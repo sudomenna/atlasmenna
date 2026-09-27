@@ -165,7 +165,12 @@ rodar com os números novos — é o ensaio real da noite seguinte.
 - [ ] **3.2. Olhar o site.** Na noite de 03/10 ainda não há voto: **você deve ver** a tela de espera
       ("Aguardando o primeiro boletim" ou a tela de pré-eleição). Se aparecer **qualquer percentual
       de candidato**, **pare e chame o Claude** — seria número que não devia estar lá.
-- [ ] **3.3.** Se 3.1 ou 3.2 falharem: **não mexa em mais nada** e chame o Claude com o print. Há a
+- [ ] **3.3. O ensaio da vigia da noite.** De 17h a 23h59 a tarefa agendada **"Vigia da noite —
+      1º turno"** roda a cada 10 min em modo **ensaio**. Na primeira rodada (17h00–17h10), abra o
+      app do Claude e **aprove as permissões que ela pedir** — assim, na noite de 04/10, ela não
+      trava esperando você. **Você deve ver** relatórios começando por "ENSAIO 03/10", e
+      notificação no celular **só** se algo estiver vermelho.
+- [ ] **3.4.** Se 3.1, 3.2 ou 3.3 falharem: **não mexa em mais nada** e chame o Claude com o print. Há a
       noite de 03/10 e a manhã de 04/10 para consertar; às 17h de 04/10 não há mais.
 
 ---
