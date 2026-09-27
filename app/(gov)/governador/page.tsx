@@ -30,8 +30,11 @@
  *
  * Cobertura
  *   - RF-021/022 (visão geral por UF), RF-025 (substituído por grid),
- *     RF-029 (tabs Pres/Gov), RF-006.1 (header com contagem via
- *     RaceStatsCards), RF-006.2 (filtros por status).
+ *     RF-029 (tabs Pres/Gov), RF-006.2 (filtros por status).
+ *   - RF-006.6/7/8 (2026-09-27): placar 1º × 2º turno e gráfico por partido,
+ *     nas duas bases, com a regra única de desfecho de
+ *     `lib/utils/desfecho-governador.ts`. Substituem o RF-006.1
+ *     (`<RaceStatsCards>`, sem call site desde 09/09 — D23).
  *   - ADR-0001/0010/0012/0013/0017.
  *   - Constituição § 2 (cores via tokens, paleta multi-partido),
  *     § 3 (degrade gracioso), § 8 (transparência — disclaimer K-1
@@ -114,6 +117,8 @@ import { FasePreEleicaoBanner } from "@/components/atoms/banners/FasePreEleicaoB
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import { BreakingNewsTicker } from "@/components/blocks/BreakingNewsTicker";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
+import { GovernadoresPlacarTurno } from "@/components/blocks/GovernadoresPlacarTurno";
+import { GovernadoresPorPartido } from "@/components/blocks/GovernadoresPorPartido";
 import { GovernorCard } from "@/components/blocks/GovernorCard";
 import { ProjectionThermometers } from "@/components/blocks/ProjectionThermometers";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
@@ -123,6 +128,7 @@ import { isPreEleicao } from "@/lib/config/fase";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
+import { classificarProjecao } from "@/lib/utils/desfecho-governador";
 import govFixture from "@/tests/fixtures/edge-config/gov-current.json" with { type: "json" };
 
 export const revalidate = 60;
@@ -168,20 +174,30 @@ const FILTER_ORDER: StatusFilter[] = ["todas", "em_disputa", "decididos_1t", "va
 const PARTICIPACAO_HEADING = "Participação do eleitorado";
 
 /**
- * Predicado de filtro — case sobre `bucket` declarado pelo orchestrator
- * (ADR-0017). `todas` passa tudo; `em_disputa` é o complemento de
- * "fechado" (chamada/decidido_1t).
+ * Predicado de filtro — spec 006, RF-006.2 + RF-006.8.
+ *
+ * 🔴 **Desde 2026-09-27 os três filtros de turno leem `classificarProjecao`**
+ * (`lib/utils/desfecho-governador.ts`), a MESMA regra do selo do
+ * `<GovernorCard>` e do placar logo acima da grade. Até esta data eles liam
+ * `bucket`, e "Decididos no 1º turno" incluía `bucket === "chamada"` — que é
+ * só "margem grande", ortogonal ao turno: ES, GO e MG do simulado (líder com
+ * 38,5%, `vai_a_2t: true`) apareciam como decididos no 1º turno.
+ *
+ * - `decididos_1t` = `eleito_1t`; `vai_2t` = `segundo_turno`;
+ * - `em_disputa`   = tudo que NÃO é `eleito_1t` (inclui quem vai ao 2º turno:
+ *                    a disputa continua até 25/10);
+ * - `chamadas` continua por `bucket` — é o que o nome diz: margem decisiva.
  */
 function passesFilter(uf: EdgeUfRow, filter: StatusFilter): boolean {
   switch (filter) {
     case "todas":
       return true;
     case "em_disputa":
-      return uf.bucket === "indefinido" || uf.bucket === "vai_2t";
+      return classificarProjecao(uf) !== "eleito_1t";
     case "decididos_1t":
-      return uf.bucket === "decidido_1t" || uf.bucket === "chamada";
+      return classificarProjecao(uf) === "eleito_1t";
     case "vai_2t":
-      return uf.bucket === "vai_2t";
+      return classificarProjecao(uf) === "segundo_turno";
     case "chamadas":
       return uf.bucket === "chamada";
   }
@@ -495,6 +511,73 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
           e aqui repetia o da capa de Presidente sem dizer nada sobre uma
           eleição que é estadual. Os dois painéis vivem em
           `/uf/[sigla]/governador`, com o dado DA UF. */}
+
+      {/* Spec 006 RF-006.6 / RF-006.7 (2026-09-27, decisão do dono) — quem
+          fecha no 1º turno, quem vai ao 2º, e o peso de cada partido. DUAS
+          leituras lado a lado: "Pela projeção" (como o estado deve terminar)
+          e "Se a apuração parasse agora" (só o já apurado). Elas podem
+          discordar na mesma noite — é para isso que ficam juntas.
+
+          Ausente em fase pré (não há desfecho de apuração que não começou —
+          RF-161), no ramo sem payload (é outro componente, acima) e no 2º
+          turno: com `turno === 2` não existe "fecha no 1º turno", e a regra
+          de desfecho deixa todas as UFs `em_aberto` (`vai_a_2t` nulo).
+
+          🔴 As colunas ficam lado a lado por CONTAINER, nunca por viewport. Esta
+          página vive dentro da coluna de painéis do `<AppShellSplit>`, que
+          mede no máximo 430px no celular e 400px fixos no desktop (medidas e
+          argumento em `components/blocks/MunicipioTable.tsx`, "A função não é
+          monotônica"): um `md:grid-cols-2` ligaria as duas colunas justamente
+          no desktop, onde há MENOS espaço (~176px cada). `@xl` (36rem) mede a
+          caixa do painel — empilha em toda largura que o shell produz hoje e
+          abre as duas colunas sozinho se a coluna de painéis alargar. */}
+      {!pre && payload.turno !== 2 ? (
+        <Panel
+          kicker="Governadores · não oficial"
+          title="1º ou 2º turno"
+          titleId="desfecho-turno-heading"
+        >
+          <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
+            <p
+              className="max-w-prose"
+              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+            >
+              Duas leituras lado a lado: a projeção diz como cada estado deve terminar; a contagem
+              mostra o que já saiu das urnas. Na mesma noite, elas podem discordar.
+            </p>
+            <div className="@container" data-testid="desfecho-turno">
+              <div className="grid grid-cols-1 gap-8 @xl:grid-cols-2 @xl:gap-6">
+                <section
+                  aria-labelledby="desfecho-projecao-heading"
+                  className="flex flex-col gap-4"
+                >
+                  <h3
+                    id="desfecho-projecao-heading"
+                    style={{ margin: 0, font: "var(--type-title)", fontSize: "var(--text-lg)" }}
+                  >
+                    Pela projeção
+                  </h3>
+                  <GovernadoresPlacarTurno porUf={por_uf} base="projecao" />
+                  <GovernadoresPorPartido porUf={por_uf} base="projecao" />
+                </section>
+                <section
+                  aria-labelledby="desfecho-contagem-heading"
+                  className="flex flex-col gap-4"
+                >
+                  <h3
+                    id="desfecho-contagem-heading"
+                    style={{ margin: 0, font: "var(--type-title)", fontSize: "var(--text-lg)" }}
+                  >
+                    Se a apuração parasse agora
+                  </h3>
+                  <GovernadoresPlacarTurno porUf={por_uf} base="contagem" />
+                  <GovernadoresPorPartido porUf={por_uf} base="contagem" />
+                </section>
+              </div>
+            </div>
+          </div>
+        </Panel>
+      ) : null}
 
       {/* Seção 3 — as 27 corridas.
           🔴 RF-162 — em fase pré esta seção é **27 links e mais nada**.

@@ -1,0 +1,134 @@
+/*
+ * components/blocks/GovernadoresPlacarTurno.module.css
+ *
+ * O placar "1º turno × 2º turno" das 27 corridas de governador — spec 006,
+ * RF-006.6.
+ *
+ * Por que CSS Module e não `style={{}}` inline como boa parte dos blocos: são
+ * 27 células e até 27 siglas por placar, e há DOIS placares na página. O
+ * mesmo `style` repetido em cada uma engorda o HTML de `/governador` sem
+ * trazer nada (medição de peso de 27/09). Aqui cada elemento carrega uma
+ * classe curta e a regra mora uma vez só.
+ *
+ * Cores: SÓ tinta NEUTRA (`--text-primary`, `--text-secondary`,
+ * `--color-bg-muted`) — nunca cor de partido, e desde 27/09 também não verde
+ * × tijolo. Decisão do dono: o placar fica logo acima das barras por partido,
+ * onde o PT é vermelho e o PL é verde, e "9 quadradinhos verdes" se lia como
+ * "9 do PL". O código agora é o MESMO das barras por partido: CHEIO = fecha no
+ * 1º turno, LISTRADO = vai ao 2º. Isso também tira a dupla eleito × 2º turno
+ * da dependência de cor (WCAG 1.4.1 — a auditoria de 27/09 apontou que era a
+ * única da família que se distinguia só por matiz).
+ *
+ * Contraste (WCAG 1.4.11, 3:1 para não-texto): `--text-primary` ≈ 16:1 nos
+ * dois temas; a listra usa a mesma tinta e leva contorno em
+ * `--text-secondary` (5,5:1 claro / 6,9:1 escuro), o mesmo remédio de
+ * `DATA_FILL_STROKE`. "Em aberto" (fundo `--color-bg-muted` + contorno) e
+ * "aguardando" (só contorno tracejado) se distinguem entre si pelo TRAÇO.
+ *
+ * Modo `pure` de CSS Modules: toda regra carrega ao menos uma classe local.
+ */
+
+.placar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* A faixa de 27 células: uma por UF, na ordem dos grupos. Decorativa
+ * (`aria-hidden`) — a informação está nos números e nas listas abaixo. */
+.faixa {
+  display: grid;
+  grid-template-columns: repeat(27, minmax(0, 1fr));
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.celula {
+  display: block;
+  height: 20px;
+  border-radius: 1px;
+}
+
+.eleito_1t {
+  background: var(--text-primary);
+}
+
+.segundo_turno {
+  background: repeating-linear-gradient(135deg, var(--text-primary) 0 3px, transparent 3px 5px);
+  box-shadow: inset 0 0 0 1px var(--text-secondary);
+}
+
+.em_aberto {
+  background: var(--color-bg-muted);
+  box-shadow: inset 0 0 0 1px var(--text-secondary);
+}
+
+.aguardando {
+  background: transparent;
+  outline: 1px dashed var(--text-secondary);
+  outline-offset: -1px;
+}
+
+.grupos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.cabecaGrupo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+/* O quadradinho de legenda ao lado do rótulo — liga a cor da faixa ao texto. */
+.amostra {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  align-self: center;
+}
+
+.numero {
+  font: var(--type-figure);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.rotulo {
+  font: var(--type-body-sm);
+  color: var(--text-secondary);
+}
+
+.siglas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--type-data);
+  color: var(--text-secondary);
+}
+
+.nota {
+  margin: 0;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}

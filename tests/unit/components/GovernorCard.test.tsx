@@ -52,11 +52,22 @@ function mkUf(overrides: Partial<EdgeUfRow> & Pick<EdgeUfRow, "sigla" | "bucket"
       { id: 3, pct: 14.1, nome: "Márcio França", partido: "PSB", sqcand: "50002553930" },
       { id: 4, pct: 8.0, nome: "Datena", partido: "PSDB", sqcand: "50002553931" },
     ],
-    vai_a_2t: null,
+    // RF-006.8 (2026-09-27) — o selo lê `vai_a_2t`, não `bucket`. O default é
+    // o que o produtor grava para cada bucket; um teste que queira a
+    // combinação incoerente (`chamada` + `vai_a_2t: true`, o caso real de ES,
+    // GO e MG no simulado) passa o campo explícito.
+    vai_a_2t: VAI_A_2T_DO_BUCKET[overrides.bucket],
     bucket: overrides.bucket,
   };
   return { ...base, ...overrides };
 }
+
+const VAI_A_2T_DO_BUCKET: Record<EdgeUfRow["bucket"], boolean | null> = {
+  chamada: false,
+  decidido_1t: false,
+  vai_2t: true,
+  indefinido: null,
+};
 
 const candidatos: EdgeCandidate[] = [
   mkCand(1, "Tarcísio", "REP", 1),
@@ -111,6 +122,26 @@ describe("<GovernorCard />", () => {
     const doc = parse(<GovernorCard uf={uf} candidatos={candidatos} />);
     const text = doc.body.textContent ?? "";
     expect(text).toContain("VAI A 2T");
+    expect(text).not.toContain("ELEITO");
+  });
+
+  it("🔴 (c2) bucket=chamada com vai_a_2t=true → VAI A 2T, nunca ELEITO (RF-006.8)", () => {
+    // Margem grande não é eleição: líder com 38,5% e 13pp de folga vai ao 2º
+    // turno. Até 2026-09-27 este card dizia "● ELEITO" (ES, GO, MG no simulado).
+    const uf = mkUf({ sigla: "ES", bucket: "chamada", vai_a_2t: true });
+    const doc = parse(<GovernorCard uf={uf} candidatos={candidatos} />);
+    const text = doc.body.textContent ?? "";
+    expect(text).toContain("VAI A 2T");
+    expect(text).not.toContain("ELEITO");
+    expect(doc.querySelector("article")?.getAttribute("aria-label")).toContain(
+      "vai ao segundo turno",
+    );
+  });
+
+  it("(c3) bucket=decidido_1t com vai_a_2t=null (2º turno / legado) → EM APURAÇÃO", () => {
+    const uf = mkUf({ sigla: "SP", bucket: "decidido_1t", vai_a_2t: null });
+    const text = parse(<GovernorCard uf={uf} candidatos={candidatos} />).body.textContent ?? "";
+    expect(text).toContain("EM APURAÇÃO");
     expect(text).not.toContain("ELEITO");
   });
 

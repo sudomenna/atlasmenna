@@ -25,6 +25,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import GovernadorGridPage from "@/app/(gov)/governador/page";
 import type { EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
 
+const VAI_A_2T_DO_BUCKET: Record<EdgeUfRow["bucket"], boolean | null> = {
+  chamada: false,
+  decidido_1t: false,
+  vai_2t: true,
+  indefinido: null,
+};
+
 // Helper pra construir um payload de governador com bucket diverso.
 function buildPayload(buckets: Array<EdgeUfRow["bucket"]>, comParticipacao = true): EdgePayload {
   const candidatos = [
@@ -110,7 +117,10 @@ function buildPayload(buckets: Array<EdgeUfRow["bucket"]>, comParticipacao = tru
       { id: 1, pct: 52, nome: "Tarcísio", partido: "REP" },
       { id: 2, pct: 38, nome: "Boulos", partido: "PSOL" },
     ],
-    vai_a_2t: null,
+    // RF-006.8 (2026-09-27) — selo, filtro e placar leem `vai_a_2t`, não
+    // `bucket`. O valor é o que o produtor grava para cada bucket; `null` em
+    // tudo fazia a fixture descrever uma noite sem nenhum desfecho.
+    vai_a_2t: VAI_A_2T_DO_BUCKET[buckets[i % buckets.length] ?? "indefinido"],
     bucket: buckets[i % buckets.length] ?? "indefinido",
   }));
   const payload: EdgePayload = {
@@ -159,15 +169,42 @@ function buildPayload(buckets: Array<EdgeUfRow["bucket"]>, comParticipacao = tru
 /** Alternado por teste — permite exercitar o payload sem `participacao`. */
 let comParticipacao = true;
 
+/**
+ * Qual payload o reader mockado devolve (spec 006, RF-006.6/7 — o painel
+ * "1º ou 2º turno" só existe na fase normal do 1º turno):
+ *   - `normal` — 1º turno, fase normal;
+ *   - `pre`    — `fase: "pre_eleicao"` (RF-153);
+ *   - `vazio`  — nenhum payload (ramo `AguardandoGovernadores`);
+ *   - `turno2` — só a chave do 2º turno existe;
+ *   - `chamada2t` — 27 UFs `bucket: "chamada"` com `vai_a_2t: true` (margem
+ *     grande E 2º turno — ES, GO e MG do simulado de 26/09, RF-006.8).
+ */
+let modo: "normal" | "pre" | "vazio" | "turno2" | "chamada2t" = "normal";
+
 vi.mock("@/lib/edge-config/reader", () => ({
-  readProjection: vi.fn(async (opts?: { cargo?: string }) => {
+  readProjection: vi.fn(async (opts?: { cargo?: string; turno?: number }) => {
     if (opts?.cargo === "gov") {
+      if (modo === "vazio") return null;
+      if (modo === "chamada2t") {
+        const p = buildPayload(["chamada"], comParticipacao);
+        for (const uf of p.por_uf) uf.vai_a_2t = true;
+        return p;
+      }
+      if (modo === "turno2") {
+        if (opts.turno !== 2) return null;
+        const p = buildPayload(["vai_2t"], comParticipacao);
+        p.turno = 2;
+        for (const uf of p.por_uf) uf.vai_a_2t = null;
+        return p;
+      }
       // 9 decidido_1t, 14 vai_2t, 4 indefinido como pedido no smoke mental.
       const buckets: Array<EdgeUfRow["bucket"]> = [];
       for (let i = 0; i < 9; i++) buckets.push("decidido_1t");
       for (let i = 0; i < 14; i++) buckets.push("vai_2t");
       for (let i = 0; i < 4; i++) buckets.push("indefinido");
-      return buildPayload(buckets, comParticipacao);
+      const p = buildPayload(buckets, comParticipacao);
+      if (modo === "pre") p.fase = "pre_eleicao";
+      return p;
     }
     return null;
   }),
@@ -179,6 +216,7 @@ vi.mock("@/lib/edge-config/reader", () => ({
 describe("GovernadorGridPage (integration / smoke)", () => {
   beforeEach(() => {
     comParticipacao = true;
+    modo = "normal";
   });
 
   it("(a) renderiza header 'Governadores 2026'", async () => {
@@ -216,7 +254,11 @@ describe("GovernadorGridPage (integration / smoke)", () => {
     expect(html).not.toContain('data-testid="stat-eleitos"');
     expect(html).not.toContain('data-testid="stat-2t"');
     expect(html).not.toContain('data-testid="stat-em-apuracao"');
-    expect(html).not.toContain("Eleitos no 1º turno");
+    // Até 27/09 esta linha também proibia o TEXTO "Eleitos no 1º turno", como
+    // guarda da remoção do `<RaceStatsCards>`. A contagem por desfecho voltou
+    // com o placar da spec 006 RF-006.6 (bloco "1º ou 2º turno" abaixo), com
+    // outro componente e outra regra — a guarda fica nos `data-testid` do
+    // componente removido, que é o que ela sempre quis dizer.
 
     expect(html).toContain("Decididos no 1º turno");
     expect(html).toContain("Vão a 2º turno");
@@ -471,5 +513,109 @@ describe("spec 021 RF-192 / spec 022 RF-200 emendados (2026-09-26, noite)", () =
     expect(doc.querySelector('[aria-labelledby="votacao-eleitorado-heading"]')).toBeNull();
     expect(doc.querySelector('[aria-labelledby="corrida-tres-circulos-heading"]')).toBeNull();
     expect(doc.querySelector('[data-testid="votacao-eleitorado"]')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spec 006 — RF-006.6 / RF-006.7 / RF-006.8 (2026-09-27, decisão do dono)
+// ---------------------------------------------------------------------------
+describe("GovernadorGridPage — painel '1º ou 2º turno' (RF-006.6/7/8)", () => {
+  beforeEach(() => {
+    comParticipacao = true;
+    modo = "normal";
+  });
+
+  async function render(status?: string): Promise<Document> {
+    const node = await GovernadorGridPage({
+      searchParams: Promise.resolve(status ? { status } : {}),
+    });
+    return new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
+  }
+
+  it("(t) fase normal do 1º turno: o painel existe, com as DUAS bases e os dois gráficos", async () => {
+    const doc = await render();
+    const painel = doc.querySelector('[data-testid="desfecho-turno"]');
+    expect(painel).not.toBeNull();
+    expect(doc.querySelector("#desfecho-turno-heading")?.textContent).toBe("1º ou 2º turno");
+    expect(doc.querySelector("#desfecho-projecao-heading")?.textContent).toBe("Pela projeção");
+    expect(doc.querySelector("#desfecho-contagem-heading")?.textContent).toBe(
+      "Se a apuração parasse agora",
+    );
+    const placares = [...doc.querySelectorAll('[data-testid="placar-turno"]')];
+    expect(placares.map((p) => p.getAttribute("data-base"))).toEqual(["projecao", "contagem"]);
+    const partidos = [...doc.querySelectorAll('[data-testid="por-partido"]')];
+    expect(partidos.map((p) => p.getAttribute("data-base"))).toEqual(["projecao", "contagem"]);
+    // Entre o painel de resultado e a grade das 27 corridas.
+    const resultado = doc.querySelector("#resultado-heading");
+    const filtros = doc.querySelector('nav[aria-label="Filtros por status"]');
+    expect(
+      resultado &&
+        painel &&
+        resultado.compareDocumentPosition(painel) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      painel &&
+        filtros &&
+        painel.compareDocumentPosition(filtros) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("(u) o placar da projeção bate com o filtro 'Decididos no 1º turno' (9) e 'Vão a 2º turno' (14)", async () => {
+    const doc = await render();
+    const num = (d: string) =>
+      doc.querySelector(
+        `[data-testid="placar-turno"][data-base="projecao"] [data-desfecho="${d}"] [data-testid="placar-numero"]`,
+      )?.textContent;
+    expect(num("eleito_1t")).toBe("9");
+    expect(num("segundo_turno")).toBe("14");
+    expect(num("em_aberto")).toBe("4");
+    expect((await render("decididos_1t")).body.textContent).toContain("9 corridas");
+    expect((await render("vai_2t")).body.textContent).toContain("14 corridas");
+    // em_disputa = tudo que não é eleito no 1º turno: 14 + 4.
+    expect((await render("em_disputa")).body.textContent).toContain("18 corridas");
+  });
+
+  it("🔴 (u2) `chamada` + `vai_a_2t: true`: selo, filtro e placar dizem 2º turno, os três", async () => {
+    modo = "chamada2t";
+    const doc = await render();
+    const texto = doc.body.textContent ?? "";
+    expect(texto).not.toContain("● ELEITO");
+    expect((texto.match(/VAI A 2T/g) ?? []).length).toBeGreaterThanOrEqual(27);
+    expect(
+      doc.querySelector(
+        '[data-testid="placar-turno"][data-base="projecao"] [data-desfecho="segundo_turno"] [data-testid="placar-numero"]',
+      )?.textContent,
+    ).toBe("27");
+    // O filtro "Decididos no 1º turno" fica vazio; "Vão a 2º turno" traz as 27.
+    expect((await render("decididos_1t")).body.textContent).toContain(
+      "Nenhuma UF se encaixa no filtro",
+    );
+    expect((await render("vai_2t")).body.textContent).toContain("27 corridas");
+    // "Chamadas" continua por `bucket` — margem decisiva, que é o que o nome diz.
+    expect((await render("chamadas")).body.textContent).toContain("27 corridas");
+  });
+
+  it("(v) fase pré: o painel NÃO existe", async () => {
+    modo = "pre";
+    const doc = await render();
+    expect(doc.querySelector('[data-testid="desfecho-turno"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="placar-turno"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="por-partido"]')).toBeNull();
+  });
+
+  it("(w) sem payload: o painel NÃO existe", async () => {
+    modo = "vazio";
+    const doc = await render();
+    expect(doc.querySelector('[data-testid="gov-aguardando"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="desfecho-turno"]')).toBeNull();
+  });
+
+  it("(x) 2º turno: o painel NÃO existe — não há 'fecha no 1º turno' a contar", async () => {
+    modo = "turno2";
+    const doc = await render();
+    // A página renderiza (a grade das corridas está lá)…
+    expect(doc.querySelector('nav[aria-label="Filtros por status"]')).not.toBeNull();
+    // …sem o painel.
+    expect(doc.querySelector('[data-testid="desfecho-turno"]')).toBeNull();
   });
 });

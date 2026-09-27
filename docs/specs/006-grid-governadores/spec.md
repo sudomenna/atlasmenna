@@ -6,10 +6,10 @@ shipped_date: 2026-05-18
 priority: M
 personas: [P1, P2, P3]
 screens: [T-02]
-requirements: [RF-021, RF-022, RF-025, RF-027, RF-029, RF-006.1, RF-006.2, RF-006.3, RF-006.4, RF-006.5, RF-062, RF-063, RF-189, RF-191]
+requirements: [RF-021, RF-022, RF-025, RF-027, RF-029, RF-006.1, RF-006.2, RF-006.3, RF-006.4, RF-006.5, RF-006.6, RF-006.7, RF-006.8, RF-062, RF-063, RF-189, RF-191]
 depends_on: [001-ingestao-tse, 002-modelo-estatistico, 005-pagina-uf-governador]
 apis: [GET /api/projection?cargo=governador]
-components: [GovernorCard, HexCartogramBrasil, RaceStatsCards, BreakingNewsTicker, LiveBadge, Tabs, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader]
+components: [GovernorCard, HexCartogramBrasil, RaceStatsCards, BreakingNewsTicker, LiveBadge, Tabs, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader, GovernadoresPlacarTurno, GovernadoresPorPartido]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-022, RNF-023, RNF-024]
 adrs: [0001, 0002, 0010, 0011, 0012, 0013, 0017, 0018, 0019, 0022, 0025, 0034, 0038, 0048]
 ---
@@ -27,7 +27,8 @@ Mostrar status de todas as 27 corridas estaduais de governador em uma única tel
 **In**:
 - Grid de 27 cards `<GovernorCard />` (um por UF) — layout opção (b): líder + top-3 compacto + chip de status.
 - `<HexCartogramBrasil />` — visão alternativa SVG inline (sem MapLibre — preserva bundle).
-- `<RaceStatsCards />` — 3 cards (eleitos no 1T / em 2T / em apuração).
+- ~~`<RaceStatsCards />` — 3 cards (eleitos no 1T / em 2T / em apuração).~~ Saiu em 2026-09-09 (D23); substituído pelo painel "1º ou 2º turno" (RF-006.6/7/8, 2026-09-27).
+- `<GovernadoresPlacarTurno />` + `<GovernadoresPorPartido />` — placar 1º × 2º turno e desfecho por partido, nas bases projeção e contagem (RF-006.6/7/8).
 - `<BreakingNewsTicker />` — chamadas recentes (rotação 5s, respeita prefers-reduced-motion).
 - Filtros server-side via search params (`Todas | Em disputa | Decididos 1T | Vão a 2T | Chamadas`).
 - Tabs cargo: `Presidente | Governador (active) | Senado | Congresso | Assembleias` — últimas 3 grayed-out + tooltip "Disponível em breve".
@@ -78,9 +79,11 @@ Aplicam-se subsets dos RFs já definidos:
 
 ### RFs específicos desta tela
 
-**RF-006.1 — Header com contagem via RaceStatsCards**
+**RF-006.1 — Header com contagem via RaceStatsCards** — ⚠️ **SUBSTITUÍDO em 2026-09-27 por RF-006.6 + RF-006.8**
 
 WHEN a página renderiza, the system SHALL exibir `<RaceStatsCards />` com counts `{eleitos, segundo_turno, em_apuracao}` agregando `EdgeUfRow.bucket` das 27 UFs.
+
+> **Substituído.** O `<RaceStatsCards />` saiu da rota em 2026-09-09 (decisão D23, sem contraparte no protótipo) e o componente ficou sem call site. Além disso, a contagem que este RF descreve — agregar por `bucket` — tratava `bucket === "chamada"` como eleito, o que é falso: `chamada` é só margem grande, ortogonal ao turno (ver RF-006.8). A contagem por desfecho volta à tela pelo **RF-006.6**, com a regra do **RF-006.8**. O texto acima fica como registro histórico; nenhum código novo deve implementá-lo.
 
 **RF-006.2 — Filtros por status (server-side)**
 
@@ -99,6 +102,48 @@ WHEN `national.chamadas_recentes?.length > 0`, the system SHALL renderizar `<Bre
 **RF-006.5 — Tabs cargo com cargos diferidos grayed-out**
 
 WHEN renderizar tabs, the system SHALL incluir Senado / Congresso / Assembleias como tabs `disabled` com tooltip "Disponível em breve" e `aria-disabled="true"` (sinaliza roadmap sem esconder).
+
+**RF-006.6 — Placar 1º × 2º turno nas duas bases (2026-09-27, decisão do dono)**
+
+WHILE a página está na fase normal do 1º turno (payload presente, `fase` ≠ `pre_eleicao`, `turno === 1`), the system SHALL exibir, entre o painel "Governadores 2026" e a grade "Corridas estaduais", um painel com DUAS leituras lado a lado — "Pela projeção" e "Se a apuração parasse agora" — e, em cada uma, a contagem das 27 UFs por desfecho (`eleito_1t`, `segundo_turno`, `em_aberto` só na projeção, `aguardando`) com a lista de siglas de cada grupo, segundo a regra do RF-006.8.
+
+IF o payload está em fase pré-eleição, ausente, ou `turno === 2`, the system SHALL omitir o painel inteiro.
+
+IF nenhuma das 27 UFs tem desfecho na base (todas `aguardando`), the system SHALL dizer isso em texto, sem imprimir contagens zeradas.
+
+**Aceitação**:
+- Given o simulado de `tests/fixtures/simulacao/governador.json`, when a página renderiza, then a coluna "Pela projeção" mostra 9 eleitos no 1º turno · 17 no 2º turno · 1 em aberto · 0 aguardando, e a coluna "Se a apuração parasse agora" mostra 10 · 17 · 0 aguardando (AL, com 52,04% apurado, fecharia).
+- Given uma UF ausente de `por_uf`, when o placar renderiza, then ela aparece como "aguardando apuração" nas duas bases e o placar soma 27.
+- Given a base "contagem", when o placar renderiza, then nenhum rótulo diz "eleito": o vocabulário é condicional ("fechariam no 1º turno", "iriam ao 2º turno").
+- Given qualquer base, when o placar renderiza, then a faixa usa só tinta neutra com o mesmo código das barras por partido — cheio (`--text-primary`) = 1º turno, listrado = 2º turno, contorno para em aberto e tracejado para aguardando — nunca cor de partido nem verde/tijolo (decisão do dono 27/09: colidia com PL/PT logo abaixo), e cada sigla tem o nome do estado por extenso para leitor de tela.
+
+**RF-006.7 — Desfecho por partido nas duas bases (2026-09-27, decisão do dono)**
+
+WHILE o painel do RF-006.6 está visível, the system SHALL exibir, em cada uma das duas colunas, uma linha por partido com barra dividida — parte cheia = UFs em que o candidato do partido fecha no 1º turno; parte listrada na mesma cor = UFs em que o partido tem um dos dois candidatos do 2º turno — e o texto "N · E eleitos + T no 2º turno" (na contagem, "fechariam" no lugar de "eleitos").
+
+Regras de soma: `eleito_1t` conta o partido do 1º colocado; `segundo_turno` conta os partidos dos DOIS primeiros **na mesma base** que classificou a UF; `em_aberto` e `aguardando` não contam. Ordem: total desc → eleitos desc → sigla (collation pt-BR). Partido ausente no payload vira a linha "Partido não informado". Cor por identidade (`colorForParty`, ADR-0024) com o contorno `DATA_FILL_STROKE` (RNF-035), escala fixa de 27 UFs nas duas colunas.
+
+**Aceitação**:
+- Given o simulado, when a coluna "Pela projeção" renderiza, then o topo é PT 11 (2 eleitos + 9 no 2º turno) e PL 10 (2 + 8), e a soma das linhas é 43 = 9 + 2 × 17.
+- Given uma UF em 2º turno, when o gráfico renderiza, then a nota diz que cada estado em 2º turno conta dois candidatos.
+- Given a sigla "REPUBLICANOS", when a linha renderiza, then a tela desenha "REP" e o leitor de tela recebe "REPUBLICANOS".
+
+**RF-006.8 — Regra única de desfecho para selo, filtro e gráficos (2026-09-27)**
+
+The system SHALL derivar o desfecho de cada UF de UM ponto só (`lib/utils/desfecho-governador.ts`), usado pelo selo do `<GovernorCard />`, pelos filtros por status do RF-006.2 e pelos gráficos dos RF-006.6/RF-006.7:
+
+- **Pela projeção**: `eleito_1t` IF `vai_a_2t === false` E `bucket !== "indefinido"`; `segundo_turno` IF `vai_a_2t === true`; `em_aberto` nos demais casos (`vai_a_2t` nulo ou ausente, ou `false` com `indefinido`). `bucket === "chamada"` **não** implica eleito.
+- **Pela contagem**: `aguardando` IF `pct_apurado === 0` ou IF falta `pct_atual` a qualquer candidato de `top_candidatos` (ausente ≠ 0); senão o líder é o primeiro na ordem da contagem (`ordenarTopCandidatosPorBase(…, "parcial")`, incluindo o candidato resgatado do RF-190) e o desfecho é `eleito_1t` IF `pct_atual > 50`, `segundo_turno` caso contrário.
+- UF ausente de `por_uf` é `aguardando` nas duas bases.
+
+Filtros: `decididos_1t` = `eleito_1t`; `vai_2t` = `segundo_turno`; `em_disputa` = todo desfecho diferente de `eleito_1t`; `chamadas` continua por `bucket === "chamada"`.
+
+**Aceitação**:
+- Given uma UF com `bucket: "chamada"` e `vai_a_2t: true`, when a página renderiza, then o selo diz "VAI A 2T" (nunca "● ELEITO"), a UF não entra em "Decididos no 1º turno", entra em "Vão a 2º turno" e em "Chamadas", e conta como 2º turno no placar e no gráfico por partido.
+- Given o líder da contagem com `pct_atual` exatamente 50, when classificado, then vai ao 2º turno; com 50,01, fecharia no 1º.
+- Given `pct_atual` ausente em algum candidato da UF, when classificado pela contagem, then a UF fica `aguardando`, nunca classificada como se o ausente fosse 0.
+
+> ⚠️ `pct_atual` é fração de `v.vvc` (ADR-0018: válidos + anulados + anulados sub judice, o denominador do `pvap` do TSE), não de `v.vv`. Como `vvc ≥ vv`, `pct_atual > 50` implica maioria dos válidos: o erro possível da régua da contagem é só o conservador (não chamar de "fecharia" um líder que já passou de 50% dos válidos).
 
 ### Open question resolvida (kickoff S06)
 

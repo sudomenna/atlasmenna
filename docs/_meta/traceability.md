@@ -68,11 +68,14 @@ Atualizada a cada PR. Fonte de verdade para cobertura.
 | RF-005.2 | Waffle de municípios | M | [005](../specs/005-pagina-uf-governador/) | `<MunicipioWaffleGrid />` | unit |
 | RF-005.3 | Apuração por mesorregião | M | [005](../specs/005-pagina-uf-governador/) | (tabela condicional) | unit |
 | RF-005.4 | Municípios por eleitorado. **2026-09-20**: deixou de ser um corte de 8 com a capital forçada ao topo — virou a lista completa, ordenada por eleitorado decrescente e paginada (20 + 40 por toque), igual nas três rotas de estado | M | [005](../specs/005-pagina-uf-governador/) | `<MunicipioTable />` | unit (`MunicipioTable.ordem.test.tsx`) |
-| RF-006.1 | Header com contagem de chamadas | M | [006](../specs/006-grid-governadores/) | `<RaceStatsCards />` | unit |
+| RF-006.1 | Header com contagem de chamadas | M | [006](../specs/006-grid-governadores/) | `<RaceStatsCards />` | ⚠️ **SUPERSEDIDO em 2026-09-27** por RF-006.6/6.7/6.8 — o componente saiu de `/governador` em D23 (2026-09-10); a contagem por desfecho volta pelos painéis novos |
 | RF-006.2 | Filtros por status | M | [006](../specs/006-grid-governadores/) | `<FilterBar />` | unit |
 | RF-006.3 | Mapa coroplético nacional por líder de UF | M | [006](../specs/006-grid-governadores/) | `<NationalMapBlock>`, `<NationalChoroplethMap>` | integration (`governador-page.test.tsx`); `<HexCartogramBrasil />` preservado sem uso |
 | RF-006.4 | Breaking news ticker | M | [006](../specs/006-grid-governadores/) | `<BreakingNewsTicker />` | unit |
 | RF-006.5 | Tabs cargo com disabled | M | [006](../specs/006-grid-governadores/) | `<Tabs disabled />` | unit |
+| RF-006.6 | Placar 1º × 2º turno nas duas bases (2026-09-27) | M | [006](../specs/006-grid-governadores/) | `<GovernadoresPlacarTurno />` | unit (`tests/unit/components/GovernadoresPlacarTurno.test.tsx`) + integration (`tests/integration/governador-page.test.tsx`) |
+| RF-006.7 | Desfecho por partido nas duas bases (2026-09-27) | M | [006](../specs/006-grid-governadores/) | `<GovernadoresPorPartido />` | unit (`tests/unit/components/GovernadoresPorPartido.test.tsx`) + integration (`tests/integration/governador-page.test.tsx`) |
+| RF-006.8 | Regra única de desfecho para selo, filtro e gráficos (2026-09-27) | M | [006](../specs/006-grid-governadores/) | `lib/utils/desfecho-governador.ts`, `<GovernorCard />` (selo), filtros (RF-006.2), gráficos (RF-006.6/7) | unit (`tests/unit/utils/desfecho-governador.test.ts`) + integration (`tests/unit/components/GovernorCard.test.tsx`, `tests/integration/governador-page.test.tsx`) |
 | RF-030.1 | Mapa coroplético hero | M | [003](../specs/003-home-nacional/) | `<NationalChoroplethMap />` | unit (SSR shell) + e2e (deferred S05) |
 | RF-030.2 | Toggles de visualização | M | [003](../specs/003-home-nacional/) | `<MapViewToggle />` | unit |
 | RF-030.3 | Interação com UF por capacidade de ponteiro (desktop mouse → balão+link, mobile/toque → gaveta) | M | [003](../specs/003-home-nacional/), [008](../specs/008-interatividade-brushing/) | `<NationalChoroplethMap />`, `<HoverCard />`, `<StateResultSheet />`, `<UfHoverLink />` | unit (contrato semântico) + e2e (deferred S05) |
@@ -194,11 +197,14 @@ Atualizada a cada PR. Fonte de verdade para cobertura.
 | RF-005.2 | Waffle de municípios | [005](../specs/005-pagina-uf-governador/) |
 | RF-005.3 | Apuração por mesorregião | [005](../specs/005-pagina-uf-governador/) |
 | RF-005.4 | Maiores municípios | [005](../specs/005-pagina-uf-governador/) |
-| RF-006.1 | Header com contagem de chamadas | [006](../specs/006-grid-governadores/) |
+| RF-006.1 | Header com contagem de chamadas (supersedido em 27/09 por RF-006.6/7/8) | [006](../specs/006-grid-governadores/) |
 | RF-006.2 | Filtros por status | [006](../specs/006-grid-governadores/) |
-| RF-006.3 | Cartograma hexagonal | [006](../specs/006-grid-governadores/) |
+| RF-006.3 | Cartograma hexagonal → Coroplético (ADR-0048) | [006](../specs/006-grid-governadores/) |
 | RF-006.4 | Breaking news ticker | [006](../specs/006-grid-governadores/) |
 | RF-006.5 | Tabs cargo com disabled | [006](../specs/006-grid-governadores/) |
+| RF-006.6 | Placar 1º × 2º turno nas duas bases | [006](../specs/006-grid-governadores/) |
+| RF-006.7 | Desfecho por partido nas duas bases | [006](../specs/006-grid-governadores/) |
+| RF-006.8 | Regra única de desfecho para selo, filtro e gráficos | [006](../specs/006-grid-governadores/) |
 | RF-012.1 | Botão "Pausar Cron" | [012](../specs/012-dashboard-status/) |
 | RF-012.2 | Botão "Forçar refresh" | [012](../specs/012-dashboard-status/) |
 | RF-010.1 | Integridade dado oficial | [001](../specs/001-ingestao-tse/) |

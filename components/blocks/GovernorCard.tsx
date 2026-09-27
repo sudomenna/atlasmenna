@@ -29,6 +29,7 @@
 
 import { candidateColor } from "@/components/blocks/_candidateColor";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
+import { classificarProjecao } from "@/lib/utils/desfecho-governador";
 import { formatPercentTrim } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -91,10 +92,21 @@ interface StatusChip {
   ariaText: string;
 }
 
-function chipFor(bucket: EdgeUfRow["bucket"]): StatusChip {
-  switch (bucket) {
-    case "chamada":
-    case "decidido_1t":
+/**
+ * Selo de status da UF — spec 006, RF-006.8 (2026-09-27).
+ *
+ * 🔴 **Era um `switch` sobre `bucket` até esta data, e `"chamada"` saía como
+ * "● ELEITO".** `chamada` é só "margem grande" — ortogonal ao turno
+ * (`EdgeUfRow.bucket`) —, então um líder com 38,5% e 13pp de folga ganhava o
+ * selo de eleito na mesma linha em que o payload dizia `vai_a_2t: true` (ES,
+ * GO e MG no simulado de 26/09). O desfecho agora vem de
+ * `classificarProjecao` (`lib/utils/desfecho-governador.ts`), a mesma regra do
+ * filtro "Decididos no 1º turno" e dos gráficos de `/governador`: selo,
+ * filtro e gráfico não podem discordar.
+ */
+function chipFor(uf: Pick<EdgeUfRow, "vai_a_2t" | "bucket">): StatusChip {
+  switch (classificarProjecao(uf)) {
+    case "eleito_1t":
       return {
         label: "● ELEITO",
         // -strong como fundo, com a TINTA PAREADA por tema — nunca branco
@@ -105,7 +117,7 @@ function chipFor(bucket: EdgeUfRow["bucket"]): StatusChip {
         fg: "var(--chip-success-ink, #ffffff)",
         ariaText: "eleito",
       };
-    case "vai_2t":
+    case "segundo_turno":
       return {
         label: "VAI A 2T",
         // Idem acima: tinta pareada, não branco fixo. Medido a 1,85:1 no
@@ -135,7 +147,7 @@ interface Row {
 }
 
 export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCardProps) {
-  const chip = chipFor(uf.bucket);
+  const chip = chipFor(uf);
   const nomeUf = UF_NAMES[uf.sigla] ?? uf.sigla;
   const candIndex = new Map(candidatos.map((c) => [c.id, c] as const));
 
