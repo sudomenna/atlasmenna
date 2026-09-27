@@ -68,7 +68,7 @@ import urllib.error
 import urllib.request
 import uuid
 from collections.abc import Iterable, Mapping
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from types import MappingProxyType
 from typing import Any, NamedTuple, TypedDict
 
@@ -311,6 +311,88 @@ def _open_conn():
     return psycopg.connect(dsn, autocommit=False)
 
 
+# ---------------------------------------------------------------------------
+# Corte de resíduo do simulado oficial do TSE (decisão do dono, 27/09/2026)
+# ---------------------------------------------------------------------------
+#
+# Produção rodou o simulado oficial do TSE (eleições 21270/21272) de 23/09 a
+# 26/09 (e segue recebendo até a virada de 03/10) sobre os MESMOS pares
+# uf×município×zona dos reais, com `pct_apurado` = 100% — medido em 27/09:
+# ~296 mil linhas em `snapshots`, cargos 1/3/5/6, turno 1
+# (docs/operations/runbook.md, docs/reference/risks.md). `snapshots` é
+# append-only (constituição § 10) — nada é apagado aqui. A decisão (opção B)
+# é o CÁLCULO ignorar leituras anteriores ao início do dia da eleição do
+# turno; apagar o resíduo em si fica para depois da eleição.
+#
+# Instantes espelham `lib/config/calendar.ts:92-103` (CALENDAR_2026) — mesmo
+# calendário, reescrito aqui porque este módulo Python não importa TS. Se o
+# calendário mudar lá, mudar aqui também.
+_CORTE_RESIDUO_SIMULADO_POR_TURNO: dict[int, datetime] = {
+    1: datetime(2026, 10, 4, 0, 0, 0, tzinfo=timezone(timedelta(hours=-3))),
+    2: datetime(2026, 10, 25, 0, 0, 0, tzinfo=timezone(timedelta(hours=-3))),
+}
+
+
+def _ts_minimo_valido(
+    turno: int, agora: datetime | None = None
+) -> datetime | None:
+    """`ts` mínimo (INCLUSIVE) que uma linha de `snapshots` precisa ter para
+    entrar no cálculo — ou `None` quando o corte ainda não se aplica.
+
+    O corte só passa a valer quando `agora` já ALCANÇOU o instante do turno
+    (`agora >= corte`, não `>`: uma linha gravada exatamente no instante do
+    corte é dado do dia da eleição, não resíduo — ver
+    `test_ts_minimo_valido_no_limite_inclui`). Antes disso — hoje, o ensaio
+    de 03/10, os testes de integração que inserem `ts = now()` — devolve
+    `None` e o comportamento fica IDÊNTICO ao anterior a esta mudança:
+    nenhuma linha é descartada por data.
+
+    `agora` é parâmetro (default `datetime.now(timezone.utc)`) exatamente
+    para o teste poder simular "já é 04/10 18h" sem mexer no relógio da
+    máquina nem no banco.
+
+    Turno fora de {1, 2} → `None` (fail-open, mesma postura de
+    `_discard_zero_zona_sentinel_when_real_zonas_exist`: na dúvida, mantém
+    o dado em vez de arriscar descartar o certo).
+    """
+    if agora is None:
+        agora = datetime.now(timezone.utc)
+    corte = _CORTE_RESIDUO_SIMULADO_POR_TURNO.get(turno)
+    if corte is None or agora < corte:
+        return None
+    return corte
+
+
+def _instante_do_gatilho(trigger_ts: str) -> datetime:
+    """`req.trigger_ts` como instante — o "agora" do corte de resíduo.
+
+    O corte (`_ts_minimo_valido`) decide "já é dia da eleição?" pelo instante
+    do GATILHO do ciclo, não pelo relógio da máquina: é a mesma fonte que já
+    alimenta `derive_seed`, então reprocessar o mesmo `(cargo, turno,
+    trigger_ts)` sobre as mesmas linhas de `snapshots` devolve o mesmo
+    resultado em qualquer data (constituição § 6; achado do
+    constitution-guard em 27/09). O ingest sempre manda
+    `new Date().toISOString()` (`lib/tse/ingest-handler.ts:848`).
+
+    `trigger_ts` ilegível → relógio real + log `warn`. Fail-safe, e não
+    fail-open: sem instante, deixar de cortar poria o resíduo do simulado no
+    cálculo da noite; o preço (reprodutibilidade só desse ciclo) fica
+    registrado no log. Instante sem fuso é lido como UTC.
+    """
+    try:
+        instante = datetime.fromisoformat(trigger_ts)
+    except (TypeError, ValueError):
+        _log(
+            "warn",
+            "trigger_ts ilegível — corte de resíduo usa o relógio real",
+            trigger_ts=trigger_ts,
+        )
+        return datetime.now(timezone.utc)
+    if instante.tzinfo is None:
+        instante = instante.replace(tzinfo=timezone.utc)
+    return instante
+
+
 def _discard_zero_zona_sentinel_when_real_zonas_exist(
     snapshots: list[LatestSnapshot],
 ) -> list[LatestSnapshot]:
@@ -384,7 +466,9 @@ def _discard_zero_zona_sentinel_when_real_zonas_exist(
     return [s for s in snapshots if _mantem(s)]
 
 
-def fetch_snapshots(conn, cargo: int, turno: int) -> list[LatestSnapshot]:
+def fetch_snapshots(
+    conn, cargo: int, turno: int, agora: datetime | None = None
+) -> list[LatestSnapshot]:
     """Snapshot mais recente por **par** `(uf, cod_municipio_tse, cod_zona)`
     para (cargo, turno).
 
@@ -421,6 +505,16 @@ def fetch_snapshots(conn, cargo: int, turno: int) -> list[LatestSnapshot]:
     vive em `_resolve_zone_weight` — quem CHAMA `fetch_snapshots`
     (`compute_uf_projections`/`compute_participacao`) já tem
     `eleitorado_total_by_uf` disponível.
+
+    Corte de resíduo do simulado (decisão do dono 27/09): a partir do
+    instante do turno (`_ts_minimo_valido`), linhas com `ts` anterior a esse
+    instante NUNCA entram no `ranked` (filtro no WHERE, não pós-processamento
+    Python — `rn = 1` já é calculado só sobre o que sobrou). Ver constante
+    `_CORTE_RESIDUO_SIMULADO_POR_TURNO` acima.
+
+    `agora` (default `None` → `_ts_minimo_valido` usa `datetime.now(utc)`) só
+    existe para o teste conseguir simular "já passou do corte" sem depender
+    do relógio da máquina; nenhum caller de produção passa este argumento.
     """
     # `nivel` entrou com a spec 021 (coluna nova em `snapshots`, migration
     # numerada). `COALESCE(..., 'zona')` porque toda linha gravada antes da
@@ -433,7 +527,18 @@ def fetch_snapshots(conn, cargo: int, turno: int) -> list[LatestSnapshot]:
     # ⚠️ Dependência de ordem de deploy: esta query exige a coluna. A
     # migration é aditiva e idempotente, e tem de ser aplicada ANTES de o
     # código subir (mesma disciplina da 0009).
-    sql = """
+    #
+    # Corte de resíduo do simulado (decisão do dono 27/09, ver
+    # `_ts_minimo_valido` acima): filtramos por `ts` — coluna indexada em
+    # `ix_snap_lookup_par` — nunca por `payload->>'ele'`, que destoastaria o
+    # JSONB inteiro de cada linha no hot path.
+    corte = _ts_minimo_valido(turno, agora)
+    params: list[Any] = [cargo, turno]
+    filtro_corte = ""
+    if corte is not None:
+        filtro_corte = " AND ts >= %s"
+        params.append(corte)
+    sql = f"""
         WITH ranked AS (
             SELECT
                 uf,
@@ -449,14 +554,14 @@ def fetch_snapshots(conn, cargo: int, turno: int) -> list[LatestSnapshot]:
                     ORDER BY ts DESC, id DESC
                 ) AS rn
             FROM snapshots
-            WHERE cargo = %s AND turno = %s
+            WHERE cargo = %s AND turno = %s{filtro_corte}
         )
         SELECT uf, cod_municipio_tse, cod_zona, nivel, pct_apurado, payload, ts
         FROM ranked
         WHERE rn = 1
     """
     with conn.cursor() as cur:
-        cur.execute(sql, (cargo, turno))
+        cur.execute(sql, tuple(params))
         rows = cur.fetchall()
     raw: list[LatestSnapshot] = [
         {
@@ -1670,6 +1775,7 @@ def fetch_municipio_aggregates(
     conn,
     cargo: int,
     turno: int,
+    agora: datetime | None = None,
 ) -> dict[tuple[str, int], dict[str, Any]]:
     """Agrega snapshots por **par** `(município, zona)` em totais por
     município (S04/F2, reescrito na Fase 3 do plano de 11/09).
@@ -1713,8 +1819,20 @@ def fetch_municipio_aggregates(
     2.651 para 35.757 linhas (13,5x, 226 s de query) além de resolver o
     município pela UF errada. O fix da época (casar por `uf`) deixou de ser
     necessário quando o JOIN inteiro saiu.
+
+    Corte de resíduo do simulado (decisão do dono 27/09): mesma regra e
+    mesma constante de `fetch_snapshots` — `_ts_minimo_valido`. Filtro por
+    `s.ts` (indexado), dentro do `WHERE` do CTE, nunca por
+    `s.payload->>'ele'`. `agora` idem — só para teste, nenhum caller de
+    produção passa este argumento.
     """
-    sql = """
+    corte = _ts_minimo_valido(turno, agora)
+    params: list[Any] = [cargo, turno]
+    filtro_corte = ""
+    if corte is not None:
+        filtro_corte = " AND s.ts >= %s"
+        params.append(corte)
+    sql = f"""
         WITH ranked AS (
             SELECT
                 s.uf,
@@ -1728,7 +1846,7 @@ def fetch_municipio_aggregates(
                     ORDER BY s.ts DESC, s.id DESC
                 ) AS rn
             FROM snapshots s
-            WHERE s.cargo = %s AND s.turno = %s
+            WHERE s.cargo = %s AND s.turno = %s{filtro_corte}
         )
         SELECT r.uf, r.cod_zona, r.pct_apurado, r.votos_total, r.payload,
                r.cod_municipio_tse
@@ -1737,7 +1855,7 @@ def fetch_municipio_aggregates(
     """
     try:
         with conn.cursor() as cur:
-            cur.execute(sql, (cargo, turno))
+            cur.execute(sql, tuple(params))
             rows = cur.fetchall()
     except Exception as exc:  # noqa: BLE001
         _log("warn", "fetch_municipio_aggregates failed", error=str(exc))
@@ -7561,7 +7679,9 @@ def _do_project_proporcional(
         # `_discard_zero_zona_sentinel_when_real_zonas_exist`; o que restar é
         # SOMADO por `combinar_entradas` — nunca uma escolhida e as outras
         # descartadas.
-        snapshots = fetch_snapshots(conn, req.cargo, req.turno)
+        snapshots = fetch_snapshots(
+            conn, req.cargo, req.turno, agora=_instante_do_gatilho(req.trigger_ts)
+        )
         # Spec 021 — mesma separação do ciclo majoritário, e pelo mesmo
         # motivo: o agregado de nível "uf" tem `cod_zona = 0` e entraria na
         # guarda de sanidade (`check_zona_merge_sanity`) e no
@@ -7978,7 +8098,12 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
             # Zona com um único par sai inalterada. `raw_snapshots` (pré-merge)
             # é mantido para a guarda de sanidade logo abaixo — comparar o
             # ANTES e o DEPOIS do merge é o que detecta multiplicação.
-            raw_snapshots = fetch_snapshots(conn, req.cargo, req.turno)
+            raw_snapshots = fetch_snapshots(
+                conn,
+                req.cargo,
+                req.turno,
+                agora=_instante_do_gatilho(req.trigger_ts),
+            )
             # Spec 021 — o agregado do TSE (nível "uf"/"br") sai da lista do
             # MODELO aqui, ANTES do merge. Se ficasse, `merge_pairs_into_zonas`
             # o trataria como um par de `cod_zona = 0` e ele viraria uma "zona"
@@ -8060,7 +8185,10 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
             # vazio + log warn — o payload UF cai pra esqueleto.
             zona_municipio = fetch_zona_municipio(conn)
             municipio_aggregates = fetch_municipio_aggregates(
-                conn, req.cargo, req.turno
+                conn,
+                req.cargo,
+                req.turno,
+                agora=_instante_do_gatilho(req.trigger_ts),
             )
             series_by_uf = fetch_series_temporais(
                 conn, req.cargo, req.turno, window_hours=24

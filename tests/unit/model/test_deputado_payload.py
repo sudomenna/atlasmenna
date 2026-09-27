@@ -889,7 +889,17 @@ def test_combinacao_nao_confere_contra_qe_parcial_do_tse() -> None:
 #: que `_discard_zero_zona_sentinel_when_real_zonas_exist` nem olha o `ts`.
 #: Testes que EXERCITAM o desempate por frescor passam `"ts"` explícito e
 #: distinto em cada linha da fixture — ver `test_uf_com_mais_de_uma_linha_de_zona_loga_info_nao_warn`.
-_DEFAULT_TS = datetime(2026, 1, 1, tzinfo=timezone.utc)
+#: 04/10 18h00 UTC: depois do corte de resíduo do simulado (04/10 03h00 UTC,
+#: `_CORTE_RESIDUO_SIMULADO_POR_TURNO`) e antes do `trigger_ts` padrão desta
+#: suíte (21h00 UTC). Era 01/01/2026 até 27/09.
+_DEFAULT_TS = datetime(2026, 10, 4, 18, 0, tzinfo=timezone.utc)
+
+
+def _instante(ts: Any) -> datetime:
+    """`ts` de fixture (ISO ou `datetime`) como instante comparável ao corte."""
+    if isinstance(ts, str):
+        return datetime.fromisoformat(ts)
+    return ts
 
 
 class _FakeCursor:
@@ -906,7 +916,10 @@ class _FakeCursor:
             # 7 colunas desde a spec 021 — `nivel` entre `cod_zona` e
             # `pct_apurado`, com default `"zona"` igual ao `COALESCE` da query
             # (mantém as fixtures pré-021 válidas; agregado declara `"nivel"`).
-            cargo, turno = params
+            # Corte de resíduo do simulado (27/09): 3º parâmetro opcional
+            # (`ts >= %s`) quando o `trigger_ts` já passou do corte.
+            cargo, turno, *rest = params
+            corte = rest[0] if rest else None
             self._rows = [
                 (
                     s["uf"],
@@ -918,7 +931,9 @@ class _FakeCursor:
                     s.get("ts", _DEFAULT_TS),
                 )
                 for s in self._conn.snapshots
-                if s["cargo"] == cargo and s["turno"] == turno
+                if s["cargo"] == cargo
+                and s["turno"] == turno
+                and (corte is None or _instante(s.get("ts", _DEFAULT_TS)) >= corte)
             ]
         elif "FROM eleitorado" in sql:
             if self._conn.eleitorado_quebrado:
@@ -1026,6 +1041,21 @@ def _snapshot(uf: str, envelope: dict[str, Any], pct: float = 100.0) -> dict[str
         "pct_apurado": pct,
         "payload": envelope,
     }
+
+
+def test_ciclo_do_cargo_6_ignora_leitura_do_simulado_depois_do_corte(ciclo_deputado) -> None:
+    """Resíduo do simulado (medido 27/09: ~296 mil linhas de 23–26/09 em
+    produção). Uma UF cuja ÚNICA leitura é do simulado entra no cálculo com
+    gatilho de 27/09 (antes do corte, comportamento antigo) e fica FORA com
+    gatilho da noite de 04/10 — o caminho proporcional passa pelo mesmo
+    `fetch_snapshots` do majoritário."""
+    linha = {**_snapshot("SP", _envelope_dez_vagas()), "ts": "2026-09-24T16:00:00+00:00"}
+
+    _s, _r, antes = ciclo_deputado([linha], trigger_ts="2026-09-27T12:00:00Z")
+    assert antes and "SP" in antes[0][1], "antes do corte a leitura antiga ainda conta"
+
+    _s, _r, depois = ciclo_deputado([linha], trigger_ts="2026-10-04T21:00:00Z")
+    assert not (depois and "SP" in depois[0][1]), "depois do corte o resíduo não pode publicar SP"
 
 
 def test_ciclo_do_cargo_6_publica_bancada_e_detalhe_por_uf(ciclo_deputado) -> None:

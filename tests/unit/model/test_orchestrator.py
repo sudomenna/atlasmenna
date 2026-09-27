@@ -35,7 +35,22 @@ import pytest
 #: que `_discard_zero_zona_sentinel_when_real_zonas_exist` nem olha o `ts`.
 #: Os dois testes que exercitam o desempate por frescor passam `"ts"`
 #: explícito e distinto em cada linha da fixture.
-_DEFAULT_TS = datetime(2026, 1, 1, tzinfo=timezone.utc)
+#:
+#: 04/10 18h00 UTC (15h BRT): depois do corte de resíduo do simulado
+#: (`_CORTE_RESIDUO_SIMULADO_POR_TURNO`, 04/10 03h00 UTC) e antes do
+#: `trigger_ts` que quase todo teste usa (18h23 UTC). Até 27/09 era 01/01/2026
+#: — com o corte seguindo o `trigger_ts`, uma linha dessas passou a ser
+#: resíduo, e é assim que deve ser.
+_DEFAULT_TS = datetime(2026, 10, 4, 18, 0, tzinfo=timezone.utc)
+
+
+def _instante(ts: Any) -> datetime:
+    """`ts` de fixture como instante: algumas fixtures o declaram em ISO
+    (`_agregado_uf`), outras como `datetime` — o banco real devolve sempre
+    `timestamptz`, e o `FakeCursor` precisa comparar os dois com o corte."""
+    if isinstance(ts, str):
+        return datetime.fromisoformat(ts)
+    return ts
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +185,13 @@ class FakeCursor:
             # fetch_municipio_aggregates: mesma CTE, partição por par. O
             # `cod_municipio_tse` vem do snapshot (chave `cod_municipio_tse`
             # da fixture, 0 quando ausente — sentinela, ignorada pela função).
-            cargo, turno = params
+            #
+            # Corte de resíduo do simulado (27/09): quando `fetch_
+            # municipio_aggregates` calcula um corte, ela acrescenta um 3º
+            # parâmetro (`ts >= %s`) — `*rest` absorve isso sem quebrar as
+            # dezenas de chamadas existentes que só passam (cargo, turno).
+            cargo, turno, *rest = params
+            corte = rest[0] if rest else None
             self._last_rows = [
                 (
                     s["uf"],
@@ -181,7 +202,9 @@ class FakeCursor:
                     int(s.get("cod_municipio_tse") or 0),
                 )
                 for s in self._conn.snapshots
-                if s["cargo"] == cargo and s["turno"] == turno
+                if s["cargo"] == cargo
+                and s["turno"] == turno
+                and (corte is None or _instante(s.get("ts", _DEFAULT_TS)) >= corte)
             ]
         elif "FROM snapshots" in sql:
             # fetch_snapshots — 7 colunas desde 2026-09-26 (cod_municipio_tse
@@ -194,7 +217,10 @@ class FakeCursor:
             # MESMO default do `COALESCE` da query e de `nivel_do_snapshot`, e
             # é o que mantém as dezenas de fixtures pré-spec-021 válidas sem
             # tocá-las. Fixture que quer agregado declara `"nivel": "uf"`/`"br"`.
-            cargo, turno = params
+            #
+            # Corte de resíduo do simulado (27/09) — ver comentário acima.
+            cargo, turno, *rest = params
+            corte = rest[0] if rest else None
             self._last_rows = [
                 (
                     s["uf"],
@@ -206,7 +232,9 @@ class FakeCursor:
                     s.get("ts", _DEFAULT_TS),
                 )
                 for s in self._conn.snapshots
-                if s["cargo"] == cargo and s["turno"] == turno
+                if s["cargo"] == cargo
+                and s["turno"] == turno
+                and (corte is None or _instante(s.get("ts", _DEFAULT_TS)) >= corte)
             ]
         elif "FROM historical_results" in sql:
             cargo, turno = params
@@ -1868,6 +1896,286 @@ def test_fetch_snapshots_mantem_zonas_reais_sozinhas(fake_db) -> None:
 
     assert len(out) == 2
     assert {s["cod_zona"] for s in out} == {1, 2}
+
+
+# ---------------------------------------------------------------------------
+# Corte de resíduo do simulado (decisão do dono, 27/09/2026)
+#
+# Produção rodou o simulado oficial do TSE (23-26/09, seguindo até 03/10)
+# sobre os MESMOS pares uf×município×zona dos reais, com `pct_apurado` =
+# 100% — sem este corte, todo par sem boletim real ainda gravado em 04/10
+# entraria no cálculo com os votos do simulado (docs/reference/risks.md,
+# docs/operations/runbook.md). `_ts_minimo_valido` é testada isolada (pura,
+# sem DB) e depois via `fetch_snapshots`/`fetch_municipio_aggregates`
+# (com FakeCursor — real Postgres não é tocado aqui).
+# ---------------------------------------------------------------------------
+
+
+def test_ts_minimo_valido_antes_do_corte_devolve_none() -> None:
+    """Antes do instante do turno, o filtro NÃO se aplica — comportamento
+    IDÊNTICO ao anterior a esta mudança. Cobre hoje (27/09), o ensaio de
+    03/10, e os testes de integração que inserem `ts = now()`."""
+    from api.model.project import _ts_minimo_valido
+
+    agora = datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc)
+    assert _ts_minimo_valido(1, agora) is None
+
+
+def test_ts_minimo_valido_depois_do_corte_devolve_o_instante_do_turno() -> None:
+    """04/10 20h UTC = 17h BRT, bem depois da virada (00h BRT = 03h UTC)."""
+    from api.model.project import _ts_minimo_valido
+
+    agora = datetime(2026, 10, 4, 20, 0, tzinfo=timezone.utc)
+    corte = _ts_minimo_valido(1, agora)
+    assert corte == datetime(2026, 10, 4, 3, 0, tzinfo=timezone.utc)
+
+
+def test_ts_minimo_valido_no_limite_inclui() -> None:
+    """`agora` exatamente igual ao instante do corte já ATIVA o filtro —
+    prova o `>=`, não `>`, do lado de `agora` (a linha-limite do lado do
+    `ts` é coberta por `test_fetch_snapshots_no_limite_ts_igual_ao_corte_entra`
+    abaixo)."""
+    from api.model.project import _ts_minimo_valido
+
+    corte_turno1 = datetime(2026, 10, 4, 3, 0, tzinfo=timezone.utc)
+    assert _ts_minimo_valido(1, corte_turno1) == corte_turno1
+
+
+def test_ts_minimo_valido_turno_2_usa_25_10() -> None:
+    from api.model.project import _ts_minimo_valido
+
+    agora = datetime(2026, 10, 25, 4, 0, tzinfo=timezone.utc)
+    assert _ts_minimo_valido(2, agora) == datetime(2026, 10, 25, 3, 0, tzinfo=timezone.utc)
+
+
+def test_ts_minimo_valido_turno_desconhecido_fail_open() -> None:
+    """Turno fora de {1, 2} nunca deveria acontecer em produção — fail-open
+    (mantém o dado) em vez de arriscar um corte com instante errado."""
+    from api.model.project import _ts_minimo_valido
+
+    agora = datetime(2026, 12, 31, tzinfo=timezone.utc)
+    assert _ts_minimo_valido(99, agora) is None
+
+
+def test_fetch_snapshots_corte_ignora_par_so_com_residuo_do_simulado(fake_db) -> None:
+    """Cenário do briefing: par A (MUNICÍPIO 1001) só tem a linha do
+    simulado (24/09); par B (MUNICÍPIO 1002) tem a linha do simulado E uma
+    linha nova (04/10 17h30 BRT, já real). Com `agora` = 04/10 18h BRT: A
+    fica FORA do resultado (nenhuma linha sobrevive ao filtro nessa
+    partição — não é "voto zerado", é ausência); B usa a linha NOVA."""
+    from api.model.project import fetch_snapshots
+
+    ts_simulado = datetime(2026, 9, 24, 10, 0, tzinfo=timezone.utc)
+    ts_real = datetime(2026, 10, 4, 20, 30, tzinfo=timezone.utc)  # 17h30 BRT
+    snapshots = [
+        {
+            "cargo": 1, "turno": 1, "uf": "SP", "cod_municipio_tse": 1001,
+            "cod_zona": 1, "pct_apurado": 100.0, "ts": ts_simulado,
+            "payload": _synthetic_envelope({100: 90.0}),
+        },
+        {
+            "cargo": 1, "turno": 1, "uf": "SP", "cod_municipio_tse": 1002,
+            "cod_zona": 1, "pct_apurado": 100.0, "ts": ts_simulado,
+            "payload": _synthetic_envelope({100: 90.0}),
+        },
+        {
+            "cargo": 1, "turno": 1, "uf": "SP", "cod_municipio_tse": 1002,
+            "cod_zona": 1, "pct_apurado": 12.0, "ts": ts_real,
+            "payload": _synthetic_envelope({100: 40.0}),
+        },
+    ]
+    conn = fake_db(snapshots, [], [])
+
+    agora_pos_virada = datetime(2026, 10, 4, 21, 0, tzinfo=timezone.utc)
+    out = fetch_snapshots(conn, cargo=1, turno=1, agora=agora_pos_virada)
+
+    municipios = {s["cod_municipio_tse"]: s for s in out}
+    assert 1001 not in municipios
+    assert 1002 in municipios
+    assert municipios[1002]["pct_apurado"] == 12.0
+
+
+def test_fetch_snapshots_corte_nao_se_aplica_antes_da_virada(fake_db) -> None:
+    """Mesmo par A do teste acima, mas `agora` ainda não chegou no corte —
+    comportamento idêntico ao anterior a esta mudança: o resíduo do
+    simulado aparece (a mudança não apaga `snapshots` — constituição § 10 —
+    só o CÁLCULO passa a ignorar, e só depois da virada)."""
+    from api.model.project import fetch_snapshots
+
+    ts_simulado = datetime(2026, 9, 24, 10, 0, tzinfo=timezone.utc)
+    snapshots = [
+        {
+            "cargo": 1, "turno": 1, "uf": "SP", "cod_municipio_tse": 1001,
+            "cod_zona": 1, "pct_apurado": 100.0, "ts": ts_simulado,
+            "payload": _synthetic_envelope({100: 90.0}),
+        },
+    ]
+    conn = fake_db(snapshots, [], [])
+
+    agora_antes_da_virada = datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc)
+    out = fetch_snapshots(conn, cargo=1, turno=1, agora=agora_antes_da_virada)
+
+    assert len(out) == 1
+    assert out[0]["cod_municipio_tse"] == 1001
+
+
+def test_fetch_snapshots_no_limite_ts_igual_ao_corte_entra(fake_db) -> None:
+    """Linha com `ts` EXATAMENTE igual ao instante do corte é dado do DIA da
+    eleição, não resíduo — entra (`>=`, não `>`, do lado do `ts`)."""
+    from api.model.project import fetch_snapshots
+
+    corte = datetime(2026, 10, 4, 3, 0, tzinfo=timezone.utc)  # 00h BRT
+    snapshots = [
+        {
+            "cargo": 1, "turno": 1, "uf": "SP", "cod_municipio_tse": 2001,
+            "cod_zona": 1, "pct_apurado": 0.0, "ts": corte,
+            "payload": _synthetic_envelope({100: 0.0}),
+        },
+    ]
+    conn = fake_db(snapshots, [], [])
+
+    out = fetch_snapshots(conn, cargo=1, turno=1, agora=corte)
+
+    assert len(out) == 1
+
+
+def test_fetch_municipio_aggregates_corte_ignora_par_so_com_residuo(fake_db) -> None:
+    """Mesmo cenário de `test_fetch_snapshots_corte_ignora_par_so_com_
+    residuo_do_simulado`, agora pelo caminho de `fetch_municipio_
+    aggregates` (mesma constante/regra, filtro próprio no SQL)."""
+    from api.model.project import fetch_municipio_aggregates
+
+    ts_simulado = datetime(2026, 9, 24, 10, 0, tzinfo=timezone.utc)
+    ts_real = datetime(2026, 10, 4, 20, 30, tzinfo=timezone.utc)
+    snapshots = [
+        {
+            "cargo": 1, "turno": 1, "uf": "SP", "cod_municipio_tse": 1001,
+            "cod_zona": 1, "pct_apurado": 100.0, "votos_total": 100,
+            "ts": ts_simulado, "payload": _synthetic_envelope({100: 90.0}),
+        },
+        {
+            "cargo": 1, "turno": 1, "uf": "SP", "cod_municipio_tse": 1002,
+            "cod_zona": 1, "pct_apurado": 100.0, "votos_total": 100,
+            "ts": ts_simulado, "payload": _synthetic_envelope({100: 90.0}),
+        },
+        {
+            "cargo": 1, "turno": 1, "uf": "SP", "cod_municipio_tse": 1002,
+            "cod_zona": 1, "pct_apurado": 12.0, "votos_total": 12,
+            "ts": ts_real, "payload": _synthetic_envelope({100: 40.0}),
+        },
+    ]
+    conn = fake_db(snapshots, [], [])
+
+    agora_pos_virada = datetime(2026, 10, 4, 21, 0, tzinfo=timezone.utc)
+    out = fetch_municipio_aggregates(conn, cargo=1, turno=1, agora=agora_pos_virada)
+
+    assert ("SP", 1001) not in out
+    assert ("SP", 1002) in out
+    assert out[("SP", 1002)]["pct_apurado"] == 12.0
+
+
+def test_fetch_snapshots_sql_so_ganha_filtro_de_ts_quando_corte_ativo(fake_db) -> None:
+    """Prova o TEXTO da SQL, não só o comportamento via `FakeCursor` (que
+    reimplementa o filtro em Python e não pegaria uma mutação `>=` → `>`
+    na string da query real). Sem corte: SQL igual à de sempre, sem
+    `ts >= %s`. Com corte: a cláusula aparece — e é por `ts`, nunca por
+    `payload->>'ele'` (que destoastaria o JSONB inteiro no hot path)."""
+    from api.model.project import fetch_snapshots
+
+    conn = fake_db([], [], [])
+
+    fetch_snapshots(conn, cargo=1, turno=1, agora=datetime(2026, 9, 27, tzinfo=timezone.utc))
+    sql_sem_corte = conn.executed_sqls[-1]
+    assert "ts >= %s" not in sql_sem_corte
+    assert "payload->>'ele'" not in sql_sem_corte
+
+    fetch_snapshots(
+        conn, cargo=1, turno=1,
+        agora=datetime(2026, 10, 4, 21, 0, tzinfo=timezone.utc),
+    )
+    sql_com_corte = conn.executed_sqls[-1]
+    assert "ts >= %s" in sql_com_corte
+    assert "payload->>'ele'" not in sql_com_corte
+
+
+def test_ciclo_majoritario_corta_pelo_trigger_ts_e_nao_pelo_relogio(
+    fake_db, minimal_dataset, monkeypatch
+) -> None:
+    """Constituição § 6: o mesmo `(cargo, turno, trigger_ts)` sobre as mesmas
+    linhas dá o mesmo resultado em qualquer data. O corte decide "já é dia da
+    eleição?" pelo `trigger_ts` do ciclo — com gatilho de 27/09 a SQL sai sem
+    o filtro, com gatilho de 04/10 sai com ele, seja qual for o relógio da
+    máquina que roda o teste. Discrimina nos dois sentidos: se a produção
+    voltar a usar o relógio real, o primeiro caso quebra a partir de 04/10 e o
+    segundo quebra antes dele."""
+    from api.model import project as proj_mod
+
+    snapshots, historical, eleitorado = minimal_dataset
+    monkeypatch.setattr(proj_mod, "post_edge_write", lambda payload, payloads_uf=None: None)
+
+    for trigger_ts, espera_corte in (
+        ("2026-09-27T12:00:00Z", False),
+        ("2026-10-04T18:23:15Z", True),
+    ):
+        conn = fake_db(list(snapshots), historical, eleitorado)
+        status, _ = proj_mod._do_project(
+            json.dumps({"cargo": 1, "turno": 1, "trigger_ts": trigger_ts}).encode()
+        )
+        assert status == 200
+        sqls = [q for q in conn.executed_sqls if "FROM snapshots" in q]
+        assert sqls, "o ciclo tem de ler snapshots"
+        for q in sqls:
+            assert ("ts >= %s" in q) is espera_corte, (trigger_ts, q)
+
+
+def test_instante_do_gatilho_le_iso_com_z_e_sem_fuso_como_utc() -> None:
+    from api.model.project import _instante_do_gatilho
+
+    assert _instante_do_gatilho("2026-10-04T18:23:15Z") == datetime(
+        2026, 10, 4, 18, 23, 15, tzinfo=timezone.utc
+    )
+    assert _instante_do_gatilho("2026-10-04T18:23:15") == datetime(
+        2026, 10, 4, 18, 23, 15, tzinfo=timezone.utc
+    )
+
+
+def test_instante_do_gatilho_ilegivel_cai_no_relogio_e_nao_desliga_o_corte() -> None:
+    """Fail-safe: `trigger_ts` ilegível não pode virar "sem corte" — isso poria
+    o resíduo do simulado no cálculo da noite."""
+    from api.model.project import _instante_do_gatilho
+
+    antes = datetime.now(timezone.utc)
+    instante = _instante_do_gatilho("...")
+    assert instante.tzinfo is not None
+    assert instante >= antes
+
+
+def test_fetch_municipio_aggregates_sql_so_ganha_filtro_de_ts_quando_corte_ativo(
+    fake_db,
+) -> None:
+    """`fetch_municipio_aggregates` também dispara a query de `eleitorado`
+    (peso do par) logo depois — por isso filtramos `executed_sqls` pela
+    query de `snapshots` (âncora `votos_total`, como no `FakeCursor`) em vez
+    de olhar só a última SQL executada."""
+    from api.model.project import fetch_municipio_aggregates
+
+    def _ultima_sql_de_snapshots(conn) -> str:
+        candidatas = [s for s in conn.executed_sqls if "votos_total" in s]
+        return candidatas[-1]
+
+    conn = fake_db([], [], [])
+
+    fetch_municipio_aggregates(
+        conn, cargo=1, turno=1,
+        agora=datetime(2026, 9, 27, tzinfo=timezone.utc),
+    )
+    assert "s.ts >= %s" not in _ultima_sql_de_snapshots(conn)
+
+    fetch_municipio_aggregates(
+        conn, cargo=1, turno=1,
+        agora=datetime(2026, 10, 4, 21, 0, tzinfo=timezone.utc),
+    )
+    assert "s.ts >= %s" in _ultima_sql_de_snapshots(conn)
 
 
 # ---------------------------------------------------------------------------

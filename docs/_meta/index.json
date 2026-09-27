@@ -437,6 +437,14 @@
       "status": "accepted",
       "date": "2026-09-27",
       "path": "docs/architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md"
+    },
+    {
+      "id": "0054",
+      "title": "Resíduo do simulado oficial do TSE: o cálculo ignora leituras anteriores ao dia da eleição (corte por turno, pelo trigger_ts)",
+      "status": "accepted",
+      "date": "2026-09-27",
+      "note": "Decisão do dono (opção B: ignorar no cálculo, não apagar). fetch_snapshots e fetch_municipio_aggregates (api/model/project.py) filtram `ts >= corte` no WHERE da CTE, corte por turno espelhando lib/config/calendar.ts (amarrado por tests/unit/model/test_corte_residuo_calendario_sync.py). Gatilho é req.trigger_ts (constituição § 6), não o relógio da máquina — achado do constitution-guard em 27/09. Apagar fisicamente o resíduo (opção A) fica para depois da eleição, decisão separada do dono.",
+      "path": "docs/architecture/adrs/0054-corte-residuo-simulado-tse-por-turno.md"
     }
   ],
   "nfr": {

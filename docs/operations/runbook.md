@@ -1290,12 +1290,38 @@ em 23–24/09. **Mas depois de desarmar, ele passa a vigiar a gaveta errada**: o
 a outra. Repontar o `EDGE_CONFIG` do `.env.local` para `ecfg_mcoa3usgvm5dbqb27vae8ptmpdxl`
 faz parte do checklist abaixo.
 
-⚠️ **Resíduo no banco, a limpar antes de 04/10**: `DATABASE_URL` em produção é o banco real, e
-o ciclo grava `snapshots` e a série por candidatura a cada rodada. Dois dias de simulado
-deixam linhas de mentira lá. `fetch_snapshots` decide por frescor de `ts`, então as linhas de
-setembro provavelmente não contaminam o cálculo de outubro — mas a **série** (spec 020) desenha
-por candidatura e pode mostrar pontos do ensaio. Conferir com o procedimento de
-[resíduo de harness no banco](#conferir-resíduo-de-harness-no-banco).
+🔴 **Resíduo no banco — medido em 27/09, filtro entregue** (decisão do dono, opção B: não
+apagar, só ignorar no cálculo — apagar fica para depois da eleição). `DATABASE_URL` em produção
+é o banco real, e o ciclo grava `snapshots` a cada rodada. Medido em 27/09: **~296 mil linhas**
+gravadas entre 23–26/09 com os códigos de eleição do **simulado oficial do TSE** (21270/21272),
+cargos 1/3/5/6, turno 1, sobre os **MESMOS pares** uf×município×zona dos reais, com
+`pct_apurado` = 100% — e o simulado segue recebendo até a virada de 03/10. Sem correção,
+`fetch_snapshots` (`api/model/project.py:469`) e `fetch_municipio_aggregates`
+(`api/model/project.py:1774`) escolhem por frescor de `ts` (`ROW_NUMBER() ... ORDER BY ts
+DESC`) — e "mais recente" não é "real": todo par sem boletim de 04/10 ainda gravado entraria
+no cálculo com os votos do simulado, porque não há nenhum outro sinal que distinga as duas
+famílias.
+
+O conserto (27/09): as duas funções agora recusam, no `WHERE` da CTE, qualquer linha com `ts`
+anterior ao início do dia da eleição do turno (`AND ts >= %s` / `AND s.ts >= %s`) — filtro por
+`ts` (coluna indexada, `ix_snap_lookup_par`), nunca por `payload->>'ele'` (destoastaria o JSONB
+inteiro de cada linha no hot path). O corte só passa a valer quando o **instante do gatilho do ciclo**
+(`trigger_ts`, o mesmo que alimenta a seed — constituição § 6; `_instante_do_gatilho`,
+`api/model/project.py:366`) já alcançou o instante do turno (`_ts_minimo_valido`,
+`api/model/project.py:336`, espelha `lib/config/calendar.ts:92-103`, amarrado por
+`tests/unit/model/test_corte_residuo_calendario_sync.py`) — antes disso (hoje, o ensaio de 03/10, os testes de
+integração que gravam `ts = now()`) o comportamento é idêntico ao anterior a esta mudança, e
+nenhuma linha some do cálculo por causa de data. `snapshots` continua append-only (constituição
+§ 10) — nada é apagado; a limpeza física do resíduo é uma decisão separada, tomada depois da
+eleição. A série por candidatura (spec 020) **não** passa por este filtro — ela lê `projections`, não
+`snapshots` —, mas tem janela própria de 24 h por `ts` **e** por `dado_ts`
+(`_SERIE_POR_CANDIDATO_SQL` e `SERIE_JANELA_HORAS = 24`, `api/model/project.py:962` e `:1068`):
+as linhas de setembro ficam fora dela na noite de 04/10. O que ainda caberia na janela seriam
+projeções gravadas em 03/10 depois das ~17h (ensaio já com os códigos reais, sem voto), se o
+modelo chegar a rodar nessa noite. ⚠️ A conferência de
+[resíduo de harness no banco](#conferir-resíduo-de-harness-no-banco) **não detecta** o resíduo
+do simulado (procura `cargo NOT IN (1,3,5,6)` e `candidato_id` 100–299); para medir este, contar
+`snapshots` por dia com `ts >= '2026-09-14'`.
 
 ### Desarmar — 🔴 checklist obrigatório antes de 04/10
 
