@@ -325,9 +325,14 @@ def test_a_exibicao_identica_com_e_sem_dvt(monkeypatch) -> None:
                 p_sem["payload"]["national"], cid
             )[campo], (cid, campo)
     for sigla in ("SP", "RJ"):
-        assert p_com["payloads_uf"][sigla]["candidatos"] == p_sem["payloads_uf"][sigla][
-            "candidatos"
+        # RF-213 (exibição) — a única diferença admitida é a etiqueta
+        # `destino`, que só existe quando o `dvt` existe
+        # (`test_destino_do_voto_exibicao.py` a cobre). Todo o resto: igual.
+        com_sem_etiqueta = [
+            {k: v for k, v in c.items() if k != "destino"}
+            for c in p_com["payloads_uf"][sigla]["candidatos"]
         ]
+        assert com_sem_etiqueta == p_sem["payloads_uf"][sigla]["candidatos"]
 
 
 # ---------------------------------------------------------------------------
@@ -475,6 +480,15 @@ def _variantes_regra_4() -> dict[str, Any]:
     }
 
 
+def _remover_destino(obj: Any) -> Any:
+    """Cópia sem nenhuma chave `destino` — a etiqueta de exibição do RF-213."""
+    if isinstance(obj, dict):
+        return {k: _remover_destino(v) for k, v in obj.items() if k != "destino"}
+    if isinstance(obj, list):
+        return [_remover_destino(v) for v in obj]
+    return obj
+
+
 @pytest.fixture
 def payload_sem_dvt(monkeypatch) -> dict[str, Any]:
     snaps, eleit = _cenario({"SP": _SHARES_B, "RJ": _SHARES_B}, _sem_dvt, cargo=1)
@@ -504,6 +518,11 @@ def test_regra_4_payload_identico_ao_sem_dvt(
         p["payload"].pop("votacao", None)
         for uf in p["payloads_uf"].values():
             uf.pop("votacao", None)
+    # RF-213 (exibição), 2026-09-27 — nas listas de candidatos `destino` só
+    # sai quando é `"anulado"` ou `"sub_judice"`. Todo `dvt` válido ⇒ nenhuma
+    # chave `destino` fora de `votacao`, e a comparação é ESTRITA nas quatro
+    # variantes (nas outras três o mapa já omite o destino).
+    assert _remover_destino(body) == body
     assert body == payload_sem_dvt
     if variante != "todos_validos":
         assert f'"n_{variante}"' in caplog.text

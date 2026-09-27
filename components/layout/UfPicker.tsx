@@ -157,7 +157,7 @@ export { ariaRessalvaVagas, margemSegundaVaga };
  */
 export function margemParaExibir(
   cargo: UfPickerCargo,
-  row: { margem_projetada: number; top_candidatos: ReadonlyArray<{ pct: number }> },
+  row: Parameters<typeof margemSegundaVaga>[0] & { margem_projetada: number },
 ): number {
   return cargo === "sen" ? margemSegundaVaga(row) : row.margem_projetada;
 }

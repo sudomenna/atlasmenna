@@ -69,6 +69,7 @@ import urllib.request
 import uuid
 from collections.abc import Iterable, Mapping
 from datetime import datetime, timezone
+from types import MappingProxyType
 from typing import Any, NamedTuple, TypedDict
 
 import numpy as np
@@ -1118,8 +1119,29 @@ def ordenar_por_parcial(
     divergência entre os dois só aparece quando apurado e projetado discordam de
     ordem: isto é, na noite da apuração, com alguém olhando o gráfico e o painel
     de resultado ao mesmo tempo, na mesma tela.
+
+    ## Anuladas no fim — porte de `ordensPorBase(...).parcial`, não só do comparador
+
+    🔴 ADR-0053 / RF-213: a candidatura de destino `"anulado"` vai para o FIM,
+    depois do comparador, numa partição ESTÁVEL — o que é, critério a critério,
+    `anuladasAoFim(rankByParcial(candidatos))` de `lib/utils/rank-parcial.ts`
+    (`ordensPorBase`). A partição fica FORA de `_chave_parcial` pela mesma razão
+    que no TypeScript fica fora de `rankByParcial`: os três critérios do
+    comparador têm o seu próprio guarda de paridade, e a regra do destino tem o
+    dela (`test_serie_por_candidato.py`). Sem isto, a série escolhia as quatro
+    por apurado e a anulada podia ocupar uma das vagas enquanto a tabela logo
+    acima a manda para o fim.
+
+    A regra é `destino != "anulado"`, NUNCA `destino == "valido"`: sub judice
+    compete, e sem destino (o TSE só publica `dvt` depois do início da
+    apuração) compete — a ordem é a de sempre, byte a byte. O `destino` que
+    chega aqui é o da lista do escopo (`destino_de`): nacional em Presidente;
+    o da UF em Governador/Senador; ausente no bloco nacional de Gov/Sen.
     """
-    return [dict(c) for c in sorted(candidatos, key=_chave_parcial)]
+    ordenados = sorted(candidatos, key=_chave_parcial)
+    competem = [dict(c) for c in ordenados if c.get("destino") != DESTINO_FORA_DA_DECISAO]
+    anuladas = [dict(c) for c in ordenados if c.get("destino") == DESTINO_FORA_DA_DECISAO]
+    return competem + anuladas
 
 
 def anexar_ponto_corrente(
@@ -4172,6 +4194,12 @@ _DESTINOS_CONHECIDOS = frozenset(_DESTINO_POR_DVT.values())
 #: está aqui, e é de propósito (regra 2).
 DESTINO_FORA_DA_DECISAO = "anulado"
 
+#: Destinos EMITIDOS nas três listas de candidatos (`EdgeCandidate.destino`,
+#: `EdgeUfCandidate.destino`, `EdgeUfRow.top_candidatos[].destino`) — os que
+#: põem etiqueta na tela. `"valido"` fica de fora: lá ele equivale a ausente
+#: ("compete") e custaria 19 B por candidatura (2026-09-27).
+DESTINOS_EXIBIDOS_NA_LISTA = frozenset({DESTINO_FORA_DA_DECISAO, "sub_judice"})
+
 _OBS_AUSENTE = "__ausente__"
 _OBS_DESCONHECIDO = "__desconhecido__"
 
@@ -4299,11 +4327,55 @@ class AnuladosNaDecisao(NamedTuple):
     nacional: frozenset[int]
     por_uf: Mapping[str, frozenset[int]]
     uf_segue_nacional: bool
+    #: O mapa de destino INTEIRO (`montar_destino_por_candidatura`), para a
+    #: EXIBIÇÃO do campo `destino` (`EdgeCandidate.destino`,
+    #: `EdgeUfCandidate.destino`, `EdgeUfRow.top_candidatos[].destino`). É o
+    #: MESMO mapa de onde `nacional`/`por_uf` saem — decisão e etiqueta nunca
+    #: discordam. Só tem candidatura com destino CONHECIDO e coerente (o mapa
+    #: já omite ausente/divergente/desconhecido); default vazio ⇒ nenhum
+    #: `destino` emitido.
+    destinos: Mapping[tuple[str, int], str] = MappingProxyType({})
 
     def da_uf(self, sigla: str) -> frozenset[int]:
         if self.uf_segue_nacional:
             return self.nacional
         return self.por_uf.get(str(sigla).strip().upper(), frozenset())
+
+    def destino_de(self, sigla: str | None, cod: int) -> str | None:
+        """Destino a EXIBIR para a candidatura `cod`, no escopo pedido.
+
+        `sigla=None` ⇒ o bloco NACIONAL (`national.candidatos`). Ali só
+        Presidente tem escopo inequívoco: em Governador/Senador o bloco
+        nacional é a UNIÃO de 27 corridas sob o mesmo espaço de número de
+        urna (o 13 de SP e o 13 da BA são candidaturas diferentes) — a mesma
+        razão pela qual RF-145 não põe NOME ali. Nenhum destino, então: a
+        tela trata ausente como "compete", que é o comportamento de antes.
+        Nem mesmo a chave `("BR", cod)` serve: em Gov/Sen ela só diz que as
+        27 candidaturas de mesmo número concordaram, não identifica uma.
+
+        `sigla` de UF ⇒ Presidente usa o destino NACIONAL (a candidatura é
+        uma só no país — o mesmo escopo de `da_uf`); Governador/Senador, o da
+        própria UF, e nunca o de outra.
+
+        Ausente do mapa ⇒ `None`. Nunca um default.
+
+        🔴 `"valido"` também ⇒ `None` (2026-09-27): nas três LISTAS de
+        candidatos o campo só é emitido quando é `"anulado"` ou
+        `"sub_judice"`. Para a tela, válido e ausente são a mesma coisa
+        ("compete"), e os 19 B de `,"destino":"valido"` por candidatura
+        derrubavam a folga de 2× do limiar do payload nacional
+        (`tests/unit/edge-config/limiar-nacional.test.ts`). NÃO vale para
+        `votacao.corrida[]` (`montar_corrida`), onde válido precisa se
+        distinguir de "ainda não publicado" (`destino_pendente`).
+        """
+        cid = int(cod)
+        if self.uf_segue_nacional:
+            destino = self.destinos.get((ESCOPO_NACIONAL, cid))
+        elif sigla is None:
+            return None
+        else:
+            destino = self.destinos.get((str(sigla).strip().upper(), cid))
+        return destino if destino in DESTINOS_EXIBIDOS_NA_LISTA else None
 
 
 SEM_ANULADOS = AnuladosNaDecisao(frozenset(), {}, False)
@@ -4326,6 +4398,7 @@ def anulados_na_decisao(
         frozenset(nacional),
         {uf: frozenset(v) for uf, v in por_uf.items()},
         int(cargo) == 1,
+        MappingProxyType(dict(destinos)),
     )
 
 
@@ -5101,8 +5174,18 @@ def aggregate_by_mesorregiao(
     uf_row: dict[str, Any],
     municipios: list[dict[str, Any]],
     historical_by_meso: dict[str, float] | None = None,
+    fora_da_decisao: frozenset[int] | set[int] | None = None,
 ) -> list[dict[str, Any]]:
     """Agrega municípios por mesorregião IBGE — S06/F4d.
+
+    ADR-0053 / RF-213 acrescenta `fora_da_decisao` — as candidaturas de voto
+    ANULADO no escopo da UF (`AnuladosNaDecisao.da_uf`: Presidente nacional,
+    Gov/Sen a UF). O líder da mesorregião e o 2º da margem saem de quem
+    COMPETE; sub judice compete. `lider_pct`/`margem` seguem em pp do total
+    da mesorregião, que inclui a anulada (base `vvc`, exibição). Mesorregião
+    em que só a anulada tem voto cai na lista inteira — mesma regra de
+    `_competidores` e do líder de município. Vazio/`None` ⇒ comportamento
+    anterior, byte a byte.
 
     Alimenta o bloco "Apuração por mesorregião" da página
     `/uf/[sigla]/governador` (spec 005, print 3 NYT-style). Determinista:
@@ -5219,13 +5302,22 @@ def aggregate_by_mesorregiao(
             sorted_cands = sorted(
                 votos_cand.items(), key=lambda kv: (-kv[1], kv[0])
             )
+            if fora_da_decisao:
+                sorted_cands = [
+                    kv for kv in sorted_cands if int(kv[0]) not in fora_da_decisao
+                ] or sorted_cands
             lider_id, lider_votos = sorted_cands[0]
             second_votos = sorted_cands[1][1] if len(sorted_cands) >= 2 else 0
             lider_pct = 100.0 * lider_votos / total
             margem = 100.0 * (lider_votos - second_votos) / total
         elif votos_cand:
             # Degenerado: tem cand_id mas total=0 (todos zero). Estável.
-            lider_id = min(votos_cand.keys())
+            # RF-213 — o menor id entre os que COMPETEM (todos anulados ⇒
+            # a lista inteira, como acima).
+            ids_meso = [
+                c for c in votos_cand if int(c) not in (fora_da_decisao or ())
+            ] or list(votos_cand)
+            lider_id = min(ids_meso)
             lider_pct = 0.0
             margem = 0.0
         else:
@@ -5338,8 +5430,11 @@ def build_uf_payloads(
 
     ADR-0053 / RF-213 acrescenta `anulados`: o líder e o 2º da UF — que dão a
     agulha da UF e o líder degenerado do município sem voto — saem das
-    candidaturas que COMPETEM. `candidatos[]` (lista, %, rank local, "Outros")
-    é exibição e não muda. `None` ⇒ comportamento anterior, byte a byte.
+    candidaturas que COMPETEM, e o líder (e o 2º da margem) de cada MUNICÍPIO
+    também. `candidatos[]` (lista, %, rank local, "Outros") é exibição e não
+    muda, exceto por ganhar `destino` quando o mapa o conhece
+    (`AnuladosNaDecisao.destino_de`). `None` ⇒ comportamento anterior, byte a
+    byte.
 
     Spec 022 (RF-209) acrescenta `votacao_by_uf` (`{uf: EdgeVotacaoUf}`, de
     `build_votacao_uf_payloads`): contagens e corrida do agregado da UF.
@@ -5452,9 +5547,10 @@ def build_uf_payloads(
         )
         # ADR-0053 / RF-213 — líder e 2º (agulha da UF) entre os que
         # COMPETEM; `ordered` segue inteiro para a exibição abaixo.
+        fora_da_uf = anulados.da_uf(sigla) if anulados is not None else frozenset()
         competem = _competidores(
             ordered,
-            anulados.da_uf(sigla) if anulados is not None else frozenset(),
+            fora_da_uf,
             onde="build_uf_payloads",
             sigla=sigla,
         )
@@ -5535,6 +5631,13 @@ def build_uf_payloads(
             sqcand_cand = identidade_cand.get("sqcand")
             if sqcand_cand:
                 candidato_payload["sqcand"] = sqcand_cand
+            # ADR-0053 / RF-213 — etiqueta do destino do voto (Presidente:
+            # nacional; Gov/Sen: o desta UF). Ausente do mapa ⇒ chave ausente.
+            destino_cand = (
+                anulados.destino_de(sigla, cid) if anulados is not None else None
+            )
+            if destino_cand is not None:
+                candidato_payload["destino"] = destino_cand
             # E2/E2b (plano § A/C) — base "comparecimento" alternativa,
             # só presente quando `_uf_projection_row` a calculou (sempre
             # o caso na Fase 1, exceto callers legados de teste que não
@@ -5653,6 +5756,17 @@ def build_uf_payloads(
                 sorted_cands = sorted(
                     votos_por_cand.items(), key=lambda kv: kv[1], reverse=True
                 )
+                # ADR-0053 / RF-213 — o líder do município (a cor dele no
+                # mapa) e o 2º da margem saem de quem COMPETE, no mesmo
+                # escopo das decisões da UF (Presidente: nacional; Gov/Sen: a
+                # UF). Sub judice compete. `votos_reportados` e o total (base
+                # `vvc`) seguem com todos: é exibição. Município em que SÓ a
+                # anulada tem voto cai na lista inteira — mesma regra de
+                # `_competidores`: o contrato exige um líder.
+                if fora_da_uf:
+                    sorted_cands = [
+                        kv for kv in sorted_cands if int(kv[0]) not in fora_da_uf
+                    ] or sorted_cands
                 lider_id, lider_votos = sorted_cands[0]
                 second_votos = sorted_cands[1][1] if len(sorted_cands) >= 2 else 0
                 total_munic = sum(votos_por_cand.values())
@@ -5711,6 +5825,8 @@ def build_uf_payloads(
             uf_row={"sigla": sigla},
             municipios=municipios_for_meso,
             historical_by_meso=None,  # spec 005 v2: enriquecer com 2022
+            # ADR-0053 / RF-213 — mesmo escopo do líder de município.
+            fora_da_decisao=fora_da_uf,
         )
 
         # Séries temporais — converte timeline em 3 séries (margem, p_vitoria, turnout).
@@ -5848,8 +5964,11 @@ def build_edge_payload(
     `composicao_vagas` ignoram as candidaturas de voto anulado. A agulha e a
     ordem de `national.candidatos` já chegam decididas via `cand_a_id`/
     `cand_b_id` e `p_vitoria` de `compute_national`. `top_candidatos`,
-    `outros` e todo percentual publicado são exibição e não mudam. `None` ⇒
-    comportamento anterior, byte a byte.
+    `outros` e todo percentual publicado são exibição e não mudam; ganham só
+    a etiqueta `destino` — `national.candidatos[]` (Presidente apenas) e
+    `por_uf[].top_candidatos[]` — quando o mapa a conhece
+    (`AnuladosNaDecisao.destino_de`). `None` ⇒ comportamento anterior, byte a
+    byte.
 
     Spec 021 acrescenta `votacao` (opcional, já montado por
     `build_votacao_payload`): as contagens absolutas do eleitorado e a
@@ -6123,6 +6242,15 @@ def build_edge_payload(
         sqcand_nat = ident_nat.get("sqcand")
         if sqcand_nat:
             candidato_nat["sqcand"] = sqcand_nat
+        # ADR-0053 / RF-213 — a etiqueta do destino do voto, do MESMO mapa que
+        # tirou a candidatura das decisões. Só Presidente: em Gov/Sen este
+        # bloco é a união de 27 corridas e o número não identifica ninguém
+        # (`AnuladosNaDecisao.destino_de`). Ausente ⇒ chave ausente.
+        destino_nat = (
+            anulados.destino_de(None, cid) if anulados is not None else None
+        )
+        if destino_nat is not None:
+            candidato_nat["destino"] = destino_nat
         # Plano § B (E2/E2b) — base "comparecimento" nacional, agregada de
         # `national_estimates_comparecimento` (mesmo bootstrap agregado de
         # `estimates_c_by_uf`, ver `_do_project`). `pct_atual` fica `None`
@@ -6341,6 +6469,15 @@ def build_edge_payload(
             pct_atual_top = r.get("pct_atual")
             if pct_atual_top is not None:
                 item_top["pct_atual"] = float(pct_atual_top)
+            # ADR-0053 / RF-213 — etiqueta do destino, no escopo desta corrida
+            # (Presidente: nacional; Gov/Sen: o da UF `sigla`). A anulada
+            # CONTINUA na lista, na posição da projeção: quem a leva para o
+            # fim é a tela. Ausente do mapa ⇒ chave ausente.
+            destino_top = (
+                anulados.destino_de(sigla, cid_top) if anulados is not None else None
+            )
+            if destino_top is not None:
+                item_top["destino"] = destino_top
             top_candidatos.append(item_top)
 
         # ── "Outros" — o que sobra depois do corte ─────────────────────────

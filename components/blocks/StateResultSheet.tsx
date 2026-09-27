@@ -220,6 +220,7 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
+import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { Figure } from "@/components/atoms/data/Figure";
 import { Sheet } from "@/components/atoms/overlays/Sheet";
 import { candidateMarkerColor } from "@/components/blocks/_candidateColor";
@@ -233,6 +234,7 @@ import {
 } from "@/components/layout/UfPicker";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import type { ViewMode } from "@/lib/state/view-mode";
+import { compete, haAnulada, NOTA_ANULADAS } from "@/lib/utils/destino-voto";
 import { formatPercent, formatPp } from "@/lib/utils/format";
 import { liderIdPorBase, ordenarTopCandidatosPorBase } from "@/lib/utils/lider-por-base";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -647,7 +649,12 @@ export function StateResultSheet({
               // fora em vez de uma. Uma regra escrita como "todas menos a
               // última" teria virado "as três primeiras" em silêncio no dia em
               // que o produtor passou a emitir quatro candidaturas.
-              const ocupaVaga = multiVaga && index < vagas;
+              //
+              // ADR-0053 / RF-213 — a anulada vem no fim
+              // (`ordenarTopCandidatosPorBase`) e nunca ocupa vaga nem
+              // recebe colocação.
+              const disputa = compete(tc);
+              const ocupaVaga = multiVaga && disputa && index < vagas;
               return (
                 <li
                   key={tc.id}
@@ -696,7 +703,7 @@ export function StateResultSheet({
                       }}
                     />
                     <span aria-hidden="true" style={{ color: "var(--text-muted)" }}>
-                      {index + 1}.
+                      {disputa ? `${index + 1}.` : "—"}
                     </span>
                     {/* 🔴 Sem `truncate`: o nome QUEBRA em vez de cortar.
                         `minWidth: 0` porque, sem `overflow: hidden`, o
@@ -717,6 +724,7 @@ export function StateResultSheet({
                     >
                       {nome}
                     </span>
+                    <DestinoEtiqueta destino={tc.destino} />
                     {partido ? (
                       <span
                         className="flex-none"
@@ -784,6 +792,22 @@ export function StateResultSheet({
               );
             })}
           </ul>
+
+          {/* ADR-0053 / RF-213 — só quando há anulada no corte. */}
+          {haAnulada(row.top_candidatos) ? (
+            <p
+              data-testid="state-sheet-nota-anuladas"
+              style={{
+                margin: "var(--space-2) 0 0",
+                font: "var(--type-body-sm)",
+                fontSize: "var(--text-xs)",
+                color: "var(--text-muted)",
+                textWrap: "pretty",
+              }}
+            >
+              {NOTA_ANULADAS}
+            </p>
+          ) : null}
 
           <Link
             href={ufHref(cargo, row.sigla)}

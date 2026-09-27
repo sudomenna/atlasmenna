@@ -105,6 +105,7 @@ import { useId, useState } from "react";
 import { PartyTag } from "@/components/atoms/data/PartyTag";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
+import { queCompetem } from "@/lib/utils/destino-voto";
 import { formatPercent, formatPp } from "@/lib/utils/format";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { partyChipInk } from "@/lib/utils/party-color";
@@ -173,7 +174,11 @@ export function strongholdsFor(
     // dia em que `TOP_CANDIDATOS_POR_UF` subir para 5 mudaria o conteúdo
     // desta tabela sem uma linha de diff neste arquivo, que é como o 3 antigo
     // virou premissa silenciosa de seis consumidores.
-    const top = (row.top_candidatos ?? []).slice(0, STRONGHOLD_POSICAO_MAX);
+    //
+    // ADR-0053 / RF-213 — posição e diferença são entre quem DISPUTA: uma
+    // anulada no topo da UF não põe ninguém em "2º" nem é o "atrás de …". O
+    // filtro vem ANTES do corte, para o corte continuar sendo de 4 que competem.
+    const top = queCompetem(row.top_candidatos ?? []).slice(0, STRONGHOLD_POSICAO_MAX);
     const i = top.findIndex((t) => t.id === candidatoId);
     if (i < 0) continue;
     const me = top[i];
@@ -392,7 +397,10 @@ export function StrongholdsPanel({
   const baseId = useId();
   const tabelaId = `${baseId}-tabela`;
   const candidatosById = new Map(candidatos.map((c) => [c.id, c]));
-  const pilulas = candidatos.slice(0, topCandidatos);
+  // ADR-0053 — a anulada não disputa, então não tem "reduto" a mostrar: sem
+  // o filtro ela ocuparia uma pílula (o `rank` do payload a conta) e a tabela
+  // dela sairia vazia, porque `strongholdsFor` a ignora.
+  const pilulas = queCompetem(candidatos).slice(0, topCandidatos);
 
   // A seleção guarda o ID, não o índice: se o payload reordenar entre dois
   // ciclos de 60s, o índice apontaria para outro candidato em silêncio.

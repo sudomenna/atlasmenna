@@ -107,9 +107,21 @@ IDX_FURO = 7
 ELENCO_MAX = 4
 
 
+#: ADR-0053 / RF-213 — destino que NÃO disputa a vaga. Espelha
+#: `DESTINO_FORA_DA_DECISAO` de `api/model/project.py`.
+DESTINO_ANULADO = "anulado"
+
+
 def rank_parcial(candidatos: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """`pct_atual` desc → `pct_projetado` desc → `id` asc (rank-parcial.ts)."""
-    return sorted(
+    """`pct_atual` desc → `pct_projetado` desc → `id` asc, anuladas no fim.
+
+    É `ordensPorBase(...).parcial` de `lib/utils/rank-parcial.ts` — o
+    comparador de `rankByParcial` seguido de `anuladasAoFim` — e o mesmo que
+    `ordenar_por_parcial` do produtor. Partição estável: `destino != "anulado"`
+    compete (sub judice e ausente incluídos), então sem destino na fixture a
+    ordem é a de antes.
+    """
+    ordenados = sorted(
         candidatos,
         key=lambda c: (
             -(c.get("pct_atual") or 0.0),
@@ -117,6 +129,9 @@ def rank_parcial(candidatos: list[dict[str, Any]]) -> list[dict[str, Any]]:
             c.get("id", 0),
         ),
     )
+    return [c for c in ordenados if c.get("destino") != DESTINO_ANULADO] + [
+        c for c in ordenados if c.get("destino") == DESTINO_ANULADO
+    ]
 
 
 def _r(x: float) -> float:
@@ -196,6 +211,33 @@ def serie_de(candidatos: list[dict[str, Any]], ts_iso: str) -> dict[str, Any] | 
         saida.append(item)
 
     return {"eixo": eixo, "cadencia_min": CADENCIA_MIN, "candidatos": saida}
+
+
+def cands_gov_da_uf(row: dict[str, Any], numeros: dict[Any, dict[str, Any]]) -> list[dict[str, Any]]:
+    """Candidaturas de Governador de UMA UF, na junção da tela.
+
+    Mesma junção de `synthesizeGovUfFromFixture`: identidade da UF, números do
+    nacional, casados por `id`. Não é o `pct` de `top_candidatos` — esse é
+    outro número, e usá-lo faria a série discordar do painel.
+
+    ADR-0053 / RF-213 — o `destino` segue a mesma precedência da tela
+    (`daUf?.destino ?? c.destino`): o da linha DA UF primeiro, o do nacional
+    como fallback. É ele que manda a anulada para o fim do elenco.
+    """
+    cands: list[dict[str, Any]] = []
+    for t in row.get("top_candidatos") or []:
+        n_ = numeros.get(t["id"])
+        if n_ is None:
+            continue
+        c = dict(n_)
+        c["nome"] = t.get("nome") or n_.get("nome")
+        c["partido"] = t.get("partido") or n_.get("partido")
+        if t.get("sqcand"):
+            c["sqcand"] = t["sqcand"]
+        if t.get("destino"):
+            c["destino"] = t["destino"]
+        cands.append(c)
+    return cands
 
 
 def _carregar_detalhes(nome: str) -> dict[str, Any]:
@@ -307,17 +349,7 @@ def main() -> int:
         # números do nacional, casados por `id`. Não é o `pct` de
         # `top_candidatos` — esse é outro número, e usá-lo faria a série
         # discordar do painel.
-        cands = []
-        for t in row.get("top_candidatos") or []:
-            n_ = numeros.get(t["id"])
-            if n_ is None:
-                continue
-            c = dict(n_)
-            c["nome"] = t.get("nome") or n_.get("nome")
-            c["partido"] = t.get("partido") or n_.get("partido")
-            if t.get("sqcand"):
-                c["sqcand"] = t["sqcand"]
-            cands.append(c)
+        cands = cands_gov_da_uf(row, numeros)
         s_ = serie_de(cands, gov["ts"])
         if s_ is None:
             continue

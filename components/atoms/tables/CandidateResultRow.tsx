@@ -88,9 +88,10 @@
 
 import type { CSSProperties } from "react";
 import { CandidateAvatar } from "@/components/atoms/data/CandidateAvatar";
+import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { PartyTag } from "@/components/atoms/data/PartyTag";
 import { candidateColor } from "@/components/blocks/_candidateColor";
-import type { EdgeCandidate } from "@/lib/edge-config/types";
+import type { EdgeCandidate, EdgeDestinoVoto } from "@/lib/edge-config/types";
 import { formatPercent, formatVotes, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -180,6 +181,14 @@ export interface CandidateResultRowProps {
    * em todas e aceitou o custo de altura. Ver {@link AVATAR_LINHA_PX}.
    */
   avatar?: { fotoUrl: string | null; eager?: boolean };
+  /**
+   * ADR-0053 / RF-213 — destinação do voto. `"anulado"` e `"sub_judice"`
+   * ganham a etiqueta textual ao lado do nome ({@link DestinoEtiqueta}); a
+   * anulada troca o número da colocação por "—", porque não disputa
+   * colocação nenhuma (ela está no fim da lista, e "13" ao lado de quem tem
+   * 30% leria como um erro de ordem). Ausente ⇒ linha idêntica à de antes.
+   */
+  destino?: EdgeDestinoVoto;
 }
 
 /**
@@ -451,6 +460,7 @@ export function CandidateResultRow({
   compact = false,
   variant = "densa",
   avatar,
+  destino,
 }: CandidateResultRowProps) {
   const atual = clampPct(pctAtual);
   const projetado = clampPct(pctProjetado);
@@ -503,7 +513,9 @@ export function CandidateResultRow({
           filhos direto na grade os transformaria em duas colunas e quebraria o
           `gridTemplateColumns` de quatro faixas. */}
       <span aria-hidden="true" style={{ font: "var(--type-data)", color: "var(--text-muted)" }}>
-        {rankProj == null || rankProj === rank ? (
+        {destino === "anulado" ? (
+          "—"
+        ) : rankProj == null || rankProj === rank ? (
           rank
         ) : (
           <>
@@ -578,6 +590,7 @@ export function CandidateResultRow({
             >
               {nome}
             </span>
+            <DestinoEtiqueta destino={destino} />
             {kit ? (
               <span className="flex-none">
                 <PartyTag color={cor} sigla={partido} size="sm" />
@@ -736,7 +749,7 @@ export function CandidateResultRow({
  */
 export type CandidateResultRowSource = Pick<
   EdgeCandidate,
-  "nome" | "partido" | "cor" | "pct_atual" | "pct_projetado" | "votos_atuais"
+  "nome" | "partido" | "cor" | "pct_atual" | "pct_projetado" | "votos_atuais" | "destino"
 > & {
   rank?: number;
   /**
@@ -800,5 +813,8 @@ export function candidateResultRowProps(
     pctProjetado: candidato.pct_projetado,
     votos: candidato.votos_atuais ?? null,
     compact,
+    // Só quando existe — `destino: undefined` explícito seria uma chave
+    // presente valendo "não sei" nos props espalhados da linha.
+    ...(candidato.destino ? { destino: candidato.destino } : {}),
   };
 }

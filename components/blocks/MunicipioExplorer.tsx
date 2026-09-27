@@ -77,6 +77,7 @@
 
 import { useCallback, useEffect, useMemo } from "react";
 
+import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { Figure } from "@/components/atoms/data/Figure";
 import { Sheet } from "@/components/atoms/overlays/Sheet";
 import { candidateColor, DATA_FILL_STROKE } from "@/components/blocks/_candidateColor";
@@ -84,6 +85,7 @@ import { type MunicipioRow, MunicipioTable } from "@/components/blocks/Municipio
 import { MunicipioWaffleGrid } from "@/components/blocks/MunicipioWaffleGrid";
 import { useMunicipioSheetStore } from "@/components/shared/municipio-sheet-store";
 import type { EdgeCandidate, EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge-config/types";
+import { compete, haAnulada, NOTA_ANULADAS } from "@/lib/utils/destino-voto";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import {
   type MunicipioVotoCandidato as FolhaRow,
@@ -136,12 +138,14 @@ function FolhaLinha({ row, rank }: { row: FolhaRow; rank: number }) {
       }}
     >
       <span aria-hidden="true" style={{ font: "var(--type-data)", color: "var(--text-muted)" }}>
-        {rank}
+        {/* ADR-0053 / RF-213 — a anulada vem no fim e não disputa colocação. */}
+        {compete(row) ? rank : "—"}
       </span>
       <div className="flex min-w-0 items-center" style={{ gap: "var(--space-2)" }}>
         <span className="truncate" style={{ font: "var(--type-body-sm)", fontWeight: 500 }}>
           {row.nome}
         </span>
+        <DestinoEtiqueta destino={row.destino} />
         <span
           className="flex-none"
           style={{
@@ -318,6 +322,19 @@ export function MunicipioExplorer({
               {linhas.map((l, i) => (
                 <FolhaLinha key={l.id} row={l} rank={i + 1} />
               ))}
+              {haAnulada(linhas) ? (
+                <p
+                  data-testid="municipio-sheet-nota-anuladas"
+                  style={{
+                    margin: "var(--space-3) 0 0",
+                    font: "var(--type-body-sm)",
+                    fontSize: "var(--text-xs)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {NOTA_ANULADAS}
+                </p>
+              ) : null}
               <p
                 style={{
                   margin: "var(--space-3) 0 0",

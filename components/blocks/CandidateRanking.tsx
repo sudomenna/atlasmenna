@@ -37,6 +37,7 @@ import {
   candidateResultRowProps,
 } from "@/components/atoms/tables/CandidateResultRow";
 import type { EdgeCandidate } from "@/lib/edge-config/types";
+import { anuladasAoFim, sufixoAriaDestino } from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 
 export interface CandidateRankingProps {
@@ -50,10 +51,12 @@ export function CandidateRanking({ candidatos, className }: CandidateRankingProp
 
   return (
     <ul className={["flex flex-col", className].filter(Boolean).join(" ")}>
-      {candidatos.map((c, i) => {
+      {/* ADR-0053 / RF-213 — anulada no fim, com a etiqueta no nome acessível. */}
+      {anuladasAoFim(candidatos).map((c, i) => {
         const props = candidateResultRowProps(c, i + 1);
         const ariaLabel =
-          `${props.nome} (${c.partido}): ${formatPercent(props.pctAtual, 1)} apurado, ` +
+          `${props.nome}${sufixoAriaDestino(c.destino)} (${c.partido}): ` +
+          `${formatPercent(props.pctAtual, 1)} apurado, ` +
           `${formatPercent(props.pctProjetado, 1)} projetado`;
 
         return (

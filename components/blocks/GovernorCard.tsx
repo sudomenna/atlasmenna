@@ -27,9 +27,11 @@
  *   - Barras decorativas com aria-hidden — info textual está nos rótulos.
  */
 
+import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { candidateColor } from "@/components/blocks/_candidateColor";
-import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
+import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
 import { classificarProjecao } from "@/lib/utils/desfecho-governador";
+import { anuladasAoFim, compete } from "@/lib/utils/destino-voto";
 import { formatPercentTrim } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -144,6 +146,8 @@ interface Row {
   /** Já resolvida pela SIGLA — ver o `candidateColor` abaixo. */
   corResolvida: string;
   rank: number; // só pra "Outros" virar cinza
+  /** ADR-0053 / RF-213 — etiqueta e posição; ausente ⇒ compete. */
+  destino?: EdgeDestinoVoto;
 }
 
 export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCardProps) {
@@ -162,7 +166,10 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
   // entradas e nenhum `outros` — legítimo, e a tela tem de continuar
   // renderizando. O corte é o que amarra ESTA superfície ao número que o dono
   // pediu, em vez de deixá-la crescer com o que o produtor resolver emitir.
-  const top = (uf.top_candidatos ?? []).slice(0, 4).map<Row>((t, i) => {
+  // ADR-0053 / RF-213 — anulada no fim das 4 linhas (antes de "Outros"), com
+  // etiqueta; o líder do cartão é o 1º QUE COMPETE. Sem anulada, a ordem é a
+  // de sempre.
+  const top = anuladasAoFim((uf.top_candidatos ?? []).slice(0, 4)).map<Row>((t, i) => {
     const meta = candIndex.get(t.id);
     return {
       id: t.id,
@@ -193,6 +200,7 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
       // Barra = preenchimento com extensão ⇒ cor-base.
       corResolvida: candidateColor(meta?.partido, meta?.rank ?? i + 1),
       rank: meta?.rank ?? i + 1,
+      ...(t.destino ? { destino: t.destino } : {}),
     };
   });
 
@@ -243,7 +251,7 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
       ]
     : top;
 
-  const liderRow = top[0];
+  const liderRow = top.find(compete);
   // 🔊 `aria-label` — sigla INTEIRA, de propósito (2026-09-19). A abreviação
   // resolve largura, e aqui não há largura: "REPUBLICANOS" dito por inteiro é
   // exatamente o que o TSE publica. A regra está em `lib/utils/sigla-partido.ts`.
@@ -319,7 +327,7 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
         {/* Rows */}
         <ul className="flex flex-col gap-1">
           {rows.map((r, idx) => {
-            const isLider = idx === 0 && r.id !== null;
+            const isLider = r.id !== null && r.id === liderRow?.id;
             const pctWidth = Math.max(0, Math.min(100, r.pct));
             return (
               <li key={r.id ?? `outros-${idx}`} className="flex items-center gap-2 text-xs">
@@ -328,7 +336,7 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
                   style={{ color: "var(--color-text-muted)" }}
                   aria-hidden
                 >
-                  {r.id === null ? "" : `${idx + 1}°`}
+                  {r.id === null ? "" : compete(r) ? `${idx + 1}°` : "—"}
                 </span>
                 <span className="flex-1 truncate" style={{ color: "var(--color-text)" }}>
                   {r.nome}
@@ -339,6 +347,11 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
                       {siglaExibicao(r.partido)}
                     </span>
                   )}
+                  {r.destino ? (
+                    <span className="ml-1">
+                      <DestinoEtiqueta destino={r.destino} />
+                    </span>
+                  ) : null}
                   {isLider && (
                     <span
                       className="ml-2"

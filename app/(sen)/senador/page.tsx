@@ -67,7 +67,8 @@ import { cargoInfo } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
-import type { EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
+import type { EdgeDestinoVoto, EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
+import { compete, haAnulada, NOTA_ANULADAS, sufixoAriaDestino } from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -224,9 +225,14 @@ function AguardandoSenado() {
 // ⚠️ `porId: Map<number, EdgeCandidate>` saiu em 2026-09-19: ele existia só para
 // buscar `c.cor`, a paleta por COLOCAÇÃO que o payload deixou de emitir. A cor
 // agora vem da SIGLA, que já chega em `top_candidatos[].partido` (RF-144).
-function topDaUf(
-  uf: EdgeUfRow,
-): Array<{ id: number; pct: number; nome: string; partido: string; cor: string }> {
+function topDaUf(uf: EdgeUfRow): Array<{
+  id: number;
+  pct: number;
+  nome: string;
+  partido: string;
+  cor: string;
+  destino?: EdgeDestinoVoto;
+}> {
   return (uf.top_candidatos ?? []).map((t, i) => {
     return {
       id: t.id,
@@ -242,8 +248,19 @@ function topDaUf(
       // antigo mascarava o problema: dava cinza quando o candidato não estava
       // no índice nacional, e cor de rank quando estava.
       cor: candidateColorDoPartido(t.partido, i + 1),
+      ...(t.destino ? { destino: t.destino } : {}),
     };
   });
+}
+
+/**
+ * ADR-0053 / RF-213 — "Nome (SIGLA)" com a etiqueta de destino dentro dos
+ * parênteses quando houver: "Nome (SIGLA, Anulado)". Texto corrido, e não o
+ * átomo `<DestinoEtiqueta>`, porque esta linha é uma frase única juntada por
+ * " · " — a palavra continua visível e é lida no mesmo fluxo.
+ */
+function rotuloCandidatura(c: { nome: string; partido: string; destino?: EdgeDestinoVoto }) {
+  return `${c.nome} (${siglaExibicao(c.partido)}${sufixoAriaDestino(c.destino)})`;
 }
 
 export default async function SenadoPage() {
@@ -516,9 +533,14 @@ export default async function SenadoPage() {
             </p>
             <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid" }}>
               {payload.por_uf.map((uf) => {
+                // ADR-0053 / RF-213 — vagas e margem entre quem DISPUTA; a
+                // anulada vai para "Fora das vagas", depois das que competem e
+                // antes de "Outros". Sem anulada, `disputam` é `top`.
                 const top = topDaUf(uf);
-                const dentro = top[VAGAS - 1];
-                const fora = top[VAGAS];
+                const disputam = top.filter(compete);
+                const anuladas = top.filter((c) => !compete(c));
+                const dentro = disputam[VAGAS - 1];
+                const fora = disputam[VAGAS];
                 const margem = dentro && fora ? dentro.pct - fora.pct : null;
 
                 // 🔴 2026-09-19 — a SEGUNDA linha, "quem ficou de fora".
@@ -556,7 +578,7 @@ export default async function SenadoPage() {
                 // o comprimento dele, então um teto de 4 cravado aqui faria a 5ª
                 // entrada sumir da tela sem entrar na cauda no dia em que o
                 // produtor subir `TOP_CANDIDATOS_POR_UF` — e sumiria calada.
-                const deFora = top.slice(VAGAS);
+                const deFora = [...disputam.slice(VAGAS), ...anuladas];
                 const outros = uf.outros;
                 // 🔴 `pct_atual` é TUDO-OU-NADA e **ausente, nunca `0`** (ver a
                 // docstring de `EdgeUfRow.outros` em `lib/edge-config/types.ts`):
@@ -584,9 +606,7 @@ export default async function SenadoPage() {
                   // Desenhado ⇒ abreviado (2026-09-19). Esta cauda é texto
                   // VISÍVEL (ver o comentário três blocos abaixo), espremida na
                   // coluna do meio de uma linha de 3 colunas.
-                  ...deFora.map(
-                    (c) => `${c.nome} (${siglaExibicao(c.partido)}) ${formatPercent(c.pct, 1)}`,
-                  ),
+                  ...deFora.map((c) => `${rotuloCandidatura(c)} ${formatPercent(c.pct, 1)}`),
                   // ⚠️ Rótulo ANTES do número nos dois valores da cauda, e não
                   // "8,1% · parcial 6,4%": o separador da lista é " · ", então
                   // um "·" dentro de um item faria a cauda parecer DOIS itens
@@ -643,12 +663,12 @@ export default async function SenadoPage() {
                           leitor lê como os ocupantes diria que quatro pessoas
                           ocupam duas vagas. O que os dois nomes extras fazem
                           aqui é alimentar a margem à direita (2º−3º). */}
-                          {top.slice(0, VAGAS).length > 0
-                            ? top
+                          {disputam.slice(0, VAGAS).length > 0
+                            ? disputam
                                 .slice(0, VAGAS)
                                 // Desenhado ⇒ abreviado (2026-09-19): dois
                                 // nomes + duas siglas num `truncate`.
-                                .map((c) => `${c.nome} (${siglaExibicao(c.partido)})`)
+                                .map(rotuloCandidatura)
                                 .join(" · ")
                             : "aguardando apuração"}
                         </span>
@@ -678,6 +698,16 @@ export default async function SenadoPage() {
                 );
               })}
             </ul>
+            {/* ADR-0053 / RF-213 — só quando alguma UF tem anulada no corte. */}
+            {payload.por_uf.some((uf) => haAnulada(uf.top_candidatos)) ? (
+              <p
+                className="max-w-prose"
+                data-testid="senado-nota-anuladas"
+                style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-muted)" }}
+              >
+                {NOTA_ANULADAS}
+              </p>
+            ) : null}
           </div>
         ) : (
           <p

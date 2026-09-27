@@ -41,8 +41,10 @@
  *     hero do 2T. Tipografia ½ escala.
  */
 
+import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { candidateMarkerColor } from "@/components/blocks/_candidateColor";
 import type { EdgePayload } from "@/lib/edge-config/types";
+import { anuladasAoFim, compete, queCompetem, sufixoAriaDestino } from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -63,8 +65,18 @@ export function TurnoOneRecap({ recap, className }: TurnoOneRecapProps) {
   if (!recap.national?.candidatos || recap.national.candidatos.length === 0) return null;
 
   // Top-3 do 1T por rank (array já vem ordenado em S05+).
-  const top3 = recap.national.candidatos.slice(0, 3);
-  const finalistas = recap.national.candidatos.filter((c) => (c.rank ?? -1) <= 2).slice(0, 2);
+  // ADR-0053 / RF-213 — a anulada fica no fim das 3 (com etiqueta), e os
+  // finalistas saem das que COMPETEM, com o `rank` recontado sem as anuladas
+  // à frente: `rank` é publicado sobre `vvc` e conta a anulada, e "rank ≤ 2"
+  // cru a poria no 2º turno. Sem anulada, `rankSemAnuladas === rank` e a regra
+  // (inclusive o `?? -1` de quem não tem rank) é exatamente a de antes.
+  const top3 = anuladasAoFim(recap.national.candidatos.slice(0, 3));
+  const anuladas = recap.national.candidatos.filter((c) => !compete(c));
+  const rankSemAnuladas = (rank: number | undefined): number =>
+    rank == null ? -1 : rank - anuladas.filter((a) => a.rank != null && a.rank < rank).length;
+  const finalistas = queCompetem(recap.national.candidatos)
+    .filter((c) => rankSemAnuladas(c.rank) <= 2)
+    .slice(0, 2);
   // Mesmo nome de exibição da lista de três logo abaixo — a frase e as pílulas
   // falam das mesmas duas pessoas e não podem chamá-las de formas diferentes.
   const nomeDe = (c: (typeof finalistas)[number] | undefined) =>
@@ -119,7 +131,7 @@ export function TurnoOneRecap({ recap, className }: TurnoOneRecapProps) {
           return (
             <li
               key={c.id}
-              aria-label={`${nomeExibicao(c.nome, c.sqcand)} (${c.partido}): ${pctLabel}`}
+              aria-label={`${nomeExibicao(c.nome, c.sqcand)}${sufixoAriaDestino(c.destino)} (${c.partido}): ${pctLabel}`}
               className="flex items-center gap-1.5"
             >
               <span
@@ -136,6 +148,7 @@ export function TurnoOneRecap({ recap, className }: TurnoOneRecapProps) {
                     do `<li>` acima segue com a sigla inteira. */}
                 ({siglaExibicao(c.partido)})
               </span>
+              <DestinoEtiqueta destino={c.destino} />
               <span className="text-sm font-semibold tabular-nums">{pctLabel}</span>
             </li>
           );

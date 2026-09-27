@@ -53,6 +53,15 @@
  * régua é só o conservador: não chamar de "fecharia" um líder que, pelos
  * válidos, já passou de 50%. Nunca o contrário.
  *
+ * **ADR-0053 / RF-213 (2026-09-27)** — candidatura de voto `"anulado"` não
+ * disputa: nunca é "o 1º" nem "o 2º" aqui, nas duas bases, e o percentual
+ * dela sai da régua dos 50% da contagem — `pct_lider > (100 − Σ pct_atual das
+ * anuladas do corte) / 2`, a mesma base "válidos + sub judice" que o modelo
+ * usa para `vai_a_2t`. Só as anuladas DENTRO de `top_candidatos` são
+ * descontadas: uma anulada fora do corte fica na base, e o erro possível
+ * continua sendo só o conservador. `"sub_judice"` e destino ausente competem e
+ * ficam na base. Sem anulada no corte, a régua é o `> 50` de sempre.
+ *
  * O líder da contagem sai de `ordenarTopCandidatosPorBase(…, "parcial")` —
  * NÃO de `top_candidatos[0]`, que é o líder por PROJEÇÃO. Desde o RF-190 o
  * array pode trazer, depois do prefixo por projeção, um candidato "resgatado"
@@ -67,6 +76,7 @@
 
 import { UF_NOMES } from "@/components/atoms/maps/_shared";
 import type { EdgeUfRow } from "@/lib/edge-config/types";
+import { compete, queCompetem } from "@/lib/utils/destino-voto";
 import { ordenarTopCandidatosPorBase, type TopCandidatoUf } from "@/lib/utils/lider-por-base";
 
 /** Os quatro desfechos possíveis de uma corrida estadual, em uma base. */
@@ -110,6 +120,8 @@ export function classificarProjecao(row: LinhaProjecao): DesfechoGovernador {
 /**
  * Os candidatos da UF na ordem da CONTAGEM, ou `null` quando a contagem não
  * tem leitura honesta (nada apurado, ou falta `pct_atual` a alguém do corte).
+ * Inclui as anuladas, no fim (é a ordem de exibição): quem decide filtra com
+ * `queCompetem`.
  */
 function ordemDaContagem(row: LinhaContagem): readonly TopCandidatoUf[] | null {
   if (!(row.pct_apurado > 0)) return null;
@@ -126,9 +138,14 @@ function ordemDaContagem(row: LinhaContagem): readonly TopCandidatoUf[] | null {
 /** Desfecho da UF **pela contagem**. Ver o cabeçalho do arquivo. */
 export function classificarContagem(row: LinhaContagem): DesfechoGovernador {
   const ordem = ordemDaContagem(row);
-  const lider = ordem?.[0]?.pct_atual;
-  if (ordem === null || lider === undefined) return "aguardando";
-  return lider > 50 ? "eleito_1t" : "segundo_turno";
+  if (ordem === null) return "aguardando";
+  const lider = queCompetem(ordem)[0]?.pct_atual;
+  if (lider === undefined) return "aguardando";
+  // ADR-0053 — a régua dos 50% sobre a base sem as anuladas do corte. Ver o
+  // cabeçalho. `pct_atual` das anuladas está definido: `ordemDaContagem` só
+  // devolve ordem quando TODO o corte tem `pct_atual`.
+  const anuladas = ordem.reduce((soma, tc) => soma + (compete(tc) ? 0 : (tc.pct_atual ?? 0)), 0);
+  return lider > (100 - anuladas) / 2 ? "eleito_1t" : "segundo_turno";
 }
 
 /** Classificador da base pedida — sem ramo default: as duas bases são nomeadas. */
@@ -216,11 +233,12 @@ function candidatosQueContam(
 ): { desfecho: DesfechoGovernador; ordem: readonly TopCandidatoUf[] } {
   if (base === "contagem") {
     const desfecho = classificarContagem(row);
-    return { desfecho, ordem: ordemDaContagem(row) ?? [] };
+    return { desfecho, ordem: queCompetem(ordemDaContagem(row) ?? []) };
   }
   const desfecho = classificarProjecao(row);
   const { ordenados } = ordenarTopCandidatosPorBase(row.top_candidatos ?? [], "proj");
-  return { desfecho, ordem: ordenados };
+  // ADR-0053 — a anulada não é "o partido eleito" nem vai ao 2º turno.
+  return { desfecho, ordem: queCompetem(ordenados) };
 }
 
 /**

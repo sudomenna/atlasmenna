@@ -118,6 +118,7 @@ import type { UfPickerCargo } from "@/components/layout/UfPicker";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { useHoverStore } from "@/lib/state/hover-store";
 import type { ViewMode } from "@/lib/state/view-mode";
+import { compete } from "@/lib/utils/destino-voto";
 // (Nada de `@/lib/utils/cand-color` aqui desde 2026-09-20: nenhuma cor deste
 // mapa deriva mais da COLOCAÇÃO do líder — ver `resolveColor` e
 // `buildHoverRows` abaixo, e o topo de `components/blocks/_candidateColor.ts`.)
@@ -583,7 +584,12 @@ function buildHoverRows(
   const { ordenados } = ordenarTopCandidatosPorBase(row.top_candidatos, viewMode);
   // Ver o comentário grande acima: o ✓ segue a IDENTIDADE do líder projetado,
   // não a posição 0 pós-reordenação.
-  const liderProjId = row.top_candidatos[0]?.id ?? row.lider;
+  //
+  // ADR-0053 / RF-213 — o 1º do corte QUE COMPETE, nunca `top_candidatos[0]`
+  // cru: o corte chega por `pct_projetado` sobre `vvc`, e uma anulada pode
+  // estar no topo dele. O modelo nunca a chama (`chamada` já a exclui), mas
+  // sem o filtro o ✓ não cairia em ninguém — ou, pior, na anulada.
+  const liderProjId = row.top_candidatos.find(compete)?.id ?? row.lider;
   const linhas: HoverCardRow[] = ordenados.map((tc) => {
     const cand = candidatosById.get(tc.id);
     const nomeBruto = tc.nome ?? cand?.nome;
@@ -629,6 +635,9 @@ function buildHoverRows(
       votos: tc.votos_atuais,
       winnerBackground: winnerPair?.background,
       winnerInk: winnerPair?.ink,
+      // ADR-0053 — etiqueta "Anulado"/"Sub judice" no balão. A ORDEM (anulada
+      // no fim, antes de "Outros") já vem de `ordenarTopCandidatosPorBase`.
+      ...(tc.destino ? { destino: tc.destino } : {}),
     };
   });
 

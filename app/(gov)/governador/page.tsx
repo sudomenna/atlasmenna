@@ -129,6 +129,7 @@ import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
 import { classificarProjecao } from "@/lib/utils/desfecho-governador";
+import { haAnulada, NOTA_ANULADAS } from "@/lib/utils/destino-voto";
 import govFixture from "@/tests/fixtures/edge-config/gov-current.json" with { type: "json" };
 
 export const revalidate = 60;
@@ -672,6 +673,16 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
                     <GovernorCard key={uf.sigla} uf={uf} candidatos={national.candidatos} />
                   ))}
                 </div>
+                {/* ADR-0053 / RF-213 — uma frase para a grade inteira, só se
+                    algum cartão exibido tiver candidatura anulada. */}
+                {ufsFiltradas.some((uf) => haAnulada(uf.top_candidatos)) ? (
+                  <p
+                    data-testid="governadores-nota-anuladas"
+                    style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-muted)" }}
+                  >
+                    {NOTA_ANULADAS}
+                  </p>
+                ) : null}
               </section>
             ) : (
               <p style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}>

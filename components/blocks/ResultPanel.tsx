@@ -97,6 +97,7 @@ import { CandidateListCollapse } from "@/components/blocks/CandidateListCollapse
 import { ReordenaListaPorBase } from "@/components/blocks/ReordenaListaPorBase";
 import { candidatoFotoUrl } from "@/lib/blob/paths";
 import type { EdgeCandidate } from "@/lib/edge-config/types";
+import { compete, haAnulada, NOTA_ANULADAS, queCompetem } from "@/lib/utils/destino-voto";
 import { formatPp, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { ordensPorBase } from "@/lib/utils/rank-parcial";
@@ -119,7 +120,7 @@ import { ordensPorBase } from "@/lib/utils/rank-parcial";
  */
 export type ResultPanelCandidate = Pick<
   EdgeCandidate,
-  "id" | "nome" | "partido" | "cor" | "votos_atuais" | "pct_atual" | "pct_projetado"
+  "id" | "nome" | "partido" | "cor" | "votos_atuais" | "pct_atual" | "pct_projetado" | "destino"
 > & {
   rank?: number;
   /**
@@ -590,10 +591,17 @@ export function ResultPanel({
   // último a entrar (índice `nVagas - 1`) vs o primeiro a ficar de fora
   // (`nVagas`). As duas listas são permutações do mesmo array, então "existe
   // duelo" é a mesma resposta nas duas — mas QUEM está dos dois lados não é.
-  const dentroParcial = porParcial[nVagas - 1];
-  const foraParcial = porParcial[nVagas];
-  const dentroProj = porProj[nVagas - 1];
-  const foraProj = porProj[nVagas];
+  // 🔴 ADR-0053 / RF-213 — margem, vaga e barra de maioria são sobre quem
+  // DISPUTA. A anulada está no fim das duas ordens (`ordensPorBase`), mas
+  // "no fim" ainda pode ser a posição 2 de uma corrida de dois: `fora` seria
+  // ela, e a margem mediria o líder contra quem não concorre. Sem anulada,
+  // `queCompetem` devolve a mesma lista e nada muda.
+  const disputaParcial = queCompetem(porParcial);
+  const disputaProj = queCompetem(porProj);
+  const dentroParcial = disputaParcial[nVagas - 1];
+  const foraParcial = disputaParcial[nVagas];
+  const dentroProj = disputaProj[nVagas - 1];
+  const foraProj = disputaProj[nVagas];
 
   // O par líder+2º de cada base, para a barra de maioria. Uma tupla em vez de
   // dois índices soltos porque as duas barras só existem juntas: se uma base
@@ -602,8 +610,8 @@ export function ResultPanel({
     lista: ResultPanelCandidate[],
   ): [ResultPanelCandidate, ResultPanelCandidate] | null =>
     lista[0] != null && lista[1] != null ? [lista[0], lista[1]] : null;
-  const duploParcial = par(porParcial);
-  const duploProj = par(porProj);
+  const duploParcial = par(disputaParcial);
+  const duploProj = par(disputaProj);
 
   // DERIVAÇÃO 1 — o payload não traz "votos apurados" agregados; some-se os
   // dos candidatos. Brancos e nulos não entram (não são voto em candidato).
@@ -641,7 +649,11 @@ export function ResultPanel({
           `Margem para a ${nVagas}ª vaga`
         : `Margem ${primeiroNomeExibicao(dentro.nome, dentro.sqcand)}`;
 
-  const excedentes = Math.max(0, candidatos.length - limit);
+  // A anulada nunca entra no colapso (ver `extras` abaixo): ela aparece
+  // sempre, no fim. Então quem pode sobrar do `limit` são só as que competem —
+  // contar a anulada aqui criaria um botão "Todos os N" que não esconde nada.
+  const excedentes = Math.max(0, queCompetem(candidatos).length - limit);
+  const temAnulada = !identidade && haAnulada(candidatos);
 
   const linhas = identidade
     ? candidatos.map((c) => (
@@ -682,14 +694,20 @@ export function ResultPanel({
         // diz que está ocupando vaga. É por isso que o RÓTULO do marcador
         // também muda (ver `<VagaBadge>`) — a tela nunca diz "projetada" sob
         // números parciais.
-        const ocupaParcial = multiVaga && iParcial < nVagas;
-        const ocupaProj = multiVaga && iProj < nVagas;
+        // ADR-0053 — a anulada não ocupa vaga, nem que a corrida tenha menos
+        // candidaturas que disputam do que vagas.
+        const disputa = compete(c);
+        const ocupaParcial = multiVaga && disputa && iParcial < nVagas;
+        const ocupaProj = multiVaga && disputa && iProj < nVagas;
 
         // Quais bases clipam esta linha no colapso. Em cada base o número de
         // linhas clipadas é o mesmo (`total - limit`); quais linhas, não.
+        // ADR-0053 — a anulada fica SEMPRE visível (decisão do dono: "continua
+        // aparecendo"). Como ela é a última das duas ordens, marcá-la como
+        // excedente a esconderia justamente quando é a mais votada.
         const extras: string[] = [];
-        if (iParcial >= limit) extras.push("parcial");
-        if (iProj >= limit) extras.push("proj");
+        if (disputa && iParcial >= limit) extras.push("parcial");
+        if (disputa && iProj >= limit) extras.push("proj");
 
         return (
           <li
@@ -874,6 +892,23 @@ export function ResultPanel({
           {linhas}
         </ol>
       )}
+
+      {/* ADR-0053 / RF-213 — a frase só existe quando há anulada na lista:
+          sem ela, ninguém precisa saber que a regra existe. */}
+      {temAnulada ? (
+        <p
+          data-testid="result-nota-anuladas"
+          style={{
+            margin: "var(--space-3) 0 0",
+            font: "var(--type-body-sm)",
+            fontSize: "var(--text-xs)",
+            color: "var(--text-muted)",
+            textWrap: "pretty",
+          }}
+        >
+          {NOTA_ANULADAS}
+        </p>
+      ) : null}
 
       {note ? (
         <p

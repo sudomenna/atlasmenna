@@ -72,6 +72,8 @@
 import type { CSSProperties } from "react";
 import { Fragment } from "react";
 
+import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
+import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 
@@ -155,6 +157,12 @@ export interface HoverCardRow {
   winnerBackground?: string;
   /** Tinta legível sobre `winnerBackground` — anda sempre em par com ele. */
   winnerInk?: string;
+  /**
+   * ADR-0053 / RF-213 — `"anulado"`/`"sub_judice"` ganham a etiqueta textual
+   * ao lado do nome. Quem monta as linhas é quem ordena (anulada no fim, antes
+   * de "Outros").
+   */
+  destino?: EdgeDestinoVoto;
 }
 
 export interface HoverCardProps {
@@ -656,6 +664,7 @@ export function HoverCard({
                   />
                 )}
                 <span className="overflow-hidden text-ellipsis whitespace-nowrap">{row.name}</span>
+                <DestinoEtiqueta destino={row.destino} />
               </span>
               {partido ? (
                 <span

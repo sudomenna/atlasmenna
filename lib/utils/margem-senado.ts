@@ -23,6 +23,8 @@
  */
 
 import type { UfPickerCargo } from "@/components/layout/UfPicker";
+import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
+import { queCompetem } from "@/lib/utils/destino-voto";
 
 /**
  * A margem que decide a 2ª vaga do Senado — 2º colocado menos o 3º (RF-104),
@@ -40,9 +42,15 @@ import type { UfPickerCargo } from "@/components/layout/UfPicker";
  * `intensityLevelForMargin` (`lib/utils/party-color.ts`) trata `NaN` como
  * nível 1, a leitura mais conservadora ("apertado", nunca "decidido").
  */
-export function margemSegundaVaga(row: { top_candidatos: ReadonlyArray<{ pct: number }> }): number {
-  const segundo = row.top_candidatos[1];
-  const terceiro = row.top_candidatos[2];
+export function margemSegundaVaga(row: {
+  top_candidatos: ReadonlyArray<{ pct: number; destino?: EdgeDestinoVoto }>;
+}): number {
+  // ADR-0053 / RF-213 — 2º e 3º entre quem DISPUTA a vaga. Uma anulada no
+  // corte não ocupa vaga, então não é nem a "2ª vaga" nem a "1ª fora". Sem
+  // anulada, `queCompetem` devolve a mesma lista, na mesma ordem.
+  const disputam = queCompetem(row.top_candidatos);
+  const segundo = disputam[1];
+  const terceiro = disputam[2];
   if (segundo == null || terceiro == null) return Number.NaN;
   return segundo.pct - terceiro.pct;
 }

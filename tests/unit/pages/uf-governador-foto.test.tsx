@@ -275,4 +275,18 @@ describe("/uf/[sigla]/governador — o rosto, e não as iniciais", () => {
     // E a foto continua sendo a do candidato de SP.
     expect(fotos(doc)[0]?.getAttribute("src")).toContain(SQ_HADDAD);
   });
+
+  it("🔴 `destino` também é SÓ da linha da UF: ausente ali não herda o do bloco nacional [mutação: `daUf?.destino ?? c.destino`]", async () => {
+    // Desde 2026-09-27 as listas não emitem `"valido"` — ausente na linha da
+    // UF é "compete". O bloco nacional de cargo 3 é a união de 27 corridas:
+    // o `destino` que ele guardar para este `id` é de OUTRA candidatura.
+    nacionalAtual = nacionalGov({ idColidido: true });
+    for (const c of nacionalAtual.national.candidatos) {
+      if (c.id === 26000) c.destino = "anulado";
+    }
+    const doc = await renderSP();
+    const texto = doc.querySelector("main")?.textContent ?? "";
+    expect(texto).toContain("HADDAD");
+    expect(texto, "etiqueta herdada do bloco nacional").not.toContain("Anulado");
+  });
 });

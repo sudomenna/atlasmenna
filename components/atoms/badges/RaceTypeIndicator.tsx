@@ -27,6 +27,7 @@
  */
 
 import type { EdgeCandidate, Turno } from "@/lib/edge-config/types";
+import { compete } from "@/lib/utils/destino-voto";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 
 export interface RaceTypeIndicatorProps {
@@ -90,10 +91,13 @@ export function RaceTypeIndicator({
   // 1T. Em fase pré-eleição o limiar NÃO se aplica — ver a prop `preEleicao`.
   // O 2T acima cai no fallback já existente e não precisa de caso novo: não
   // existe segundo turno antes do primeiro.
+  // ADR-0053 / RF-213 — "disputa entre N": a candidatura anulada não
+  // disputa, então não entra na contagem (ela segue na lista, com etiqueta).
   const n = preEleicao
     ? candidatos.length
     : candidatos.filter(
-        (c) => Number.isFinite(c.pct_projetado) && c.pct_projetado >= PCT_THRESHOLD_1T,
+        (c) =>
+          compete(c) && Number.isFinite(c.pct_projetado) && c.pct_projetado >= PCT_THRESHOLD_1T,
       ).length;
   const word = n === 1 ? "candidato" : "candidatos";
 

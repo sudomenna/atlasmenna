@@ -286,6 +286,36 @@ describe("GET /api/projection?uf= com cargo", () => {
     expect("sqcand" in (corpo.candidatos[1] ?? {})).toBe(false);
   });
 
+  it("🔴 síntese de `cargo=gov`: `destino` SÓ da linha da UF — ausente ali não deixa passar o da lista nacional [mutação: `t?.destino ?? c.destino`]", async () => {
+    // Desde 2026-09-27 as listas não emitem `"valido"`: a ausência na linha da
+    // UF quer dizer "compete". Se a síntese caísse na lista nacional — em
+    // Gov/Sen a UNIÃO de 27 corridas —, um `destino` alheio viraria etiqueta
+    // aqui. Presidente segue lendo a lista nacional (ver o ramo `nacional`).
+    const base = GOV_NACIONAL as {
+      national: { candidatos: Array<Record<string, unknown>> };
+      por_uf: Array<{ sigla: string; top_candidatos: Array<Record<string, unknown>> }>;
+    };
+    const payload = structuredClone(base);
+    for (const c of payload.national.candidatos) {
+      if (c.id === 26000) c.destino = "anulado";
+      if (c.id === 26001) c.destino = "anulado";
+    }
+    const sp = payload.por_uf.find((l) => l.sigla === "SP");
+    const segundo = sp?.top_candidatos.find((t) => t.id === 26001);
+    if (segundo === undefined) throw new Error("fixture sem 26001");
+    segundo.destino = "sub_judice";
+    simulacaoLigadaMock.mockReturnValue(true);
+    simulacaoGovernadorUfMock.mockReturnValue(null);
+    simulacaoNacionalMock.mockReturnValue(payload);
+
+    const res = await GET(new Request("http://x/api/projection?uf=SP&cargo=gov"));
+    const corpo = (await res.json()) as { candidatos: Array<{ id: number; destino?: string }> };
+    const porId = new Map(corpo.candidatos.map((c) => [c.id, c] as const));
+
+    expect("destino" in (porId.get(26000) ?? {})).toBe(false);
+    expect(porId.get(26001)?.destino).toBe("sub_judice");
+  });
+
   it("simulação ligada + `cargo=gov` numa UF que o payload não tem → 503, nunca outra UF", async () => {
     simulacaoLigadaMock.mockReturnValue(true);
     simulacaoGovernadorUfMock.mockReturnValue(null);

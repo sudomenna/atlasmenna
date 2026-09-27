@@ -223,6 +223,13 @@ export interface CliSimulacao {
   seed: string;
   /** Diretório de saída, relativo à raiz do repositório ou absoluto. */
   out: string;
+  /**
+   * ADR-0053 / RF-213 — cenário OPCIONAL `--anulado-lidera <UF>`: nesta UF a
+   * candidatura mais forte a Governador e a Senador tem o voto ANULADO e
+   * lidera o apurado. Ausente no default (e no `CLI_DEFAULT`): sem a flag, a
+   * saída é byte a byte a de sempre. Ver {@link FRACAO_ANULADOS_CENARIO}.
+   */
+  anuladoLidera?: string;
 }
 
 export const CLI_DEFAULT: CliSimulacao = {
@@ -266,6 +273,15 @@ export function parseCli(argv: readonly string[]): CliSimulacao {
     } else if (a === "--out") {
       if (v === undefined || v.length === 0) throw new Error("--out exige um diretório");
       cli.out = v;
+      i++;
+    } else if (a === "--anulado-lidera") {
+      // Lookup explícito na lista de UFs, nunca um default: `--anulado-lidera`
+      // sem UF, ou com UF inexistente, é erro alto.
+      const uf = UFS.find((u) => u === v);
+      if (uf === undefined) {
+        throw new Error(`--anulado-lidera exige uma UF (ex.: --anulado-lidera SP); veio "${v}".`);
+      }
+      cli.anuladoLidera = uf;
       i++;
     } else if (a?.startsWith("--")) {
       throw new Error(`Flag desconhecida: ${a}`);
@@ -1439,6 +1455,18 @@ export interface ContextoUf {
    * contexto.
    */
   votaveisUmVoto: { apurados: number; finais: number };
+  /**
+   * ADR-0053 / RF-213 — SÓ no cenário `--anulado-lidera <UF>`, e só nessa UF:
+   * a fração dos votáveis (`vvc`) que é voto anulado, no lugar de
+   * `PARAMETROS_VOTACAO.anulados`. Ausente em todo o resto (inclusive no
+   * default), e aí nada muda. Lida em UM lugar, {@link repartirVotaveis} —
+   * contagens e candidaturas continuam saindo da mesma conta.
+   *
+   * Vale para a UF inteira, nos quatro cargos (o contexto é o mesmo objeto):
+   * as contagens de voto dos cargos de um voto por eleitor seguem idênticas
+   * entre si, como a invariante (12) exige. Ver {@link aplicarCenarioAnulado}.
+   */
+  fracaoAnulados?: number;
 }
 
 /**
@@ -1708,7 +1736,8 @@ export function repartirVotaveis(
   par: ParametrosVotacao = PARAMETROS_VOTACAO,
   votaveis: number = ctx.votosApurados,
 ): { validos: number; anulados: number; subJudice: number } {
-  const anulados = ctx.anulaveis ? Math.round(votaveis * par.anulados) : 0;
+  const fracaoAnulados = ctx.fracaoAnulados === undefined ? par.anulados : ctx.fracaoAnulados;
+  const anulados = ctx.anulaveis ? Math.round(votaveis * fracaoAnulados) : 0;
   const subJudice = ctx.anulaveis ? Math.round(votaveis * par.subJudice) : 0;
   return { validos: votaveis - anulados - subJudice, anulados, subJudice };
 }
@@ -2085,7 +2114,7 @@ export function blocoVotacaoDaCorrida(
  * que a tela usa para achar o nome.
  */
 export function corridaDaUf(c: CorridaUf): EdgeCorridaEntrada[] {
-  const publicado = c.ctx.pctApurado > 0;
+  const publicado = destinoPublicadoNaUf(c);
   return [...c.resultados]
     .sort((a, b) => a.cand.id - b.cand.id)
     .map((r) => ({
@@ -2094,6 +2123,69 @@ export function corridaDaUf(c: CorridaUf): EdgeCorridaEntrada[] {
       votos: r.votosAtuais,
       ...(publicado ? { destino: r.destino } : {}),
     }));
+}
+
+/**
+ * O TSE já publicou a destinação (`dvt`) desta corrida DE UF? Só "após a
+ * primeira totalização parcial" — aqui, UF com apuração > 0. É o ponto ÚNICO
+ * da regra para Governador e Senador: a `corrida` da UF ({@link corridaDaUf}),
+ * o `destino` das listas de candidaturas e o filtro de quem compete
+ * ({@link competidores}) leem daqui, e por isso não têm como divergir.
+ */
+function destinoPublicadoNaUf(c: CorridaUf): boolean {
+  return c.ctx.pctApurado > 0;
+}
+
+/**
+ * O mesmo para o Presidente, cuja destinação é NACIONAL (a do arquivo `br`):
+ * publicada assim que QUALQUER UF apurou, e aplicada em toda UF — o produtor
+ * faz igual ("Presidente decide com o destino NACIONAL em toda UF",
+ * `api/model/project.py`). Ponto único de {@link corridaNacionalPresidente}.
+ */
+function destinoPublicadoNoPais(corridas: readonly CorridaUf[]): boolean {
+  return corridas.some((c) => c.ctx.pctApurado > 0);
+}
+
+/**
+ * ADR-0053 / RF-213 — quem DISPUTA a corrida: as candidaturas cujo destino
+ * publicado não é `"anulado"`, na ordem de `resultados` (rank por projetado).
+ * "Anulado sub judice" compete (segue o TSE). Destino não publicado ⇒ todas
+ * competem — degradação segura do ADR, nunca "desconhecido ⇒ anulado".
+ *
+ * É daqui que saem líder, margem, agulha, vagas e cor do mapa; a LISTA
+ * publicada continua com todas (a tela põe a anulada no fim, com etiqueta).
+ */
+function competidores(
+  resultados: readonly ResultadoCandUf[],
+  destinoPublicado: boolean,
+): ResultadoCandUf[] {
+  return destinoPublicado ? resultados.filter((r) => r.destino !== "anulado") : [...resultados];
+}
+
+/**
+ * `destino` de uma candidatura nas três LISTAS (`national.candidatos`,
+ * `por_uf[].top_candidatos`, `EdgePayloadUf.candidatos`) — espelho de
+ * `AnuladosNaDecisao.destino_de` do produtor: `{ destino }` SÓ quando a
+ * destinação já foi publicada (RF-209) E é `"anulado"` ou `"sub_judice"`.
+ * `"valido"` nunca é emitido aqui (2026-09-27): para a tela equivale a
+ * ausente, e custava 19 B por candidatura — derrubava a folga de 2× do
+ * payload nacional (`tests/unit/edge-config/limiar-nacional.test.ts`).
+ * `votacao.corrida[]` ({@link corridaDaUf}) NÃO usa isto: lá `"valido"`
+ * precisa se distinguir de "ainda não publicado".
+ */
+function destinoNaLista(
+  destino: EdgeDestinoVoto,
+  destinoPublicado: boolean,
+): { destino?: EdgeDestinoVoto } {
+  return destinoPublicado && destino !== "valido" ? { destino } : {};
+}
+
+/** {@link destinoNaLista} de um resultado de UF. */
+function campoDestino(
+  r: ResultadoCandUf,
+  destinoPublicado: boolean,
+): { destino?: EdgeDestinoVoto } {
+  return destinoNaLista(r.destino, destinoPublicado);
 }
 
 /** `true` se alguma entrada com voto está sem destino — espelho do produtor. */
@@ -2149,7 +2241,7 @@ export function votacaoDeputadoUf(ctx: ContextoUf): NonNullable<DeputadoUfDetail
  * e é publicada assim que QUALQUER UF apurou.
  */
 export function corridaNacionalPresidente(corridas: readonly CorridaUf[]): EdgeCorridaEntrada[] {
-  const publicado = corridas.some((c) => c.ctx.pctApurado > 0);
+  const publicado = destinoPublicadoNoPais(corridas);
   const porId = new Map<number, EdgeCorridaEntrada>();
   for (const c of corridas) {
     for (const r of c.resultados) {
@@ -2186,7 +2278,7 @@ export function corridaPorPartido(corridas: readonly CorridaUf[]): EdgeCorridaPa
     // UF a 0% não publicou destino (`corridaDaUf`): o produtor real não sabe
     // quem é válido ali, e o voto dela é zero de qualquer forma. Pular a UF
     // mantém a saída IGUAL à do produtor nesse estado (`[]` a 0% no país).
-    if (c.ctx.pctApurado <= 0) continue;
+    if (!destinoPublicadoNaUf(c)) continue;
     for (const r of c.resultados) {
       if (r.destino !== "valido") continue;
       soma.set(r.cand.partido, (soma.get(r.cand.partido) ?? 0) + r.votosAtuais);
@@ -2439,6 +2531,65 @@ export function designarDestinos(
 }
 
 /**
+ * ADR-0053 / RF-213 — fração dos votáveis anulada na UF do cenário
+ * `--anulado-lidera`. **Metade**, e não um número "realista": com `vansj`
+ * em {@link PARAMETROS_VOTACAO}.subJudice (8,7%), sobram 41,3% de válidos, e
+ * nenhuma candidatura válida alcança a anulada NO APURADO em feitio nenhum
+ * (no `decidida`, 24/(24+4+…) do bolo de válidos chega a ~39% — um 40% aqui
+ * já não garantiria). A garantia é por construção, não por sorte da seed.
+ */
+export const FRACAO_ANULADOS_CENARIO = 0.5;
+
+/**
+ * Destinos da corrida estadual na UF do cenário `--anulado-lidera`: a
+ * candidatura MAIS FORTE (índice 0) é a anulada — é o caso (B) do ADR-0053,
+ * que {@link designarDestinos} nunca produz porque protege o topo. A sub
+ * judice segue a regra de sempre; a anulada que a regra escolheria volta a
+ * ser válida (uma anulada por corrida, como no default).
+ */
+function destinosDoCenarioAnulado(shares: readonly number[], vagas: number): EdgeDestinoVoto[] {
+  const destinos = designarDestinos(shares, vagas);
+  const antiga = destinos.indexOf("anulado");
+  if (antiga < 0 || destinos[0] !== "valido") {
+    throw new Error(
+      "[simulacao] --anulado-lidera: a corrida não comporta uma anulada no topo " +
+        `(destinos ${destinos.join(",")}) — escolha uma UF anulável.`,
+    );
+  }
+  destinos[antiga] = "valido";
+  destinos[0] = "anulado";
+  return destinos;
+}
+
+/**
+ * Aplica o cenário `--anulado-lidera <UF>` aos contextos: devolve os MESMOS
+ * objetos, exceto o da UF pedida, que ganha `fracaoAnulados`. Sem UF, devolve
+ * o array intacto — o default não passa por aqui.
+ *
+ * ⚠️ Efeito colateral declarado: o contexto é o da UF nos quatro cargos, então
+ * no PRESIDENTE a anulada nacional (uma candidatura fraca no perfil) também
+ * recebe metade dos votáveis dessa UF e lidera o apurado dela, com
+ * `pct_projetado` pequeno. É o preço de não afrouxar a invariante (12) — os
+ * cargos de um voto por eleitor contam os mesmos votos neste gerador.
+ */
+export function aplicarCenarioAnulado(
+  ctxs: readonly ContextoUf[],
+  uf: string | undefined,
+): ContextoUf[] {
+  if (uf === undefined) return [...ctxs];
+  const alvo = ctxs.find((c) => c.uf === uf);
+  if (alvo === undefined) throw new Error(`[simulacao] --anulado-lidera: UF ${uf} desconhecida`);
+  if (!alvo.anulaveis || alvo.pctApurado <= 0) {
+    throw new Error(
+      `[simulacao] --anulado-lidera ${uf}: a UF precisa ser anulável (≥ ${MIN_CANDIDATURAS_PARA_DESTINO} ` +
+        `candidaturas em cada corrida majoritária) e ter apuração > 0 (tem ${alvo.pctApurado}%) — ` +
+        "senão a destinação não é publicada e não há o que ver na tela.",
+    );
+  }
+  return ctxs.map((c) => (c === alvo ? { ...c, fracaoAnulados: FRACAO_ANULADOS_CENARIO } : c));
+}
+
+/**
  * Reparte os votáveis apurados entre as candidaturas POR DESTINAÇÃO (spec
  * 022): o bolo de válidos só entre as válidas, o de anulados só entre as
  * anuladas, o de sub judice só entre as sub judice — cada um por maiores
@@ -2574,12 +2725,20 @@ export function resolverCorridaUf(
   };
 }
 
-/** `EdgeCandidate` a partir de um resultado. `sqcand` só quando pedido. */
-function edgeCandidate(r: ResultadoCandUf, comSqcand: boolean): EdgeCandidate {
+/**
+ * `EdgeCandidate` a partir de um resultado. `sqcand` só quando pedido;
+ * `destino` só quando a destinação da abrangência já foi publicada (RF-213).
+ */
+function edgeCandidate(
+  r: ResultadoCandUf,
+  comSqcand: boolean,
+  destinoPublicado: boolean,
+): EdgeCandidate {
   const c: EdgeCandidate = {
     id: r.cand.id,
     nome: r.cand.nome,
     partido: r.cand.partido,
+    ...campoDestino(r, destinoPublicado),
     cor: colorForRank(r.rank),
     votos_atuais: r.votosAtuais,
     votos_projetados: r.votosProjetados,
@@ -2610,11 +2769,16 @@ function linhaUf(
   vagas: number,
   forcarNaoChamada: boolean,
   ehGovernador: boolean,
+  destinoPublicado: boolean,
 ): EdgeUfRow {
   const { ctx, resultados } = corrida;
-  const lider = resultados[0];
-  const segundo = resultados[1];
-  if (lider === undefined) throw new Error(`UF ${ctx.uf} sem candidatura`);
+  // ADR-0053 / RF-213 — líder e margem (e daí a cor do mapa, a chamada e o
+  // balde) saem só de quem COMPETE; a anulada segue em `top_candidatos`, com
+  // `destino`, para a tela pô-la no fim com a etiqueta.
+  const disputa = competidores(resultados, destinoPublicado);
+  const lider = disputa[0];
+  const segundo = disputa[1];
+  if (lider === undefined) throw new Error(`UF ${ctx.uf} sem candidatura que compete`);
 
   const margemProj = lider.shareFinal - (segundo?.shareFinal ?? 0);
   const margemAtual = ctx.pctApurado > 0 ? lider.shareAtual - (segundo?.shareAtual ?? 0) : 0;
@@ -2670,6 +2834,9 @@ function linhaUf(
       pct: r2(r.shareFinal),
       nome: r.cand.nome,
       partido: r.cand.partido,
+      // RF-213 — o MESMO `destino` de `votacao.corrida` da abrangência que
+      // decide (a UF; no Presidente, o país). Ausente antes da publicação.
+      ...campoDestino(r, destinoPublicado),
       // Aqui `sqcand` SEMPRE vai: esta linha sabe de que UF é, e é ela que
       // endereça a foto (ADR-0041/0042). É o oposto do bloco nacional de
       // cargo 3/5, onde a mesma chave apontaria para o estado errado.
@@ -2840,12 +3007,15 @@ export function montarPresidente(
     }))
     .sort((a, b) => b.share - a.share || a.cand.id - b.cand.id);
 
+  // RF-213 — a destinação do Presidente é NACIONAL, e é a mesma nas 27 UFs.
+  const destinoPublicado = destinoPublicadoNoPais(corridas);
   const candidatos: EdgeCandidate[] = linhas.map((l, idx) => {
     const hw = meiaLarguraIc(l.share, pct);
     return {
       id: l.cand.id,
       nome: l.cand.nome,
       partido: l.cand.partido,
+      ...destinoNaLista(destinos[l.i] as EdgeDestinoVoto, destinoPublicado),
       cor: colorForRank(idx + 1),
       votos_atuais: l.votosAtuais,
       votos_projetados: l.votosProjetados,
@@ -2867,7 +3037,9 @@ export function montarPresidente(
   if (lider === undefined) throw new Error("Corrida presidencial sem líder — impossível.");
 
   const { pos, band } = agulha(lider.p_vitoria, segundo?.p_vitoria ?? 0);
-  const porUfLinhas = corridas.map((c) => linhaUf(c, 1, cenario === "apertado", false));
+  const porUfLinhas = corridas.map((c) =>
+    linhaUf(c, 1, cenario === "apertado", false, destinoPublicado),
+  );
 
   // `cenarios_2t` reindexado de posição-no-array-de-cands para `id` — o
   // consumidor recebe ids de candidato, nunca índices internos.
@@ -2999,7 +3171,9 @@ export function montarCorridasEstaduais(
     // Spec 022 — UF que não é anulável (ver `ufAnulavel`) não tem bolo de
     // anulados; a corrida dela sai toda válida.
     const destinos = ctx.anulaveis
-      ? designarDestinos(shares, vagas)
+      ? ctx.fracaoAnulados === undefined
+        ? designarDestinos(shares, vagas)
+        : destinosDoCenarioAnulado(shares, vagas)
       : shares.map((): EdgeDestinoVoto => "valido");
     return resolverCorridaUf(r, ctx, cands, shares, vagas, destinos);
   });
@@ -3026,11 +3200,11 @@ export function montarPayloadEstadual(
       // `comSqcand: false` — bloco 7(b) do cabeçalho: aqui a chave apontaria
       // para a foto de um candidato de UF arbitrária. A identidade destes
       // cargos vive em `top_candidatos` e no arquivo por UF.
-      candidatos.push(edgeCandidate(res, false));
+      candidatos.push(edgeCandidate(res, false, destinoPublicadoNaUf(c)));
     }
   }
 
-  const linhas = corridas.map((c) => linhaUf(c, vagas, false, ehGov));
+  const linhas = corridas.map((c) => linhaUf(c, vagas, false, ehGov, destinoPublicadoNaUf(c)));
   const chamadas = linhas.filter((l) => l.chamada);
 
   const national: EdgeNational = {
@@ -3045,10 +3219,15 @@ export function montarPayloadEstadual(
     candidato_b_id: null,
     p_segundo_turno_overall: null,
     cenarios_2t: [],
-    chamadas_recentes: chamadas.slice(0, 5).map((l) => ({
-      ts,
-      texto: `${l.sigla} chamada para ${l.top_candidatos[0]?.nome ?? "o líder"} (${l.top_candidatos[0]?.partido ?? "—"}) com ${pp(l.pct_apurado)}% apurado.`,
-    })),
+    chamadas_recentes: chamadas.slice(0, 5).map((l) => {
+      // O chamado é o `lider` (quem compete, RF-213) — não `top_candidatos[0]`,
+      // que pode ser uma anulada no topo da lista.
+      const t = l.top_candidatos.find((x) => x.id === l.lider);
+      return {
+        ts,
+        texto: `${l.sigla} chamada para ${t?.nome ?? "o líder"} (${t?.partido ?? "—"}) com ${pp(l.pct_apurado)}% apurado.`,
+      };
+    }),
     vai_a_2t_nacional: null,
   };
   if (ehGov) {
@@ -3077,7 +3256,9 @@ export function montarPayloadEstadual(
     const porPartido = new Map<string, number>();
     for (const c of corridas) {
       if (c.ctx.pctApurado <= 0) continue;
-      for (const res of c.resultados.slice(0, vagas)) {
+      // As vagas vão para quem COMPETE (ADR-0053): uma anulada no topo não
+      // ocupa cadeira.
+      for (const res of competidores(c.resultados, destinoPublicadoNaUf(c)).slice(0, vagas)) {
         porPartido.set(res.cand.partido, (porPartido.get(res.cand.partido) ?? 0) + 1);
       }
     }
@@ -3116,8 +3297,9 @@ function insightsSenador(linhas: readonly EdgeUfRow[], corridas: readonly Corrid
     (l) => l.bucket === "decidido_1t" || l.bucket === "chamada",
   ).length;
   const disputadas = corridas.filter((c) => {
-    const seg = c.resultados[1];
-    const ter = c.resultados[2];
+    const disputa = competidores(c.resultados, destinoPublicadoNaUf(c));
+    const seg = disputa[1];
+    const ter = disputa[2];
     return seg !== undefined && ter !== undefined && seg.shareFinal - ter.shareFinal < 3;
   }).length;
   return [
@@ -3174,12 +3356,15 @@ export function montarPresidenteUf(
   // bloco nacional daqueles cargos seguem com `colorForRank(r.rank)`, e está
   // certo.
   const corPorId = new Map(nacionais.map((c) => [c.id, c.cor]));
+  // RF-213 — Presidente: destinação NACIONAL em toda UF (como o produtor).
+  const destinoPublicado = destinoPublicadoNoPais(corridas);
   const out: Record<string, EdgePayloadUf> = {};
   for (const c of corridas) {
     const candidatos: EdgeUfCandidate[] = c.resultados.map((r) => ({
       id: r.cand.id,
       nome: r.cand.nome,
       partido: r.cand.partido,
+      ...campoDestino(r, destinoPublicado),
       cor: corPorId.get(r.cand.id) ?? colorForRank(r.rank),
       votos_atuais: r.votosAtuais,
       votos_projetados: r.votosProjetados,
@@ -3189,9 +3374,11 @@ export function montarPresidenteUf(
       sqcand: r.cand.sqcand,
     }));
     // A ordem é a mesma de `resultados` (rank por projetado), e é isso que
-    // garante `candidatos[0].id === por_uf.lider`: o mapa pinta um vencedor e
-    // a página do estado mostra o mesmo.
-    const { pos, band } = agulha(c.resultados[0]?.pVitoria ?? 0, c.resultados[1]?.pVitoria ?? 0);
+    // garante `candidatos[0].id === por_uf.lider` — salvo se o 1º for uma
+    // candidatura anulada (RF-213): aí o `lider` é o 1º que COMPETE, e a
+    // agulha também é entre quem compete.
+    const disputa = competidores(c.resultados, destinoPublicado);
+    const { pos, band } = agulha(disputa[0]?.pVitoria ?? 0, disputa[1]?.pVitoria ?? 0);
     out[c.ctx.uf] = {
       uf: c.ctx.uf,
       ts,
@@ -3217,12 +3404,16 @@ export function montarSenadorUf(
   const vagas = cargoInfo(5).vagasPorUf ?? 2;
   const out: Record<string, EdgePayloadUf> = {};
   for (const c of estadual.corridas) {
-    const lider = c.resultados[0];
-    const segundo = c.resultados[1];
+    const publicado = destinoPublicadoNaUf(c);
+    // Agulha e vagas entre quem COMPETE (RF-213).
+    const disputa = competidores(c.resultados, publicado);
+    const lider = disputa[0];
+    const segundo = disputa[1];
     const candidatos: EdgeUfCandidate[] = c.resultados.map((r) => ({
       id: r.cand.id,
       nome: r.cand.nome,
       partido: r.cand.partido,
+      ...campoDestino(r, publicado),
       cor: colorForRank(r.rank),
       votos_atuais: r.votosAtuais,
       votos_projetados: r.votosProjetados,
@@ -3235,7 +3426,7 @@ export function montarSenadorUf(
       sqcand: r.cand.sqcand,
     }));
     // Agulha da UF: distância entre quem já tem a 2ª vaga e quem a disputa.
-    const { pos, band } = agulha(segundo?.pEleito ?? 0, c.resultados[2]?.pEleito ?? 0);
+    const { pos, band } = agulha(segundo?.pEleito ?? 0, disputa[2]?.pEleito ?? 0);
     out[c.ctx.uf] = {
       uf: c.ctx.uf,
       ts,
@@ -3323,11 +3514,15 @@ export function montarGovernadorUf(
 ): Record<string, EdgePayloadUf> {
   const out: Record<string, EdgePayloadUf> = {};
   for (const c of estadual.corridas) {
-    const lider = c.resultados[0];
+    const publicado = destinoPublicadoNaUf(c);
+    // Agulha entre quem COMPETE (RF-213).
+    const disputa = competidores(c.resultados, publicado);
+    const lider = disputa[0];
     const candidatos: EdgeUfCandidate[] = c.resultados.map((r) => ({
       id: r.cand.id,
       nome: r.cand.nome,
       partido: r.cand.partido,
+      ...campoDestino(r, publicado),
       // 🔴 **Sem `cor`**, ao contrário dos dois irmãos acima — e é deliberado,
       // não esquecimento. `EdgeUfCandidate.cor` foi marcado `@deprecated` em
       // 19/09 (`a631a14`: "o produtor para de emitir a cor por colocação"), e
@@ -3347,7 +3542,7 @@ export function montarGovernadorUf(
       // Sem `p_eleito` — ver o ponto 2 da docstring.
       sqcand: r.cand.sqcand,
     }));
-    const { pos, band } = agulha(lider?.pVitoria ?? 0, c.resultados[1]?.pVitoria ?? 0);
+    const { pos, band } = agulha(lider?.pVitoria ?? 0, disputa[1]?.pVitoria ?? 0);
     out[c.ctx.uf] = {
       uf: c.ctx.uf,
       ts,
@@ -4036,10 +4231,17 @@ const SERIE_PASSO_MIN = 5;
  * primeiras zonas apuradas não são amostra representativa do estado, e é isso
  * que o leitor vê balançar.
  */
-function serieDaUf(rng: Rng, corrida: CorridaUf, tsFinal: string): EdgeUfSeriesTemporais {
+function serieDaUf(
+  rng: Rng,
+  corrida: CorridaUf,
+  tsFinal: string,
+  destinoPublicado: boolean,
+): EdgeUfSeriesTemporais {
   const fim = Date.parse(tsFinal);
-  const lider = corrida.resultados[0];
-  const segundo = corrida.resultados[1];
+  // Margem e p_vitoria do líder entre quem COMPETE (RF-213).
+  const disputa = competidores(corrida.resultados, destinoPublicado);
+  const lider = disputa[0];
+  const segundo = disputa[1];
   const margemFinal = (lider?.shareAtual ?? 0) - (segundo?.shareAtual ?? 0);
   const pFinal = lider?.pVitoria ?? 0;
   const serie: EdgeUfSeriesTemporais = { margem: [], p_vitoria: [], turnout: [] };
@@ -4120,6 +4322,10 @@ export function montarMunicipios(
   for (const ctx of ctxs) {
     const corrida = corridas.find((c) => c.ctx.uf === ctx.uf);
     if (corrida === undefined) throw new Error(`Sem corrida de ${cargo} para ${ctx.uf}`);
+    // RF-213 — a destinação que decide: a nacional no Presidente, a da UF nos
+    // outros dois (a MESMA regra das listas e de `por_uf[].lider`).
+    const destinoPublicado =
+      cargo === "pres" ? destinoPublicadoNoPais(corridas) : destinoPublicadoNaUf(corrida);
     const muns = dados.municipios.filter((m) => m.uf === ctx.uf);
     if (muns.length === 0) throw new Error(`Sem municípios para ${ctx.uf}`);
 
@@ -4181,12 +4387,16 @@ export function montarMunicipios(
       const reportados: Record<number, number> = {};
       let v1 = -1;
       let v2 = -1;
-      let lider = corrida.resultados[0];
+      let lider: ResultadoCandUf | undefined;
       corrida.resultados.forEach((res, k) => {
         const v = votos[k] as number;
         // Sparse por contrato (`EdgeUfMunicipio.votos_reportados`): quem não
         // teve voto neste município não ocupa bytes em 5.570 objetos.
         if (v > 0) reportados[res.cand.id] = v;
+        // ADR-0053 / RF-213 — a anulada tem voto (fica em `votos_reportados`)
+        // mas não disputa: não lidera o município nem pinta o mapa, e a
+        // margem é sobre o 2º que COMPETE. Sub judice compete.
+        if (destinoPublicado && res.destino === "anulado") return;
         if (v > v1) {
           v2 = v1;
           v1 = v;
@@ -4223,7 +4433,7 @@ export function montarMunicipios(
       // gerador ainda não produz.
       turno: 1,
       municipios,
-      series_temporais: serieDaUf(r.derive(`serie|${ctx.uf}`), corrida, ts),
+      series_temporais: serieDaUf(r.derive(`serie|${ctx.uf}`), corrida, ts, destinoPublicado),
     };
   }
   return out;
@@ -4272,6 +4482,11 @@ export interface Manifest {
   };
   por_uf: LinhaManifest[];
   avisos: string[];
+  /**
+   * Presente só quando gerado com `--anulado-lidera <UF>` (ADR-0053 / RF-213):
+   * diz ao dono QUAL UF tem a anulada no topo, para ele ir direto à tela.
+   */
+  cenario_anulado_lidera?: { uf: string; fracao_anulados: number };
 }
 
 export interface SaidaSimulacao {
@@ -4343,7 +4558,11 @@ export function gerarSimulacao(
   const eleitoradoPorUf: Record<string, number> = {};
   for (const uf of UFS) eleitoradoPorUf[uf] = dados.eleitorado[uf]?.aptos ?? 0;
   const pctPorUf = distribuirPctPorUf(cli.pct, eleitoradoPorUf);
-  const ctxs = montarContextos(dados, pctPorUf, raiz.derive("ctx"));
+  // `--anulado-lidera` (ADR-0053 / RF-213): sem a flag, os mesmos contextos.
+  const ctxs = aplicarCenarioAnulado(
+    montarContextos(dados, pctPorUf, raiz.derive("ctx")),
+    cli.anuladoLidera,
+  );
 
   const pres = montarPresidente(dados, ctxs, raiz, cli.cenario, ts);
   const presidente = pres.payload;
@@ -4403,6 +4622,13 @@ export function gerarSimulacao(
     })),
     avisos: [...dados.avisos],
   };
+  // Só com a flag — o manifest do default não ganha chave nenhuma.
+  if (cli.anuladoLidera !== undefined) {
+    manifest.cenario_anulado_lidera = {
+      uf: cli.anuladoLidera,
+      fracao_anulados: FRACAO_ANULADOS_CENARIO,
+    };
+  }
 
   return {
     presidente,
@@ -4887,6 +5113,114 @@ export function validarSaida(s: SaidaSimulacao): void {
   // corrida: Σ `votos_projetados` das `valido` == `projetada.validos`, exato
   // (`conferirProjecaoDaCorrida`).
   validarCorrida(s);
+
+  // (15) ADR-0053 / RF-213 — o `destino` das LISTAS é o de `votacao.corrida`
+  // da mesma abrangência, e nenhum `lider` é uma candidatura anulada.
+  validarDestinoNasListas(s);
+}
+
+/** `id → destino` (ou `undefined`, se ainda não publicado) de uma corrida. */
+function destinoPorId(
+  corrida: readonly EdgeCorridaEntrada[] | undefined,
+): Map<number, EdgeDestinoVoto | undefined> {
+  return new Map((corrida ?? []).map((e) => [e.id, e.destino] as const));
+}
+
+/**
+ * (15) ADR-0053 / RF-213. Reprova:
+ *
+ *   - candidatura de uma lista (`national.candidatos`, `por_uf[].top_candidatos`,
+ *     `EdgePayloadUf.candidatos`) cujo `destino` difere do de `votacao.corrida`
+ *     da abrangência que decide — a do PAÍS no Presidente (em toda UF, como o
+ *     produtor), a da UF em Governador e Senador. "Difere" inclui um lado com
+ *     destino e o outro sem: emitir `destino` antes da 1ª totalização é
+ *     inventar o `dvt`; omiti-lo depois faz a tela tratar a anulada como quem
+ *     compete. ÚNICA exceção (2026-09-27): a corrida diz `"valido"` e a lista
+ *     não traz `destino` — as listas não emitem `"valido"` (`destinoNaLista`).
+ *     A lista trazer `"valido"` explícito também reprova: é o byte que a
+ *     regra existe para economizar;
+ *   - candidatura de uma lista que não está na corrida (a comparação acima
+ *     passaria em silêncio, com `undefined` dos dois lados);
+ *   - `por_uf[].lider` ou `municipios[].lider.candidato_id` que seja uma
+ *     candidatura `"anulado"` — ela pintaria o mapa com a cor de quem não
+ *     disputa.
+ */
+function validarDestinoNasListas(s: SaidaSimulacao): void {
+  const conferir = (
+    nome: string,
+    lista: ReadonlyArray<{ id: number; destino?: EdgeDestinoVoto }>,
+    ref: ReadonlyMap<number, EdgeDestinoVoto | undefined>,
+  ): void => {
+    for (const x of lista) {
+      if (!ref.has(x.id)) {
+        erro(`${nome}: candidatura ${x.id} fora de votacao.corrida — destino sem referência`);
+      }
+      // A lista omite `"valido"` (`destinoNaLista`): corrida `"valido"` ⇔ lista
+      // sem `destino`. Qualquer outra divergência reprova.
+      const esperado = ref.get(x.id) === "valido" ? undefined : ref.get(x.id);
+      if (x.destino !== esperado) {
+        erro(
+          `${nome}: candidatura ${x.id} com destino ${String(x.destino)}, mas votacao.corrida ` +
+            `da abrangência diz ${String(ref.get(x.id))} (ADR-0053 / RF-213)`,
+        );
+      }
+    }
+  };
+  const liderCompete = (
+    nome: string,
+    lider: number,
+    ref: ReadonlyMap<number, EdgeDestinoVoto | undefined>,
+  ): void => {
+    if (ref.get(lider) === "anulado") {
+      erro(`${nome}: lider ${lider} é candidatura ANULADA — não disputa (ADR-0053 / RF-213)`);
+    }
+  };
+
+  // Presidente — a destinação nacional vale em toda UF.
+  const refPres = destinoPorId(s.presidente.votacao?.corrida);
+  conferir("presidente.json/national", s.presidente.national.candidatos, refPres);
+  for (const l of s.presidente.por_uf) {
+    conferir(`presidente.json/por_uf/${l.sigla}`, l.top_candidatos, refPres);
+    liderCompete(`presidente.json/por_uf/${l.sigla}`, l.lider, refPres);
+  }
+  for (const [uf, p] of Object.entries(s.presidenteUf)) {
+    conferir(`presidente-uf.json/${uf}`, p.candidatos, refPres);
+  }
+  for (const [uf, blob] of Object.entries(s.municipiosPresT1)) {
+    for (const m of blob.municipios) {
+      liderCompete(`municipios-pres-t1/${uf}/${m.cod_ibge}`, m.lider.candidato_id, refPres);
+    }
+  }
+
+  // Governador e Senador — a destinação é a da UF.
+  const estaduais = [
+    ["governador", s.governador, s.governadorUf, s.municipiosGovT1, "gov"],
+    ["senador", s.senador, s.senadorUf, s.municipiosSenT1, "sen"],
+  ] as const;
+  for (const [nome, nacional, porUf, municipios, sufixo] of estaduais) {
+    const refUf = new Map<string, Map<number, EdgeDestinoVoto | undefined>>();
+    const refUniao = new Map<number, EdgeDestinoVoto | undefined>();
+    for (const [uf, p] of Object.entries(porUf)) {
+      const ref = destinoPorId(p.votacao?.corrida);
+      refUf.set(uf, ref);
+      for (const [id, d] of ref) refUniao.set(id, d);
+      conferir(`${nome}-uf.json/${uf}`, p.candidatos, ref);
+    }
+    // Os ids são únicos entre as 27 UFs (bloco 7(a)): a união é a referência
+    // da lista nacional, que é a concatenação das 27 corridas.
+    conferir(`${nome}.json/national`, nacional.national.candidatos, refUniao);
+    for (const l of nacional.por_uf) {
+      const ref = refUf.get(l.sigla) ?? new Map();
+      conferir(`${nome}.json/por_uf/${l.sigla}`, l.top_candidatos, ref);
+      liderCompete(`${nome}.json/por_uf/${l.sigla}`, l.lider, ref);
+    }
+    for (const [uf, blob] of Object.entries(municipios)) {
+      const ref = refUf.get(uf) ?? new Map();
+      for (const m of blob.municipios) {
+        liderCompete(`municipios-${sufixo}-t1/${uf}/${m.cod_ibge}`, m.lider.candidato_id, ref);
+      }
+    }
+  }
 }
 
 /**
@@ -5346,6 +5680,9 @@ async function main(): Promise<void> {
   console.log(`  cenário    : ${cli.cenario}`);
   console.log(`  seed       : ${cli.seed}`);
   console.log(`  saída      : ${cli.out}`);
+  if (cli.anuladoLidera !== undefined) {
+    console.log(`  anulado lidera (ADR-0053): ${cli.anuladoLidera} — Governador e Senador`);
+  }
 
   const dados = await carregarDados();
   const saida = gerarSimulacao(dados, cli, ts);

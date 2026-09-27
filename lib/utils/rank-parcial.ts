@@ -17,6 +17,9 @@
  * Determinismo (constituição § 6): funções puras, sem `Date`, sem random.
  */
 
+import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
+import { anuladasAoFim } from "@/lib/utils/destino-voto";
+
 /**
  * O mínimo que uma candidatura precisa ter para ser ordenável.
  *
@@ -30,6 +33,11 @@ export interface RankavelPorBase {
   id: number;
   pct_atual: number;
   pct_projetado: number;
+  /**
+   * ADR-0053 / RF-213 — lido só por {@link ordensPorBase}, que põe a
+   * candidatura `"anulado"` no fim das DUAS ordens. Ausente ⇒ compete.
+   */
+  destino?: EdgeDestinoVoto;
 }
 
 /**
@@ -123,8 +131,16 @@ export interface OrdensPorBase<T> {
 export function ordensPorBase<T extends RankavelPorBase>(
   candidatos: readonly T[],
 ): OrdensPorBase<T> {
-  const parcial = rankByParcial(candidatos);
-  const proj = rankByProjecao(candidatos);
+  // 🔴 ADR-0053 / RF-213 (decisão do dono, 2026-09-27): a candidatura de voto
+  // `"anulado"` continua na lista, com o percentual oficial, mas vai para o
+  // FIM das duas ordens — ela não disputa a vaga, e a posição 1 da lista é
+  // lida como "quem lidera". A partição fica AQUI, depois dos comparadores, e
+  // não dentro de `rankByParcial`/`rankByProjecao`: aqueles dois são portados
+  // critério a critério pelo produtor Python (ver a docstring de
+  // `rankByParcial`), e um critério novo lá exigiria mexer no gráfico de
+  // evolução no mesmo commit. Sem anulada na lista, a ordem é a de sempre.
+  const parcial = anuladasAoFim(rankByParcial(candidatos));
+  const proj = anuladasAoFim(rankByProjecao(candidatos));
   const posParcial = new Map<number, number>();
   const posProj = new Map<number, number>();
   parcial.forEach((c, i) => {

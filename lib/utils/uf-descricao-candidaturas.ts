@@ -53,6 +53,7 @@
  */
 
 import type { EdgeUfRow } from "@/lib/edge-config/types";
+import { anuladasAoFim, sufixoAriaDestino } from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 
@@ -113,8 +114,12 @@ export function descricaoCandidaturasUf(row: EdgeUfRow): string {
   // Sem `.slice()` — ver a nota acima. O comprimento é decidido pelo produtor
   // (`TOP_CANDIDATOS_POR_UF` + `RESGATE_POR_APURADO`), e esta lista tem de ser
   // paralela ao que a tela mostra (RF-025).
-  const partes = (row.top_candidatos ?? []).map((tc) =>
-    entrada(tc.nome ? nomeExibicao(tc.nome, tc.sqcand) : `Cand ${tc.id}`, tc.partido, tc.pct),
+  // ADR-0053 / RF-213 — a anulada no fim (a mesma ordem do balão e da
+  // ficha) e com a etiqueta dita em voz alta.
+  const partes = anuladasAoFim(row.top_candidatos ?? []).map(
+    (tc) =>
+      entrada(tc.nome ? nomeExibicao(tc.nome, tc.sqcand) : `Cand ${tc.id}`, tc.partido, tc.pct) +
+      sufixoAriaDestino(tc.destino),
   );
 
   const outros = row.outros;

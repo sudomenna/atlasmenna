@@ -66,6 +66,7 @@ import { useMunicipioSheetStore } from "@/components/shared/municipio-sheet-stor
 import { CODIGOS_IBGE_NAO_MUNICIPIO } from "@/lib/config/malha-ibge";
 import type { EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge-config/types";
 import { useHoverStore } from "@/lib/state/hover-store";
+import { compete } from "@/lib/utils/destino-voto";
 // 🔴 2026-09-20 — mesmo remédio do mapa nacional, ver
 // `_NationalChoroplethMapImpl.tsx` e `lib/utils/hover-card-placement.ts`.
 import {
@@ -191,7 +192,14 @@ function buildMunicipioHoverRows(
   candidatos: EdgeUfCandidate[],
 ): HoverCardRow[] {
   const todos = votosPorCandidatoMunicipio(municipio, candidatos);
-  const linhas: HoverCardRow[] = todos.slice(0, MUNICIPIO_TOP_N).map((v) => {
+  // ADR-0053 / RF-213 — o corte de {@link MUNICIPIO_TOP_N} é entre quem
+  // COMPETE; a anulada entra depois dele e antes de "Outros", sempre visível
+  // e com etiqueta. Cortar a lista crua com ela no fim a esconderia dentro de
+  // "Outros" — e "Outros" passaria a somar voto anulado junto com o de quem
+  // disputa. Sem anulada, `competem` é `todos` e o balão é o de sempre.
+  const competem = todos.filter(compete);
+  const anuladas = todos.filter((v) => !compete(v));
+  const linhas: HoverCardRow[] = [...competem.slice(0, MUNICIPIO_TOP_N), ...anuladas].map((v) => {
     return {
       name: v.nome,
       // 🔴 2026-09-20 — sem desvio: `textForParty` já resolve sigla ausente,
@@ -205,10 +213,11 @@ function buildMunicipioHoverRows(
       partido: v.partido,
       votos: v.votos,
       pct: v.pct,
+      ...(v.destino ? { destino: v.destino } : {}),
     };
   });
 
-  const cauda = todos.slice(MUNICIPIO_TOP_N);
+  const cauda = competem.slice(MUNICIPIO_TOP_N);
   if (cauda.length === 0) return linhas;
 
   return [

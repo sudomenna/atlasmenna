@@ -297,6 +297,11 @@ function synthesizeGovUfFromFixture(sigla: string, fixture: EdgePayload): EdgePa
         // valendo "não sei", e um consumidor futuro que teste `"sqcand" in c`
         // leria isso como "tem".
         ...(daUf?.sqcand ? { sqcand: daUf.sqcand } : {}),
+        // ADR-0053 / RF-213 — destino SÓ da linha DA UF (é a corrida daquele
+        // estado). Nunca cai no nacional: desde 2026-09-27 as listas não
+        // emitem `"valido"`, então ausente aqui é "compete" e não pode deixar
+        // passar o valor da união de 27 corridas. Ausente ⇒ sem chave.
+        ...(daUf?.destino ? { destino: daUf.destino } : {}),
       };
     });
   if (candidatos.length === 0) return null;

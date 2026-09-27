@@ -263,6 +263,9 @@ function sintetizarUf(
 
   const candidatos: EdgeUfCandidate[] = elenco.map((c) => {
     const t = identidade === "da-uf" ? daUf.get(c.id) : undefined;
+    // Ver o comentário no `destino` abaixo: da UF OU do nacional, nunca um
+    // caindo no outro.
+    const destino = identidade === "da-uf" ? t?.destino : c.destino;
     return {
       id: c.id,
       // Identidade da UF quando ela existe; o nacional é o fallback honesto de
@@ -279,6 +282,12 @@ function sintetizarUf(
       // valendo "não sei", e um consumidor que teste `"sqcand" in c` leria isso
       // como "tem".
       ...(t?.sqcand ? { sqcand: t.sqcand } : {}),
+      // ADR-0053 / RF-213 — destino da abrangência que decide: a linha DA UF
+      // em Governador/Senador, a lista nacional no Presidente. Sem cair de uma
+      // na outra: desde 2026-09-27 as listas não emitem `"valido"`, então a
+      // ausência na UF é "compete" e NÃO pode deixar passar o valor da lista
+      // nacional (em Gov/Sen, a união de 27 corridas). Ausente ⇒ sem chave.
+      ...(destino ? { destino } : {}),
     };
   });
 

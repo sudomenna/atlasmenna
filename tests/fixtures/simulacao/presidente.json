@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-27T05:34:08.319Z",
+  "ts": "2026-09-27T08:01:20.613Z",
   "cargo": 1,
   "turno": 1,
   "pct_apurado_total": 25,
@@ -154,6 +154,7 @@
         "id": 30,
         "nome": "ZEMA",
         "partido": "NOVO",
+        "destino": "sub_judice",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 2544017,
         "votos_projetados": 10112564,
@@ -171,6 +172,7 @@
         "id": 80,
         "nome": "SAMARA",
         "partido": "UP",
+        "destino": "anulado",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 2232863,
         "votos_projetados": 8875728,
@@ -394,6 +396,7 @@
           "pct": 2.69,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 4451,
           "pct_atual": 8.7
@@ -450,6 +453,7 @@
           "pct": 2.35,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 0,
           "pct_atual": 0
@@ -506,6 +510,7 @@
           "pct": 4.39,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 20760,
           "pct_atual": 8.7
@@ -562,6 +567,7 @@
           "pct": 4.56,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 4362,
           "pct_atual": 8.7
@@ -618,6 +624,7 @@
           "pct": 2.34,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 85024,
           "pct_atual": 8.7
@@ -674,6 +681,7 @@
           "pct": 2.34,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 54804,
           "pct_atual": 8.7
@@ -730,6 +738,7 @@
           "pct": 9.1,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 56903,
           "pct_atual": 8.7
@@ -786,6 +795,7 @@
           "pct": 5.23,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 62236,
           "pct_atual": 8.7
@@ -842,6 +852,7 @@
           "pct": 5.33,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 98991,
           "pct_atual": 8.7
@@ -898,6 +909,7 @@
           "pct": 1.81,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 38173,
           "pct_atual": 8.7
@@ -954,6 +966,7 @@
           "pct": 13.6,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 338799,
           "pct_atual": 8.7
@@ -1010,6 +1023,7 @@
           "pct": 5.2,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 51668,
           "pct_atual": 8.7
@@ -1066,6 +1080,7 @@
           "pct": 4.08,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 44101,
           "pct_atual": 8.7
@@ -1122,6 +1137,7 @@
           "pct": 2.11,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 47240,
           "pct_atual": 8.7
@@ -1178,6 +1194,7 @@
           "pct": 2.5,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 24445,
           "pct_atual": 8.7
@@ -1234,6 +1251,7 @@
           "pct": 2.92,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 55034,
           "pct_atual": 8.7
@@ -1290,6 +1308,7 @@
           "pct": 2.28,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 20636,
           "pct_atual": 8.7
@@ -1346,6 +1365,7 @@
           "pct": 7.65,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 198859,
           "pct_atual": 8.7
@@ -1402,6 +1422,7 @@
           "pct": 7.16,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 252634,
           "pct_atual": 8.7
@@ -1458,6 +1479,7 @@
           "pct": 2.2,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 20262,
           "pct_atual": 8.7
@@ -1514,6 +1536,7 @@
           "pct": 4.25,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 9117,
           "pct_atual": 8.7
@@ -1570,6 +1593,7 @@
           "pct": 4.39,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 3012,
           "pct_atual": 8.7
@@ -1626,6 +1650,7 @@
           "pct": 8.87,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 158843,
           "pct_atual": 8.7
@@ -1673,6 +1698,7 @@
           "pct": 16.87,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 90451,
           "pct_atual": 8.7
@@ -1738,6 +1764,7 @@
           "pct": 2.72,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 13107,
           "pct_atual": 8.7
@@ -1794,6 +1821,7 @@
           "pct": 11.74,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 781406,
           "pct_atual": 8.7
@@ -1850,6 +1878,7 @@
           "pct": 2.56,
           "nome": "ZEMA",
           "partido": "NOVO",
+          "destino": "sub_judice",
           "sqcand": "280002539826",
           "votos_atuais": 8699,
           "pct_atual": 8.7
@@ -1877,24 +1906,24 @@
   },
   "serie_por_candidato": {
     "eixo": [
-      "2026-09-27T04:05:00Z",
-      "2026-09-27T04:10:00Z",
-      "2026-09-27T04:15:00Z",
-      "2026-09-27T04:20:00Z",
-      "2026-09-27T04:25:00Z",
-      "2026-09-27T04:30:00Z",
-      "2026-09-27T04:35:00Z",
-      "2026-09-27T04:40:00Z",
-      "2026-09-27T04:45:00Z",
-      "2026-09-27T04:50:00Z",
-      "2026-09-27T04:55:00Z",
-      "2026-09-27T05:00:00Z",
-      "2026-09-27T05:05:00Z",
-      "2026-09-27T05:10:00Z",
-      "2026-09-27T05:15:00Z",
-      "2026-09-27T05:20:00Z",
-      "2026-09-27T05:25:00Z",
-      "2026-09-27T05:30:00Z"
+      "2026-09-27T06:35:00Z",
+      "2026-09-27T06:40:00Z",
+      "2026-09-27T06:45:00Z",
+      "2026-09-27T06:50:00Z",
+      "2026-09-27T06:55:00Z",
+      "2026-09-27T07:00:00Z",
+      "2026-09-27T07:05:00Z",
+      "2026-09-27T07:10:00Z",
+      "2026-09-27T07:15:00Z",
+      "2026-09-27T07:20:00Z",
+      "2026-09-27T07:25:00Z",
+      "2026-09-27T07:30:00Z",
+      "2026-09-27T07:35:00Z",
+      "2026-09-27T07:40:00Z",
+      "2026-09-27T07:45:00Z",
+      "2026-09-27T07:50:00Z",
+      "2026-09-27T07:55:00Z",
+      "2026-09-27T08:00:00Z"
     ],
     "cadencia_min": 5,
     "candidatos": [

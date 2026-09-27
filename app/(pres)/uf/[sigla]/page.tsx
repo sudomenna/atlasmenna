@@ -293,6 +293,8 @@ function synthesizeUfFromNational(sigla: string, national: EdgePayload): EdgePay
       pct_atual: c.pct_atual,
       pct_projetado: c.pct_projetado,
       ci95: { lower: c.pct_projetado_lower, upper: c.pct_projetado_upper },
+      // ADR-0053 / RF-213 — só quando existe (ausente ⇒ compete).
+      ...(c.destino ? { destino: c.destino } : {}),
     })),
     // Dev-only. Desde os cortes de 09/09 esta rota não tem mais consumidor
     // para `participacao` (os termômetros do ADR-0018 saíram, ver o cabeçalho

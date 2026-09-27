@@ -41,6 +41,7 @@
 import type { CSSProperties } from "react";
 
 import type { EdgeCandidate, EdgeNational, Turno } from "@/lib/edge-config/types";
+import { compete } from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { partyChipInk } from "@/lib/utils/party-color";
@@ -97,8 +98,14 @@ export function NationalWinnerBanner({
   if (national.candidato_a_id == null) return null;
 
   // Resolve líder: rank 1 primeiro, fallback por id.
+  //
+  // 🔴 ADR-0053 / RF-213 — `rank` conta a candidatura anulada (é publicado
+  // sobre `vvc`). Com ela em `rank` 1, o banner diria "Presidente eleito:
+  // <anulada>" assim que `pct_apurado_total` passasse do limiar. O `rank` 1
+  // só vale se COMPETE; senão, `candidato_a_id`, que o modelo já escolhe
+  // entre as que competem.
   const lider =
-    candidatos.find((c) => (c.rank ?? -1) === 1) ??
+    candidatos.find((c) => (c.rank ?? -1) === 1 && compete(c)) ??
     candidatos.find((c) => c.id === national.candidato_a_id);
   if (!lider) return null;
 

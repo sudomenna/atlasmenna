@@ -184,6 +184,7 @@ import { isPreEleicao } from "@/lib/config/fase";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readArchivedProjection, readNationalProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload } from "@/lib/edge-config/types";
+import { queCompetem } from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { rankByParcial } from "@/lib/utils/rank-parcial";
@@ -725,8 +726,18 @@ export default async function HomePage() {
   // `EdgeNational.candidatos` já chega. Ou seja, `lider`/`segundo` são "quem o
   // MODELO põe na frente" — que é exatamente o que a tabela por estado
   // (candidato A/B) e a agulha querem, e por isso eles seguem intocados.
-  const lider = national.candidatos.find((c) => (c.rank ?? -1) === 1) ?? national.candidatos[0];
-  const segundo = national.candidatos.find((c) => (c.rank ?? -1) === 2) ?? national.candidatos[1];
+  //
+  // 🔴 ADR-0053 / RF-213 — `rank` é publicado sobre `vvc` e CONTA a
+  // candidatura anulada; o modelo tira a anulada só das decisões
+  // (`candidato_a_id`, agulha, `p_*`). Por isso o líder aqui é o de MENOR
+  // `rank` entre as que COMPETEM, não "quem tem `rank === 1`" — que seria a
+  // anulada, com `p_fecha_1t = 0`, nomeada no painel de chances e na tabela
+  // por estado. Sem anulada, dá exatamente o `rank` 1 e o 2 de sempre.
+  const porRankQueCompete = queCompetem(national.candidatos)
+    .slice()
+    .sort((a, b) => (a.rank ?? Number.POSITIVE_INFINITY) - (b.rank ?? Number.POSITIVE_INFINITY));
+  const lider = porRankQueCompete[0] ?? national.candidatos[0];
+  const segundo = porRankQueCompete[1] ?? national.candidatos[1];
 
   // ...e quem a CONTAGEM põe na frente, que desde 2026-09-20 é uma pergunta
   // diferente NA TELA: com "tudo acompanha a base ativa", o `<ResultPanel>`
@@ -740,7 +751,10 @@ export default async function HomePage() {
   // (`lib/utils/rank-parcial.ts`, ponto único das duas ordens): se a lista e
   // este nome divergirem algum dia, será porque o comparador mudou, não porque
   // há dois critérios na mesma página.
-  const liderParcial = rankByParcial(national.candidatos)[0] ?? lider;
+  //
+  // ADR-0053 — o 1º da contagem QUE COMPETE (a lista põe a anulada no fim;
+  // este nome tem de concordar com ela).
+  const liderParcial = rankByParcial(queCompetem(national.candidatos))[0] ?? lider;
 
   // Badges de estado ao lado do título do painel de resultado (RF-028). São
   // os mesmos nos dois modos — por isso saíram do JSX de cada ramo.

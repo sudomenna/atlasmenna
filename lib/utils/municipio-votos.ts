@@ -17,7 +17,8 @@
  * importar de `components/blocks/`) possa chamá-la também.
  */
 
-import type { EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge-config/types";
+import type { EdgeDestinoVoto, EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge-config/types";
+import { anuladasAoFim } from "@/lib/utils/destino-voto";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { colorForParty } from "@/lib/utils/party-color";
 
@@ -80,6 +81,12 @@ export interface MunicipioVotoCandidato {
    * ao mesmo tempo (é por isso que a conta está aqui, e não duplicada).
    */
   pct: number;
+  /**
+   * ADR-0053 / RF-213 — destinação do voto da candidatura NA UF
+   * (`EdgeUfCandidate.destino`). Ausente ⇒ compete. Só etiqueta e ordem: o
+   * líder do município é o `m.lider` do Blob, que o produtor calcula.
+   */
+  destino?: EdgeDestinoVoto;
 }
 
 /**
@@ -124,7 +131,8 @@ export function votosPorCandidatoMunicipio(
   const entradas = Object.entries(municipio.votos_reportados ?? {});
   const total = entradas.reduce((acc, [, v]) => acc + (Number.isFinite(v) ? v : 0), 0);
 
-  return entradas
+  // ADR-0053 / RF-213 — anulada no fim, depois do ranking por votos.
+  const ordenados = entradas
     .map(([rawId, votos]) => {
       const id = Number(rawId);
       const c = porId.get(id);
@@ -137,7 +145,9 @@ export function votosPorCandidatoMunicipio(
         cor: colorForParty(c?.partido),
         votos: v,
         pct: total > 0 ? (v / total) * 100 : 0,
+        ...(c?.destino ? { destino: c.destino } : {}),
       };
     })
     .sort((a, b) => b.votos - a.votos || a.id - b.id);
+  return anuladasAoFim(ordenados);
 }

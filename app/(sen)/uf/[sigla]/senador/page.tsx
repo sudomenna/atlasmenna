@@ -93,6 +93,7 @@ import { isPreEleicao } from "@/lib/config/fase";
 import { simulacaoLigada, simulacaoMunicipiosUf, simulacaoSenadorUf } from "@/lib/dev/simulacao";
 import { readProjection, readUfProjection } from "@/lib/edge-config/reader";
 import type { EdgePayloadUf, EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge-config/types";
+import { queCompetem } from "@/lib/utils/destino-voto";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { ordensPorBase } from "@/lib/utils/rank-parcial";
 import senUfFixture from "@/tests/fixtures/edge-config/sen-uf.json" with { type: "json" };
@@ -478,8 +479,11 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
   // recorte e não tem `p_eleito` some do painel, e não é substituído pelo
   // próximo colocado. Publicar um medidor de quem o modelo não avaliou — nem
   // que fosse com 0% — seria inventar uma afirmação que o payload não faz.
+  // ADR-0053 / RF-213 — só quem DISPUTA entra no elenco das vagas: a
+  // anulada já vem no fim de `ordensPorBase`, e o filtro garante que ela não
+  // entre nem numa corrida com menos candidaturas que `vagas + 1`.
   const elencoDe = (ordenados: readonly EdgeUfCandidate[]) =>
-    ordenados
+    queCompetem(ordenados)
       .slice(0, vagas + 1)
       .filter((c): c is EdgeUfCandidate & { p_eleito: number } => c.p_eleito != null)
       .map((c) => ({

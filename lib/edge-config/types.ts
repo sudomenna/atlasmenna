@@ -457,6 +457,23 @@ export interface EdgeCandidate {
   nome: string;
   partido: string;
   /**
+   * Destinação do voto desta candidatura (`cand[].dvt`, ADR-0053 / RF-213).
+   * 🔴 **Emitido SÓ quando `"anulado"` ou `"sub_judice"`** — `"valido"`
+   * nunca é gravado nesta lista (2026-09-27: 19 B por candidatura, ~6 KB no
+   * Senado nacional, derrubavam a folga de 2× do limiar do payload).
+   * `"anulado"` ⇒ NÃO compete: a tela a põe no fim da lista com a etiqueta
+   * "Anulado" e a ignora ao derivar líder, margem, vagas e cor do mapa.
+   * `"sub_judice"` ⇒ compete (segue o TSE), com etiqueta "Sub judice".
+   * **Ausente** ⇒ compete: válida, OU o TSE ainda não publicou (antes da 1ª
+   * totalização parcial), OU os arquivos divergiram — a tela nunca supõe
+   * anulado e não distingue os três casos (quem precisa distinguir válido de
+   * "ainda não publicado" é `votacao.corrida[]`, que continua emitindo
+   * `"valido"`). Os percentuais continuam sobre `vvc` (ADR-0018) em todos os
+   * casos. O tipo segue `EdgeDestinoVoto` para não quebrar consumidores; o
+   * produtor não grava `"valido"` aqui.
+   */
+  destino?: EdgeDestinoVoto;
+  /**
    * @deprecated **Não leia este campo.** Aposentado em 2026-09-19.
    *
    * Ele carrega `var(--color-cand-{rank})` — a paleta por **COLOCAÇÃO** do
@@ -810,6 +827,23 @@ export interface EdgeUfRow {
     nome?: string;
     /** Sigla. Ausente = consumidor cai no que já faz hoje ("—"). */
     partido?: string;
+    /**
+     * Destinação do voto desta candidatura (`cand[].dvt`, ADR-0053 / RF-213).
+     * 🔴 **Emitido SÓ quando `"anulado"` ou `"sub_judice"`** — `"valido"`
+     * nunca é gravado nesta lista (2026-09-27: 19 B por candidatura, ~6 KB no
+     * Senado nacional, derrubavam a folga de 2× do limiar do payload).
+     * `"anulado"` ⇒ NÃO compete: a tela a põe no fim da lista com a etiqueta
+     * "Anulado" e a ignora ao derivar líder, margem, vagas e cor do mapa.
+     * `"sub_judice"` ⇒ compete (segue o TSE), com etiqueta "Sub judice".
+     * **Ausente** ⇒ compete: válida, OU o TSE ainda não publicou (antes da 1ª
+     * totalização parcial), OU os arquivos divergiram — a tela nunca supõe
+     * anulado e não distingue os três casos (quem precisa distinguir válido de
+     * "ainda não publicado" é `votacao.corrida[]`, que continua emitindo
+     * `"valido"`). Os percentuais continuam sobre `vvc` (ADR-0018) em todos os
+     * casos. O tipo segue `EdgeDestinoVoto` para não quebrar consumidores; o
+     * produtor não grava `"valido"` aqui.
+     */
+    destino?: EdgeDestinoVoto;
     /**
      * Identidade **global e estável** do candidato (ADR-0042 item 2) — é o
      * que liga esta linha à foto, via
@@ -1221,6 +1255,23 @@ export interface EdgeUfCandidate {
   id: number;
   nome: string;
   partido: string;
+  /**
+   * Destinação do voto desta candidatura (`cand[].dvt`, ADR-0053 / RF-213).
+   * 🔴 **Emitido SÓ quando `"anulado"` ou `"sub_judice"`** — `"valido"`
+   * nunca é gravado nesta lista (2026-09-27: 19 B por candidatura, ~6 KB no
+   * Senado nacional, derrubavam a folga de 2× do limiar do payload).
+   * `"anulado"` ⇒ NÃO compete: a tela a põe no fim da lista com a etiqueta
+   * "Anulado" e a ignora ao derivar líder, margem, vagas e cor do mapa.
+   * `"sub_judice"` ⇒ compete (segue o TSE), com etiqueta "Sub judice".
+   * **Ausente** ⇒ compete: válida, OU o TSE ainda não publicou (antes da 1ª
+   * totalização parcial), OU os arquivos divergiram — a tela nunca supõe
+   * anulado e não distingue os três casos (quem precisa distinguir válido de
+   * "ainda não publicado" é `votacao.corrida[]`, que continua emitindo
+   * `"valido"`). Os percentuais continuam sobre `vvc` (ADR-0018) em todos os
+   * casos. O tipo segue `EdgeDestinoVoto` para não quebrar consumidores; o
+   * produtor não grava `"valido"` aqui.
+   */
+  destino?: EdgeDestinoVoto;
   /** @deprecated Ver {@link EdgeCandidate.cor}. Aposentado em 2026-09-19. */
   cor?: string;
   /** Votos absolutos REPORTADOS no momento (TSE). */
