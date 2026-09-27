@@ -50,6 +50,14 @@
  * gráfico é do FIM da apuração, quando `aptos − instalados → 0`. O que sobra
  * ali é anulado, e é assim que o residual se chama.
  *
+ * ## O seletor Parcial/Projeção escolhe os arcos (RF-195b, 2026-09-27)
+ *
+ * Arcos 1 e 2 são da visão "Parcial" e o arco 3 da "Projeção", via
+ * `data-view-only` (ADR-0029 § 2): os três seguem no HTML e a cascata de
+ * `app/globals.css` esconde o outro lado — nenhum JS novo. A metodologia tem um
+ * parágrafo por visão. A grade ({@link GRADE_DOS_ARCOS}) mantém o tamanho do
+ * arco igual nas duas visões.
+ *
  * ## Três estados, e colapsar dois é o erro (RF-193b vs RF-198)
  *
  * | no payload                                   | o que é       | o que sai na tela            |
@@ -122,7 +130,48 @@ import type {
   EdgeVotacaoContagens,
   EdgeVotacaoProjetada,
 } from "@/lib/edge-config/types";
+import type { ViewMode } from "@/lib/state/view-mode";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
+
+// ---------------------------------------------------------------------------
+// A grade dos arcos — compartilhada com o painel da corrida (spec 022)
+// ---------------------------------------------------------------------------
+
+/** Vão horizontal entre arcos. Entra na conta da faixa mínima abaixo. */
+const VAO_COLUNA = "var(--space-6)";
+
+/**
+ * Grade dos arcos, em faixas de UM TERÇO do painel (nunca menos de 260px).
+ *
+ * 🔴 Era `repeat(auto-fit, minmax(260px, 1fr))` até 2026-09-27, e deixou de
+ * servir quando o seletor Parcial/Projeção passou a esconder arcos (spec 021
+ * RF-195b, spec 022 RF-211). `auto-fit` COLAPSA as faixas vazias e o `1fr`
+ * distribui a sobra entre os itens visíveis — medido no navegador em
+ * `/uf/BA/deputado-federal` a 1280px: painel de 1.217px, três arcos de 390px
+ * cada. Com o seletor escondendo arcos, os dois do Parcial passariam a 596px e
+ * o único da Projeção a 1.217px: o mesmo gráfico com três tamanhos conforme a
+ * visão.
+ *
+ * `auto-fill` mantém as faixas vazias no lugar, e a faixa mínima de um terço
+ * fixa QUANTAS cabem — três num painel largo, sem que uma quarta de 260px se
+ * encaixe e encolha as outras. O arco fica do mesmo tamanho nas duas visões,
+ * alinhado à esquerda com o título do painel. Num painel estreito (a coluna
+ * lateral da home, o celular) o terço fica abaixo de 260px, cabe UMA faixa e o
+ * `1fr` a estica — igual a antes.
+ *
+ * O `- 1px` é folga de arredondamento: três terços exatos mais dois vãos somam
+ * exatamente 100%, e um épsilon de ponto flutuante a mais derrubaria a grade
+ * para duas faixas.
+ *
+ * ⚠️ Não há vão fantasma aqui (a armadilha de 2026-09-20, `app/globals.css`):
+ * aquela era uma grade de faixas EXPLÍCITAS; nesta os itens escondidos saem do
+ * posicionamento automático e os visíveis ocupam as primeiras faixas.
+ */
+export const GRADE_DOS_ARCOS: CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: `repeat(auto-fill, minmax(max(260px, calc((100% - 2 * ${VAO_COLUNA}) / 3 - 1px)), 1fr))`,
+  gap: `var(--space-5) ${VAO_COLUNA}`,
+};
 
 // ---------------------------------------------------------------------------
 // Vocabulário das fatias
@@ -512,6 +561,23 @@ function estiloMarcador(cor: CorFatia): CSSProperties {
   };
 }
 
+/** Título de um arco (`<figcaption>`). */
+const ESTILO_TITULO_ARCO: CSSProperties = {
+  font: "var(--type-kicker)",
+  letterSpacing: "var(--tracking-caps)",
+  textTransform: "uppercase",
+  color: "var(--accent-text)",
+};
+
+/** Texto de um arco que não pode ser desenhado (espera, inconsistência). */
+const ESTILO_ESPERA_ARCO: CSSProperties = {
+  margin: 0,
+  font: "var(--type-body-sm)",
+  color: "var(--text-muted)",
+  borderTop: "1px solid var(--border-hairline)",
+  paddingTop: "var(--space-2)",
+};
+
 export interface ArcoProps {
   id: string;
   /**
@@ -536,6 +602,17 @@ export interface ArcoProps {
   fatias: readonly FatiaDesenho[];
   /** Renderizado no lugar das fatias quando não há o que desenhar. */
   vazio?: { testid: string; texto: string };
+  /**
+   * Visão do seletor Parcial/Projeção em que este arco aparece (ADR-0029 § 2,
+   * `data-view-only`). Ausente ⇒ aparece nas duas.
+   *
+   * O atributo vai num `<div>` EM VOLTA da `<figure>`, e não nela: a figura
+   * declara `display: flex` inline, e estilo inline vence a regra
+   * `[data-view-only] { display: none }` da folha — o arco nunca sumiria. O
+   * invólucro não tem `display` próprio, então `display: revert` o devolve a
+   * `block`. Os estados vazios moram dentro da figura e somem com ela.
+   */
+  visao?: ViewMode;
 }
 
 /**
@@ -543,7 +620,24 @@ export interface ArcoProps {
  * no painel da corrida (`CorridaTresCirculos`). Não conhece o vocabulário de
  * fatias de nenhum dos dois painéis: recebe cada fatia com a cor resolvida.
  */
-export function Arco({ id, defsPrefix, titulo, baseLabel, total, fatias, vazio }: ArcoProps) {
+export function Arco({ visao, ...props }: ArcoProps) {
+  if (!visao) return <ArcoFigura {...props} />;
+  return (
+    <div data-view-only={visao} data-testid={`${props.id}-visao`}>
+      <ArcoFigura {...props} />
+    </div>
+  );
+}
+
+function ArcoFigura({
+  id,
+  defsPrefix,
+  titulo,
+  baseLabel,
+  total,
+  fatias,
+  vazio,
+}: Omit<ArcoProps, "visao">) {
   // Não existe mais "denominador da geometria" separado do total. Ele existia
   // para o arco 3 fechar o anel quando as projeções não somavam `aptos`; desde
   // a correção do RF-195 o arco 3 tem a quinta fatia por subtração e fecha em
@@ -575,28 +669,10 @@ export function Arco({ id, defsPrefix, titulo, baseLabel, total, fatias, vazio }
       data-soma-abs={String(somaAbs)}
       style={{ margin: 0, display: "flex", flexDirection: "column", gap: "var(--space-2)" }}
     >
-      <figcaption
-        style={{
-          font: "var(--type-kicker)",
-          letterSpacing: "var(--tracking-caps)",
-          textTransform: "uppercase",
-          color: "var(--accent-text)",
-        }}
-      >
-        {titulo}
-      </figcaption>
+      <figcaption style={ESTILO_TITULO_ARCO}>{titulo}</figcaption>
 
       {vazio ? (
-        <p
-          data-testid={vazio.testid}
-          style={{
-            margin: 0,
-            font: "var(--type-body-sm)",
-            color: "var(--text-muted)",
-            borderTop: "1px solid var(--border-hairline)",
-            paddingTop: "var(--space-2)",
-          }}
-        >
+        <p data-testid={vazio.testid} style={ESTILO_ESPERA_ARCO}>
           {vazio.texto}
         </p>
       ) : (
@@ -840,6 +916,9 @@ const TITLE_ID_PADRAO = "votacao-eleitorado-heading";
  */
 const FUNDO_DO_ROTULO: CSSProperties = { background: "var(--surface-page)" };
 
+/** Parágrafo da metodologia — a margem é dele, não do invólucro (ver o JSX). */
+const ESTILO_PARAGRAFO_METODOLOGIA: CSSProperties = { margin: "var(--space-4) 0 0" };
+
 export function VotacaoEleitorado({
   votacao,
   kicker,
@@ -877,6 +956,8 @@ export function VotacaoEleitorado({
 
   const anuladosESubJudice = anuladosTotal(c);
   const naoInstalados = Math.max(0, naoApuradoInstalacao(c));
+  // O residual do arco 3 — o anulado PROJETADO, não o contado até agora.
+  const anuladosProjetados = c3?.find((f) => f.key === "anulados")?.abs ?? 0;
 
   return (
     <Panel
@@ -889,14 +970,15 @@ export function VotacaoEleitorado({
       <div
         data-testid="votacao-eleitorado"
         data-instalados={String(c.instalados)}
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: "var(--space-5) var(--space-6)",
-        }}
+        style={GRADE_DOS_ARCOS}
       >
+        {/* RF-195b — o seletor do shell escolhe os arcos: 1 e 2 são o que JÁ
+            foi contado ("Parcial"); o 3 é o fim projetado ("Projeção"). Os
+            três seguem no HTML (ADR-0017); a cascata esconde o outro lado. */}
+
         {/* Arco 1 — RF-193 / RF-193b. As SEIS fatias sobre os aptos. */}
         <Arco
+          visao="parcial"
           id="votacao-circulo-1"
           defsPrefix={titleId}
           titulo="Do eleitorado apto"
@@ -918,6 +1000,7 @@ export function VotacaoEleitorado({
             própria e nomeada, sem "ainda não apurado". Denominador zero
             (RF-193b) NÃO vira "0,0%": vira texto. */}
         <Arco
+          visao="parcial"
           id="votacao-circulo-2"
           defsPrefix={titleId}
           titulo="Do eleitorado já apurado"
@@ -949,6 +1032,7 @@ export function VotacaoEleitorado({
             com texto próprio: confundi-lo com "aguardando" mandaria o operador
             esperar por um dado que já chegou, e errado. */}
         <Arco
+          visao="proj"
           id="votacao-circulo-3"
           defsPrefix={titleId}
           titulo="Projeção para o fim da apuração"
@@ -978,46 +1062,75 @@ export function VotacaoEleitorado({
           real do simulado. Desde 2026-09-26 eles têm fatia própria, mas a
           declaração continua — e ganhou um segundo dever, explicar que anulado
           NÃO é nulo, porque são ramos diferentes da árvore do TSE e a tela põe
-          os dois lado a lado em cinza. */}
-      <p
+          os dois lado a lado em cinza.
+
+          🔴 RF-195b (2026-09-27): o texto acompanha o seletor. Um parágrafo
+          por visão, cada um falando SÓ dos arcos que a sua visão mostra —
+          frase que cite um gráfico escondido ("o terceiro gráfico…" na visão
+          Parcial) é defeito, e a mesma verdade não se repete dentro de uma
+          visão. A distinção anulado ≠ nulo aparece nas duas porque as duas têm
+          a fatia "Anulados e sub judice"; cada visão a diz uma vez. A margem
+          fica em cada parágrafo, não no invólucro: sem projeção não há
+          parágrafo da Projeção, e o invólucro não deixa um vão vazio. */}
+      <div
         data-testid="votacao-metodologia"
         style={{
-          marginTop: "var(--space-4)",
           font: "var(--type-body-sm)",
           fontSize: "var(--text-xs)",
           color: "var(--text-secondary)",
         }}
       >
-        Os três gráficos têm bases diferentes e não devem ser comparados fatia a fatia: o primeiro e
-        o terceiro são sobre os {formatVotes(c.aptos)} eleitores aptos; o segundo, só sobre o
-        eleitorado das seções já instaladas.{" "}
-        {anuladosESubJudice > 0 ? (
-          <>
-            <strong style={{ fontWeight: 600 }}>
-              {formatVotes(anuladosESubJudice)} votos anulados e sub judice
-            </strong>{" "}
-            têm fatia própria e não se confundem com voto nulo: no voto nulo o eleitor não escolheu
-            ninguém, enquanto o anulado foi dado a uma candidatura e anulado depois pela Justiça —
-            sub judice é a parte ainda sob decisão.{" "}
-          </>
+        <p
+          data-view-only="parcial"
+          data-testid="votacao-metodologia-parcial"
+          style={ESTILO_PARAGRAFO_METODOLOGIA}
+        >
+          Os dois gráficos têm bases diferentes e não devem ser comparados fatia a fatia: o primeiro
+          é sobre os {formatVotes(c.aptos)} eleitores aptos; o segundo, só sobre o eleitorado das
+          seções já instaladas.
+          {anuladosESubJudice > 0 ? (
+            <>
+              {" "}
+              <strong style={{ fontWeight: 600 }}>
+                {formatVotes(anuladosESubJudice)} votos anulados e sub judice
+              </strong>{" "}
+              têm fatia própria e não se confundem com voto nulo: no voto nulo o eleitor não
+              escolheu ninguém, enquanto o anulado foi dado a uma candidatura e anulado depois pela
+              Justiça — sub judice é a parte ainda sob decisão.
+            </>
+          ) : null}
+          {naoInstalados > 0 ? (
+            <>
+              {" "}
+              “Ainda não apurado” são {formatVotes(naoInstalados)} eleitores de seções ainda não
+              instaladas ou não totalizadas — e só isso.
+            </>
+          ) : null}
+        </p>
+        {c3 ? (
+          <p
+            data-view-only="proj"
+            data-testid="votacao-metodologia-proj"
+            style={ESTILO_PARAGRAFO_METODOLOGIA}
+          >
+            A projeção é sobre os {formatVotes(c.aptos)} eleitores aptos, e as quatro projeções são
+            publicadas como saem do modelo, sem reescala. Neste gráfico não existe fatia “ainda não
+            apurado”, porque ele mostra o fim da apuração, quando não há mais seção por apurar.
+            {anuladosProjetados > 0 ? (
+              <>
+                {" "}
+                O que sobra ali são os votos anulados e sub judice, que{" "}
+                <strong style={{ fontWeight: 600 }}>não chegam a zero no fim da apuração</strong> —
+                continuam existindo depois de a última urna ser contada — e não se confundem com
+                voto nulo: no voto nulo o eleitor não escolheu ninguém, enquanto o anulado foi dado
+                a uma candidatura e anulado depois pela Justiça; sub judice é a parte ainda sob
+                decisão.
+              </>
+            ) : null}{" "}
+            O intervalo de confiança de cada métrica é publicado à parte, sobre a base de cada uma.
+          </p>
         ) : null}
-        {naoInstalados > 0 ? (
-          <>
-            “Ainda não apurado” são {formatVotes(naoInstalados)} eleitores de seções ainda não
-            instaladas ou não totalizadas — e só isso.{" "}
-          </>
-        ) : null}
-        {projetada ? (
-          <>
-            As quatro projeções são publicadas como saem do modelo, sem reescala. No terceiro
-            gráfico não existe fatia “ainda não apurado”, porque ele mostra o fim da apuração,
-            quando não há mais seção por apurar; o que sobra ali são os votos anulados, que{" "}
-            <strong style={{ fontWeight: 600 }}>não chegam a zero no fim da apuração</strong> —
-            continuam existindo depois de a última urna ser contada. O intervalo de confiança de
-            cada métrica é publicado à parte, sobre a base de cada uma.
-          </>
-        ) : null}
-      </p>
+      </div>
     </Panel>
   );
 }

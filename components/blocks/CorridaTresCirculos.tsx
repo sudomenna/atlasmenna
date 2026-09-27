@@ -78,6 +78,18 @@
  * SVG no balde `incomplete`, que não reprova nada. A tradução textual
  * (RNF-023) é a legenda VISÍVEL de cada círculo.
  *
+ * ## O seletor Parcial/Projeção (RF-211, RF-212 — 2026-09-27)
+ *
+ * Os três círculos são o que JÁ foi contado: visão "Parcial", via
+ * `data-view-only` (ADR-0029 § 2), como os arcos 1 e 2 do painel irmão. Na
+ * visão "Projeção" entra um quarto semicírculo, o da corrida PROJETADA
+ * ({@link fatiasProjecaoCorrida}): o total é `votacao.projetada.validos` — o
+ * MESMO número da fatia de válidos do arco 3 do painel "Votação", para os dois
+ * painéis nunca discordarem na mesma tela — dividido pela participação de cada
+ * candidatura em Σ `votos_projetados` das `valido`. Sem dado, "aguardando",
+ * sempre no DOM. `<DetailUnavailable>` e o Senado (RF-210) não têm visão:
+ * valem nas duas.
+ *
  * Server Component puro — sem `"use client"`, sem estado, sem evento (RNF-007a).
  */
 
@@ -91,6 +103,7 @@ import {
   FATIA_LABEL,
   type FatiaDesenho,
   type FatiaKey,
+  GRADE_DOS_ARCOS,
 } from "@/components/blocks/VotacaoEleitorado";
 import type {
   EdgeCorridaEntrada,
@@ -130,8 +143,17 @@ export interface Concorrente {
   votos: number;
 }
 
-/** Nome por número de urna — a lista `candidatos` do MESMO payload. */
-export type CandidatoNome = { id: number; nome?: string | null };
+/**
+ * Nome e projeção por número de urna — a lista `candidatos` do MESMO payload
+ * (`national.candidatos` em `/`, `EdgePayloadUf.candidatos` nas UFs). O `id` é
+ * o número de urna, a mesma chave de `EdgeCorridaEntrada.id`.
+ * `votos_projetados` só é lido pelo círculo de projeção (RF-212).
+ */
+export type CandidatoNome = {
+  id: number;
+  nome?: string | null;
+  votos_projetados?: number | null;
+};
 
 // ---------------------------------------------------------------------------
 // Ordem e filtro — exportados porque é onde os defeitos moram
@@ -222,6 +244,116 @@ export function fatiasDaCorrida(ordenados: readonly Concorrente[]): FatiaAbs[] {
   }));
   const resto = ordenados.slice(TOP_N).reduce((s, c) => s + c.votos, 0);
   return [...top, { key: "outros", label: "Outros", abs: resto, pintura: COR_OUTROS }];
+}
+
+// ---------------------------------------------------------------------------
+// O círculo de projeção (RF-212)
+// ---------------------------------------------------------------------------
+
+/**
+ * Divide `total` entre `pesos` na proporção de cada um, com arredondamento pelo
+ * MAIOR RESTO: cada parte recebe o piso da sua cota e as unidades que faltam
+ * vão, uma a uma, às de maior resto (empate ⇒ a de menor índice, que é a de
+ * maior peso na ordem de chegada aqui). A soma é `total` EXATO, por
+ * construção — arredondar cada cota sozinha erraria por ±1 ou ±2.
+ *
+ * Aritmética em `BigInt` de propósito: `total × peso` passa de 2^53 com números
+ * de eleição nacional (1,6e8 × 4e7 ≈ 6e15 já encosta; 1e8 × 1e8 passa), e um
+ * produto arredondado em ponto flutuante mudaria o resto — e com ele QUEM
+ * recebe a unidade.
+ */
+export function maiorResto(pesos: readonly number[], total: number): number[] {
+  const T = BigInt(total);
+  const S = pesos.reduce((s, p) => s + BigInt(p), BigInt(0));
+  if (S === BigInt(0)) return pesos.map(() => 0);
+  const partes = pesos.map((p) => (T * BigInt(p)) / S);
+  const restos = pesos.map((p) => (T * BigInt(p)) % S);
+  let falta = T - partes.reduce((s, x) => s + x, BigInt(0));
+  const ordem = pesos
+    .map((_, i) => i)
+    .sort((a, b) => {
+      const ra = restos[a] ?? BigInt(0);
+      const rb = restos[b] ?? BigInt(0);
+      return rb > ra ? 1 : rb < ra ? -1 : a - b;
+    });
+  for (const i of ordem) {
+    if (falta <= BigInt(0)) break;
+    partes[i] = (partes[i] ?? BigInt(0)) + BigInt(1);
+    falta -= BigInt(1);
+  }
+  return partes.map((x) => Number(x));
+}
+
+/**
+ * RF-212 — as fatias do círculo de projeção da corrida, ou `null` ("aguardando").
+ *
+ *   - entram só as candidaturas `destino === "valido"` em `corrida` (RF-203)
+ *     que têm `votos_projetados > 0` na lista `candidatos`, cruzada por `id`;
+ *     candidatura ausente da lista NÃO entra (não há projeção dela para
+ *     dividir — nunca um zero inventado);
+ *   - ordem pela PROJEÇÃO (é o gráfico da projeção), desempate pelo número de
+ *     urna crescente, como no RF-202; quatro com fatia própria + "Outros";
+ *   - fatia = `projetadaValidos × votos_projetados_i ÷ Σ votos_projetados`,
+ *     pelo maior resto: Σ fatias === `projetadaValidos`, na unidade.
+ *
+ * `null` quando: não há `projetadaValidos` (ou não é inteiro positivo); a
+ * destinação está pendente (RF-207 — sem saber quem é válido, a divisão seria
+ * o número errado); `corrida` ausente; nenhuma candidatura válida com projeção
+ * (Σ = 0); ou uma projeção não é inteiro ≥ 0 (payload torto não vira fatia).
+ * Nunca devolve fatias cujo total difira de `projetadaValidos` — o `fechar`
+ * confere na saída.
+ *
+ * ⚠️ Os votos de cada candidatura AQUI podem diferir nos últimos dígitos dos
+ * `votos_projetados` da lista: o total vem da projeção de participação, a
+ * divisão vem da soma das candidaturas. Medido no replay 2022 (spec 022
+ * RF-212): 0,02% nacional com 1 h; a metodologia do painel declara isso.
+ */
+export function fatiasProjecaoCorrida(
+  v: { corrida?: readonly EdgeCorridaEntrada[]; destino_pendente?: true },
+  candidatos: readonly CandidatoNome[],
+  projetadaValidos: number | null | undefined,
+): FatiaDesenho[] | null {
+  if (
+    projetadaValidos === null ||
+    projetadaValidos === undefined ||
+    !Number.isSafeInteger(projetadaValidos) ||
+    projetadaValidos <= 0
+  ) {
+    return null;
+  }
+  if (!v.corrida || destinacaoPendente(v)) return null;
+
+  const porId = new Map(candidatos.map((c) => [c.id, c]));
+  const entram: { id: number; c: Concorrente }[] = [];
+  for (const e of v.corrida) {
+    if (e.destino !== "valido") continue;
+    const cand = porId.get(e.id);
+    const vp = cand?.votos_projetados;
+    if (vp === undefined || vp === null) continue;
+    if (!Number.isSafeInteger(vp) || vp < 0) return null;
+    if (vp === 0) continue;
+    entram.push({
+      id: e.id,
+      c: {
+        key: `cand-${e.id}`,
+        label: rotuloCandidatura(e, cand?.nome),
+        partido: e.partido,
+        votos: vp,
+      },
+    });
+  }
+  if (entram.length === 0) return null;
+
+  entram.sort((a, b) => b.c.votos - a.c.votos || a.id - b.id);
+  const brutas = fatiasDaCorrida(entram.map((x) => x.c));
+  const abs = maiorResto(
+    brutas.map((f) => f.abs),
+    projetadaValidos,
+  );
+  return fechar(
+    brutas.map((f, i) => ({ ...f, abs: abs[i] ?? 0 })),
+    projetadaValidos,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -425,6 +557,38 @@ export function CorridaTresCirculos({
 
   const porPartido = modo === "partido";
 
+  // RF-212 — o círculo de projeção. Só por candidatura: não há projeção por
+  // PARTIDO no payload, e o modo partido segue em "aguardando". Senado não
+  // chega aqui (RF-210). `votacao` já foi conferido acima quando não é Senado.
+  const projetadaValidos = votacao?.projetada?.validos;
+  const proj =
+    senado || porPartido || !votacao
+      ? null
+      : fatiasProjecaoCorrida(votacao, candidatos, projetadaValidos);
+  const vazioProj: { testid: string; texto: string } | undefined = proj
+    ? undefined
+    : porPartido
+      ? {
+          testid: "corrida-projecao-aguardando",
+          texto: "A projeção da corrida entre os partidos ainda não está disponível.",
+        }
+      : espera === ESPERA_DESTINO
+        ? { testid: "corrida-projecao-aguardando-destino", texto: ESPERA_DESTINO.texto }
+        : {
+            testid: "corrida-projecao-aguardando",
+            texto:
+              "Aguardando projeção — ainda não há votos apurados suficientes para projetar o fim da apuração.",
+          };
+
+  // "Outros" só é citado na metodologia quando existe como fatia — com quatro
+  // ou menos candidaturas válidas ele some do arco (regra de fatia zero).
+  const temOutrosProj = (proj?.find((f) => f.key === "outros")?.abs ?? 0) > 0;
+
+  // RF-211 — os três círculos (e a metodologia que fala deles) são da visão
+  // "Parcial". No Senado não: o "aguardando" do RF-210 vale nas DUAS visões,
+  // e escondê-lo na Projeção deixaria o painel sem dizer por que está vazio.
+  const visaoApurado = senado ? undefined : ("parcial" as const);
+
   return (
     <Panel
       kicker={kicker}
@@ -445,14 +609,11 @@ export function CorridaTresCirculos({
                 ? "sem-votos"
                 : "apurando"
         }
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: "var(--space-5) var(--space-6)",
-        }}
+        style={GRADE_DOS_ARCOS}
       >
         {/* Círculo 1 — RF-204. Só voto válido, sobre os válidos. */}
         <Arco
+          visao={visaoApurado}
           id="corrida-circulo-1"
           defsPrefix={titleId}
           titulo="Dos votos válidos"
@@ -464,6 +625,7 @@ export function CorridaTresCirculos({
 
         {/* Círculo 2 — RF-205. Sobre quem votou; anulado ≠ nulo. */}
         <Arco
+          visao={visaoApurado}
           id="corrida-circulo-2"
           defsPrefix={titleId}
           titulo="De quem votou"
@@ -476,6 +638,7 @@ export function CorridaTresCirculos({
         {/* Círculo 3 — RF-206. Sobre o eleitorado inteiro, APURADO (não
             projetado), com "Ainda não apurado" nomeado. */}
         <Arco
+          visao={visaoApurado}
           id="corrida-circulo-3"
           defsPrefix={titleId}
           titulo="Do eleitorado apto, até agora"
@@ -484,12 +647,33 @@ export function CorridaTresCirculos({
           fatias={c3 ?? []}
           vazio={vazio(3, c3, "eleitores aptos", false)}
         />
+
+        {/* RF-212 — o círculo de projeção da corrida, só na visão "Projeção".
+            O total é `projetada.validos`, o MESMO número da fatia de válidos
+            do arco 3 do painel "Votação"; a divisão segue a projeção de cada
+            candidatura ({@link fatiasProjecaoCorrida}). Sem dado, a figura
+            fica no DOM dizendo por quê (ADR-0017). No Senado não entra: lá o
+            bloqueio do RF-210 já cobre as duas visões, e dois avisos de
+            "indisponível" seriam ruído. */}
+        {senado ? null : (
+          <Arco
+            visao="proj"
+            id="corrida-projecao"
+            defsPrefix={titleId}
+            titulo="Projeção para o fim da apuração"
+            baseLabel="votos válidos (projetado)"
+            total={projetadaValidos ?? 0}
+            fatias={proj ?? []}
+            vazio={vazioProj}
+          />
+        )}
       </div>
 
       {/* Metodologia (RF-208, constituição § 8): de onde vêm os círculos, por
           que podem diferir da lista acima, e por que anulado não é nulo. */}
       <p
         data-testid="corrida-metodologia"
+        data-view-only={visaoApurado}
         style={{
           marginTop: "var(--space-4)",
           font: "var(--type-body-sm)",
@@ -518,6 +702,32 @@ export function CorridaTresCirculos({
           <> O terceiro gráfico é sobre os {formatVotes(c.aptos)} eleitores aptos.</>
         ) : null}
       </p>
+
+      {/* RF-212 — a metodologia do círculo de projeção, só na visão
+          "Projeção" e só quando ele está desenhado. Não cita os três círculos
+          do Parcial, e o parágrafo do Parcial não cita este. */}
+      {proj && projetadaValidos ? (
+        <p
+          data-testid="corrida-metodologia-proj"
+          data-view-only="proj"
+          style={{
+            marginTop: "var(--space-4)",
+            font: "var(--type-body-sm)",
+            fontSize: "var(--text-xs)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          O total deste gráfico, {formatVotes(projetadaValidos)} votos válidos, é o mesmo da
+          projeção do painel “Votação”. A divisão desse total entre as candidaturas segue a projeção
+          de cada uma
+          {temOutrosProj
+            ? "; as quatro com mais votos projetados têm fatia própria e as demais somam “Outros”"
+            : ""}
+          . Só o voto válido entra: candidaturas anuladas ou sub judice ficam fora da divisão. Por
+          isso, os votos projetados de cada candidatura aqui podem diferir nos últimos dígitos dos
+          que aparecem na lista de candidaturas.
+        </p>
+      ) : null}
     </Panel>
   );
 }

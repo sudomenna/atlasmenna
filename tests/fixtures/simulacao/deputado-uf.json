@@ -1,6 +1,6 @@
 {
   "AC": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "AC",
@@ -774,7 +774,7 @@
     }
   },
   "AL": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "AL",
@@ -1428,7 +1428,7 @@
     }
   },
   "AM": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "AM",
@@ -2366,7 +2366,7 @@
     }
   },
   "AP": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "AP",
@@ -3056,7 +3056,7 @@
     }
   },
   "BA": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "BA",
@@ -4284,7 +4284,7 @@
     }
   },
   "CE": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "CE",
@@ -5437,14 +5437,14 @@
     }
   },
   "DF": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "DF",
-    "pct_apurado": 37,
+    "pct_apurado": 37.1,
     "lugares_a_preencher": 8,
-    "quociente_eleitoral": 81519,
-    "quociente_eleitoral_tse": 81519,
+    "quociente_eleitoral": 81739,
+    "quociente_eleitoral_tse": 81739,
     "totalizacao_final": false,
     "divergencias": [],
     "agremiacoes": [
@@ -5455,9 +5455,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "MDB",
-        "votos_nominais": 145907,
-        "votos_legenda": 6319,
-        "votos_validos": 152226,
+        "votos_nominais": 146301,
+        "votos_legenda": 6336,
+        "votos_validos": 152637,
         "pct_votos": 23.34,
         "quociente_partidario": 1,
         "cadeiras": 3,
@@ -5466,21 +5466,21 @@
             "sqcand": 70002538934,
             "nome": "WASHINGTON CORAÇÃO VALENTE",
             "partido": "MDB",
-            "votos": 58387,
+            "votos": 58544,
             "ordem": 1
           },
           {
             "sqcand": 70002538936,
             "nome": "PAMELA ÁGUIA",
             "partido": "MDB",
-            "votos": 26310,
+            "votos": 26382,
             "ordem": 2
           },
           {
             "sqcand": 70002538941,
             "nome": "ZÉ HUMBERTO",
             "partido": "MDB",
-            "votos": 16505,
+            "votos": 16550,
             "ordem": 3
           }
         ],
@@ -5489,35 +5489,35 @@
             "sqcand": 70002538935,
             "nome": "RAFAEL PRUDENTE",
             "partido": "MDB",
-            "votos": 11856,
+            "votos": 11888,
             "ordem": 1
           },
           {
             "sqcand": 70002538938,
             "nome": "DANIEL DONIZET",
             "partido": "MDB",
-            "votos": 9173,
+            "votos": 9197,
             "ordem": 2
           },
           {
             "sqcand": 70002538693,
             "nome": "WESLEY AMARAL",
             "partido": "MDB",
-            "votos": 7438,
+            "votos": 7458,
             "ordem": 3
           },
           {
             "sqcand": 70002538940,
             "nome": "COSTA NETO",
             "partido": "MDB",
-            "votos": 6229,
+            "votos": 6246,
             "ordem": 4
           },
           {
             "sqcand": 70002538937,
             "nome": "JOSY JACOB",
             "partido": "MDB",
-            "votos": 5343,
+            "votos": 5357,
             "ordem": 5
           }
         ]
@@ -5529,9 +5529,9 @@
         "tipo": "federacao",
         "componentes": ["PT", "PV"],
         "sigla_lider": "PT",
-        "votos_nominais": 114245,
-        "votos_legenda": 8712,
-        "votos_validos": 122957,
+        "votos_nominais": 114553,
+        "votos_legenda": 8736,
+        "votos_validos": 123289,
         "pct_votos": 18.85,
         "quociente_partidario": 1,
         "cadeiras": 2,
@@ -5540,14 +5540,14 @@
             "sqcand": 70002539540,
             "nome": "AGNELO QUEIROZ",
             "partido": "PT",
-            "votos": 45717,
+            "votos": 45840,
             "ordem": 1
           },
           {
             "sqcand": 70002539537,
             "nome": "RUTH VENCEREMOS",
             "partido": "PT",
-            "votos": 20601,
+            "votos": 20657,
             "ordem": 2
           }
         ],
@@ -5556,35 +5556,35 @@
             "sqcand": 70002539536,
             "nome": "ROSILENE CORRÊA",
             "partido": "PT",
-            "votos": 12924,
+            "votos": 12958,
             "ordem": 1
           },
           {
             "sqcand": 70002539539,
             "nome": "MÁRCIA ABRAHÃO",
             "partido": "PT",
-            "votos": 9283,
+            "votos": 9308,
             "ordem": 2
           },
           {
             "sqcand": 70002539541,
             "nome": "POLICARPO",
             "partido": "PT",
-            "votos": 7182,
+            "votos": 7202,
             "ordem": 3
           },
           {
             "sqcand": 70002539533,
             "nome": "PROF. REGINALDO VERAS",
             "partido": "PV",
-            "votos": 5824,
+            "votos": 5839,
             "ordem": 4
           },
           {
             "sqcand": 70002539538,
             "nome": "JU DOS TIGRADOS",
             "partido": "PV",
-            "votos": 4878,
+            "votos": 4891,
             "ordem": 5
           }
         ]
@@ -5596,9 +5596,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PL",
-        "votos_nominais": 49311,
-        "votos_legenda": 3304,
-        "votos_validos": 52615,
+        "votos_nominais": 49444,
+        "votos_legenda": 3313,
+        "votos_validos": 52757,
         "pct_votos": 8.07,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -5607,7 +5607,7 @@
             "sqcand": 70002550931,
             "nome": "MARIANA NAIME",
             "partido": "PL",
-            "votos": 19732,
+            "votos": 19786,
             "ordem": 1
           }
         ],
@@ -5616,35 +5616,35 @@
             "sqcand": 70002550322,
             "nome": "ALBERTO FRAGA",
             "partido": "PL",
-            "votos": 8892,
+            "votos": 8916,
             "ordem": 1
           },
           {
             "sqcand": 70002550315,
             "nome": "CAPITÃO DAVI",
             "partido": "PL",
-            "votos": 5578,
+            "votos": 5593,
             "ordem": 2
           },
           {
             "sqcand": 70002550317,
             "nome": "MARIA AMÉLIA",
             "partido": "PL",
-            "votos": 4007,
+            "votos": 4018,
             "ordem": 3
           },
           {
             "sqcand": 70002550320,
             "nome": "ULISSIS LIMA",
             "partido": "PL",
-            "votos": 3100,
+            "votos": 3108,
             "ordem": 4
           },
           {
             "sqcand": 70002550318,
             "nome": "SANDRA FARAJ",
             "partido": "PL",
-            "votos": 2514,
+            "votos": 2520,
             "ordem": 5
           }
         ]
@@ -5656,9 +5656,9 @@
         "tipo": "federacao",
         "componentes": ["CIDADANIA", "PSDB"],
         "sigla_lider": "CIDADANIA",
-        "votos_nominais": 64738,
-        "votos_legenda": 3172,
-        "votos_validos": 67910,
+        "votos_nominais": 64913,
+        "votos_legenda": 3180,
+        "votos_validos": 68093,
         "pct_votos": 10.41,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -5667,7 +5667,7 @@
             "sqcand": 70002554386,
             "nome": "ROBERTO FREIRE",
             "partido": "CIDADANIA",
-            "votos": 25906,
+            "votos": 25976,
             "ordem": 1
           }
         ],
@@ -5676,35 +5676,35 @@
             "sqcand": 70002551191,
             "nome": "PROFESSOR LÉO MATOS",
             "partido": "PSDB",
-            "votos": 11674,
+            "votos": 11705,
             "ordem": 1
           },
           {
             "sqcand": 70002554435,
             "nome": "MARIANA DE PAULA",
             "partido": "CIDADANIA",
-            "votos": 7323,
+            "votos": 7343,
             "ordem": 2
           },
           {
             "sqcand": 70002551189,
             "nome": "LEIA XAVIER",
             "partido": "PSDB",
-            "votos": 5260,
+            "votos": 5275,
             "ordem": 3
           },
           {
             "sqcand": 70002551187,
             "nome": "FELIPE RODRIGUES",
             "partido": "PSDB",
-            "votos": 4070,
+            "votos": 4081,
             "ordem": 4
           },
           {
             "sqcand": 70002551188,
             "nome": "KARLA VINHAS",
             "partido": "PSDB",
-            "votos": 3300,
+            "votos": 3309,
             "ordem": 5
           }
         ]
@@ -5716,9 +5716,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "REPUBLICANOS",
-        "votos_nominais": 50330,
-        "votos_legenda": 3830,
-        "votos_validos": 54160,
+        "votos_nominais": 50467,
+        "votos_legenda": 3840,
+        "votos_validos": 54307,
         "pct_votos": 8.3,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -5727,7 +5727,7 @@
             "sqcand": 70002538523,
             "nome": "GILVAN PATRULHA DO CONSUMIDOR",
             "partido": "REPUBLICANOS",
-            "votos": 20140,
+            "votos": 20195,
             "ordem": 1
           }
         ],
@@ -5736,35 +5736,35 @@
             "sqcand": 70002538526,
             "nome": "CAROL FURLAN",
             "partido": "REPUBLICANOS",
-            "votos": 9076,
+            "votos": 9100,
             "ordem": 1
           },
           {
             "sqcand": 70002538522,
             "nome": "RAVAN LEÃO",
             "partido": "REPUBLICANOS",
-            "votos": 5693,
+            "votos": 5709,
             "ordem": 2
           },
           {
             "sqcand": 70002538524,
             "nome": "LIZA LOPES",
             "partido": "REPUBLICANOS",
-            "votos": 4090,
+            "votos": 4101,
             "ordem": 3
           },
           {
             "sqcand": 70002538521,
             "nome": "FRED LINHARES",
             "partido": "REPUBLICANOS",
-            "votos": 3164,
+            "votos": 3173,
             "ordem": 4
           },
           {
             "sqcand": 70002538527,
             "nome": "JULIO CESAR",
             "partido": "REPUBLICANOS",
-            "votos": 2566,
+            "votos": 2572,
             "ordem": 5
           }
         ]
@@ -5859,9 +5859,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "DC",
-        "votos_nominais": 546,
+        "votos_nominais": 547,
         "votos_legenda": 30,
-        "votos_validos": 576,
+        "votos_validos": 577,
         "pct_votos": 0.09,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -5878,7 +5878,7 @@
             "sqcand": 70002541497,
             "nome": "LEONARDO BEAR",
             "partido": "DC",
-            "votos": 98,
+            "votos": 99,
             "ordem": 2
           },
           {
@@ -5963,9 +5963,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "MISSÃO",
-        "votos_nominais": 8,
+        "votos_nominais": 9,
         "votos_legenda": 1,
-        "votos_validos": 9,
+        "votos_validos": 10,
         "pct_votos": 0,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6000,10 +6000,10 @@
             "ordem": 4
           },
           {
-            "sqcand": 70002545073,
-            "nome": "MARTA LIMA",
+            "sqcand": 70002545074,
+            "nome": "VICTOR RATTES",
             "partido": "MISSÃO",
-            "votos": 0,
+            "votos": 1,
             "ordem": 5
           }
         ]
@@ -6067,9 +6067,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "NOVO",
-        "votos_nominais": 36720,
-        "votos_legenda": 1556,
-        "votos_validos": 38276,
+        "votos_nominais": 36818,
+        "votos_legenda": 1561,
+        "votos_validos": 38379,
         "pct_votos": 5.87,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6079,35 +6079,35 @@
             "sqcand": 70002532007,
             "nome": "CORONEL AVIADOR LUIZ GAMA",
             "partido": "NOVO",
-            "votos": 14694,
+            "votos": 14733,
             "ordem": 1
           },
           {
             "sqcand": 70002532001,
             "nome": "ALE CHIANELLI",
             "partido": "NOVO",
-            "votos": 6621,
+            "votos": 6639,
             "ordem": 2
           },
           {
             "sqcand": 70002532009,
             "nome": "NANA",
             "partido": "NOVO",
-            "votos": 4154,
+            "votos": 4165,
             "ordem": 3
           },
           {
             "sqcand": 70002532006,
             "nome": "WILKER LEÃO",
             "partido": "NOVO",
-            "votos": 2984,
+            "votos": 2992,
             "ordem": 4
           },
           {
             "sqcand": 70002532002,
             "nome": "PAULO ECHEBARRIA",
             "partido": "NOVO",
-            "votos": 2308,
+            "votos": 2315,
             "ordem": 5
           }
         ]
@@ -6157,9 +6157,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PDT",
-        "votos_nominais": 22298,
-        "votos_legenda": 1197,
-        "votos_validos": 23495,
+        "votos_nominais": 22357,
+        "votos_legenda": 1201,
+        "votos_validos": 23558,
         "pct_votos": 3.6,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6169,35 +6169,35 @@
             "sqcand": 70002547159,
             "nome": "PASTOR ISMAEL LOPES",
             "partido": "PDT",
-            "votos": 8923,
+            "votos": 8946,
             "ordem": 1
           },
           {
             "sqcand": 70002547162,
             "nome": "ISANIL",
             "partido": "PDT",
-            "votos": 4021,
+            "votos": 4031,
             "ordem": 2
           },
           {
             "sqcand": 70002547155,
             "nome": "JÔ ABREU",
             "partido": "PDT",
-            "votos": 2522,
+            "votos": 2529,
             "ordem": 3
           },
           {
             "sqcand": 70002547161,
             "nome": "MOACIR COLETIVO TRABALHISTA",
             "partido": "PDT",
-            "votos": 1812,
+            "votos": 1817,
             "ordem": 4
           },
           {
             "sqcand": 70002547156,
             "nome": "FLAVIO WERNECK",
             "partido": "PDT",
-            "votos": 1402,
+            "votos": 1405,
             "ordem": 5
           }
         ]
@@ -6209,9 +6209,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PODE",
-        "votos_nominais": 1876,
+        "votos_nominais": 1881,
         "votos_legenda": 144,
-        "votos_validos": 2020,
+        "votos_validos": 2025,
         "pct_votos": 0.31,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6221,28 +6221,28 @@
             "sqcand": 70002540846,
             "nome": "SARGENTO MAURÍCIO PARDAL",
             "partido": "PODE",
-            "votos": 776,
+            "votos": 778,
             "ordem": 1
           },
           {
             "sqcand": 70002540848,
             "nome": "FRANÇA",
             "partido": "PODE",
-            "votos": 349,
+            "votos": 350,
             "ordem": 2
           },
           {
             "sqcand": 70002540842,
             "nome": "SALVE JORGE",
             "partido": "PODE",
-            "votos": 219,
+            "votos": 220,
             "ordem": 3
           },
           {
             "sqcand": 70002540845,
             "nome": "GORDINHO DA FARMÁCIA",
             "partido": "PODE",
-            "votos": 157,
+            "votos": 158,
             "ordem": 4
           },
           {
@@ -6261,9 +6261,9 @@
         "tipo": "federacao",
         "componentes": ["PRD", "SOLIDARIEDADE"],
         "sigla_lider": "SOLIDARIEDADE",
-        "votos_nominais": 8882,
-        "votos_legenda": 756,
-        "votos_validos": 9638,
+        "votos_nominais": 8907,
+        "votos_legenda": 758,
+        "votos_validos": 9665,
         "pct_votos": 1.48,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6273,35 +6273,35 @@
             "sqcand": 70002538101,
             "nome": "GERCIANE",
             "partido": "SOLIDARIEDADE",
-            "votos": 3554,
+            "votos": 3564,
             "ordem": 1
           },
           {
             "sqcand": 70002538105,
             "nome": "SUBTENENTE CINTYA",
             "partido": "PRD",
-            "votos": 1602,
+            "votos": 1606,
             "ordem": 2
           },
           {
             "sqcand": 70002538102,
             "nome": "JAIR MARINHO",
             "partido": "SOLIDARIEDADE",
-            "votos": 1005,
+            "votos": 1008,
             "ordem": 3
           },
           {
             "sqcand": 70002538108,
             "nome": "GABRIEL PORTELLA",
             "partido": "SOLIDARIEDADE",
-            "votos": 722,
+            "votos": 724,
             "ordem": 4
           },
           {
             "sqcand": 70002553954,
             "nome": "DIEGO COSTA",
             "partido": "SOLIDARIEDADE",
-            "votos": 558,
+            "votos": 560,
             "ordem": 5
           }
         ]
@@ -6313,9 +6313,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PSB",
-        "votos_nominais": 23078,
-        "votos_legenda": 1910,
-        "votos_validos": 24988,
+        "votos_nominais": 23141,
+        "votos_legenda": 1915,
+        "votos_validos": 25056,
         "pct_votos": 3.83,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6325,35 +6325,35 @@
             "sqcand": 70002542516,
             "nome": "DANI FREITAS",
             "partido": "PSB",
-            "votos": 9235,
+            "votos": 9260,
             "ordem": 1
           },
           {
             "sqcand": 70002542514,
             "nome": "PROFESSOR GADELHA",
             "partido": "PSB",
-            "votos": 4162,
+            "votos": 4173,
             "ordem": 2
           },
           {
             "sqcand": 70002542521,
             "nome": "DANI SOLTA O VERBO",
             "partido": "PSB",
-            "votos": 2611,
+            "votos": 2618,
             "ordem": 3
           },
           {
             "sqcand": 70002542519,
             "nome": "ROLLEMBERG",
             "partido": "PSB",
-            "votos": 1875,
+            "votos": 1880,
             "ordem": 4
           },
           {
             "sqcand": 70002542522,
             "nome": "RAQUEL MEDEIROS",
             "partido": "PSB",
-            "votos": 1451,
+            "votos": 1455,
             "ordem": 5
           }
         ]
@@ -6365,9 +6365,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PSD",
-        "votos_nominais": 47195,
-        "votos_legenda": 3714,
-        "votos_validos": 50909,
+        "votos_nominais": 47322,
+        "votos_legenda": 3724,
+        "votos_validos": 51046,
         "pct_votos": 7.81,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6377,35 +6377,35 @@
             "sqcand": 70002537013,
             "nome": "DELEGADO NUGOLI",
             "partido": "PSD",
-            "votos": 19510,
+            "votos": 19562,
             "ordem": 1
           },
           {
             "sqcand": 70002537010,
             "nome": "SARGENTO ELIOMAR",
             "partido": "PSD",
-            "votos": 8791,
+            "votos": 8815,
             "ordem": 2
           },
           {
             "sqcand": 70002537008,
             "nome": "ADILA MARIA",
             "partido": "PSD",
-            "votos": 5515,
+            "votos": 5530,
             "ordem": 3
           },
           {
             "sqcand": 70002537011,
             "nome": "DR. JOÃO LUIZ",
             "partido": "PSD",
-            "votos": 3962,
+            "votos": 3973,
             "ordem": 4
           },
           {
             "sqcand": 70002553949,
             "nome": "JÚLIO ISIDRO",
             "partido": "PSD",
-            "votos": 3065,
+            "votos": 3073,
             "ordem": 5
           }
         ]
@@ -6417,9 +6417,9 @@
         "tipo": "federacao",
         "componentes": ["PSOL", "REDE"],
         "sigla_lider": "PSOL",
-        "votos_nominais": 2087,
-        "votos_legenda": 107,
-        "votos_validos": 2194,
+        "votos_nominais": 2092,
+        "votos_legenda": 108,
+        "votos_validos": 2200,
         "pct_votos": 0.34,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6429,21 +6429,21 @@
             "sqcand": 70002533382,
             "nome": "ENFERMEIRA KARINE",
             "partido": "PSOL",
-            "votos": 835,
+            "votos": 837,
             "ordem": 1
           },
           {
             "sqcand": 70002533381,
             "nome": "FÁBIO FELIX",
             "partido": "PSOL",
-            "votos": 376,
+            "votos": 377,
             "ordem": 2
           },
           {
             "sqcand": 70002533387,
             "nome": "MARIA CLEUDES",
             "partido": "REDE",
-            "votos": 236,
+            "votos": 237,
             "ordem": 3
           },
           {
@@ -6469,9 +6469,9 @@
         "tipo": "federacao",
         "componentes": ["PP", "UNIÃO"],
         "sigla_lider": "PP",
-        "votos_nominais": 45570,
-        "votos_legenda": 4161,
-        "votos_validos": 49731,
+        "votos_nominais": 45693,
+        "votos_legenda": 4173,
+        "votos_validos": 49866,
         "pct_votos": 7.63,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6481,35 +6481,35 @@
             "sqcand": 70002538519,
             "nome": "DRA. MARINA NORONHA",
             "partido": "PP",
-            "votos": 18235,
+            "votos": 18285,
             "ordem": 1
           },
           {
             "sqcand": 70002538516,
             "nome": "PROF. DÍDIA",
             "partido": "UNIÃO",
-            "votos": 8217,
+            "votos": 8239,
             "ordem": 2
           },
           {
             "sqcand": 70002538517,
             "nome": "CORONEL MORENO",
             "partido": "PP",
-            "votos": 5155,
+            "votos": 5169,
             "ordem": 3
           },
           {
             "sqcand": 70002538518,
             "nome": "SANDRO AVELAR",
             "partido": "UNIÃO",
-            "votos": 3703,
+            "votos": 3713,
             "ordem": 4
           },
           {
             "sqcand": 70002538512,
             "nome": "VALDIRENE TAVARES",
             "partido": "PP",
-            "votos": 2865,
+            "votos": 2873,
             "ordem": 5
           }
         ]
@@ -6521,9 +6521,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "UP",
-        "votos_nominais": 361,
+        "votos_nominais": 362,
         "votos_legenda": 31,
-        "votos_validos": 392,
+        "votos_validos": 393,
         "pct_votos": 0.06,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6533,7 +6533,7 @@
             "sqcand": 70002537106,
             "nome": "DURVAL",
             "partido": "UP",
-            "votos": 249,
+            "votos": 250,
             "ordem": 1
           },
           {
@@ -6550,33 +6550,33 @@
     "empates_indeterminados": [],
     "votacao": {
       "contagens": {
-        "aptos": 2365513,
-        "instalados": 875238,
-        "comparecimento": 708788,
-        "abstencao": 166450,
-        "validos": 545594,
-        "brancos": 28438,
-        "nulos": 28197,
-        "anulados": 49809,
-        "sub_judice": 56750
+        "aptos": 2187571,
+        "instalados": 811588,
+        "comparecimento": 710703,
+        "abstencao": 100885,
+        "validos": 547069,
+        "brancos": 28515,
+        "nulos": 28273,
+        "anulados": 49943,
+        "sub_judice": 56903
       },
       "projetada": {
         "validos": 1474579,
         "brancos": 76861,
         "nulos": 76208,
-        "abstencao": 449870
+        "abstencao": 271928
       }
     }
   },
   "ES": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "ES",
-    "pct_apurado": 32.1,
+    "pct_apurado": 32.2,
     "lugares_a_preencher": 10,
-    "quociente_eleitoral": 71298,
-    "quociente_eleitoral_tse": 71298,
+    "quociente_eleitoral": 71520,
+    "quociente_eleitoral_tse": 71520,
     "totalizacao_final": false,
     "divergencias": [],
     "agremiacoes": [
@@ -6587,9 +6587,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PL",
-        "votos_nominais": 329896,
-        "votos_legenda": 16178,
-        "votos_validos": 346074,
+        "votos_nominais": 330924,
+        "votos_legenda": 16228,
+        "votos_validos": 347152,
         "pct_votos": 48.54,
         "quociente_partidario": 4,
         "cadeiras": 6,
@@ -6598,42 +6598,42 @@
             "sqcand": 80002549694,
             "nome": "DRA BIANCA BAHIENSE",
             "partido": "PL",
-            "votos": 128376,
+            "votos": 128775,
             "ordem": 1
           },
           {
             "sqcand": 80002549695,
             "nome": "ENFERMEIRA ELIZA RAMLOW",
             "partido": "PL",
-            "votos": 57849,
+            "votos": 58029,
             "ordem": 2
           },
           {
             "sqcand": 80002549693,
             "nome": "CABO BONADIMAN",
             "partido": "PL",
-            "votos": 36291,
+            "votos": 36404,
             "ordem": 3
           },
           {
             "sqcand": 80002549702,
             "nome": "ALEXSANDRA TOMAZ",
             "partido": "PL",
-            "votos": 26068,
+            "votos": 26150,
             "ordem": 4
           },
           {
             "sqcand": 80002549703,
             "nome": "LAZARO",
             "partido": "PL",
-            "votos": 20168,
+            "votos": 20231,
             "ordem": 5
           },
           {
             "sqcand": 80002549697,
             "nome": "CARLOS VON",
             "partido": "PL",
-            "votos": 16353,
+            "votos": 16404,
             "ordem": 6
           }
         ],
@@ -6642,28 +6642,28 @@
             "sqcand": 80002549701,
             "nome": "NEUCIMAR FRAGA",
             "partido": "PL",
-            "votos": 13697,
+            "votos": 13739,
             "ordem": 1
           },
           {
             "sqcand": 80002549698,
             "nome": "LUCAS POLESE",
             "partido": "PL",
-            "votos": 11747,
+            "votos": 11784,
             "ordem": 2
           },
           {
             "sqcand": 80002549699,
             "nome": "GLORIA LEITE",
             "partido": "PL",
-            "votos": 10259,
+            "votos": 10291,
             "ordem": 3
           },
           {
             "sqcand": 80002549696,
             "nome": "CORONEL PIMENTA",
             "partido": "PL",
-            "votos": 9088,
+            "votos": 9117,
             "ordem": 4
           }
         ]
@@ -6675,9 +6675,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PSB",
-        "votos_nominais": 60623,
-        "votos_legenda": 5496,
-        "votos_validos": 66119,
+        "votos_nominais": 60812,
+        "votos_legenda": 5513,
+        "votos_validos": 66325,
         "pct_votos": 9.27,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -6686,7 +6686,7 @@
             "sqcand": 80002541003,
             "nome": "RAFAEL PACHECO",
             "partido": "PSB",
-            "votos": 23022,
+            "votos": 23094,
             "ordem": 1
           }
         ],
@@ -6695,35 +6695,35 @@
             "sqcand": 80002541001,
             "nome": "FELIPE RIGONI",
             "partido": "PSB",
-            "votos": 10374,
+            "votos": 10407,
             "ordem": 1
           },
           {
             "sqcand": 80002541006,
             "nome": "LORENA VASQUES",
             "partido": "PSB",
-            "votos": 6508,
+            "votos": 6528,
             "ordem": 2
           },
           {
             "sqcand": 80002541009,
             "nome": "DR. VICTOR",
             "partido": "PSB",
-            "votos": 4675,
+            "votos": 4690,
             "ordem": 3
           },
           {
             "sqcand": 80002541008,
             "nome": "TYAGO HOFFMANN",
             "partido": "PSB",
-            "votos": 3617,
+            "votos": 3628,
             "ordem": 4
           },
           {
             "sqcand": 80002541002,
             "nome": "MANU",
             "partido": "PSB",
-            "votos": 2933,
+            "votos": 2942,
             "ordem": 5
           }
         ]
@@ -6735,9 +6735,9 @@
         "tipo": "federacao",
         "componentes": ["PCDOB", "PT", "PV"],
         "sigla_lider": "PV",
-        "votos_nominais": 75632,
-        "votos_legenda": 7454,
-        "votos_validos": 83086,
+        "votos_nominais": 75867,
+        "votos_legenda": 7478,
+        "votos_validos": 83345,
         "pct_votos": 11.65,
         "quociente_partidario": 1,
         "cadeiras": 1,
@@ -6746,7 +6746,7 @@
             "sqcand": 80002549478,
             "nome": "JACK LOPES",
             "partido": "PV",
-            "votos": 28722,
+            "votos": 28812,
             "ordem": 1
           }
         ],
@@ -6755,35 +6755,35 @@
             "sqcand": 80002549471,
             "nome": "DURVAL CORTES",
             "partido": "PV",
-            "votos": 12943,
+            "votos": 12983,
             "ordem": 1
           },
           {
             "sqcand": 80002549472,
             "nome": "MARIA ALVES",
             "partido": "PCDOB",
-            "votos": 8120,
+            "votos": 8145,
             "ordem": 2
           },
           {
             "sqcand": 80002549474,
             "nome": "OLGA LIPAUS",
             "partido": "PT",
-            "votos": 5833,
+            "votos": 5851,
             "ordem": 3
           },
           {
             "sqcand": 80002549469,
             "nome": "DR. NÉSIO FERNANDES",
             "partido": "PCDOB",
-            "votos": 4512,
+            "votos": 4526,
             "ordem": 4
           },
           {
             "sqcand": 80002549470,
             "nome": "JACK ROCHA",
             "partido": "PT",
-            "votos": 3659,
+            "votos": 3670,
             "ordem": 5
           }
         ]
@@ -6795,9 +6795,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "REPUBLICANOS",
-        "votos_nominais": 54109,
-        "votos_legenda": 2361,
-        "votos_validos": 56470,
+        "votos_nominais": 54278,
+        "votos_legenda": 2368,
+        "votos_validos": 56646,
         "pct_votos": 7.92,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -6806,7 +6806,7 @@
             "sqcand": 80002542394,
             "nome": "AGENTE DIAS",
             "partido": "REPUBLICANOS",
-            "votos": 20548,
+            "votos": 20613,
             "ordem": 1
           }
         ],
@@ -6815,35 +6815,35 @@
             "sqcand": 80002542397,
             "nome": "HANS DETTMANN",
             "partido": "REPUBLICANOS",
-            "votos": 9260,
+            "votos": 9289,
             "ordem": 1
           },
           {
             "sqcand": 80002542392,
             "nome": "MANATO",
             "partido": "REPUBLICANOS",
-            "votos": 5809,
+            "votos": 5827,
             "ordem": 2
           },
           {
             "sqcand": 80002542395,
             "nome": "ADRIANA BOAS",
             "partido": "REPUBLICANOS",
-            "votos": 4173,
+            "votos": 4186,
             "ordem": 3
           },
           {
             "sqcand": 80002542396,
             "nome": "ERICK MUSSO",
             "partido": "REPUBLICANOS",
-            "votos": 3228,
+            "votos": 3238,
             "ordem": 4
           },
           {
             "sqcand": 80002542390,
             "nome": "CORONEL RAMALHO",
             "partido": "REPUBLICANOS",
-            "votos": 2618,
+            "votos": 2626,
             "ordem": 5
           }
         ]
@@ -6855,9 +6855,9 @@
         "tipo": "federacao",
         "componentes": ["PP", "UNIÃO"],
         "sigla_lider": "PP",
-        "votos_nominais": 52845,
-        "votos_legenda": 2743,
-        "votos_validos": 55588,
+        "votos_nominais": 53009,
+        "votos_legenda": 2752,
+        "votos_validos": 55761,
         "pct_votos": 7.8,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -6866,7 +6866,7 @@
             "sqcand": 80002542403,
             "nome": "AMARO NETO",
             "partido": "PP",
-            "votos": 20069,
+            "votos": 20131,
             "ordem": 1
           }
         ],
@@ -6875,35 +6875,35 @@
             "sqcand": 80002542411,
             "nome": "MESSIAS DONATO",
             "partido": "UNIÃO",
-            "votos": 9043,
+            "votos": 9071,
             "ordem": 1
           },
           {
             "sqcand": 80002542407,
             "nome": "THIAGO CARREIRO",
             "partido": "UNIÃO",
-            "votos": 5673,
+            "votos": 5691,
             "ordem": 2
           },
           {
             "sqcand": 80002542413,
             "nome": "CLAUDIA LEMOS",
             "partido": "UNIÃO",
-            "votos": 4075,
+            "votos": 4088,
             "ordem": 3
           },
           {
             "sqcand": 80002542410,
             "nome": "DR. BRUNO RESENDE",
             "partido": "UNIÃO",
-            "votos": 3153,
+            "votos": 3163,
             "ordem": 4
           },
           {
             "sqcand": 80002542409,
             "nome": "DA VITÓRIA",
             "partido": "PP",
-            "votos": 2557,
+            "votos": 2564,
             "ordem": 5
           }
         ]
@@ -6915,9 +6915,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "AVANTE",
-        "votos_nominais": 7,
+        "votos_nominais": 8,
         "votos_legenda": 0,
-        "votos_validos": 7,
+        "votos_validos": 8,
         "pct_votos": 0,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6952,8 +6952,8 @@
             "ordem": 4
           },
           {
-            "sqcand": 80002554228,
-            "nome": "BATISTÃO BARBOSA",
+            "sqcand": 80002538195,
+            "nome": "DR. FLAVINHO DA MARECHAL",
             "partido": "AVANTE",
             "votos": 1,
             "ordem": 5
@@ -6967,9 +6967,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "DC",
-        "votos_nominais": 292,
+        "votos_nominais": 293,
         "votos_legenda": 29,
-        "votos_validos": 321,
+        "votos_validos": 322,
         "pct_votos": 0.05,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -6979,7 +6979,7 @@
             "sqcand": 80002551832,
             "nome": "PASTOR MAURÍCIO",
             "partido": "DC",
-            "votos": 131,
+            "votos": 132,
             "ordem": 1
           },
           {
@@ -7102,9 +7102,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "NOVO",
-        "votos_nominais": 44803,
-        "votos_legenda": 2034,
-        "votos_validos": 46837,
+        "votos_nominais": 44943,
+        "votos_legenda": 2040,
+        "votos_validos": 46983,
         "pct_votos": 6.57,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -7114,35 +7114,35 @@
             "sqcand": 80002531650,
             "nome": "JOSÉ LUIZ COELHO",
             "partido": "NOVO",
-            "votos": 17435,
+            "votos": 17489,
             "ordem": 1
           },
           {
             "sqcand": 80002531648,
             "nome": "PENÉLOPE FEU ROSA",
             "partido": "NOVO",
-            "votos": 7857,
+            "votos": 7881,
             "ordem": 2
           },
           {
             "sqcand": 80002531645,
             "nome": "AILANA PELISSARI",
             "partido": "NOVO",
-            "votos": 4929,
+            "votos": 4944,
             "ordem": 3
           },
           {
             "sqcand": 80002531652,
             "nome": "SIDIMAR DO MERCADINHO",
             "partido": "NOVO",
-            "votos": 3540,
+            "votos": 3551,
             "ordem": 4
           },
           {
             "sqcand": 80002531647,
             "nome": "LÉO SINDICO",
             "partido": "NOVO",
-            "votos": 2739,
+            "votos": 2748,
             "ordem": 5
           }
         ]
@@ -7154,9 +7154,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PODE",
-        "votos_nominais": 1418,
+        "votos_nominais": 1422,
         "votos_legenda": 82,
-        "votos_validos": 1500,
+        "votos_validos": 1504,
         "pct_votos": 0.21,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -7166,7 +7166,7 @@
             "sqcand": 80002535612,
             "nome": "ALESSANDRO BROEDEL",
             "partido": "PODE",
-            "votos": 539,
+            "votos": 540,
             "ordem": 1
           },
           {
@@ -7180,14 +7180,14 @@
             "sqcand": 80002536277,
             "nome": "PHILIPE LEMOS",
             "partido": "PODE",
-            "votos": 152,
+            "votos": 153,
             "ordem": 3
           },
           {
             "sqcand": 80002535611,
             "nome": "GUERINO BALESTRASSI",
             "partido": "PODE",
-            "votos": 109,
+            "votos": 110,
             "ordem": 4
           },
           {
@@ -7206,9 +7206,9 @@
         "tipo": "federacao",
         "componentes": ["PRD", "SOLIDARIEDADE"],
         "sigla_lider": "SOLIDARIEDADE",
-        "votos_nominais": 13222,
-        "votos_legenda": 1055,
-        "votos_validos": 14277,
+        "votos_nominais": 13263,
+        "votos_legenda": 1058,
+        "votos_validos": 14321,
         "pct_votos": 2,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -7218,35 +7218,35 @@
             "sqcand": 80002550811,
             "nome": "DEIVID DO VALE",
             "partido": "SOLIDARIEDADE",
-            "votos": 5145,
+            "votos": 5161,
             "ordem": 1
           },
           {
             "sqcand": 80002550810,
             "nome": "THAINAN CASTRO",
             "partido": "SOLIDARIEDADE",
-            "votos": 2319,
+            "votos": 2326,
             "ordem": 2
           },
           {
             "sqcand": 80002550813,
             "nome": "JOSIMAR FERNANDES",
             "partido": "SOLIDARIEDADE",
-            "votos": 1455,
+            "votos": 1459,
             "ordem": 3
           },
           {
             "sqcand": 80002550808,
             "nome": "RAFA ALVES",
             "partido": "PRD",
-            "votos": 1045,
+            "votos": 1048,
             "ordem": 4
           },
           {
             "sqcand": 80002550817,
             "nome": "VALTEMIR SOUZA",
             "partido": "SOLIDARIEDADE",
-            "votos": 808,
+            "votos": 811,
             "ordem": 5
           }
         ]
@@ -7258,9 +7258,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PSD",
-        "votos_nominais": 36652,
-        "votos_legenda": 1869,
-        "votos_validos": 38521,
+        "votos_nominais": 36766,
+        "votos_legenda": 1875,
+        "votos_validos": 38641,
         "pct_votos": 5.4,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -7270,35 +7270,35 @@
             "sqcand": 80002552169,
             "nome": "SANDRA FRASSON",
             "partido": "PSD",
-            "votos": 14667,
+            "votos": 14712,
             "ordem": 1
           },
           {
             "sqcand": 80002552166,
             "nome": "DR HUMBERTO",
             "partido": "PSD",
-            "votos": 6609,
+            "votos": 6630,
             "ordem": 2
           },
           {
             "sqcand": 80002552141,
             "nome": "CINTIA NININHA",
             "partido": "PSD",
-            "votos": 4146,
+            "votos": 4159,
             "ordem": 3
           },
           {
             "sqcand": 80002552168,
             "nome": "ROGERIO BERNARDO",
             "partido": "PSD",
-            "votos": 2978,
+            "votos": 2988,
             "ordem": 4
           },
           {
             "sqcand": 80002552163,
             "nome": "LUIZ MATTOS",
             "partido": "PSD",
-            "votos": 2304,
+            "votos": 2311,
             "ordem": 5
           }
         ]
@@ -7310,9 +7310,9 @@
         "tipo": "federacao",
         "componentes": ["PSOL"],
         "sigla_lider": "PSOL",
-        "votos_nominais": 3284,
-        "votos_legenda": 307,
-        "votos_validos": 3591,
+        "votos_nominais": 3294,
+        "votos_legenda": 308,
+        "votos_validos": 3602,
         "pct_votos": 0.5,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -7322,35 +7322,35 @@
             "sqcand": 80002549400,
             "nome": "RENAN ALMEIDA",
             "partido": "PSOL",
-            "votos": 1479,
+            "votos": 1483,
             "ordem": 1
           },
           {
             "sqcand": 80002549398,
             "nome": "ANA PAULA ROCHA",
             "partido": "PSOL",
-            "votos": 666,
+            "votos": 669,
             "ordem": 2
           },
           {
             "sqcand": 80002549401,
             "nome": "DR. FLÁVIO LAZZARINI",
             "partido": "PSOL",
-            "votos": 418,
+            "votos": 419,
             "ordem": 3
           },
           {
             "sqcand": 80002549403,
             "nome": "GILBERTINHO CAMPOS",
             "partido": "PSOL",
-            "votos": 300,
+            "votos": 301,
             "ordem": 4
           },
           {
             "sqcand": 80002549402,
             "nome": "PROF. VINÍCIUS MACHADO",
             "partido": "PSOL",
-            "votos": 232,
+            "votos": 233,
             "ordem": 5
           }
         ]
@@ -7362,9 +7362,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "UP",
-        "votos_nominais": 529,
-        "votos_legenda": 42,
-        "votos_validos": 571,
+        "votos_nominais": 530,
+        "votos_legenda": 43,
+        "votos_validos": 573,
         "pct_votos": 0.08,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -7381,7 +7381,7 @@
             "sqcand": 80002541093,
             "nome": "GABRIEL COSTA",
             "partido": "UP",
-            "votos": 164,
+            "votos": 165,
             "ordem": 2
           }
         ]
@@ -7392,14 +7392,14 @@
     "votacao": {
       "contagens": {
         "aptos": 2999642,
-        "instalados": 962884,
-        "comparecimento": 763308,
-        "abstencao": 199576,
-        "validos": 596485,
-        "brancos": 25270,
-        "nulos": 25055,
-        "anulados": 54455,
-        "sub_judice": 62043
+        "instalados": 965883,
+        "comparecimento": 765686,
+        "abstencao": 200197,
+        "validos": 598344,
+        "brancos": 25349,
+        "nulos": 25133,
+        "anulados": 54624,
+        "sub_judice": 62236
       },
       "projetada": {
         "validos": 1858209,
@@ -7410,7 +7410,7 @@
     }
   },
   "GO": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "GO",
@@ -8383,7 +8383,7 @@
     }
   },
   "MA": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "MA",
@@ -9480,7 +9480,7 @@
     }
   },
   "MG": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "MG",
@@ -10891,14 +10891,14 @@
     }
   },
   "MS": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "MS",
-    "pct_apurado": 39.3,
+    "pct_apurado": 39.4,
     "lugares_a_preencher": 8,
-    "quociente_eleitoral": 74031,
-    "quociente_eleitoral_tse": 74031,
+    "quociente_eleitoral": 74219,
+    "quociente_eleitoral_tse": 74219,
     "totalizacao_final": false,
     "divergencias": [],
     "agremiacoes": [
@@ -10909,9 +10909,9 @@
         "tipo": "federacao",
         "componentes": ["PSDB"],
         "sigla_lider": "PSDB",
-        "votos_nominais": 100904,
-        "votos_legenda": 7057,
-        "votos_validos": 107961,
+        "votos_nominais": 101161,
+        "votos_legenda": 7075,
+        "votos_validos": 108236,
         "pct_votos": 18.23,
         "quociente_partidario": 1,
         "cadeiras": 2,
@@ -10920,14 +10920,14 @@
             "sqcand": 120002535259,
             "nome": "DR. VICTOR ROCHA",
             "partido": "PSDB",
-            "votos": 40378,
+            "votos": 40481,
             "ordem": 1
           },
           {
             "sqcand": 120002535262,
             "nome": "SIRLENE DOS SANTOS",
             "partido": "PSDB",
-            "votos": 18195,
+            "votos": 18242,
             "ordem": 2
           }
         ],
@@ -10936,35 +10936,35 @@
             "sqcand": 120002535258,
             "nome": "NATAL GONZAGA",
             "partido": "PSDB",
-            "votos": 11414,
+            "votos": 11443,
             "ordem": 1
           },
           {
             "sqcand": 120002535261,
             "nome": "PUKA VALDEZ",
             "partido": "PSDB",
-            "votos": 8199,
+            "votos": 8220,
             "ordem": 2
           },
           {
             "sqcand": 120002535260,
             "nome": "BIA CAVASSA",
             "partido": "PSDB",
-            "votos": 6344,
+            "votos": 6360,
             "ordem": 3
           },
           {
             "sqcand": 120002535265,
             "nome": "VIVIANE LUIZA",
             "partido": "PSDB",
-            "votos": 5144,
+            "votos": 5157,
             "ordem": 4
           },
           {
             "sqcand": 120002535263,
             "nome": "PROFESSOR JUARI",
             "partido": "PSDB",
-            "votos": 4308,
+            "votos": 4319,
             "ordem": 5
           }
         ]
@@ -10976,9 +10976,9 @@
         "tipo": "federacao",
         "componentes": ["PCDOB", "PT", "PV"],
         "sigla_lider": "PT",
-        "votos_nominais": 138829,
-        "votos_legenda": 11128,
-        "votos_validos": 149957,
+        "votos_nominais": 139182,
+        "votos_legenda": 11156,
+        "votos_validos": 150338,
         "pct_votos": 25.32,
         "quociente_partidario": 2,
         "cadeiras": 2,
@@ -10987,14 +10987,14 @@
             "sqcand": 120002537463,
             "nome": "ELIEL KAIOWÁ",
             "partido": "PT",
-            "votos": 55554,
+            "votos": 55695,
             "ordem": 1
           },
           {
             "sqcand": 120002537465,
             "nome": "CAMILA JARA",
             "partido": "PT",
-            "votos": 25034,
+            "votos": 25098,
             "ordem": 2
           }
         ],
@@ -11003,35 +11003,35 @@
             "sqcand": 120002537466,
             "nome": "MARQUINHOS TRAD",
             "partido": "PV",
-            "votos": 15705,
+            "votos": 15745,
             "ordem": 1
           },
           {
             "sqcand": 120002537464,
             "nome": "GISELLE MARQUES",
             "partido": "PT",
-            "votos": 11281,
+            "votos": 11310,
             "ordem": 2
           },
           {
             "sqcand": 120002537467,
             "nome": "ROBERTO MATEUS",
             "partido": "PCDOB",
-            "votos": 8728,
+            "votos": 8750,
             "ordem": 3
           },
           {
             "sqcand": 120002537468,
             "nome": "SANDRO DO VANDER",
             "partido": "PT",
-            "votos": 7077,
+            "votos": 7095,
             "ordem": 4
           },
           {
             "sqcand": 120002537460,
             "nome": "ANA SARAVY",
             "partido": "PV",
-            "votos": 5927,
+            "votos": 5942,
             "ordem": 5
           }
         ]
@@ -11043,9 +11043,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "MDB",
-        "votos_nominais": 58269,
-        "votos_legenda": 4185,
-        "votos_validos": 62454,
+        "votos_nominais": 58418,
+        "votos_legenda": 4195,
+        "votos_validos": 62613,
         "pct_votos": 10.55,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -11054,7 +11054,7 @@
             "sqcand": 120002538948,
             "nome": "WELLISON MUCHIUTTI",
             "partido": "MDB",
-            "votos": 23317,
+            "votos": 23377,
             "ordem": 1,
             "indefinido": true
           }
@@ -11064,35 +11064,35 @@
             "sqcand": 120002538949,
             "nome": "PAULO MASSETTI",
             "partido": "MDB",
-            "votos": 10507,
+            "votos": 10534,
             "ordem": 1
           },
           {
             "sqcand": 120002538946,
             "nome": "SANDRO AZAMBUJA",
             "partido": "MDB",
-            "votos": 6592,
+            "votos": 6608,
             "ordem": 2
           },
           {
             "sqcand": 120002538945,
             "nome": "GABRIEL ROSSI",
             "partido": "MDB",
-            "votos": 4735,
+            "votos": 4747,
             "ordem": 3
           },
           {
             "sqcand": 120002538953,
             "nome": "ROSE PIRES",
             "partido": "MDB",
-            "votos": 3663,
+            "votos": 3673,
             "ordem": 4
           },
           {
             "sqcand": 120002538952,
             "nome": "MANOEL VITÓRIO",
             "partido": "MDB",
-            "votos": 2970,
+            "votos": 2978,
             "ordem": 5
           }
         ]
@@ -11104,9 +11104,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PL",
-        "votos_nominais": 80354,
-        "votos_legenda": 7260,
-        "votos_validos": 87614,
+        "votos_nominais": 80559,
+        "votos_legenda": 7278,
+        "votos_validos": 87837,
         "pct_votos": 14.79,
         "quociente_partidario": 1,
         "cadeiras": 1,
@@ -11115,7 +11115,7 @@
             "sqcand": 120002536285,
             "nome": "GIROTO",
             "partido": "PL",
-            "votos": 32155,
+            "votos": 32237,
             "ordem": 1
           }
         ],
@@ -11124,35 +11124,35 @@
             "sqcand": 120002536283,
             "nome": "CASSY MONTEIRO",
             "partido": "PL",
-            "votos": 14490,
+            "votos": 14527,
             "ordem": 1
           },
           {
             "sqcand": 120002536284,
             "nome": "ANGELO MARCON",
             "partido": "PL",
-            "votos": 9090,
+            "votos": 9113,
             "ordem": 2
           },
           {
             "sqcand": 120002536281,
             "nome": "RODOLFO NOGUEIRA",
             "partido": "PL",
-            "votos": 6529,
+            "votos": 6546,
             "ordem": 3
           },
           {
             "sqcand": 120002536286,
             "nome": "MARA CASEIRO",
             "partido": "PL",
-            "votos": 5052,
+            "votos": 5064,
             "ordem": 4
           },
           {
             "sqcand": 120002536280,
             "nome": "ANDRÉ CAMPOS",
             "partido": "PL",
-            "votos": 4096,
+            "votos": 4107,
             "ordem": 5
           }
         ]
@@ -11164,9 +11164,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "REPUBLICANOS",
-        "votos_nominais": 57102,
-        "votos_legenda": 5019,
-        "votos_validos": 62121,
+        "votos_nominais": 57247,
+        "votos_legenda": 5032,
+        "votos_validos": 62279,
         "pct_votos": 10.49,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -11175,7 +11175,7 @@
             "sqcand": 120002537358,
             "nome": "DR. PAULO VERON",
             "partido": "REPUBLICANOS",
-            "votos": 22850,
+            "votos": 22908,
             "ordem": 1
           }
         ],
@@ -11184,35 +11184,35 @@
             "sqcand": 120002537361,
             "nome": "JAIME VERRUCK",
             "partido": "REPUBLICANOS",
-            "votos": 10297,
+            "votos": 10323,
             "ordem": 1
           },
           {
             "sqcand": 120002537360,
             "nome": "NANAH CORDEIRO",
             "partido": "REPUBLICANOS",
-            "votos": 6459,
+            "votos": 6476,
             "ordem": 2
           },
           {
             "sqcand": 120002537362,
             "nome": "NETO SANTOS",
             "partido": "REPUBLICANOS",
-            "votos": 4640,
+            "votos": 4652,
             "ordem": 3
           },
           {
             "sqcand": 120002537355,
             "nome": "BETO PEREIRA",
             "partido": "REPUBLICANOS",
-            "votos": 3590,
+            "votos": 3599,
             "ordem": 4
           },
           {
             "sqcand": 120002537357,
             "nome": "CORONEL BITTENCOURT",
             "partido": "REPUBLICANOS",
-            "votos": 2911,
+            "votos": 2918,
             "ordem": 5
           }
         ]
@@ -11224,9 +11224,9 @@
         "tipo": "federacao",
         "componentes": ["PP", "UNIÃO"],
         "sigla_lider": "PP",
-        "votos_nominais": 62915,
-        "votos_legenda": 3949,
-        "votos_validos": 66864,
+        "votos_nominais": 63075,
+        "votos_legenda": 3959,
+        "votos_validos": 67034,
         "pct_votos": 11.29,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -11235,7 +11235,7 @@
             "sqcand": 120002538787,
             "nome": "ALAN GUEDES",
             "partido": "PP",
-            "votos": 25176,
+            "votos": 25240,
             "ordem": 1
           }
         ],
@@ -11244,35 +11244,35 @@
             "sqcand": 120002538785,
             "nome": "KELIANA FERNANDES",
             "partido": "PP",
-            "votos": 11345,
+            "votos": 11374,
             "ordem": 1
           },
           {
             "sqcand": 120002538789,
             "nome": "DRA. CLEDIANE",
             "partido": "PP",
-            "votos": 7117,
+            "votos": 7135,
             "ordem": 2
           },
           {
             "sqcand": 120002538791,
             "nome": "DAGOBERTO NOGUEIRA",
             "partido": "PP",
-            "votos": 5113,
+            "votos": 5126,
             "ordem": 3
           },
           {
             "sqcand": 120002538784,
             "nome": "GERALDO RESENDE",
             "partido": "UNIÃO",
-            "votos": 3955,
+            "votos": 3965,
             "ordem": 4
           },
           {
             "sqcand": 120002538788,
             "nome": "ROSE MODESTO",
             "partido": "UNIÃO",
-            "votos": 3207,
+            "votos": 3215,
             "ordem": 5
           }
         ]
@@ -11381,9 +11381,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "DC",
-        "votos_nominais": 430,
+        "votos_nominais": 431,
         "votos_legenda": 25,
-        "votos_validos": 455,
+        "votos_validos": 456,
         "pct_votos": 0.08,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -11400,7 +11400,7 @@
             "sqcand": 120002552947,
             "nome": "MARIA ISABELA SALDANHA",
             "partido": "DC",
-            "votos": 77,
+            "votos": 78,
             "ordem": 2
           },
           {
@@ -11485,9 +11485,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "NOVO",
-        "votos_nominais": 41017,
-        "votos_legenda": 3065,
-        "votos_validos": 44082,
+        "votos_nominais": 41121,
+        "votos_legenda": 3073,
+        "votos_validos": 44194,
         "pct_votos": 7.44,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -11497,35 +11497,35 @@
             "sqcand": 120002545237,
             "nome": "SUBTENENTE MOTA",
             "partido": "NOVO",
-            "votos": 16413,
+            "votos": 16455,
             "ordem": 1
           },
           {
             "sqcand": 120002545235,
             "nome": "VICTORIA PEIXOTO",
             "partido": "NOVO",
-            "votos": 7396,
+            "votos": 7415,
             "ordem": 2
           },
           {
             "sqcand": 120002545239,
             "nome": "PROF. EDUARDO FERRUFINO",
             "partido": "NOVO",
-            "votos": 4640,
+            "votos": 4652,
             "ordem": 3
           },
           {
             "sqcand": 120002545236,
             "nome": "CAROL MOURÃO",
             "partido": "NOVO",
-            "votos": 3333,
+            "votos": 3341,
             "ordem": 4
           },
           {
             "sqcand": 120002545242,
             "nome": "CHARLES GAMA",
             "partido": "NOVO",
-            "votos": 2579,
+            "votos": 2585,
             "ordem": 5
           }
         ]
@@ -11575,9 +11575,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PDT",
-        "votos_nominais": 7950,
-        "votos_legenda": 778,
-        "votos_validos": 8728,
+        "votos_nominais": 7971,
+        "votos_legenda": 780,
+        "votos_validos": 8751,
         "pct_votos": 1.47,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -11587,35 +11587,35 @@
             "sqcand": 120002549687,
             "nome": "TATO SOUZA",
             "partido": "PDT",
-            "votos": 3181,
+            "votos": 3190,
             "ordem": 1
           },
           {
             "sqcand": 120002549690,
             "nome": "AILTON FIGUEIREDO",
             "partido": "PDT",
-            "votos": 1434,
+            "votos": 1437,
             "ordem": 2
           },
           {
             "sqcand": 120002549691,
             "nome": "LUIS BRIZOLA",
             "partido": "PDT",
-            "votos": 899,
+            "votos": 902,
             "ordem": 3
           },
           {
             "sqcand": 120002549689,
             "nome": "ROSANE BACH",
             "partido": "PDT",
-            "votos": 646,
+            "votos": 648,
             "ordem": 4
           },
           {
             "sqcand": 120002549688,
             "nome": "JEFFERSOM MARECCO",
             "partido": "PDT",
-            "votos": 500,
+            "votos": 501,
             "ordem": 5
           }
         ]
@@ -11679,9 +11679,9 @@
         "tipo": "federacao",
         "componentes": ["PSOL", "REDE"],
         "sigla_lider": "PSOL",
-        "votos_nominais": 1797,
+        "votos_nominais": 1802,
         "votos_legenda": 144,
-        "votos_validos": 1941,
+        "votos_validos": 1946,
         "pct_votos": 0.33,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -11691,21 +11691,21 @@
             "sqcand": 120002532712,
             "nome": "PROF. ANISIO GUATÓ",
             "partido": "PSOL",
-            "votos": 719,
+            "votos": 721,
             "ordem": 1
           },
           {
             "sqcand": 120002532711,
             "nome": "FÁTIMA SOUZA",
             "partido": "PSOL",
-            "votos": 324,
+            "votos": 325,
             "ordem": 2
           },
           {
             "sqcand": 120002532717,
             "nome": "CABRAL",
             "partido": "PSOL",
-            "votos": 203,
+            "votos": 204,
             "ordem": 3
           },
           {
@@ -11730,14 +11730,14 @@
     "votacao": {
       "contagens": {
         "aptos": 2032487,
-        "instalados": 798766,
-        "comparecimento": 639440,
-        "abstencao": 159326,
-        "validos": 495477,
-        "brancos": 23697,
-        "nulos": 23496,
-        "anulados": 45233,
-        "sub_judice": 51537
+        "instalados": 800799,
+        "comparecimento": 641067,
+        "abstencao": 159732,
+        "validos": 496737,
+        "brancos": 23757,
+        "nulos": 23556,
+        "anulados": 45349,
+        "sub_judice": 51668
       },
       "projetada": {
         "validos": 1260754,
@@ -11748,7 +11748,7 @@
     }
   },
   "MT": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "MT",
@@ -12721,7 +12721,7 @@
     }
   },
   "PA": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PA",
@@ -13760,7 +13760,7 @@
     }
   },
   "PB": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PB",
@@ -14778,7 +14778,7 @@
     }
   },
   "PE": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PE",
@@ -15945,7 +15945,7 @@
     }
   },
   "PI": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PI",
@@ -16942,14 +16942,14 @@
     }
   },
   "PR": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PR",
-    "pct_apurado": 34.7,
+    "pct_apurado": 34.8,
     "lugares_a_preencher": 30,
-    "quociente_eleitoral": 75956,
-    "quociente_eleitoral_tse": 75956,
+    "quociente_eleitoral": 76174,
+    "quociente_eleitoral_tse": 76174,
     "totalizacao_final": false,
     "divergencias": [],
     "agremiacoes": [
@@ -16960,9 +16960,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PSD",
-        "votos_nominais": 685089,
-        "votos_legenda": 59673,
-        "votos_validos": 744762,
+        "votos_nominais": 687064,
+        "votos_legenda": 59844,
+        "votos_validos": 746908,
         "pct_votos": 32.68,
         "quociente_partidario": 9,
         "cadeiras": 10,
@@ -16971,70 +16971,70 @@
             "sqcand": 160002542314,
             "nome": "BETO PRETO",
             "partido": "PSD",
-            "votos": 214119,
+            "votos": 214737,
             "ordem": 1
           },
           {
             "sqcand": 160002542323,
             "nome": "LUIZ NISHIMORI",
             "partido": "PSD",
-            "votos": 96488,
+            "votos": 96766,
             "ordem": 2
           },
           {
             "sqcand": 160002542318,
             "nome": "LUIZÃO GOULART",
             "partido": "PSD",
-            "votos": 60529,
+            "votos": 60704,
             "ordem": 3
           },
           {
             "sqcand": 160002542320,
             "nome": "PSICÓLOGA ELAINE MICHELE",
             "partido": "PSD",
-            "votos": 43480,
+            "votos": 43605,
             "ordem": 4
           },
           {
             "sqcand": 160002542313,
             "nome": "MARCELO RANGEL",
             "partido": "PSD",
-            "votos": 33639,
+            "votos": 33736,
             "ordem": 5
           },
           {
             "sqcand": 160002542319,
             "nome": "RATINHO DE COLOMBO",
             "partido": "PSD",
-            "votos": 27276,
+            "votos": 27355,
             "ordem": 6
           },
           {
             "sqcand": 160002542341,
             "nome": "GIL DOS ANJOS",
             "partido": "PSD",
-            "votos": 22845,
+            "votos": 22911,
             "ordem": 7
           },
           {
             "sqcand": 160002542335,
             "nome": "ADÃO PEREIRA FEDERAL",
             "partido": "PSD",
-            "votos": 19593,
+            "votos": 19649,
             "ordem": 8
           },
           {
             "sqcand": 160002542339,
             "nome": "CABO NILSON FERREIRA",
             "partido": "PSD",
-            "votos": 17111,
+            "votos": 17160,
             "ordem": 9
           },
           {
             "sqcand": 160002542338,
             "nome": "PASTORA LISLAINE",
             "partido": "PSD",
-            "votos": 15158,
+            "votos": 15202,
             "ordem": 10
           }
         ],
@@ -17043,35 +17043,35 @@
             "sqcand": 160002542315,
             "nome": "DRA ROSANGÊLA SILVEIRA",
             "partido": "PSD",
-            "votos": 13585,
+            "votos": 13624,
             "ordem": 1
           },
           {
             "sqcand": 160002542342,
             "nome": "KAMILA BRITES",
             "partido": "PSD",
-            "votos": 12291,
+            "votos": 12327,
             "ordem": 2
           },
           {
             "sqcand": 160002542321,
             "nome": "WALTER VOLPATO",
             "partido": "PSD",
-            "votos": 11210,
+            "votos": 11243,
             "ordem": 3
           },
           {
             "sqcand": 160002542327,
             "nome": "CLOARA PINHEIRO",
             "partido": "PSD",
-            "votos": 10295,
+            "votos": 10324,
             "ordem": 4
           },
           {
             "sqcand": 160002554288,
             "nome": "ROSE PROTETORA DOS ANIMAIS",
             "partido": "PSD",
-            "votos": 9509,
+            "votos": 9537,
             "ordem": 5
           }
         ]
@@ -17083,9 +17083,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PL",
-        "votos_nominais": 359636,
-        "votos_legenda": 25686,
-        "votos_validos": 385322,
+        "votos_nominais": 360672,
+        "votos_legenda": 25760,
+        "votos_validos": 386432,
         "pct_votos": 16.91,
         "quociente_partidario": 5,
         "cadeiras": 5,
@@ -17094,35 +17094,35 @@
             "sqcand": 160002547569,
             "nome": "SARGENTO FAHUR",
             "partido": "PL",
-            "votos": 115906,
+            "votos": 116240,
             "ordem": 1
           },
           {
             "sqcand": 160002547574,
             "nome": "NEGUINHO GRASSI",
             "partido": "PL",
-            "votos": 52230,
+            "votos": 52380,
             "ordem": 2
           },
           {
             "sqcand": 160002547571,
             "nome": "JUNIOR SANTOS ROSA",
             "partido": "PL",
-            "votos": 32765,
+            "votos": 32860,
             "ordem": 3
           },
           {
             "sqcand": 160002547592,
             "nome": "RAFAEL DANTAS",
             "partido": "PL",
-            "votos": 23536,
+            "votos": 23604,
             "ordem": 4
           },
           {
             "sqcand": 160002547584,
             "nome": "OLIMPIO",
             "partido": "PL",
-            "votos": 18209,
+            "votos": 18262,
             "ordem": 5
           }
         ],
@@ -17131,35 +17131,35 @@
             "sqcand": 160002547593,
             "nome": "RICARDO ARRUDA",
             "partido": "PL",
-            "votos": 14765,
+            "votos": 14807,
             "ordem": 1
           },
           {
             "sqcand": 160002547576,
             "nome": "JOCELINO VELOSO",
             "partido": "PL",
-            "votos": 12366,
+            "votos": 12402,
             "ordem": 2
           },
           {
             "sqcand": 160002547564,
             "nome": "RICARDO PINAFFI",
             "partido": "PL",
-            "votos": 10606,
+            "votos": 10636,
             "ordem": 3
           },
           {
             "sqcand": 160002547582,
             "nome": "STEPHANES",
             "partido": "PL",
-            "votos": 9262,
+            "votos": 9289,
             "ordem": 4
           },
           {
             "sqcand": 160002547566,
             "nome": "MIRIAM FERREIRA",
             "partido": "PL",
-            "votos": 8206,
+            "votos": 8229,
             "ordem": 5
           }
         ]
@@ -17171,9 +17171,9 @@
         "tipo": "federacao",
         "componentes": ["PCDOB", "PT", "PV"],
         "sigla_lider": "PT",
-        "votos_nominais": 345899,
-        "votos_legenda": 26234,
-        "votos_validos": 372133,
+        "votos_nominais": 346896,
+        "votos_legenda": 26310,
+        "votos_validos": 373206,
         "pct_votos": 16.33,
         "quociente_partidario": 4,
         "cadeiras": 5,
@@ -17182,35 +17182,35 @@
             "sqcand": 160002536512,
             "nome": "CAROL DARTORA",
             "partido": "PT",
-            "votos": 108877,
+            "votos": 109191,
             "ordem": 1
           },
           {
             "sqcand": 160002536498,
             "nome": "PROFESSORA AMÁBILE",
             "partido": "PCDOB",
-            "votos": 49063,
+            "votos": 49204,
             "ordem": 2
           },
           {
             "sqcand": 160002536518,
             "nome": "UALID RABAH",
             "partido": "PT",
-            "votos": 30778,
+            "votos": 30867,
             "ordem": 3
           },
           {
             "sqcand": 160002536515,
             "nome": "POLACO DO PT",
             "partido": "PT",
-            "votos": 22109,
+            "votos": 22173,
             "ordem": 4
           },
           {
             "sqcand": 160002536514,
             "nome": "PROFESSORA MICHELE",
             "partido": "PT",
-            "votos": 17105,
+            "votos": 17154,
             "ordem": 5
           }
         ],
@@ -17219,35 +17219,35 @@
             "sqcand": 160002536517,
             "nome": "WELTER",
             "partido": "PT",
-            "votos": 13870,
+            "votos": 13909,
             "ordem": 1
           },
           {
             "sqcand": 160002536507,
             "nome": "EDUARDO GUADAGNIN",
             "partido": "PT",
-            "votos": 11616,
+            "votos": 11650,
             "ordem": 2
           },
           {
             "sqcand": 160002536519,
             "nome": "ZECA DIRCEU",
             "partido": "PT",
-            "votos": 9963,
+            "votos": 9992,
             "ordem": 3
           },
           {
             "sqcand": 160002536504,
             "nome": "CÉLIO RODRIGUES E COLETIVO",
             "partido": "PT",
-            "votos": 8701,
+            "votos": 8726,
             "ordem": 4
           },
           {
             "sqcand": 160002536508,
             "nome": "ADRIANA ARAUJO",
             "partido": "PT",
-            "votos": 7708,
+            "votos": 7730,
             "ordem": 5
           }
         ]
@@ -17259,9 +17259,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "NOVO",
-        "votos_nominais": 118001,
-        "votos_legenda": 11493,
-        "votos_validos": 129494,
+        "votos_nominais": 118342,
+        "votos_legenda": 11526,
+        "votos_validos": 129868,
         "pct_votos": 5.68,
         "quociente_partidario": 1,
         "cadeiras": 2,
@@ -17270,14 +17270,14 @@
             "sqcand": 160002542304,
             "nome": "SARA LIMA",
             "partido": "NOVO",
-            "votos": 35961,
+            "votos": 36065,
             "ordem": 1
           },
           {
             "sqcand": 160002542296,
             "nome": "GUILHERME KILTER",
             "partido": "NOVO",
-            "votos": 16205,
+            "votos": 16252,
             "ordem": 2
           }
         ],
@@ -17286,35 +17286,35 @@
             "sqcand": 160002542290,
             "nome": "PROFESSOR SAULO",
             "partido": "NOVO",
-            "votos": 10166,
+            "votos": 10195,
             "ordem": 1
           },
           {
             "sqcand": 160002542310,
             "nome": "FAYNARA BARBOSA",
             "partido": "NOVO",
-            "votos": 7302,
+            "votos": 7324,
             "ordem": 2
           },
           {
             "sqcand": 160002542307,
             "nome": "DR. RICARDO VETERINÁRIO",
             "partido": "NOVO",
-            "votos": 5650,
+            "votos": 5666,
             "ordem": 3
           },
           {
             "sqcand": 160002542292,
             "nome": "DR TAFFAREL DEFENSOR ANIMAIS",
             "partido": "NOVO",
-            "votos": 4581,
+            "votos": 4594,
             "ordem": 4
           },
           {
             "sqcand": 160002542282,
             "nome": "ADILSON SEIDI",
             "partido": "NOVO",
-            "votos": 3837,
+            "votos": 3848,
             "ordem": 5
           }
         ]
@@ -17326,9 +17326,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PSB",
-        "votos_nominais": 125409,
-        "votos_legenda": 5468,
-        "votos_validos": 130877,
+        "votos_nominais": 125771,
+        "votos_legenda": 5483,
+        "votos_validos": 131254,
         "pct_votos": 5.74,
         "quociente_partidario": 1,
         "cadeiras": 2,
@@ -17337,14 +17337,14 @@
             "sqcand": 160002532593,
             "nome": "ELEANGELA",
             "partido": "PSB",
-            "votos": 38682,
+            "votos": 38794,
             "ordem": 1
           },
           {
             "sqcand": 160002532617,
             "nome": "DR HAROLDO",
             "partido": "PSB",
-            "votos": 17431,
+            "votos": 17481,
             "ordem": 2
           }
         ],
@@ -17353,35 +17353,35 @@
             "sqcand": 160002532612,
             "nome": "ELAINE MARINS",
             "partido": "PSB",
-            "votos": 10935,
+            "votos": 10967,
             "ordem": 1
           },
           {
             "sqcand": 160002532602,
             "nome": "CLODOMIR ASCARI",
             "partido": "PSB",
-            "votos": 7855,
+            "votos": 7878,
             "ordem": 2
           },
           {
             "sqcand": 160002532595,
             "nome": "ANDERSON DEOLI",
             "partido": "PSB",
-            "votos": 6077,
+            "votos": 6095,
             "ordem": 3
           },
           {
             "sqcand": 160002532614,
             "nome": "DR. FRANCISMAR",
             "partido": "PSB",
-            "votos": 4927,
+            "votos": 4942,
             "ordem": 4
           },
           {
             "sqcand": 160002532591,
             "nome": "CHARLESTON JÚNIOR INCLUSÃO",
             "partido": "PSB",
-            "votos": 4127,
+            "votos": 4139,
             "ordem": 5
           }
         ]
@@ -17393,9 +17393,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "REPUBLICANOS",
-        "votos_nominais": 114305,
-        "votos_legenda": 7597,
-        "votos_validos": 121902,
+        "votos_nominais": 114634,
+        "votos_legenda": 7619,
+        "votos_validos": 122253,
         "pct_votos": 5.35,
         "quociente_partidario": 1,
         "cadeiras": 2,
@@ -17404,14 +17404,14 @@
             "sqcand": 160002540768,
             "nome": "NEWTON BONIN",
             "partido": "REPUBLICANOS",
-            "votos": 37164,
+            "votos": 37271,
             "ordem": 1
           },
           {
             "sqcand": 160002540772,
             "nome": "DR. RANIERI",
             "partido": "REPUBLICANOS",
-            "votos": 16747,
+            "votos": 16795,
             "ordem": 2
           }
         ],
@@ -17420,35 +17420,35 @@
             "sqcand": 160002540770,
             "nome": "DIOGO HUTT DA TV",
             "partido": "REPUBLICANOS",
-            "votos": 10506,
+            "votos": 10536,
             "ordem": 1
           },
           {
             "sqcand": 160002540763,
             "nome": "PASTOR CARLOS EDUARDO",
             "partido": "REPUBLICANOS",
-            "votos": 7547,
+            "votos": 7568,
             "ordem": 2
           },
           {
             "sqcand": 160002540769,
             "nome": "PEDRO LUPION",
             "partido": "REPUBLICANOS",
-            "votos": 5839,
+            "votos": 5855,
             "ordem": 3
           },
           {
             "sqcand": 160002540764,
             "nome": "GENERAL HERMESON",
             "partido": "REPUBLICANOS",
-            "votos": 4734,
+            "votos": 4748,
             "ordem": 4
           },
           {
             "sqcand": 160002540773,
             "nome": "EDER BUBLITZ",
             "partido": "REPUBLICANOS",
-            "votos": 3965,
+            "votos": 3977,
             "ordem": 5
           }
         ]
@@ -17460,9 +17460,9 @@
         "tipo": "federacao",
         "componentes": ["PP", "UNIÃO"],
         "sigla_lider": "UNIÃO",
-        "votos_nominais": 167062,
-        "votos_legenda": 11821,
-        "votos_validos": 178883,
+        "votos_nominais": 167544,
+        "votos_legenda": 11855,
+        "votos_validos": 179399,
         "pct_votos": 7.85,
         "quociente_partidario": 2,
         "cadeiras": 2,
@@ -17471,14 +17471,14 @@
             "sqcand": 160002532877,
             "nome": "MARISA LOBO - PSICÓLOGA CRISTÃ",
             "partido": "UNIÃO",
-            "votos": 52214,
+            "votos": 52365,
             "ordem": 1
           },
           {
             "sqcand": 160002532872,
             "nome": "SANTIN ROVEDA",
             "partido": "UNIÃO",
-            "votos": 23529,
+            "votos": 23597,
             "ordem": 2
           }
         ],
@@ -17487,35 +17487,35 @@
             "sqcand": 160002532863,
             "nome": "DIEGO GARCIA",
             "partido": "UNIÃO",
-            "votos": 14760,
+            "votos": 14803,
             "ordem": 1
           },
           {
             "sqcand": 160002532874,
             "nome": "DILCEU SPERAFICO",
             "partido": "PP",
-            "votos": 10603,
+            "votos": 10633,
             "ordem": 2
           },
           {
             "sqcand": 160002532855,
             "nome": "LUISA CANZIANI",
             "partido": "UNIÃO",
-            "votos": 8203,
+            "votos": 8227,
             "ordem": 3
           },
           {
             "sqcand": 160002532871,
             "nome": "ELIS SALDIVAR",
             "partido": "UNIÃO",
-            "votos": 6651,
+            "votos": 6671,
             "ordem": 4
           },
           {
             "sqcand": 160002532857,
             "nome": "RICARDO BARROS",
             "partido": "PP",
-            "votos": 5571,
+            "votos": 5587,
             "ordem": 5
           }
         ]
@@ -17527,9 +17527,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "MDB",
-        "votos_nominais": 73836,
-        "votos_legenda": 6464,
-        "votos_validos": 80300,
+        "votos_nominais": 74049,
+        "votos_legenda": 6482,
+        "votos_validos": 80531,
         "pct_votos": 3.52,
         "quociente_partidario": 1,
         "cadeiras": 1,
@@ -17538,7 +17538,7 @@
             "sqcand": 160002540798,
             "nome": "VEREADOR ADEMILSON",
             "partido": "MDB",
-            "votos": 22775,
+            "votos": 22840,
             "ordem": 1
           }
         ],
@@ -17547,35 +17547,35 @@
             "sqcand": 160002554127,
             "nome": "SILVIO PRZYWITOWSKI",
             "partido": "MDB",
-            "votos": 10263,
+            "votos": 10292,
             "ordem": 1
           },
           {
             "sqcand": 160002540803,
             "nome": "MIRADOR",
             "partido": "MDB",
-            "votos": 6438,
+            "votos": 6457,
             "ordem": 2
           },
           {
             "sqcand": 160002540801,
             "nome": "MERON NETO",
             "partido": "MDB",
-            "votos": 4625,
+            "votos": 4638,
             "ordem": 3
           },
           {
             "sqcand": 160002540809,
             "nome": "EDUARDO BANTLE",
             "partido": "MDB",
-            "votos": 3578,
+            "votos": 3588,
             "ordem": 4
           },
           {
             "sqcand": 160002540794,
             "nome": "SILVIA WINTER",
             "partido": "MDB",
-            "votos": 2901,
+            "votos": 2910,
             "ordem": 5
           }
         ]
@@ -17587,9 +17587,9 @@
         "tipo": "federacao",
         "componentes": ["CIDADANIA", "PSDB"],
         "sigla_lider": "CIDADANIA",
-        "votos_nominais": 65419,
-        "votos_legenda": 5040,
-        "votos_validos": 70459,
+        "votos_nominais": 65608,
+        "votos_legenda": 5054,
+        "votos_validos": 70662,
         "pct_votos": 3.09,
         "quociente_partidario": 0,
         "cadeiras": 1,
@@ -17598,7 +17598,7 @@
             "sqcand": 160002549524,
             "nome": "SIDNEI JARDIM",
             "partido": "CIDADANIA",
-            "votos": 20592,
+            "votos": 20651,
             "ordem": 1
           }
         ],
@@ -17607,35 +17607,35 @@
             "sqcand": 160002549533,
             "nome": "BETO RICHA",
             "partido": "PSDB",
-            "votos": 9279,
+            "votos": 9306,
             "ordem": 1
           },
           {
             "sqcand": 160002549543,
             "nome": "BRUNA ESMANHOTO",
             "partido": "PSDB",
-            "votos": 5821,
+            "votos": 5838,
             "ordem": 2
           },
           {
             "sqcand": 160002549551,
             "nome": "EVANDRO ROMAN",
             "partido": "CIDADANIA",
-            "votos": 4181,
+            "votos": 4194,
             "ordem": 3
           },
           {
             "sqcand": 160002549549,
             "nome": "CHICO BRASILEIRO",
             "partido": "PSDB",
-            "votos": 3235,
+            "votos": 3244,
             "ordem": 4
           },
           {
             "sqcand": 160002549546,
             "nome": "RENATA BUENO",
             "partido": "CIDADANIA",
-            "votos": 2623,
+            "votos": 2631,
             "ordem": 5
           }
         ]
@@ -17751,9 +17751,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PDT",
-        "votos_nominais": 26111,
-        "votos_legenda": 2269,
-        "votos_validos": 28380,
+        "votos_nominais": 26186,
+        "votos_legenda": 2276,
+        "votos_validos": 28462,
         "pct_votos": 1.25,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -17763,35 +17763,35 @@
             "sqcand": 160002541982,
             "nome": "DR. PAULO FONTINELLI",
             "partido": "PDT",
-            "votos": 8004,
+            "votos": 8027,
             "ordem": 1
           },
           {
             "sqcand": 160002542226,
             "nome": "CRISTINA BALESTRA",
             "partido": "PDT",
-            "votos": 3607,
+            "votos": 3617,
             "ordem": 2
           },
           {
             "sqcand": 160002542227,
             "nome": "SÉRGIO GALLINA",
             "partido": "PDT",
-            "votos": 2263,
+            "votos": 2269,
             "ordem": 3
           },
           {
             "sqcand": 160002542215,
             "nome": "RENE PENINHA",
             "partido": "PDT",
-            "votos": 1625,
+            "votos": 1630,
             "ordem": 4
           },
           {
             "sqcand": 160002541986,
             "nome": "DR. WATER",
             "partido": "PDT",
-            "votos": 1258,
+            "votos": 1261,
             "ordem": 5
           }
         ]
@@ -17803,9 +17803,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PODE",
-        "votos_nominais": 4964,
-        "votos_legenda": 305,
-        "votos_validos": 5269,
+        "votos_nominais": 4978,
+        "votos_legenda": 306,
+        "votos_validos": 5284,
         "pct_votos": 0.23,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -17815,28 +17815,28 @@
             "sqcand": 160002547469,
             "nome": "SARGENTO TÂNIA GUERREIRO",
             "partido": "PODE",
-            "votos": 1551,
+            "votos": 1556,
             "ordem": 1
           },
           {
             "sqcand": 160002547474,
             "nome": "CORONEL MINIKÉLO",
             "partido": "PODE",
-            "votos": 699,
+            "votos": 701,
             "ordem": 2
           },
           {
             "sqcand": 160002552571,
             "nome": "SAYMON VEIGA",
             "partido": "PODE",
-            "votos": 439,
+            "votos": 440,
             "ordem": 3
           },
           {
             "sqcand": 160002546893,
             "nome": "DELEGADO FEDERAL ALAMINO",
             "partido": "PODE",
-            "votos": 315,
+            "votos": 316,
             "ordem": 4
           },
           {
@@ -17855,9 +17855,9 @@
         "tipo": "federacao",
         "componentes": ["PRD", "SOLIDARIEDADE"],
         "sigla_lider": "SOLIDARIEDADE",
-        "votos_nominais": 24114,
-        "votos_legenda": 1352,
-        "votos_validos": 25466,
+        "votos_nominais": 24183,
+        "votos_legenda": 1356,
+        "votos_validos": 25539,
         "pct_votos": 1.12,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -17867,35 +17867,35 @@
             "sqcand": 160002553371,
             "nome": "SIMONE DIAS",
             "partido": "PRD",
-            "votos": 8640,
+            "votos": 8665,
             "ordem": 1
           },
           {
             "sqcand": 160002553360,
             "nome": "LIZA RAMOS",
             "partido": "SOLIDARIEDADE",
-            "votos": 3893,
+            "votos": 3904,
             "ordem": 2
           },
           {
             "sqcand": 160002553365,
             "nome": "FRANCIS CAVALCANTI",
             "partido": "SOLIDARIEDADE",
-            "votos": 2442,
+            "votos": 2449,
             "ordem": 3
           },
           {
             "sqcand": 160002553373,
             "nome": "VIVI DA GARAPEIRA",
             "partido": "PRD",
-            "votos": 1754,
+            "votos": 1759,
             "ordem": 4
           },
           {
             "sqcand": 160002553361,
             "nome": "MARCÃO DO POVO",
             "partido": "SOLIDARIEDADE",
-            "votos": 1357,
+            "votos": 1361,
             "ordem": 5
           }
         ]
@@ -17907,9 +17907,9 @@
         "tipo": "federacao",
         "componentes": ["PSOL", "REDE"],
         "sigla_lider": "PSOL",
-        "votos_nominais": 4402,
-        "votos_legenda": 362,
-        "votos_validos": 4764,
+        "votos_nominais": 4415,
+        "votos_legenda": 363,
+        "votos_validos": 4778,
         "pct_votos": 0.21,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -17919,35 +17919,35 @@
             "sqcand": 160002547717,
             "nome": "ALANA LANDAL",
             "partido": "PSOL",
-            "votos": 1492,
+            "votos": 1496,
             "ordem": 1
           },
           {
             "sqcand": 160002547712,
             "nome": "VANICE LIMA",
             "partido": "REDE",
-            "votos": 672,
+            "votos": 674,
             "ordem": 2
           },
           {
             "sqcand": 160002547724,
             "nome": "JUVANCI",
             "partido": "PSOL",
-            "votos": 422,
+            "votos": 423,
             "ordem": 3
           },
           {
             "sqcand": 160002547713,
             "nome": "BRAGA",
             "partido": "PSOL",
-            "votos": 303,
+            "votos": 304,
             "ordem": 4
           },
           {
             "sqcand": 160002547722,
             "nome": "PROF. JOÃO HENRIQUE",
             "partido": "PSOL",
-            "votos": 234,
+            "votos": 235,
             "ordem": 5
           }
         ]
@@ -17959,9 +17959,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "UP",
-        "votos_nominais": 559,
+        "votos_nominais": 561,
         "votos_legenda": 30,
-        "votos_validos": 589,
+        "votos_validos": 591,
         "pct_votos": 0.03,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -17971,7 +17971,7 @@
             "sqcand": 160002550999,
             "nome": "GIOVANNY GODOI",
             "partido": "UP",
-            "votos": 385,
+            "votos": 387,
             "ordem": 1
           },
           {
@@ -17989,14 +17989,14 @@
     "votacao": {
       "contagens": {
         "aptos": 8645891,
-        "instalados": 3000119,
-        "comparecimento": 2477173,
-        "abstencao": 522946,
-        "validos": 1906345,
-        "brancos": 99676,
-        "nulos": 98830,
-        "anulados": 174035,
-        "sub_judice": 198287
+        "instalados": 3008765,
+        "comparecimento": 2484312,
+        "abstencao": 524453,
+        "validos": 1911838,
+        "brancos": 99964,
+        "nulos": 99114,
+        "anulados": 174537,
+        "sub_judice": 198859
       },
       "projetada": {
         "validos": 5493787,
@@ -18007,14 +18007,14 @@
     }
   },
   "RJ": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RJ",
-    "pct_apurado": 30.6,
+    "pct_apurado": 30.7,
     "lugares_a_preencher": 46,
-    "quociente_eleitoral": 62907,
-    "quociente_eleitoral_tse": 62907,
+    "quociente_eleitoral": 63113,
+    "quociente_eleitoral_tse": 63113,
     "totalizacao_final": false,
     "divergencias": [],
     "agremiacoes": [
@@ -18025,9 +18025,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PL",
-        "votos_nominais": 763855,
-        "votos_legenda": 60710,
-        "votos_validos": 824565,
+        "votos_nominais": 766352,
+        "votos_legenda": 60908,
+        "votos_validos": 827260,
         "pct_votos": 28.49,
         "quociente_partidario": 13,
         "cadeiras": 14,
@@ -18036,98 +18036,98 @@
             "sqcand": 190002532810,
             "nome": "ALTINEU CORTES",
             "partido": "PL",
-            "votos": 220188,
+            "votos": 220908,
             "ordem": 1
           },
           {
             "sqcand": 190002532819,
             "nome": "GENERAL PAZUELLO",
             "partido": "PL",
-            "votos": 99222,
+            "votos": 99547,
             "ordem": 2
           },
           {
             "sqcand": 190002532831,
             "nome": "IGOR PORTO",
             "partido": "PL",
-            "votos": 62245,
+            "votos": 62448,
             "ordem": 3
           },
           {
             "sqcand": 190002532821,
             "nome": "RICARDO NETUNO",
             "partido": "PL",
-            "votos": 44712,
+            "votos": 44858,
             "ordem": 4
           },
           {
             "sqcand": 190002532837,
             "nome": "DR RODRIGO FURTADO",
             "partido": "PL",
-            "votos": 34592,
+            "votos": 34705,
             "ordem": 5
           },
           {
             "sqcand": 190002532829,
             "nome": "MARCELLO CAPPARELLI",
             "partido": "PL",
-            "votos": 28049,
+            "votos": 28141,
             "ordem": 6
           },
           {
             "sqcand": 190002532826,
             "nome": "CORONEL PRINCIPE",
             "partido": "PL",
-            "votos": 23493,
+            "votos": 23569,
             "ordem": 7
           },
           {
             "sqcand": 190002532798,
             "nome": "DR. FLÁVIO",
             "partido": "PL",
-            "votos": 20148,
+            "votos": 20214,
             "ordem": 8
           },
           {
             "sqcand": 190002532806,
             "nome": "MATHEUS QUINTAL",
             "partido": "PL",
-            "votos": 17596,
+            "votos": 17654,
             "ordem": 9
           },
           {
             "sqcand": 190002532839,
             "nome": "SGT BATATA",
             "partido": "PL",
-            "votos": 15588,
+            "votos": 15639,
             "ordem": 10
           },
           {
             "sqcand": 190002532804,
             "nome": "MANOELA PERES",
             "partido": "PL",
-            "votos": 13970,
+            "votos": 14015,
             "ordem": 11
           },
           {
             "sqcand": 190002532833,
             "nome": "VANESSA SILVA",
             "partido": "PL",
-            "votos": 12640,
+            "votos": 12681,
             "ordem": 12
           },
           {
             "sqcand": 190002532830,
             "nome": "DELEGADA PATRÍCIA AGUIAR",
             "partido": "PL",
-            "votos": 11528,
+            "votos": 11566,
             "ordem": 13
           },
           {
             "sqcand": 190002532822,
             "nome": "GUTEMBERG FONSECA",
             "partido": "PL",
-            "votos": 10586,
+            "votos": 10621,
             "ordem": 14
           }
         ],
@@ -18136,35 +18136,35 @@
             "sqcand": 190002532815,
             "nome": "DAVI PQD",
             "partido": "PL",
-            "votos": 9779,
+            "votos": 9811,
             "ordem": 1
           },
           {
             "sqcand": 190002532797,
             "nome": "PROF. MAURO ROSA",
             "partido": "PL",
-            "votos": 9079,
+            "votos": 9109,
             "ordem": 2
           },
           {
             "sqcand": 190002532828,
             "nome": "JEAN LOPES",
             "partido": "PL",
-            "votos": 8468,
+            "votos": 8496,
             "ordem": 3
           },
           {
             "sqcand": 190002532814,
             "nome": "ADRIANA DA MATTA",
             "partido": "PL",
-            "votos": 7929,
+            "votos": 7955,
             "ordem": 4
           },
           {
             "sqcand": 190002535141,
             "nome": "ROGERIA BOLSONARO",
             "partido": "PL",
-            "votos": 7451,
+            "votos": 7476,
             "ordem": 5
           }
         ]
@@ -18176,9 +18176,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PSB",
-        "votos_nominais": 407377,
-        "votos_legenda": 24007,
-        "votos_validos": 431384,
+        "votos_nominais": 408707,
+        "votos_legenda": 24086,
+        "votos_validos": 432793,
         "pct_votos": 14.91,
         "quociente_partidario": 6,
         "cadeiras": 7,
@@ -18187,49 +18187,49 @@
             "sqcand": 190002538424,
             "nome": "DARLA MUNIZ",
             "partido": "PSB",
-            "votos": 116996,
+            "votos": 117378,
             "ordem": 1
           },
           {
             "sqcand": 190002538438,
             "nome": "SELMINHA SORRISO",
             "partido": "PSB",
-            "votos": 52721,
+            "votos": 52893,
             "ordem": 2
           },
           {
             "sqcand": 190002538422,
             "nome": "TATIANA ROQUE",
             "partido": "PSB",
-            "votos": 33073,
+            "votos": 33182,
             "ordem": 3
           },
           {
             "sqcand": 190002538431,
             "nome": "ELAINE FERREIRA",
             "partido": "PSB",
-            "votos": 23757,
+            "votos": 23835,
             "ordem": 4
           },
           {
             "sqcand": 190002537608,
             "nome": "PAULO ANGELITO",
             "partido": "PSB",
-            "votos": 18380,
+            "votos": 18440,
             "ordem": 5
           },
           {
             "sqcand": 190002537609,
             "nome": "DR ADRIANO ROCHA",
             "partido": "PSB",
-            "votos": 14904,
+            "votos": 14952,
             "ordem": 6
           },
           {
             "sqcand": 190002538439,
             "nome": "DARLAN PRAXEDES",
             "partido": "PSB",
-            "votos": 12483,
+            "votos": 12523,
             "ordem": 7
           }
         ],
@@ -18238,35 +18238,35 @@
             "sqcand": 190002537603,
             "nome": "VERÔNICA INÁCIO",
             "partido": "PSB",
-            "votos": 10706,
+            "votos": 10741,
             "ordem": 1
           },
           {
             "sqcand": 190002537600,
             "nome": "SUSTENTARE IDÁLIA",
             "partido": "PSB",
-            "votos": 9350,
+            "votos": 9380,
             "ordem": 2
           },
           {
             "sqcand": 190002537610,
             "nome": "ROMÉRIO DUARTE",
             "partido": "PSB",
-            "votos": 8283,
+            "votos": 8310,
             "ordem": 3
           },
           {
             "sqcand": 190002538414,
             "nome": "EDUARDO FURTADO",
             "partido": "PSB",
-            "votos": 7423,
+            "votos": 7447,
             "ordem": 4
           },
           {
             "sqcand": 190002538444,
             "nome": "KARINA DA SAÚDE",
             "partido": "PSB",
-            "votos": 6716,
+            "votos": 6738,
             "ordem": 5
           }
         ]
@@ -18278,9 +18278,9 @@
         "tipo": "federacao",
         "componentes": ["CIDADANIA", "PSDB"],
         "sigla_lider": "PSDB",
-        "votos_nominais": 305806,
-        "votos_legenda": 28133,
-        "votos_validos": 333939,
+        "votos_nominais": 306805,
+        "votos_legenda": 28225,
+        "votos_validos": 335030,
         "pct_votos": 11.54,
         "quociente_partidario": 5,
         "cadeiras": 6,
@@ -18289,42 +18289,42 @@
             "sqcand": 190002550499,
             "nome": "SEVERINO DIAS",
             "partido": "PSDB",
-            "votos": 88151,
+            "votos": 88439,
             "ordem": 1
           },
           {
             "sqcand": 190002550502,
             "nome": "MARCIA VALENTIM",
             "partido": "PSDB",
-            "votos": 39723,
+            "votos": 39853,
             "ordem": 2
           },
           {
             "sqcand": 190002550486,
             "nome": "PROF. JONATAS CASTELO BRANCO",
             "partido": "PSDB",
-            "votos": 24920,
+            "votos": 25001,
             "ordem": 3
           },
           {
             "sqcand": 190002550500,
             "nome": "TALITA GALHARDO",
             "partido": "PSDB",
-            "votos": 17900,
+            "votos": 17959,
             "ordem": 4
           },
           {
             "sqcand": 190002550491,
             "nome": "EDMUNDO",
             "partido": "PSDB",
-            "votos": 13849,
+            "votos": 13894,
             "ordem": 5
           },
           {
             "sqcand": 190002550523,
             "nome": "LILIAN MEDEIROS",
             "partido": "PSDB",
-            "votos": 11229,
+            "votos": 11266,
             "ordem": 6,
             "indefinido": true
           }
@@ -18334,35 +18334,35 @@
             "sqcand": 190002549600,
             "nome": "SUBTENENTE BERNARDO",
             "partido": "PSDB",
-            "votos": 9405,
+            "votos": 9436,
             "ordem": 1
           },
           {
             "sqcand": 190002550485,
             "nome": "JOÃO VICTOR FAMÍLIA",
             "partido": "PSDB",
-            "votos": 8066,
+            "votos": 8093,
             "ordem": 2
           },
           {
             "sqcand": 190002550490,
             "nome": "DRA. ADRIANA KUTWAK",
             "partido": "PSDB",
-            "votos": 7045,
+            "votos": 7068,
             "ordem": 3
           },
           {
             "sqcand": 190002549599,
             "nome": "JOÃO DINIZ AVC",
             "partido": "PSDB",
-            "votos": 6241,
+            "votos": 6261,
             "ordem": 4
           },
           {
             "sqcand": 190002550517,
             "nome": "ELIANE DA SAÚDE",
             "partido": "PSDB",
-            "votos": 5593,
+            "votos": 5611,
             "ordem": 5
           }
         ]
@@ -18374,9 +18374,9 @@
         "tipo": "federacao",
         "componentes": ["PCDOB", "PT", "PV"],
         "sigla_lider": "PT",
-        "votos_nominais": 305162,
-        "votos_legenda": 27841,
-        "votos_validos": 333003,
+        "votos_nominais": 306160,
+        "votos_legenda": 27932,
+        "votos_validos": 334092,
         "pct_votos": 11.51,
         "quociente_partidario": 5,
         "cadeiras": 5,
@@ -18385,35 +18385,35 @@
             "sqcand": 190002543092,
             "nome": "FREIXO",
             "partido": "PT",
-            "votos": 88302,
+            "votos": 88591,
             "ordem": 1
           },
           {
             "sqcand": 190002543083,
             "nome": "MÁRCIA DO PV",
             "partido": "PV",
-            "votos": 39791,
+            "votos": 39921,
             "ordem": 2
           },
           {
             "sqcand": 190002543090,
             "nome": "MARCELO PACHECO",
             "partido": "PT",
-            "votos": 24962,
+            "votos": 25044,
             "ordem": 3
           },
           {
             "sqcand": 190002543073,
             "nome": "PROFESSOR RODNEY",
             "partido": "PV",
-            "votos": 17931,
+            "votos": 17990,
             "ordem": 4
           },
           {
             "sqcand": 190002543077,
             "nome": "ENFERMEIRA REJANE",
             "partido": "PCDOB",
-            "votos": 13873,
+            "votos": 13918,
             "ordem": 5
           }
         ],
@@ -18422,35 +18422,35 @@
             "sqcand": 190002543080,
             "nome": "ANIELLE FRANCO",
             "partido": "PT",
-            "votos": 11249,
+            "votos": 11285,
             "ordem": 1
           },
           {
             "sqcand": 190002543067,
             "nome": "LUCIANA NERY",
             "partido": "PT",
-            "votos": 9421,
+            "votos": 9452,
             "ordem": 2
           },
           {
             "sqcand": 190002543102,
             "nome": "DIMAS GADELHA",
             "partido": "PT",
-            "votos": 8080,
+            "votos": 8107,
             "ordem": 3
           },
           {
             "sqcand": 190002543088,
             "nome": "LEO CDD",
             "partido": "PT",
-            "votos": 7057,
+            "votos": 7080,
             "ordem": 4
           },
           {
             "sqcand": 190002543095,
             "nome": "CELSO PANSERA",
             "partido": "PT",
-            "votos": 6251,
+            "votos": 6272,
             "ordem": 5
           }
         ]
@@ -18462,9 +18462,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "REPUBLICANOS",
-        "votos_nominais": 218777,
-        "votos_legenda": 16198,
-        "votos_validos": 234975,
+        "votos_nominais": 219492,
+        "votos_legenda": 16251,
+        "votos_validos": 235743,
         "pct_votos": 8.12,
         "quociente_partidario": 3,
         "cadeiras": 4,
@@ -18473,28 +18473,28 @@
             "sqcand": 190002543343,
             "nome": "PROFESSOR JOZIEL",
             "partido": "REPUBLICANOS",
-            "votos": 63815,
+            "votos": 64023,
             "ordem": 1
           },
           {
             "sqcand": 190002543370,
             "nome": "ALEXANDRE RODRIGUES",
             "partido": "REPUBLICANOS",
-            "votos": 28757,
+            "votos": 28851,
             "ordem": 2
           },
           {
             "sqcand": 190002543334,
             "nome": "CELITA TOLEDO",
             "partido": "REPUBLICANOS",
-            "votos": 18040,
+            "votos": 18099,
             "ordem": 3
           },
           {
             "sqcand": 190002543340,
             "nome": "LUCIANO ALVES",
             "partido": "REPUBLICANOS",
-            "votos": 12958,
+            "votos": 13001,
             "ordem": 4
           }
         ],
@@ -18503,35 +18503,35 @@
             "sqcand": 190002543356,
             "nome": "MISSIONARIA CARLA",
             "partido": "REPUBLICANOS",
-            "votos": 10025,
+            "votos": 10058,
             "ordem": 1
           },
           {
             "sqcand": 190002543350,
             "nome": "PEDRO DA COSTA",
             "partido": "REPUBLICANOS",
-            "votos": 8129,
+            "votos": 8156,
             "ordem": 2
           },
           {
             "sqcand": 190002543360,
             "nome": "IVAN INACIO",
             "partido": "REPUBLICANOS",
-            "votos": 6809,
+            "votos": 6831,
             "ordem": 3
           },
           {
             "sqcand": 190002543367,
             "nome": "PASTOR ALEX GONÇALVES",
             "partido": "REPUBLICANOS",
-            "votos": 5839,
+            "votos": 5859,
             "ordem": 4
           },
           {
             "sqcand": 190002543336,
             "nome": "IVANIA MARTINS",
             "partido": "REPUBLICANOS",
-            "votos": 5100,
+            "votos": 5116,
             "ordem": 5
           }
         ]
@@ -18543,9 +18543,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "MDB",
-        "votos_nominais": 178822,
-        "votos_legenda": 17164,
-        "votos_validos": 195986,
+        "votos_nominais": 179407,
+        "votos_legenda": 17220,
+        "votos_validos": 196627,
         "pct_votos": 6.77,
         "quociente_partidario": 3,
         "cadeiras": 3,
@@ -18554,21 +18554,21 @@
             "sqcand": 190002539348,
             "nome": "THIAGO ZANATA",
             "partido": "MDB",
-            "votos": 52380,
+            "votos": 52551,
             "ordem": 1
           },
           {
             "sqcand": 190002539345,
             "nome": "RAQUEL WICK",
             "partido": "MDB",
-            "votos": 23604,
+            "votos": 23681,
             "ordem": 2
           },
           {
             "sqcand": 190002539361,
             "nome": "CHRISTIANNE MEIRELLES",
             "partido": "MDB",
-            "votos": 14807,
+            "votos": 14856,
             "ordem": 3
           }
         ],
@@ -18577,35 +18577,35 @@
             "sqcand": 190002539335,
             "nome": "ALICE GUIMARÃES",
             "partido": "MDB",
-            "votos": 10636,
+            "votos": 10671,
             "ordem": 1
           },
           {
             "sqcand": 190002539339,
             "nome": "BIÓLOGO HENRIQUE",
             "partido": "MDB",
-            "votos": 8229,
+            "votos": 8256,
             "ordem": 2
           },
           {
             "sqcand": 190002539358,
             "nome": "LUCIANO GUERREIRO",
             "partido": "MDB",
-            "votos": 6673,
+            "votos": 6694,
             "ordem": 3
           },
           {
             "sqcand": 190002539334,
             "nome": "MANUEL NETO",
             "partido": "MDB",
-            "votos": 5589,
+            "votos": 5607,
             "ordem": 4
           },
           {
             "sqcand": 190002539343,
             "nome": "ADELY OZON",
             "partido": "MDB",
-            "votos": 4793,
+            "votos": 4809,
             "ordem": 5
           }
         ]
@@ -18617,9 +18617,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PDT",
-        "votos_nominais": 117425,
-        "votos_legenda": 10064,
-        "votos_validos": 127489,
+        "votos_nominais": 117809,
+        "votos_legenda": 10097,
+        "votos_validos": 127906,
         "pct_votos": 4.41,
         "quociente_partidario": 2,
         "cadeiras": 2,
@@ -18628,14 +18628,14 @@
             "sqcand": 190002539670,
             "nome": "CLAUDIO LUIZ",
             "partido": "PDT",
-            "votos": 33724,
+            "votos": 33834,
             "ordem": 1
           },
           {
             "sqcand": 190002539650,
             "nome": "THIAGO VALERIO",
             "partido": "PDT",
-            "votos": 15197,
+            "votos": 15246,
             "ordem": 2
           }
         ],
@@ -18644,35 +18644,35 @@
             "sqcand": 190002539679,
             "nome": "CRIS GEMEAS",
             "partido": "PDT",
-            "votos": 9533,
+            "votos": 9565,
             "ordem": 1
           },
           {
             "sqcand": 190002539684,
             "nome": "DEJORGE PATRICIO",
             "partido": "PDT",
-            "votos": 6848,
+            "votos": 6871,
             "ordem": 2
           },
           {
             "sqcand": 190002539660,
             "nome": "LUCAS TERRA",
             "partido": "PDT",
-            "votos": 5298,
+            "votos": 5315,
             "ordem": 3
           },
           {
             "sqcand": 190002539683,
             "nome": "ÍNDIO DAS CADEIRAS",
             "partido": "PDT",
-            "votos": 4296,
+            "votos": 4310,
             "ordem": 4
           },
           {
             "sqcand": 190002539649,
             "nome": "MARCIA BRAGA",
             "partido": "PDT",
-            "votos": 3598,
+            "votos": 3610,
             "ordem": 5
           }
         ]
@@ -18684,9 +18684,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PSD",
-        "votos_nominais": 134571,
-        "votos_legenda": 11733,
-        "votos_validos": 146304,
+        "votos_nominais": 135011,
+        "votos_legenda": 11771,
+        "votos_validos": 146782,
         "pct_votos": 5.06,
         "quociente_partidario": 2,
         "cadeiras": 2,
@@ -18695,14 +18695,14 @@
             "sqcand": 190002540179,
             "nome": "GIANCARLO DE TRÂNSITO",
             "partido": "PSD",
-            "votos": 39418,
+            "votos": 39547,
             "ordem": 1
           },
           {
             "sqcand": 190002540176,
             "nome": "FABINHO DA FEIRA",
             "partido": "PSD",
-            "votos": 17763,
+            "votos": 17821,
             "ordem": 2
           }
         ],
@@ -18711,35 +18711,35 @@
             "sqcand": 190002540159,
             "nome": "MARCELO VERLY",
             "partido": "PSD",
-            "votos": 11143,
+            "votos": 11180,
             "ordem": 1
           },
           {
             "sqcand": 190002540188,
             "nome": "LUCIANE COSTA",
             "partido": "PSD",
-            "votos": 8004,
+            "votos": 8031,
             "ordem": 2
           },
           {
             "sqcand": 190002540182,
             "nome": "SHERAZADE",
             "partido": "PSD",
-            "votos": 6193,
+            "votos": 6213,
             "ordem": 3
           },
           {
             "sqcand": 190002540165,
             "nome": "SILVIA ARÃO",
             "partido": "PSD",
-            "votos": 5021,
+            "votos": 5038,
             "ordem": 4
           },
           {
             "sqcand": 190002540162,
             "nome": "VANDO LUZ",
             "partido": "PSD",
-            "votos": 4206,
+            "votos": 4219,
             "ordem": 5
           }
         ]
@@ -18751,9 +18751,9 @@
         "tipo": "federacao",
         "componentes": ["PP", "UNIÃO"],
         "sigla_lider": "UNIÃO",
-        "votos_nominais": 114617,
-        "votos_legenda": 9626,
-        "votos_validos": 124243,
+        "votos_nominais": 114991,
+        "votos_legenda": 9658,
+        "votos_validos": 124649,
         "pct_votos": 4.29,
         "quociente_partidario": 1,
         "cadeiras": 2,
@@ -18762,14 +18762,14 @@
             "sqcand": 190002541051,
             "nome": "SONINHA DE QUINTINO",
             "partido": "UNIÃO",
-            "votos": 33297,
+            "votos": 33405,
             "ordem": 1
           },
           {
             "sqcand": 190002541050,
             "nome": "DR DILSON DRUMOND",
             "partido": "PP",
-            "votos": 15004,
+            "votos": 15053,
             "ordem": 2
           }
         ],
@@ -18778,35 +18778,35 @@
             "sqcand": 190002541086,
             "nome": "RENATO COZZOLINO",
             "partido": "PP",
-            "votos": 9413,
+            "votos": 9443,
             "ordem": 1
           },
           {
             "sqcand": 190002541056,
             "nome": "DR. ALCIO PEREIRA",
             "partido": "PP",
-            "votos": 6761,
+            "votos": 6783,
             "ordem": 2
           },
           {
             "sqcand": 190002541069,
             "nome": "VIVIANE FERNANDES",
             "partido": "PP",
-            "votos": 5231,
+            "votos": 5248,
             "ordem": 3
           },
           {
             "sqcand": 190002541049,
             "nome": "SANCLER MELLO",
             "partido": "PP",
-            "votos": 4242,
+            "votos": 4255,
             "ordem": 4
           },
           {
             "sqcand": 190002541076,
             "nome": "DR LUIS FERNANDO",
             "partido": "UNIÃO",
-            "votos": 3553,
+            "votos": 3564,
             "ordem": 5
           }
         ]
@@ -18818,9 +18818,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "NOVO",
-        "votos_nominais": 77118,
-        "votos_legenda": 5252,
-        "votos_validos": 82370,
+        "votos_nominais": 77370,
+        "votos_legenda": 5269,
+        "votos_validos": 82639,
         "pct_votos": 2.85,
         "quociente_partidario": 1,
         "cadeiras": 1,
@@ -18829,7 +18829,7 @@
             "sqcand": 190002534607,
             "nome": "AZIEL DIAS",
             "partido": "NOVO",
-            "votos": 21991,
+            "votos": 22063,
             "ordem": 1
           }
         ],
@@ -18838,35 +18838,35 @@
             "sqcand": 190002534617,
             "nome": "FABI PESSANHA",
             "partido": "NOVO",
-            "votos": 9910,
+            "votos": 9942,
             "ordem": 1
           },
           {
             "sqcand": 190002534629,
             "nome": "PROFESSOR MURDOCH",
             "partido": "NOVO",
-            "votos": 6217,
+            "votos": 6237,
             "ordem": 2
           },
           {
             "sqcand": 190002534636,
             "nome": "SILVIA BLUMBERG",
             "partido": "NOVO",
-            "votos": 4466,
+            "votos": 4480,
             "ordem": 3
           },
           {
             "sqcand": 190002534610,
             "nome": "DIEGO VAZ",
             "partido": "NOVO",
-            "votos": 3455,
+            "votos": 3466,
             "ordem": 4
           },
           {
             "sqcand": 190002534606,
             "nome": "LEONEL POLICIANO",
             "partido": "NOVO",
-            "votos": 2801,
+            "votos": 2811,
             "ordem": 5
           }
         ]
@@ -18930,9 +18930,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "DC",
-        "votos_nominais": 933,
+        "votos_nominais": 936,
         "votos_legenda": 50,
-        "votos_validos": 983,
+        "votos_validos": 986,
         "pct_votos": 0.03,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -18942,21 +18942,21 @@
             "sqcand": 190002543907,
             "nome": "RUIMAR MENDES",
             "partido": "DC",
-            "votos": 273,
+            "votos": 274,
             "ordem": 1
           },
           {
             "sqcand": 190002543895,
             "nome": "SIMONE CLARA",
             "partido": "DC",
-            "votos": 123,
+            "votos": 124,
             "ordem": 2
           },
           {
             "sqcand": 190002543880,
             "nome": "GUSTAVO SCHMIDT",
             "partido": "DC",
-            "votos": 77,
+            "votos": 78,
             "ordem": 3
           },
           {
@@ -19190,9 +19190,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PODE",
-        "votos_nominais": 5377,
-        "votos_legenda": 303,
-        "votos_validos": 5680,
+        "votos_nominais": 5395,
+        "votos_legenda": 304,
+        "votos_validos": 5699,
         "pct_votos": 0.2,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -19202,35 +19202,35 @@
             "sqcand": 190002543261,
             "nome": "LUIS ALEGRIA DO PASSARINHEIRO",
             "partido": "PODE",
-            "votos": 1575,
+            "votos": 1580,
             "ordem": 1
           },
           {
             "sqcand": 190002548582,
             "nome": "ISABELA ABREU",
             "partido": "PODE",
-            "votos": 710,
+            "votos": 712,
             "ordem": 2
           },
           {
             "sqcand": 190002548584,
             "nome": "DOUGLAS ANDRADE",
             "partido": "PODE",
-            "votos": 445,
+            "votos": 447,
             "ordem": 3
           },
           {
             "sqcand": 190002543265,
             "nome": "DOUTOR PORFIRIO",
             "partido": "PODE",
-            "votos": 320,
+            "votos": 321,
             "ordem": 4
           },
           {
             "sqcand": 190002543281,
             "nome": "PROFESSOR RUBENS DA SAÚDE",
             "partido": "PODE",
-            "votos": 247,
+            "votos": 248,
             "ordem": 5
           }
         ]
@@ -19242,9 +19242,9 @@
         "tipo": "federacao",
         "componentes": ["PRD", "SOLIDARIEDADE"],
         "sigla_lider": "SOLIDARIEDADE",
-        "votos_nominais": 31092,
-        "votos_legenda": 2812,
-        "votos_validos": 33904,
+        "votos_nominais": 31193,
+        "votos_legenda": 2822,
+        "votos_validos": 34015,
         "pct_votos": 1.17,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -19254,35 +19254,35 @@
             "sqcand": 190002534841,
             "nome": "MARCUS VINICIUS NESKAU",
             "partido": "PRD",
-            "votos": 8897,
+            "votos": 8926,
             "ordem": 1
           },
           {
             "sqcand": 190002534848,
             "nome": "LENILTON RODRIGUES",
             "partido": "SOLIDARIEDADE",
-            "votos": 4009,
+            "votos": 4022,
             "ordem": 2
           },
           {
             "sqcand": 190002534873,
             "nome": "GLAUBER POUBEL",
             "partido": "SOLIDARIEDADE",
-            "votos": 2515,
+            "votos": 2523,
             "ordem": 3
           },
           {
             "sqcand": 190002534850,
             "nome": "JOSÉ DE DJ",
             "partido": "PRD",
-            "votos": 1807,
+            "votos": 1813,
             "ordem": 4
           },
           {
             "sqcand": 190002534852,
             "nome": "CORONEL LAURO BOTTO",
             "partido": "SOLIDARIEDADE",
-            "votos": 1398,
+            "votos": 1402,
             "ordem": 5
           }
         ]
@@ -19294,9 +19294,9 @@
         "tipo": "federacao",
         "componentes": ["PSOL", "REDE"],
         "sigla_lider": "PSOL",
-        "votos_nominais": 14676,
-        "votos_legenda": 751,
-        "votos_validos": 15427,
+        "votos_nominais": 14724,
+        "votos_legenda": 754,
+        "votos_validos": 15478,
         "pct_votos": 0.53,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -19306,35 +19306,35 @@
             "sqcand": 190002536158,
             "nome": "FERNANDA VIEIRA",
             "partido": "PSOL",
-            "votos": 4691,
+            "votos": 4706,
             "ordem": 1
           },
           {
             "sqcand": 190002536160,
             "nome": "RAFAEL RIBEIRO",
             "partido": "PSOL",
-            "votos": 2114,
+            "votos": 2121,
             "ordem": 2
           },
           {
             "sqcand": 190002536146,
             "nome": "NOEL",
             "partido": "PSOL",
-            "votos": 1326,
+            "votos": 1330,
             "ordem": 3
           },
           {
             "sqcand": 190002536150,
             "nome": "PROFESSORA MIRIANA",
             "partido": "PSOL",
-            "votos": 953,
+            "votos": 956,
             "ordem": 4
           },
           {
             "sqcand": 190002536145,
             "nome": "PASTOR HENRIQUE VIEIRA",
             "partido": "PSOL",
-            "votos": 737,
+            "votos": 739,
             "ordem": 5
           }
         ]
@@ -19346,9 +19346,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "PSTU",
-        "votos_nominais": 868,
+        "votos_nominais": 871,
         "votos_legenda": 67,
-        "votos_validos": 935,
+        "votos_validos": 938,
         "pct_votos": 0.03,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -19358,14 +19358,14 @@
             "sqcand": 190002539833,
             "nome": "ELIAS ALFREDO",
             "partido": "PSTU",
-            "votos": 598,
+            "votos": 600,
             "ordem": 1
           },
           {
             "sqcand": 190002539832,
             "nome": "BARBARA SINEDINO",
             "partido": "PSTU",
-            "votos": 270,
+            "votos": 271,
             "ordem": 2
           }
         ]
@@ -19377,9 +19377,9 @@
         "tipo": "partido",
         "componentes": [],
         "sigla_lider": "UP",
-        "votos_nominais": 2137,
+        "votos_nominais": 2144,
         "votos_legenda": 162,
-        "votos_validos": 2299,
+        "votos_validos": 2306,
         "pct_votos": 0.08,
         "quociente_partidario": 0,
         "cadeiras": 0,
@@ -19389,14 +19389,14 @@
             "sqcand": 190002539542,
             "nome": "ESTEBAN CRESCENTE",
             "partido": "UP",
-            "votos": 1473,
+            "votos": 1478,
             "ordem": 1
           },
           {
             "sqcand": 190002539543,
             "nome": "PÉTALA",
             "partido": "UP",
-            "votos": 664,
+            "votos": 666,
             "ordem": 2
           }
         ]
@@ -19407,14 +19407,14 @@
     "votacao": {
       "contagens": {
         "aptos": 13033929,
-        "instalados": 3988376,
-        "comparecimento": 3174255,
-        "abstencao": 814121,
-        "validos": 2420919,
-        "brancos": 140854,
-        "nulos": 139658,
-        "anulados": 221013,
-        "sub_judice": 251811
+        "instalados": 4001410,
+        "comparecimento": 3184629,
+        "abstencao": 816781,
+        "validos": 2428831,
+        "brancos": 141315,
+        "nulos": 140114,
+        "anulados": 221735,
+        "sub_judice": 252634
       },
       "projetada": {
         "validos": 7911503,
@@ -19425,7 +19425,7 @@
     }
   },
   "RN": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RN",
@@ -20227,7 +20227,7 @@
     }
   },
   "RO": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RO",
@@ -21113,7 +21113,7 @@
     }
   },
   "RR": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RR",
@@ -21911,7 +21911,7 @@
     }
   },
   "RS": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RS",
@@ -23125,7 +23125,7 @@
     }
   },
   "SC": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "SC",
@@ -24106,7 +24106,7 @@
     }
   },
   "SE": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "SE",
@@ -25066,7 +25066,7 @@
     }
   },
   "SP": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "SP",
@@ -26695,7 +26695,7 @@
     }
   },
   "TO": {
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 6,
     "turno": 1,
     "uf": "TO",

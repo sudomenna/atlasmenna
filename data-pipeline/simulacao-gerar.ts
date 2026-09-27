@@ -1601,12 +1601,17 @@ export const PARAMETROS_VOTACAO: ParametrosVotacao = {
  * daqui — é o que faz Σ votos das candidaturas `valido` == `validos` (e o
  * mesmo para anulado e sub judice) valer por CONSTRUÇÃO, como no TSE, em vez
  * de por tolerância. Duas cópias da conta divergiriam no arredondamento.
+ *
+ * `votaveis` é o apurado por padrão; com `ctx.votosFinais` é o FIM DE NOITE
+ * — a mesma conta aplicada ao total que as candidaturas projetam (ver
+ * `resolverCorridaUf`). A 100% os dois coincidem, e é por isso que a projeção
+ * reencontra o contado na unidade.
  */
 export function repartirVotaveis(
   ctx: ContextoUf,
   par: ParametrosVotacao = PARAMETROS_VOTACAO,
+  votaveis: number = ctx.votosApurados,
 ): { validos: number; anulados: number; subJudice: number } {
-  const votaveis = ctx.votosApurados;
   const anulados = ctx.anulaveis ? Math.round(votaveis * par.anulados) : 0;
   const subJudice = ctx.anulaveis ? Math.round(votaveis * par.subJudice) : 0;
   return { validos: votaveis - anulados - subJudice, anulados, subJudice };
@@ -1716,6 +1721,11 @@ export function contagensVotacao(
 /**
  * As quatro fatias do círculo 3 (RF-195), em CONTAGEM ABSOLUTA e **cruas**.
  *
+ * ⚠️ Desde 2026-09-27 só o Deputado (cargo 6) projeta por aqui. Os cargos com
+ * corrida (1, 3, 5) projetam por {@link fimDeNoiteDaCorrida}, para que a
+ * `projetada` e os `votos_projetados` das candidaturas sejam o mesmo fim de
+ * noite.
+ *
  * Espelha `projetar_fatias_em_contagens` (`api/model/project.py:3827`):
  *   - a abstenção projeta sobre `instalados`, e no fim da noite
  *     `instalados → aptos`, logo `abstencao = p_abstencao × aptos`;
@@ -1763,7 +1773,9 @@ export function projetarVotacao(
 }
 
 /**
- * O bloco `votacao` de um payload nacional (spec 021).
+ * O bloco `votacao` de um payload nacional (spec 021) — desde 2026-09-27 só
+ * o de Deputado (cargo 6), que não tem corrida. Os cargos 1, 3 e 5 projetam
+ * pela corrida, em {@link blocoVotacaoDaCorrida}; as contagens são as mesmas.
  *
  * `contagens` está SEMPRE presente, porque no simulado — como em produção — o
  * `aptos` chega no mesmo envelope que todo o resto: `e.te` é conhecido antes do
@@ -1783,6 +1795,104 @@ export function blocoVotacao(
 ): EdgeVotacao {
   const bloco: EdgeVotacao = { contagens: contagensVotacao(ctxs, par) };
   const projetada = projetarVotacao(ctxs, par);
+  if (projetada !== null) bloco.projetada = projetada;
+  return bloco;
+}
+
+/**
+ * O fim de noite de UMA corrida de UF, lido dos votos PROJETADOS das
+ * candidaturas — a `projetada` dos cargos com corrida (1, 3 e 5).
+ *
+ * 🔴 **Decisão do dono (2026-09-27): as duas projeções saem do MESMO fim de
+ * noite.** O modelo real projeta o fim da noite por dois caminhos — Σ
+ * `votos_projetados` das candidaturas e a participação projetada — e no replay
+ * 2022 eles concordam em 0,02% (spec 022 RF-212). Este gerador inventava os
+ * dois separadamente (`projetarVotacao` pela participação, `resolverCorridaUf`
+ * pelo perfil), e na tela do `dev:sim` o círculo de projeção da corrida
+ * discordava da lista de candidaturas em 7–15%. Aqui só existe um:
+ *
+ *   - `validos` = Σ `votos_projetados` das candidaturas `valido` — EXATO;
+ *   - `brancos + nulos` sobre o comparecimento do fim de noite, com a MESMA
+ *     conta de {@link contagensDaUf} (`votaveis × bn / (1 − bn)`, depois a
+ *     subtração), sobre `votaveis = Σ votos_projetados` de TODAS as
+ *     candidaturas (`== ctx.votosFinais`, invariante 2);
+ *   - `abstencao = aptos − comparecimento`, sem clamp.
+ *
+ * Consequência por construção: o residual do círculo 3
+ * (`aptos − validos − brancos − nulos − abstencao`) é EXATAMENTE Σ
+ * `votos_projetados` das candidaturas `anulado` e `sub_judice`. E a 100%
+ * apurado as quatro reencontram o contado — `validos` e `brancos`/`nulos` na
+ * unidade, `abstencao` a menos das seções nunca instaladas.
+ *
+ * Deputado (cargo 6) não tem corrida e segue em {@link projetarVotacao}.
+ */
+export function fimDeNoiteDaCorrida(
+  c: CorridaUf,
+  par: ParametrosVotacao = PARAMETROS_VOTACAO,
+): EdgeVotacaoProjetada {
+  let votaveis = 0;
+  let validos = 0;
+  for (const r of c.resultados) {
+    votaveis += r.votosProjetados;
+    if (r.destino === "valido") validos += r.votosProjetados;
+  }
+  const bn = c.ctx.brancosNulos;
+  const bnTotal = Math.round((votaveis * bn) / (1 - bn));
+  const brancos = Math.round(bnTotal * par.brancosDoPar);
+  const nulos = bnTotal - brancos;
+  const abstencao = c.ctx.eleitores - (votaveis + bnTotal);
+  if (abstencao < 0) {
+    // Sem clamp, pela mesma razão de `contagensDaUf`: o que o clamp esconderia
+    // é uma contradição real entre o comparecimento e o eleitorado.
+    throw new Error(
+      `[simulacao] ${c.ctx.uf}: comparecimento projetado ${votaveis + bnTotal} > aptos ` +
+        `${c.ctx.eleitores} — o fim de noite não cabe no eleitorado.`,
+    );
+  }
+  return { validos, brancos, nulos, abstencao };
+}
+
+/**
+ * A `projetada` de uma abrangência com corrida: a SOMA dos fins de noite das
+ * UFs dela ({@link fimDeNoiteDaCorrida}). Nacional = Σ das 27, como os
+ * `votos_projetados` nacionais do Presidente (`montarPresidente`) — soma de
+ * inteiros, exata.
+ *
+ * UF a 0% entra na soma nacional (os votos projetados dela entram na lista
+ * nacional do Presidente também); `null` só quando NENHUMA UF apurou (RF-195).
+ */
+export function projetarVotacaoDaCorrida(
+  corridas: readonly CorridaUf[],
+  par: ParametrosVotacao = PARAMETROS_VOTACAO,
+): EdgeVotacaoProjetada | null {
+  if (!corridas.some((c) => c.ctx.pctApurado > 0)) return null;
+  const total: EdgeVotacaoProjetada = { validos: 0, brancos: 0, nulos: 0, abstencao: 0 };
+  for (const c of corridas) {
+    const f = fimDeNoiteDaCorrida(c, par);
+    total.validos += f.validos;
+    total.brancos += f.brancos;
+    total.nulos += f.nulos;
+    total.abstencao += f.abstencao;
+  }
+  return total;
+}
+
+/**
+ * O bloco `votacao` de uma abrangência com corrida (cargos 1, 3 e 5):
+ * contagens pela mesma {@link contagensVotacao} de todo mundo, projeção pela
+ * corrida ({@link projetarVotacaoDaCorrida}).
+ */
+export function blocoVotacaoDaCorrida(
+  corridas: readonly CorridaUf[],
+  par: ParametrosVotacao = PARAMETROS_VOTACAO,
+): EdgeVotacao {
+  const bloco: EdgeVotacao = {
+    contagens: contagensVotacao(
+      corridas.map((c) => c.ctx),
+      par,
+    ),
+  };
+  const projetada = projetarVotacaoDaCorrida(corridas, par);
   if (projetada !== null) bloco.projetada = projetada;
   return bloco;
 }
@@ -1824,16 +1934,21 @@ function corridaPendente(corrida: readonly EdgeCorridaEntrada[]): boolean {
  * O `votacao` de um `EdgePayloadUf` de cargo 1, 3 ou 5 (spec 022 RF-209 +
  * spec 021 RF-192 emendado em 2026-09-26, noite).
  *
- * `contagens` e `projetada` saem de {@link blocoVotacao} sobre UMA UF — a
- * MESMA função do nacional, aplicada ao contexto da UF. É o espelho de
- * `build_votacao_uf_payloads` (`api/model/project.py`), que chama
- * `projetar_fatias_em_contagens` com a participação DA UF. Um segundo caminho
- * de projeção só para UF seria uma chance de a tela de UF e a capa divergirem
- * sem ninguém ver.
+ * `contagens` e `projetada` saem de {@link blocoVotacaoDaCorrida} sobre UMA
+ * UF — a MESMA função do nacional, aplicada à corrida da UF. Um segundo
+ * caminho de projeção só para UF seria uma chance de a tela de UF e a capa
+ * divergirem sem ninguém ver; e a soma das 27 `projetada` de UF é, por
+ * construção, a `projetada` nacional (quando as 27 apuraram).
+ *
+ * ⚠️ Divergência deliberada do produtor real desde 2026-09-27: lá
+ * (`build_votacao_uf_payloads`, `api/model/project.py`) a `projetada` sai da
+ * participação DA UF, e a Σ das candidaturas só CONCORDA com ela (0,02%–0,16%
+ * no replay 2022). Aqui as duas são o mesmo número — ver
+ * {@link fimDeNoiteDaCorrida}.
  */
 export function votacaoDaUf(c: CorridaUf): EdgeVotacaoUf {
   const corrida = corridaDaUf(c);
-  const bloco: EdgeVotacaoUf = { ...blocoVotacao([c.ctx]), corrida };
+  const bloco: EdgeVotacaoUf = { ...blocoVotacaoDaCorrida([c]), corrida };
   if (corridaPendente(corrida)) bloco.destino_pendente = true;
   return bloco;
 }
@@ -2162,13 +2277,18 @@ export function designarDestinos(
  * as três identidades do TSE valem por construção. Bolo positivo sem ninguém
  * no grupo é defeito do chamador e sai como erro alto — distribuí-lo entre as
  * válidas recriaria exatamente o voto anulado sem marca que a spec conserta.
+ *
+ * `votaveis` escolhe o instante: o apurado (`ctx.votosApurados`, o padrão) ou
+ * o fim de noite (`ctx.votosFinais`). É a MESMA repartição nos dois — ver
+ * `resolverCorridaUf`.
  */
 function alocarPorDestino(
   ctx: ContextoUf,
   pesos: readonly number[],
   destinos: readonly EdgeDestinoVoto[],
+  votaveis: number = ctx.votosApurados,
 ): number[] {
-  const bolos = repartirVotaveis(ctx);
+  const bolos = repartirVotaveis(ctx, PARAMETROS_VOTACAO, votaveis);
   const porDestino: Record<EdgeDestinoVoto, number> = {
     valido: bolos.validos,
     anulado: bolos.anulados,
@@ -2204,6 +2324,25 @@ function alocarPorDestino(
  * quanto no apurado. Essa é a primeira invariante que o dono conferiria, e a
  * única forma de ela nunca falhar é os votos serem repartidos a partir do
  * total, em vez de somados a partir das partes.
+ *
+ * 🔴 **Um fim de noite só (decisão do dono, 2026-09-27).** Os votos
+ * PROJETADOS saem por destinação, exatamente como os apurados: o bolo de
+ * válidos do fim de noite (`repartirVotaveis` sobre `votosFinais`) só entre
+ * as válidas, e assim por diante. Até 27/09 eles saíam por `alocarInteiros`
+ * sobre o total, e a candidatura anulada ficava com o share do perfil (≈1–4%)
+ * no projetado e com a fatia medida de anulados (7,6%) no apurado. Duas
+ * consequências medidas na fixture: Σ `votos_projetados` das válidas passava
+ * `votacao.projetada.validos` em +7,3% (BR Presidente) a +15,2% (AC), e a
+ * 100% apurado o `votos_projetados` de cada candidata NÃO reencontrava o
+ * `votos_atuais` dela — o gerador contradizia a própria contagem final.
+ * Agora a 100% os dois são iguais na unidade (os pesos coincidem:
+ * `sharesApurados` a 100% devolve `sharesFinais`), e {@link fimDeNoiteDaCorrida}
+ * lê a `projetada` DESTES votos.
+ *
+ * ⚠️ O que NÃO mudou, e fica declarado: `pct_projetado` continua sendo o share
+ * do perfil (`sharesFinais`), não `votos_projetados ÷ votosFinais`. É a mesma
+ * distância que `pct_atual` já tinha de `pct_projetado` a 100% desde a spec
+ * 022 — mexer no share mexeria em rank, probabilidade e agulha.
  */
 export function resolverCorridaUf(
   rng: Rng,
@@ -2219,7 +2358,8 @@ export function resolverCorridaUf(
     );
   }
   const atuais = sharesApurados(rng.derive(`apurado|${ctx.uf}`), sharesFinais, ctx.pctApurado);
-  const votosProj = alocarInteiros(ctx.votosFinais, sharesFinais);
+  // O fim de noite por DESTINAÇÃO, pela mesma função do apurado — ver acima.
+  const votosProj = alocarPorDestino(ctx, sharesFinais, destinos, ctx.votosFinais);
   // Spec 022 — os votos apurados saem por DESTINAÇÃO; o share publicado sai
   // dos votos, para `pct_atual` e `votos_atuais` contarem a mesma história.
   const votosAt = alocarPorDestino(ctx, atuais, destinos);
@@ -2496,7 +2636,23 @@ export function montarPresidente(
       0,
     ),
   );
-  const sharesNac = votosProj.map((v) => (100 * v) / totalProj);
+  // `pct_projetado` nacional é o PERFIL ponderado pelo volume de cada UF — a
+  // mesma grandeza do `pct_projetado` de UF (`shareFinal`) — e não
+  // `votos_projetados ÷ total`. Desde 2026-09-27 os `votos_projetados` saem
+  // por destinação (`resolverCorridaUf`): as válidas encolhem para caber no
+  // bolo de válidos e a anulada cresce até a fatia medida de anulados. Ler o
+  // share dos votos moveria o cenário pedido (o líder do `folgado` cairia de
+  // ~48% para ~44,6%) e poria a candidatura sub judice em 3º no ranking — o
+  // cenário é um contrato com o dono (ver `sharesPorUf`).
+  const sharesNac = cands.map(
+    (cand) =>
+      corridas.reduce(
+        (a, c) =>
+          a +
+          (c.resultados.find((x) => x.cand.id === cand.id)?.shareFinal ?? 0) * c.ctx.votosFinais,
+        0,
+      ) / Math.max(1, totalProj),
+  );
   const sharesNacAt = votosAt.map((v) => (totalAt > 0 ? (100 * v) / totalAt : 0));
 
   const pct = pctNacional(ctxs);
@@ -2578,7 +2734,7 @@ export function montarPresidente(
       ufs_apuradas: ufsApuradas(porUfLinhas),
       // Spec 022 — `corrida` (por candidatura) sai das MESMAS corridas de UF
       // cujos `vvc` compõem as contagens: fecha por construção.
-      votacao: { ...blocoVotacao(ctxs), corrida: corridaNacionalPresidente(corridas) },
+      votacao: { ...blocoVotacaoDaCorrida(corridas), corrida: corridaNacionalPresidente(corridas) },
       national,
       por_uf: porUfLinhas,
       insights: insightsPresidente(candidatos, prob.pSegundoTurno, pct, porUfLinhas),
@@ -2731,7 +2887,10 @@ export function montarPayloadEstadual(
     pct_apurado_total: r1(pct),
     ufs_apuradas: ufsApuradas(linhas),
     // Spec 022 — 27 corridas não têm 1º colocado nacional: por PARTIDO (RF-201).
-    votacao: { ...blocoVotacao(ctxs), corrida_por_partido: corridaPorPartido(corridas) },
+    votacao: {
+      ...blocoVotacaoDaCorrida(corridas),
+      corrida_por_partido: corridaPorPartido(corridas),
+    },
     national,
     por_uf: linhas,
     insights: ehGov ? insightsGovernador(linhas) : insightsSenador(linhas, corridas),
@@ -4531,6 +4690,10 @@ export function validarSaida(s: SaidaSimulacao): void {
   // anulados pelas candidaturas sem marcar ninguém (Σ `votos_atuais` =
   // válidos + anulados + sub judice, medido em 26/09) — um círculo "só
   // válidos" montado ali poria voto anulado numa fatia com nome.
+  //
+  // (14) Decisão do dono (27/09) — na mesma passada, em cada abrangência com
+  // corrida: Σ `votos_projetados` das `valido` == `projetada.validos`, exato
+  // (`conferirProjecaoDaCorrida`).
   validarCorrida(s);
 }
 
@@ -4598,6 +4761,12 @@ function validarCorrida(s: SaidaSimulacao): void {
     vp.destino_pendente,
     new Set(presidente.national.candidatos.map((c) => c.id)),
   );
+  conferirProjecaoDaCorrida(
+    "presidente",
+    vp.projetada,
+    presidente.national.candidatos,
+    destinosPublicados(vp.corrida),
+  );
 
   // Nacional de Governador e Senador: por partido, e nunca por candidatura.
   for (const [nome, p] of [
@@ -4621,6 +4790,20 @@ function validarCorrida(s: SaidaSimulacao): void {
         );
       }
     }
+    // O nacional destes dois cargos não publica destinação por candidatura
+    // (RF-201), e a UF a 0% também não (`corridaDaUf`) — mas a `projetada`
+    // nacional soma o fim de noite das 27. A destinação vem então das corridas
+    // internas, que são de onde os `candidatos` do payload saíram.
+    conferirProjecaoDaCorrida(
+      nome,
+      v.projetada,
+      p.national.candidatos,
+      new Map(
+        (nome === "governador" ? s.corridasGov : s.corridasSen).flatMap((c) =>
+          c.resultados.map((r) => [r.cand.id, r.destino] as const),
+        ),
+      ),
+    );
   }
 
   // Deputado: nada de corrida (RF-200).
@@ -4657,6 +4840,12 @@ function validarCorrida(s: SaidaSimulacao): void {
         v.destino_pendente,
         new Set(p.candidatos.map((x) => x.id)),
       );
+      conferirProjecaoDaCorrida(
+        `${arquivo}/${c.uf}`,
+        v.projetada,
+        p.candidatos,
+        destinosPublicados(v.corrida),
+      );
       for (const [k, n] of Object.entries(v.contagens)) {
         const kk = k as keyof EdgeVotacaoContagens;
         somaUf[kk] = (somaUf[kk] ?? 0) + n;
@@ -4683,6 +4872,62 @@ function validarCorrida(s: SaidaSimulacao): void {
     }
   }
   conferirSomaDasUfs("deputado-uf.json", somaDep, deputado.votacao?.contagens);
+}
+
+/** A destinação por `id` que a corrida publicada declara (sem as pendentes). */
+function destinosPublicados(
+  corrida: readonly EdgeCorridaEntrada[] | undefined,
+): ReadonlyMap<number, EdgeDestinoVoto> {
+  const m = new Map<number, EdgeDestinoVoto>();
+  for (const e of corrida ?? []) if (e.destino !== undefined) m.set(e.id, e.destino);
+  return m;
+}
+
+/**
+ * (14) Decisão do dono (2026-09-27) — as duas projeções saem do MESMO fim de
+ * noite: numa abrangência com corrida e `projetada`, Σ `votos_projetados` das
+ * candidaturas `valido` == `projetada.validos`, **exato em inteiro**. É a
+ * conta que o círculo de projeção da corrida faz na tela (spec 022 RF-212):
+ * total = `projetada.validos`, fatias pela proporção de `votos_projetados`.
+ * Com as duas projeções inventadas separadamente, a lista de candidaturas e o
+ * círculo discordavam em 7–15% na fixture de 26/09.
+ *
+ * Igualdade, não tolerância: no gerador as duas são a mesma soma
+ * ({@link fimDeNoiteDaCorrida}), então qualquer diferença — mesmo de 1 voto —
+ * é um segundo caminho de projeção reaparecendo.
+ *
+ * Candidatura da lista sem destinação conhecida com `projetada` presente
+ * também reprova: sem ela não há como separar as válidas, e somá-la (ou
+ * pulá-la) em silêncio mudaria o total que a invariante confere.
+ *
+ * O teto (`projetada` somando mais que `aptos`) é conferido ANTES, nas mesmas
+ * abrangências: (12)(d) no nacional e `conferirVotacaoUf` em cada UF.
+ */
+function conferirProjecaoDaCorrida(
+  nome: string,
+  projetada: EdgeVotacaoProjetada | undefined,
+  candidatos: ReadonlyArray<Pick<EdgeCandidate, "id" | "votos_projetados">>,
+  destinos: ReadonlyMap<number, EdgeDestinoVoto>,
+): void {
+  if (projetada === undefined) return;
+  let somaValidos = 0;
+  for (const c of candidatos) {
+    const d = destinos.get(c.id);
+    if (d === undefined) {
+      erro(
+        `${nome}: candidatura ${c.id} sem destinação com votacao.projetada presente — ` +
+          `não há como separar os votos projetados válidos (decisão do dono 27/09)`,
+      );
+    }
+    if (d === "valido") somaValidos += c.votos_projetados;
+  }
+  if (somaValidos !== projetada.validos) {
+    erro(
+      `${nome}: Σ votos_projetados das candidaturas 'valido' = ${somaValidos} ≠ ` +
+        `votacao.projetada.validos ${projetada.validos} — as duas projeções não saem do ` +
+        `mesmo fim de noite (decisão do dono 27/09, spec 022 RF-212)`,
+    );
+  }
 }
 
 /** Σ das contagens das 27 UFs == contagens nacionais (identidade do produtor). */

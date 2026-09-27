@@ -617,6 +617,56 @@ SalaCofre-ETL/0.1 (contato: menna@outsiders.digital)
 
 Mas primeiro **verifique se a URL de base está correta** (deve ser `https://cdn.tse.jus.br/`, não outro host).
 
+## Carregar o eleitorado do DF (2026-09-27)
+
+**Problema**: `eleitorado` (Postgres) não tem o DF. A fonte de `eleitorado-import.ts`
+é o CSV de eleitorado da eleição **municipal** de 2024, e o DF não elege prefeito —
+não aparece no CSV. Efeito no modelo: `_resolve_zone_weight`
+(`api/model/project.py:2510-2528`) dá peso 0 a toda zona do DF, então
+Governador/Senador do DF ficam "aguardando projeção" a noite inteira mesmo com
+100% apurado, e Presidente-DF fica com `pct_apurado` travado em 0 (os votos reais
+são descartados). `zonas` **já tem** os 19 pares do DF (recuperados de
+`historical_results` por `zonas-import.ts`, fonte `'historico'`) — só falta o
+PESO, que vive em `eleitorado.eleitores_aptos`.
+
+**Fonte**: fixtures reais do simulado TSE 2026, 2ª janela (22–24/09), baixadas em
+27/09 — `tests/fixtures/tse/2026-sim/df/` (ver o README da pasta para proveniência
+completa e a ressalva sobre AC/AP).
+
+**Script**: `data-pipeline/eleitorado-df-import.ts` (`pnpm db:eleitorado:df`). Lê
+só as fixtures locais — nenhum fetch em runtime. Valida: as 19 zonas lidas ==
+lista oficial do EA12 para o município 97012; `Σ te` das zonas == `te` do
+agregado de UF; toda zona com `te > 0`. Modo padrão é **simulação** (imprime as
+19 linhas e sai sem conectar no banco).
+
+```bash
+# 1. Simulação — confere os números sem tocar o banco:
+pnpm db:eleitorado:df
+
+# 2. Escrita — só depois de conferir a simulação acima:
+set -a; . ./.env.local; set +a
+pnpm db:eleitorado:df --escrever
+```
+
+A escrita é restrita a `uf='DF'` (nunca lê nem grava outra UF) e usa
+`INSERT ... ON CONFLICT DO NOTHING`. Se já existirem linhas do DF em
+`ano=2026` com valores **diferentes** dos calculados, a escrita **aborta**
+listando a diferença — não sobrescreve. Se os valores já baterem, ela não faz
+nada (idempotente).
+
+**Conferência pós-escrita**:
+
+```sql
+SELECT uf, count(*), sum(eleitores_aptos) FROM eleitorado WHERE uf='DF' GROUP BY uf;
+-- esperado: DF | 19 | 2.187.571
+```
+
+Depois de carregado, rode `zonas-import.ts` de novo **não é necessário** — os
+pares do DF já estão em `zonas` desde a migration 0006. O que muda é só o peso
+em `eleitorado`, que o modelo (`fetch_eleitorado`, `api/model/project.py:518`)
+lê com `ano=2026` — a mesma convenção que as outras 26 UFs já usam mesmo vindo
+de fonte de 2024.
+
 ## Modelo — profiling baseline (T13 spec 002 · RNF-006)
 
 Baseline de `computed_duration_ms` do endpoint `/api/model/project` (orquestrador T12). A meta operacional é **p95 < 2000ms** ([RNF-006](../nfr/performance.md)), com sub-meta interna **p95 < 1500ms** para deixar ≥500ms de folga ao I/O Postgres (Neon) que entra na conta em produção.

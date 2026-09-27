@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-26T21:38:53.016Z",
+  "ts": "2026-09-27T04:40:24.833Z",
   "cargo": 6,
   "turno": 1,
   "pct_apurado_total": 25,
@@ -19,9 +19,9 @@
         "componentes": ["PCDOB", "PT", "PV"],
         "sigla_lider": "PT",
         "cadeiras": 121,
-        "votos_nominais": 5600609,
-        "votos_legenda": 435536,
-        "votos_validos": 6036145,
+        "votos_nominais": 5603500,
+        "votos_legenda": 435779,
+        "votos_validos": 6039279,
         "pct_votos": 20.52,
         "cadeiras_indefinidas": 7
       },
@@ -33,10 +33,10 @@
         "componentes": [],
         "sigla_lider": "PL",
         "cadeiras": 87,
-        "votos_nominais": 3976938,
-        "votos_legenda": 285308,
-        "votos_validos": 4262246,
-        "pct_votos": 14.49,
+        "votos_nominais": 3981837,
+        "votos_legenda": 285657,
+        "votos_validos": 4267494,
+        "pct_votos": 14.5,
         "cadeiras_indefinidas": 6
       },
       {
@@ -47,10 +47,10 @@
         "componentes": ["PP", "UNIÃO"],
         "sigla_lider": "UNIÃO",
         "cadeiras": 69,
-        "votos_nominais": 3449798,
-        "votos_legenda": 205864,
-        "votos_validos": 3655662,
-        "pct_votos": 12.43,
+        "votos_nominais": 3451101,
+        "votos_legenda": 205961,
+        "votos_validos": 3657062,
+        "pct_votos": 12.42,
         "cadeiras_indefinidas": 2
       },
       {
@@ -61,9 +61,9 @@
         "componentes": [],
         "sigla_lider": "REPUBLICANOS",
         "cadeiras": 55,
-        "votos_nominais": 3395601,
-        "votos_legenda": 199739,
-        "votos_validos": 3595340,
+        "votos_nominais": 3397096,
+        "votos_legenda": 199844,
+        "votos_validos": 3596940,
         "pct_votos": 12.22,
         "cadeiras_indefinidas": 1
       },
@@ -75,10 +75,10 @@
         "componentes": [],
         "sigla_lider": "PSD",
         "cadeiras": 41,
-        "votos_nominais": 2215735,
-        "votos_legenda": 182070,
-        "votos_validos": 2397805,
-        "pct_votos": 8.15,
+        "votos_nominais": 2218391,
+        "votos_legenda": 182295,
+        "votos_validos": 2400686,
+        "pct_votos": 8.16,
         "cadeiras_indefinidas": 3
       },
       {
@@ -89,9 +89,9 @@
         "componentes": ["CIDADANIA", "PSDB"],
         "sigla_lider": "PSDB",
         "cadeiras": 38,
-        "votos_nominais": 2255618,
-        "votos_legenda": 159885,
-        "votos_validos": 2415503,
+        "votos_nominais": 2257238,
+        "votos_legenda": 160017,
+        "votos_validos": 2417255,
         "pct_votos": 8.21,
         "cadeiras_indefinidas": 1
       },
@@ -103,9 +103,9 @@
         "componentes": [],
         "sigla_lider": "NOVO",
         "cadeiras": 34,
-        "votos_nominais": 2423252,
-        "votos_legenda": 183899,
-        "votos_validos": 2607151,
+        "votos_nominais": 2424187,
+        "votos_legenda": 183968,
+        "votos_validos": 2608155,
         "pct_votos": 8.86,
         "cadeiras_indefinidas": 4
       },
@@ -117,9 +117,9 @@
         "componentes": [],
         "sigla_lider": "PSB",
         "cadeiras": 34,
-        "votos_nominais": 1662273,
-        "votos_legenda": 105316,
-        "votos_validos": 1767589,
+        "votos_nominais": 1664217,
+        "votos_legenda": 105432,
+        "votos_validos": 1769649,
         "pct_votos": 6.01
       },
       {
@@ -130,9 +130,9 @@
         "componentes": [],
         "sigla_lider": "MDB",
         "cadeiras": 24,
-        "votos_nominais": 1238747,
-        "votos_legenda": 87022,
-        "votos_validos": 1325769,
+        "votos_nominais": 1240088,
+        "votos_legenda": 87123,
+        "votos_validos": 1327211,
         "pct_votos": 4.51,
         "cadeiras_indefinidas": 1
       },
@@ -144,9 +144,9 @@
         "componentes": [],
         "sigla_lider": "PDT",
         "cadeiras": 7,
-        "votos_nominais": 595779,
-        "votos_legenda": 41683,
-        "votos_validos": 637462,
+        "votos_nominais": 596318,
+        "votos_legenda": 41729,
+        "votos_validos": 638047,
         "pct_votos": 2.17
       },
       {
@@ -157,9 +157,9 @@
         "componentes": ["PRD", "SOLIDARIEDADE"],
         "sigla_lider": "PRD",
         "cadeiras": 3,
-        "votos_nominais": 406083,
-        "votos_legenda": 30854,
-        "votos_validos": 436937,
+        "votos_nominais": 406319,
+        "votos_legenda": 30873,
+        "votos_validos": 437192,
         "pct_votos": 1.49
       },
       {
@@ -183,9 +183,9 @@
         "componentes": [],
         "sigla_lider": "AVANTE",
         "cadeiras": 0,
-        "votos_nominais": 343,
+        "votos_nominais": 344,
         "votos_legenda": 20,
-        "votos_validos": 363,
+        "votos_validos": 364,
         "pct_votos": 0
       },
       {
@@ -196,9 +196,9 @@
         "componentes": [],
         "sigla_lider": "DC",
         "cadeiras": 0,
-        "votos_nominais": 9750,
+        "votos_nominais": 9756,
         "votos_legenda": 590,
-        "votos_validos": 10340,
+        "votos_validos": 10346,
         "pct_votos": 0.04
       },
       {
@@ -222,9 +222,9 @@
         "componentes": [],
         "sigla_lider": "MISSÃO",
         "cadeiras": 0,
-        "votos_nominais": 322,
+        "votos_nominais": 323,
         "votos_legenda": 21,
-        "votos_validos": 343,
+        "votos_validos": 344,
         "pct_votos": 0
       },
       {
@@ -261,9 +261,9 @@
         "componentes": [],
         "sigla_lider": "PODE",
         "cadeiras": 0,
-        "votos_nominais": 100235,
-        "votos_legenda": 7388,
-        "votos_validos": 107623,
+        "votos_nominais": 100276,
+        "votos_legenda": 7390,
+        "votos_validos": 107666,
         "pct_votos": 0.37
       },
       {
@@ -274,9 +274,9 @@
         "componentes": ["PSOL", "REDE"],
         "sigla_lider": "PSOL",
         "cadeiras": 0,
-        "votos_nominais": 123759,
-        "votos_legenda": 7799,
-        "votos_validos": 131558,
+        "votos_nominais": 123840,
+        "votos_legenda": 7805,
+        "votos_validos": 131645,
         "pct_votos": 0.45
       },
       {
@@ -287,9 +287,9 @@
         "componentes": [],
         "sigla_lider": "PSTU",
         "cadeiras": 0,
-        "votos_nominais": 4808,
+        "votos_nominais": 4811,
         "votos_legenda": 410,
-        "votos_validos": 5218,
+        "votos_validos": 5221,
         "pct_votos": 0.02
       },
       {
@@ -300,30 +300,30 @@
         "componentes": [],
         "sigla_lider": "UP",
         "cadeiras": 0,
-        "votos_nominais": 18003,
-        "votos_legenda": 1286,
-        "votos_validos": 19289,
+        "votos_nominais": 18014,
+        "votos_legenda": 1287,
+        "votos_validos": 19301,
         "pct_votos": 0.07
       }
     ]
   },
   "votacao": {
     "contagens": {
-      "aptos": 158278193,
-      "instalados": 39569584,
-      "comparecimento": 31737578,
-      "abstencao": 7832006,
-      "validos": 24640301,
-      "brancos": 1166913,
-      "nulos": 1156999,
-      "anulados": 2231220,
-      "sub_judice": 2542145
+      "aptos": 158100251,
+      "instalados": 39532646,
+      "comparecimento": 31761011,
+      "abstencao": 7771635,
+      "validos": 24658300,
+      "brancos": 1167878,
+      "nulos": 1157953,
+      "anulados": 2232863,
+      "sub_judice": 2544017
     },
     "projetada": {
       "validos": 98665173,
       "brancos": 4716327,
       "nulos": 4676259,
-      "abstencao": 30950413
+      "abstencao": 30772471
     }
   },
   "por_uf": [
@@ -413,9 +413,9 @@
     },
     {
       "sigla": "DF",
-      "pct_apurado": 37,
+      "pct_apurado": 37.1,
       "lugares_a_preencher": 8,
-      "quociente_eleitoral": 81519,
+      "quociente_eleitoral": 81739,
       "cadeiras_definidas": 8,
       "vagas_nao_preenchidas": 0,
       "empates_indeterminados": 0,
@@ -427,9 +427,9 @@
     },
     {
       "sigla": "ES",
-      "pct_apurado": 32.1,
+      "pct_apurado": 32.2,
       "lugares_a_preencher": 10,
-      "quociente_eleitoral": 71298,
+      "quociente_eleitoral": 71520,
       "cadeiras_definidas": 10,
       "vagas_nao_preenchidas": 0,
       "empates_indeterminados": 0,
@@ -483,9 +483,9 @@
     },
     {
       "sigla": "MS",
-      "pct_apurado": 39.3,
+      "pct_apurado": 39.4,
       "lugares_a_preencher": 8,
-      "quociente_eleitoral": 74031,
+      "quociente_eleitoral": 74219,
       "cadeiras_definidas": 8,
       "vagas_nao_preenchidas": 0,
       "empates_indeterminados": 0,
@@ -567,9 +567,9 @@
     },
     {
       "sigla": "PR",
-      "pct_apurado": 34.7,
+      "pct_apurado": 34.8,
       "lugares_a_preencher": 30,
-      "quociente_eleitoral": 75956,
+      "quociente_eleitoral": 76174,
       "cadeiras_definidas": 30,
       "vagas_nao_preenchidas": 0,
       "empates_indeterminados": 0,
@@ -581,9 +581,9 @@
     },
     {
       "sigla": "RJ",
-      "pct_apurado": 30.6,
+      "pct_apurado": 30.7,
       "lugares_a_preencher": 46,
-      "quociente_eleitoral": 62907,
+      "quociente_eleitoral": 63113,
       "cadeiras_definidas": 46,
       "vagas_nao_preenchidas": 0,
       "empates_indeterminados": 0,

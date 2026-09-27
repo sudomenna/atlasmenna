@@ -1,6 +1,6 @@
 {
   "aviso": "DADO SIMULADO. Nomes, partidos, números de urna e eleitorado são reais; votos, percentuais de apuração e probabilidades são INVENTADOS por data-pipeline/simulacao-gerar.ts. Uso exclusivo de desenvolvimento local — estes arquivos nunca devem ser publicados em destino remoto.",
-  "gerado_ts": "2026-09-26T21:38:53.016Z",
+  "gerado_ts": "2026-09-27T04:40:24.833Z",
   "gerador": "data-pipeline/simulacao-gerar.ts",
   "pct_pedido": 25,
   "pct_efetivo": 25,
@@ -21,7 +21,7 @@
     "senador-uf.json",
     "senador.json"
   ],
-  "eleitorado_total": 158278193,
+  "eleitorado_total": 158100251,
   "votos_validos_projetados_total": 117935194,
   "contagens": {
     "presidente_candidatos": 12,
@@ -103,22 +103,22 @@
     },
     {
       "uf": "DF",
-      "pct_apurado": 37,
-      "eleitores_aptos": 2365513,
-      "comparecimento_pct": 74.51,
+      "pct_apurado": 37.1,
+      "eleitores_aptos": 2187571,
+      "comparecimento_pct": 80.57,
       "votos_validos_projetados": 1762575,
-      "votos_apurados": 652153,
-      "fonte_eleitorado": "derivado_2022",
+      "votos_apurados": 653915,
+      "fonte_eleitorado": "medido",
       "feitio_governador": "decidida",
       "feitio_senador": "decidida"
     },
     {
       "uf": "ES",
-      "pct_apurado": 32.1,
+      "pct_apurado": 32.2,
       "eleitores_aptos": 2999642,
       "comparecimento_pct": 74.05,
       "votos_validos_projetados": 2221130,
-      "votos_apurados": 712983,
+      "votos_apurados": 715204,
       "fonte_eleitorado": "medido",
       "feitio_governador": "apertada",
       "feitio_senador": "apertada"
@@ -158,11 +158,11 @@
     },
     {
       "uf": "MS",
-      "pct_apurado": 39.3,
+      "pct_apurado": 39.4,
       "eleitores_aptos": 2032487,
       "comparecimento_pct": 74.15,
       "votos_validos_projetados": 1506989,
-      "votos_apurados": 592247,
+      "votos_apurados": 593754,
       "fonte_eleitorado": "medido",
       "feitio_governador": "indefinida",
       "feitio_senador": "decidida"
@@ -224,22 +224,22 @@
     },
     {
       "uf": "PR",
-      "pct_apurado": 34.7,
+      "pct_apurado": 34.8,
       "eleitores_aptos": 8645891,
       "comparecimento_pct": 75.95,
       "votos_validos_projetados": 6566764,
-      "votos_apurados": 2278667,
+      "votos_apurados": 2285234,
       "fonte_eleitorado": "medido",
       "feitio_governador": "decidida",
       "feitio_senador": "decidida"
     },
     {
       "uf": "RJ",
-      "pct_apurado": 30.6,
+      "pct_apurado": 30.7,
       "eleitores_aptos": 13033929,
       "comparecimento_pct": 72.55,
       "votos_validos_projetados": 9456677,
-      "votos_apurados": 2893743,
+      "votos_apurados": 2903200,
       "fonte_eleitorado": "medido",
       "feitio_governador": "indefinida",
       "feitio_senador": "apertada"
@@ -334,9 +334,8 @@
     }
   ],
   "avisos": [
-    "DF: sem linhas em 'eleitorado'. Eleitorado retrodeduzido de historical_results 2022 (1.762.575 votos ÷ comparecimento nacional 74.5%).",
     "eleitorado.comparecimento_pct_historico está NULL nas 6.085 linhas; o comparecimento por UF foi medido em historical_results 2022/1T/cargo 1.",
     "2 feição(ões) da malha do IBGE descartada(s) por não ser(em) município: RS/Lagoa Mirim, RS/Lagoa dos Patos.",
-    "2 município(s) sem eleitorado na tabela — peso rateado pela população: DF/Brasília, PE/Fernando de Noronha."
+    "1 município(s) sem eleitorado na tabela — peso rateado pela população: PE/Fernando de Noronha."
   ]
 }

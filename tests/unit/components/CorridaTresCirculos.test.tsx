@@ -35,6 +35,8 @@ import {
   circuloValidos,
   destinacaoPendente,
   fatiasDaCorrida,
+  fatiasProjecaoCorrida,
+  maiorResto,
   ordenarCandidaturas,
   ordenarPartidos,
 } from "@/components/blocks/CorridaTresCirculos";
@@ -122,6 +124,36 @@ const CANDIDATOS = [
   { id: 44, nome: "Eduardo Sub Judice" },
   { id: 90, nome: "Fábio Anulado" },
 ];
+
+/**
+ * A mesma lista com `votos_projetados` (RF-212). Desenhada para discriminar:
+ *   - a ORDEM da projeção difere da do apurado: 22 passa 13, e 50 (6ª no
+ *     apurado) entra no top-4 no lugar de 12;
+ *   - 15 e 30 EMPATAM na projeção — o desempate por número de urna crescente
+ *     põe 15 no top-4 e manda 30 para "Outros";
+ *   - 44 (sub judice) e 90 (anulado) têm as MAIORES projeções: sem o filtro
+ *     `valido` elas tomariam o 1º lugar;
+ *   - Σ projeções válidas (98.000.000) ≠ `projetada.validos` do payload, para
+ *     "total = Σ candidatos" não passar por coincidência.
+ */
+const CANDIDATOS_PROJ = [
+  { id: 13, nome: "Ana Tereza", votos_projetados: 38_000_000 },
+  { id: 22, nome: "Bruno Lima", votos_projetados: 40_000_000 },
+  { id: 15, nome: "Carla Dias", votos_projetados: 5_000_000 },
+  { id: 12, nome: "Davi Souza", votos_projetados: 1_000_000 },
+  { id: 30, nome: "Gil Novo", votos_projetados: 5_000_000 },
+  { id: 50, nome: "Helena Psol", votos_projetados: 9_000_000 },
+  { id: 44, nome: "Eduardo Sub Judice", votos_projetados: 60_000_000 },
+  { id: 90, nome: "Fábio Anulado", votos_projetados: 7_000_000 },
+];
+
+/** Total de válidos projetado — o arco 3 do "Votação". ≠ Σ acima (98 mi). */
+const PROJETADA = {
+  validos: 50_000_001,
+  brancos: 4_000_000,
+  nulos: 3_000_000,
+  abstencao: 20_000_000,
+};
 
 // ---------------------------------------------------------------------------
 // RF-203 — o filtro de destinação
@@ -639,10 +671,12 @@ describe("🔴 os dois painéis na MESMA página — id de SVG é global", () =>
   const v = votacaoDe(corridaReal(), {
     projetada: { validos: 50_000_000, brancos: 4_000_000, nulos: 3_000_000, abstencao: 20_000_000 },
   });
+  // Com `votos_projetados`, o quarto arco da corrida (RF-212) também desenha
+  // — e traz o seu próprio `<pattern>`.
   const doc = parse(
     <>
       <VotacaoEleitorado votacao={v} />
-      <CorridaTresCirculos modo="candidatura" votacao={v} candidatos={CANDIDATOS} />
+      <CorridaTresCirculos modo="candidatura" votacao={v} candidatos={CANDIDATOS_PROJ} />
     </>,
   );
 
@@ -650,8 +684,10 @@ describe("🔴 os dois painéis na MESMA página — id de SVG é global", () =>
     const ids = [...doc.querySelectorAll("[id]")].map((e) => e.getAttribute("id"));
     expect(ids.length).toBeGreaterThan(6);
     expect(ids.length - new Set(ids).size).toBe(0);
-    // três `<pattern>` de cada painel — os dois desenharam
-    expect(doc.querySelectorAll("pattern")).toHaveLength(6);
+    // três `<pattern>` do "Votação" + quatro da corrida (três círculos e o de
+    // projeção) — todos desenharam
+    expect(q(doc, "corrida-projecao")?.querySelector("pattern")).not.toBeNull();
+    expect(doc.querySelectorAll("pattern")).toHaveLength(7);
   });
 
   it("e o `titleId` prefixa os `<defs>`: dois painéis da corrida também não colidem", () => {
@@ -660,12 +696,22 @@ describe("🔴 os dois painéis na MESMA página — id de SVG é global", () =>
     // com o `<pattern>` do primeiro).
     const dois = parse(
       <>
-        <CorridaTresCirculos modo="candidatura" votacao={v} titleId="corrida-a" />
-        <CorridaTresCirculos modo="candidatura" votacao={v} titleId="corrida-b" />
+        <CorridaTresCirculos
+          modo="candidatura"
+          votacao={v}
+          candidatos={CANDIDATOS_PROJ}
+          titleId="corrida-a"
+        />
+        <CorridaTresCirculos
+          modo="candidatura"
+          votacao={v}
+          candidatos={CANDIDATOS_PROJ}
+          titleId="corrida-b"
+        />
       </>,
     );
     const ids = [...dois.querySelectorAll("[id]")].map((e) => e.getAttribute("id"));
-    expect(dois.querySelectorAll("pattern")).toHaveLength(6);
+    expect(dois.querySelectorAll("pattern")).toHaveLength(8);
     expect(ids.length - new Set(ids).size).toBe(0);
   });
 
@@ -692,8 +738,17 @@ describe("RF-208 — base e fonte declaradas", () => {
     const doc = parse(
       <CorridaTresCirculos modo="candidatura" votacao={votacaoDe(corridaReal())} />,
     );
-    const caps = [...doc.querySelectorAll("figcaption")].map((f) => f.textContent);
-    expect(caps).toEqual(["Dos votos válidos", "De quem votou", "Do eleitorado apto, até agora"]);
+    // Por visão (RF-211/212): três figuras no Parcial, uma na Projeção. Contar
+    // o documento inteiro misturaria as duas — cada lista é exata.
+    const caps = (visao: string) =>
+      [...doc.querySelectorAll(`[data-view-only="${visao}"] figcaption`)].map((f) => f.textContent);
+    expect(caps("parcial")).toEqual([
+      "Dos votos válidos",
+      "De quem votou",
+      "Do eleitorado apto, até agora",
+    ]);
+    expect(caps("proj")).toEqual(["Projeção para o fim da apuração"]);
+    expect(doc.querySelectorAll("figcaption")).toHaveLength(4);
     expect(q(doc, "corrida-circulo-1-legenda-cand-13")?.getAttribute("data-base")).toBe(
       "votos válidos",
     );
@@ -739,7 +794,449 @@ describe("RF-208 — base e fonte declaradas", () => {
     );
     const id = q(doc, "panel")?.getAttribute("aria-labelledby");
     expect(doc.getElementById(id ?? "")?.textContent).toBe("A corrida");
-    const figs = [...doc.querySelectorAll("figure")].map((f) => f.getAttribute("data-testid"));
-    expect(figs).toEqual(["corrida-circulo-1", "corrida-circulo-2", "corrida-circulo-3"]);
+    const figs = (visao: string) =>
+      [...doc.querySelectorAll(`[data-view-only="${visao}"] figure`)].map((f) =>
+        f.getAttribute("data-testid"),
+      );
+    expect(figs("parcial")).toEqual([
+      "corrida-circulo-1",
+      "corrida-circulo-2",
+      "corrida-circulo-3",
+    ]);
+    expect(figs("proj")).toEqual(["corrida-projecao"]);
+    expect(doc.querySelectorAll("figure")).toHaveLength(4);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RF-211 / RF-212 — o seletor Parcial/Projeção (2026-09-27)
+// ---------------------------------------------------------------------------
+
+const visaoDe = (doc: Document, testid: string) =>
+  q(doc, testid)?.closest("[data-view-only]")?.getAttribute("data-view-only") ?? null;
+
+describe("RF-211 — os três círculos são da visão 'Parcial'", () => {
+  it("🔴 apurando: cada círculo e a metodologia são 'parcial'", () => {
+    // Mutações que morrem: trocar parcial↔proj num círculo; tirar o atributo.
+    const doc = parse(
+      <CorridaTresCirculos modo="candidatura" votacao={votacaoDe(corridaReal())} />,
+    );
+    for (const n of [1, 2, 3] as const) {
+      expect(visaoDe(doc, `corrida-circulo-${n}`), `círculo ${n}`).toBe("parcial");
+    }
+    expect(q(doc, "corrida-metodologia")?.getAttribute("data-view-only")).toBe("parcial");
+    // o atributo não pode estar na `<figure>` — o `display: flex` inline venceria
+    expect(doc.querySelectorAll("figure[data-view-only]")).toHaveLength(0);
+  });
+
+  it("os estados de espera de cada círculo somem com ele (destino, sem votos, não fecha)", () => {
+    const pendente = parse(
+      <CorridaTresCirculos
+        modo="candidatura"
+        votacao={votacaoDe(corridaReal(), { destino_pendente: true })}
+      />,
+    );
+    for (const n of [1, 2, 3] as const) {
+      expect(visaoDe(pendente, `corrida-circulo-${n}-aguardando-destino`)).toBe("parcial");
+    }
+    const corrida = corridaReal();
+    const c = contagensDe(corrida, EXTRA);
+    const torto = parse(
+      <CorridaTresCirculos
+        modo="candidatura"
+        votacao={{ contagens: { ...c, validos: c.validos + 1 }, corrida }}
+      />,
+    );
+    expect(visaoDe(torto, "corrida-circulo-1-nao-fecha")).toBe("parcial");
+  });
+});
+
+describe("RF-212 — maiorResto: a soma fecha no total EXATO", () => {
+  const soma = (xs: number[]) => xs.reduce((s, x) => s + x, 0);
+  const arredondado = (pesos: number[], total: number) => {
+    const S = soma(pesos);
+    return pesos.map((p) => Math.round((total * p) / S));
+  };
+
+  // Cada caso é um em que arredondar cada cota sozinha ERRA o total — o erro
+  // do arredondamento simples está na última coluna, e o teste confere que ele
+  // de fato erraria (senão o caso não discrimina nada).
+  const casos: [string, number[], number, number[], number][] = [
+    ["−1", [1, 1, 1], 100, [34, 33, 33], -1],
+    ["+1", [1, 1, 1], 200, [67, 67, 66], +1],
+    ["−2", [1, 1, 1, 1, 1, 1], 8, [2, 2, 1, 1, 1, 1], -2],
+    ["+2", [1, 1, 1, 1, 1, 1], 10, [2, 2, 2, 2, 1, 1], +2],
+  ];
+  for (const [nome, pesos, total, esperado, erroSimples] of casos) {
+    it(`🔴 caso em que o arredondamento simples erra por ${nome}`, () => {
+      expect(soma(arredondado(pesos, total)) - total).toBe(erroSimples);
+      const r = maiorResto(pesos, total);
+      expect(r).toEqual(esperado);
+      expect(soma(r)).toBe(total);
+    });
+  }
+
+  it("a unidade vai ao MAIOR resto, não ao maior peso", () => {
+    // 7 × {5, 3, 2} / 10 = 3,5 · 2,1 · 1,4 → pisos 3·2·1 (6), falta 1; o maior
+    // resto é o do 1º (0,5) — e no caso abaixo é o do 3º (0,8), não o do 1º.
+    expect(maiorResto([5, 3, 2], 7)).toEqual([4, 2, 1]);
+    // 9 × {5, 3, 2} / 10 = 4,5 · 2,7 · 1,8 → pisos 4·2·1 (7), falta 2: restos
+    // 0,5 · 0,7 · 0,8 ⇒ 3º e 2º recebem, o 1º (maior peso) não.
+    expect(maiorResto([5, 3, 2], 9)).toEqual([4, 3, 2]);
+  });
+
+  it("empate de resto ⇒ a de menor índice (a de maior projeção, na ordem de entrada)", () => {
+    // 2 × {3, 1} / 4 = 1,5 · 0,5 — restos iguais, falta 1.
+    expect(maiorResto([3, 1], 2)).toEqual([2, 0]);
+    expect(maiorResto([1, 1], 1)).toEqual([1, 0]);
+  });
+
+  it("🔴 números de eleição nacional não perdem a unidade (produto > 2^53)", () => {
+    const r = maiorResto([99_999_999, 1], 158_000_000);
+    expect(r).toEqual([157_999_998, 2]);
+    expect(soma(r)).toBe(158_000_000);
+  });
+
+  it("peso zero nunca recebe unidade", () => {
+    expect(maiorResto([1, 1, 1, 0], 100)).toEqual([34, 33, 33, 0]);
+  });
+});
+
+describe("RF-212 — fatiasProjecaoCorrida", () => {
+  const v = votacaoDe(corridaReal(), { projetada: PROJETADA });
+  const keys = (f: { key: string }[] | null) => (f ?? []).map((x) => x.key);
+
+  it("🔴 ordem pela PROJEÇÃO, só `valido`, desempate por número de urna crescente", () => {
+    // apurado: 13, 22, 15, 12, 30, 50 · projeção: 22, 13, 50, 15≡30 (empate).
+    // Sub judice (44) e anulado (90) têm as maiores projeções e ficam fora.
+    const f = fatiasProjecaoCorrida(v, CANDIDATOS_PROJ, PROJETADA.validos);
+    expect(keys(f)).toEqual(["cand-22", "cand-13", "cand-50", "cand-15", "outros"]);
+  });
+
+  it("🔴 o desempate não depende da ordem de chegada (nem da corrida, nem da lista)", () => {
+    const corridaInv = [...corridaReal()].reverse();
+    const vInv = votacaoDe(corridaInv, { projetada: PROJETADA });
+    for (const [vv, lista] of [
+      [v, CANDIDATOS_PROJ],
+      [vInv, CANDIDATOS_PROJ],
+      [v, [...CANDIDATOS_PROJ].reverse()],
+      [vInv, [...CANDIDATOS_PROJ].reverse()],
+    ] as const) {
+      expect(keys(fatiasProjecaoCorrida(vv, lista, PROJETADA.validos))).toEqual([
+        "cand-22",
+        "cand-13",
+        "cand-50",
+        "cand-15",
+        "outros",
+      ]);
+    }
+  });
+
+  it("🔴 Σ fatias === `projetada.validos` na unidade — e NÃO Σ das projeções", () => {
+    const f = fatiasProjecaoCorrida(v, CANDIDATOS_PROJ, PROJETADA.validos) ?? [];
+    const soma = f.reduce((s, x) => s + x.abs, 0);
+    expect(soma).toBe(50_000_001);
+    // Σ projeções válidas = 98.000.000; o total NÃO é esse.
+    expect(soma).not.toBe(98_000_000);
+    // cada fatia na proporção: 22 = 50.000.001 × 40/98 = 20.408.163,67…
+    const por = Object.fromEntries(f.map((x) => [x.key, x.abs]));
+    expect(por).toEqual({
+      "cand-22": 20_408_164,
+      "cand-13": 19_387_755,
+      "cand-50": 4_591_837,
+      "cand-15": 2_551_020,
+      // 30 (5 mi) + 12 (1 mi) = 6 mi → 3.061.224,5… (piso 3.061.224)
+      outros: 3_061_225,
+    });
+    // percentual sobre o total projetado
+    expect(f[0]?.pct).toBeCloseTo((20_408_164 / 50_000_001) * 100, 10);
+  });
+
+  it("🔴 caso de ponta em que o arredondamento simples erraria por +2 e −2", () => {
+    const cinco: EdgeCorridaEntrada[] = [11, 12, 13, 14, 15].map((id) => ({
+      id,
+      partido: "PT",
+      votos: 100,
+      destino: "valido",
+    }));
+    const lista = cinco.map((e) => ({ id: e.id, votos_projetados: 1 }));
+    // 8 ÷ 5 = 1,6 → arredondado 2 × 5 = 10 (+2); maior resto → 2,2,2,1,1
+    expect(fatiasProjecaoCorrida({ corrida: cinco }, lista, 8)?.map((f) => f.abs)).toEqual([
+      2, 2, 2, 1, 1,
+    ]);
+    // 7 ÷ 5 = 1,4 → arredondado 1 × 5 = 5 (−2); maior resto → 2,2,1,1,1
+    expect(fatiasProjecaoCorrida({ corrida: cinco }, lista, 7)?.map((f) => f.abs)).toEqual([
+      2, 2, 1, 1, 1,
+    ]);
+  });
+
+  it("candidatura ausente da lista NÃO entra — as outras seguem", () => {
+    const sem22 = CANDIDATOS_PROJ.filter((c) => c.id !== 22);
+    const f = fatiasProjecaoCorrida(v, sem22, PROJETADA.validos);
+    expect(keys(f)).toEqual(["cand-13", "cand-50", "cand-15", "cand-30", "outros"]);
+    expect(f?.reduce((s, x) => s + x.abs, 0)).toBe(PROJETADA.validos);
+  });
+
+  it("🔴 só entra quem tem projeção > 0 — nem zero, nem ausente, ocupa lugar", () => {
+    // Três válidas: 13 com projeção, 22 com projeção ZERO, 15 fora da lista.
+    // Com poucas candidaturas, um zero ou um ausente que entrasse ocuparia uma
+    // das quatro fatias próprias (invisível no arco, mas presente no dado).
+    const corrida: EdgeCorridaEntrada[] = [
+      { id: 13, partido: "PT", votos: 10, destino: "valido" },
+      { id: 22, partido: "PL", votos: 9, destino: "valido" },
+      { id: 15, partido: "MDB", votos: 8, destino: "valido" },
+    ];
+    const lista = [
+      { id: 13, votos_projetados: 100 },
+      { id: 22, votos_projetados: 0 },
+    ];
+    const f = fatiasProjecaoCorrida({ corrida }, lista, 1_000);
+    expect(keys(f)).toEqual(["cand-13", "outros"]);
+    expect(f?.map((x) => x.abs)).toEqual([1_000, 0]);
+  });
+
+  it("o rótulo vem da lista, como no Parcial", () => {
+    const f = fatiasProjecaoCorrida(v, CANDIDATOS_PROJ, PROJETADA.validos);
+    expect(f?.[0]?.label).toBe("Bruno Lima · PL");
+    expect(f?.[4]?.label).toBe("Outros");
+  });
+
+  describe("🔴 cada ramo de 'aguardando' devolve null", () => {
+    it("sem `projetada`, ou total zero, negativo ou não inteiro", () => {
+      for (const t of [undefined, null, 0, -1, 1.5, Number.NaN]) {
+        expect(fatiasProjecaoCorrida(v, CANDIDATOS_PROJ, t), String(t)).toBeNull();
+      }
+    });
+
+    it("destinação pendente — pela flag", () => {
+      const p = votacaoDe(corridaReal(), { projetada: PROJETADA, destino_pendente: true });
+      expect(fatiasProjecaoCorrida(p, CANDIDATOS_PROJ, PROJETADA.validos)).toBeNull();
+    });
+
+    it("destinação pendente — por entrada com votos e sem destino", () => {
+      const corrida = corridaReal().map((e) => (e.id === 12 ? { ...e, destino: undefined } : e));
+      expect(fatiasProjecaoCorrida({ corrida }, CANDIDATOS_PROJ, PROJETADA.validos)).toBeNull();
+    });
+
+    it("`corrida` ausente", () => {
+      expect(fatiasProjecaoCorrida({}, CANDIDATOS_PROJ, PROJETADA.validos)).toBeNull();
+    });
+
+    it("Σ projeções válidas = 0 (todas zeradas)", () => {
+      const zeradas = CANDIDATOS_PROJ.map((c) =>
+        c.id === 44 || c.id === 90 ? c : { ...c, votos_projetados: 0 },
+      );
+      // 44 e 90 seguem com projeção — e não podem salvar a divisão
+      expect(fatiasProjecaoCorrida(v, zeradas, PROJETADA.validos)).toBeNull();
+    });
+
+    it("nenhuma válida está na lista (só nomes, sem `votos_projetados`)", () => {
+      expect(fatiasProjecaoCorrida(v, CANDIDATOS, PROJETADA.validos)).toBeNull();
+      expect(fatiasProjecaoCorrida(v, [], PROJETADA.validos)).toBeNull();
+    });
+
+    it("projeção torta (negativa ou não inteira) não vira fatia", () => {
+      for (const torta of [-5, 1.5]) {
+        const lista = CANDIDATOS_PROJ.map((c) =>
+          c.id === 12 ? { ...c, votos_projetados: torta } : c,
+        );
+        expect(fatiasProjecaoCorrida(v, lista, PROJETADA.validos), String(torta)).toBeNull();
+      }
+    });
+  });
+});
+
+describe("RF-212 — o círculo de projeção no painel", () => {
+  const v = votacaoDe(corridaReal(), { projetada: PROJETADA });
+  const doc = parse(
+    <>
+      <VotacaoEleitorado votacao={v} />
+      <CorridaTresCirculos modo="candidatura" votacao={v} candidatos={CANDIDATOS_PROJ} />
+    </>,
+  );
+
+  it("🔴 uma figura, só na visão 'proj', com a legenda na ordem da projeção", () => {
+    expect(visaoDe(doc, "corrida-projecao")).toBe("proj");
+    expect(q(doc, "corrida-projecao")?.tagName).toBe("FIGURE");
+    const lis = [...doc.querySelectorAll('[data-testid="corrida-projecao-legenda"] li')].map((li) =>
+      (li.getAttribute("data-testid") ?? "").replace("corrida-projecao-legenda-", ""),
+    );
+    expect(lis).toEqual(["cand-22", "cand-13", "cand-50", "cand-15", "outros"]);
+    expect(q(doc, "corrida-projecao-legenda-cand-22")?.getAttribute("data-base")).toBe(
+      "votos válidos (projetado)",
+    );
+  });
+
+  it("🔴 o total é o MESMO da fatia de válidos do arco 3 do 'Votação'", () => {
+    const fig = q(doc, "corrida-projecao");
+    const validosVotacao = q(doc, "votacao-circulo-3-fatia-validos")?.getAttribute("data-abs");
+    expect(validosVotacao).toBe(String(PROJETADA.validos));
+    expect(fig?.getAttribute("data-total")).toBe(validosVotacao);
+    expect(fig?.getAttribute("data-soma-abs")).toBe(validosVotacao);
+    expect(q(doc, "corrida-projecao-total")?.textContent).toBe("50.000.001");
+    expect(q(doc, "corrida-projecao-base")?.textContent).toBe("votos válidos (projetado)");
+  });
+
+  it("a fatia pinta pela sigla, 'Outros' neutro", () => {
+    expect(q(doc, "corrida-projecao-fatia-cand-22")?.getAttribute("stroke")).toBe(
+      candidateColor("PL"),
+    );
+    expect(q(doc, "corrida-projecao-padrao-outros")?.getAttribute("data-padrao")).toBe("trilho");
+  });
+
+  it("🔴 a metodologia da Projeção existe, é 'proj', e diz o que muda", () => {
+    const m = q(doc, "corrida-metodologia-proj");
+    expect(m?.getAttribute("data-view-only")).toBe("proj");
+    const t = m?.textContent ?? "";
+    expect(t).toContain("é o mesmo da projeção do painel “Votação”");
+    expect(t).toContain("segue a projeção de cada uma");
+    expect(t).toContain("podem diferir nos últimos dígitos");
+    expect(t).toContain("50.000.001");
+    expect(t).toContain("as demais somam “Outros”");
+    // não cita os três círculos do Parcial …
+    expect(t).not.toMatch(/três gráficos|terceiro|primeiro gráfico|até agora/i);
+    // … e o parágrafo do Parcial não cita este
+    const parcial = q(doc, "corrida-metodologia")?.textContent ?? "";
+    expect(parcial).not.toMatch(/proje/i);
+    expect(t).not.toMatch(/RF-|payload|bootstrap|replay/i);
+  });
+
+  it("sem 'Outros' no arco, a metodologia não o cita", () => {
+    const corrida: EdgeCorridaEntrada[] = [
+      { id: 13, partido: "PT", votos: 10, destino: "valido" },
+      { id: 22, partido: "PL", votos: 9, destino: "valido" },
+    ];
+    const d = parse(
+      <CorridaTresCirculos
+        modo="candidatura"
+        votacao={{ contagens: contagensDe(corrida, EXTRA), corrida, projetada: PROJETADA }}
+        candidatos={[
+          { id: 13, votos_projetados: 60 },
+          { id: 22, votos_projetados: 40 },
+        ]}
+      />,
+    );
+    const t = q(d, "corrida-metodologia-proj")?.textContent ?? "";
+    expect(t).toContain("segue a projeção de cada uma. Só o voto válido entra");
+    expect(t).not.toContain("Outros");
+  });
+
+  it("os dois `proj` do painel são a figura e a metodologia — nada do Parcial vaza", () => {
+    const corrida = q(doc, "corrida-tres-circulos")?.closest('[data-testid="panel"]');
+    const proj = [...(corrida?.querySelectorAll('[data-view-only="proj"]') ?? [])].map((e) =>
+      e.getAttribute("data-testid"),
+    );
+    expect(proj).toEqual(["corrida-projecao-visao", "corrida-metodologia-proj"]);
+  });
+});
+
+describe("RF-212 — sem dado, a figura da Projeção diz por quê (sempre no DOM)", () => {
+  const semSvg = (d: Document) => q(d, "corrida-projecao")?.querySelector("svg") ?? null;
+
+  it("🔴 sem `projetada` ⇒ 'aguardando projeção', na visão 'proj'", () => {
+    const d = parse(
+      <CorridaTresCirculos
+        modo="candidatura"
+        votacao={votacaoDe(corridaReal())}
+        candidatos={CANDIDATOS_PROJ}
+      />,
+    );
+    expect(visaoDe(d, "corrida-projecao-aguardando")).toBe("proj");
+    expect(q(d, "corrida-projecao-aguardando")?.textContent).toMatch(/^Aguardando projeção/);
+    expect(semSvg(d)).toBeNull();
+    expect(q(d, "corrida-metodologia-proj")).toBeNull();
+    // o único `proj` é o invólucro da figura
+    expect(d.querySelectorAll('[data-view-only="proj"]')).toHaveLength(1);
+  });
+
+  it("o texto ao leitor não tem jargão e não promete data", () => {
+    const d = parse(
+      <CorridaTresCirculos
+        modo="candidatura"
+        votacao={votacaoDe(corridaReal())}
+        candidatos={CANDIDATOS_PROJ}
+      />,
+    );
+    const t = q(d, "corrida-projecao-aguardando")?.textContent ?? "";
+    expect(t).not.toMatch(/RF-|payload|modelo|medi[çc]|replay|\d{1,2}\/\d{1,2}|hora|amanhã/i);
+  });
+
+  it("🔴 destinação pendente ⇒ 'aguardando a separação dos votos válidos'", () => {
+    const d = parse(
+      <CorridaTresCirculos
+        modo="candidatura"
+        votacao={votacaoDe(corridaReal(), { projetada: PROJETADA, destino_pendente: true })}
+        candidatos={CANDIDATOS_PROJ}
+      />,
+    );
+    expect(q(d, "corrida-projecao-aguardando-destino")?.textContent).toMatch(
+      /aguardando a separação dos votos válidos/i,
+    );
+    expect(visaoDe(d, "corrida-projecao-aguardando-destino")).toBe("proj");
+    expect(q(d, "corrida-projecao-aguardando")).toBeNull();
+    expect(semSvg(d)).toBeNull();
+  });
+
+  it("🔴 lista sem `votos_projetados` ⇒ 'aguardando projeção', mesmo com `projetada`", () => {
+    const d = parse(
+      <CorridaTresCirculos
+        modo="candidatura"
+        votacao={votacaoDe(corridaReal(), { projetada: PROJETADA })}
+        candidatos={CANDIDATOS}
+      />,
+    );
+    expect(q(d, "corrida-projecao-aguardando")).not.toBeNull();
+    expect(semSvg(d)).toBeNull();
+  });
+
+  it("no modo partido, fala de partidos — não há projeção por partido", () => {
+    // Mesmo com `corrida` e projeções por candidatura à mão: o gráfico é por
+    // partido, e dividir por candidatura aqui seria outro gráfico.
+    const d = parse(
+      <CorridaTresCirculos
+        modo="partido"
+        votacao={{
+          contagens: contagensDe(corridaReal(), EXTRA),
+          corrida: corridaReal(),
+          corrida_por_partido: [{ partido: "PT", votos_validos: 1 }],
+          projetada: PROJETADA,
+        }}
+        candidatos={CANDIDATOS_PROJ}
+      />,
+    );
+    expect(q(d, "corrida-projecao-aguardando")?.textContent).toContain("entre os partidos");
+    expect(semSvg(d)).toBeNull();
+  });
+});
+
+describe("RF-210 / RF-207 — Senado e <DetailUnavailable> valem nas DUAS visões", () => {
+  it("🔴 Senado: nada marcado por visão, e nenhum bloco de projeção", () => {
+    // Esconder o "aguardando Senado" na Projeção deixaria o painel sem dizer
+    // por que está vazio. Mutação que morre: aplicar `parcial` também no Senado.
+    const doc = parse(
+      <CorridaTresCirculos modo="candidatura" senado votacao={votacaoDe(corridaReal())} />,
+    );
+    expect(doc.querySelectorAll("[data-view-only]")).toHaveLength(0);
+    expect(q(doc, "corrida-projecao")).toBeNull();
+    for (const n of [1, 2, 3] as const) {
+      expect(q(doc, `corrida-circulo-${n}-aguardando-senado`)).not.toBeNull();
+    }
+  });
+
+  it("🔴 <DetailUnavailable>: nada marcado por visão", () => {
+    const casos = [
+      <CorridaTresCirculos key="a" modo="candidatura" votacao={undefined} />,
+      <CorridaTresCirculos
+        key="b"
+        modo="partido"
+        votacao={{ contagens: contagensDe(corridaReal(), EXTRA) }}
+      />,
+    ];
+    for (const node of casos) {
+      const doc = parse(node);
+      expect(q(doc, "detail-unavailable")).not.toBeNull();
+      expect(doc.querySelectorAll("[data-view-only]")).toHaveLength(0);
+      expect(q(doc, "corrida-projecao")).toBeNull();
+    }
   });
 });

@@ -26,6 +26,33 @@ Conselheiro Distrital).
 | `ac01392-z0001-…` e `ac01392-z0009-…` | EA20 | Os dois pares de Rio Branco |
 | `ac01007-c0001-…` e `ac01007-z0009-…` | EA20 | Bujari — o outro município da zona 0009 |
 
+## Subpasta `df/` — eleitorado real do DF (2ª janela, 24/09)
+
+Baixados em **2026-09-27** de `https://resultados-sim.tse.jus.br/simulado/simulado2026`
+(eleição `21270`, Presidente), a partir da lista oficial de zonas do EA12 acima
+(`mun-e021270-cm.json`, abrangência `df`, município `97012`) — **nenhuma URL adivinhada**.
+Estado dos arquivos: `dg`/`hg` **24/09/2026 16:12:48–53** (2ª janela do simulado, 22–24/09).
+
+Motivo da coleta: a tabela `eleitorado` (Postgres) não tem o DF — sua fonte é o CSV de
+eleitorado da eleição **municipal** de 2024, e o DF não tem eleição municipal. Este
+simulado é a fonte usada para preencher a lacuna (ver `docs/operations/runbook.md`
+§ "Carregar o eleitorado do DF").
+
+| Arquivo | Leiaute | O que é |
+|---|---|---|
+| `df-e021270-ab.json` | EA15 | Acompanhamento do DF — 2 itens: `mun` (97012) + `uf` (df), ambos com o mesmo `e.te` (DF só tem 1 município) |
+| `df-c0001-e021270-u.json` | EA20 | Presidente, nível UF (DF) — agregado das 19 zonas |
+| `df97012-z<zona>-c0001-e021270-u.json` | EA20 | Presidente, par Brasília (97012) × zona — 19 arquivos, zonas `0001 0002 0003 0004 0005 0006 0008 0009 0010 0011 0013 0014 0015 0016 0017 0018 0019 0020 0021` (a lista pula 0007 e 0012 — o EA12 não lista essas zonas para 97012, e não é gap de coleta) |
+
+Conferência (feita por `data-pipeline/eleitorado-df-import.ts`, modo simulação):
+Σ `e.te` das 19 zonas = **2.187.571**, exatamente igual ao `e.te` de `df-c0001-e021270-u.json`
+e de `df-e021270-ab.json`.
+
+⚠️ **Ressalva de proveniência**: nas 27 UFs, o `e.te` deste simulado fica entre +0,2% e +4,5%
+acima do que `eleitorado-import.ts` calculou do CSV de 2024 (crescimento normal do cadastro),
+exceto AC (+17%) e AP (+10%), fora dessa faixa — não investigado a fundo, mas tratado como
+plausível (cadastro cresce de forma desigual por UF).
+
 ## Para que servem
 
 > ✅ **Desde 18/09 estes arquivos são GUARDA, não só amostra.**

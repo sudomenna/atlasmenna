@@ -5,7 +5,7 @@ status: implementing
 priority: M
 personas: [P1, P2, P3]
 screens: [T-01, T-03, T-10]
-requirements: [RF-200, RF-201, RF-202, RF-203, RF-204, RF-205, RF-206, RF-207, RF-208, RF-209, RF-210]
+requirements: [RF-200, RF-201, RF-202, RF-203, RF-204, RF-205, RF-206, RF-207, RF-208, RF-209, RF-210, RF-211, RF-212]
 depends_on: [001-ingestao-tse, 003-home-nacional, 004-pagina-uf-presidencial, 005-pagina-uf-governador, 006-grid-governadores, 016-senador, 021-votacao-eleitorado]
 apis: []
 components: [CorridaTresCirculos, VotacaoEleitorado, Panel, DetailUnavailable]
@@ -234,6 +234,44 @@ emendado). Deputado (cargo 6) recebe `votacao` por UF **sem** `corrida`, e sem
    unidade. Inofensivo aqui porque a fatia "Anulados e sub judice" sai de
    `contagens`, não da corrida (RF-205) — e é por isso que ela NÃO pode passar
    a ser derivada da soma das candidaturas.
+
+### RF-211 — os três círculos são da visão "Parcial" (decisão do dono, 2026-09-27)
+
+**Enquanto** a visão ativa do seletor do shell é **"Parcial"**, **o sistema
+deve** exibir os três círculos do RF-204..206. **Enquanto** é **"Projeção"**,
+**o sistema deve** escondê-los e exibir o círculo de projeção do RF-212.
+Mesmo mecanismo do RF-195b da spec 021 (`data-view-only`, CSS, sem JS).
+
+### RF-212 — o círculo de projeção da corrida (decisão do dono, 2026-09-27)
+
+**Enquanto** a visão ativa é **"Projeção"**, **o sistema deve** exibir um
+semicírculo com a divisão projetada dos votos válidos entre as candidaturas:
+as quatro de maior projeção + "Outros", só destino `valido`.
+
+**Onde** o total (centro do semicírculo e base dos percentuais) é
+`votacao.projetada.validos` — **o mesmo número do arco 3 do painel "Votação"**,
+para os dois painéis nunca discordarem na mesma tela. Cada fatia é
+`votacao.projetada.validos × (votos_projetados_i ÷ Σ votos_projetados das
+candidaturas valido)`, com arredondamento pelo maior resto para a soma fechar
+no total exato. `votos_projetados` vem da lista `candidatos` do mesmo payload
+(nacional ou UF), cruzada por `id` com `votacao.corrida` para a destinação.
+
+**Onde** a ordem, aqui, é por projeção (é o gráfico da projeção); desempate
+pelo número de urna crescente, como no RF-202.
+
+⚠️ **Por que é seguro combinar os dois cálculos** — medido no replay 2022 com
+o modelo real (2026-09-27): o total de válidos pela soma das candidaturas e
+pela projeção de participação diferem **0,02%** nacional com 1 h de apuração
+(0,09% no fim; até 0,94% aos 15 min) e **≤ 0,16%** em qualquer UF com 1 h. A
+divergência troca de sinal entre instantes (ruído de bootstrap, não viés). Das
+duas, a de participação errou menos contra o resultado final (≈ 1,4 pp). Os
+15% vistos no simulado eram artefato do gerador. A consequência declarada: os
+votos projetados de cada candidato neste círculo diferem da lista de
+candidaturas nos últimos dígitos, e a metodologia diz isso.
+
+**Estados**: sem `projetada` ⇒ "aguardando projeção"; destinação pendente
+(RF-207) ⇒ "aguardando a separação dos votos válidos"; Σ projeções válidas = 0
+⇒ "aguardando projeção"; Senado ⇒ RF-210. Sempre no DOM.
 
 ### RF-210 — Senado fica em "aguardando" (decisão do dono, 26/09)
 

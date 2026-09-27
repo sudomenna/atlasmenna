@@ -1,7 +1,7 @@
 {
   "AC": {
     "uf": "AC",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -12,7 +12,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 27801,
-        "votos_projetados": 246600,
+        "votos_projetados": 214008,
         "pct_atual": 54.36,
         "pct_projetado": 55.93,
         "ci95": {
@@ -27,7 +27,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 7431,
-        "votos_projetados": 94056,
+        "votos_projetados": 81625,
         "pct_atual": 14.53,
         "pct_projetado": 21.33,
         "ci95": {
@@ -42,7 +42,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 6316,
-        "votos_projetados": 71429,
+        "votos_projetados": 61988,
         "pct_atual": 12.35,
         "pct_projetado": 16.2,
         "ci95": {
@@ -57,7 +57,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 4451,
-        "votos_projetados": 11843,
+        "votos_projetados": 38368,
         "pct_atual": 8.7,
         "pct_projetado": 2.69,
         "ci95": {
@@ -72,7 +72,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 603,
-        "votos_projetados": 6098,
+        "votos_projetados": 5292,
         "pct_atual": 1.18,
         "pct_projetado": 1.38,
         "ci95": {
@@ -87,7 +87,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 3906,
-        "votos_projetados": 4023,
+        "votos_projetados": 33675,
         "pct_atual": 7.64,
         "pct_projetado": 0.91,
         "ci95": {
@@ -102,7 +102,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 263,
-        "votos_projetados": 3020,
+        "votos_projetados": 2621,
         "pct_atual": 0.51,
         "pct_projetado": 0.68,
         "ci95": {
@@ -117,7 +117,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 144,
-        "votos_projetados": 1492,
+        "votos_projetados": 1295,
         "pct_atual": 0.28,
         "pct_projetado": 0.34,
         "ci95": {
@@ -132,7 +132,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 115,
-        "votos_projetados": 1167,
+        "votos_projetados": 1013,
         "pct_atual": 0.22,
         "pct_projetado": 0.26,
         "ci95": {
@@ -147,7 +147,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 65,
-        "votos_projetados": 653,
+        "votos_projetados": 567,
         "pct_atual": 0.13,
         "pct_projetado": 0.15,
         "ci95": {
@@ -162,7 +162,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 34,
-        "votos_projetados": 342,
+        "votos_projetados": 297,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -177,7 +177,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 17,
-        "votos_projetados": 194,
+        "votos_projetados": 168,
         "pct_atual": 0.03,
         "pct_projetado": 0.04,
         "ci95": {
@@ -204,7 +204,7 @@
       },
       "projetada": {
         "validos": 368874,
-        "brancos": 17314,
+        "brancos": 17315,
         "nulos": 17167,
         "abstencao": 137049
       },
@@ -286,7 +286,7 @@
   },
   "AL": {
     "uf": "AL",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -297,7 +297,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 82643,
-        "votos_projetados": 750710,
+        "votos_projetados": 784097,
         "pct_atual": 41.32,
         "pct_projetado": 43.54,
         "ci95": {
@@ -312,7 +312,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 71745,
-        "votos_projetados": 549698,
+        "votos_projetados": 574146,
         "pct_atual": 35.87,
         "pct_projetado": 31.88,
         "ci95": {
@@ -327,7 +327,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 39225,
-        "votos_projetados": 299081,
+        "votos_projetados": 312382,
         "pct_atual": 19.61,
         "pct_projetado": 17.35,
         "ci95": {
@@ -342,7 +342,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 0,
-        "votos_projetados": 40557,
+        "votos_projetados": 0,
         "pct_atual": 0,
         "pct_projetado": 2.35,
         "ci95": {
@@ -357,7 +357,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 0,
-        "votos_projetados": 32862,
+        "votos_projetados": 0,
         "pct_atual": 0,
         "pct_projetado": 1.91,
         "ci95": {
@@ -372,7 +372,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2515,
-        "votos_projetados": 21701,
+        "votos_projetados": 22666,
         "pct_atual": 1.26,
         "pct_projetado": 1.26,
         "ci95": {
@@ -387,7 +387,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2115,
-        "votos_projetados": 14735,
+        "votos_projetados": 15391,
         "pct_atual": 1.06,
         "pct_projetado": 0.85,
         "ci95": {
@@ -402,7 +402,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 551,
-        "votos_projetados": 4930,
+        "votos_projetados": 5149,
         "pct_atual": 0.28,
         "pct_projetado": 0.29,
         "ci95": {
@@ -417,7 +417,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 553,
-        "votos_projetados": 4913,
+        "votos_projetados": 5131,
         "pct_atual": 0.28,
         "pct_projetado": 0.28,
         "ci95": {
@@ -432,7 +432,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 345,
-        "votos_projetados": 2727,
+        "votos_projetados": 2849,
         "pct_atual": 0.17,
         "pct_projetado": 0.16,
         "ci95": {
@@ -447,7 +447,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 201,
-        "votos_projetados": 1457,
+        "votos_projetados": 1522,
         "pct_atual": 0.1,
         "pct_projetado": 0.08,
         "ci95": {
@@ -462,7 +462,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 116,
-        "votos_projetados": 846,
+        "votos_projetados": 884,
         "pct_atual": 0.06,
         "pct_projetado": 0.05,
         "ci95": {
@@ -488,7 +488,7 @@
         "sub_judice": 0
       },
       "projetada": {
-        "validos": 1442489,
+        "validos": 1724217,
         "brancos": 80688,
         "nulos": 80002,
         "abstencao": 557987
@@ -571,7 +571,7 @@
   },
   "AM": {
     "uf": "AM",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -582,7 +582,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 84980,
-        "votos_projetados": 796770,
+        "votos_projetados": 709673,
         "pct_atual": 35.62,
         "pct_projetado": 38.74,
         "ci95": {
@@ -597,7 +597,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 71056,
-        "votos_projetados": 688772,
+        "votos_projetados": 613481,
         "pct_atual": 29.78,
         "pct_projetado": 33.49,
         "ci95": {
@@ -612,7 +612,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 37335,
-        "votos_projetados": 384456,
+        "votos_projetados": 342430,
         "pct_atual": 15.65,
         "pct_projetado": 18.69,
         "ci95": {
@@ -627,7 +627,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 20760,
-        "votos_projetados": 90332,
+        "votos_projetados": 178970,
         "pct_atual": 8.7,
         "pct_projetado": 4.39,
         "ci95": {
@@ -642,7 +642,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 18221,
-        "votos_projetados": 34551,
+        "votos_projetados": 157081,
         "pct_atual": 7.64,
         "pct_projetado": 1.68,
         "ci95": {
@@ -657,7 +657,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2092,
-        "votos_projetados": 21408,
+        "votos_projetados": 19068,
         "pct_atual": 0.88,
         "pct_projetado": 1.04,
         "ci95": {
@@ -672,7 +672,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1959,
-        "votos_projetados": 18347,
+        "votos_projetados": 16341,
         "pct_atual": 0.82,
         "pct_projetado": 0.89,
         "ci95": {
@@ -687,7 +687,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 989,
-        "votos_projetados": 10069,
+        "votos_projetados": 8969,
         "pct_atual": 0.41,
         "pct_projetado": 0.49,
         "ci95": {
@@ -702,7 +702,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 572,
-        "votos_projetados": 5900,
+        "votos_projetados": 5255,
         "pct_atual": 0.24,
         "pct_projetado": 0.29,
         "ci95": {
@@ -717,7 +717,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 322,
-        "votos_projetados": 3290,
+        "votos_projetados": 2930,
         "pct_atual": 0.13,
         "pct_projetado": 0.16,
         "ci95": {
@@ -732,7 +732,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 189,
-        "votos_projetados": 1800,
+        "votos_projetados": 1604,
         "pct_atual": 0.08,
         "pct_projetado": 0.09,
         "ci95": {
@@ -747,7 +747,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 99,
-        "votos_projetados": 981,
+        "votos_projetados": 874,
         "pct_atual": 0.04,
         "pct_projetado": 0.05,
         "ci95": {
@@ -856,7 +856,7 @@
   },
   "AP": {
     "uf": "AP",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -867,7 +867,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 16703,
-        "votos_projetados": 176169,
+        "votos_projetados": 156857,
         "pct_atual": 33.32,
         "pct_projetado": 40.76,
         "ci95": {
@@ -882,7 +882,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 13657,
-        "votos_projetados": 134130,
+        "votos_projetados": 119426,
         "pct_atual": 27.24,
         "pct_projetado": 31.04,
         "ci95": {
@@ -897,7 +897,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 9943,
-        "votos_projetados": 80279,
+        "votos_projetados": 71479,
         "pct_atual": 19.83,
         "pct_projetado": 18.58,
         "ci95": {
@@ -912,7 +912,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 4362,
-        "votos_projetados": 19688,
+        "votos_projetados": 37606,
         "pct_atual": 8.7,
         "pct_projetado": 4.56,
         "ci95": {
@@ -927,7 +927,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 3829,
-        "votos_projetados": 6412,
+        "votos_projetados": 33007,
         "pct_atual": 7.64,
         "pct_projetado": 1.48,
         "ci95": {
@@ -942,7 +942,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 557,
-        "votos_projetados": 5779,
+        "votos_projetados": 5146,
         "pct_atual": 1.11,
         "pct_projetado": 1.34,
         "ci95": {
@@ -957,7 +957,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 597,
-        "votos_projetados": 5349,
+        "votos_projetados": 4762,
         "pct_atual": 1.19,
         "pct_projetado": 1.24,
         "ci95": {
@@ -972,7 +972,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 227,
-        "votos_projetados": 2115,
+        "votos_projetados": 1883,
         "pct_atual": 0.45,
         "pct_projetado": 0.49,
         "ci95": {
@@ -987,7 +987,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 120,
-        "votos_projetados": 1104,
+        "votos_projetados": 983,
         "pct_atual": 0.24,
         "pct_projetado": 0.26,
         "ci95": {
@@ -1002,7 +1002,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 84,
-        "votos_projetados": 614,
+        "votos_projetados": 547,
         "pct_atual": 0.17,
         "pct_projetado": 0.14,
         "ci95": {
@@ -1017,7 +1017,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 33,
-        "votos_projetados": 346,
+        "votos_projetados": 308,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -1032,7 +1032,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 19,
-        "votos_projetados": 176,
+        "votos_projetados": 157,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -1059,7 +1059,7 @@
       },
       "projetada": {
         "validos": 361548,
-        "brancos": 18102,
+        "brancos": 18101,
         "nulos": 17948,
         "abstencao": 103038
       },
@@ -1141,7 +1141,7 @@
   },
   "BA": {
     "uf": "BA",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -1152,7 +1152,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 478453,
-        "votos_projetados": 4834887,
+        "votos_projetados": 4200837,
         "pct_atual": 48.97,
         "pct_projetado": 57.4,
         "ci95": {
@@ -1167,7 +1167,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 167423,
-        "votos_projetados": 1704557,
+        "votos_projetados": 1481021,
         "pct_atual": 17.14,
         "pct_projetado": 20.24,
         "ci95": {
@@ -1182,7 +1182,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 151485,
-        "votos_projetados": 1364740,
+        "votos_projetados": 1185767,
         "pct_atual": 15.5,
         "pct_projetado": 16.2,
         "ci95": {
@@ -1197,7 +1197,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 85024,
-        "votos_projetados": 196974,
+        "votos_projetados": 732962,
         "pct_atual": 8.7,
         "pct_projetado": 2.34,
         "ci95": {
@@ -1212,7 +1212,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 74625,
-        "votos_projetados": 115712,
+        "votos_projetados": 643316,
         "pct_atual": 7.64,
         "pct_projetado": 1.37,
         "ci95": {
@@ -1227,7 +1227,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 9590,
-        "votos_projetados": 94874,
+        "votos_projetados": 82432,
         "pct_atual": 0.98,
         "pct_projetado": 1.13,
         "ci95": {
@@ -1242,7 +1242,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4166,
-        "votos_projetados": 45191,
+        "votos_projetados": 39265,
         "pct_atual": 0.43,
         "pct_projetado": 0.54,
         "ci95": {
@@ -1257,7 +1257,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2441,
-        "votos_projetados": 24114,
+        "votos_projetados": 20952,
         "pct_atual": 0.25,
         "pct_projetado": 0.29,
         "ci95": {
@@ -1272,7 +1272,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2023,
-        "votos_projetados": 20906,
+        "votos_projetados": 18164,
         "pct_atual": 0.21,
         "pct_projetado": 0.25,
         "ci95": {
@@ -1287,7 +1287,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 927,
-        "votos_projetados": 11428,
+        "votos_projetados": 9929,
         "pct_atual": 0.09,
         "pct_projetado": 0.14,
         "ci95": {
@@ -1302,7 +1302,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 614,
-        "votos_projetados": 6168,
+        "votos_projetados": 5359,
         "pct_atual": 0.06,
         "pct_projetado": 0.07,
         "ci95": {
@@ -1317,7 +1317,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 298,
-        "votos_projetados": 3457,
+        "votos_projetados": 3004,
         "pct_atual": 0.03,
         "pct_projetado": 0.04,
         "ci95": {
@@ -1343,7 +1343,7 @@
         "sub_judice": 85024
       },
       "projetada": {
-        "validos": 7046731,
+        "validos": 7046730,
         "brancos": 293461,
         "nulos": 290967,
         "abstencao": 2276071
@@ -1426,7 +1426,7 @@
   },
   "CE": {
     "uf": "CE",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -1437,7 +1437,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 305622,
-        "votos_projetados": 2969329,
+        "votos_projetados": 2578382,
         "pct_atual": 48.53,
         "pct_projetado": 54.69,
         "ci95": {
@@ -1452,7 +1452,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 117173,
-        "votos_projetados": 1178954,
+        "votos_projetados": 1023731,
         "pct_atual": 18.6,
         "pct_projetado": 21.71,
         "ci95": {
@@ -1467,7 +1467,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 91654,
-        "votos_projetados": 947305,
+        "votos_projetados": 822581,
         "pct_atual": 14.55,
         "pct_projetado": 17.45,
         "ci95": {
@@ -1482,7 +1482,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 54804,
-        "votos_projetados": 127204,
+        "votos_projetados": 472449,
         "pct_atual": 8.7,
         "pct_projetado": 2.34,
         "ci95": {
@@ -1497,7 +1497,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 48101,
-        "votos_projetados": 71206,
+        "votos_projetados": 414665,
         "pct_atual": 7.64,
         "pct_projetado": 1.31,
         "ci95": {
@@ -1512,7 +1512,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 5751,
-        "votos_projetados": 63742,
+        "votos_projetados": 55350,
         "pct_atual": 0.91,
         "pct_projetado": 1.17,
         "ci95": {
@@ -1527,7 +1527,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2663,
-        "votos_projetados": 28440,
+        "votos_projetados": 24695,
         "pct_atual": 0.42,
         "pct_projetado": 0.52,
         "ci95": {
@@ -1542,7 +1542,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1210,
-        "votos_projetados": 14641,
+        "votos_projetados": 12713,
         "pct_atual": 0.19,
         "pct_projetado": 0.27,
         "ci95": {
@@ -1557,7 +1557,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1321,
-        "votos_projetados": 13978,
+        "votos_projetados": 12138,
         "pct_atual": 0.21,
         "pct_projetado": 0.26,
         "ci95": {
@@ -1572,7 +1572,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 827,
-        "votos_projetados": 7717,
+        "votos_projetados": 6701,
         "pct_atual": 0.13,
         "pct_projetado": 0.14,
         "ci95": {
@@ -1587,7 +1587,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 440,
-        "votos_projetados": 4407,
+        "votos_projetados": 3826,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -1602,7 +1602,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 229,
-        "votos_projetados": 2341,
+        "votos_projetados": 2033,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -1628,7 +1628,7 @@
         "sub_judice": 54804
       },
       "projetada": {
-        "validos": 4542149,
+        "validos": 4542150,
         "brancos": 252534,
         "nulos": 250388,
         "abstencao": 1003353
@@ -1711,23 +1711,23 @@
   },
   "DF": {
     "uf": "DF",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
-    "pct_apurado": 37,
+    "pct_apurado": 37.1,
     "candidatos": [
       {
         "id": 22,
         "nome": "FLAVIO BOLSONARO",
         "partido": "PL",
         "cor": "var(--color-cand-2)",
-        "votos_atuais": 282224,
-        "votos_projetados": 737915,
-        "pct_atual": 43.28,
+        "votos_atuais": 282971,
+        "votos_projetados": 710800,
+        "pct_atual": 43.27,
         "pct_projetado": 41.87,
         "ci95": {
           "lower": 40.39,
-          "upper": 43.35
+          "upper": 43.34
         },
         "sqcand": "280002551544"
       },
@@ -1736,13 +1736,13 @@
         "nome": "LULA",
         "partido": "PT",
         "cor": "var(--color-cand-1)",
-        "votos_atuais": 141081,
-        "votos_projetados": 441626,
-        "pct_atual": 21.63,
+        "votos_atuais": 141476,
+        "votos_projetados": 425399,
+        "pct_atual": 21.64,
         "pct_projetado": 25.06,
         "ci95": {
           "lower": 23.76,
-          "upper": 26.36
+          "upper": 26.35
         },
         "sqcand": "280002542548"
       },
@@ -1751,12 +1751,12 @@
         "nome": "RONALDO CAIADO",
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
-        "votos_atuais": 97213,
-        "votos_projetados": 278643,
+        "votos_atuais": 97477,
+        "votos_projetados": 268404,
         "pct_atual": 14.91,
         "pct_projetado": 15.81,
         "ci95": {
-          "lower": 14.71,
+          "lower": 14.72,
           "upper": 16.9
         },
         "sqcand": "280002551932"
@@ -1766,8 +1766,8 @@
         "nome": "ZEMA",
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
-        "votos_atuais": 56750,
-        "votos_projetados": 160467,
+        "votos_atuais": 56903,
+        "votos_projetados": 153378,
         "pct_atual": 8.7,
         "pct_projetado": 9.1,
         "ci95": {
@@ -1781,13 +1781,13 @@
         "nome": "SAMARA",
         "partido": "UP",
         "cor": "var(--color-cand-5)",
-        "votos_atuais": 49809,
-        "votos_projetados": 71279,
+        "votos_atuais": 49943,
+        "votos_projetados": 134618,
         "pct_atual": 7.64,
         "pct_projetado": 4.04,
         "ci95": {
           "lower": 3.45,
-          "upper": 4.64
+          "upper": 4.63
         },
         "sqcand": "280002538811"
       },
@@ -1796,8 +1796,8 @@
         "nome": "EDMILSON COSTA",
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
-        "votos_atuais": 11815,
-        "votos_projetados": 32607,
+        "votos_atuais": 11846,
+        "votos_projetados": 31409,
         "pct_atual": 1.81,
         "pct_projetado": 1.85,
         "ci95": {
@@ -1811,8 +1811,8 @@
         "nome": "HERTZ DIAS",
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 4952,
-        "votos_projetados": 16225,
+        "votos_atuais": 4967,
+        "votos_projetados": 15629,
         "pct_atual": 0.76,
         "pct_projetado": 0.92,
         "ci95": {
@@ -1826,8 +1826,8 @@
         "nome": "CLARIANA BARAO",
         "partido": "DC",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 5442,
-        "votos_projetados": 15461,
+        "votos_atuais": 5457,
+        "votos_projetados": 14893,
         "pct_atual": 0.83,
         "pct_projetado": 0.88,
         "ci95": {
@@ -1841,8 +1841,8 @@
         "nome": "RUI COSTA PIMENTA",
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 1365,
-        "votos_projetados": 4143,
+        "votos_atuais": 1369,
+        "votos_projetados": 3991,
         "pct_atual": 0.21,
         "pct_projetado": 0.24,
         "ci95": {
@@ -1856,8 +1856,8 @@
         "nome": "RENAN SANTOS",
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 823,
-        "votos_projetados": 2268,
+        "votos_atuais": 826,
+        "votos_projetados": 2185,
         "pct_atual": 0.13,
         "pct_projetado": 0.13,
         "ci95": {
@@ -1871,8 +1871,8 @@
         "nome": "VETERINÁRIO WILSON GRASSI",
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 439,
-        "votos_projetados": 1244,
+        "votos_atuais": 440,
+        "votos_projetados": 1198,
         "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
@@ -1887,7 +1887,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 240,
-        "votos_projetados": 697,
+        "votos_projetados": 671,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -1902,81 +1902,81 @@
     "granularidade": "zona",
     "votacao": {
       "contagens": {
-        "aptos": 2365513,
-        "instalados": 875238,
-        "comparecimento": 708788,
-        "abstencao": 166450,
-        "validos": 545594,
-        "brancos": 28438,
-        "nulos": 28197,
-        "anulados": 49809,
-        "sub_judice": 56750
+        "aptos": 2187571,
+        "instalados": 811588,
+        "comparecimento": 710703,
+        "abstencao": 100885,
+        "validos": 547069,
+        "brancos": 28515,
+        "nulos": 28273,
+        "anulados": 49943,
+        "sub_judice": 56903
       },
       "projetada": {
         "validos": 1474579,
-        "brancos": 76861,
+        "brancos": 76860,
         "nulos": 76208,
-        "abstencao": 449870
+        "abstencao": 271928
       },
       "corrida": [
         {
           "id": 13,
           "partido": "PT",
-          "votos": 141081,
+          "votos": 141476,
           "destino": "valido"
         },
         {
           "id": 14,
           "partido": "MISSÃO",
-          "votos": 823,
+          "votos": 826,
           "destino": "valido"
         },
         {
           "id": 16,
           "partido": "PSTU",
-          "votos": 4952,
+          "votos": 4967,
           "destino": "valido"
         },
         {
           "id": 21,
           "partido": "PCB",
-          "votos": 11815,
+          "votos": 11846,
           "destino": "valido"
         },
         {
           "id": 22,
           "partido": "PL",
-          "votos": 282224,
+          "votos": 282971,
           "destino": "valido"
         },
         {
           "id": 27,
           "partido": "DC",
-          "votos": 5442,
+          "votos": 5457,
           "destino": "valido"
         },
         {
           "id": 29,
           "partido": "PCO",
-          "votos": 1365,
+          "votos": 1369,
           "destino": "valido"
         },
         {
           "id": 30,
           "partido": "NOVO",
-          "votos": 56750,
+          "votos": 56903,
           "destino": "sub_judice"
         },
         {
           "id": 35,
           "partido": "DEMOCRATA",
-          "votos": 439,
+          "votos": 440,
           "destino": "valido"
         },
         {
           "id": 55,
           "partido": "PSD",
-          "votos": 97213,
+          "votos": 97477,
           "destino": "valido"
         },
         {
@@ -1988,7 +1988,7 @@
         {
           "id": 80,
           "partido": "UP",
-          "votos": 49809,
+          "votos": 49943,
           "destino": "anulado"
         }
       ]
@@ -1996,18 +1996,18 @@
   },
   "ES": {
     "uf": "ES",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
-    "pct_apurado": 32.1,
+    "pct_apurado": 32.2,
     "candidatos": [
       {
         "id": 22,
         "nome": "FLAVIO BOLSONARO",
         "partido": "PL",
         "cor": "var(--color-cand-2)",
-        "votos_atuais": 272506,
-        "votos_projetados": 951210,
+        "votos_atuais": 273356,
+        "votos_projetados": 854397,
         "pct_atual": 38.22,
         "pct_projetado": 42.83,
         "ci95": {
@@ -2021,8 +2021,8 @@
         "nome": "LULA",
         "partido": "PT",
         "cor": "var(--color-cand-1)",
-        "votos_atuais": 180610,
-        "votos_projetados": 634832,
+        "votos_atuais": 181174,
+        "votos_projetados": 570220,
         "pct_atual": 25.33,
         "pct_projetado": 28.58,
         "ci95": {
@@ -2036,12 +2036,12 @@
         "nome": "RONALDO CAIADO",
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
-        "votos_atuais": 124379,
-        "votos_projetados": 420523,
+        "votos_atuais": 124764,
+        "votos_projetados": 377722,
         "pct_atual": 17.44,
         "pct_projetado": 18.93,
         "ci95": {
-          "lower": 17.62,
+          "lower": 17.63,
           "upper": 20.24
         },
         "sqcand": "280002551932"
@@ -2051,8 +2051,8 @@
         "nome": "ZEMA",
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
-        "votos_atuais": 62043,
-        "votos_projetados": 116097,
+        "votos_atuais": 62236,
+        "votos_projetados": 193281,
         "pct_atual": 8.7,
         "pct_projetado": 5.23,
         "ci95": {
@@ -2066,8 +2066,8 @@
         "nome": "SAMARA",
         "partido": "UP",
         "cor": "var(--color-cand-5)",
-        "votos_atuais": 54455,
-        "votos_projetados": 36270,
+        "votos_atuais": 54624,
+        "votos_projetados": 169641,
         "pct_atual": 7.64,
         "pct_projetado": 1.63,
         "ci95": {
@@ -2081,8 +2081,8 @@
         "nome": "EDMILSON COSTA",
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
-        "votos_atuais": 8062,
-        "votos_projetados": 24401,
+        "votos_atuais": 8087,
+        "votos_projetados": 21918,
         "pct_atual": 1.13,
         "pct_projetado": 1.1,
         "ci95": {
@@ -2096,8 +2096,8 @@
         "nome": "HERTZ DIAS",
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 4133,
-        "votos_projetados": 15781,
+        "votos_atuais": 4147,
+        "votos_projetados": 14175,
         "pct_atual": 0.58,
         "pct_projetado": 0.71,
         "ci95": {
@@ -2111,8 +2111,8 @@
         "nome": "CLARIANA BARAO",
         "partido": "DC",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 3586,
-        "votos_projetados": 11487,
+        "votos_atuais": 3597,
+        "votos_projetados": 10318,
         "pct_atual": 0.5,
         "pct_projetado": 0.52,
         "ci95": {
@@ -2126,8 +2126,8 @@
         "nome": "RUI COSTA PIMENTA",
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 1575,
-        "votos_projetados": 5129,
+        "votos_atuais": 1580,
+        "votos_projetados": 4607,
         "pct_atual": 0.22,
         "pct_projetado": 0.23,
         "ci95": {
@@ -2141,8 +2141,8 @@
         "nome": "RENAN SANTOS",
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 893,
-        "votos_projetados": 2939,
+        "votos_atuais": 895,
+        "votos_projetados": 2640,
         "pct_atual": 0.13,
         "pct_projetado": 0.13,
         "ci95": {
@@ -2156,8 +2156,8 @@
         "nome": "VETERINÁRIO WILSON GRASSI",
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 450,
-        "votos_projetados": 1591,
+        "votos_atuais": 452,
+        "votos_projetados": 1429,
         "pct_atual": 0.06,
         "pct_projetado": 0.07,
         "ci95": {
@@ -2171,8 +2171,8 @@
         "nome": "ESCRITOR AUGUSTO CURY",
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 291,
-        "votos_projetados": 870,
+        "votos_atuais": 292,
+        "votos_projetados": 782,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -2188,17 +2188,17 @@
     "votacao": {
       "contagens": {
         "aptos": 2999642,
-        "instalados": 962884,
-        "comparecimento": 763308,
-        "abstencao": 199576,
-        "validos": 596485,
-        "brancos": 25270,
-        "nulos": 25055,
-        "anulados": 54455,
-        "sub_judice": 62043
+        "instalados": 965883,
+        "comparecimento": 765686,
+        "abstencao": 200197,
+        "validos": 598344,
+        "brancos": 25349,
+        "nulos": 25133,
+        "anulados": 54624,
+        "sub_judice": 62236
       },
       "projetada": {
-        "validos": 1858209,
+        "validos": 1858208,
         "brancos": 78723,
         "nulos": 78054,
         "abstencao": 621735
@@ -2207,73 +2207,73 @@
         {
           "id": 13,
           "partido": "PT",
-          "votos": 180610,
+          "votos": 181174,
           "destino": "valido"
         },
         {
           "id": 14,
           "partido": "MISSÃO",
-          "votos": 893,
+          "votos": 895,
           "destino": "valido"
         },
         {
           "id": 16,
           "partido": "PSTU",
-          "votos": 4133,
+          "votos": 4147,
           "destino": "valido"
         },
         {
           "id": 21,
           "partido": "PCB",
-          "votos": 8062,
+          "votos": 8087,
           "destino": "valido"
         },
         {
           "id": 22,
           "partido": "PL",
-          "votos": 272506,
+          "votos": 273356,
           "destino": "valido"
         },
         {
           "id": 27,
           "partido": "DC",
-          "votos": 3586,
+          "votos": 3597,
           "destino": "valido"
         },
         {
           "id": 29,
           "partido": "PCO",
-          "votos": 1575,
+          "votos": 1580,
           "destino": "valido"
         },
         {
           "id": 30,
           "partido": "NOVO",
-          "votos": 62043,
+          "votos": 62236,
           "destino": "sub_judice"
         },
         {
           "id": 35,
           "partido": "DEMOCRATA",
-          "votos": 450,
+          "votos": 452,
           "destino": "valido"
         },
         {
           "id": 55,
           "partido": "PSD",
-          "votos": 124379,
+          "votos": 124764,
           "destino": "valido"
         },
         {
           "id": 70,
           "partido": "AVANTE",
-          "votos": 291,
+          "votos": 292,
           "destino": "valido"
         },
         {
           "id": 80,
           "partido": "UP",
-          "votos": 54455,
+          "votos": 54624,
           "destino": "anulado"
         }
       ]
@@ -2281,7 +2281,7 @@
   },
   "GO": {
     "uf": "GO",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 30.9,
@@ -2292,7 +2292,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 477205,
-        "votos_projetados": 1690720,
+        "votos_projetados": 1525240,
         "pct_atual": 41.95,
         "pct_projetado": 45.93,
         "ci95": {
@@ -2307,7 +2307,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 295341,
-        "votos_projetados": 1041835,
+        "votos_projetados": 939865,
         "pct_atual": 25.96,
         "pct_projetado": 28.3,
         "ci95": {
@@ -2322,7 +2322,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 151321,
-        "votos_projetados": 584304,
+        "votos_projetados": 527115,
         "pct_atual": 13.3,
         "pct_projetado": 15.87,
         "ci95": {
@@ -2337,7 +2337,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 98991,
-        "votos_projetados": 196225,
+        "votos_projetados": 320358,
         "pct_atual": 8.7,
         "pct_projetado": 5.33,
         "ci95": {
@@ -2352,7 +2352,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 86883,
-        "votos_projetados": 71152,
+        "votos_projetados": 281176,
         "pct_atual": 7.64,
         "pct_projetado": 1.93,
         "ci95": {
@@ -2367,7 +2367,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 12240,
-        "votos_projetados": 44092,
+        "votos_projetados": 39776,
         "pct_atual": 1.08,
         "pct_projetado": 1.2,
         "ci95": {
@@ -2382,7 +2382,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5655,
-        "votos_projetados": 20163,
+        "votos_projetados": 18190,
         "pct_atual": 0.5,
         "pct_projetado": 0.55,
         "ci95": {
@@ -2397,7 +2397,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4343,
-        "votos_projetados": 13449,
+        "votos_projetados": 12132,
         "pct_atual": 0.38,
         "pct_projetado": 0.37,
         "ci95": {
@@ -2412,7 +2412,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2880,
-        "votos_projetados": 9680,
+        "votos_projetados": 8733,
         "pct_atual": 0.25,
         "pct_projetado": 0.26,
         "ci95": {
@@ -2427,7 +2427,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1514,
-        "votos_projetados": 5309,
+        "votos_projetados": 4789,
         "pct_atual": 0.13,
         "pct_projetado": 0.14,
         "ci95": {
@@ -2442,7 +2442,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 700,
-        "votos_projetados": 2932,
+        "votos_projetados": 2645,
         "pct_atual": 0.06,
         "pct_projetado": 0.08,
         "ci95": {
@@ -2457,7 +2457,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 501,
-        "votos_projetados": 1608,
+        "votos_projetados": 1450,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -2483,9 +2483,9 @@
         "sub_judice": 98991
       },
       "projetada": {
-        "validos": 3079936,
+        "validos": 3079935,
         "brancos": 162632,
-        "nulos": 161250,
+        "nulos": 161251,
         "abstencao": 1121083
       },
       "corrida": [
@@ -2566,7 +2566,7 @@
   },
   "MA": {
     "uf": "MA",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -2577,7 +2577,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 213170,
-        "votos_projetados": 2065166,
+        "votos_projetados": 1778724,
         "pct_atual": 48.59,
         "pct_projetado": 54.61,
         "ci95": {
@@ -2592,7 +2592,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 81162,
-        "votos_projetados": 825331,
+        "votos_projetados": 710856,
         "pct_atual": 18.5,
         "pct_projetado": 21.82,
         "ci95": {
@@ -2607,7 +2607,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 62639,
-        "votos_projetados": 682589,
+        "votos_projetados": 587912,
         "pct_atual": 14.28,
         "pct_projetado": 18.05,
         "ci95": {
@@ -2622,7 +2622,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 38173,
-        "votos_projetados": 68470,
+        "votos_projetados": 329075,
         "pct_atual": 8.7,
         "pct_projetado": 1.81,
         "ci95": {
@@ -2637,7 +2637,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 33504,
-        "votos_projetados": 39948,
+        "votos_projetados": 288827,
         "pct_atual": 7.64,
         "pct_projetado": 1.06,
         "ci95": {
@@ -2652,7 +2652,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3136,
-        "votos_projetados": 34099,
+        "votos_projetados": 29369,
         "pct_atual": 0.71,
         "pct_projetado": 0.9,
         "ci95": {
@@ -2667,7 +2667,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 3225,
-        "votos_projetados": 31350,
+        "votos_projetados": 27002,
         "pct_atual": 0.74,
         "pct_projetado": 0.83,
         "ci95": {
@@ -2682,7 +2682,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1566,
-        "votos_projetados": 13842,
+        "votos_projetados": 11922,
         "pct_atual": 0.36,
         "pct_projetado": 0.37,
         "ci95": {
@@ -2697,7 +2697,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1120,
-        "votos_projetados": 10442,
+        "votos_projetados": 8994,
         "pct_atual": 0.26,
         "pct_projetado": 0.28,
         "ci95": {
@@ -2712,7 +2712,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 523,
-        "votos_projetados": 5660,
+        "votos_projetados": 4875,
         "pct_atual": 0.12,
         "pct_projetado": 0.15,
         "ci95": {
@@ -2727,7 +2727,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 310,
-        "votos_projetados": 3107,
+        "votos_projetados": 2676,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -2742,7 +2742,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 143,
-        "votos_projetados": 1641,
+        "votos_projetados": 1413,
         "pct_atual": 0.03,
         "pct_projetado": 0.04,
         "ci95": {
@@ -2851,7 +2851,7 @@
   },
   "MG": {
     "uf": "MG",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 32.4,
@@ -2862,7 +2862,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 1106046,
-        "votos_projetados": 4002334,
+        "votos_projetados": 3986470,
         "pct_atual": 28.41,
         "pct_projetado": 33.31,
         "ci95": {
@@ -2877,7 +2877,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 1437903,
-        "votos_projetados": 3977196,
+        "votos_projetados": 3961432,
         "pct_atual": 36.93,
         "pct_projetado": 33.1,
         "ci95": {
@@ -2892,7 +2892,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 600874,
-        "votos_projetados": 1763978,
+        "votos_projetados": 1756986,
         "pct_atual": 15.43,
         "pct_projetado": 14.68,
         "ci95": {
@@ -2907,7 +2907,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 338799,
-        "votos_projetados": 1633742,
+        "votos_projetados": 1045675,
         "pct_atual": 8.7,
         "pct_projetado": 13.6,
         "ci95": {
@@ -2922,7 +2922,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 297361,
-        "votos_projetados": 289709,
+        "votos_projetados": 917782,
         "pct_atual": 7.64,
         "pct_projetado": 2.41,
         "ci95": {
@@ -2937,7 +2937,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 54413,
-        "votos_projetados": 156429,
+        "votos_projetados": 155808,
         "pct_atual": 1.4,
         "pct_projetado": 1.3,
         "ci95": {
@@ -2952,7 +2952,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 26305,
-        "votos_projetados": 91533,
+        "votos_projetados": 91170,
         "pct_atual": 0.68,
         "pct_projetado": 0.76,
         "ci95": {
@@ -2967,7 +2967,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 14696,
-        "votos_projetados": 47158,
+        "votos_projetados": 46971,
         "pct_atual": 0.38,
         "pct_projetado": 0.39,
         "ci95": {
@@ -2982,7 +2982,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 8650,
-        "votos_projetados": 27083,
+        "votos_projetados": 26976,
         "pct_atual": 0.22,
         "pct_projetado": 0.23,
         "ci95": {
@@ -2997,7 +2997,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4192,
-        "votos_projetados": 14805,
+        "votos_projetados": 14747,
         "pct_atual": 0.11,
         "pct_projetado": 0.12,
         "ci95": {
@@ -3012,7 +3012,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2631,
-        "votos_projetados": 8142,
+        "votos_projetados": 8110,
         "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
@@ -3027,7 +3027,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1519,
-        "votos_projetados": 4524,
+        "votos_projetados": 4506,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -3136,23 +3136,23 @@
   },
   "MS": {
     "uf": "MS",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
-    "pct_apurado": 39.3,
+    "pct_apurado": 39.4,
     "candidatos": [
       {
         "id": 22,
         "nome": "FLAVIO BOLSONARO",
         "partido": "PL",
         "cor": "var(--color-cand-2)",
-        "votos_atuais": 243899,
-        "votos_projetados": 675494,
+        "votos_atuais": 244515,
+        "votos_projetados": 605722,
         "pct_atual": 41.18,
         "pct_projetado": 44.82,
         "ci95": {
-          "lower": 43.4,
-          "upper": 46.25
+          "lower": 43.41,
+          "upper": 46.24
         },
         "sqcand": "280002551544"
       },
@@ -3161,13 +3161,13 @@
         "nome": "LULA",
         "partido": "PT",
         "cor": "var(--color-cand-1)",
-        "votos_atuais": 149208,
-        "votos_projetados": 444463,
+        "votos_atuais": 149594,
+        "votos_projetados": 398555,
         "pct_atual": 25.19,
         "pct_projetado": 29.49,
         "ci95": {
           "lower": 28.19,
-          "upper": 30.8
+          "upper": 30.79
         },
         "sqcand": "280002542548"
       },
@@ -3176,8 +3176,8 @@
         "nome": "RONALDO CAIADO",
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
-        "votos_atuais": 88321,
-        "votos_projetados": 250100,
+        "votos_atuais": 88546,
+        "votos_projetados": 224267,
         "pct_atual": 14.91,
         "pct_projetado": 16.6,
         "ci95": {
@@ -3191,13 +3191,13 @@
         "nome": "ZEMA",
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
-        "votos_atuais": 51537,
-        "votos_projetados": 78385,
+        "votos_atuais": 51668,
+        "votos_projetados": 131137,
         "pct_atual": 8.7,
         "pct_projetado": 5.2,
         "ci95": {
           "lower": 4.57,
-          "upper": 5.84
+          "upper": 5.83
         },
         "sqcand": "280002539826"
       },
@@ -3206,8 +3206,8 @@
         "nome": "SAMARA",
         "partido": "UP",
         "cor": "var(--color-cand-5)",
-        "votos_atuais": 45233,
-        "votos_projetados": 22627,
+        "votos_atuais": 45349,
+        "votos_projetados": 115098,
         "pct_atual": 7.64,
         "pct_projetado": 1.5,
         "ci95": {
@@ -3221,8 +3221,8 @@
         "nome": "EDMILSON COSTA",
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
-        "votos_atuais": 6133,
-        "votos_projetados": 14658,
+        "votos_atuais": 6147,
+        "votos_projetados": 13144,
         "pct_atual": 1.04,
         "pct_projetado": 0.97,
         "ci95": {
@@ -3236,8 +3236,8 @@
         "nome": "HERTZ DIAS",
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 3098,
-        "votos_projetados": 8500,
+        "votos_atuais": 3106,
+        "votos_projetados": 7622,
         "pct_atual": 0.52,
         "pct_projetado": 0.56,
         "ci95": {
@@ -3251,8 +3251,8 @@
         "nome": "CLARIANA BARAO",
         "partido": "DC",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 2049,
-        "votos_projetados": 4915,
+        "votos_atuais": 2054,
+        "votos_projetados": 4407,
         "pct_atual": 0.35,
         "pct_projetado": 0.33,
         "ci95": {
@@ -3266,8 +3266,8 @@
         "nome": "RUI COSTA PIMENTA",
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 1385,
-        "votos_projetados": 4003,
+        "votos_atuais": 1389,
+        "votos_projetados": 3590,
         "pct_atual": 0.23,
         "pct_projetado": 0.27,
         "ci95": {
@@ -3281,8 +3281,8 @@
         "nome": "RENAN SANTOS",
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 701,
-        "votos_projetados": 2063,
+        "votos_atuais": 702,
+        "votos_projetados": 1850,
         "pct_atual": 0.12,
         "pct_projetado": 0.14,
         "ci95": {
@@ -3296,8 +3296,8 @@
         "nome": "VETERINÁRIO WILSON GRASSI",
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 387,
-        "votos_projetados": 1141,
+        "votos_atuais": 388,
+        "votos_projetados": 1023,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -3312,7 +3312,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 296,
-        "votos_projetados": 640,
+        "votos_projetados": 574,
         "pct_atual": 0.05,
         "pct_projetado": 0.04,
         "ci95": {
@@ -3328,14 +3328,14 @@
     "votacao": {
       "contagens": {
         "aptos": 2032487,
-        "instalados": 798766,
-        "comparecimento": 639440,
-        "abstencao": 159326,
-        "validos": 495477,
-        "brancos": 23697,
-        "nulos": 23496,
-        "anulados": 45233,
-        "sub_judice": 51537
+        "instalados": 800799,
+        "comparecimento": 641067,
+        "abstencao": 159732,
+        "validos": 496737,
+        "brancos": 23757,
+        "nulos": 23556,
+        "anulados": 45349,
+        "sub_judice": 51668
       },
       "projetada": {
         "validos": 1260754,
@@ -3347,61 +3347,61 @@
         {
           "id": 13,
           "partido": "PT",
-          "votos": 149208,
+          "votos": 149594,
           "destino": "valido"
         },
         {
           "id": 14,
           "partido": "MISSÃO",
-          "votos": 701,
+          "votos": 702,
           "destino": "valido"
         },
         {
           "id": 16,
           "partido": "PSTU",
-          "votos": 3098,
+          "votos": 3106,
           "destino": "valido"
         },
         {
           "id": 21,
           "partido": "PCB",
-          "votos": 6133,
+          "votos": 6147,
           "destino": "valido"
         },
         {
           "id": 22,
           "partido": "PL",
-          "votos": 243899,
+          "votos": 244515,
           "destino": "valido"
         },
         {
           "id": 27,
           "partido": "DC",
-          "votos": 2049,
+          "votos": 2054,
           "destino": "valido"
         },
         {
           "id": 29,
           "partido": "PCO",
-          "votos": 1385,
+          "votos": 1389,
           "destino": "valido"
         },
         {
           "id": 30,
           "partido": "NOVO",
-          "votos": 51537,
+          "votos": 51668,
           "destino": "sub_judice"
         },
         {
           "id": 35,
           "partido": "DEMOCRATA",
-          "votos": 387,
+          "votos": 388,
           "destino": "valido"
         },
         {
           "id": 55,
           "partido": "PSD",
-          "votos": 88321,
+          "votos": 88546,
           "destino": "valido"
         },
         {
@@ -3413,7 +3413,7 @@
         {
           "id": 80,
           "partido": "UP",
-          "votos": 45233,
+          "votos": 45349,
           "destino": "anulado"
         }
       ]
@@ -3421,7 +3421,7 @@
   },
   "MT": {
     "uf": "MT",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 27.5,
@@ -3432,7 +3432,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 205358,
-        "votos_projetados": 888574,
+        "votos_projetados": 785742,
         "pct_atual": 40.52,
         "pct_projetado": 48.22,
         "ci95": {
@@ -3447,7 +3447,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 131243,
-        "votos_projetados": 505203,
+        "votos_projetados": 446738,
         "pct_atual": 25.9,
         "pct_projetado": 27.41,
         "ci95": {
@@ -3462,7 +3462,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 76340,
-        "votos_projetados": 304543,
+        "votos_projetados": 269299,
         "pct_atual": 15.06,
         "pct_projetado": 16.53,
         "ci95": {
@@ -3477,7 +3477,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 44101,
-        "votos_projetados": 75190,
+        "votos_projetados": 160366,
         "pct_atual": 8.7,
         "pct_projetado": 4.08,
         "ci95": {
@@ -3492,7 +3492,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 38707,
-        "votos_projetados": 24153,
+        "votos_projetados": 140752,
         "pct_atual": 7.64,
         "pct_projetado": 1.31,
         "ci95": {
@@ -3507,7 +3507,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 4258,
-        "votos_projetados": 17407,
+        "votos_projetados": 15392,
         "pct_atual": 0.84,
         "pct_projetado": 0.94,
         "ci95": {
@@ -3522,7 +3522,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2646,
-        "votos_projetados": 10831,
+        "votos_projetados": 9577,
         "pct_atual": 0.52,
         "pct_projetado": 0.59,
         "ci95": {
@@ -3537,7 +3537,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1824,
-        "votos_projetados": 6876,
+        "votos_projetados": 6081,
         "pct_atual": 0.36,
         "pct_projetado": 0.37,
         "ci95": {
@@ -3552,7 +3552,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1142,
-        "votos_projetados": 4946,
+        "votos_projetados": 4374,
         "pct_atual": 0.23,
         "pct_projetado": 0.27,
         "ci95": {
@@ -3567,7 +3567,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 638,
-        "votos_projetados": 2786,
+        "votos_projetados": 2463,
         "pct_atual": 0.13,
         "pct_projetado": 0.15,
         "ci95": {
@@ -3582,7 +3582,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 326,
-        "votos_projetados": 1529,
+        "votos_projetados": 1352,
         "pct_atual": 0.06,
         "pct_projetado": 0.08,
         "ci95": {
@@ -3597,7 +3597,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 211,
-        "votos_projetados": 850,
+        "votos_projetados": 752,
         "pct_atual": 0.04,
         "pct_projetado": 0.05,
         "ci95": {
@@ -3706,7 +3706,7 @@
   },
   "PA": {
     "uf": "PA",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -3717,7 +3717,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 166552,
-        "votos_projetados": 1831654,
+        "votos_projetados": 1586356,
         "pct_atual": 30.68,
         "pct_projetado": 39.14,
         "ci95": {
@@ -3732,7 +3732,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 195578,
-        "votos_projetados": 1797167,
+        "votos_projetados": 1556487,
         "pct_atual": 36.03,
         "pct_projetado": 38.4,
         "ci95": {
@@ -3747,7 +3747,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 81414,
-        "votos_projetados": 786788,
+        "votos_projetados": 681420,
         "pct_atual": 15,
         "pct_projetado": 16.81,
         "ci95": {
@@ -3762,7 +3762,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 47240,
-        "votos_projetados": 98622,
+        "votos_projetados": 407243,
         "pct_atual": 8.7,
         "pct_projetado": 2.11,
         "ci95": {
@@ -3777,7 +3777,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 41462,
-        "votos_projetados": 60640,
+        "votos_projetados": 357435,
         "pct_atual": 7.64,
         "pct_projetado": 1.3,
         "ci95": {
@@ -3792,7 +3792,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 3334,
-        "votos_projetados": 35652,
+        "votos_projetados": 30877,
         "pct_atual": 0.61,
         "pct_projetado": 0.76,
         "ci95": {
@@ -3807,7 +3807,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3731,
-        "votos_projetados": 34746,
+        "votos_projetados": 30093,
         "pct_atual": 0.69,
         "pct_projetado": 0.74,
         "ci95": {
@@ -3822,7 +3822,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1205,
-        "votos_projetados": 11659,
+        "votos_projetados": 10098,
         "pct_atual": 0.22,
         "pct_projetado": 0.25,
         "ci95": {
@@ -3837,7 +3837,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1162,
-        "votos_projetados": 11339,
+        "votos_projetados": 9821,
         "pct_atual": 0.21,
         "pct_projetado": 0.24,
         "ci95": {
@@ -3852,7 +3852,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 646,
-        "votos_projetados": 6289,
+        "votos_projetados": 5447,
         "pct_atual": 0.12,
         "pct_projetado": 0.13,
         "ci95": {
@@ -3867,7 +3867,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 369,
-        "votos_projetados": 3454,
+        "votos_projetados": 2991,
         "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
@@ -3882,7 +3882,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 180,
-        "votos_projetados": 1926,
+        "votos_projetados": 1668,
         "pct_atual": 0.03,
         "pct_projetado": 0.04,
         "ci95": {
@@ -3991,7 +3991,7 @@
   },
   "PB": {
     "uf": "PB",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4002,7 +4002,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 115673,
-        "votos_projetados": 1168623,
+        "votos_projetados": 1019176,
         "pct_atual": 41.18,
         "pct_projetado": 48.26,
         "ci95": {
@@ -4017,7 +4017,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 63068,
-        "votos_projetados": 650232,
+        "votos_projetados": 567078,
         "pct_atual": 22.45,
         "pct_projetado": 26.85,
         "ci95": {
@@ -4032,7 +4032,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 50014,
-        "votos_projetados": 439752,
+        "votos_projetados": 383515,
         "pct_atual": 17.8,
         "pct_projetado": 18.16,
         "ci95": {
@@ -4047,7 +4047,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 24445,
-        "votos_projetados": 60558,
+        "votos_projetados": 210733,
         "pct_atual": 8.7,
         "pct_projetado": 2.5,
         "ci95": {
@@ -4062,7 +4062,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 21455,
-        "votos_projetados": 38052,
+        "votos_projetados": 184959,
         "pct_atual": 7.64,
         "pct_projetado": 1.57,
         "ci95": {
@@ -4077,7 +4077,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2584,
-        "votos_projetados": 26772,
+        "votos_projetados": 23349,
         "pct_atual": 0.92,
         "pct_projetado": 1.11,
         "ci95": {
@@ -4092,7 +4092,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1459,
-        "votos_projetados": 14024,
+        "votos_projetados": 12230,
         "pct_atual": 0.52,
         "pct_projetado": 0.58,
         "ci95": {
@@ -4107,7 +4107,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 935,
-        "votos_projetados": 10306,
+        "votos_projetados": 8988,
         "pct_atual": 0.33,
         "pct_projetado": 0.43,
         "ci95": {
@@ -4122,7 +4122,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 657,
-        "votos_projetados": 6789,
+        "votos_projetados": 5921,
         "pct_atual": 0.23,
         "pct_projetado": 0.28,
         "ci95": {
@@ -4137,7 +4137,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 326,
-        "votos_projetados": 3499,
+        "votos_projetados": 3051,
         "pct_atual": 0.12,
         "pct_projetado": 0.14,
         "ci95": {
@@ -4152,7 +4152,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 202,
-        "votos_projetados": 1999,
+        "votos_projetados": 1744,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -4167,7 +4167,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 98,
-        "votos_projetados": 1082,
+        "votos_projetados": 944,
         "pct_atual": 0.03,
         "pct_projetado": 0.04,
         "ci95": {
@@ -4276,7 +4276,7 @@
   },
   "PE": {
     "uf": "PE",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4287,7 +4287,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 287673,
-        "votos_projetados": 2827462,
+        "votos_projetados": 2474273,
         "pct_atual": 45.49,
         "pct_projetado": 51.86,
         "ci95": {
@@ -4302,7 +4302,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 146853,
-        "votos_projetados": 1396016,
+        "votos_projetados": 1221634,
         "pct_atual": 23.22,
         "pct_projetado": 25.61,
         "ci95": {
@@ -4317,7 +4317,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 80992,
-        "votos_projetados": 851643,
+        "votos_projetados": 745261,
         "pct_atual": 12.81,
         "pct_projetado": 15.62,
         "ci95": {
@@ -4332,7 +4332,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 55034,
-        "votos_projetados": 159254,
+        "votos_projetados": 474428,
         "pct_atual": 8.7,
         "pct_projetado": 2.92,
         "ci95": {
@@ -4347,7 +4347,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 48303,
-        "votos_projetados": 80492,
+        "votos_projetados": 416403,
         "pct_atual": 7.64,
         "pct_projetado": 1.48,
         "ci95": {
@@ -4362,7 +4362,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 5632,
-        "votos_projetados": 58850,
+        "votos_projetados": 51499,
         "pct_atual": 0.89,
         "pct_projetado": 1.08,
         "ci95": {
@@ -4377,7 +4377,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3340,
-        "votos_projetados": 31862,
+        "votos_projetados": 27882,
         "pct_atual": 0.53,
         "pct_projetado": 0.58,
         "ci95": {
@@ -4392,7 +4392,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1706,
-        "votos_projetados": 16192,
+        "votos_projetados": 14169,
         "pct_atual": 0.27,
         "pct_projetado": 0.3,
         "ci95": {
@@ -4407,7 +4407,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1403,
-        "votos_projetados": 14807,
+        "votos_projetados": 12957,
         "pct_atual": 0.22,
         "pct_projetado": 0.27,
         "ci95": {
@@ -4422,7 +4422,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 787,
-        "votos_projetados": 8358,
+        "votos_projetados": 7314,
         "pct_atual": 0.12,
         "pct_projetado": 0.15,
         "ci95": {
@@ -4437,7 +4437,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 490,
-        "votos_projetados": 4518,
+        "votos_projetados": 3953,
         "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
@@ -4452,7 +4452,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 220,
-        "votos_projetados": 2555,
+        "votos_projetados": 2236,
         "pct_atual": 0.03,
         "pct_projetado": 0.05,
         "ci95": {
@@ -4561,7 +4561,7 @@
   },
   "PI": {
     "uf": "PI",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4572,7 +4572,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 117798,
-        "votos_projetados": 1223059,
+        "votos_projetados": 1059259,
         "pct_atual": 49.67,
         "pct_projetado": 59.83,
         "ci95": {
@@ -4587,7 +4587,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 37186,
-        "votos_projetados": 374211,
+        "votos_projetados": 324094,
         "pct_atual": 15.68,
         "pct_projetado": 18.3,
         "ci95": {
@@ -4602,7 +4602,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 38642,
-        "votos_projetados": 329731,
+        "votos_projetados": 285572,
         "pct_atual": 16.29,
         "pct_projetado": 16.13,
         "ci95": {
@@ -4617,7 +4617,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 20636,
-        "votos_projetados": 46555,
+        "votos_projetados": 177900,
         "pct_atual": 8.7,
         "pct_projetado": 2.28,
         "ci95": {
@@ -4632,7 +4632,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 18112,
-        "votos_projetados": 23006,
+        "votos_projetados": 156142,
         "pct_atual": 7.64,
         "pct_projetado": 1.13,
         "ci95": {
@@ -4647,7 +4647,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2033,
-        "votos_projetados": 17960,
+        "votos_projetados": 15555,
         "pct_atual": 0.86,
         "pct_projetado": 0.88,
         "ci95": {
@@ -4662,7 +4662,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1140,
-        "votos_projetados": 13326,
+        "votos_projetados": 11541,
         "pct_atual": 0.48,
         "pct_projetado": 0.65,
         "ci95": {
@@ -4677,7 +4677,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 544,
-        "votos_projetados": 5580,
+        "votos_projetados": 4832,
         "pct_atual": 0.23,
         "pct_projetado": 0.27,
         "ci95": {
@@ -4692,7 +4692,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 471,
-        "votos_projetados": 5236,
+        "votos_projetados": 4535,
         "pct_atual": 0.2,
         "pct_projetado": 0.26,
         "ci95": {
@@ -4707,7 +4707,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 317,
-        "votos_projetados": 3120,
+        "votos_projetados": 2702,
         "pct_atual": 0.13,
         "pct_projetado": 0.15,
         "ci95": {
@@ -4722,7 +4722,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 181,
-        "votos_projetados": 1699,
+        "votos_projetados": 1472,
         "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
@@ -4737,7 +4737,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 89,
-        "votos_projetados": 903,
+        "votos_projetados": 782,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -4763,7 +4763,7 @@
         "sub_judice": 20636
       },
       "projetada": {
-        "validos": 1710343,
+        "validos": 1710344,
         "brancos": 84324,
         "nulos": 83607,
         "abstencao": 486447
@@ -4846,19 +4846,19 @@
   },
   "PR": {
     "uf": "PR",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
-    "pct_apurado": 34.7,
+    "pct_apurado": 34.8,
     "candidatos": [
       {
         "id": 22,
         "nome": "FLAVIO BOLSONARO",
         "partido": "PL",
         "cor": "var(--color-cand-2)",
-        "votos_atuais": 974484,
-        "votos_projetados": 2919940,
-        "pct_atual": 42.77,
+        "votos_atuais": 977264,
+        "votos_projetados": 2698370,
+        "pct_atual": 42.76,
         "pct_projetado": 44.47,
         "ci95": {
           "lower": 42.9,
@@ -4871,8 +4871,8 @@
         "nome": "LULA",
         "partido": "PT",
         "cor": "var(--color-cand-1)",
-        "votos_atuais": 571763,
-        "votos_projetados": 1764225,
+        "votos_atuais": 573407,
+        "votos_projetados": 1630352,
         "pct_atual": 25.09,
         "pct_projetado": 26.87,
         "ci95": {
@@ -4886,13 +4886,13 @@
         "nome": "RONALDO CAIADO",
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
-        "votos_atuais": 294242,
-        "votos_projetados": 1055156,
+        "votos_atuais": 295122,
+        "votos_projetados": 975090,
         "pct_atual": 12.91,
         "pct_projetado": 16.07,
         "ci95": {
           "lower": 14.91,
-          "upper": 17.23
+          "upper": 17.22
         },
         "sqcand": "280002551932"
       },
@@ -4901,8 +4901,8 @@
         "nome": "ZEMA",
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
-        "votos_atuais": 198287,
-        "votos_projetados": 502300,
+        "votos_atuais": 198859,
+        "votos_projetados": 571433,
         "pct_atual": 8.7,
         "pct_projetado": 7.65,
         "ci95": {
@@ -4916,8 +4916,8 @@
         "nome": "SAMARA",
         "partido": "UP",
         "cor": "var(--color-cand-5)",
-        "votos_atuais": 174035,
-        "votos_projetados": 119567,
+        "votos_atuais": 174537,
+        "votos_projetados": 501543,
         "pct_atual": 7.64,
         "pct_projetado": 1.82,
         "ci95": {
@@ -4931,8 +4931,8 @@
         "nome": "EDMILSON COSTA",
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
-        "votos_atuais": 29350,
-        "votos_projetados": 98448,
+        "votos_atuais": 29436,
+        "votos_projetados": 90978,
         "pct_atual": 1.29,
         "pct_projetado": 1.5,
         "ci95": {
@@ -4946,8 +4946,8 @@
         "nome": "HERTZ DIAS",
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 14686,
-        "votos_projetados": 42572,
+        "votos_atuais": 14727,
+        "votos_projetados": 39341,
         "pct_atual": 0.64,
         "pct_projetado": 0.65,
         "ci95": {
@@ -4961,8 +4961,8 @@
         "nome": "CLARIANA BARAO",
         "partido": "DC",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 11723,
-        "votos_projetados": 34153,
+        "votos_atuais": 11756,
+        "votos_projetados": 31562,
         "pct_atual": 0.51,
         "pct_projetado": 0.52,
         "ci95": {
@@ -4976,8 +4976,8 @@
         "nome": "RUI COSTA PIMENTA",
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 4968,
-        "votos_projetados": 15173,
+        "votos_atuais": 4983,
+        "votos_projetados": 14021,
         "pct_atual": 0.22,
         "pct_projetado": 0.23,
         "ci95": {
@@ -4991,8 +4991,8 @@
         "nome": "RENAN SANTOS",
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 2664,
-        "votos_projetados": 8289,
+        "votos_atuais": 2671,
+        "votos_projetados": 7660,
         "pct_atual": 0.12,
         "pct_projetado": 0.13,
         "ci95": {
@@ -5006,8 +5006,8 @@
         "nome": "VETERINÁRIO WILSON GRASSI",
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 1553,
-        "votos_projetados": 4364,
+        "votos_atuais": 1557,
+        "votos_projetados": 4033,
         "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
@@ -5021,8 +5021,8 @@
         "nome": "ESCRITOR AUGUSTO CURY",
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 912,
-        "votos_projetados": 2577,
+        "votos_atuais": 915,
+        "votos_projetados": 2381,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -5038,17 +5038,17 @@
     "votacao": {
       "contagens": {
         "aptos": 8645891,
-        "instalados": 3000119,
-        "comparecimento": 2477173,
-        "abstencao": 522946,
-        "validos": 1906345,
-        "brancos": 99676,
-        "nulos": 98830,
-        "anulados": 174035,
-        "sub_judice": 198287
+        "instalados": 3008765,
+        "comparecimento": 2484312,
+        "abstencao": 524453,
+        "validos": 1911838,
+        "brancos": 99964,
+        "nulos": 99114,
+        "anulados": 174537,
+        "sub_judice": 198859
       },
       "projetada": {
-        "validos": 5493787,
+        "validos": 5493788,
         "brancos": 287252,
         "nulos": 284811,
         "abstencao": 1507064
@@ -5057,73 +5057,73 @@
         {
           "id": 13,
           "partido": "PT",
-          "votos": 571763,
+          "votos": 573407,
           "destino": "valido"
         },
         {
           "id": 14,
           "partido": "MISSÃO",
-          "votos": 2664,
+          "votos": 2671,
           "destino": "valido"
         },
         {
           "id": 16,
           "partido": "PSTU",
-          "votos": 14686,
+          "votos": 14727,
           "destino": "valido"
         },
         {
           "id": 21,
           "partido": "PCB",
-          "votos": 29350,
+          "votos": 29436,
           "destino": "valido"
         },
         {
           "id": 22,
           "partido": "PL",
-          "votos": 974484,
+          "votos": 977264,
           "destino": "valido"
         },
         {
           "id": 27,
           "partido": "DC",
-          "votos": 11723,
+          "votos": 11756,
           "destino": "valido"
         },
         {
           "id": 29,
           "partido": "PCO",
-          "votos": 4968,
+          "votos": 4983,
           "destino": "valido"
         },
         {
           "id": 30,
           "partido": "NOVO",
-          "votos": 198287,
+          "votos": 198859,
           "destino": "sub_judice"
         },
         {
           "id": 35,
           "partido": "DEMOCRATA",
-          "votos": 1553,
+          "votos": 1557,
           "destino": "valido"
         },
         {
           "id": 55,
           "partido": "PSD",
-          "votos": 294242,
+          "votos": 295122,
           "destino": "valido"
         },
         {
           "id": 70,
           "partido": "AVANTE",
-          "votos": 912,
+          "votos": 915,
           "destino": "valido"
         },
         {
           "id": 80,
           "partido": "UP",
-          "votos": 174035,
+          "votos": 174537,
           "destino": "anulado"
         }
       ]
@@ -5131,18 +5131,18 @@
   },
   "RJ": {
     "uf": "RJ",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
-    "pct_apurado": 30.6,
+    "pct_apurado": 30.7,
     "candidatos": [
       {
         "id": 22,
         "nome": "FLAVIO BOLSONARO",
         "partido": "PL",
         "cor": "var(--color-cand-2)",
-        "votos_atuais": 1169084,
-        "votos_projetados": 3787613,
+        "votos_atuais": 1172853,
+        "votos_projetados": 3589601,
         "pct_atual": 40.4,
         "pct_projetado": 40.05,
         "ci95": {
@@ -5156,8 +5156,8 @@
         "nome": "LULA",
         "partido": "PT",
         "cor": "var(--color-cand-1)",
-        "votos_atuais": 728850,
-        "votos_projetados": 2636649,
+        "votos_atuais": 731258,
+        "votos_projetados": 2498809,
         "pct_atual": 25.19,
         "pct_projetado": 27.88,
         "ci95": {
@@ -5171,8 +5171,8 @@
         "nome": "RONALDO CAIADO",
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
-        "votos_atuais": 423262,
-        "votos_projetados": 1542234,
+        "votos_atuais": 424663,
+        "votos_projetados": 1461608,
         "pct_atual": 14.63,
         "pct_projetado": 16.31,
         "ci95": {
@@ -5186,8 +5186,8 @@
         "nome": "ZEMA",
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
-        "votos_atuais": 251811,
-        "votos_projetados": 677544,
+        "votos_atuais": 252634,
+        "votos_projetados": 822911,
         "pct_atual": 8.7,
         "pct_projetado": 7.16,
         "ci95": {
@@ -5201,8 +5201,8 @@
         "nome": "SAMARA",
         "partido": "UP",
         "cor": "var(--color-cand-5)",
-        "votos_atuais": 221013,
-        "votos_projetados": 431212,
+        "votos_atuais": 221735,
+        "votos_projetados": 722263,
         "pct_atual": 7.64,
         "pct_projetado": 4.56,
         "ci95": {
@@ -5216,8 +5216,8 @@
         "nome": "EDMILSON COSTA",
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
-        "votos_atuais": 45340,
-        "votos_projetados": 178991,
+        "votos_atuais": 45492,
+        "votos_projetados": 169634,
         "pct_atual": 1.57,
         "pct_projetado": 1.89,
         "ci95": {
@@ -5231,8 +5231,8 @@
         "nome": "HERTZ DIAS",
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 27130,
-        "votos_projetados": 104502,
+        "votos_atuais": 27221,
+        "votos_projetados": 99039,
         "pct_atual": 0.94,
         "pct_projetado": 1.11,
         "ci95": {
@@ -5246,8 +5246,8 @@
         "nome": "CLARIANA BARAO",
         "partido": "DC",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 13784,
-        "votos_projetados": 49755,
+        "votos_atuais": 13829,
+        "votos_projetados": 47154,
         "pct_atual": 0.48,
         "pct_projetado": 0.53,
         "ci95": {
@@ -5261,13 +5261,13 @@
         "nome": "RUI COSTA PIMENTA",
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 6806,
-        "votos_projetados": 23791,
+        "votos_atuais": 6829,
+        "votos_projetados": 22547,
         "pct_atual": 0.24,
         "pct_projetado": 0.25,
         "ci95": {
           "lower": 0.08,
-          "upper": 0.43
+          "upper": 0.42
         },
         "sqcand": "280002552487"
       },
@@ -5276,8 +5276,8 @@
         "nome": "RENAN SANTOS",
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 3833,
-        "votos_projetados": 13082,
+        "votos_atuais": 3846,
+        "votos_projetados": 12398,
         "pct_atual": 0.13,
         "pct_projetado": 0.14,
         "ci95": {
@@ -5291,8 +5291,8 @@
         "nome": "VETERINÁRIO WILSON GRASSI",
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 1799,
-        "votos_projetados": 7393,
+        "votos_atuais": 1805,
+        "votos_projetados": 7006,
         "pct_atual": 0.06,
         "pct_projetado": 0.08,
         "ci95": {
@@ -5306,8 +5306,8 @@
         "nome": "ESCRITOR AUGUSTO CURY",
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 1031,
-        "votos_projetados": 3911,
+        "votos_atuais": 1035,
+        "votos_projetados": 3707,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -5323,14 +5323,14 @@
     "votacao": {
       "contagens": {
         "aptos": 13033929,
-        "instalados": 3988376,
-        "comparecimento": 3174255,
-        "abstencao": 814121,
-        "validos": 2420919,
-        "brancos": 140854,
-        "nulos": 139658,
-        "anulados": 221013,
-        "sub_judice": 251811
+        "instalados": 4001410,
+        "comparecimento": 3184629,
+        "abstencao": 816781,
+        "validos": 2428831,
+        "brancos": 141315,
+        "nulos": 140114,
+        "anulados": 221735,
+        "sub_judice": 252634
       },
       "projetada": {
         "validos": 7911503,
@@ -5342,73 +5342,73 @@
         {
           "id": 13,
           "partido": "PT",
-          "votos": 728850,
+          "votos": 731258,
           "destino": "valido"
         },
         {
           "id": 14,
           "partido": "MISSÃO",
-          "votos": 3833,
+          "votos": 3846,
           "destino": "valido"
         },
         {
           "id": 16,
           "partido": "PSTU",
-          "votos": 27130,
+          "votos": 27221,
           "destino": "valido"
         },
         {
           "id": 21,
           "partido": "PCB",
-          "votos": 45340,
+          "votos": 45492,
           "destino": "valido"
         },
         {
           "id": 22,
           "partido": "PL",
-          "votos": 1169084,
+          "votos": 1172853,
           "destino": "valido"
         },
         {
           "id": 27,
           "partido": "DC",
-          "votos": 13784,
+          "votos": 13829,
           "destino": "valido"
         },
         {
           "id": 29,
           "partido": "PCO",
-          "votos": 6806,
+          "votos": 6829,
           "destino": "valido"
         },
         {
           "id": 30,
           "partido": "NOVO",
-          "votos": 251811,
+          "votos": 252634,
           "destino": "sub_judice"
         },
         {
           "id": 35,
           "partido": "DEMOCRATA",
-          "votos": 1799,
+          "votos": 1805,
           "destino": "valido"
         },
         {
           "id": 55,
           "partido": "PSD",
-          "votos": 423262,
+          "votos": 424663,
           "destino": "valido"
         },
         {
           "id": 70,
           "partido": "AVANTE",
-          "votos": 1031,
+          "votos": 1035,
           "destino": "valido"
         },
         {
           "id": 80,
           "partido": "UP",
-          "votos": 221013,
+          "votos": 221735,
           "destino": "anulado"
         }
       ]
@@ -5416,7 +5416,7 @@
   },
   "RN": {
     "uf": "RN",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -5427,7 +5427,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 106150,
-        "votos_projetados": 984820,
+        "votos_projetados": 857893,
         "pct_atual": 45.59,
         "pct_projetado": 49.06,
         "ci95": {
@@ -5442,7 +5442,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 53018,
-        "votos_projetados": 553967,
+        "votos_projetados": 482570,
         "pct_atual": 22.77,
         "pct_projetado": 27.6,
         "ci95": {
@@ -5457,7 +5457,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 29541,
-        "votos_projetados": 329593,
+        "votos_projetados": 287114,
         "pct_atual": 12.69,
         "pct_projetado": 16.42,
         "ci95": {
@@ -5472,7 +5472,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 20262,
-        "votos_projetados": 44218,
+        "votos_projetados": 174670,
         "pct_atual": 8.7,
         "pct_projetado": 2.2,
         "ci95": {
@@ -5487,7 +5487,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 17784,
-        "votos_projetados": 35306,
+        "votos_projetados": 153307,
         "pct_atual": 7.64,
         "pct_projetado": 1.76,
         "ci95": {
@@ -5502,7 +5502,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2388,
-        "votos_projetados": 23691,
+        "votos_projetados": 20638,
         "pct_atual": 1.03,
         "pct_projetado": 1.18,
         "ci95": {
@@ -5517,7 +5517,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1746,
-        "votos_projetados": 17152,
+        "votos_projetados": 14941,
         "pct_atual": 0.75,
         "pct_projetado": 0.85,
         "ci95": {
@@ -5532,7 +5532,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 821,
-        "votos_projetados": 8051,
+        "votos_projetados": 7014,
         "pct_atual": 0.35,
         "pct_projetado": 0.4,
         "ci95": {
@@ -5547,7 +5547,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 580,
-        "votos_projetados": 5215,
+        "votos_projetados": 4543,
         "pct_atual": 0.25,
         "pct_projetado": 0.26,
         "ci95": {
@@ -5562,7 +5562,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 282,
-        "votos_projetados": 2853,
+        "votos_projetados": 2485,
         "pct_atual": 0.12,
         "pct_projetado": 0.14,
         "ci95": {
@@ -5577,7 +5577,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 174,
-        "votos_projetados": 1553,
+        "votos_projetados": 1353,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -5592,7 +5592,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 97,
-        "votos_projetados": 845,
+        "votos_projetados": 736,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -5701,7 +5701,7 @@
   },
   "RO": {
     "uf": "RO",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -5712,7 +5712,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 51437,
-        "votos_projetados": 483226,
+        "votos_projetados": 428968,
         "pct_atual": 49.09,
         "pct_projetado": 53.5,
         "ci95": {
@@ -5727,7 +5727,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 17900,
-        "votos_projetados": 194547,
+        "votos_projetados": 172702,
         "pct_atual": 17.08,
         "pct_projetado": 21.54,
         "ci95": {
@@ -5742,7 +5742,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 15770,
-        "votos_projetados": 149361,
+        "votos_projetados": 132590,
         "pct_atual": 15.05,
         "pct_projetado": 16.54,
         "ci95": {
@@ -5757,7 +5757,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 9117,
-        "votos_projetados": 38363,
+        "votos_projetados": 78599,
         "pct_atual": 8.7,
         "pct_projetado": 4.25,
         "ci95": {
@@ -5772,7 +5772,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 8002,
-        "votos_projetados": 13641,
+        "votos_projetados": 68985,
         "pct_atual": 7.64,
         "pct_projetado": 1.51,
         "ci95": {
@@ -5787,7 +5787,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 1062,
-        "votos_projetados": 9521,
+        "votos_projetados": 8452,
         "pct_atual": 1.01,
         "pct_projetado": 1.05,
         "ci95": {
@@ -5802,7 +5802,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 620,
-        "votos_projetados": 5700,
+        "votos_projetados": 5060,
         "pct_atual": 0.59,
         "pct_projetado": 0.63,
         "ci95": {
@@ -5817,7 +5817,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 373,
-        "votos_projetados": 3969,
+        "votos_projetados": 3523,
         "pct_atual": 0.36,
         "pct_projetado": 0.44,
         "ci95": {
@@ -5832,7 +5832,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 235,
-        "votos_projetados": 2404,
+        "votos_projetados": 2134,
         "pct_atual": 0.22,
         "pct_projetado": 0.27,
         "ci95": {
@@ -5847,7 +5847,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 139,
-        "votos_projetados": 1333,
+        "votos_projetados": 1183,
         "pct_atual": 0.13,
         "pct_projetado": 0.15,
         "ci95": {
@@ -5862,7 +5862,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 82,
-        "votos_projetados": 761,
+        "votos_projetados": 676,
         "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
@@ -5877,7 +5877,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 38,
-        "votos_projetados": 409,
+        "votos_projetados": 363,
         "pct_atual": 0.04,
         "pct_projetado": 0.05,
         "ci95": {
@@ -5986,7 +5986,7 @@
   },
   "RR": {
     "uf": "RR",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -5997,7 +5997,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 17919,
-        "votos_projetados": 170948,
+        "votos_projetados": 151560,
         "pct_atual": 51.77,
         "pct_projetado": 57.29,
         "ci95": {
@@ -6012,7 +6012,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 5157,
-        "votos_projetados": 53841,
+        "votos_projetados": 47735,
         "pct_atual": 14.9,
         "pct_projetado": 18.05,
         "ci95": {
@@ -6027,7 +6027,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 5005,
-        "votos_projetados": 48369,
+        "votos_projetados": 42883,
         "pct_atual": 14.46,
         "pct_projetado": 16.21,
         "ci95": {
@@ -6042,7 +6042,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 3012,
-        "votos_projetados": 13095,
+        "votos_projetados": 25964,
         "pct_atual": 8.7,
         "pct_projetado": 4.39,
         "ci95": {
@@ -6057,7 +6057,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 2643,
-        "votos_projetados": 3725,
+        "votos_projetados": 22788,
         "pct_atual": 7.64,
         "pct_projetado": 1.25,
         "ci95": {
@@ -6072,7 +6072,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 314,
-        "votos_projetados": 2995,
+        "votos_projetados": 2655,
         "pct_atual": 0.91,
         "pct_projetado": 1,
         "ci95": {
@@ -6087,7 +6087,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 266,
-        "votos_projetados": 2598,
+        "votos_projetados": 2303,
         "pct_atual": 0.77,
         "pct_projetado": 0.87,
         "ci95": {
@@ -6102,7 +6102,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 135,
-        "votos_projetados": 1234,
+        "votos_projetados": 1094,
         "pct_atual": 0.39,
         "pct_projetado": 0.41,
         "ci95": {
@@ -6117,7 +6117,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 80,
-        "votos_projetados": 773,
+        "votos_projetados": 686,
         "pct_atual": 0.23,
         "pct_projetado": 0.26,
         "ci95": {
@@ -6132,7 +6132,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 43,
-        "votos_projetados": 426,
+        "votos_projetados": 377,
         "pct_atual": 0.12,
         "pct_projetado": 0.14,
         "ci95": {
@@ -6147,7 +6147,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 24,
-        "votos_projetados": 237,
+        "votos_projetados": 210,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -6162,7 +6162,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 13,
-        "votos_projetados": 128,
+        "votos_projetados": 114,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -6271,7 +6271,7 @@
   },
   "RS": {
     "uf": "RS",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 27.5,
@@ -6282,7 +6282,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 687467,
-        "votos_projetados": 2806827,
+        "votos_projetados": 2635189,
         "pct_atual": 37.66,
         "pct_projetado": 42.29,
         "ci95": {
@@ -6297,7 +6297,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 481297,
-        "votos_projetados": 1797848,
+        "votos_projetados": 1687909,
         "pct_atual": 26.37,
         "pct_projetado": 27.09,
         "ci95": {
@@ -6312,7 +6312,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 301452,
-        "votos_projetados": 1107668,
+        "votos_projetados": 1039933,
         "pct_atual": 16.51,
         "pct_projetado": 16.69,
         "ci95": {
@@ -6327,7 +6327,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 158843,
-        "votos_projetados": 588719,
+        "votos_projetados": 577611,
         "pct_atual": 8.7,
         "pct_projetado": 8.87,
         "ci95": {
@@ -6342,7 +6342,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 139415,
-        "votos_projetados": 134160,
+        "votos_projetados": 506965,
         "pct_atual": 7.64,
         "pct_projetado": 2.02,
         "ci95": {
@@ -6357,7 +6357,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 26731,
-        "votos_projetados": 91689,
+        "votos_projetados": 86082,
         "pct_atual": 1.46,
         "pct_projetado": 1.38,
         "ci95": {
@@ -6372,7 +6372,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 13584,
-        "votos_projetados": 50487,
+        "votos_projetados": 47400,
         "pct_atual": 0.74,
         "pct_projetado": 0.76,
         "ci95": {
@@ -6387,7 +6387,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 7777,
-        "votos_projetados": 28075,
+        "votos_projetados": 26358,
         "pct_atual": 0.43,
         "pct_projetado": 0.42,
         "ci95": {
@@ -6402,7 +6402,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4172,
-        "votos_projetados": 15785,
+        "votos_projetados": 14820,
         "pct_atual": 0.23,
         "pct_projetado": 0.24,
         "ci95": {
@@ -6417,7 +6417,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2346,
-        "votos_projetados": 8842,
+        "votos_projetados": 8301,
         "pct_atual": 0.13,
         "pct_projetado": 0.13,
         "ci95": {
@@ -6432,7 +6432,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1524,
-        "votos_projetados": 5042,
+        "votos_projetados": 4734,
         "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
@@ -6447,7 +6447,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 774,
-        "votos_projetados": 2610,
+        "votos_projetados": 2450,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -6473,7 +6473,7 @@
         "sub_judice": 158843
       },
       "projetada": {
-        "validos": 5553177,
+        "validos": 5553176,
         "brancos": 275907,
         "nulos": 273563,
         "abstencao": 1495336
@@ -6556,7 +6556,7 @@
   },
   "SC": {
     "uf": "SC",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 24,
@@ -6567,7 +6567,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 491477,
-        "votos_projetados": 1911963,
+        "votos_projetados": 1973029,
         "pct_atual": 47.28,
         "pct_projetado": 44.15,
         "ci95": {
@@ -6582,7 +6582,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 195255,
-        "votos_projetados": 823987,
+        "votos_projetados": 850304,
         "pct_atual": 18.78,
         "pct_projetado": 19.03,
         "ci95": {
@@ -6597,7 +6597,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 90451,
-        "votos_projetados": 730428,
+        "votos_projetados": 376878,
         "pct_atual": 8.7,
         "pct_projetado": 16.87,
         "ci95": {
@@ -6612,7 +6612,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 150595,
-        "votos_projetados": 649330,
+        "votos_projetados": 670069,
         "pct_atual": 14.49,
         "pct_projetado": 14.99,
         "ci95": {
@@ -6627,7 +6627,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 79388,
-        "votos_projetados": 89377,
+        "votos_projetados": 330783,
         "pct_atual": 7.64,
         "pct_projetado": 2.06,
         "ci95": {
@@ -6642,7 +6642,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 16285,
-        "votos_projetados": 62278,
+        "votos_projetados": 64267,
         "pct_atual": 1.57,
         "pct_projetado": 1.44,
         "ci95": {
@@ -6657,7 +6657,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 6857,
-        "votos_projetados": 28199,
+        "votos_projetados": 29099,
         "pct_atual": 0.66,
         "pct_projetado": 0.65,
         "ci95": {
@@ -6672,7 +6672,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4100,
-        "votos_projetados": 15727,
+        "votos_projetados": 16230,
         "pct_atual": 0.39,
         "pct_projetado": 0.36,
         "ci95": {
@@ -6687,7 +6687,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2463,
-        "votos_projetados": 9774,
+        "votos_projetados": 10086,
         "pct_atual": 0.24,
         "pct_projetado": 0.23,
         "ci95": {
@@ -6702,7 +6702,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1423,
-        "votos_projetados": 5470,
+        "votos_projetados": 5645,
         "pct_atual": 0.14,
         "pct_projetado": 0.13,
         "ci95": {
@@ -6717,7 +6717,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 716,
-        "votos_projetados": 2855,
+        "votos_projetados": 2947,
         "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
@@ -6732,7 +6732,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 426,
-        "votos_projetados": 1596,
+        "votos_projetados": 1647,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -6759,7 +6759,7 @@
       },
       "projetada": {
         "validos": 3623323,
-        "brancos": 176422,
+        "brancos": 176421,
         "nulos": 174923,
         "abstencao": 958331
       },
@@ -6841,7 +6841,7 @@
   },
   "SE": {
     "uf": "SE",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -6852,7 +6852,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 62594,
-        "votos_projetados": 639907,
+        "votos_projetados": 561597,
         "pct_atual": 41.56,
         "pct_projetado": 49.28,
         "ci95": {
@@ -6867,7 +6867,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 33626,
-        "votos_projetados": 331600,
+        "votos_projetados": 291020,
         "pct_atual": 22.33,
         "pct_projetado": 25.54,
         "ci95": {
@@ -6882,7 +6882,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 24551,
-        "votos_projetados": 213804,
+        "votos_projetados": 187640,
         "pct_atual": 16.3,
         "pct_projetado": 16.47,
         "ci95": {
@@ -6897,7 +6897,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 13107,
-        "votos_projetados": 35374,
+        "votos_projetados": 112988,
         "pct_atual": 8.7,
         "pct_projetado": 2.72,
         "ci95": {
@@ -6912,7 +6912,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 11504,
-        "votos_projetados": 25312,
+        "votos_projetados": 99169,
         "pct_atual": 7.64,
         "pct_projetado": 1.95,
         "ci95": {
@@ -6927,7 +6927,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2225,
-        "votos_projetados": 24254,
+        "votos_projetados": 21286,
         "pct_atual": 1.48,
         "pct_projetado": 1.87,
         "ci95": {
@@ -6942,7 +6942,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 1562,
-        "votos_projetados": 14397,
+        "votos_projetados": 12635,
         "pct_atual": 1.04,
         "pct_projetado": 1.11,
         "ci95": {
@@ -6957,7 +6957,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 646,
-        "votos_projetados": 6687,
+        "votos_projetados": 5868,
         "pct_atual": 0.43,
         "pct_projetado": 0.51,
         "ci95": {
@@ -6972,7 +6972,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 390,
-        "votos_projetados": 3594,
+        "votos_projetados": 3155,
         "pct_atual": 0.26,
         "pct_projetado": 0.28,
         "ci95": {
@@ -6987,7 +6987,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 236,
-        "votos_projetados": 1885,
+        "votos_projetados": 1654,
         "pct_atual": 0.16,
         "pct_projetado": 0.15,
         "ci95": {
@@ -7002,7 +7002,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 112,
-        "votos_projetados": 1047,
+        "votos_projetados": 919,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -7017,7 +7017,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 65,
-        "votos_projetados": 571,
+        "votos_projetados": 501,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -7126,7 +7126,7 @@
   },
   "SP": {
     "uf": "SP",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 35,
@@ -7137,7 +7137,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 2693823,
-        "votos_projetados": 8868775,
+        "votos_projetados": 8930855,
         "pct_atual": 30,
         "pct_projetado": 34.57,
         "ci95": {
@@ -7152,7 +7152,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 2794556,
-        "votos_projetados": 7364742,
+        "votos_projetados": 7416295,
         "pct_atual": 31.12,
         "pct_projetado": 28.71,
         "ci95": {
@@ -7167,7 +7167,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 1584313,
-        "votos_projetados": 3894009,
+        "votos_projetados": 3921267,
         "pct_atual": 17.64,
         "pct_projetado": 15.18,
         "ci95": {
@@ -7182,7 +7182,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 781406,
-        "votos_projetados": 3012854,
+        "votos_projetados": 2232589,
         "pct_atual": 8.7,
         "pct_projetado": 11.74,
         "ci95": {
@@ -7197,7 +7197,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 685835,
-        "votos_projetados": 1328467,
+        "votos_projetados": 1959528,
         "pct_atual": 7.64,
         "pct_projetado": 5.18,
         "ci95": {
@@ -7212,7 +7212,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 215339,
-        "votos_projetados": 605283,
+        "votos_projetados": 609521,
         "pct_atual": 2.4,
         "pct_projetado": 2.36,
         "ci95": {
@@ -7227,7 +7227,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 110701,
-        "votos_projetados": 285384,
+        "votos_projetados": 287381,
         "pct_atual": 1.23,
         "pct_projetado": 1.11,
         "ci95": {
@@ -7242,7 +7242,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 67217,
-        "votos_projetados": 170246,
+        "votos_projetados": 171438,
         "pct_atual": 0.75,
         "pct_projetado": 0.66,
         "ci95": {
@@ -7257,7 +7257,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 23283,
-        "votos_projetados": 62193,
+        "votos_projetados": 62628,
         "pct_atual": 0.26,
         "pct_projetado": 0.24,
         "ci95": {
@@ -7272,7 +7272,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 12342,
-        "votos_projetados": 34690,
+        "votos_projetados": 34933,
         "pct_atual": 0.14,
         "pct_projetado": 0.14,
         "ci95": {
@@ -7287,7 +7287,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 6746,
-        "votos_projetados": 19101,
+        "votos_projetados": 19235,
         "pct_atual": 0.08,
         "pct_projetado": 0.07,
         "ci95": {
@@ -7302,7 +7302,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4156,
-        "votos_projetados": 10590,
+        "votos_projetados": 10664,
         "pct_atual": 0.05,
         "pct_projetado": 0.04,
         "ci95": {
@@ -7411,7 +7411,7 @@
   },
   "TO": {
     "uf": "TO",
-    "ts": "2026-09-26T21:38:53.016Z",
+    "ts": "2026-09-27T04:40:24.833Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -7422,7 +7422,7 @@
         "partido": "PT",
         "cor": "var(--color-cand-1)",
         "votos_atuais": 34180,
-        "votos_projetados": 336582,
+        "votos_projetados": 291869,
         "pct_atual": 34.19,
         "pct_projetado": 39.06,
         "ci95": {
@@ -7437,7 +7437,7 @@
         "partido": "PL",
         "cor": "var(--color-cand-2)",
         "votos_atuais": 32153,
-        "votos_projetados": 319414,
+        "votos_projetados": 276982,
         "pct_atual": 32.16,
         "pct_projetado": 37.06,
         "ci95": {
@@ -7452,7 +7452,7 @@
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
         "votos_atuais": 15597,
-        "votos_projetados": 158160,
+        "votos_projetados": 137150,
         "pct_atual": 15.6,
         "pct_projetado": 18.35,
         "ci95": {
@@ -7467,7 +7467,7 @@
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
         "votos_atuais": 8699,
-        "votos_projetados": 22084,
+        "votos_projetados": 74992,
         "pct_atual": 8.7,
         "pct_projetado": 2.56,
         "ci95": {
@@ -7482,7 +7482,7 @@
         "partido": "UP",
         "cor": "var(--color-cand-5)",
         "votos_atuais": 7635,
-        "votos_projetados": 8278,
+        "votos_projetados": 65820,
         "pct_atual": 7.64,
         "pct_projetado": 0.96,
         "ci95": {
@@ -7497,7 +7497,7 @@
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
         "votos_atuais": 562,
-        "votos_projetados": 5878,
+        "votos_projetados": 5097,
         "pct_atual": 0.56,
         "pct_projetado": 0.68,
         "ci95": {
@@ -7512,7 +7512,7 @@
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 355,
-        "votos_projetados": 3522,
+        "votos_projetados": 3054,
         "pct_atual": 0.36,
         "pct_projetado": 0.41,
         "ci95": {
@@ -7527,7 +7527,7 @@
         "partido": "DC",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 356,
-        "votos_projetados": 3395,
+        "votos_projetados": 2944,
         "pct_atual": 0.36,
         "pct_projetado": 0.39,
         "ci95": {
@@ -7542,7 +7542,7 @@
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 210,
-        "votos_projetados": 2245,
+        "votos_projetados": 1947,
         "pct_atual": 0.21,
         "pct_projetado": 0.26,
         "ci95": {
@@ -7557,7 +7557,7 @@
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 121,
-        "votos_projetados": 1218,
+        "votos_projetados": 1056,
         "pct_atual": 0.12,
         "pct_projetado": 0.14,
         "ci95": {
@@ -7572,7 +7572,7 @@
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 65,
-        "votos_projetados": 658,
+        "votos_projetados": 571,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
@@ -7587,7 +7587,7 @@
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
         "votos_atuais": 35,
-        "votos_projetados": 358,
+        "votos_projetados": 310,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
@@ -7613,8 +7613,8 @@
         "sub_judice": 8699
       },
       "projetada": {
-        "validos": 720979,
-        "brancos": 36237,
+        "validos": 720980,
+        "brancos": 36236,
         "nulos": 35929,
         "abstencao": 237385
       },

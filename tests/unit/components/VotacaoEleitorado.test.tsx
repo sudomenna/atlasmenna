@@ -834,3 +834,215 @@ describe("rótulo central do arco — fundo opaco para o axe", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// RF-195b — o seletor Parcial/Projeção escolhe os arcos (2026-09-27)
+// ---------------------------------------------------------------------------
+
+/**
+ * Texto que um leitor vê numa visão: tudo do nó, MENOS o que está marcado para
+ * a outra visão. Replica a cascata de `app/globals.css` (bloco ADR-0029):
+ * `[data-view-only]` some, e só o da visão ativa volta.
+ */
+function textoNaVisao(el: Element | null, visao: "parcial" | "proj"): string {
+  if (!el) return "";
+  const clone = el.cloneNode(true) as Element;
+  const outra = visao === "parcial" ? "proj" : "parcial";
+  for (const n of [...clone.querySelectorAll(`[data-view-only="${outra}"]`)]) n.remove();
+  return clone.textContent ?? "";
+}
+
+/** Quantas vezes `trecho` aparece em `texto`. */
+function ocorrencias(texto: string, trecho: string): number {
+  return texto.split(trecho).length - 1;
+}
+
+describe("RF-195b — Parcial mostra os arcos 1 e 2; Projeção, o arco 3", () => {
+  const c = contagensReais();
+  const projetada = {
+    validos: 50_000_000,
+    brancos: 5_000_000,
+    nulos: 4_000_000,
+    abstencao: 28_000_000,
+  };
+  const doc = parse(<VotacaoEleitorado votacao={{ contagens: c, projetada }} />);
+  const visaoDe = (arco: string) =>
+    doc
+      .querySelector(`[data-testid="${arco}"]`)
+      ?.closest("[data-view-only]")
+      ?.getAttribute("data-view-only");
+
+  it("🔴 arcos 1 e 2 são da visão 'parcial', arco 3 da 'proj'", () => {
+    // Mutações que morrem: trocar parcial↔proj em qualquer arco; tirar o atributo.
+    expect(visaoDe("votacao-circulo-1")).toBe("parcial");
+    expect(visaoDe("votacao-circulo-2")).toBe("parcial");
+    expect(visaoDe("votacao-circulo-3")).toBe("proj");
+  });
+
+  it("🔴 o atributo NÃO está na `<figure>` — o `display: flex` inline dela venceria o CSS", () => {
+    // Estilo inline ganha da regra `[data-view-only] { display: none }` da
+    // folha: na figura, o arco nunca sumiria. Vai num invólucro sem `display`.
+    expect(doc.querySelectorAll("figure[data-view-only]")).toHaveLength(0);
+    for (const n of [1, 2, 3]) {
+      const inv = doc.querySelector(`[data-testid="votacao-circulo-${n}-visao"]`);
+      expect(inv?.getAttribute("data-view-only"), `arco ${n}`).toMatch(/^(parcial|proj)$/);
+      expect(inv?.getAttribute("style"), `arco ${n}: invólucro sem estilo`).toBeNull();
+    }
+  });
+
+  it("os três seguem no HTML — o seletor esconde, não remove (ADR-0017)", () => {
+    const figs = [...doc.querySelectorAll("figure")].map((f) => f.getAttribute("data-testid"));
+    expect(figs).toEqual(["votacao-circulo-1", "votacao-circulo-2", "votacao-circulo-3"]);
+  });
+
+  it("🔴 os estados vazios moram DENTRO do seu arco e somem com ele", () => {
+    const casos: [React.ReactElement, string, "parcial" | "proj"][] = [
+      [
+        <VotacaoEleitorado key="a" votacao={{ contagens: { ...c, validos: c.validos + 1 } }} />,
+        "votacao-circulo-1-inconsistente",
+        "parcial",
+      ],
+      [
+        <VotacaoEleitorado key="b" votacao={{ contagens: contagensNaoComecou() }} />,
+        "votacao-circulo-2-sem-base",
+        "parcial",
+      ],
+      [
+        <VotacaoEleitorado key="d" votacao={{ contagens: c }} />,
+        "votacao-circulo-3-aguardando",
+        "proj",
+      ],
+      [
+        <VotacaoEleitorado
+          key="e"
+          votacao={{ contagens: c, projetada: { ...projetada, validos: c.aptos } }}
+        />,
+        "votacao-circulo-3-inconsistente",
+        "proj",
+      ],
+    ];
+    for (const [node, testid, visao] of casos) {
+      const d = parse(node);
+      const el = d.querySelector(`[data-testid="${testid}"]`);
+      expect(el, testid).not.toBeNull();
+      expect(el?.closest("[data-view-only]")?.getAttribute("data-view-only"), testid).toBe(visao);
+    }
+    // arco 2 inconsistente: cinco fatias que não somam `instalados`.
+    const d2 = parse(
+      <VotacaoEleitorado
+        votacao={{ contagens: { ...contagensParciais(), abstencao: 12_000_001 } }}
+      />,
+    );
+    const inc2 = d2.querySelector('[data-testid="votacao-circulo-2-inconsistente"]');
+    expect(inc2).not.toBeNull();
+    expect(inc2?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe("parcial");
+  });
+
+  it("`votacao` ausente ⇒ <DetailUnavailable> nas DUAS visões — nada marcado por visão", () => {
+    const d = parse(<VotacaoEleitorado votacao={null} />);
+    expect(d.querySelector('[data-testid="detail-unavailable"]')).not.toBeNull();
+    expect(d.querySelectorAll("[data-view-only]")).toHaveLength(0);
+  });
+
+  it("🔴 a grade usa `auto-fill` — `auto-fit` esticaria o arco único da Projeção", () => {
+    // Medido no navegador (2026-09-27, `/uf/BA/deputado-federal` a 1280px):
+    // com `auto-fit` o arco 3 sozinho iria a 1.217px; com `auto-fill` e faixa
+    // mínima de 1/3 ele fica nos mesmos 390px do Parcial.
+    const estilo =
+      doc.querySelector('[data-testid="votacao-eleitorado"]')?.getAttribute("style") ?? "";
+    expect(estilo).toContain("auto-fill");
+    expect(estilo).not.toContain("auto-fit");
+    expect(estilo).toMatch(/\/\s*3/);
+  });
+});
+
+describe("RF-195b — a metodologia acompanha a visão, sem frase órfã nem repetida", () => {
+  const c = contagensReais();
+  const projetada = {
+    validos: 50_000_000,
+    brancos: 5_000_000,
+    nulos: 4_000_000,
+    abstencao: 28_000_000,
+  };
+  const doc = parse(<VotacaoEleitorado votacao={{ contagens: c, projetada }} />);
+  const met = doc.querySelector('[data-testid="votacao-metodologia"]');
+  const parcial = textoNaVisao(met, "parcial");
+  const proj = textoNaVisao(met, "proj");
+
+  it("🔴 cada parágrafo é de UMA visão", () => {
+    expect(
+      doc
+        .querySelector('[data-testid="votacao-metodologia-parcial"]')
+        ?.getAttribute("data-view-only"),
+    ).toBe("parcial");
+    expect(
+      doc.querySelector('[data-testid="votacao-metodologia-proj"]')?.getAttribute("data-view-only"),
+    ).toBe("proj");
+    // Nenhum texto solto no invólucro: tudo o que ele diz é de alguma visão.
+    const solto = [...(met?.childNodes ?? [])].filter(
+      (n) => n.nodeType === 3 && (n.textContent ?? "").trim() !== "",
+    );
+    expect(solto).toHaveLength(0);
+  });
+
+  it("🔴 na Parcial, nenhuma frase cita o gráfico escondido ou a projeção", () => {
+    expect(parcial).not.toMatch(/terceiro|três gráficos|proje[cç]/i);
+    expect(parcial).toContain("Os dois gráficos");
+    expect(parcial).toContain("o primeiro é sobre os 163.079.139 eleitores aptos");
+    expect(parcial).toContain("o segundo, só sobre o eleitorado das seções já instaladas");
+  });
+
+  it("🔴 na Projeção, nenhuma frase cita os arcos 1 e 2", () => {
+    expect(proj).not.toMatch(/primeiro|segundo|dois gráficos|três gráficos|terceiro/i);
+    expect(proj).not.toContain("seções ainda não instaladas");
+    expect(proj).not.toContain("19.722.460"); // o anulado CONTADO é do arco 1/2
+    expect(proj).toContain("A projeção é sobre os 163.079.139 eleitores aptos");
+    expect(proj).toContain("sem reescala");
+    expect(proj).toContain("não chegam a zero no fim da apuração");
+  });
+
+  it("🔴 anulado ≠ nulo é dito UMA vez em cada visão — nunca duas", () => {
+    for (const [nome, t] of [
+      ["parcial", parcial],
+      ["proj", proj],
+    ] as const) {
+      expect(ocorrencias(t, "no voto nulo o eleitor não escolheu ninguém"), nome).toBe(1);
+      expect(ocorrencias(t, "eleitores aptos"), nome).toBe(1);
+    }
+  });
+
+  it("sem projeção, não há parágrafo da Projeção (nada citando um gráfico que não existe)", () => {
+    const d = parse(<VotacaoEleitorado votacao={{ contagens: c }} />);
+    expect(d.querySelector('[data-testid="votacao-metodologia-proj"]')).toBeNull();
+    expect(d.querySelector('[data-testid="votacao-metodologia-parcial"]')).not.toBeNull();
+  });
+
+  it("projeção que não fecha também não ganha parágrafo", () => {
+    const d = parse(
+      <VotacaoEleitorado
+        votacao={{ contagens: c, projetada: { ...projetada, validos: c.aptos } }}
+      />,
+    );
+    expect(d.querySelector('[data-testid="votacao-metodologia-proj"]')).toBeNull();
+  });
+
+  it("🔴 residual projetado ZERO ⇒ a Projeção não fala de anulados", () => {
+    const zerado = contagensSemAnulados();
+    const d = parse(
+      <VotacaoEleitorado
+        votacao={{
+          contagens: zerado,
+          projetada: {
+            validos: 60_000_000,
+            brancos: 5_000_000,
+            nulos: 5_000_000,
+            abstencao: 30_000_000,
+          },
+        }}
+      />,
+    );
+    const p = textoNaVisao(d.querySelector('[data-testid="votacao-metodologia"]'), "proj");
+    expect(p).toContain("A projeção é sobre");
+    expect(p).not.toMatch(/anulad/i);
+  });
+});

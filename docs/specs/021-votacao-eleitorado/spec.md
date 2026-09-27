@@ -5,7 +5,7 @@ status: draft
 priority: M
 personas: [P1, P2, P3]
 screens: [T-01, T-03, T-10, T-12]
-requirements: [RF-192, RF-193, RF-193b, RF-194, RF-195, RF-196, RF-197, RF-198, RF-199]
+requirements: [RF-192, RF-193, RF-193b, RF-194, RF-195, RF-195b, RF-196, RF-197, RF-198, RF-199]
 depends_on: [001-ingestao-tse, 002-modelo-estatistico, 003-home-nacional, 006-grid-governadores, 016-senador, 017-deputado-federal]
 apis: []
 components: [VotacaoEleitorado, Panel, DetailUnavailable]
@@ -227,6 +227,21 @@ fatia negativa desenha errado em silêncio.
 
 ⚠️ O IC95 de cada métrica continua publicado em `EdgeParticipacao`, sobre a
 base dela. Não há IC neste bloco, e não é esquecimento.
+
+### RF-195b — o seletor Parcial/Projeção escolhe os arcos (decisão do dono, 2026-09-27)
+
+**Enquanto** a visão ativa do seletor do shell é **"Parcial"**, **o sistema
+deve** exibir só os arcos 1 ("Do eleitorado apto") e 2 ("Do eleitorado já
+apurado").
+
+**Enquanto** a visão ativa é **"Projeção"**, **o sistema deve** exibir só o
+arco 3 ("Projeção para o fim da apuração").
+
+**Onde** o mecanismo é o existente (ADR-0029 § 2): os três arcos continuam no
+HTML (ADR-0017) com `data-view-only="parcial"` / `data-view-only="proj"`, e a
+cascata de `app/globals.css` esconde o outro — o painel segue Server
+Component, sem JS novo (RNF-007a). O texto de metodologia acompanha: frase
+sobre o arco 3 só na Projeção, frases sobre arcos 1/2 só no Parcial.
 
 ### RF-196 — todo número tem base declarada
 
