@@ -784,13 +784,14 @@ describe("/uf/[sigla]/senador (T-10)", () => {
       (p) => p.getAttribute("aria-labelledby") === "corrida-tres-circulos-heading",
     );
     // Spec 021 RF-192 EMENDADO (2026-09-26, noite) — "Votação" DA UF entra
-    // logo depois do resultado e ANTES de "A corrida"; a série desce mais uma
-    // posição. Ordem: resultado → Votação → A corrida → evolução (spec 020).
+    // logo depois de "A corrida" (ordem invertida pelo dono em 2026-09-27);
+    // a série desce mais uma posição. Ordem: resultado → A corrida → Votação →
+    // evolução (spec 020).
     const iVotacao = paineis.findIndex(
       (p) => p.getAttribute("aria-labelledby") === "votacao-uf-heading",
     );
-    expect(iVotacao).toBe(1);
-    expect(iCorrida).toBe(2);
+    expect(iCorrida).toBe(1);
+    expect(iVotacao).toBe(2);
     expect(iSerie).toBe(4);
 
     // Sem série no Blob deste caso: nenhum traçado.
@@ -1493,11 +1494,12 @@ describe("/uf/[sigla]/senador — RF-210: votos por eleitor vêm de `vagas`, sem
       ).toBe("invalid");
       expect(painel?.querySelector("svg")).toBeNull();
     }
-    // A posição dos painéis não muda: resultado → Votação → A corrida.
+    // A posição dos painéis não muda: resultado → A corrida → Votação
+    // (ordem invertida pelo dono em 2026-09-27).
     const paineis = [...doc.querySelectorAll('[data-testid="panel"]')];
     const ids = paineis.map((p) => p.getAttribute("aria-labelledby"));
-    expect(ids.indexOf("votacao-uf-heading")).toBe(1);
-    expect(ids.indexOf("corrida-tres-circulos-heading")).toBe(2);
+    expect(ids.indexOf("corrida-tres-circulos-heading")).toBe(1);
+    expect(ids.indexOf("votacao-uf-heading")).toBe(2);
     // E o resto da página segue de pé (o marcador de vaga ainda cai na tabela).
     expect(doc.querySelectorAll("[data-testid='result-vaga-marker']").length).toBe(VAGAS_SENADO);
   });

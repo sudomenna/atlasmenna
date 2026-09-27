@@ -432,7 +432,7 @@ describe("UFPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
    * painel de resultado — o único lugar proibido, porque lá vive o `<h1>`.
    * Por isso as asserções são de ÍNDICE entre os painéis irmãos.
    */
-  it("(k2) a evolução da apuração é o 4º painel: depois do resultado, da votação e da corrida, antes dos municípios", async () => {
+  it("(k2) a evolução da apuração é o 4º painel: depois do resultado, da corrida e da votação, antes dos municípios", async () => {
     const doc = await renderUF();
     const paineis = [...doc.querySelectorAll('[data-testid="panel"]')];
     const kickers = paineis.map(
@@ -450,15 +450,16 @@ describe("UFPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
     );
 
     // Spec 021 RF-192 EMENDADO (2026-09-26, noite) — "Votação" DA UF entra
-    // logo depois do resultado e ANTES de "A corrida"; a série desce mais uma
-    // posição. Ordem: resultado → Votação → A corrida → evolução (spec 020).
+    // logo depois de "A corrida" (ordem invertida pelo dono em 2026-09-27);
+    // a série desce mais uma posição. Ordem: resultado → A corrida → Votação →
+    // evolução (spec 020).
     const iVotacao = paineis.findIndex(
       (p) => p.getAttribute("aria-labelledby") === "votacao-uf-heading",
     );
 
     expect(paineis[0]?.getAttribute("aria-labelledby")).toBe("resultado-heading");
-    expect(iVotacao).toBe(1);
-    expect(iCorrida).toBe(2);
+    expect(iCorrida).toBe(1);
+    expect(iVotacao).toBe(2);
     expect(iSerie).toBe(3);
     expect(kickers.indexOf("Municípios")).toBe(4);
 

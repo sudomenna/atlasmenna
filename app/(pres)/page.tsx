@@ -969,23 +969,11 @@ export default async function HomePage() {
         </Panel>
       )}
 
-      {/* Spec 021 (RF-192) — "Votação": o eleitorado inteiro em três círculos,
-          em `<Panel>` PRÓPRIO, imediatamente depois do painel de resultado e
-          antes de tudo o mais.
-
-          🔴 Painel próprio, e não um apêndice do painel acima: aquele responde
-          "quem está ganhando", este responde "como o eleitorado se comportou".
-          São perguntas diferentes e o dono pediu a separação visual.
-
-          `payload.votacao` é opcional — sem ele o componente renderiza
-          `<DetailUnavailable>` (RF-198), nunca zeros. Os três estados que ele
-          distingue (ausente / "não começou" / apurando) estão no RF-193b. */}
-      <VotacaoEleitorado kicker="Presidente · Brasil" votacao={payload.votacao} />
-
       {/* Spec 022 (RF-200/201) — "A corrida": a disputa em três círculos
           (válidos → quem votou → eleitorado apto), IMEDIATAMENTE depois do
-          "Votação" — nunca antes, porque o RF-192 fixa aquele painel logo
-          após a lista de candidaturas. Uma corrida só ⇒ fatias por
+          painel de resultado e ANTES do "Votação" (ordem invertida pelo dono
+          em 2026-09-27: primeiro quem está ganhando, depois como o eleitorado
+          se comportou). Uma corrida só ⇒ fatias por
           CANDIDATURA; o nome sai de `national.candidatos`, cruzado por `id`.
           Sem `votacao.corrida` ⇒ `<DetailUnavailable>` (RF-207). */}
       <CorridaTresCirculos
@@ -995,6 +983,19 @@ export default async function HomePage() {
         candidatos={payload.national.candidatos}
         titleId="corrida-tres-circulos-heading"
       />
+
+      {/* Spec 021 (RF-192) — "Votação": o eleitorado inteiro em três círculos,
+          em `<Panel>` PRÓPRIO, logo depois de "A corrida" (dono, 2026-09-27 —
+          até então vinha antes dela).
+
+          🔴 Painel próprio, e não um apêndice do painel acima: aquele responde
+          "quem está ganhando", este responde "como o eleitorado se comportou".
+          São perguntas diferentes e o dono pediu a separação visual.
+
+          `payload.votacao` é opcional — sem ele o componente renderiza
+          `<DetailUnavailable>` (RF-198), nunca zeros. Os três estados que ele
+          distingue (ausente / "não começou" / apurando) estão no RF-193b. */}
+      <VotacaoEleitorado kicker="Presidente · Brasil" votacao={payload.votacao} />
 
       {/* Seção 3 — chances (`ChancesPanel` do protótipo, 2º painel de
           conteúdo em `App.jsx:350`). Aqui, ao contrário das rotas de UF, o

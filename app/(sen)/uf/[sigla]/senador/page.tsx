@@ -558,7 +558,8 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
 
       {/* Spec 021 RF-192 (EMENDADO em 2026-09-26, noite, decisão do dono) —
           "Votação" DA UF: o eleitorado deste estado em três círculos, logo
-          depois do `<ResultPanel>` e ANTES de "A corrida". `payload.votacao`
+          depois de "A corrida" (ordem invertida pelo dono em 2026-09-27; os
+          dois painéis abaixo vêm na ordem Corrida → Votação). `payload.votacao`
           é o agregado da UF (spec 022 RF-209); `projetada` sai da
           participação projetada DA UF, nunca da nacional.
           ⚠️ Senado: duas vagas, dois votos por eleitor (spec 022 RF-210) —
@@ -576,31 +577,24 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
         <>
           <Panel
             kicker={`Senador · ${sigla}`}
-            title="Votação"
-            titleId="votacao-uf-heading"
-            headingLevel={2}
-          >
-            <DetailUnavailable label="A votação do eleitorado" reason="invalid" />
-          </Panel>
-          <Panel
-            kicker={`Senador · ${sigla}`}
             title="A corrida"
             titleId="corrida-tres-circulos-heading"
             headingLevel={2}
           >
             <DetailUnavailable label="A corrida por candidatura" reason="invalid" />
           </Panel>
+          <Panel
+            kicker={`Senador · ${sigla}`}
+            title="Votação"
+            titleId="votacao-uf-heading"
+            headingLevel={2}
+          >
+            <DetailUnavailable label="A votação do eleitorado" reason="invalid" />
+          </Panel>
         </>
       ) : (
         <>
-          <VotacaoEleitorado
-            kicker={`Senador · ${sigla}`}
-            votacao={payload.votacao}
-            titleId="votacao-uf-heading"
-            votosPorEleitor={votosPorEleitor}
-          />
-
-          {/* Spec 022 (RF-200/210) — "A corrida", logo depois do "Votação".
+          {/* Spec 022 (RF-200/210) — "A corrida", ANTES do "Votação" (dono, 27/09).
               Senado em VOTOS, `votosPorEleitor` por eleitor (decisão do dono,
               27/09): o "aguardando" de 26/09 caiu quando as capturas reais do
               simulado mostraram `tv == 2 × c`. */}
@@ -610,6 +604,13 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
             votacao={payload.votacao}
             candidatos={payload.candidatos}
             titleId="corrida-tres-circulos-heading"
+            votosPorEleitor={votosPorEleitor}
+          />
+
+          <VotacaoEleitorado
+            kicker={`Senador · ${sigla}`}
+            votacao={payload.votacao}
+            titleId="votacao-uf-heading"
             votosPorEleitor={votosPorEleitor}
           />
         </>

@@ -80,6 +80,15 @@ arredondamento e vira **assunto de cada gráfico**: o (1) o nomeia em cinza, o
 
 ### RF-192 — o painel, e onde ele fica
 
+🔴 **EMENDADO em 2026-09-27, decisão do dono — "A corrida" vem ANTES de
+"Votação" em toda tela que tem os dois** (`/`, `/uf/[sigla]`,
+`/uf/[sigla]/governador`, `/uf/[sigla]/senador`). Onde as cláusulas abaixo
+dizem "imediatamente após o painel de resultado" ou "antes de 'A corrida'",
+leia: imediatamente após o painel "A corrida" (spec 022 RF-200). Em
+`/uf/[sigla]/deputado-federal`, que não tem "A corrida", "Votação" segue logo
+após o painel de resultado. A ordem vale também para os painéis de
+indisponibilidade (mesma posição dos de verdade).
+
 **Quando** a rota é uma das quatro telas nacionais (`/`, `/governador`,
 `/senador`, `/deputado-federal`), **o sistema deve** renderizar o painel
 "Votação" em `<Panel>` próprio, **imediatamente após** o painel de resultado

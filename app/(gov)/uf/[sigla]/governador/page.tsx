@@ -628,21 +628,9 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
         ufDaFoto={sigla}
       />
 
-      {/* Spec 021 RF-192 (EMENDADO em 2026-09-26, noite, decisão do dono) —
-          "Votação" DA UF: o eleitorado deste estado em três círculos, logo
-          depois do `<ResultPanel>` e ANTES de "A corrida". `payload.votacao`
-          é o agregado da UF (spec 022 RF-209); `projetada` sai da
-          participação projetada DA UF, nunca da nacional.
-          Payload sem `votacao` (fallback sintético em desenvolvimento, ou UF
-          sem agregado) ⇒ `<DetailUnavailable>` (RF-198) — não quebra. */}
-      <VotacaoEleitorado
-        kicker={`Governador · ${sigla}`}
-        votacao={payload.votacao}
-        titleId="votacao-uf-heading"
-      />
-
       {/* Spec 022 (RF-200/201) — "A corrida" da UF em três círculos,
-          imediatamente depois do `<ResultPanel>`. Uma corrida só ⇒ fatias por
+          imediatamente depois do `<ResultPanel>` e ANTES do "Votação" (dono,
+          2026-09-27). Uma corrida só ⇒ fatias por
           CANDIDATURA, com o nome cruzado por `id` em `payload.candidatos`.
           ⚠️ O payload sintetizado em desenvolvimento não traz `votacao` e cai
           em `<DetailUnavailable>` (RF-207) — não quebra. */}
@@ -652,6 +640,19 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
         votacao={payload.votacao}
         candidatos={payload.candidatos}
         titleId="corrida-tres-circulos-heading"
+      />
+
+      {/* Spec 021 RF-192 (EMENDADO em 2026-09-26, noite, decisão do dono) —
+          "Votação" DA UF: o eleitorado deste estado em três círculos, logo
+          depois de "A corrida" (ordem invertida pelo dono em 2026-09-27). `payload.votacao`
+          é o agregado da UF (spec 022 RF-209); `projetada` sai da
+          participação projetada DA UF, nunca da nacional.
+          Payload sem `votacao` (fallback sintético em desenvolvimento, ou UF
+          sem agregado) ⇒ `<DetailUnavailable>` (RF-198) — não quebra. */}
+      <VotacaoEleitorado
+        kicker={`Governador · ${sigla}`}
+        votacao={payload.votacao}
+        titleId="votacao-uf-heading"
       />
 
       {/* Seção 1b — spec 020 (RF-174): a evolução da apuração, no slot T-04

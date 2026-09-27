@@ -74,6 +74,13 @@ painel o declara (RF-208).
 
 ### RF-200 — o painel, e onde ele fica
 
+🔴 **EMENDADO em 2026-09-27, decisão do dono — a ordem se inverte: "A
+corrida" vem ANTES de "Votação"** em `/` e nas telas de UF de Presidente,
+Governador e Senador: resultado → "A corrida" → "Votação". Primeiro quem está
+ganhando, depois como o eleitorado se comportou. Onde as cláusulas abaixo dizem
+"depois do painel 'Votação'", leia: imediatamente depois do painel de resultado
+e imediatamente antes de "Votação" (spec 021 RF-192 emendado na mesma data).
+
 **Quando** a rota é `/`, `/governador` ou `/senador`, **o sistema deve**
 renderizar o painel "A corrida" em `<Panel>` próprio **imediatamente depois**
 do painel "Votação" (spec 021). Não pode ir antes: RF-192 fixa "Votação"
