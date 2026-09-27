@@ -497,6 +497,24 @@ describe("GovernadorGridPage — painel '1º ou 2º turno' (RF-006.6/7/8)", () =
     ).toBeTruthy();
   });
 
+  it("🔴 (t2) cada leitura segue a chave: projeção só em 'Projeção', contagem só em 'Parcial' (dono, 2026-09-27)", async () => {
+    const doc = await render();
+    const baseDa = (headingId: string) =>
+      doc.querySelector(`#${headingId}`)?.closest("section")?.getAttribute("data-view-only");
+    expect(baseDa("desfecho-projecao-heading")).toBe("proj");
+    expect(baseDa("desfecho-contagem-heading")).toBe("parcial");
+    // Os dois gráficos de cada base moram DENTRO da seção da sua base.
+    for (const [base, view] of [
+      ["projecao", "proj"],
+      ["contagem", "parcial"],
+    ] as const) {
+      for (const tid of ["placar-turno", "por-partido"]) {
+        const el = doc.querySelector(`[data-testid="${tid}"][data-base="${base}"]`);
+        expect(el?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe(view);
+      }
+    }
+  });
+
   it("(u) o placar da projeção bate com o filtro 'Decididos no 1º turno' (9) e 'Vão a 2º turno' (14)", async () => {
     const doc = await render();
     const num = (d: string) =>

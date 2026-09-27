@@ -456,24 +456,16 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
           `/uf/[sigla]/governador`, com o dado DA UF. */}
 
       {/* Spec 006 RF-006.6 / RF-006.7 (2026-09-27, decisão do dono) — quem
-          fecha no 1º turno, quem vai ao 2º, e o peso de cada partido. DUAS
-          leituras lado a lado: "Pela projeção" (como o estado deve terminar)
-          e "Se a apuração parasse agora" (só o já apurado). Elas podem
-          discordar na mesma noite — é para isso que ficam juntas.
+          fecha no 1º turno, quem vai ao 2º, e o peso de cada partido. Duas
+          leituras: "Pela projeção" (como o estado deve terminar) e "Se a
+          apuração parasse agora" (só o já apurado). Até 2026-09-27 (tarde)
+          ficavam lado a lado; agora cada uma aparece só na sua base da chave
+          "Parcial / Projeção" — ver o comentário no ponto de uso.
 
           Ausente em fase pré (não há desfecho de apuração que não começou —
           RF-161), no ramo sem payload (é outro componente, acima) e no 2º
           turno: com `turno === 2` não existe "fecha no 1º turno", e a regra
-          de desfecho deixa todas as UFs `em_aberto` (`vai_a_2t` nulo).
-
-          🔴 As colunas ficam lado a lado por CONTAINER, nunca por viewport. Esta
-          página vive dentro da coluna de painéis do `<AppShellSplit>`, que
-          mede no máximo 430px no celular e 400px fixos no desktop (medidas e
-          argumento em `components/blocks/MunicipioTable.tsx`, "A função não é
-          monotônica"): um `md:grid-cols-2` ligaria as duas colunas justamente
-          no desktop, onde há MENOS espaço (~176px cada). `@xl` (36rem) mede a
-          caixa do painel — empilha em toda largura que o shell produz hoje e
-          abre as duas colunas sozinho se a coluna de painéis alargar. */}
+          de desfecho deixa todas as UFs `em_aberto` (`vai_a_2t` nulo). */}
       {!pre && payload.turno !== 2 ? (
         <Panel
           kicker="Governadores · não oficial"
@@ -481,42 +473,55 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
           titleId="desfecho-turno-heading"
         >
           <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
-            <p
-              className="max-w-prose"
-              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-            >
-              Duas leituras lado a lado: a projeção diz como cada estado deve terminar; a contagem
-              mostra o que já saiu das urnas. Na mesma noite, elas podem discordar.
-            </p>
-            <div className="@container" data-testid="desfecho-turno">
-              <div className="grid grid-cols-1 gap-8 @xl:grid-cols-2 @xl:gap-6">
-                <section
-                  aria-labelledby="desfecho-projecao-heading"
-                  className="flex flex-col gap-4"
+            {/* 🔴 2026-09-27 (decisão do dono) — as duas leituras deixaram de
+                ficar lado a lado: cada uma segue a chave "Parcial / Projeção"
+                (`data-view-only`, `app/globals.css`). "Pela projeção" só na
+                base Projeção; "Se a apuração parasse agora" só na Parcial —
+                a mesma regra de 20/09 de que a visão Parcial não mostra
+                leitura do modelo nenhuma. `display: none` também tira a
+                coluna escondida da árvore de acessibilidade. Com uma coluna
+                por vez, a grade de duas colunas por container saiu. */}
+            <div className="flex flex-col" data-testid="desfecho-turno">
+              <section
+                aria-labelledby="desfecho-projecao-heading"
+                className="flex flex-col gap-4"
+                data-view-only="proj"
+              >
+                <h3
+                  id="desfecho-projecao-heading"
+                  style={{ margin: 0, font: "var(--type-title)", fontSize: "var(--text-lg)" }}
                 >
-                  <h3
-                    id="desfecho-projecao-heading"
-                    style={{ margin: 0, font: "var(--type-title)", fontSize: "var(--text-lg)" }}
-                  >
-                    Pela projeção
-                  </h3>
-                  <GovernadoresPlacarTurno porUf={por_uf} base="projecao" />
-                  <GovernadoresPorPartido porUf={por_uf} base="projecao" />
-                </section>
-                <section
-                  aria-labelledby="desfecho-contagem-heading"
-                  className="flex flex-col gap-4"
+                  Pela projeção
+                </h3>
+                <p
+                  className="max-w-prose"
+                  style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
                 >
-                  <h3
-                    id="desfecho-contagem-heading"
-                    style={{ margin: 0, font: "var(--type-title)", fontSize: "var(--text-lg)" }}
-                  >
-                    Se a apuração parasse agora
-                  </h3>
-                  <GovernadoresPlacarTurno porUf={por_uf} base="contagem" />
-                  <GovernadoresPorPartido porUf={por_uf} base="contagem" />
-                </section>
-              </div>
+                  Como cada estado deve terminar, segundo a projeção do modelo.
+                </p>
+                <GovernadoresPlacarTurno porUf={por_uf} base="projecao" />
+                <GovernadoresPorPartido porUf={por_uf} base="projecao" />
+              </section>
+              <section
+                aria-labelledby="desfecho-contagem-heading"
+                className="flex flex-col gap-4"
+                data-view-only="parcial"
+              >
+                <h3
+                  id="desfecho-contagem-heading"
+                  style={{ margin: 0, font: "var(--type-title)", fontSize: "var(--text-lg)" }}
+                >
+                  Se a apuração parasse agora
+                </h3>
+                <p
+                  className="max-w-prose"
+                  style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+                >
+                  O que já saiu das urnas, sem projeção.
+                </p>
+                <GovernadoresPlacarTurno porUf={por_uf} base="contagem" />
+                <GovernadoresPorPartido porUf={por_uf} base="contagem" />
+              </section>
             </div>
           </div>
         </Panel>

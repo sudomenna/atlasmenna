@@ -105,7 +105,7 @@ WHEN renderizar tabs, the system SHALL incluir Senado / Congresso / Assembleias 
 
 **RF-006.6 — Placar 1º × 2º turno nas duas bases (2026-09-27, decisão do dono)**
 
-WHILE a página está na fase normal do 1º turno (payload presente, `fase` ≠ `pre_eleicao`, `turno === 1`), the system SHALL exibir, entre o painel "Governadores 2026" e a grade "Corridas estaduais", um painel com DUAS leituras lado a lado — "Pela projeção" e "Se a apuração parasse agora" — e, em cada uma, a contagem das 27 UFs por desfecho (`eleito_1t`, `segundo_turno`, `em_aberto` só na projeção, `aguardando`) com a lista de siglas de cada grupo, segundo a regra do RF-006.8.
+WHILE a página está na fase normal do 1º turno (payload presente, `fase` ≠ `pre_eleicao`, `turno === 1`), the system SHALL exibir, entre o painel "Governadores 2026" e a grade "Corridas estaduais", um painel com DUAS leituras — "Pela projeção" e "Se a apuração parasse agora" — e, em cada uma, a contagem das 27 UFs por desfecho (`eleito_1t`, `segundo_turno`, `em_aberto` só na projeção, `aguardando`) com a lista de siglas de cada grupo, segundo a regra do RF-006.8.
 
 IF o payload está em fase pré-eleição, ausente, ou `turno === 2`, the system SHALL omitir o painel inteiro.
 
@@ -116,6 +116,8 @@ IF nenhuma das 27 UFs tem desfecho na base (todas `aguardando`), the system SHAL
 - Given uma UF ausente de `por_uf`, when o placar renderiza, then ela aparece como "aguardando apuração" nas duas bases e o placar soma 27.
 - Given a base "contagem", when o placar renderiza, then nenhum rótulo diz "eleito": o vocabulário é condicional ("fechariam no 1º turno", "iriam ao 2º turno").
 - Given qualquer base, when o placar renderiza, then a faixa usa só tinta neutra com o mesmo código das barras por partido — cheio (`--text-primary`) = 1º turno, listrado = 2º turno, contorno para em aberto e tracejado para aguardando — nunca cor de partido nem verde/tijolo (decisão do dono 27/09: colidia com PL/PT logo abaixo), e cada sigla tem o nome do estado por extenso para leitor de tela.
+
+> **Emendado em 2026-09-27 (tarde), decisão do dono.** As duas leituras deixaram de ficar lado a lado: cada uma aparece só na sua base da chave "Parcial / Projeção" — "Pela projeção" com a chave em Projeção, "Se a apuração parasse agora" com a chave em Parcial (`data-view-only`, `app/globals.css`; mesma regra de 20/09 de que a visão Parcial não mostra leitura do modelo). Teste: `tests/integration/governador-page.test.tsx` caso (t2).
 
 **RF-006.7 — Desfecho por partido nas duas bases (2026-09-27, decisão do dono)**
 
