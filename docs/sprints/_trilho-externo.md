@@ -267,6 +267,8 @@ TSE — nunca de tentativa e erro, nunca por analogia com 2022 ou 2024.
 
 ### Roteiro
 
+> 📋 **Passo a passo para o dono, em linguagem simples:** [`../operations/vespera-03-10.md`](../operations/vespera-03-10.md).
+
 1. **03/10, manhã** — `pnpm tse:watch --once` contra produção. Se `exit 2`, ler os códigos das
    eleições Federal e Estadual no `ele-c.json`, anotando **a fonte e o horário**.
 2. Se até o meio-dia não houver sinal: chamado em `30308800.tse.jus.br` (descrição começando com
