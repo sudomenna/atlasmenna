@@ -122,21 +122,21 @@ const TOTAL_UFS = 27;
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Câmara dos Deputados 2026 · SalaCofre",
+  title: "Câmara dos Deputados 2026 · AtlasMenna",
   description:
     "Como está a bancada da Câmara dos Deputados em 2026 com os votos já apurados, por partido e federação — 27 corridas proporcionais, turno único. Não oficial. Fonte: TSE.",
   alternates: { canonical: `/${DEPUTADO.slug}` },
   openGraph: {
-    title: "Câmara dos Deputados 2026 · SalaCofre",
+    title: "Câmara dos Deputados 2026 · AtlasMenna",
     description:
       "Como a bancada da Câmara está se formando, partido a partido e federação a federação, com os votos já contados.",
     type: "website",
     locale: "pt_BR",
-    siteName: "SalaCofre",
+    siteName: "AtlasMenna",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Câmara dos Deputados 2026 · SalaCofre",
+    title: "Câmara dos Deputados 2026 · AtlasMenna",
     description: "A bancada da Câmara com os votos já apurados, estado a estado.",
   },
 };

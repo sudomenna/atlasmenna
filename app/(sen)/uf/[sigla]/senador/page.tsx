@@ -187,7 +187,7 @@ interface UFSenadorPageProps {
 export async function generateMetadata({ params }: UFSenadorPageProps): Promise<Metadata> {
   const { sigla: raw } = await params;
   const sigla = raw.toUpperCase();
-  const title = `Senado ${sigla} — Apuração 2026 | SalaCofre`;
+  const title = `Senado ${sigla} — Apuração 2026 | AtlasMenna`;
   const description = `Apuração da corrida ao Senado em ${sigla} (2026): duas vagas por estado, projeção em tempo real e margem para a 2ª vaga.`;
   return {
     alternates: { canonical: `/uf/${sigla}/senador` },
@@ -198,7 +198,7 @@ export async function generateMetadata({ params }: UFSenadorPageProps): Promise<
       description,
       type: "website",
       locale: "pt_BR",
-      siteName: "SalaCofre",
+      siteName: "AtlasMenna",
       url: `/uf/${sigla}/senador`,
     },
     twitter: { card: "summary_large_image", title, description },

@@ -128,7 +128,7 @@ interface UFDeputadoPageProps {
 export async function generateMetadata({ params }: UFDeputadoPageProps): Promise<Metadata> {
   const { sigla: raw } = await params;
   const sigla = raw.toUpperCase();
-  const title = `${DEPUTADO.label} ${sigla} — Apuração 2026 | SalaCofre`;
+  const title = `${DEPUTADO.label} ${sigla} — Apuração 2026 | AtlasMenna`;
   const description = `Apuração da eleição de ${DEPUTADO.label} em ${sigla} (2026): cadeiras por partido e federação com os votos já contados, votos de legenda e eleitos, em tempo real.`;
   return {
     alternates: { canonical: `/uf/${sigla}/${DEPUTADO.slug}` },
@@ -139,7 +139,7 @@ export async function generateMetadata({ params }: UFDeputadoPageProps): Promise
       description,
       type: "website",
       locale: "pt_BR",
-      siteName: "SalaCofre",
+      siteName: "AtlasMenna",
       url: `/uf/${sigla}/${DEPUTADO.slug}`,
     },
     twitter: { card: "summary_large_image", title, description },

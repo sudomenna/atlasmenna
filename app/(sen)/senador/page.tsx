@@ -99,21 +99,21 @@ const VAGAS = SENADOR.vagasPorUf ?? 1;
 const CADENCIA_MIN = 5;
 
 export const metadata: Metadata = {
-  title: "Senado 2026 · SalaCofre",
+  title: "Senado 2026 · AtlasMenna",
   description:
     "Projeção das 27 corridas estaduais para o Senado em 2026 — duas vagas por estado, 54 em disputa. Não oficial. Fonte: TSE.",
   alternates: { canonical: "/senador" },
   openGraph: {
-    title: "Senado 2026 · SalaCofre",
+    title: "Senado 2026 · AtlasMenna",
     description:
       "Projeção das 54 vagas do Senado em disputa em 2026 — duas por estado, turno único.",
     type: "website",
     locale: "pt_BR",
-    siteName: "SalaCofre",
+    siteName: "AtlasMenna",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Senado 2026 · SalaCofre",
+    title: "Senado 2026 · AtlasMenna",
     description: "As 54 vagas do Senado em disputa, estado a estado.",
   },
 };

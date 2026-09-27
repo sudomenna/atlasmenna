@@ -35,7 +35,7 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SalaCofre — Apuração eleitoral 2026",
+  title: "AtlasMenna — Apuração eleitoral 2026",
   description:
     "Plataforma pública de apuração eleitoral 2026 com projeção estatística. Não oficial. Fonte: TSE.",
 };
@@ -112,7 +112,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             e precisa ser inline e síncrono para rodar antes do primeiro paint. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <TopBar
-          brand="SalaCofre"
+          brand="AtlasMenna"
           brandHref="/"
           subtitle={`Eleições 2026 · ${turno}º turno · não oficial`}
           right={

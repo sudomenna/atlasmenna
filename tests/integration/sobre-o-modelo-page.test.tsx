@@ -51,7 +51,7 @@ describe("/sobre-o-modelo — restyle em tokens (S07/Bloco 2)", () => {
   it("(b) um único <h1>, e os oito <h2> de seção seguem existindo", () => {
     const doc = parse();
     expect(doc.querySelectorAll("h1")).toHaveLength(1);
-    expect(doc.querySelector("h1")?.textContent).toBe("Como a SalaCofre faz uma projeção");
+    expect(doc.querySelector("h1")?.textContent).toBe("Como o AtlasMenna faz uma projeção");
     expect(doc.querySelectorAll("h2")).toHaveLength(8);
   });
 

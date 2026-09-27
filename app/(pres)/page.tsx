@@ -230,21 +230,21 @@ import nationalFixtureT2 from "@/tests/fixtures/edge-config/projection-current-t
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "SalaCofre — Apuração presidencial 2026",
+  title: "AtlasMenna — Apuração presidencial 2026",
   description:
     "Apuração presidencial 2026 em tempo real e projeção estatística do resultado final. Não oficial. Fonte: TSE.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "SalaCofre — Apuração presidencial 2026",
+    title: "AtlasMenna — Apuração presidencial 2026",
     description:
       "Apuração presidencial 2026 em tempo real e projeção estatística do resultado final.",
     type: "website",
     locale: "pt_BR",
-    siteName: "SalaCofre",
+    siteName: "AtlasMenna",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SalaCofre — Apuração presidencial 2026",
+    title: "AtlasMenna — Apuração presidencial 2026",
     description:
       "Apuração presidencial 2026 em tempo real e projeção estatística do resultado final.",
   },

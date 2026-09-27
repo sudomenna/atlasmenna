@@ -988,7 +988,7 @@ export function SerieApuracaoChart({
             {cadenciaMin} minutos. As candidaturas listadas são as{" "}
             {candidatos.length === 1 ? "que está" : `${candidatos.length} que estão`} à frente no
             momento; quem sai do grupo deixa de aparecer, inclusive no passado. A coluna de projeção
-            é uma estimativa do SalaCofre, não um resultado oficial — o resultado oficial é o do
+            é uma estimativa do AtlasMenna, não um resultado oficial — o resultado oficial é o do
             Tribunal Superior Eleitoral.
             {destacaVagas && emVaga.length === 2
               ? ` Esta corrida elege 2 vagas: no momento, ${emVaga

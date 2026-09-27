@@ -223,7 +223,7 @@ interface UFPageProps {
 export async function generateMetadata({ params }: UFPageProps): Promise<Metadata> {
   const { sigla: raw } = await params;
   const sigla = raw.toUpperCase();
-  const title = `${sigla} — Apuração Presidencial 2026 | SalaCofre`;
+  const title = `${sigla} — Apuração Presidencial 2026 | AtlasMenna`;
   const description = `Apuração presidencial 2026 em ${sigla}: projeção em tempo real, mapa de municípios, swing vs 2022.`;
   return {
     // RNF-027 — URL canônica /uf/<SIGLA>.
@@ -237,7 +237,7 @@ export async function generateMetadata({ params }: UFPageProps): Promise<Metadat
       description,
       type: "website",
       locale: "pt_BR",
-      siteName: "SalaCofre",
+      siteName: "AtlasMenna",
       url: `/uf/${sigla}`,
     },
     twitter: {

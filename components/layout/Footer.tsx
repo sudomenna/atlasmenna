@@ -30,7 +30,7 @@ export function Footer() {
         >
           TSE
         </a>
-        . SalaCofre 2026.
+        . AtlasMenna 2026.
       </p>
       {/*
         `/candidatos` (spec 018, T-13) entra AQUI e não no `<CargoTabs>`: o

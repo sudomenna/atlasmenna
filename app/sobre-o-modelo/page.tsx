@@ -287,14 +287,14 @@ function BandTd({ children, style }: { children: ReactNode; style?: CSSPropertie
  */
 
 export const metadata: Metadata = {
-  title: "Sobre o Modelo — SalaCofre",
+  title: "Sobre o Modelo — AtlasMenna",
   description:
-    "Como funciona o modelo estatístico de projeção da SalaCofre: regra de três por zona eleitoral, intervalo de confiança via bootstrap, bandas de probabilidade, a faixa de cadeiras da Câmara e limitações conhecidas.",
+    "Como funciona o modelo estatístico de projeção do AtlasMenna: regra de três por zona eleitoral, intervalo de confiança via bootstrap, bandas de probabilidade, a faixa de cadeiras da Câmara e limitações conhecidas.",
   alternates: { canonical: "/sobre-o-modelo" },
   openGraph: {
-    title: "Sobre o Modelo — SalaCofre",
+    title: "Sobre o Modelo — AtlasMenna",
     description:
-      "Metodologia da projeção eleitoral SalaCofre: regra de três por zona, bootstrap, agulha de probabilidade e limitações.",
+      "Metodologia da projeção eleitoral do AtlasMenna: regra de três por zona, bootstrap, agulha de probabilidade e limitações.",
     type: "article",
   },
 };
@@ -304,13 +304,13 @@ export default function SobreOModeloPage() {
     <main style={S.page}>
       <article style={S.container}>
         <p style={S.kicker}>Metodologia</p>
-        <h1 style={S.title}>Como a SalaCofre faz uma projeção</h1>
+        <h1 style={S.title}>Como o AtlasMenna faz uma projeção</h1>
         <p style={S.deck}>
           O método em três partes: projetar, por regra de três, o total de cada zona eleitoral a
           partir do que ela já apurou; simular mil reamostragens para estimar a incerteza; e
           traduzir tudo em uma probabilidade que se atualiza a cada novo boletim do TSE.
         </p>
-        <p style={S.byline}>Equipe SalaCofre · Última atualização: maio de 2026</p>
+        <p style={S.byline}>Equipe AtlasMenna · Última atualização: maio de 2026</p>
 
         {/* 1. O modelo */}
         <section style={S.sectionFirst} aria-labelledby="sec-modelo">
@@ -712,10 +712,10 @@ export default function SobreOModeloPage() {
         <section style={S.section} aria-labelledby="sec-team">
           <p style={S.sectionLabel}>7 · Quem somos</p>
           <h2 id="sec-team" style={S.h2}>
-            O time por trás da SalaCofre
+            O time por trás do AtlasMenna
           </h2>
           <p style={S.body}>
-            A SalaCofre é um projeto independente de jornalismo de dados eleitorais. Os nomes da
+            O AtlasMenna é um projeto independente de jornalismo de dados eleitorais. Os nomes da
             equipe, créditos editoriais e contato de redação serão publicados aqui antes do dia da
             eleição.
           </p>
@@ -791,7 +791,7 @@ export default function SobreOModeloPage() {
           <a href="https://resultados.tse.jus.br" rel="noopener noreferrer" target="_blank">
             TSE
           </a>
-          . · SalaCofre 2026
+          . · AtlasMenna 2026
         </footer>
       </article>
     </main>

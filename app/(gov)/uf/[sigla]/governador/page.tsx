@@ -190,7 +190,7 @@ interface UFGovernadorPageProps {
 export async function generateMetadata({ params }: UFGovernadorPageProps): Promise<Metadata> {
   const { sigla: raw } = await params;
   const sigla = raw.toUpperCase();
-  const title = `Governador ${sigla} — Apuração 2026 | SalaCofre`;
+  const title = `Governador ${sigla} — Apuração 2026 | AtlasMenna`;
   const description = `Apuração da corrida estadual de governador em ${sigla} (2026): projeção em tempo real, mapa de municípios, agregação por mesorregião.`;
   return {
     alternates: { canonical: `/uf/${sigla}/governador` },
@@ -201,7 +201,7 @@ export async function generateMetadata({ params }: UFGovernadorPageProps): Promi
       description,
       type: "website",
       locale: "pt_BR",
-      siteName: "SalaCofre",
+      siteName: "AtlasMenna",
       url: `/uf/${sigla}/governador`,
     },
     twitter: { card: "summary_large_image", title, description },

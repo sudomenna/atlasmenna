@@ -125,7 +125,7 @@ import {
 export const revalidate = 43_200;
 
 export const metadata: Metadata = {
-  title: "Candidatos 2026 — SalaCofre",
+  title: "Candidatos 2026 — AtlasMenna",
   description:
     "Quem está concorrendo em 2026: nome de urna, partido e número das candidaturas " +
     "registradas no TSE, por cargo e por unidade da federação.",
@@ -651,7 +651,7 @@ export default async function CandidatosPage({ searchParams }: PageProps) {
             data-testid="candidatos-filtro-invalido"
             style={{ font: "var(--type-body)", color: "var(--text-secondary)", margin: 0 }}
           >
-            Nenhuma candidatura para este filtro. O SalaCofre cobre quatro cargos — Presidente,
+            Nenhuma candidatura para este filtro. O AtlasMenna cobre quatro cargos — Presidente,
             Governador, Senador e Deputado Federal — nas 27 unidades da federação.
           </p>
         ) : resultado && resultado.status === "unavailable" ? (

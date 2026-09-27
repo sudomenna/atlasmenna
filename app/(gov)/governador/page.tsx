@@ -133,21 +133,21 @@ import govFixture from "@/tests/fixtures/edge-config/gov-current.json" with { ty
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Governadores 2026 · SalaCofre",
+  title: "Governadores 2026 · AtlasMenna",
   description:
     "Projeção das 27 corridas estaduais para governador em 2026 — apuração em tempo real, status por UF, cartograma NYT-style. Não oficial. Fonte: TSE.",
   alternates: { canonical: "/governador" },
   openGraph: {
-    title: "Governadores 2026 · SalaCofre",
+    title: "Governadores 2026 · AtlasMenna",
     description:
       "Projeção das 27 corridas estaduais para governador em 2026 — apuração em tempo real.",
     type: "website",
     locale: "pt_BR",
-    siteName: "SalaCofre",
+    siteName: "AtlasMenna",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Governadores 2026 · SalaCofre",
+    title: "Governadores 2026 · AtlasMenna",
     description: "Apuração em tempo real das 27 corridas estaduais.",
   },
 };

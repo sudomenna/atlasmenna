@@ -77,7 +77,7 @@ describe("/sobre-o-modelo (spec 011 / ADR-0021)", () => {
       "A unidade mínima: a regra de três por zona",
       "o bootstrap",
       "a agulha",
-      "O time por trás da SalaCofre",
+      "O time por trás do AtlasMenna",
       "De onde vêm os dados",
     ]) {
       expect(markup).toContain(heading);
