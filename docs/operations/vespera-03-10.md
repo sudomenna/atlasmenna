@@ -58,8 +58,25 @@ mostra "Aguardando o primeiro boletim" a noite toda, igual à tela normal de ant
       de rede. Leia **qual linha** mudou; se for só um leiaute com tempo esgotado, rode de novo.
 
 - [ ] **0.4. Combinar quem está de plantão em 03/10.** É o único passo do projeto que não pode ser
-      antecipado. Anote o nome em [`../sprints/_D1-04out2026.md`](../sprints/_D1-04out2026.md) § "Quem é
-      PagerDuty".
+      antecipado. Anote o nome em [`../sprints/_D1-04out2026.md`](../sprints/_D1-04out2026.md) § "Quem
+      está de plantão".
+
+- [ ] **0.5. Apontar a vigia do terminal para a gaveta do site.** Em 27/09 o `pnpm vigia:ciclo`
+      desta máquina lê a gaveta de **ensaio** do simulado (`salacofre-edge-config-preview`), não a
+      que o site público mostra (`salacofre-edge-config`). Na noite de 04/10 ela gritaria "parado"
+      em falso a noite toda — ou pior, ficaria calada quando devia gritar.
+      1. Vercel → **Storage** → store **`salacofre-edge-config`** (o **sem** "preview") →
+         **Tokens** → copie a linha de conexão (começa com `https://edge-config.vercel.com/`).
+      2. Abra o arquivo `~/Projetos/AtlasMenna/.env.local`, ache a linha que começa com
+         `EDGE_CONFIG=` (**não** `EDGE_CONFIG_ID` nem `EDGE_CONFIG_TOKEN`) e troque o que vem
+         depois do `=` pelo que você copiou. Salve.
+      3. Confira:
+         ```bash
+         cd ~/Projetos/AtlasMenna && pnpm vigia:ciclo
+         ```
+         **Você deve ver** `"idade_min":null`. Se vier um número grande (milhares de minutos),
+         ainda está na gaveta do ensaio. Se disser que está "cega", a linha copiada foi a errada.
+      (Origem: [`runbook.md`](./runbook.md) § "Desarmar" — o item estava lá e faltava aqui.)
 
 ---
 
@@ -123,11 +140,15 @@ publica a lista sem fotos, sem erro nenhum na tela.
       dela. Vercel → **Deployments** → o mais recente marcado **Production** → menu **⋯** →
       **Redeploy**. **Você deve ver** o novo deployment ficar **Ready** e **Current**.
 
-- [ ] **2.4. Conferir que o sistema monta a lista de pedidos ao TSE sem erro.**
+- [ ] **2.4. Conferir que o sistema monta a lista de pedidos ao TSE sem erro** com o número
+      Federal anotado (troque `<número>` pelo número, sem os sinais `<` `>`):
       ```bash
-      cd ~/Projetos/AtlasMenna && pnpm list-targets --env production --cargo 1
+      cd ~/Projetos/AtlasMenna && set -a; . ./.env.local; set +a; TSE_COD_ELEICAO_FEDERAL=ele2026/<número> pnpm list-targets --env production --cargo 1
       ```
-      **Você deve ver** em torno de **6.110** alvos, sem mensagem de erro.
+      **Você deve ver** `Total de alvos: 6138` (6.110 zonas + 27 estados + 1 nacional; medido em
+      27/09), sem mensagem de erro. Este passo prova que o número tem o formato certo e que a
+      lista de zonas está completa — ele **não** lê a Vercel; quem confere a Vercel é o 2.2.
+      (Até 27/09 este passo estava escrito sem o `.env.local` e sem o número, e quebrava.)
 
 ---
 
@@ -137,9 +158,10 @@ O robô só busca resultados entre **17h e 04h** (horário de Brasília). Às 17
 rodar com os números novos — é o ensaio real da noite seguinte.
 
 - [ ] **3.1. Às 17h05, olhar os registros da Vercel.** Vercel → projeto → **Logs** → filtrar por
-      `/api/ingest`. **Você deve ver** chamadas com resposta **200** a cada ~30 s e **nenhuma**
-      mensagem "Nem TSE_COD_ELEICAO_FEDERAL nem TSE_COD_ELEICAO estão definidas" (essa frase
-      é exatamente o defeito que este passo a passo existe para evitar).
+      `/api/ingest`. **Você deve ver** chamadas com resposta **200** a cada minuto (duas por
+      minuto é normal: Presidente e Governador), a linha `ingest ciclo concluído`, e **nenhuma**
+      mensagem começando por **`Nem TSE_COD_ELEICAO`** (essa frase é exatamente o defeito que
+      este passo a passo existe para evitar).
 - [ ] **3.2. Olhar o site.** Na noite de 03/10 ainda não há voto: **você deve ver** a tela de espera
       ("Aguardando o primeiro boletim" ou a tela de pré-eleição). Se aparecer **qualquer percentual
       de candidato**, **pare e chame o Claude** — seria número que não devia estar lá.
@@ -150,6 +172,4 @@ rodar com os números novos — é o ensaio real da noite seguinte.
 
 ## Parte 4 — 04/10
 
-- [ ] **4.1.** Manhã: rodar a vigia de novo (2.2) — tem de continuar **"armado"**.
-- [ ] **4.2.** 17h: acompanhar os registros como em 3.1; os primeiros números reais aparecem quando o
-      TSE publicar o primeiro boletim.
+O roteiro do dia está em [`../sprints/_D1-04out2026.md`](../sprints/_D1-04out2026.md).

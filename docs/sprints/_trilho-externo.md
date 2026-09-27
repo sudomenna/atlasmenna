@@ -284,7 +284,7 @@ TSE — nunca de tentativa e erro, nunca por analogia com 2022 ou 2024.
 
 Este é o **único** item do projeto inteiro que não pode ser antecipado — não existe versão dele que
 possa ser feita em 30/09. Se ninguém estiver de plantão em 03/10, o produto não apura em 04/10. O
-nome do plantonista entra na seção _Quem é PagerDuty_ de [`_D1-04out2026.md`](./_D1-04out2026.md).
+nome do plantonista entra na seção _Quem está de plantão_ de [`_D1-04out2026.md`](./_D1-04out2026.md).
 
 ### Como saber que deu certo
 

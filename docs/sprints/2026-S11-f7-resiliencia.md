@@ -180,8 +180,9 @@ em 05/09** e continua diferida. O que resta é o mínimo:
       `--no-verify` exige ordem explícita do dono. Um hotfix às 21h não é hora de descobrir
       isso — o conserto é `pnpm lint:fix`.
 - [ ] Congelar a `main` — último commit pelo menos 24 h antes do dia D.
-- [ ] Ensaio de pausa do cron (`CRON_ENABLED=false` por 30 s e religar), como o protocolo
-      de [D1](./_D1-04out2026.md) prevê para as 14h.
+- [ ] ~~Ensaio de pausa do cron (`CRON_ENABLED=false` por 30 s e religar)~~ — **retirado do
+      dia D em 27/09**: trocar variável só vale com publicação nova, e o ensaio custaria duas no
+      dia da eleição. O freio segue descrito em [D1](./_D1-04out2026.md) Parte 3.
 
 ---
 
