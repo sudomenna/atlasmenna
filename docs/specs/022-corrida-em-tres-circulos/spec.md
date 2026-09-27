@@ -176,7 +176,6 @@ específica do RF-193 (`naoApuradoInstalacao`), nunca "o resto de tudo".
 | `votacao.corrida` ausente | **não sabemos** | `<DetailUnavailable>` no lugar dos três círculos |
 | `votacao.destino_pendente === true`, **ou** alguma entrada de `corrida` com `votos > 0` e **sem** `destino` | **aguardando a destinação** — o TSE ainda não fez a 1ª totalização parcial | os três círculos em "aguardando a separação dos votos válidos", no DOM |
 | `contagens.validos == 0` | **não começou** | círculos 1 e 2 "sem votos apurados" (base zero não vira "0,0%"); círculo 3 segue o RF-206, que nesse estado é quase todo "Ainda não apurado" |
-| rota de Senador | **aguardando medição** — ver RF-210 | os três círculos em "aguardando", no DOM |
 | resto | **apurando** | RF-204..206 |
 
 Três estados que o dono fixou em 14/09 continuam distintos: ausente ≠ zerado ≠
@@ -271,20 +270,55 @@ candidaturas nos últimos dígitos, e a metodologia diz isso.
 
 **Estados**: sem `projetada` ⇒ "aguardando projeção"; destinação pendente
 (RF-207) ⇒ "aguardando a separação dos votos válidos"; Σ projeções válidas = 0
-⇒ "aguardando projeção"; Senado ⇒ RF-210. Sempre no DOM.
+⇒ "aguardando projeção"; Senado em votos, 2 por eleitor (RF-210). Sempre no DOM.
 
-### RF-210 — Senado fica em "aguardando" (decisão do dono, 26/09)
+### RF-210 — Senado: tudo contado em VOTOS, 2 por eleitor (decisão do dono, 2026-09-27)
 
-**Quando** a rota é de Senador, **o sistema deve** renderizar o painel com os
-três círculos em "aguardando", sempre no DOM.
+🔴 **Substitui o "aguardando" de 2026-09-26.** Medido nas capturas reais do
+simulado do TSE, cargo 5, 2 vagas (`tests/fixtures/tse/2026-sim/senado/`,
+DF/AC/SP/RS, 100% apurado):
 
-**Motivo**: com duas vagas cada eleitor vota duas vezes, e não há captura real
-de Senador no repositório para medir como o TSE conta isso em `vv`/`tv`/`c`. A
-fixture do simulado não responde: copia **as mesmas** contagens para os três
-cargos. O produtor publica `corrida_por_partido`/`corrida` para Senador mesmo
-assim — o bloqueio é só da tela, até a medição.
+```
+tv == 2 × c                                   (exato nas 4 UFs)
+vv + vb + tvn + van + vansj (+ vscv) == tv    (exato)
+Σ vap das candidaturas "Válido" == vv         (exato)
+c + a == esi                                  (pessoas)
+```
 
----
+Os campos de VOTO (`validos`, `brancos`, `nulos`, `anulados`, `sub_judice`)
+vêm em votos; `aptos`, `instalados`, `comparecimento`, `abstencao` vêm em
+PESSOAS. Somá-los faz todo arco "não fechar".
+
+**Quando** o cargo é Senador, **o sistema deve** exibir os círculos (desta
+spec e do painel "Votação", spec 021) em **votos**: as quantidades de pessoas
+multiplicadas por `votos_por_eleitor` (= vagas em disputa na UF, 2 em 2026),
+e a base nomeada como "votos (2 por eleitor)". Base do círculo 2 = `tv` =
+`comparecimento × 2`; do círculo 3 = `aptos × 2`; "Abstenção" = `abstencao × 2`
+e "Ainda não apurado" = `(aptos − instalados) × 2`.
+
+**Onde** a alternativa (contar em pessoas e dividir votos por 2) é **proibida**:
+um eleitor pode dar um voto válido e um branco — não existe meio eleitor.
+
+⚠️ A projeção (arco 3 do "Votação", círculo de projeção da corrida) segue a
+mesma unidade: o total projetado de válidos do Senado é em votos. Conferir no
+produtor (`compute_participacao`/`projetar_fatias_em_contagens`) e no gerador
+do simulado, que até 2026-09-27 copiava para o Senado as contagens do
+Presidente sem dobrar os votos — escondendo o defeito.
+
+**Conferido e corrigido no produtor (2026-09-27).** Medido nas 4 capturas
+antes da correção: a fração de válidos saía 168–176% sobre `comparecimento`
+(pessoas), o clip a achatava em 100% e `projetada.validos` publicava o número
+de PESSOAS (DF: 1.862.765 contra 3.273.238 votos); `participacao.brancos_nulos`
+saía o dobro (DF 11,82% contra 5,91%); o círculo do RF-212 divergia 68–76%.
+O fator `votos_por_eleitor` (`api/model/cargos.py`, da mesma tabela de
+`EdgePayloadUf.vagas`; cargo sem fator ⇒ não projeta) entra na base das
+métricas de VOTO (`comparecimento × 2 == tv`) e em `projetar_fatias_em_contagens`;
+`abstencao` segue pessoas sobre pessoas. Depois: as quatro fatias batem a
+verdade com erro ≤ 3 votos e RF-212 fecha com diferença ≤ 3 votos
+(`tests/unit/model/test_senado_votos_por_eleitor.py`). ⚠️ O contrato TS
+continua rotulando `participacao.brancos_nulos.base` como `"comparecimento"`;
+no Senado essa base é o total de VOTOS — a tela deve dizer "dos votos", não
+"do comparecimento". Idem a base "comparecimento" dos candidatos (E2).
 
 ## Fora de escopo
 
@@ -299,10 +333,9 @@ assim — o bloqueio é só da tela, até a medição.
 2. **Levar a destinação do voto até a tela** (opção A) — RF-203/209.
 3. **Destravar os círculos 2 e 3 das telas de UF junto** — RF-209.
 4. **Antes da destinação, "aguardando"** — RF-207.
-5. **Senado em "aguardando"** — RF-210.
+5. ~~Senado em "aguardando"~~ → **Senado contado em votos, 2 por eleitor** (2026-09-27) — RF-210.
 6. **Círculo 3 com "Ainda não apurado"** — RF-206.
 
 ## Open questions
 
-1. Senado: como `vv`, `tv` e `c` contam os dois votos por eleitor. Fecha com
-   uma captura real de cargo 5 do simulado.
+1. ~~Senado: como `vv`, `tv` e `c` contam os dois votos por eleitor.~~ ✅ **FECHADA (2026-09-27)**: medido nas capturas reais (`tv = 2 × c`) — ver RF-210.

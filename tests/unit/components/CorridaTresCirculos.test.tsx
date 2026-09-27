@@ -116,6 +116,30 @@ function votacaoDe(corrida: EdgeCorridaEntrada[], over: Partial<EdgeVotacao> = {
   return { contagens: contagensDe(corrida, EXTRA), corrida, ...over };
 }
 
+/**
+ * A mesma corrida contada como no SENADO (RF-210): os votos como vêm, e as
+ * PESSOAS pela metade — cada eleitor deu dois votos, `tv == 2 × c`. Só fecha
+ * com `votosPorEleitor = 2`. Os votos de `corridaReal()` + EXTRA somam
+ * 47.500.000, par de propósito.
+ */
+function votacaoSenadoDe(corrida: EdgeCorridaEntrada[]): EdgeVotacao {
+  const umaVaga = contagensDe(corrida, EXTRA);
+  const votos = umaVaga.comparecimento;
+  const comparecimento = votos / 2;
+  const abstencao = 6_000_000;
+  const instalados = comparecimento + abstencao;
+  return {
+    contagens: {
+      ...umaVaga,
+      comparecimento,
+      abstencao,
+      instalados,
+      aptos: instalados + 20_000_000,
+    },
+    corrida,
+  };
+}
+
 const CANDIDATOS = [
   { id: 13, nome: "Ana Tereza" },
   { id: 22, nome: "Bruno Lima" },
@@ -493,29 +517,45 @@ describe("RF-207 — os estados, e nenhum fabrica zero", () => {
   });
 });
 
-describe("RF-210 — Senado em 'aguardando'", () => {
-  const TEXTO = "Este gráfico ainda não está disponível para o Senado.";
-
-  it("🔴 os três em 'aguardando', no DOM, mesmo com dado íntegro", () => {
-    const doc = parse(
-      <CorridaTresCirculos modo="partido" senado votacao={votacaoDe(corridaReal())} />,
+/**
+ * RF-210 REESCRITO (2026-09-27, decisão do dono) — o "aguardando Senado" de
+ * 26/09 saiu: o Senado é contado em VOTOS, 2 por eleitor. Os casos que
+ * FECHAM com as capturas reais do TSE vivem em
+ * `tests/unit/components/senado-votos-por-eleitor.test.tsx`; aqui fica o que
+ * é do contrato do componente.
+ */
+describe("RF-210 — Senado em votos: o 'aguardando' não existe mais", () => {
+  it("🔴 nenhum estado 'aguardando-senado' no componente, nem o texto antigo", () => {
+    const fonte = readFileSync(
+      resolve(process.cwd(), "components/blocks/CorridaTresCirculos.tsx"),
+      "utf8",
     );
-    for (const n of [1, 2, 3] as const) {
-      expect(q(doc, `corrida-circulo-${n}-aguardando-senado`)?.textContent).toContain(TEXTO);
+    expect(fonte).not.toMatch(/aguardando-senado|ESPERA_SENADO/);
+    expect(fonte).not.toContain("ainda não está disponível para o Senado");
+  });
+
+  it("🔴 `votosPorEleitor` que não é inteiro ≥ 1 ⇒ <DetailUnavailable>, nunca um círculo", () => {
+    for (const k of [0, -2, 1.5, Number.NaN]) {
+      const doc = parse(
+        <CorridaTresCirculos
+          modo="candidatura"
+          votacao={votacaoDe(corridaReal())}
+          votosPorEleitor={k}
+        />,
+      );
+      expect(q(doc, "detail-unavailable")).not.toBeNull();
+      expect(doc.querySelectorAll("svg")).toHaveLength(0);
     }
-    expect(doc.querySelectorAll("svg")).toHaveLength(0);
   });
 
-  it("🔴 e mesmo SEM `votacao` — é bloqueio da tela, não do dado", () => {
-    const doc = parse(<CorridaTresCirculos modo="candidatura" senado votacao={undefined} />);
-    expect(q(doc, "detail-unavailable")).toBeNull();
-    expect(q(doc, "corrida-circulo-1-aguardando-senado")).not.toBeNull();
-  });
-
-  it("o texto ao leitor não tem jargão", () => {
-    const doc = parse(<CorridaTresCirculos modo="partido" senado votacao={undefined} />);
-    const t = q(doc, "corrida-circulo-1-aguardando-senado")?.textContent ?? "";
-    expect(t).not.toMatch(/RF-|payload|vv|tv\b|captura|medi[çc]/i);
+  it("🔴 as funções de círculo recusam `votosPorEleitor` inválido", () => {
+    const corrida = fatiasDaCorrida(ordenarCandidaturas(corridaReal()));
+    const c = contagensDe(corridaReal(), EXTRA);
+    expect(circuloComparecimento(corrida, c, 0)).toBeNull();
+    expect(circuloAptos(corrida, c, 1.5)).toBeNull();
+    // E o default é 1: sem o argumento, a fixture de UMA vaga fecha.
+    expect(circuloComparecimento(corrida, c)).not.toBeNull();
+    expect(circuloAptos(corrida, c)).not.toBeNull();
   });
 });
 
@@ -1209,18 +1249,25 @@ describe("RF-212 — sem dado, a figura da Projeção diz por quê (sempre no DO
   });
 });
 
-describe("RF-210 / RF-207 — Senado e <DetailUnavailable> valem nas DUAS visões", () => {
-  it("🔴 Senado: nada marcado por visão, e nenhum bloco de projeção", () => {
-    // Esconder o "aguardando Senado" na Projeção deixaria o painel sem dizer
-    // por que está vazio. Mutação que morre: aplicar `parcial` também no Senado.
+describe("RF-210 / RF-207 — Senado segue o seletor; <DetailUnavailable> vale nas DUAS visões", () => {
+  it("🔴 Senado (2 por eleitor): os três no 'parcial', a projeção no 'proj' — como os outros cargos", () => {
+    // Desde 2026-09-27 o Senado desenha: não há mais o "aguardando" que valia
+    // nas duas visões. A projeção entra com o total `projetada.validos`, SEM
+    // fator — já é de votos.
     const doc = parse(
-      <CorridaTresCirculos modo="candidatura" senado votacao={votacaoDe(corridaReal())} />,
+      <CorridaTresCirculos
+        modo="candidatura"
+        votacao={{ ...votacaoSenadoDe(corridaReal()), projetada: PROJETADA }}
+        candidatos={CANDIDATOS_PROJ}
+        votosPorEleitor={2}
+      />,
     );
-    expect(doc.querySelectorAll("[data-view-only]")).toHaveLength(0);
-    expect(q(doc, "corrida-projecao")).toBeNull();
     for (const n of [1, 2, 3] as const) {
-      expect(q(doc, `corrida-circulo-${n}-aguardando-senado`)).not.toBeNull();
+      expect(q(doc, `corrida-circulo-${n}-visao`)?.getAttribute("data-view-only")).toBe("parcial");
+      expect(q(doc, `corrida-circulo-${n}`)?.querySelector("svg")).not.toBeNull();
     }
+    expect(q(doc, "corrida-projecao-visao")?.getAttribute("data-view-only")).toBe("proj");
+    expect(q(doc, "corrida-projecao")?.getAttribute("data-total")).toBe(String(PROJETADA.validos));
   });
 
   it("🔴 <DetailUnavailable>: nada marcado por visão", () => {

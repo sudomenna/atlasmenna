@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-27T04:40:24.833Z",
+  "ts": "2026-09-27T05:34:08.319Z",
   "cargo": 3,
   "turno": 1,
   "pct_apurado_total": 25,
@@ -3016,23 +3016,23 @@
     "cenarios_2t": [],
     "chamadas_recentes": [
       {
-        "ts": "2026-09-27T04:40:24.833Z",
+        "ts": "2026-09-27T05:34:08.319Z",
         "texto": "DF chamada para LEANDRO GRASS (PT) com 37,1% apurado."
       },
       {
-        "ts": "2026-09-27T04:40:24.833Z",
+        "ts": "2026-09-27T05:34:08.319Z",
         "texto": "ES chamada para LORENZO PAZOLINI (REPUBLICANOS) com 32,2% apurado."
       },
       {
-        "ts": "2026-09-27T04:40:24.833Z",
+        "ts": "2026-09-27T05:34:08.319Z",
         "texto": "GO chamada para WILDER MORAIS (PL) com 30,9% apurado."
       },
       {
-        "ts": "2026-09-27T04:40:24.833Z",
+        "ts": "2026-09-27T05:34:08.319Z",
         "texto": "MG chamada para FLÁVIO ROSCOE (PL) com 32,4% apurado."
       },
       {
-        "ts": "2026-09-27T04:40:24.833Z",
+        "ts": "2026-09-27T05:34:08.319Z",
         "texto": "PR chamada para SANDRO ALEX (PSD) com 34,8% apurado."
       }
     ],

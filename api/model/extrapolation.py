@@ -99,7 +99,7 @@ from typing import Any, TypedDict
 import numpy as np
 
 from api.model.edge_cases import inflate_ci_low_apurado, inflate_ci_zero_apurado
-from api.model.turnout import _clip01, _frac_to_pct
+from api.model.turnout import _clip01, _frac_to_pct, _votos_por_eleitor_valido
 
 # ---------------------------------------------------------------------------
 # Tipos
@@ -161,7 +161,9 @@ class UfCandidatosEstimate(TypedDict):
     base_votaveis_projetada: int
     base_comparecimento_projetada: int
     # Σ comparecimento OBSERVADO nas zonas apuradas (sem `k`, sem
-    # extrapolação) — é o denominador bruto de `pct_atual` de
+    # extrapolação), **na unidade de VOTO do cargo** (`e.c ×
+    # votos_por_eleitor` — o dobro das pessoas no Senado de 2026, spec 022
+    # RF-210; igual às pessoas nos demais) — é o denominador bruto de `pct_atual` de
     # brancos/nulos, e é o `den` que `turnout.aggregate_national_
     # participacao` soma UF a UF para o `pct_atual` nacional. Fica `0`
     # numa UF imputada (`impute_uf_from_national`), que por definição não
@@ -194,6 +196,8 @@ def estimate_uf_candidatos(
     n_resamples: int = 1000,
     estrato_by_cod_zona: dict[int, int] | None = None,
     te_total_by_estrato: dict[int, float] | None = None,
+    *,
+    votos_por_eleitor: int = 1,
 ) -> UfCandidatosEstimate | None:
     """Projeta candidatos de uma UF por regra de três + bootstrap de zonas.
 
@@ -225,6 +229,20 @@ def estimate_uf_candidatos(
             estrato ponderada por este peso (RF-013 estendido — estrato
             sem nenhuma zona apurada cai para a proporção da UF inteira,
             mesma hierarquia já usada para zona individual).
+        votos_por_eleitor: votos que cada eleitor deposita no cargo (2 no
+            Senado de 2026 — `cargos.votos_por_eleitor`). Multiplica SÓ a
+            base "comparecimento" (`c*k`), que é a única base em PESSOAS: os
+            numeradores (`vap`, `brancos + nulos`) e a base "votáveis"
+            (`vvc`) já vêm em VOTOS do TSE. Sem o fator, medido nas capturas
+            reais de Senador (`tests/fixtures/tse/2026-sim/senado/`), a soma
+            dos shares "comparecimento" dos candidatos dava 184–188% e
+            brancos+nulos 11,8–15,1% (o dobro do real). Com ele, a identidade
+            da Fase 5 (`Σ_c share_comp + bn + anulados == 1`) volta a valer
+            no Senado como vale nos outros cargos. `1` é o valor dos cargos
+            de voto único; o chamador de produção
+            (`project.py::compute_uf_projections`) o passa sempre, explícito.
+            A base "votáveis" — e portanto `estimates_votaveis`, `p_vitoria`,
+            `p_eleito` e `votos_projetados` — NÃO muda.
 
     Returns:
         `None` se NENHUMA zona estiver apurada — caller decide o
@@ -234,11 +252,16 @@ def estimate_uf_candidatos(
     apuradas = [z for z in zonas if _is_apurada(z)]
     if not apuradas:
         return None
+    vpe = float(_votos_por_eleitor_valido(votos_por_eleitor))
 
     k_a = len(apuradas)
     te_a = np.array([float(z["eleitores_aptos"]) for z in apuradas])
     esi_a = np.array([float(z["eleitores_instalados"]) for z in apuradas])
-    c_a = np.array([float(z["comparecimento"]) for z in apuradas])
+    # Base "comparecimento" em VOTOS (`e.c × votos_por_eleitor`, == `v.tv`
+    # nas capturas do TSE): ver o argumento `votos_por_eleitor`. Com `vpe ==
+    # 1.0` a multiplicação é exata em ponto flutuante — os cargos de voto
+    # único saem bit a bit iguais ao que saíam antes.
+    c_a = np.array([float(z["comparecimento"]) for z in apuradas]) * vpe
     vvc_a = np.array([float(z["votaveis"]) for z in apuradas])
 
     # esi_a > 0 garantido por `_is_apurada` — divisão direta é segura.

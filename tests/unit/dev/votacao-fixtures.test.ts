@@ -98,10 +98,17 @@ describe("fixtures do simulado — o bloco `votacao` está no DISCO (spec 021)",
         c.comparecimento + c.abstencao,
         `${nome}: comparecimento + abstenção tem de ser o eleitorado das seções instaladas`,
       ).toBe(c.instalados);
+      // No Senado de 2 vagas cada eleitor deposita DOIS votos: os campos de
+      // voto somam `2 × comparecimento` (spec 022 RF-210 — medido nas capturas
+      // reais do TSE, `tv == 2 × c` exato). O fator vem do payload, como a
+      // tela o lê; ausente vale 1.
+      const k =
+        (payload as { composicao_vagas?: { vagas_por_uf?: number } }).composicao_vagas
+          ?.vagas_por_uf ?? 1;
       expect(
         c.validos + c.brancos + c.nulos + c.anulados + c.sub_judice,
-        `${nome}: válidos + brancos + nulos + anulados + sub judice tem de ser o comparecimento`,
-      ).toBe(c.comparecimento);
+        `${nome}: válidos + brancos + nulos + anulados + sub judice tem de ser ${k} × o comparecimento`,
+      ).toBe(k * c.comparecimento);
     });
   }
 

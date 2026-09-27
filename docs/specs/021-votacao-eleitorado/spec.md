@@ -5,7 +5,7 @@ status: draft
 priority: M
 personas: [P1, P2, P3]
 screens: [T-01, T-03, T-10, T-12]
-requirements: [RF-192, RF-193, RF-193b, RF-194, RF-195, RF-195b, RF-196, RF-197, RF-198, RF-199]
+requirements: [RF-192, RF-193, RF-193b, RF-194, RF-195, RF-195b, RF-195c, RF-196, RF-197, RF-198, RF-199]
 depends_on: [001-ingestao-tse, 002-modelo-estatistico, 003-home-nacional, 006-grid-governadores, 016-senador, 017-deputado-federal]
 apis: []
 components: [VotacaoEleitorado, Panel, DetailUnavailable]
@@ -242,6 +242,14 @@ HTML (ADR-0017) com `data-view-only="parcial"` / `data-view-only="proj"`, e a
 cascata de `app/globals.css` esconde o outro — o painel segue Server
 Component, sem JS novo (RNF-007a). O texto de metodologia acompanha: frase
 sobre o arco 3 só na Projeção, frases sobre arcos 1/2 só no Parcial.
+
+### RF-195c — Senado em votos (decisão do dono, 2026-09-27)
+
+**Quando** o cargo é Senador, **o sistema deve** exibir os três arcos em
+**votos, 2 por eleitor**, pela regra da spec 022 RF-210: `aptos`,
+`instalados` e `abstencao` multiplicados por `votos_por_eleitor`, base
+nomeada "votos (2 por eleitor)". Sem isso, medido, todo arco do Senado
+devolve "não fecha" (`tv = 2 × c` nas capturas reais do TSE).
 
 ### RF-196 — todo número tem base declarada
 

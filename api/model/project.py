@@ -82,6 +82,7 @@ from api.model.cargos import (
     total_cadeiras as cargo_total_cadeiras,
     vagas_em_disputa as cargo_vagas_em_disputa,
     vagas_por_uf as cargo_vagas_por_uf,
+    votos_por_eleitor as cargo_votos_por_eleitor,
 )
 from api.model.cadeiras import distribuir_cadeiras
 from api.model.cadeiras_bootstrap import (
@@ -121,6 +122,7 @@ from api.model.turnout import (
     Metric as ParticipacaoMetric,
     ParticipacaoEstimate,
     ZonaParticipacao,
+    _votos_por_eleitor_valido,
     aggregate_national_participacao,
     estimate_uf_participacao,
 )
@@ -2646,6 +2648,17 @@ def compute_uf_projections(
     e a consequência estatística, documentada em `_uf_projection_row`.
     """
     granularidade = cargo_granularidade(int(cargo))
+    # Spec 022 RF-210 — a base "comparecimento" dos candidatos (e o
+    # brancos/nulos da Fase 5, que sai do MESMO bootstrap) em VOTOS: no
+    # Senado de 2026 cada eleitor deposita 2. A base "votáveis" — a de
+    # `p_vitoria`/`p_eleito`/`votos_projetados` — não depende do fator.
+    vpe_cargo = _votos_por_eleitor_ou_none(cargo, "compute_uf_projections")
+    # ⚠️ Cargo sem fator declarado (só os sintéticos do harness, 91–93: os
+    # quatro cargos reais o declaram) segue com a base em pessoas, como antes
+    # desta mudança. Não publica número errado por isso: o brancos/nulos que
+    # sai deste bootstrap é DESCARTADO por `compute_participacao` para o mesmo
+    # cargo (o `vpe is None` de lá), e o aviso acima fica no log.
+    vpe_bootstrap = vpe_cargo if vpe_cargo is not None else 1
     # `_snapshots_por_uf` (não `setdefault` cru): descarta `BR`/UF vazia —
     # ver a docstring dele para o porquê de a linha nacional ser perigosa aqui.
     snaps_by_uf = _snapshots_por_uf(snapshots)
@@ -2708,6 +2721,7 @@ def compute_uf_projections(
             local_seed,
             estrato_by_cod_zona=estrato_by_cod_zona,
             te_total_by_estrato=te_total_by_estrato,
+            votos_por_eleitor=vpe_bootstrap,
         )
         if est is None:
             if int(cargo) == 1:
@@ -4134,12 +4148,18 @@ def build_votacao_uf_payloads(
     if cargo_i not in CARGOS_COM_VOTACAO_UF:
         return {}
     participacoes = participacao_by_uf or {}
+    # Spec 022 RF-210 — mesma unidade do nacional, da mesma tabela.
+    vpe = _votos_por_eleitor_ou_none(cargo_i, "build_votacao_uf_payloads")
     out: dict[str, dict[str, Any]] = {}
     for sigla, (snap, bruto) in _agregados_de_uf(agregados).items():
         contagens = _contagens_de_bruto(bruto)
         bloco: dict[str, Any] = {"contagens": contagens}
-        projetada = projetar_fatias_em_contagens(
-            contagens, participacoes.get(sigla) or {}
+        projetada = (
+            projetar_fatias_em_contagens(
+                contagens, participacoes.get(sigla) or {}, votos_por_eleitor=vpe
+            )
+            if vpe is not None
+            else None
         )
         if projetada is not None:
             bloco["projetada"] = projetada
@@ -4152,9 +4172,35 @@ def build_votacao_uf_payloads(
     return out
 
 
+def _votos_por_eleitor_ou_none(cargo: int, onde: str) -> int | None:
+    """`cargos.votos_por_eleitor(cargo)`, com aviso no log quando é `None`.
+
+    Ponto ÚNICO em que o produtor resolve a unidade voto/pessoa do cargo
+    (spec 022 RF-210). Os quatro chamadores — `compute_uf_projections`,
+    `compute_participacao`, `build_votacao_payload`,
+    `build_votacao_uf_payloads` — leem daqui, da mesma tabela que dá
+    `EdgePayloadUf.vagas` (`cargos.vagas_por_uf`), para que o fator do
+    Senado não possa valer 2 num lugar e 1 no outro.
+
+    `None` ⇒ quem chamou NÃO projeta métrica de voto. Nunca um palpite.
+    """
+    vpe = cargo_votos_por_eleitor(int(cargo))
+    if vpe is None:
+        _log(
+            "warn",
+            "cargo sem votos_por_eleitor declarado; metricas de VOTO nao "
+            "projetadas (spec 022 RF-210)",
+            cargo=int(cargo),
+            onde=onde,
+        )
+    return vpe
+
+
 def projetar_fatias_em_contagens(
     contagens: Mapping[str, int],
     participacao: Mapping[str, ParticipacaoEstimate | None],
+    *,
+    votos_por_eleitor: int = 1,
 ) -> dict[str, int] | None:
     """`votacao.projetada` (spec 021, RF-195): as quatro fatias do círculo 3
     em CONTAGENS ABSOLUTAS, projetadas para o fim da apuração.
@@ -4181,6 +4227,22 @@ def projetar_fatias_em_contagens(
     Precisão medida contra a verdade na mesma captura: +165, +15, +15 e +40
     votos. É o ruído do bootstrap, e é 0,0001% do vão.
 
+    🔴 **Unidade — Senado (spec 022 RF-210, 2026-09-27).** `abstencao` sai em
+    PESSOAS (é `contagens.abstencao`, pessoas). `validos`/`brancos`/`nulos`
+    saem em VOTOS (são `contagens.validos` etc., votos). A ponte é
+    `votos_por_eleitor`: o comparecimento projetado (pessoas) vezes os votos
+    que cada um deposita. As frações de voto chegam de
+    `compute_participacao` sobre a base `comparecimento × votos_por_eleitor`
+    (votos sobre votos), então a conta fecha: a 100% apurado,
+    `validos → v.vv` e `abstencao → e.a`. Antes do fator, medido nas quatro
+    capturas reais de Senador (`tests/fixtures/tse/2026-sim/senado/`): a
+    fração de válidos saía 168–176% e era achatada em 100% pelo clip, e
+    `projetada.validos` publicava o número de PESSOAS que compareceram
+    (DF: 1.862.765 contra 3.273.238 válidos — 43% a menos), ao lado do
+    círculo 2 exibindo a contagem verdadeira. `votos_por_eleitor` vem do
+    chamador que conhece o cargo (`_votos_por_eleitor_ou_none`); `1` é o
+    valor dos cargos de voto único.
+
     Devolve `None` se faltar QUALQUER uma das quatro projeções (ou `aptos`)
     — o círculo 3 vai para "aguardando projeção" **inteiro**, no DOM
     (ADR-0017/ADR-0018), em vez de desenhar três fatias e um buraco onde a
@@ -4199,17 +4261,19 @@ def projetar_fatias_em_contagens(
         # é em fração.
         fracoes[metrica] = float(est["pct_projetado"]) / 100.0
 
-    abstencao = fracoes["abstencao"] * aptos
-    comparecimento = aptos - abstencao
+    vpe = _votos_por_eleitor_valido(votos_por_eleitor)
+    abstencao = fracoes["abstencao"] * aptos  # pessoas
+    comparecimento = aptos - abstencao  # pessoas
     if comparecimento < 0:
         # Abstenção projetada > 100% dos aptos é impossível, mas se a
         # extrapolação estourar não publicamos comparecimento negativo.
         return None
+    votos = comparecimento * vpe  # votos — a base das três fatias de voto
 
     return {
-        "validos": int(round(fracoes["validos"] * comparecimento)),
-        "brancos": int(round(fracoes["brancos"] * comparecimento)),
-        "nulos": int(round(fracoes["nulos"] * comparecimento)),
+        "validos": int(round(fracoes["validos"] * votos)),
+        "brancos": int(round(fracoes["brancos"] * votos)),
+        "nulos": int(round(fracoes["nulos"] * votos)),
         "abstencao": int(round(abstencao)),
     }
 
@@ -4235,7 +4299,16 @@ def build_votacao_payload(
     if contagens is None:
         return None
     bloco: dict[str, Any] = {"contagens": contagens}
-    projetada = projetar_fatias_em_contagens(contagens, participacao or {})
+    # Spec 022 RF-210 — cargo sem unidade declarada não projeta (círculo 3
+    # "aguardando projeção"); o Senado projeta em votos.
+    vpe = _votos_por_eleitor_ou_none(cargo, "build_votacao_payload")
+    projetada = (
+        projetar_fatias_em_contagens(
+            contagens, participacao or {}, votos_por_eleitor=vpe
+        )
+        if vpe is not None
+        else None
+    )
     if projetada is not None:
         bloco["projetada"] = projetada
     # Spec 022 (RF-209) — a corrida sai do MESMO agregado das contagens.
@@ -4395,6 +4468,11 @@ def compute_participacao(
         "brancos",
         "nulos",
     )
+    # Spec 022 RF-210 — as quatro métricas de VOTO são votos sobre votos
+    # (`comparecimento × votos_por_eleitor`); `abstencao` é pessoas sobre
+    # pessoas e não depende do fator. Cargo sem fator declarado ⇒ as métricas
+    # de voto ficam `None` ("aguardando projeção"), nunca um palpite de 1 ou 2.
+    vpe = _votos_por_eleitor_ou_none(cargo, "compute_participacao")
     by_uf: dict[str, dict[str, ParticipacaoEstimate | None]] = {}
 
     for uf, snaps in snaps_by_uf.items():
@@ -4420,6 +4498,9 @@ def compute_participacao(
 
         uf_result: dict[str, ParticipacaoEstimate | None] = {}
         for metric in metrics:
+            if metric != "abstencao" and vpe is None:
+                uf_result[metric] = None
+                continue
             # Fase 5 — brancos/nulos NÃO passa mais por `turnout.py` quando
             # o caller entregou o resultado do bootstrap de candidatos.
             # Nenhuma seed é derivada aqui para essa métrica: o valor vem do
@@ -4438,7 +4519,13 @@ def compute_participacao(
                 )
             ) & 0xFFFFFFFF
             uf_result[metric] = estimate_uf_participacao(
-                zonas, metric, pct_apurado_uf, local_seed
+                zonas,
+                metric,
+                pct_apurado_uf,
+                local_seed,
+                # `abstencao` ignora o fator (pessoas/pessoas); as de voto o
+                # usam. `vpe` não é `None` aqui: ver o `continue` acima.
+                votos_por_eleitor=vpe if vpe is not None else 1,
             )
         by_uf[uf] = uf_result
 

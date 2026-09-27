@@ -184,7 +184,28 @@ def _clip01(x: float) -> float:
     return x
 
 
-def _metric_num_den(z: ZonaParticipacao, metric: Metric) -> tuple[float, float]:
+def _votos_por_eleitor_valido(votos_por_eleitor: int) -> int:
+    """Valida o fator de unidade voto/pessoa (spec 022 RF-210).
+
+    `bool` é recusado de propósito (`True == 1` em Python), assim como
+    `None`, zero e negativos: o fator só existe como inteiro ≥ 1. Um valor
+    inválido aqui é erro de programação do chamador — nunca é adivinhado.
+    """
+    if (
+        isinstance(votos_por_eleitor, bool)
+        or not isinstance(votos_por_eleitor, int)
+        or votos_por_eleitor < 1
+    ):
+        raise ValueError(
+            f"votos_por_eleitor inválido: {votos_por_eleitor!r} — inteiro ≥ 1 "
+            "(ver cargos.votos_por_eleitor)"
+        )
+    return votos_por_eleitor
+
+
+def _metric_num_den(
+    z: ZonaParticipacao, metric: Metric, votos_por_eleitor: int = 1
+) -> tuple[float, float]:
     """Numerador/denominador CRUS (contagens do TSE, não fração) da métrica
     para uma zona.
 
@@ -207,6 +228,24 @@ def _metric_num_den(z: ZonaParticipacao, metric: Metric) -> tuple[float, float]:
     `brancos_nulos` — trocar a base de uma fatia e não das outras faria
     quatro números que não dividem o mesmo inteiro.
 
+    🔴 **Unidade — spec 022 RF-210 / spec 021 RF-195c (2026-09-27).** O
+    numerador das métricas de voto está em VOTOS (`v.vv`, `v.vb`, `v.tvn`) e
+    `comparecimento` (`e.c`) está em PESSOAS. Num cargo de um voto por eleitor
+    as duas coincidem; no Senado de 2026 (2 vagas) o TSE publica
+    `v.tv == 2 × e.c` exato (4 capturas reais, `tests/fixtures/tse/2026-sim/
+    senado/`). Sem o fator, medido na captura do DF: válidos saíam
+    **175,72%** (e o `_clip01` os achatava em 100%, derrubando a projeção
+    de válidos para o número de PESSOAS — 1.862.765 no lugar de 3.273.238
+    votos), e brancos+nulos saíam 11,82% no lugar de 5,91%. A base das
+    métricas de voto é portanto `comparecimento × votos_por_eleitor` (== `v.tv`
+    nas capturas), e `abstencao` fica em pessoas sobre pessoas.
+
+    `votos_por_eleitor` vem do chamador que conhece o cargo
+    (`project.py::compute_participacao` ← `cargos.votos_por_eleitor`). O `1`
+    do parâmetro é o valor dos cargos de voto único e o de todos os testes
+    anteriores a esta mudança; o chamador de produção passa o valor SEMPRE,
+    explicitamente, e não chama esta função quando o cargo não o declara.
+
     🔴 **Por que o `raise` no fim, e não um `return` de fallback.** Até a
     spec 021 esta função terminava em
     `return float(z["brancos"] + z["nulos"]), float(z["comparecimento"])`
@@ -225,22 +264,31 @@ def _metric_num_den(z: ZonaParticipacao, metric: Metric) -> tuple[float, float]:
     fechada com ramo faltando tem de **estourar**, não adivinhar.
     """
     if metric == "abstencao":
+        # PESSOAS sobre PESSOAS — `votos_por_eleitor` não entra, em cargo
+        # nenhum. Um eleitor que não foi à urna é UM ausente, não dois.
         return float(z["abstencao"]), float(z["eleitores_instalados"])
+    # As quatro métricas abaixo são VOTOS; a base tem de estar em votos
+    # também. Ver o § "Unidade" da docstring.
+    base_votos = float(z["comparecimento"]) * _votos_por_eleitor_valido(
+        votos_por_eleitor
+    )
     if metric == "brancos_nulos":
-        return float(z["brancos"] + z["nulos"]), float(z["comparecimento"])
+        return float(z["brancos"] + z["nulos"]), base_votos
     if metric == "validos":
-        return float(z["validos"]), float(z["comparecimento"])
+        return float(z["validos"]), base_votos
     if metric == "brancos":
-        return float(z["brancos"]), float(z["comparecimento"])
+        return float(z["brancos"]), base_votos
     if metric == "nulos":
-        return float(z["nulos"]), float(z["comparecimento"])
+        return float(z["nulos"]), base_votos
     raise ValueError(
         f"métrica de participação desconhecida: {metric!r} — acrescente o "
         "ramo aqui ao acrescentar membro em `Metric` (ver docstring)"
     )
 
 
-def metric_value(z: ZonaParticipacao, metric: Metric) -> float:
+def metric_value(
+    z: ZonaParticipacao, metric: Metric, votos_por_eleitor: int = 1
+) -> float:
     """Fração [0,1] da métrica para UMA zona.
 
     Retorna `0.0` se o denominador for `<= 0` — fallback defensivo; o
@@ -252,7 +300,7 @@ def metric_value(z: ZonaParticipacao, metric: Metric) -> float:
     `Metric` — o `0.0` acima cobre denominador vazio, NÃO métrica
     desconhecida (que é erro de programação, não estado do dado).
     """
-    num, den = _metric_num_den(z, metric)
+    num, den = _metric_num_den(z, metric, votos_por_eleitor)
     if den <= 0:
         return 0.0
     return num / den
@@ -269,6 +317,8 @@ def estimate_uf_participacao(
     pct_apurado_uf: float,
     seed: int,
     n_resamples: int = 1000,
+    *,
+    votos_por_eleitor: int = 1,
 ) -> ParticipacaoEstimate | None:
     """Projeta `metric` para uma UF (regra de três, D5): taxa observada nas
     zonas apuradas, ponderada por `weight` (eleitores aptos 2026),
@@ -285,23 +335,35 @@ def estimate_uf_participacao(
         seed: determinístico, DERIVADO PELO CALLER de `(uf, metric)`
             (mesmo padrão de `local_seed` em `compute_uf_projections`).
         n_resamples: default 1000 (paridade com `bootstrap_uf`).
+        votos_por_eleitor: votos que cada eleitor deposita no cargo (2 no
+            Senado de 2026). Multiplica a base `comparecimento` das métricas
+            de VOTO — ver `_metric_num_den`, § "Unidade". Não toca
+            `abstencao`. `num`/`den` do resultado saem, portanto, em votos
+            para as métricas de voto.
 
     Returns:
         `ParticipacaoEstimate`, ou `None` se nenhuma zona for utilizável —
         a UI deve mostrar "aguardando projeção", nunca um número inventado.
     """
+    vpe = votos_por_eleitor
     usable = [
         z
         for z in zonas
-        if _metric_num_den(z, metric)[1] > 0 and z.get("weight", 0) > 0
+        if _metric_num_den(z, metric, vpe)[1] > 0 and z.get("weight", 0) > 0
     ]
     if not usable:
         return None
 
-    values = np.array([metric_value(z, metric) for z in usable], dtype=np.float64)
+    values = np.array(
+        [metric_value(z, metric, vpe) for z in usable], dtype=np.float64
+    )
     weights = np.array([float(z["weight"]) for z in usable], dtype=np.float64)
-    nums = np.array([_metric_num_den(z, metric)[0] for z in usable], dtype=np.float64)
-    dens = np.array([_metric_num_den(z, metric)[1] for z in usable], dtype=np.float64)
+    nums = np.array(
+        [_metric_num_den(z, metric, vpe)[0] for z in usable], dtype=np.float64
+    )
+    dens = np.array(
+        [_metric_num_den(z, metric, vpe)[1] for z in usable], dtype=np.float64
+    )
 
     # `pct_atual`: razão LITERAL de somas (Σnum/Σden) — não é a média
     # ponderada das frações por zona. Cada zona contribui pelo seu próprio

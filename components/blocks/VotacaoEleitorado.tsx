@@ -50,6 +50,15 @@
  * gráfico é do FIM da apuração, quando `aptos − instalados → 0`. O que sobra
  * ali é anulado, e é assim que o residual se chama.
  *
+ * ## Senado: os três arcos contam VOTOS (RF-195c, spec 022 RF-210, 2026-09-27)
+ *
+ * Com duas vagas cada eleitor dá dois votos, e o TSE soma votos: nas capturas
+ * reais do simulado, cargo 5, `tv == 2 × c` (`tests/fixtures/tse/2026-sim/senado/`).
+ * Os campos de voto chegam em votos; `aptos`, `instalados` e `abstencao` em
+ * pessoas. Por isso `votosPorEleitor` (a página passa `EdgePayloadUf.vagas`)
+ * multiplica as PESSOAS — nunca divide os votos: não existe meio eleitor. A
+ * base passa a se chamar "votos (2 por eleitor)" e a metodologia diz por quê.
+ *
  * ## O seletor Parcial/Projeção escolhe os arcos (RF-195b, 2026-09-27)
  *
  * Arcos 1 e 2 são da visão "Parcial" e o arco 3 da "Projeção", via
@@ -338,6 +347,41 @@ export function naoApuradoInstalacao(c: EdgeVotacaoContagens): number {
   return c.aptos - c.instalados;
 }
 
+// ---------------------------------------------------------------------------
+// Senado: a unidade é VOTO, não eleitor (spec 022 RF-210, spec 021 RF-195c)
+// ---------------------------------------------------------------------------
+
+/**
+ * `true` quando `k` pode ser o número de votos de cada eleitor: inteiro ≥ 1.
+ *
+ * Qualquer outra coisa (0, negativo, fração, `NaN`) faz as fatias devolverem
+ * `null` — "não fecha" — em vez de multiplicar por um número que não existe.
+ * Quem decide o `k` de uma corrida é a PÁGINA (a partir de
+ * `EdgePayloadUf.vagas`), e ela recusa o que não for 1 ou 2; aqui a guarda é
+ * só a de não fazer aritmética com lixo.
+ */
+export function votosPorEleitorValido(k: number): boolean {
+  return Number.isSafeInteger(k) && k >= 1;
+}
+
+/**
+ * Nome da unidade quando cada eleitor dá `k > 1` votos: "votos (2 por
+ * eleitor)". Ponto único — os dois painéis (este e `CorridaTresCirculos`)
+ * nomeiam a base com ele.
+ */
+export function unidadeVotos(k: number): string {
+  return `votos (${k} por eleitor)`;
+}
+
+/**
+ * Frase da metodologia do Senado, sem jargão (RF-210). Só existe com `k > 1`.
+ * "dois" por extenso no caso de 2026; outro `k` sai em algarismo.
+ */
+export function fraseVotosPorEleitor(k: number): string {
+  const n = k === 2 ? "dois" : String(k);
+  return `No Senado cada eleitor dá ${n} votos, um para cada vaga em disputa — por isso estes gráficos contam votos, e não eleitores.`;
+}
+
 /** Percentual sobre uma base, com guarda de divisão por zero. */
 function pctDe(parte: number, base: number): number {
   return base > 0 ? (parte / base) * 100 : 0;
@@ -373,20 +417,35 @@ function montar(chaves: readonly FatiaKey[], abs: Record<string, number>, base: 
  * `aptos` e o anel não fecha. Por isso a checagem abaixo é explícita: devolve
  * `null` e a tela diz que o dado não fecha, em vez de desenhar um anel com um
  * vão mudo ou de inflar uma fatia para tapá-lo (constituição § 6).
+ *
+ * ## `votosPorEleitor` — o Senado (spec 022 RF-210, spec 021 RF-195c)
+ *
+ * Os campos de VOTO (`validos`, `brancos`, `nulos`, `anulados`, `sub_judice`)
+ * chegam em votos; `aptos`, `instalados` e `abstencao` chegam em PESSOAS.
+ * Com uma vaga as duas unidades coincidem. Com duas, cada eleitor dá dois
+ * votos, e o TSE soma assim — medido nas capturas reais do simulado, cargo 5
+ * (`tests/fixtures/tse/2026-sim/senado/`): `tv == 2 × c`, exato nas 4 UFs.
+ * Somar votos com pessoas faz o arco "não fechar". A regra: as quantidades de
+ * PESSOAS × `k` (abstenção e o não apurado `aptos − instalados`), os campos
+ * de voto como vêm, e a base é `aptos × k`. A alternativa — dividir os votos
+ * por `k` — é proibida pelo RF-210: não existe meio eleitor.
  */
-export function fatiasCirculo1(c: EdgeVotacaoContagens): Fatia[] | null {
+export function fatiasCirculo1(c: EdgeVotacaoContagens, votosPorEleitor = 1): Fatia[] | null {
+  if (!votosPorEleitorValido(votosPorEleitor)) return null;
+  const k = votosPorEleitor;
+  const base = c.aptos * k;
   const abs: Record<FatiaKey, number> = {
     validos: c.validos,
     brancos: c.brancos,
     nulos: c.nulos,
     anulados: anuladosTotal(c),
-    abstencao: c.abstencao,
-    nao_apurado: naoApuradoInstalacao(c),
+    abstencao: c.abstencao * k,
+    nao_apurado: naoApuradoInstalacao(c) * k,
   };
   if (Object.values(abs).some((v) => v < 0)) return null;
   const soma = Object.values(abs).reduce((s, v) => s + v, 0);
-  if (soma !== c.aptos) return null;
-  return montar(ORDEM_FATIAS, abs, c.aptos);
+  if (soma !== base) return null;
+  return montar(ORDEM_FATIAS, abs, base);
 }
 
 /**
@@ -400,20 +459,26 @@ export function fatiasCirculo1(c: EdgeVotacaoContagens): Fatia[] | null {
  *
  * Devolve `[]` quando `instalados` é zero (RF-193b — a apuração não começou),
  * e `null` quando as cinco não fecham em `instalados`.
+ *
+ * Senado (`votosPorEleitor = k > 1`): base `instalados × k` e abstenção × k;
+ * os votos como vêm — ver {@link fatiasCirculo1}.
  */
-export function fatiasCirculo2(c: EdgeVotacaoContagens): Fatia[] | null {
+export function fatiasCirculo2(c: EdgeVotacaoContagens, votosPorEleitor = 1): Fatia[] | null {
+  if (!votosPorEleitorValido(votosPorEleitor)) return null;
   if (c.instalados <= 0) return [];
+  const k = votosPorEleitor;
+  const base = c.instalados * k;
   const abs: Record<string, number> = {
     validos: c.validos,
     brancos: c.brancos,
     nulos: c.nulos,
     anulados: anuladosTotal(c),
-    abstencao: c.abstencao,
+    abstencao: c.abstencao * k,
   };
   if (Object.values(abs).some((v) => v < 0)) return null;
   const soma = Object.values(abs).reduce((s, v) => s + v, 0);
-  if (soma !== c.instalados) return null;
-  return montar(FATIAS_INSTALADAS, abs, c.instalados);
+  if (soma !== base) return null;
+  return montar(FATIAS_INSTALADAS, abs, base);
 }
 
 /**
@@ -436,19 +501,32 @@ export function fatiasCirculo2(c: EdgeVotacaoContagens): Fatia[] | null {
  * Por isso `EdgeVotacaoProjetada` só tem quatro campos: o anulado projetado
  * não é publicado porque ele **é** o residual, e derivá-lo garante que o anel
  * feche em `aptos` por construção.
+ *
+ * Senado (`votosPorEleitor = k > 1`): a projeção segue a mesma divisão de
+ * unidades das contagens — `validos`, `brancos` e `nulos` projetados são
+ * VOTOS; `abstencao` projetada são PESSOAS, e entra × k. A base é
+ * `aptos × k`, e o residual continua sendo o anulado projetado, em votos.
  */
-export function fatiasCirculo3(c: EdgeVotacaoContagens, p: EdgeVotacaoProjetada): Fatia[] | null {
-  const residual = c.aptos - somaQuatro(p);
-  if (residual < 0) return null;
+export function fatiasCirculo3(
+  c: EdgeVotacaoContagens,
+  p: EdgeVotacaoProjetada,
+  votosPorEleitor = 1,
+): Fatia[] | null {
+  if (!votosPorEleitorValido(votosPorEleitor)) return null;
+  const k = votosPorEleitor;
+  const base = c.aptos * k;
   if (p.validos < 0 || p.brancos < 0 || p.nulos < 0 || p.abstencao < 0) return null;
+  const abstencao = p.abstencao * k;
+  const residual = base - (p.validos + p.brancos + p.nulos + abstencao);
+  if (residual < 0) return null;
   const abs: Record<string, number> = {
     validos: p.validos,
     brancos: p.brancos,
     nulos: p.nulos,
     anulados: residual,
-    abstencao: p.abstencao,
+    abstencao,
   };
-  return montar(FATIAS_INSTALADAS, abs, c.aptos);
+  return montar(FATIAS_INSTALADAS, abs, base);
 }
 
 // ---------------------------------------------------------------------------
@@ -904,6 +982,15 @@ export interface VotacaoEleitoradoProps {
   /** `id` do heading; amarra o `aria-labelledby` da `<section>` do Panel. */
   titleId?: string;
   className?: string;
+  /**
+   * Quantos votos cada eleitor dá nesta corrida (spec 022 RF-210, spec 021
+   * RF-195c). 1 em Presidente, Governador e Deputado; no Senado é o número de
+   * vagas em disputa na UF (2 em 2026), e quem o passa é a página, a partir de
+   * `EdgePayloadUf.vagas` — sem supor. Com `k > 1` os três arcos contam
+   * VOTOS: as quantidades de pessoas × k, a base nomeada "votos (k por
+   * eleitor)". Valor que não seja inteiro ≥ 1 ⇒ `<DetailUnavailable>`.
+   */
+  votosPorEleitor?: number;
 }
 
 const TITLE_ID_PADRAO = "votacao-eleitorado-heading";
@@ -926,10 +1013,13 @@ export function VotacaoEleitorado({
   headingLevel = 2,
   titleId = TITLE_ID_PADRAO,
   className,
+  votosPorEleitor = 1,
 }: VotacaoEleitoradoProps) {
   // RF-198 — o painel degrada, nunca some. `votacao` ausente é "não sabemos";
   // é DIFERENTE de `contagens` zeradas, que é "não começou" (RF-193b).
-  if (!votacao?.contagens) {
+  // `votosPorEleitor` inválido também é "não sabemos": sem a unidade, qualquer
+  // arco desenhado estaria na unidade errada.
+  if (!votacao?.contagens || !votosPorEleitorValido(votosPorEleitor)) {
     return (
       <Panel
         kicker={kicker}
@@ -950,9 +1040,25 @@ export function VotacaoEleitorado({
   // de espera: é um payload que não soma, e cada arco o diz na própria caixa em
   // vez de desenhar torto. `[]` no arco 2 é outra coisa — é a apuração não ter
   // começado (RF-193b), e tem texto próprio.
-  const c1 = fatiasCirculo1(c);
-  const c2 = fatiasCirculo2(c);
-  const c3 = projetada ? fatiasCirculo3(c, projetada) : null;
+  const k = votosPorEleitor;
+  const c1 = fatiasCirculo1(c, k);
+  const c2 = fatiasCirculo2(c, k);
+  const c3 = projetada ? fatiasCirculo3(c, projetada, k) : null;
+
+  // Bases nomeadas na unidade dos arcos (RF-196 + RF-210): com `k > 1` o
+  // número grande é de VOTOS, e chamá-lo de "eleitores" seria o dobro de
+  // gente que não existe.
+  const emVotos = k > 1;
+  const base1 = emVotos ? `${unidadeVotos(k)} do eleitorado apto` : "eleitores aptos";
+  const base2 = emVotos ? `${unidadeVotos(k)} do eleitorado já apurado` : "eleitorado já apurado";
+  const base3 = emVotos
+    ? `${unidadeVotos(k)} do eleitorado apto (projetado)`
+    : "eleitores aptos (projetado)";
+  // "sobre os N eleitores aptos" — ou, no Senado, "sobre os 2N votos dos N
+  // eleitores aptos": as duas quantidades, cada uma com o seu nome.
+  const sobreAptos = emVotos
+    ? `${formatVotes(c.aptos * k)} votos dos ${formatVotes(c.aptos)} eleitores aptos`
+    : `${formatVotes(c.aptos)} eleitores aptos`;
 
   const anuladosESubJudice = anuladosTotal(c);
   const naoInstalados = Math.max(0, naoApuradoInstalacao(c));
@@ -970,6 +1076,7 @@ export function VotacaoEleitorado({
       <div
         data-testid="votacao-eleitorado"
         data-instalados={String(c.instalados)}
+        data-votos-por-eleitor={String(k)}
         style={GRADE_DOS_ARCOS}
       >
         {/* RF-195b — o seletor do shell escolhe os arcos: 1 e 2 são o que JÁ
@@ -982,8 +1089,8 @@ export function VotacaoEleitorado({
           id="votacao-circulo-1"
           defsPrefix={titleId}
           titulo="Do eleitorado apto"
-          baseLabel="eleitores aptos"
-          total={c.aptos}
+          baseLabel={base1}
+          total={c.aptos * k}
           fatias={comCorNeutra(c1 ?? [])}
           vazio={
             c1
@@ -1004,8 +1111,8 @@ export function VotacaoEleitorado({
           id="votacao-circulo-2"
           defsPrefix={titleId}
           titulo="Do eleitorado já apurado"
-          baseLabel="eleitorado já apurado"
-          total={c.instalados}
+          baseLabel={base2}
+          total={c.instalados * k}
           fatias={comCorNeutra(c2 ?? [])}
           vazio={
             c2 === null
@@ -1036,8 +1143,8 @@ export function VotacaoEleitorado({
           id="votacao-circulo-3"
           defsPrefix={titleId}
           titulo="Projeção para o fim da apuração"
-          baseLabel="eleitores aptos (projetado)"
-          total={c.aptos}
+          baseLabel={base3}
+          total={c.aptos * k}
           fatias={comCorNeutra(c3 ?? [])}
           vazio={
             c3
@@ -1080,14 +1187,20 @@ export function VotacaoEleitorado({
           color: "var(--text-secondary)",
         }}
       >
+        {/* RF-210 — a frase do Senado vale nas DUAS visões (os três arcos
+            contam votos), e por isso não leva `data-view-only`. */}
+        {emVotos ? (
+          <p data-testid="votacao-metodologia-votos" style={ESTILO_PARAGRAFO_METODOLOGIA}>
+            {fraseVotosPorEleitor(k)}
+          </p>
+        ) : null}
         <p
           data-view-only="parcial"
           data-testid="votacao-metodologia-parcial"
           style={ESTILO_PARAGRAFO_METODOLOGIA}
         >
           Os dois gráficos têm bases diferentes e não devem ser comparados fatia a fatia: o primeiro
-          é sobre os {formatVotes(c.aptos)} eleitores aptos; o segundo, só sobre o eleitorado das
-          seções já instaladas.
+          é sobre os {sobreAptos}; o segundo, só sobre o eleitorado das seções já instaladas.
           {anuladosESubJudice > 0 ? (
             <>
               {" "}
@@ -1102,8 +1215,18 @@ export function VotacaoEleitorado({
           {naoInstalados > 0 ? (
             <>
               {" "}
-              “Ainda não apurado” são {formatVotes(naoInstalados)} eleitores de seções ainda não
-              instaladas ou não totalizadas — e só isso.
+              {emVotos ? (
+                <>
+                  “Ainda não apurado” são os {formatVotes(naoInstalados * k)} votos de{" "}
+                  {formatVotes(naoInstalados)} eleitores de seções ainda não instaladas ou não
+                  totalizadas — e só isso.
+                </>
+              ) : (
+                <>
+                  “Ainda não apurado” são {formatVotes(naoInstalados)} eleitores de seções ainda não
+                  instaladas ou não totalizadas — e só isso.
+                </>
+              )}
             </>
           ) : null}
         </p>
@@ -1113,9 +1236,9 @@ export function VotacaoEleitorado({
             data-testid="votacao-metodologia-proj"
             style={ESTILO_PARAGRAFO_METODOLOGIA}
           >
-            A projeção é sobre os {formatVotes(c.aptos)} eleitores aptos, e as quatro projeções são
-            publicadas como saem do modelo, sem reescala. Neste gráfico não existe fatia “ainda não
-            apurado”, porque ele mostra o fim da apuração, quando não há mais seção por apurar.
+            A projeção é sobre os {sobreAptos}, e as quatro projeções são publicadas como saem do
+            modelo, sem reescala. Neste gráfico não existe fatia “ainda não apurado”, porque ele
+            mostra o fim da apuração, quando não há mais seção por apurar.
             {anuladosProjetados > 0 ? (
               <>
                 {" "}

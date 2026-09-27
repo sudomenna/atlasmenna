@@ -1383,9 +1383,15 @@ describe("/uf/[sigla]/senador — os municípios (2026-09-20)", () => {
 
 /**
  * Spec 021 RF-192 emendado (2026-09-26, noite) — um `votacao` de UF que FECHA
- * nas identidades do TSE (`c + a = esi`; `vv+vb+tvn+van+vansj = c`), com
- * números que não existem em nenhum outro lugar do payload: se a tela
- * mostrar `instalados = 900`, só pode ter vindo daqui.
+ * nas identidades do TSE, com números que não existem em nenhum outro lugar
+ * do payload: se a tela mostrar `instalados = 900`, só pode ter vindo daqui.
+ *
+ * 🔴 Reescrito em 2026-09-27 (spec 022 RF-210): é o SENADO, e o Senado conta
+ * dois votos por eleitor — `tv == 2 × c` nas capturas reais do simulado. Os
+ * campos de voto somam `2 × comparecimento` (1.400), não `comparecimento`
+ * (700); `c + a = esi` segue em pessoas. A versão anterior era de UMA vaga e
+ * só "passava" porque nenhum teste olhava se os arcos fechavam.
+ * A corrida: Σ válidas = 1.200 = `validos`; a candidatura 9 é sub judice.
  */
 const VOTACAO_UF = {
   contagens: {
@@ -1393,13 +1399,20 @@ const VOTACAO_UF = {
     instalados: 900,
     comparecimento: 700,
     abstencao: 200,
-    validos: 600,
-    brancos: 40,
-    nulos: 30,
-    anulados: 20,
-    sub_judice: 10,
+    validos: 1200,
+    brancos: 80,
+    nulos: 60,
+    anulados: 40,
+    sub_judice: 20,
   },
-  projetada: { validos: 700, brancos: 50, nulos: 40, abstencao: 150 },
+  corrida: [
+    { id: 1, partido: "PT", votos: 500, destino: "valido" as const },
+    { id: 2, partido: "PL", votos: 400, destino: "valido" as const },
+    { id: 3, partido: "MDB", votos: 300, destino: "valido" as const },
+    { id: 9, partido: "PCO", votos: 20, destino: "sub_judice" as const },
+  ],
+  // Votos em votos; abstenção em pessoas: 1400 + 100 + 80 + 2×150 = 1880 ≤ 2000.
+  projetada: { validos: 1400, brancos: 100, nulos: 80, abstencao: 150 },
 };
 
 describe("spec 021 RF-192 / spec 022 RF-200 emendados (2026-09-26, noite)", () => {
@@ -1431,5 +1444,127 @@ describe("spec 021 RF-192 / spec 022 RF-200 emendados (2026-09-26, noite)", () =
     const painel = doc.querySelector('[aria-labelledby="votacao-uf-heading"]');
     expect(painel?.querySelector('[data-testid="detail-unavailable"]')).not.toBeNull();
     expect(doc.querySelectorAll("h1").length).toBe(1);
+  });
+});
+
+/**
+ * Spec 022 RF-210 / spec 021 RF-195c (decisão do dono, 2026-09-27) — o Senado
+ * contado em VOTOS, com `votosPorEleitor` lido de `payload.vagas`, e SEM
+ * default: sem `vagas` confiável, os dois painéis ficam indisponíveis.
+ */
+describe("/uf/[sigla]/senador — RF-210: votos por eleitor vêm de `vagas`, sem supor", () => {
+  const painelDe = (doc: Document, titleId: string) =>
+    doc.querySelector(`[aria-labelledby="${titleId}"]`);
+
+  it("🔴 `vagas: 2` ⇒ os arcos do 'Votação' e os círculos da corrida FECHAM, em votos", async () => {
+    readUfProjectionMock.mockResolvedValue(ufPayload({ votacao: VOTACAO_UF }));
+    const doc = await render(UFSenadorPage(PARAMS_SP));
+    const votacao = painelDe(doc, "votacao-uf-heading");
+    const corrida = painelDe(doc, "corrida-tres-circulos-heading");
+    for (const n of [1, 2, 3] as const) {
+      expect(
+        votacao?.querySelector(`[data-testid="votacao-circulo-${n}-inconsistente"]`),
+      ).toBeNull();
+      expect(corrida?.querySelector(`[data-testid="corrida-circulo-${n}-nao-fecha"]`)).toBeNull();
+      expect(corrida?.querySelector(`[data-testid="corrida-circulo-${n}"] svg`)).not.toBeNull();
+    }
+    expect(
+      votacao?.querySelector('[data-testid="votacao-circulo-1"]')?.getAttribute("data-total"),
+    ).toBe("2000");
+    expect(votacao?.querySelector('[data-testid="votacao-circulo-1-base"]')?.textContent).toContain(
+      "votos (2 por eleitor)",
+    );
+    expect(
+      corrida?.querySelector('[data-testid="corrida-circulo-2"]')?.getAttribute("data-total"),
+    ).toBe("1400");
+    // O "aguardando Senado" de 26/09 não existe mais.
+    expect(doc.body.innerHTML).not.toContain("aguardando-senado");
+  });
+
+  it("🔴 payload SEM `vagas` ⇒ os dois painéis indisponíveis — nunca supor 2 (nem 1)", async () => {
+    const semVagas = ufPayload({ votacao: VOTACAO_UF });
+    delete (semVagas as Partial<EdgePayloadUf>).vagas;
+    readUfProjectionMock.mockResolvedValue(semVagas);
+    const doc = await render(UFSenadorPage(PARAMS_SP));
+    for (const id of ["votacao-uf-heading", "corrida-tres-circulos-heading"]) {
+      const painel = painelDe(doc, id);
+      expect(
+        painel?.querySelector('[data-testid="detail-unavailable"]')?.getAttribute("data-reason"),
+      ).toBe("invalid");
+      expect(painel?.querySelector("svg")).toBeNull();
+    }
+    // A posição dos painéis não muda: resultado → Votação → A corrida.
+    const paineis = [...doc.querySelectorAll('[data-testid="panel"]')];
+    const ids = paineis.map((p) => p.getAttribute("aria-labelledby"));
+    expect(ids.indexOf("votacao-uf-heading")).toBe(1);
+    expect(ids.indexOf("corrida-tres-circulos-heading")).toBe(2);
+    // E o resto da página segue de pé (o marcador de vaga ainda cai na tabela).
+    expect(doc.querySelectorAll("[data-testid='result-vaga-marker']").length).toBe(VAGAS_SENADO);
+  });
+
+  it("🔴 `vagas` fora de 1..2 (3, 1.5, 0) ⇒ indisponível", async () => {
+    for (const vagas of [3, 1.5, 0]) {
+      readUfProjectionMock.mockResolvedValue(ufPayload({ votacao: VOTACAO_UF, vagas }));
+      const doc = await render(UFSenadorPage(PARAMS_SP));
+      for (const id of ["votacao-uf-heading", "corrida-tres-circulos-heading"]) {
+        expect(
+          painelDe(doc, id)?.querySelector('[data-testid="detail-unavailable"]'),
+        ).not.toBeNull();
+      }
+    }
+  });
+
+  it("`vagas: 1` (um terço do Senado) ⇒ 1 por eleitor, sem frase do Senado", async () => {
+    readUfProjectionMock.mockResolvedValue(ufPayload({ votacao: VOTACAO_UF, vagas: 1 }));
+    const doc = await render(UFSenadorPage(PARAMS_SP));
+    expect(
+      doc
+        .querySelector('[data-testid="votacao-eleitorado"]')
+        ?.getAttribute("data-votos-por-eleitor"),
+    ).toBe("1");
+    expect(doc.querySelector('[data-testid="votacao-metodologia-votos"]')).toBeNull();
+  });
+});
+
+/**
+ * Spec 022 RF-210, achado do produtor (2026-09-27) — no Senado,
+ * `participacao.brancos_nulos` e a base "comparecimento" dos candidatos são
+ * VOTOS sobre VOTOS (`(vb+tvn)/tv`), e o rótulo "% do comparecimento" seria
+ * falso no cargo 5. Medido em 2026-09-27: NENHUMA rota de Senado desenha esse
+ * rótulo hoje — `ProjectionThermometers` (o único que o escreve) só entra nas
+ * rotas de Presidente e Governador. Este caso trava isso: quem puser o bloco
+ * aqui terá de resolver a unidade antes.
+ */
+describe("/uf/[sigla]/senador — RF-210: nada rotulado 'do comparecimento'", () => {
+  it("🔴 com `participacao.brancos_nulos` e `comparecimento` nos candidatos, a tela não diz 'comparecimento'", async () => {
+    const participacao = {
+      brancos_nulos: {
+        pct_atual: 5.91,
+        pct_projetado: 5.91,
+        lower: 5.8,
+        upper: 6.0,
+        base: "comparecimento" as const,
+      },
+      abstencao: {
+        pct_atual: 14.8,
+        pct_projetado: 14.8,
+        lower: 14.6,
+        upper: 15.0,
+        base: "eleitores_instalados" as const,
+      },
+    };
+    const base = ufPayload();
+    readUfProjectionMock.mockResolvedValue(
+      ufPayload({
+        votacao: VOTACAO_UF,
+        participacao,
+        candidatos: base.candidatos.map((c) => ({
+          ...c,
+          comparecimento: { pct_atual: 20, pct_projetado: 20, lower: 19, upper: 21 },
+        })),
+      }),
+    );
+    const doc = await render(UFSenadorPage(PARAMS_SP));
+    expect(doc.body.textContent ?? "").not.toMatch(/comparecimento/i);
   });
 });

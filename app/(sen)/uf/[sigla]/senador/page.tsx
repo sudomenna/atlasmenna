@@ -124,6 +124,26 @@ const SENADOR = cargoInfo(5);
 const VAGAS_PADRAO = SENADOR.vagasPorUf ?? 1;
 const CADENCIA_MIN = 5;
 
+/**
+ * Spec 022 RF-210 / spec 021 RF-195c — quantos votos cada eleitor dá nesta
+ * UF: as vagas em disputa, lidas de `EdgePayloadUf.vagas`. `null` quando o
+ * payload não diz, ou diz algo que não é 1 ou 2.
+ *
+ * 🔴 **Sem default, de propósito — ao contrário de `vagas` logo abaixo, que
+ * cai em `VAGAS_PADRAO`.** Lá o default só decide quantas linhas ganham o
+ * marcador de vaga; aqui ele decidiria a UNIDADE de três círculos. Supor 2
+ * num payload antigo sem o campo ou supor 1 num de Senado dobraria (ou
+ * cortaria pela metade) abstenção e eleitorado em silêncio — o tipo de
+ * default que já mordeu três vezes (memória `feedback_default_silencioso_enum`).
+ * Sem `vagas` confiável, os dois painéis dizem que estão indisponíveis.
+ *
+ * O teto 2 é o da eleição: 2/3 do Senado (2 vagas) ou 1/3 (1 vaga). Outro
+ * número é payload torto, não uma eleição nova.
+ */
+function votosPorEleitorDe(vagas: unknown): 1 | 2 | null {
+  return vagas === 1 || vagas === 2 ? vagas : null;
+}
+
 // 27 UFs — mesma lista canônica das outras rotas de UF.
 const UFS_BRASIL = [
   "AC",
@@ -433,6 +453,9 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
   // `lib/config/cargos.ts`); o default cobre payloads gravados antes da spec
   // 016, que não têm a chave.
   const vagas = payload.vagas ?? VAGAS_PADRAO;
+  // RF-210 — a unidade dos círculos. SEM o `?? VAGAS_PADRAO` da linha de
+  // cima: ver `votosPorEleitorDe`.
+  const votosPorEleitor = votosPorEleitorDe(payload.vagas);
   // 🔴 Estas ordens NÃO alimentam mais o `<ResultPanel>` (2026-09-20): o
   // painel deriva as duas sozinho e a cascata escolhe a da base ativa. O que
   // sobrou aqui é o recorte do `<ChancesPanel>` — que **também** passou a
@@ -534,29 +557,59 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
           depois do `<ResultPanel>` e ANTES de "A corrida". `payload.votacao`
           é o agregado da UF (spec 022 RF-209); `projetada` sai da
           participação projetada DA UF, nunca da nacional.
-          ⚠️ Senado: duas vagas, dois votos por eleitor (spec 022 RF-210).
+          ⚠️ Senado: duas vagas, dois votos por eleitor (spec 022 RF-210) —
+          os arcos contam VOTOS, com `votosPorEleitor` vindo de `vagas`.
           Se as contagens não fecharem nas identidades do RF-193/194, os
           arcos dizem "não fecha" em vez de desenhar torto.
           Payload sem `votacao` (fallback sintético em desenvolvimento, ou UF
           sem agregado) ⇒ `<DetailUnavailable>` (RF-198) — não quebra. */}
-      <VotacaoEleitorado
-        kicker={`Senador · ${sigla}`}
-        votacao={payload.votacao}
-        titleId="votacao-uf-heading"
-      />
+      {votosPorEleitor === null ? (
+        // RF-210 — sem `vagas` confiável não há unidade: ver
+        // `votosPorEleitorDe`. Mesmo `titleId`, mesmo heading e mesma posição
+        // dos painéis de verdade (a ordem das seções é contrato, RF-192/200),
+        // com o motivo "invalid": o dado chegou, mas sem o campo que diz como
+        // contá-lo.
+        <>
+          <Panel
+            kicker={`Senador · ${sigla}`}
+            title="Votação"
+            titleId="votacao-uf-heading"
+            headingLevel={2}
+          >
+            <DetailUnavailable label="A votação do eleitorado" reason="invalid" />
+          </Panel>
+          <Panel
+            kicker={`Senador · ${sigla}`}
+            title="A corrida"
+            titleId="corrida-tres-circulos-heading"
+            headingLevel={2}
+          >
+            <DetailUnavailable label="A corrida por candidatura" reason="invalid" />
+          </Panel>
+        </>
+      ) : (
+        <>
+          <VotacaoEleitorado
+            kicker={`Senador · ${sigla}`}
+            votacao={payload.votacao}
+            titleId="votacao-uf-heading"
+            votosPorEleitor={votosPorEleitor}
+          />
 
-      {/* Spec 022 (RF-200/210) — "A corrida", imediatamente depois do
-          `<ResultPanel>` da UF, e em "aguardando" por decisão do dono (26/09):
-          com duas vagas cada eleitor vota duas vezes, e ainda não há captura
-          real de Senador para medir como o TSE conta isso. Fica no DOM. */}
-      <CorridaTresCirculos
-        kicker={`Senador · ${sigla}`}
-        modo="candidatura"
-        senado
-        votacao={payload.votacao}
-        candidatos={payload.candidatos}
-        titleId="corrida-tres-circulos-heading"
-      />
+          {/* Spec 022 (RF-200/210) — "A corrida", logo depois do "Votação".
+              Senado em VOTOS, `votosPorEleitor` por eleitor (decisão do dono,
+              27/09): o "aguardando" de 26/09 caiu quando as capturas reais do
+              simulado mostraram `tv == 2 × c`. */}
+          <CorridaTresCirculos
+            kicker={`Senador · ${sigla}`}
+            modo="candidatura"
+            votacao={payload.votacao}
+            candidatos={payload.candidatos}
+            titleId="corrida-tres-circulos-heading"
+            votosPorEleitor={votosPorEleitor}
+          />
+        </>
+      )}
 
       {/* Seção 2 — RF-103. O bloco NUNCA sai do DOM (ADR-0017): sem
           incerteza medida ele explica por quê, em vez de sumir ou de

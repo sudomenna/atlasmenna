@@ -237,6 +237,47 @@ def vagas_por_uf(cd: int, default: int = 1) -> int:
     return default if vagas is None else vagas
 
 
+def votos_por_eleitor(cd: int) -> int | None:
+    """Quantos votos UM eleitor deposita no cargo — a razão entre as duas
+    unidades que o EA20 mistura no mesmo arquivo (spec 022 RF-210, spec 021
+    RF-195c).
+
+    O TSE publica `e.te`/`e.esi`/`e.c`/`e.a` em **pessoas** e `v.tv`/`v.vv`/
+    `v.vb`/`v.tvn`/`v.van`/`v.vansj` em **votos**. Num cargo de um voto por
+    eleitor as duas unidades coincidem e ninguém percebe a diferença. No
+    Senado de 2026 (2 vagas) não coincidem: medido nas quatro capturas reais
+    do simulado (`tests/fixtures/tse/2026-sim/senado/{df,ac,sp,rs}`),
+    `v.tv == 2 × e.c` exato. Toda razão "voto ÷ comparecimento" sai o dobro.
+
+    - Majoritário: `vagas_por_uf` — cada vaga é um voto (Senado: 2 em 2026;
+      Presidente/Governador: 1).
+    - Proporcional (Deputado Federal): **1** — voto único, na legenda ou no
+      nome. Não é `vagas_por_uf` (que é `None` ali, e seria o tamanho da
+      bancada, não o número de votos).
+
+    🔴 **`None`, nunca um palpite**, para cargo desconhecido ou majoritário sem
+    `vagas_por_uf` declarado. É o padrão "default silencioso em conversor de
+    enum" que esta base já pagou três vezes: um `2` suposto para o Senado, ou
+    um `1` suposto para qualquer cargo, publicaria projeção de voto na unidade
+    errada sem erro nenhum. O chamador que recebe `None` NÃO projeta as
+    métricas de voto (`project.py::compute_participacao`,
+    `project.py::_votos_por_eleitor_ou_none`).
+
+    Fonte: a MESMA tabela de onde saem `EdgePayloadUf.vagas` e o `vagas` de
+    `p_eleito` (`vagas_por_uf`, espelho de `lib/config/cargos.ts`, conferido
+    por `tests/unit/model/test_cargos_sync.py`).
+    """
+    info = cargo_info(cd)
+    if info is None:
+        return None
+    if info["proporcional"]:
+        return 1
+    vagas = info["vagas_por_uf"]
+    if vagas is None or int(vagas) < 1:
+        return None
+    return int(vagas)
+
+
 def granularidade(cd: int, default: Granularidade = "zona") -> Granularidade:
     """Granularidade de ingestão do cargo (ADR-0026 item 1)."""
     info = cargo_info(cd)

@@ -16,6 +16,18 @@
  *   3. **Do eleitorado apto** — base `contagens.aptos`. As do círculo 2, mais
  *      abstenção e "Ainda não apurado" (`aptos − instalados`, RF-206).
  *
+ * ## Senado: tudo em VOTOS, 2 por eleitor (RF-210, 2026-09-27)
+ *
+ * Substitui o "aguardando Senado" de 2026-09-26. Medido nas capturas reais do
+ * simulado, cargo 5 (`tests/fixtures/tse/2026-sim/senado/`): `tv == 2 × c`,
+ * Σ `vap` das "Válido" == `vv`, `c + a == esi`. Os votos chegam em votos;
+ * `aptos`, `instalados`, `comparecimento` e `abstencao` chegam em PESSOAS.
+ * Com `votosPorEleitor = k` (a página passa `EdgePayloadUf.vagas`): o
+ * círculo 1 não muda (válidos já são votos); o 2 fecha em
+ * `comparecimento × k`; o 3 em `aptos × k`, com abstenção e "Ainda não
+ * apurado" × k. A projeção (total `projetada.validos`) já é em votos e não
+ * leva fator. Dividir os votos por `k` é proibido: não existe meio eleitor.
+ *
  * Cada círculo confere a sua soma contra a sua base, **na unidade**, e devolve
  * `null` quando não bate: a tela diz "não fecha" em vez de esticar uma fatia
  * (constituição § 6). Fecham por identidade do TSE porque tudo vem do MESMO
@@ -36,16 +48,13 @@
  *
  * | no payload                                         | o que é              | tela                          |
  * |----------------------------------------------------|----------------------|-------------------------------|
- * | rota de Senador (`senado`)                         | aguardando medição   | os três em "aguardando"       |
- * | `votacao`/`contagens` ausente                      | não sabemos          | `<DetailUnavailable>`         |
+ * | `votacao`/`contagens` ausente, ou `votosPorEleitor` inválido | não sabemos | `<DetailUnavailable>` |
  * | `destino_pendente` ou entrada com votos sem destino | aguardando destinação | os três em "aguardando…"     |
  * | `corrida` (ou `corrida_por_partido`) ausente        | não sabemos          | `<DetailUnavailable>`         |
  * | `validos == 0`                                     | não começou          | 1 e 2 "sem votos apurados"; 3 segue |
  * | resto                                              | apurando             | RF-204..206                   |
  *
  * ⚠️ A ordem das linhas é decisão, não acaso:
- *   - **Senado primeiro** (RF-210): o bloqueio é da tela, independente do que
- *     o payload traga — "sempre no DOM".
  *   - **pendente ANTES de ausente**: no modo partido o produtor OMITE
  *     `corrida_por_partido` enquanto há destinação pendente (RF-209). Testar
  *     a ausência primeiro transformaria "aguardando o TSE" em "não sabemos" —
@@ -87,8 +96,7 @@
  * MESMO número da fatia de válidos do arco 3 do painel "Votação", para os dois
  * painéis nunca discordarem na mesma tela — dividido pela participação de cada
  * candidatura em Σ `votos_projetados` das `valido`. Sem dado, "aguardando",
- * sempre no DOM. `<DetailUnavailable>` e o Senado (RF-210) não têm visão:
- * valem nas duas.
+ * sempre no DOM. `<DetailUnavailable>` não tem visão: vale nas duas.
  *
  * Server Component puro — sem `"use client"`, sem estado, sem evento (RNF-007a).
  */
@@ -103,7 +111,10 @@ import {
   FATIA_LABEL,
   type FatiaDesenho,
   type FatiaKey,
+  fraseVotosPorEleitor,
   GRADE_DOS_ARCOS,
+  unidadeVotos,
+  votosPorEleitorValido,
 } from "@/components/blocks/VotacaoEleitorado";
 import type {
   EdgeCorridaEntrada,
@@ -394,11 +405,16 @@ export function circuloValidos(
  * Círculo 2 (RF-205) — a corrida mais brancos, nulos e "Anulados e sub
  * judice", sobre `contagens.comparecimento`. Sem a fatia dos anulados o
  * círculo não fecha: eles estão DENTRO do comparecimento (RF-197, spec 021).
+ *
+ * Senado (RF-210): base `comparecimento × votosPorEleitor` — é o `tv` do TSE.
+ * As fatias são todas de votos e entram como vêm.
  */
 export function circuloComparecimento(
   corrida: readonly FatiaAbs[],
   c: EdgeVotacaoContagens,
+  votosPorEleitor = 1,
 ): FatiaDesenho[] | null {
+  if (!votosPorEleitorValido(votosPorEleitor)) return null;
   return fechar(
     [
       ...corrida,
@@ -406,7 +422,7 @@ export function circuloComparecimento(
       neutra("nulos", c.nulos),
       neutra("anulados", c.anulados + c.sub_judice),
     ],
-    c.comparecimento,
+    c.comparecimento * votosPorEleitor,
   );
 }
 
@@ -415,21 +431,27 @@ export function circuloComparecimento(
  * sobre `contagens.aptos`. "Ainda não apurado" é `aptos − instalados`, a
  * mesma subtração ESPECÍFICA de `naoApuradoInstalacao` (spec 021), nunca "o
  * resto de tudo". ⚠️ Apurado, não projetado.
+ *
+ * Senado (RF-210): base `aptos × votosPorEleitor`; "Abstenção" e "Ainda não
+ * apurado" são PESSOAS e entram × votosPorEleitor; os votos, como vêm.
  */
 export function circuloAptos(
   corrida: readonly FatiaAbs[],
   c: EdgeVotacaoContagens,
+  votosPorEleitor = 1,
 ): FatiaDesenho[] | null {
+  if (!votosPorEleitorValido(votosPorEleitor)) return null;
+  const k = votosPorEleitor;
   return fechar(
     [
       ...corrida,
       neutra("brancos", c.brancos),
       neutra("nulos", c.nulos),
       neutra("anulados", c.anulados + c.sub_judice),
-      neutra("abstencao", c.abstencao),
-      neutra("nao_apurado", c.aptos - c.instalados),
+      neutra("abstencao", c.abstencao * k),
+      neutra("nao_apurado", (c.aptos - c.instalados) * k),
     ],
-    c.aptos,
+    c.aptos * k,
   );
 }
 
@@ -451,8 +473,14 @@ export interface CorridaTresCirculosProps {
    * Sem nome, a fatia mostra número e sigla — nunca um nome inventado.
    */
   candidatos?: readonly CandidatoNome[];
-  /** RF-210 — rota de Senador: os três círculos em "aguardando", sempre no DOM. */
-  senado?: boolean;
+  /**
+   * RF-210 — quantos votos cada eleitor dá nesta corrida: 1 em Presidente e
+   * Governador; no Senado, as vagas em disputa na UF (2 em 2026), passadas
+   * pela página a partir de `EdgePayloadUf.vagas` — sem supor. Com `k > 1` os
+   * círculos 2 e 3 contam VOTOS e as bases dizem "votos (k por eleitor)".
+   * Valor que não seja inteiro ≥ 1 ⇒ `<DetailUnavailable>`.
+   */
+  votosPorEleitor?: number;
   kicker?: string;
   heading?: string;
   headingLevel?: 1 | 2 | 3 | 4;
@@ -469,12 +497,6 @@ const TITLE_ID_PADRAO = "corrida-tres-circulos-heading";
 
 /** Estado dos três círculos quando nenhum pode ser desenhado. */
 type Espera = { sufixo: string; texto: string };
-
-const ESPERA_SENADO: Espera = {
-  sufixo: "aguardando-senado",
-  texto:
-    "Este gráfico ainda não está disponível para o Senado. Com duas vagas em disputa, cada eleitor vota duas vezes, e ainda estamos conferindo como o TSE soma esses votos.",
-};
 
 const ESPERA_DESTINO: Espera = {
   sufixo: "aguardando-destino",
@@ -498,7 +520,7 @@ export function CorridaTresCirculos({
   votacao,
   modo,
   candidatos = [],
-  senado = false,
+  votosPorEleitor = 1,
   kicker,
   heading = "A corrida",
   headingLevel = 2,
@@ -525,9 +547,9 @@ export function CorridaTresCirculos({
   // estado; `null` segue para a aritmética.
   let espera: Espera | null = null;
   let corrida: FatiaAbs[] = [];
-  if (senado) {
-    espera = ESPERA_SENADO;
-  } else if (!votacao || !c) {
+  // `votosPorEleitor` inválido é "não sabemos" (RF-210): sem a unidade, os
+  // círculos 2 e 3 sairiam na unidade errada.
+  if (!votacao || !c || !votosPorEleitorValido(votosPorEleitor)) {
     return indisponivel;
   } else if (destinacaoPendente(votacao)) {
     espera = ESPERA_DESTINO;
@@ -542,8 +564,15 @@ export function CorridaTresCirculos({
 
   const semVotos = !espera && c !== undefined && c.validos === 0;
   const c1 = espera || semVotos || !c ? null : circuloValidos(corrida, c);
-  const c2 = espera || semVotos || !c ? null : circuloComparecimento(corrida, c);
-  const c3 = espera || !c ? null : circuloAptos(corrida, c);
+  const k = votosPorEleitor;
+  const c2 = espera || semVotos || !c ? null : circuloComparecimento(corrida, c, k);
+  const c3 = espera || !c ? null : circuloAptos(corrida, c, k);
+
+  // RF-210 — bases nomeadas na unidade de cada círculo. O círculo 1 já é de
+  // votos (válidos) com qualquer `k`; o 2 e o 3 viram votos quando `k > 1`.
+  const emVotos = k > 1;
+  const base2 = emVotos ? `${unidadeVotos(k)} de quem votou` : "eleitores que votaram";
+  const base3 = emVotos ? `${unidadeVotos(k)} do eleitorado apto` : "eleitores aptos";
 
   const vazio = (
     n: 1 | 2 | 3,
@@ -558,13 +587,10 @@ export function CorridaTresCirculos({
   const porPartido = modo === "partido";
 
   // RF-212 — o círculo de projeção. Só por candidatura: não há projeção por
-  // PARTIDO no payload, e o modo partido segue em "aguardando". Senado não
-  // chega aqui (RF-210). `votacao` já foi conferido acima quando não é Senado.
-  const projetadaValidos = votacao?.projetada?.validos;
-  const proj =
-    senado || porPartido || !votacao
-      ? null
-      : fatiasProjecaoCorrida(votacao, candidatos, projetadaValidos);
+  // PARTIDO no payload, e o modo partido segue em "aguardando". No Senado o
+  // total `projetada.validos` já é de VOTOS (RF-210) e não leva fator.
+  const projetadaValidos = votacao.projetada?.validos;
+  const proj = porPartido ? null : fatiasProjecaoCorrida(votacao, candidatos, projetadaValidos);
   const vazioProj: { testid: string; texto: string } | undefined = proj
     ? undefined
     : porPartido
@@ -585,9 +611,8 @@ export function CorridaTresCirculos({
   const temOutrosProj = (proj?.find((f) => f.key === "outros")?.abs ?? 0) > 0;
 
   // RF-211 — os três círculos (e a metodologia que fala deles) são da visão
-  // "Parcial". No Senado não: o "aguardando" do RF-210 vale nas DUAS visões,
-  // e escondê-lo na Projeção deixaria o painel sem dizer por que está vazio.
-  const visaoApurado = senado ? undefined : ("parcial" as const);
+  // "Parcial".
+  const visaoApurado = "parcial" as const;
 
   return (
     <Panel
@@ -600,14 +625,9 @@ export function CorridaTresCirculos({
       <div
         data-testid="corrida-tres-circulos"
         data-modo={modo}
+        data-votos-por-eleitor={String(k)}
         data-estado={
-          espera === ESPERA_SENADO
-            ? "aguardando-senado"
-            : espera === ESPERA_DESTINO
-              ? "aguardando-destino"
-              : semVotos
-                ? "sem-votos"
-                : "apurando"
+          espera === ESPERA_DESTINO ? "aguardando-destino" : semVotos ? "sem-votos" : "apurando"
         }
         style={GRADE_DOS_ARCOS}
       >
@@ -618,7 +638,7 @@ export function CorridaTresCirculos({
           defsPrefix={titleId}
           titulo="Dos votos válidos"
           baseLabel="votos válidos"
-          total={c?.validos ?? 0}
+          total={c.validos}
           fatias={c1 ?? []}
           vazio={vazio(1, c1, "votos válidos", semVotos)}
         />
@@ -629,10 +649,10 @@ export function CorridaTresCirculos({
           id="corrida-circulo-2"
           defsPrefix={titleId}
           titulo="De quem votou"
-          baseLabel="eleitores que votaram"
-          total={c?.comparecimento ?? 0}
+          baseLabel={base2}
+          total={c.comparecimento * k}
           fatias={c2 ?? []}
-          vazio={vazio(2, c2, "eleitores que votaram", semVotos)}
+          vazio={vazio(2, c2, base2, semVotos)}
         />
 
         {/* Círculo 3 — RF-206. Sobre o eleitorado inteiro, APURADO (não
@@ -642,31 +662,28 @@ export function CorridaTresCirculos({
           id="corrida-circulo-3"
           defsPrefix={titleId}
           titulo="Do eleitorado apto, até agora"
-          baseLabel="eleitores aptos"
-          total={c?.aptos ?? 0}
+          baseLabel={base3}
+          total={c.aptos * k}
           fatias={c3 ?? []}
-          vazio={vazio(3, c3, "eleitores aptos", false)}
+          vazio={vazio(3, c3, base3, false)}
         />
 
         {/* RF-212 — o círculo de projeção da corrida, só na visão "Projeção".
             O total é `projetada.validos`, o MESMO número da fatia de válidos
             do arco 3 do painel "Votação"; a divisão segue a projeção de cada
             candidatura ({@link fatiasProjecaoCorrida}). Sem dado, a figura
-            fica no DOM dizendo por quê (ADR-0017). No Senado não entra: lá o
-            bloqueio do RF-210 já cobre as duas visões, e dois avisos de
-            "indisponível" seriam ruído. */}
-        {senado ? null : (
-          <Arco
-            visao="proj"
-            id="corrida-projecao"
-            defsPrefix={titleId}
-            titulo="Projeção para o fim da apuração"
-            baseLabel="votos válidos (projetado)"
-            total={projetadaValidos ?? 0}
-            fatias={proj ?? []}
-            vazio={vazioProj}
-          />
-        )}
+            fica no DOM dizendo por quê (ADR-0017). No Senado também: o total
+            já é de votos (RF-210). */}
+        <Arco
+          visao="proj"
+          id="corrida-projecao"
+          defsPrefix={titleId}
+          titulo="Projeção para o fim da apuração"
+          baseLabel="votos válidos (projetado)"
+          total={projetadaValidos ?? 0}
+          fatias={proj ?? []}
+          vazio={vazioProj}
+        />
       </div>
 
       {/* Metodologia (RF-208, constituição § 8): de onde vêm os círculos, por
@@ -698,10 +715,34 @@ export function CorridaTresCirculos({
         confunde com voto nulo: no voto nulo o eleitor não escolheu ninguém, enquanto o anulado foi
         dado a uma candidatura e anulado depois pela Justiça — sub judice é a parte ainda sob
         decisão.
-        {c && c.aptos > 0 && !espera ? (
-          <> O terceiro gráfico é sobre os {formatVotes(c.aptos)} eleitores aptos.</>
+        {c.aptos > 0 && !espera ? (
+          emVotos ? (
+            <>
+              {" "}
+              O terceiro gráfico é sobre os {formatVotes(c.aptos * k)} votos dos{" "}
+              {formatVotes(c.aptos)} eleitores aptos.
+            </>
+          ) : (
+            <> O terceiro gráfico é sobre os {formatVotes(c.aptos)} eleitores aptos.</>
+          )
         ) : null}
       </p>
+
+      {/* RF-210 — a frase do Senado vale nas DUAS visões (o círculo de
+          projeção também é de votos), e por isso não leva `data-view-only`. */}
+      {emVotos ? (
+        <p
+          data-testid="corrida-metodologia-votos"
+          style={{
+            marginTop: "var(--space-4)",
+            font: "var(--type-body-sm)",
+            fontSize: "var(--text-xs)",
+            color: "var(--text-secondary)",
+          }}
+        >
+          {fraseVotosPorEleitor(k)}
+        </p>
+      ) : null}
 
       {/* RF-212 — a metodologia do círculo de projeção, só na visão
           "Projeção" e só quando ele está desenhado. Não cita os três círculos

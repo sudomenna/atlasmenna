@@ -168,7 +168,11 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 // As MESMAS funções que a tela usa para desenhar os arcos — o validador não
 // reimplementa a aritmética, para não divergir dela em silêncio.
-import { fatiasCirculo1, fatiasCirculo3 } from "@/components/blocks/VotacaoEleitorado";
+import {
+  fatiasCirculo1,
+  fatiasCirculo2,
+  fatiasCirculo3,
+} from "@/components/blocks/VotacaoEleitorado";
 import type {
   DeputadoUfAgremiacao,
   DeputadoUfCandidato,
@@ -1409,6 +1413,32 @@ export interface ContextoUf {
    * uma válida.
    */
   anulaveis: boolean;
+  /**
+   * Spec 022 RF-210 — quantos votos cada eleitor dá NESTE cargo. `1` em
+   * {@link montarContextos} (Presidente, Governador, Deputado); o Senado de
+   * 2026 ganha o seu por {@link ctxDoCargo}, a partir de
+   * {@link votosPorEleitorDoCargo}.
+   *
+   * 🔴 Com `votosPorEleitor = k > 1` os campos de VOTO deste contexto
+   * (`votosApurados`, `votosFinais`) estão na escala de `k` votos por eleitor
+   * — são o `vvc` do cargo, como no TSE. O comparecimento (PESSOAS) continua
+   * saindo de {@link votaveisUmVoto}, a régua de um cargo de um voto só: é o
+   * mesmo eleitorado nos quatro cargos.
+   */
+  votosPorEleitor: number;
+  /**
+   * Fração de brancos+nulos sobre o TOTAL DE VOTOS (`tv`). Só é lida com
+   * `votosPorEleitor > 1` — com um voto por eleitor votos e pessoas coincidem,
+   * e a fração é `brancosNulos` (que é o valor posto por `montarContextos`).
+   */
+  brancosNulosPorVoto: number;
+  /**
+   * Os votos a candidato de um cargo de UM voto por eleitor — a régua de
+   * PESSOAS de onde o comparecimento sai ({@link urnaDaUf}). Com
+   * `votosPorEleitor = 1` são `votosApurados`/`votosFinais` do próprio
+   * contexto.
+   */
+  votaveisUmVoto: { apurados: number; finais: number };
 }
 
 /**
@@ -1451,6 +1481,7 @@ export function montarContextos(
     // Jitter por UF com fluxo próprio: acrescentar sorteio noutro cargo não
     // pode mexer nestes números (ver `Rng.derive`).
     const bn = rng.derive(`bn|${uf}`).entre(0.062, 0.089);
+    const votosApurados = Math.round((votosFinais * pct) / 100);
     return {
       uf,
       pctApurado: pct,
@@ -1458,12 +1489,77 @@ export function montarContextos(
       comparecimento: e.comparecimento,
       pares: e.pares,
       votosFinais,
-      votosApurados: Math.round((votosFinais * pct) / 100),
+      votosApurados,
       brancosNulos: bn,
       fonteEleitorado: e.fonte,
       anulaveis: ufAnulavel(dados, uf),
+      votosPorEleitor: 1,
+      brancosNulosPorVoto: bn,
+      votaveisUmVoto: { apurados: votosApurados, finais: votosFinais },
     };
   });
+}
+
+/**
+ * Spec 022 RF-210 — quantos votos cada eleitor dá num cargo. **Fonte única**:
+ * `vagasPorUf` de `lib/config/cargos.ts` — a mesma de que sai o `vagas` do
+ * payload de UF do Senado e a `composicao_vagas.vagas_por_uf` do nacional.
+ * Presidente e Governador elegem 1 (1 voto); o Senado de 2026 renova 2/3,
+ * 2 vagas por UF, e cada eleitor vota DUAS vezes (`tv == 2 × c`, medido nas
+ * capturas reais `tests/fixtures/tse/2026-sim/senado/`). Deputado Federal é
+ * proporcional: um voto só (nominal ou de legenda), apesar das 8–70 cadeiras.
+ *
+ * Sem `vagasPorUf` num cargo majoritário é erro alto — um default aqui é
+ * exatamente o conversor silencioso que já mordeu esta base três vezes.
+ */
+export function votosPorEleitorDoCargo(cargo: CargoTse): number {
+  const info = cargoInfo(cargo);
+  if (info.proporcional) return 1;
+  if (info.vagasPorUf === null || !Number.isSafeInteger(info.vagasPorUf) || info.vagasPorUf < 1) {
+    throw new Error(`[simulacao] cargo ${cargo}: vagasPorUf ${String(info.vagasPorUf)} inválido`);
+  }
+  return info.vagasPorUf;
+}
+
+/**
+ * Faixa MEDIDA de brancos+nulos sobre o total de votos (`(vb + tvn) / tv`) no
+ * Senado, nas quatro capturas reais do simulado do TSE a 100% apurado
+ * (`tests/fixtures/tse/2026-sim/senado/{df,ac,sp,rs}-c0005-e021272-u.json`):
+ * DF 5,91% · SP 6,80% · RS 7,51% · AC 7,57%. Brancos e nulos ficam ~meio a
+ * meio (49,6–52,0%), dentro do `brancosDoPar` de 50,21% medido no
+ * Presidente — por isso a repartição do par reusa {@link PARAMETROS_VOTACAO}.
+ *
+ * Não é o dobro dos brancos+nulos do Presidente: num voto de duas vagas o
+ * eleitor pode dar um voto válido e um branco, e a taxa por VOTO é própria.
+ */
+export const BRANCOS_NULOS_POR_VOTO_SENADO = { min: 0.0591, max: 0.0757 } as const;
+
+/**
+ * O contexto de UMA UF no cargo pedido. Cargo de um voto por eleitor devolve
+ * o MESMO objeto (Presidente, Governador e Deputado não mudam em nada).
+ *
+ * Com `k = votosPorEleitorDoCargo(cargo) > 1` (o Senado): mesmo eleitorado,
+ * mesmo `pctApurado`, mesmo comparecimento em pessoas — e `votosApurados` /
+ * `votosFinais` passam a ser os votos a candidato do cargo (`vvc`), na escala
+ * de `k` votos por eleitor, por {@link urnaDaUf}. Brancos+nulos por voto
+ * sorteados por UF na faixa medida ({@link BRANCOS_NULOS_POR_VOTO_SENADO}),
+ * com fluxo próprio (`rng.derive`), para não mexer em nenhum outro número.
+ */
+export function ctxDoCargo(ctx: ContextoUf, cargo: CargoTse, rng: Rng): ContextoUf {
+  const k = votosPorEleitorDoCargo(cargo);
+  if (k === 1) return ctx;
+  const { min, max } = BRANCOS_NULOS_POR_VOTO_SENADO;
+  const semVotos: ContextoUf = {
+    ...ctx,
+    votosPorEleitor: k,
+    brancosNulosPorVoto: rng.derive(`bnVoto|${ctx.uf}`).entre(min, max),
+    votaveisUmVoto: { ...ctx.votaveisUmVoto },
+  };
+  return {
+    ...semVotos,
+    votosApurados: urnaDaUf(semVotos, "apurado").votaveis,
+    votosFinais: urnaDaUf(semVotos, "final").votaveis,
+  };
 }
 
 /**
@@ -1618,6 +1714,56 @@ export function repartirVotaveis(
 }
 
 /**
+ * O que sai da urna de UMA UF num instante, **na unidade do cargo**:
+ * `comparecimento` em PESSOAS; `votaveis` (o `vvc`), `brancos` e `nulos` em
+ * VOTOS. Ponto ÚNICO da conta (spec 022 RF-210): {@link contagensDaUf}, o fim
+ * de noite ({@link fimDeNoiteDaCorrida}) e os `votosApurados`/`votosFinais`
+ * do contexto de Senado ({@link ctxDoCargo}) saem daqui.
+ *
+ * O comparecimento sai SEMPRE da régua de um voto por eleitor
+ * (`ctx.votaveisUmVoto`, com `ctx.brancosNulos` sobre o comparecimento) — é o
+ * mesmo eleitorado nos quatro cargos:
+ *
+ *     bn1 = round(votaveis1 × bn / (1 − bn));  comparecimento = votaveis1 + bn1
+ *
+ * Com `k = ctx.votosPorEleitor`:
+ *
+ *   - `k = 1`: `votaveis = votaveis1`, e o par brancos+nulos é `bn1` — a conta
+ *     de sempre, byte a byte;
+ *   - `k > 1` (o Senado): o total de votos é `tv = k × comparecimento` EXATO
+ *     (medido nas capturas reais: `tv == 2 × c` nas 4 UFs), brancos+nulos
+ *     são `round(tv × ctx.brancosNulosPorVoto)` e `votaveis = tv − brancos −
+ *     nulos`. Nunca "dividir os votos por k": não existe meio eleitor.
+ *
+ * Em qualquer `k`: `votaveis + brancos + nulos == k × comparecimento`, exato
+ * em inteiro, por construção.
+ */
+export function urnaDaUf(
+  ctx: ContextoUf,
+  instante: "apurado" | "final",
+  par: ParametrosVotacao = PARAMETROS_VOTACAO,
+): { comparecimento: number; votaveis: number; brancos: number; nulos: number } {
+  const k = ctx.votosPorEleitor;
+  if (!Number.isSafeInteger(k) || k < 1) {
+    throw new Error(`[simulacao] ${ctx.uf}: votosPorEleitor ${k} não é inteiro ≥ 1`);
+  }
+  const votaveis1 =
+    instante === "apurado" ? ctx.votaveisUmVoto.apurados : ctx.votaveisUmVoto.finais;
+  // brancos+nulos tal que a fração SOBRE O COMPARECIMENTO seja exatamente
+  // `ctx.brancosNulos` — a mesma base que `blocoParticipacao` declara.
+  const bn1 = Math.round((votaveis1 * ctx.brancosNulos) / (1 - ctx.brancosNulos));
+  const comparecimento = votaveis1 + bn1;
+  const bnTotal = k === 1 ? bn1 : Math.round(k * comparecimento * ctx.brancosNulosPorVoto);
+  const brancos = Math.round(bnTotal * par.brancosDoPar);
+  return {
+    comparecimento,
+    votaveis: k * comparecimento - bnTotal,
+    brancos,
+    nulos: bnTotal - brancos,
+  };
+}
+
+/**
  * As 9 contagens de UMA UF no instante `ctx.pctApurado`.
  *
  * 🔴 **Toda identidade sai por SOMA ou SUBTRAÇÃO de inteiros.** O consumidor
@@ -1634,25 +1780,34 @@ export function repartirVotaveis(
  * `round(votaveis + f) = votaveis + round(f)`. A subtração fica porque garante
  * `brancos + nulos == bnTotal` na fronteira do 0,5 — não porque um teste
  * discrimine as duas formas, e nenhum discrimina.
+ *
+ * Senado (spec 022 RF-210, `ctx.votosPorEleitor = k > 1`): `aptos`,
+ * `instalados`, `comparecimento` e `abstencao` em PESSOAS, iguais aos dos
+ * outros cargos; `validos + brancos + nulos + anulados + sub_judice == k ×
+ * comparecimento`, exato — ver {@link urnaDaUf}.
  */
 function contagensDaUf(
   ctx: ContextoUf,
   par: ParametrosVotacao = PARAMETROS_VOTACAO,
 ): EdgeVotacaoContagens {
   const aptos = ctx.eleitores;
-  // `votosApurados` é voto A CANDIDATO já contado, isto é `vvc` do EA20 e não
+  // `votaveis` é voto A CANDIDATO já contado, isto é `vvc` do EA20 e não
   // `vv`: anulados e sub judice saem de DENTRO dele (`vvc = vv + van + vansj`),
   // nunca por cima. Somá-los por cima inflaria o comparecimento e faria a
   // abstenção deste bloco contradizer o `pct_projetado` que
   // `blocoParticipacao` publica na mesma tela (19,4% viraria ~6%).
-  const votaveis = ctx.votosApurados;
-  // brancos+nulos tal que a fração SOBRE O COMPARECIMENTO seja exatamente
-  // `ctx.brancosNulos` — a mesma base que `blocoParticipacao` declara.
-  const bnTotal = Math.round((votaveis * ctx.brancosNulos) / (1 - ctx.brancosNulos));
-  const brancos = Math.round(bnTotal * par.brancosDoPar);
-  const nulos = bnTotal - brancos;
-  const comparecimento = votaveis + brancos + nulos;
-  const { validos, anulados, subJudice } = repartirVotaveis(ctx, par);
+  const urna = urnaDaUf(ctx, "apurado", par);
+  if (urna.votaveis !== ctx.votosApurados) {
+    // O contexto guarda os votáveis do cargo como cache (`ctxDoCargo`); as
+    // candidaturas foram repartidas sobre ELE. Divergir aqui é a corrida e as
+    // contagens contando votos diferentes.
+    throw new Error(
+      `[simulacao] ${ctx.uf}: votáveis da urna ${urna.votaveis} ≠ votosApurados do contexto ` +
+        `${ctx.votosApurados} (votosPorEleitor ${ctx.votosPorEleitor})`,
+    );
+  }
+  const { comparecimento, brancos, nulos } = urna;
+  const { validos, anulados, subJudice } = repartirVotaveis(ctx, par, urna.votaveis);
   // `esi` CRESCE com a apuração: uma seção só entra em `est` — e portanto em
   // `esi` — quando o boletim dela é totalizado. É daí que vem o tamanho do vão
   // do círculo 1 durante a noite (o país ainda não contado), encolhendo até o
@@ -1824,6 +1979,13 @@ export function blocoVotacao(
  * apurado as quatro reencontram o contado — `validos` e `brancos`/`nulos` na
  * unidade, `abstencao` a menos das seções nunca instaladas.
  *
+ * Senado (spec 022 RF-210, `k = ctx.votosPorEleitor = 2`): `validos`,
+ * `brancos` e `nulos` em VOTOS, `abstencao` em PESSOAS — a divisão de
+ * unidades de `fatiasCirculo3(c, p, k)`. O residual do círculo 3 passa a ser
+ * `k × aptos − (validos + brancos + nulos + k × abstencao)`, e continua
+ * EXATAMENTE Σ `votos_projetados` das `anulado` e `sub_judice`, porque o
+ * total de votos do fim de noite é `k × comparecimento` ({@link urnaDaUf}).
+ *
  * Deputado (cargo 6) não tem corrida e segue em {@link projetarVotacao}.
  */
 export function fimDeNoiteDaCorrida(
@@ -1836,16 +1998,25 @@ export function fimDeNoiteDaCorrida(
     votaveis += r.votosProjetados;
     if (r.destino === "valido") validos += r.votosProjetados;
   }
-  const bn = c.ctx.brancosNulos;
-  const bnTotal = Math.round((votaveis * bn) / (1 - bn));
-  const brancos = Math.round(bnTotal * par.brancosDoPar);
-  const nulos = bnTotal - brancos;
-  const abstencao = c.ctx.eleitores - (votaveis + bnTotal);
+  // Brancos, nulos e o comparecimento do fim de noite pela MESMA conta das
+  // contagens ({@link urnaDaUf}) — em PESSOAS o comparecimento, em VOTOS o
+  // resto (Senado, RF-210). Os votáveis dela são Σ `votos_projetados` de
+  // TODAS as candidaturas por construção (`resolverCorridaUf`); divergir é
+  // um segundo fim de noite reaparecendo.
+  const urna = urnaDaUf(c.ctx, "final", par);
+  if (urna.votaveis !== votaveis) {
+    throw new Error(
+      `[simulacao] ${c.ctx.uf}: Σ votos_projetados ${votaveis} ≠ votáveis do fim de noite ` +
+        `${urna.votaveis} — as candidaturas e a urna projetam noites diferentes.`,
+    );
+  }
+  const { brancos, nulos } = urna;
+  const abstencao = c.ctx.eleitores - urna.comparecimento;
   if (abstencao < 0) {
     // Sem clamp, pela mesma razão de `contagensDaUf`: o que o clamp esconderia
     // é uma contradição real entre o comparecimento e o eleitorado.
     throw new Error(
-      `[simulacao] ${c.ctx.uf}: comparecimento projetado ${votaveis + bnTotal} > aptos ` +
+      `[simulacao] ${c.ctx.uf}: comparecimento projetado ${urna.comparecimento} > aptos ` +
         `${c.ctx.eleitores} — o fim de noite não cabe no eleitorado.`,
     );
   }
@@ -2807,7 +2978,11 @@ export function montarCorridasEstaduais(
   const r = rng.derive(`cargo-${cargo}`);
   const vagas = cargoInfo(cargo).vagasPorUf ?? 1;
   const feitios = repartirFeitios(r.derive("feitios"), UFS);
-  const corridas = ctxs.map((ctx) => {
+  const corridas = ctxs.map((ctxEleitorado) => {
+    // Spec 022 RF-210 — o Senado conta VOTOS, `vagas` por eleitor: o contexto
+    // do cargo tem o mesmo eleitorado e os votáveis na escala do cargo.
+    // Governador devolve o mesmo objeto (`ctxDoCargo`).
+    const ctx = ctxDoCargo(ctxEleitorado, cargo, r);
     const ordem = UFS.indexOf(ctx.uf);
     // `idBase` sequencial por UF — ver o bloco 7(a) do cabeçalho. Sem ele, o
     // 13 de Alagoas e o 13 do Acre colidem no índice que a tela monta sobre
@@ -3072,8 +3247,8 @@ export function montarSenadorUf(
       needle_band: lider === undefined ? "tossup" : band,
       vagas,
       granularidade: cargoInfo(5).granularidade,
-      // Spec 022 (RF-209). A TELA de Senador fica em "aguardando" (RF-210); o
-      // produtor publica mesmo assim, como o real.
+      // Spec 022 (RF-209). Em VOTOS, `vagas` por eleitor (RF-210): a tela
+      // multiplica as pessoas por este mesmo `vagas`.
       votacao: votacaoDaUf(c),
     };
   }
@@ -3971,8 +4146,12 @@ export function montarMunicipios(
     // Votos apurados por município repartidos A PARTIR do total da UF (peso =
     // eleitorado × percentual apurado), e não calculados um a um. É o que faz
     // Σ municípios == votos apurados da UF exatamente, sem resto órfão.
+    //
+    // `corrida.ctx`, não `ctx`: no Senado (RF-210) os votos da corrida estão
+    // na escala de 2 por eleitor, e as duas margens de `alocarMatriz` têm de
+    // somar o mesmo total. Nos outros cargos é o mesmo objeto.
     const apuradosPorMun = alocarInteiros(
-      ctx.votosApurados,
+      corrida.ctx.votosApurados,
       eleitores.map((e, i) => e * (pcts[i] as number)),
     );
 
@@ -4584,11 +4763,17 @@ export function validarSaida(s: SaidaSimulacao): void {
   // buraco de 14,2% do comparecimento. É a armadilha registrada nesta base, e
   // o único jeito de ela não voltar é uma invariante que reprove o zero.
   const temBaseAmostral = ctxs.some((c) => c.pctApurado > 0);
-  const nacionais: Array<[string, EdgeVotacao | undefined]> = [
-    ["presidente", presidente.votacao],
-    ["governador", governador.votacao],
-    ["senador", senador.votacao],
-    ["deputado", deputado.votacao],
+  //
+  // Spec 022 RF-210 — cada eleitor dá `k` votos no cargo, e `k` é lido do
+  // PAYLOAD, como a tela lê (`composicao_vagas.vagas_por_uf` no nacional do
+  // Senado; ausente ⇒ 1 voto por eleitor), e não recalculado aqui: um `k`
+  // errado no produtor tem de sair como número que não fecha com o que a
+  // tela vai multiplicar.
+  const nacionais: Array<[string, EdgeVotacao | undefined, number]> = [
+    ["presidente", presidente.votacao, votosPorEleitorPublicado(presidente)],
+    ["governador", governador.votacao, votosPorEleitorPublicado(governador)],
+    ["senador", senador.votacao, votosPorEleitorPublicado(senador)],
+    ["deputado", deputado.votacao, 1],
   ];
   // ⚠️ A referência é o PRIMEIRO payload, não uma segunda chamada a
   // `contagensVotacao(ctxs)`. Recalcular com a mesma função aqui seria
@@ -4597,25 +4782,38 @@ export function validarSaida(s: SaidaSimulacao): void {
   // enquanto qualquer poda de teste esbarraria na comparação antes de chegar
   // nelas. A âncora que NÃO é recálculo é o `eleitorado_total` do manifest, que
   // soma `ctxs` por outro caminho.
+  //
+  // As quantidades de PESSOAS são as mesmas nos quatro cargos (é o mesmo
+  // eleitorado); os campos de VOTO só são comparáveis entre cargos com o
+  // mesmo `k` — o Senado conta 2 votos por eleitor (RF-210).
   let referencia: EdgeVotacaoContagens | undefined;
-  for (const [nome, v] of nacionais) {
+  const referenciaVotos = new Map<number, EdgeVotacaoContagens>();
+  for (const [nome, v, k] of nacionais) {
     if (v === undefined) {
       erro(`${nome}: bloco 'votacao' ausente — a spec 021 emenda as QUATRO telas nacionais`);
+    }
+    if (!Number.isSafeInteger(k) || k < 1) {
+      erro(`${nome}: votos por eleitor publicado = ${k} — não é inteiro ≥ 1 (RF-210)`);
     }
     const c = v.contagens;
     for (const [campo, n] of Object.entries(c)) {
       if (!Number.isInteger(n) || n < 0) {
         erro(`${nome}: votacao.contagens.${campo} = ${n} não é inteiro ≥ 0`);
       }
-      const esperado = (referencia ?? c)[campo as keyof EdgeVotacaoContagens];
+      const chave = campo as keyof EdgeVotacaoContagens;
+      const deVoto = CAMPOS_DE_VOTO.has(chave);
+      const esperado = (deVoto ? (referenciaVotos.get(k) ?? c) : (referencia ?? c))[chave];
       if (n !== esperado) {
         erro(
           `${nome}: votacao.contagens.${campo} = ${n}, mas o país tem ${esperado} — ` +
-            `as quatro telas contam o MESMO eleitorado`,
+            (deVoto
+              ? `os cargos de ${k} voto(s) por eleitor contam os MESMOS votos`
+              : "as quatro telas contam o MESMO eleitorado"),
         );
       }
     }
     referencia ??= c;
+    if (!referenciaVotos.has(k)) referenciaVotos.set(k, c);
     if (c.aptos !== manifest.eleitorado_total) {
       erro(
         `${nome}: votacao.contagens.aptos = ${c.aptos} ≠ eleitorado_total ` +
@@ -4629,13 +4827,7 @@ export function validarSaida(s: SaidaSimulacao): void {
           `≠ instalados ${c.instalados} (identidade 'esi = c + a' do EA20)`,
       );
     }
-    const soma6 = c.validos + c.brancos + c.nulos + c.anulados + c.sub_judice;
-    if (soma6 !== c.comparecimento) {
-      erro(
-        `${nome}: validos+brancos+nulos+anulados+sub_judice = ${soma6} ` +
-          `≠ comparecimento ${c.comparecimento} (identidade 'tv = vvc + vb + tvn' do EA20)`,
-      );
-    }
+    conferirVotosPorEleitor(nome, c, k);
     if (c.instalados > c.aptos) {
       erro(`${nome}: instalados ${c.instalados} > aptos ${c.aptos} — 'esi ≤ te' é hierarquia`);
     }
@@ -4644,7 +4836,7 @@ export function validarSaida(s: SaidaSimulacao): void {
     // parcelas já são forçadas ≥ 0), então nenhum teste o alcança sem primeiro
     // desligar uma delas — fica como piso explícito para o dia em que alguém
     // mexer na ordem, não como invariante coberta.
-    const residual1 = c.aptos - (c.validos + c.brancos + c.nulos + c.abstencao);
+    const residual1 = k * c.aptos - (c.validos + c.brancos + c.nulos + k * c.abstencao);
     if (residual1 < 0) {
       erro(`${nome}: residual do círculo 1 = ${residual1} < 0 — a quinta fatia desenharia errado`);
     }
@@ -4677,7 +4869,7 @@ export function validarSaida(s: SaidaSimulacao): void {
           erro(`${nome}: votacao.projetada.${campo} = ${n} não é inteiro ≥ 0`);
         }
       }
-      const residual3 = c.aptos - (p.validos + p.brancos + p.nulos + p.abstencao);
+      const residual3 = k * c.aptos - (p.validos + p.brancos + p.nulos + k * p.abstencao);
       if (residual3 < 0) {
         erro(`${nome}: residual do círculo 3 = ${residual3} < 0 — as projeções estouram aptos`);
       }
@@ -4695,6 +4887,45 @@ export function validarSaida(s: SaidaSimulacao): void {
   // corrida: Σ `votos_projetados` das `valido` == `projetada.validos`, exato
   // (`conferirProjecaoDaCorrida`).
   validarCorrida(s);
+}
+
+/**
+ * Os campos de VOTO de `EdgeVotacaoContagens` (spec 022 RF-210). Os outros
+ * quatro — `aptos`, `instalados`, `comparecimento`, `abstencao` — são PESSOAS.
+ */
+const CAMPOS_DE_VOTO: ReadonlySet<keyof EdgeVotacaoContagens> = new Set([
+  "validos",
+  "brancos",
+  "nulos",
+  "anulados",
+  "sub_judice",
+] as const);
+
+/**
+ * Quantos votos por eleitor um payload NACIONAL declara — o que a tela
+ * multiplicaria. Só o Senado publica (`composicao_vagas.vagas_por_uf`);
+ * ausente é um voto por eleitor, como `EdgePayloadUf.vagas` ausente.
+ */
+function votosPorEleitorPublicado(p: EdgePayload): number {
+  return p.composicao_vagas?.vagas_por_uf ?? 1;
+}
+
+/**
+ * Spec 022 RF-210 — a identidade `tv = vv + vb + tvn + van + vansj` do EA20 com
+ * a UNIDADE certa: `tv == k × comparecimento`, exato em inteiro. Com `k = 1`
+ * é a identidade de sempre; no Senado (`k = 2`) é o que as capturas reais
+ * medem nas 4 UFs. Reprova nos dois sentidos: Senado com votos "de
+ * Presidente" (1 por eleitor) e Presidente/Governador com votos em dobro.
+ */
+function conferirVotosPorEleitor(nome: string, c: EdgeVotacaoContagens, k: number): void {
+  const soma = c.validos + c.brancos + c.nulos + c.anulados + c.sub_judice;
+  if (soma !== k * c.comparecimento) {
+    erro(
+      `${nome}: validos+brancos+nulos+anulados+sub_judice = ${soma} ≠ ${k} × comparecimento ` +
+        `${c.comparecimento} (identidade 'tv = vvc + vb + tvn' do EA20, ${k} voto(s) por ` +
+        `eleitor — spec 022 RF-210)`,
+    );
+  }
 }
 
 /**
@@ -4832,7 +5063,20 @@ function validarCorrida(s: SaidaSimulacao): void {
       if (p === undefined || v === undefined) {
         erro(`${arquivo}/${c.uf}: bloco 'votacao' ausente (spec 022 RF-209)`);
       }
-      conferirVotacaoUf(`${arquivo}/${c.uf}`, v, c);
+      // `k` do PAYLOAD, como a página lê (`EdgePayloadUf.vagas`, ausente ⇒ 1
+      // voto por eleitor) — ver (12).
+      conferirVotacaoUf(`${arquivo}/${c.uf}`, v, c, p.vagas ?? 1);
+      // O mesmo eleitorado da UF nos três cargos: as PESSOAS do Senado são as
+      // do Presidente — só os votos mudam de escala (RF-210).
+      const pessoasRef = s.presidenteUf[c.uf]?.votacao?.contagens;
+      for (const campo of ["aptos", "instalados", "comparecimento", "abstencao"] as const) {
+        if (pessoasRef !== undefined && v.contagens[campo] !== pessoasRef[campo]) {
+          erro(
+            `${arquivo}/${c.uf}: contagens.${campo} = ${v.contagens[campo]}, mas a UF tem ` +
+              `${pessoasRef[campo]} no Presidente — é o MESMO eleitorado (spec 022 RF-210)`,
+          );
+        }
+      }
       conferirCorrida(
         `${arquivo}/${c.uf}`,
         v.corrida,
@@ -4865,7 +5109,7 @@ function validarCorrida(s: SaidaSimulacao): void {
     if ("corrida" in v || "destino_pendente" in v) {
       erro(`deputado-uf.json/${c.uf}: votacao com corrida — Deputado não tem colocados (RF-200)`);
     }
-    conferirVotacaoUf(`deputado-uf.json/${c.uf}`, v, c);
+    conferirVotacaoUf(`deputado-uf.json/${c.uf}`, v, c, 1);
     for (const [k, n] of Object.entries(v.contagens)) {
       const kk = k as keyof EdgeVotacaoContagens;
       somaDep[kk] = (somaDep[kk] ?? 0) + n;
@@ -4950,8 +5194,12 @@ function conferirSomaDasUfs(
 /**
  * O painel "Votação" de UMA UF (spec 021 RF-192 emendado em 2026-09-26,
  * noite) desenha os três arcos com as MESMAS funções da tela
- * (`fatiasCirculo1`/`fatiasCirculo3`). Reprova:
+ * (`fatiasCirculo1`/`fatiasCirculo2`/`fatiasCirculo3`), com o MESMO
+ * `votosPorEleitor` que a página passa (`EdgePayloadUf.vagas`, spec 022
+ * RF-210). Reprova:
  *
+ *   - `validos+brancos+nulos+anulados+sub_judice ≠ votosPorEleitor ×
+ *     comparecimento` — Senado com votos "de Presidente", ou o contrário;
  *   - arco 1 que não fecha em `aptos` (a tela diria "não é possível montar
  *     este gráfico" — num simulado isso é defeito do gerador, não estado);
  *   - `projetada` presente sem base amostral na UF, ou ausente com ela
@@ -4962,8 +5210,15 @@ function conferirVotacaoUf(
   nome: string,
   v: Pick<EdgeVotacaoUf, "contagens" | "projetada">,
   ctx: ContextoUf,
+  votosPorEleitor: number,
 ): void {
-  if (fatiasCirculo1(v.contagens) === null) {
+  // Spec 022 RF-210 — a identidade com a unidade do cargo, com mensagem
+  // própria (as fatias abaixo também não fechariam, mas diriam só "não fecha").
+  conferirVotosPorEleitor(nome, v.contagens, votosPorEleitor);
+  if (
+    fatiasCirculo1(v.contagens, votosPorEleitor) === null ||
+    fatiasCirculo2(v.contagens, votosPorEleitor) === null
+  ) {
     erro(`${nome}: o arco 1 não fecha em aptos ${v.contagens.aptos} (spec 021 RF-193)`);
   }
   const temBase = ctx.pctApurado > 0;
@@ -4979,10 +5234,11 @@ function conferirVotacaoUf(
     if (!Number.isInteger(n) || n < 0)
       erro(`${nome}: votacao.projetada.${campo} = ${n} não é inteiro ≥ 0`);
   }
-  if (fatiasCirculo3(v.contagens, p) === null) {
-    const soma = p.validos + p.brancos + p.nulos + p.abstencao;
+  if (fatiasCirculo3(v.contagens, p, votosPorEleitor) === null) {
+    const soma = p.validos + p.brancos + p.nulos + votosPorEleitor * p.abstencao;
     erro(
-      `${nome}: residual do círculo 3 < 0 — a projeção soma ${soma} > aptos ${v.contagens.aptos}`,
+      `${nome}: residual do círculo 3 < 0 — a projeção soma ${soma} > ` +
+        `${votosPorEleitor} × aptos ${v.contagens.aptos}`,
     );
   }
 }

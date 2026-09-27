@@ -30,8 +30,14 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  fatiasCirculo1,
+  fatiasCirculo2,
+  fatiasCirculo3,
+} from "@/components/blocks/VotacaoEleitorado";
+import {
   alocarInteiros,
   alocarMatriz,
+  BRANCOS_NULOS_POR_VOTO_SENADO,
   type CandidatoBruto,
   CLI_DEFAULT,
   contagensVotacao,
@@ -50,6 +56,7 @@ import {
   TOLERANCIA,
   UFS,
   validarSaida,
+  votosPorEleitorDoCargo,
 } from "@/data-pipeline/simulacao-gerar";
 import type { DeputadoUfDetail } from "@/lib/blob/deputado-uf";
 import type { UfDetailBlob } from "@/lib/blob/uf-detail";
@@ -1381,9 +1388,15 @@ describe("simulacao-gerar — o bloco `votacao` (spec 021)", () => {
   });
 
   it("as quatro telas contam o MESMO eleitorado [mutação: somar só as UFs apuradas num dos cargos]", () => {
-    const ref = JSON.stringify(nacionais[0][1]?.contagens);
+    // PESSOAS iguais nos quatro; os campos de VOTO iguais nos três cargos de
+    // um voto por eleitor. O Senado conta 2 votos por eleitor (spec 022
+    // RF-210) — os votos dele são conferidos no describe do RF-210.
+    const pessoas = (c: EdgeVotacaoContagens | undefined) =>
+      JSON.stringify([c?.aptos, c?.instalados, c?.comparecimento, c?.abstencao]);
+    const ref = nacionais[0][1]?.contagens;
     for (const [nome, v] of nacionais) {
-      expect(JSON.stringify(v?.contagens), nome).toBe(ref);
+      expect(pessoas(v?.contagens), nome).toBe(pessoas(ref));
+      if (nome !== "senador") expect(JSON.stringify(v?.contagens), nome).toBe(JSON.stringify(ref));
     }
     // E o total é o eleitorado do país, não uma parcela dele.
     expect(nacionais[0][1]?.contagens.aptos).toBe(s.manifest.eleitorado_total);
@@ -2002,8 +2015,11 @@ describe("simulacao-gerar — o painel Votação nas telas de UF (spec 021 RF-19
       if (v === undefined) throw new Error("sem BA");
       // +1 em `aptos` NÃO serve: a fatia "Ainda não apurado" é `aptos −
       // instalados` e absorve o voto a mais — o arco fecha por identidade.
-      // +1 em `validos` quebra a identidade `c = vv + vb + tvn + van + vansj`.
-      v.contagens = { ...v.contagens, validos: v.contagens.validos + 1 };
+      // +1 em `validos` também não: desde o RF-210 (spec 022) a identidade
+      // `tv == k × comparecimento` é conferida ANTES e reprova com mensagem
+      // própria. +1 na abstenção mantém essa identidade e desequilibra o arco
+      // (a abstenção entra × 2 no Senado).
+      v.contagens = { ...v.contagens, abstencao: v.contagens.abstencao + 1 };
     });
     expect(() => validarSaida(podre)).toThrow(/senador-uf.json\/BA: o arco 1 não fecha/);
   });
@@ -2071,6 +2087,8 @@ describe("simulacao-gerar — as duas projeções saem do MESMO fim de noite (de
     votacao: EdgeVotacao | undefined;
     candidatos: ReadonlyArray<{ id: number; votos_projetados: number }>;
     destinos: ReadonlyMap<number, string>;
+    /** Votos por eleitor que o PAYLOAD declara (spec 022 RF-210). */
+    k: number;
   };
   const s = gerar();
   const cheio = gerar({ pct: 100 });
@@ -2091,18 +2109,21 @@ describe("simulacao-gerar — as duas projeções saem do MESMO fim de noite (de
         votacao: x.presidente.votacao,
         candidatos: x.presidente.national.candidatos,
         destinos: destinos(x.corridasPres),
+        k: 1,
       },
       {
         nome: "governador",
         votacao: x.governador.votacao,
         candidatos: x.governador.national.candidatos,
         destinos: destinos(x.corridasGov),
+        k: 1,
       },
       {
         nome: "senador",
         votacao: x.senador.votacao,
         candidatos: x.senador.national.candidatos,
         destinos: destinos(x.corridasSen),
+        k: x.senador.composicao_vagas?.vagas_por_uf ?? 1,
       },
     ];
     for (const [arq, mapa, corridas] of [
@@ -2118,6 +2139,7 @@ describe("simulacao-gerar — as duas projeções saem do MESMO fim de noite (de
           votacao: p.votacao,
           candidatos: p.candidatos,
           destinos: destinos(corridas.filter((k) => k.ctx.uf === c.uf)),
+          k: p.vagas ?? 1,
         });
       }
     }
@@ -2151,12 +2173,16 @@ describe("simulacao-gerar — as duas projeções saem do MESMO fim de noite (de
       const v = l.votacao;
       const p = v?.projetada;
       if (v === undefined || p === undefined) continue;
-      const residual = v.contagens.aptos - (p.validos + p.brancos + p.nulos + p.abstencao);
+      // Senado (RF-210): votos × 1, pessoas × k — a conta de `fatiasCirculo3`.
+      const residual =
+        l.k * v.contagens.aptos - (p.validos + p.brancos + p.nulos + l.k * p.abstencao);
       expect(residual, l.nome).toBe(somaPorDestino(l, ["anulado", "sub_judice"]));
       if (residual > 0) positivos++;
     }
     // Premissa: o caso não é trivial — há anulados projetados de verdade.
     expect(positivos).toBeGreaterThan(3);
+    // Premissa: o Senado está no laço, com 2 votos por eleitor.
+    expect(abrangencias(s).filter((l) => l.k === 2).length).toBe(28);
   });
 
   it("🔴 a 100% o fim de noite de cada candidatura É a contagem final dela [mutação: votos projetados por `alocarInteiros` sobre o total, sem destinação]", () => {
@@ -2183,7 +2209,11 @@ describe("simulacao-gerar — as duas projeções saem do MESMO fim de noite (de
     const ref = s.presidente.votacao?.projetada;
     expect(ref).toBeDefined();
     expect(s.governador.votacao?.projetada).toEqual(ref);
-    expect(s.senador.votacao?.projetada).toEqual(ref);
+    // Senado (spec 022 RF-210): o MESMO fim de noite em pessoas — a abstenção
+    // projetada é a do Presidente —, e os votos na escala de 2 por eleitor.
+    const sen = s.senador.votacao?.projetada;
+    expect(sen?.abstencao).toBe(ref?.abstencao);
+    expect(sen?.validos ?? 0).toBeGreaterThan(1.5 * (ref?.validos ?? 0));
     // Deputado (sem corrida) continua em `projetarVotacao` — nada quebrou.
     expect(s.deputado.votacao?.projetada).toEqual(projetarVotacao(s.ctxs) ?? undefined);
   });
@@ -2262,5 +2292,272 @@ describe("simulacao-gerar — as duas projeções saem do MESMO fim de noite (de
       });
     });
     expect(() => validarSaida(podre)).toThrow(/candidatura 99999 sem destinação/);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Spec 022 RF-210 / spec 021 RF-195c — o Senado contado em VOTOS, 2 por eleitor
+//
+// Medido nas capturas reais do simulado do TSE (cargo 5, 2 vagas,
+// `tests/fixtures/tse/2026-sim/senado/`): `tv == 2 × c` exato nas 4 UFs. Até
+// 27/09 o gerador copiava para o Senado as MESMAS contagens do Presidente
+// (votos = pessoas) e as candidaturas somavam o mesmo total — e foi por isso
+// que o simulado escondeu que, em produção, todo arco do Senado "não fechava".
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe("simulacao-gerar — o Senado em votos, 2 por eleitor (spec 022 RF-210)", () => {
+  type Saida = ReturnType<typeof gerar>;
+  const PCTS = [0, 0.08, 25, 100] as const;
+  const saidas: ReadonlyArray<readonly [number, Saida]> = PCTS.map((pct) => [pct, gerar({ pct })]);
+  const s = saidas[2]?.[1] as Saida;
+  const soma5 = (c: EdgeVotacaoContagens) =>
+    c.validos + c.brancos + c.nulos + c.anulados + c.sub_judice;
+  const PESSOAS = ["aptos", "instalados", "comparecimento", "abstencao"] as const;
+
+  function com(f: (x: Saida) => void): Saida {
+    const x = gerar();
+    f(x);
+    return x;
+  }
+
+  it("o fator sai de uma fonte só: `vagasPorUf` — Senado 2; Presidente, Governador e Deputado 1 [mutação: 2 literal para todos os cargos]", () => {
+    expect(votosPorEleitorDoCargo(5)).toBe(2);
+    expect(votosPorEleitorDoCargo(1)).toBe(1);
+    expect(votosPorEleitorDoCargo(3)).toBe(1);
+    expect(votosPorEleitorDoCargo(6)).toBe(1);
+    // E é o MESMO número que a tela lê do payload para multiplicar.
+    for (const uf of UFS) expect(s.senadorUf[uf]?.vagas, uf).toBe(votosPorEleitorDoCargo(5));
+    expect(s.senador.composicao_vagas?.vagas_por_uf).toBe(votosPorEleitorDoCargo(5));
+  });
+
+  it("🔴 em TODA abrangência, `validos+brancos+nulos+anulados+sub_judice == 2 × comparecimento` no Senado e `== 1 ×` nos outros [mutação: fator esquecido; fator nas pessoas; 2 para todos]", () => {
+    let senadoComVoto = 0;
+    for (const [pct, x] of saidas) {
+      const linhas: Array<[string, EdgeVotacaoContagens | undefined, number]> = [
+        ["senador", x.senador.votacao?.contagens, 2],
+        ["presidente", x.presidente.votacao?.contagens, 1],
+        ["governador", x.governador.votacao?.contagens, 1],
+        ["deputado", x.deputado.votacao?.contagens, 1],
+      ];
+      for (const uf of UFS) {
+        linhas.push([`senador-uf/${uf}`, x.senadorUf[uf]?.votacao?.contagens, 2]);
+        linhas.push([`presidente-uf/${uf}`, x.presidenteUf[uf]?.votacao?.contagens, 1]);
+        linhas.push([`governador-uf/${uf}`, x.governadorUf[uf]?.votacao?.contagens, 1]);
+        linhas.push([`deputado-uf/${uf}`, x.deputadoUf[uf]?.votacao?.contagens, 1]);
+      }
+      for (const [nome, c, k] of linhas) {
+        if (c === undefined) throw new Error(`${pct}% ${nome}: sem contagens`);
+        expect(soma5(c), `${pct}% ${nome}`).toBe(k * c.comparecimento);
+        if (k === 2 && c.comparecimento > 0) senadoComVoto++;
+      }
+    }
+    // Premissa: o caso não é trivial — há Senado com comparecimento > 0.
+    expect(senadoComVoto).toBeGreaterThan(28);
+  });
+
+  it("🔴 as PESSOAS do Senado são as do Presidente, UF a UF e no país — é o mesmo eleitorado [mutação: fator nas pessoas]", () => {
+    for (const [pct, x] of saidas) {
+      const pares: Array<
+        [string, EdgeVotacaoContagens | undefined, EdgeVotacaoContagens | undefined]
+      > = [["BR", x.senador.votacao?.contagens, x.presidente.votacao?.contagens]];
+      for (const uf of UFS) {
+        pares.push([
+          uf,
+          x.senadorUf[uf]?.votacao?.contagens,
+          x.presidenteUf[uf]?.votacao?.contagens,
+        ]);
+      }
+      for (const [onde, sen, pres] of pares) {
+        for (const campo of PESSOAS) {
+          expect(sen?.[campo], `${pct}% ${onde}.${campo}`).toBe(pres?.[campo]);
+        }
+      }
+    }
+  });
+
+  it("🔴 as funções da TELA fecham os três arcos do Senado com k = 2, e rejeitam os mesmos números com k = 1 [mutação: fator esquecido em qualquer campo de voto]", () => {
+    let fechados = 0;
+    for (const [, x] of saidas) {
+      for (const uf of UFS) {
+        const p = x.senadorUf[uf];
+        const v = p?.votacao;
+        if (p === undefined || v === undefined) throw new Error(`senador-uf/${uf} sem votacao`);
+        const k = p.vagas ?? 1;
+        expect(fatiasCirculo1(v.contagens, k), uf).not.toBeNull();
+        expect(fatiasCirculo2(v.contagens, k), uf).not.toBeNull();
+        if (v.projetada !== undefined) {
+          const f3 = fatiasCirculo3(v.contagens, v.projetada, k);
+          expect(f3, uf).not.toBeNull();
+          expect(
+            f3?.every((f) => f.abs >= 0),
+            uf,
+          ).toBe(true);
+        }
+        if (v.contagens.comparecimento > 0) {
+          // "Dados de Presidente" (votos = pessoas) é o que a tela rejeita.
+          expect(fatiasCirculo1(v.contagens, 1), `${uf} com k=1`).toBeNull();
+          fechados++;
+        }
+      }
+    }
+    expect(fechados).toBeGreaterThan(27);
+  });
+
+  it("🔴 as candidaturas do Senado somam os VOTOS do cargo — apurado e fim de noite [mutação: repartir as candidaturas sobre o total de pessoas]", () => {
+    for (const [pct, x] of saidas) {
+      for (const uf of UFS) {
+        const p = x.senadorUf[uf];
+        const v = p?.votacao;
+        if (p === undefined || v === undefined) throw new Error(`senador-uf/${uf} sem votacao`);
+        const c = v.contagens;
+        const vvc = c.validos + c.anulados + c.sub_judice;
+        const somaAt = p.candidatos.reduce((a, x) => a + x.votos_atuais, 0);
+        expect(somaAt, `${pct}% ${uf} Σ votos_atuais`).toBe(vvc);
+        expect(somaAt, `${pct}% ${uf}`).toBe(2 * c.comparecimento - c.brancos - c.nulos);
+        const somaCorrida = (v.corrida ?? []).reduce((a, e) => a + e.votos, 0);
+        expect(somaCorrida, `${pct}% ${uf} Σ corrida`).toBe(vvc);
+        const pj = v.projetada;
+        if (pj !== undefined) {
+          const somaProj = p.candidatos.reduce((a, x) => a + x.votos_projetados, 0);
+          const compFinal = c.aptos - pj.abstencao;
+          expect(somaProj, `${pct}% ${uf} Σ votos_projetados`).toBe(
+            2 * compFinal - pj.brancos - pj.nulos,
+          );
+        }
+      }
+    }
+  });
+
+  it("`pct_atual` e `pct_projetado` do Senado são percentuais sobre VOTOS e não saem pela metade [mutação: dividir pelo total em pessoas]", () => {
+    let conferidas = 0;
+    for (const uf of UFS) {
+      const p = s.senadorUf[uf];
+      if (p === undefined || p.pct_apurado <= 0) continue;
+      const total = p.candidatos.reduce((a, x) => a + x.votos_atuais, 0);
+      const somaAtual = p.candidatos.reduce((a, x) => a + x.pct_atual, 0);
+      const somaProj = p.candidatos.reduce((a, x) => a + x.pct_projetado, 0);
+      expect(Math.abs(somaAtual - 100), `${uf} Σ pct_atual`).toBeLessThanOrEqual(
+        TOLERANCIA.pctSoma,
+      );
+      expect(Math.abs(somaProj - 100), `${uf} Σ pct_projetado`).toBeLessThanOrEqual(
+        TOLERANCIA.pctSoma,
+      );
+      for (const cand of p.candidatos) {
+        expect(cand.pct_atual, `${uf}/${cand.id}`).toBeCloseTo(
+          (100 * cand.votos_atuais) / total,
+          1,
+        );
+      }
+      conferidas++;
+    }
+    expect(conferidas).toBeGreaterThan(20);
+  });
+
+  it("brancos+nulos do Senado têm taxa POR VOTO própria, na faixa medida das capturas reais, e o par segue meio a meio [mutação: dobrar os brancos/nulos do Presidente]", () => {
+    const { min, max } = BRANCOS_NULOS_POR_VOTO_SENADO;
+    const cheio = saidas[3]?.[1] as Saida;
+    let diferentes = 0;
+    for (const uf of UFS) {
+      const c = cheio.senadorUf[uf]?.votacao?.contagens;
+      const pres = cheio.presidenteUf[uf]?.votacao?.contagens;
+      if (c === undefined || pres === undefined) throw new Error(uf);
+      const tv = soma5(c);
+      const taxa = (c.brancos + c.nulos) / tv;
+      // Meia unidade de arredondamento sobre milhões de votos.
+      expect(taxa, uf).toBeGreaterThanOrEqual(min - 1e-6);
+      expect(taxa, uf).toBeLessThanOrEqual(max + 1e-6);
+      const pctBrancos = (100 * c.brancos) / (c.brancos + c.nulos);
+      expect(pctBrancos, uf).toBeGreaterThan(45);
+      expect(pctBrancos, uf).toBeLessThan(55);
+      if (c.brancos + c.nulos !== 2 * (pres.brancos + pres.nulos)) diferentes++;
+    }
+    expect(diferentes).toBe(27);
+  });
+
+  it('`validarSaida` reprova Senado com votos "de Presidente", na UF e no país [mutação: a invariante do RF-210 não existir]', () => {
+    const uf = s.ctxs.find((c) => c.pctApurado > 0)?.uf;
+    if (uf === undefined) throw new Error("nenhuma UF apurada");
+    const naUf = com((x) => {
+      const v = x.senadorUf[uf]?.votacao;
+      const pres = x.presidenteUf[uf]?.votacao?.contagens;
+      if (v === undefined || pres === undefined) throw new Error("sem UF");
+      v.contagens = { ...pres };
+    });
+    expect(() => validarSaida(naUf)).toThrow(
+      new RegExp(`senador-uf.json/${uf}: .* ≠ 2 × comparecimento`),
+    );
+    const noPais = com((x) => {
+      const v = x.senador.votacao;
+      const pres = x.presidente.votacao?.contagens;
+      if (v === undefined || pres === undefined) throw new Error("sem nacional");
+      v.contagens = { ...pres };
+    });
+    expect(() => validarSaida(noPais)).toThrow(/senador: .* ≠ 2 × comparecimento/);
+  });
+
+  it("`validarSaida` reprova Presidente e Governador com votos em dobro [mutação: invariante só no Senado]", () => {
+    const uf = s.ctxs.find((c) => c.pctApurado > 0)?.uf;
+    if (uf === undefined) throw new Error("nenhuma UF apurada");
+    for (const [arq, chave] of [
+      ["presidente-uf.json", "presidenteUf"],
+      ["governador-uf.json", "governadorUf"],
+    ] as const) {
+      const podre = com((x) => {
+        const v = x[chave][uf]?.votacao;
+        const sen = x.senadorUf[uf]?.votacao?.contagens;
+        if (v === undefined || sen === undefined) throw new Error("sem UF");
+        v.contagens = { ...sen };
+      });
+      expect(() => validarSaida(podre), arq).toThrow(
+        new RegExp(`${arq}/${uf}: .* ≠ 1 × comparecimento`),
+      );
+    }
+  });
+
+  it("`validarSaida` lê o fator do PAYLOAD, como a tela [mutação: recalcular o fator no validador]", () => {
+    const nacional = com((x) => {
+      const cv = x.senador.composicao_vagas;
+      if (cv === undefined) throw new Error("sem composicao_vagas");
+      cv.vagas_por_uf = 1;
+    });
+    // Com k = 1 o Senado vira "cargo de um voto" e os votos dele passam a ser
+    // comparados com os do Presidente — é essa comparação que reprova primeiro.
+    expect(() => validarSaida(nacional)).toThrow(
+      /senador: votacao.contagens.validos .* MESMOS votos/,
+    );
+    const uf = s.ctxs.find((c) => c.pctApurado > 0)?.uf as string;
+    const naUf = com((x) => {
+      const p = x.senadorUf[uf];
+      if (p === undefined) throw new Error("sem UF");
+      p.vagas = 1;
+      // Σ p_eleito tem de somar `vagas` (outra invariante, anterior): meio
+      // `p_eleito` para cada um mantém aquela de pé e isola a do RF-210.
+      for (const c of p.candidatos) c.p_eleito = (c.p_eleito ?? 0) / 2;
+    });
+    expect(() => validarSaida(naUf)).toThrow(
+      new RegExp(`senador-uf.json/${uf}: .* ≠ 1 × comparecimento`),
+    );
+  });
+
+  it("`validarSaida` reprova Senado de UF com PESSOAS diferentes das do Presidente [mutação: a conferência de eleitorado por UF não existir]", () => {
+    const uf = s.ctxs.find((c) => c.pctApurado > 0)?.uf as string;
+    const podre = com((x) => {
+      const v = x.senadorUf[uf]?.votacao;
+      if (v === undefined) throw new Error("sem UF");
+      // +1 em instalados e em abstenção: `c + a = esi` fecha, `tv = 2c` fecha e
+      // os três arcos fecham — só o eleitorado diverge do Presidente.
+      v.contagens = {
+        ...v.contagens,
+        instalados: v.contagens.instalados + 1,
+        abstencao: v.contagens.abstencao + 1,
+      };
+    });
+    expect(() => validarSaida(podre)).toThrow(
+      new RegExp(`senador-uf.json/${uf}: contagens.instalados .* MESMO eleitorado`),
+    );
+  });
+
+  it("`validarSaida` aceita a saída com o Senado em votos a 0%, 0,08%, 25% e 100%", () => {
+    for (const [pct, x] of saidas) expect(() => validarSaida(x), `${pct}%`).not.toThrow();
   });
 });

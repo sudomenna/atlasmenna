@@ -183,7 +183,16 @@ export interface EdgeParticipacaoMetric {
 export interface EdgeParticipacao {
   /** Abstenção — sobre os eleitores das seções instaladas. */
   abstencao?: EdgeParticipacaoMetric & { base: "eleitores_instalados" };
-  /** Brancos + nulos agregados — sobre o comparecimento. */
+  /**
+   * Brancos + nulos agregados — sobre o comparecimento.
+   *
+   * ⚠️ Senado (spec 022 RF-210, 2026-09-27): o produtor calcula VOTOS sobre
+   * VOTOS, `(vb + tvn) / tv`, com `tv = 2 × comparecimento`. O literal
+   * `"comparecimento"` fica (é o nome do denominador no contrato), mas uma tela
+   * de Senado que exiba esta métrica tem de dizer "dos votos", não "do
+   * comparecimento". Nenhuma rota de Senado a exibe hoje (travado em
+   * `tests/unit/pages/senador.test.tsx`). Idem `EdgeCandidate.comparecimento`.
+   */
   brancos_nulos?: EdgeParticipacaoMetric & { base: "comparecimento" };
   /**
    * Agregado dos candidatos de rank ≥ 4 ("Outros candidatos"), com IC95
