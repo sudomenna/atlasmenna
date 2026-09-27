@@ -207,6 +207,16 @@ composição total de 81 cadeiras do Senado.
 - Given qualquer estado de apuração, when a tela renderiza, then o denominador
   exibido é 54 e há texto distinguindo-o das 81 cadeiras.
 
+> **Nota 2026-09-27 (decisão do dono) — a lista "Estado a estado" de `/senador` (T-09).**
+> Passou a usar o mesmo cartão da grade de `/governador` (`<GovernorCard cargo="sen">`):
+> as quatro primeiras posições e "Outros", sempre em % dos votos válidos da UF, com o
+> apurado no cabeçalho. Sem o selo de status do governador ("● ELEITO" / "VAI A 2T"),
+> que não se aplica a turno único com duas vagas; o rótulo acessível nomeia os dois
+> primeiros. Substitui a linha de 19/09 ("ocupantes · Fora das vagas · margem p/ 2ª vaga").
+> A margem 2º→3º (RF-104) segue nas três superfícies que o RF lista — nenhuma delas é
+> esta lista. Testes: `tests/unit/pages/senador.test.tsx` (f), (g), (g4), (g6) e
+> `tests/unit/pages/anulada-paginas.test.tsx`.
+
 **RF-108 — Transparência de cadência**
 
 WHEN uma tela de Senador exibe projeção, the system SHALL exibir que a

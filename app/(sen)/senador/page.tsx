@@ -58,8 +58,8 @@ import { FasePreEleicaoBanner } from "@/components/atoms/banners/FasePreEleicaoB
 import { VoteBar, type VoteBarSegment } from "@/components/atoms/bars/VoteBar";
 import { Figure } from "@/components/atoms/data/Figure";
 import { Panel } from "@/components/atoms/surfaces/Panel";
-import { candidateColor as candidateColorDoPartido } from "@/components/blocks/_candidateColor";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
+import { GovernorCard } from "@/components/blocks/GovernorCard";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
@@ -67,17 +67,8 @@ import { cargoInfo } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
-import type { EdgeDestinoVoto, EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
-import {
-  compete,
-  exibePercentual,
-  haAnulada,
-  NOTA_ANULADAS_SEM_REGRA_1T,
-  sufixoAriaDestino,
-  votosDaAnulada,
-} from "@/lib/utils/destino-voto";
-import { formatPercent } from "@/lib/utils/format";
-import { nomeExibicao } from "@/lib/utils/nome-candidato";
+import type { EdgePayload } from "@/lib/edge-config/types";
+import { haAnulada, NOTA_ANULADAS_SEM_REGRA_1T } from "@/lib/utils/destino-voto";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import senFixture from "@/tests/fixtures/edge-config/sen-current.json" with { type: "json" };
 
@@ -200,77 +191,6 @@ function AguardandoSenado() {
       <Footer />
     </main>
   );
-}
-
-/**
- * Os candidatos de uma UF, na ordem da projeção.
- *
- * `EdgeUfRow.top_candidatos` já vem ordenado por `pct_projetado` desc. **Vinha
- * cortado em 3 pelo orchestrator; desde 2026-09-19 vêm 4** — decisão do dono
- * de mostrar quatro candidaturas nas telas de resumo de UF, acompanhada pelo
- * produtor (`TOP_CANDIDATOS_POR_UF = 4`, `api/model/project.py`). Com duas
- * vagas, o que esta tela precisa continua vindo de graça: os dois que entram e
- * — agora — os dois primeiros que ficam de fora.
- *
- * Esta função NÃO corta nada: quem consome escolhe. A lista estado a estado
- * imprime `slice(0, VAGAS)` (os dois ocupantes, sem ordinal) e mede a margem
- * da 2ª vaga entre `[VAGAS - 1]` e `[VAGAS]` — o 2º e o 3º. Os dois acessos
- * são por índice contado do TOPO, então a 4ª entrada entrou sem deslocar
- * nenhum deles. Payload gravado antes de 19/09 traz 3 entradas e segue
- * correto pela mesma razão.
- *
- * **Spec 018 / ADR-0042 — nome e partido vêm da própria linha da UF.** Até a
- * spec 018 esta função os buscava em `national.candidatos` indexado por `id`,
- * e isso estava errado por construção: no Senado o bloco nacional é a **união
- * de 27 corridas** sob o mesmo espaço de `id`, então `id === 13` ali não
- * identifica uma pessoa — identifica "o número 13 nalguma UF". Como em cargo
- * majoritário o número na urna É o número do partido, todo senador do PT do
- * país concorre sob o 13, e o índice entregava o candidato de um estado
- * arbitrário para os outros 26. `uf.top_candidatos[]` é resolvido pelo par
- * `(uf, numero)` no orchestrator e já sabe de que estado é.
- */
-// ⚠️ `porId: Map<number, EdgeCandidate>` saiu em 2026-09-19: ele existia só para
-// buscar `c.cor`, a paleta por COLOCAÇÃO que o payload deixou de emitir. A cor
-// agora vem da SIGLA, que já chega em `top_candidatos[].partido` (RF-144).
-function topDaUf(uf: EdgeUfRow): Array<{
-  id: number;
-  pct: number;
-  nome: string;
-  partido: string;
-  cor: string;
-  destino?: EdgeDestinoVoto;
-  votos?: number;
-}> {
-  return (uf.top_candidatos ?? []).map((t, i) => {
-    return {
-      id: t.id,
-      pct: t.pct,
-      // Fallback para payload PRÉ-018 (campo ausente): o placeholder de
-      // sempre, e deliberadamente NÃO uma volta ao índice nacional —
-      // "Candidatura 13" é feio e verdadeiro; o nome do senador de outro
-      // estado seria bonito e falso.
-      nome: t.nome ? nomeExibicao(t.nome, t.sqcand) : `Candidatura ${t.id}`,
-      partido: t.partido ?? "—",
-      // 🔴 Cor pela SIGLA (ADR-0024), não por `c.cor` — que era a paleta por
-      // COLOCAÇÃO e saiu do payload em 19/09. O `?? "var(--color-cand-other)"`
-      // antigo mascarava o problema: dava cinza quando o candidato não estava
-      // no índice nacional, e cor de rank quando estava.
-      cor: candidateColorDoPartido(t.partido, i + 1),
-      ...(t.destino ? { destino: t.destino } : {}),
-      // Lido SÓ na anulada, que aparece com os votos no lugar do % (opção A).
-      ...(typeof t.votos_atuais === "number" ? { votos: t.votos_atuais } : {}),
-    };
-  });
-}
-
-/**
- * ADR-0053 / RF-213 — "Nome (SIGLA)" com a etiqueta de destino dentro dos
- * parênteses quando houver: "Nome (SIGLA, Anulado)". Texto corrido, e não o
- * átomo `<DestinoEtiqueta>`, porque esta linha é uma frase única juntada por
- * " · " — a palavra continua visível e é lida no mesmo fluxo.
- */
-function rotuloCandidatura(c: { nome: string; partido: string; destino?: EdgeDestinoVoto }) {
-  return `${c.nome} (${siglaExibicao(c.partido)}${sufixoAriaDestino(c.destino)})`;
 }
 
 export default async function SenadoPage() {
@@ -523,198 +443,40 @@ export default async function SenadoPage() {
           </div>
         ) : payload.por_uf.length > 0 ? (
           <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
-            {/* 🔴 A legenda é o que impede a segunda linha de mentir por
-                omissão. "Outros (7)" logo depois de dois nomes seria lido como
-                "e mais sete" — quando há também o 3º e o 4º, que estão na
-                mesma linha e fora da cauda. Dizer de onde a cauda começa é o
-                que mantém a partição legível: ocupantes + de fora + Outros =
-                todas as candidaturas do estado. A frase do traço existe pela
-                mesma razão: sem ela, um "—" no meio de números vira erro de
-                renderização aos olhos do leitor, em vez do fato que é. */}
+            {/* 🔴 2026-09-27 (decisão do dono) — o MESMO cartão de
+                `/governador` (`<GovernorCard cargo="sen">`): as quatro
+                primeiras posições e "Outros", sempre em % dos votos válidos do
+                estado (`top_candidatos[].pct` + `outros.pct` fecham 100 por
+                UF). Substitui a linha "ocupantes · Fora das vagas · margem p/
+                2ª vaga" de 19/09. A margem da 2ª vaga continua na tela do
+                estado (`/uf/[sigla]/senador`, RF-104). Cada cartão segue sendo
+                o link para essa tela, e a lista continua o alvo do
+                `aria-describedby` do mapa nacional (`corridas-heading`). */}
             <p
               className="max-w-prose"
               style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
             >
-              Cada linha traz os dois que ficam com as vagas e, abaixo, quem ficou de fora: as
-              demais candidaturas com a projeção de cada uma e <strong>Outros</strong>, a soma das
-              que estão fora das quatro primeiras daquele estado — com quantas são entre parênteses.
-              Onde o TSE ainda não apurou nada no estado, o valor apurado aparece como um traço,
-              porque não foi medido — não é zero.
+              Os quatro mais votados de cada estado e a soma dos demais, em percentual dos votos
+              válidos. São duas vagas por estado: ficam com elas as duas primeiras posições.
             </p>
-            <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid" }}>
-              {payload.por_uf.map((uf) => {
-                // ADR-0053 / RF-213 — vagas e margem entre quem DISPUTA; a
-                // anulada vai para "Fora das vagas", depois das que competem e
-                // antes de "Outros". Sem anulada, `disputam` é `top`.
-                const top = topDaUf(uf);
-                const disputam = top.filter(compete);
-                const anuladas = top.filter((c) => !compete(c));
-                const dentro = disputam[VAGAS - 1];
-                const fora = disputam[VAGAS];
-                const margem = dentro && fora ? dentro.pct - fora.pct : null;
-
-                // 🔴 2026-09-19 — a SEGUNDA linha, "quem ficou de fora".
-                //
-                // Motivo: o balão de hover dos mapas (`<HoverCard>`) mostra
-                // quatro candidaturas por UF mais a cauda somada, e é
-                // `aria-hidden` por construção — ele espelha em pixels o que um
-                // ponteiro revelou, e quem navega por teclado não tem ponteiro
-                // (docstring do átomo). Esta lista é o alvo do
-                // `aria-describedby` do mapa nacional de Senador
-                // (`_NationalChoroplethMapImpl.tsx`, ramo `cargo === "sen"` →
-                // `"corridas-heading"`), então tudo que o balão diz e esta lista
-                // cala é informação que a rota não entrega a leitor de tela. Até
-                // aqui ela calava TRÊS coisas: o 3º, o 4º e a cauda.
-                //
-                // ⚠️ A linha de cima NÃO mudou e não pode mudar: ela é "quem
-                // fica com as duas cadeiras", e quatro nomes ali diriam que
-                // quatro pessoas ocupam duas vagas (ver o comentário dela).
-                // Estes nomes vêm numa linha PRÓPRIA e sob o rótulo "Fora das
-                // vagas", que é a frase que impede a leitura errada.
-                //
-                // Por que os de fora ganham percentual e os ocupantes não: a
-                // divisão editorial é identidade × magnitude. Entre o 1º e o 2º
-                // não há hierarquia — os dois se elegem igual, e numerá-los ou
-                // ranqueá-los por número inventaria uma. Entre o 2º e o 3º há
-                // exatamente uma diferença que importa, e a coluna da direita já
-                // a publica ("X p/ 2ª vaga"): esta linha é quem dá NOME ao lado
-                // de lá dessa margem, que até hoje era um número contra um
-                // adversário anônimo.
-                //
-                // `slice(VAGAS)` sem teto superior, ao contrário do
-                // `slice(0, 4)` de `<GovernorCard>`: aqui o trabalho da linha é
-                // FECHAR a partição (ocupantes + de fora + cauda = todo mundo).
-                // `uf.outros` é o complemento de `top_candidatos` seja qual for
-                // o comprimento dele, então um teto de 4 cravado aqui faria a 5ª
-                // entrada sumir da tela sem entrar na cauda no dia em que o
-                // produtor subir `TOP_CANDIDATOS_POR_UF` — e sumiria calada.
-                const deFora = [...disputam.slice(VAGAS), ...anuladas];
-                const outros = uf.outros;
-                // 🔴 `pct_atual` é TUDO-OU-NADA e **ausente, nunca `0`** (ver a
-                // docstring de `EdgeUfRow.outros` em `lib/edge-config/types.ts`):
-                // some por UF inteira quando nenhuma zona foi apurada. Um
-                // `?? 0` aqui escreveria "0,0% apurado" — "medimos zero" no
-                // lugar de "não sabemos", que são estados diferentes (decisão do
-                // dono, 14/09). Por isso o teste explícito de tipo, e não um
-                // coalesce.
-                const pctAtualOutros = outros?.pct_atual;
-                const parcialOutros =
-                  typeof pctAtualOutros === "number" && Number.isFinite(pctAtualOutros)
-                    ? formatPercent(pctAtualOutros, 1)
-                    : "—";
-                // 🔴 Cauda AUSENTE ⇒ nenhum pedaço de texto. Campo faltando
-                // significa "não há mais ninguém" (UF com ≤ 4 candidaturas), não
-                // "os demais somam zero": renderizar incondicionalmente
-                // escreveria "Outros 0,0%" numa corrida de três.
-                //
-                // E `outros.pct` vem do CAMPO, somado candidato a candidato no
-                // produtor — nunca `100 − Σ(top)`. Os pontos de uma UF não fecham
-                // em 100 de propósito (cada um é a média de um bootstrap
-                // próprio); a subtração empurraria o resíduo de fechamento para
-                // dentro de "Outros" e o publicaria como voto de alguém.
-                const partesFora = [
-                  // Desenhado ⇒ abreviado (2026-09-19). Esta cauda é texto
-                  // VISÍVEL (ver o comentário três blocos abaixo), espremida na
-                  // coluna do meio de uma linha de 3 colunas.
-                  // Emenda "opção A" ao ADR-0053 — a anulada vai com os
-                  // VOTOS, nunca com o % (o dela é sobre outra base); sem voto
-                  // no dado, só o rótulo com a etiqueta.
-                  ...deFora.map((c) => {
-                    if (exibePercentual(c))
-                      return `${rotuloCandidatura(c)} ${formatPercent(c.pct, 1)}`;
-                    const votos = votosDaAnulada(c.votos, true);
-                    return votos ? `${rotuloCandidatura(c)} ${votos}` : rotuloCandidatura(c);
-                  }),
-                  // ⚠️ Rótulo ANTES do número nos dois valores da cauda, e não
-                  // "8,1% · parcial 6,4%": o separador da lista é " · ", então
-                  // um "·" dentro de um item faria a cauda parecer DOIS itens
-                  // ("… · Outros (7) 8,1%" + "parcial 6,4%") — a linha passaria
-                  // a listar uma candidatura fantasma. Com o rótulo na frente,
-                  // o traço de "apurado —" também cai num lugar em que se lê
-                  // como valor ausente, não como travessão de pontuação.
-                  ...(outros
-                    ? [
-                        `Outros (${outros.n_candidatos}) projetado ${formatPercent(outros.pct, 1)}, apurado ${parcialOutros}`,
-                      ]
-                    : []),
-                ];
-                return (
-                  <li key={uf.sigla} style={{ borderBottom: "1px solid var(--border-hairline)" }}>
-                    <a
-                      href={`/uf/${uf.sigla}/senador`}
-                      data-testid="corrida-uf"
-                      data-uf={uf.sigla}
-                      className="grid items-center"
-                      style={{
-                        gridTemplateColumns: "2.5rem minmax(0, 1fr) auto",
-                        columnGap: "var(--space-3)",
-                        minHeight: "var(--tap-min)",
-                        padding: "var(--space-3) 0",
-                        color: "inherit",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <span style={{ font: "var(--type-figure-sm)" }}>{uf.sigla}</span>
-                      <span className="min-w-0 flex flex-col" style={{ gap: "var(--space-1)" }}>
-                        <span
-                          className="truncate"
-                          // 2026-09-19 — `data-testid` novo, e ele existe para
-                          // uma asserção NEGATIVA: o teste "(g)" precisa provar
-                          // que o 3º colocado não aparece AQUI. Até esta data a
-                          // prova era sobre o `textContent` da linha inteira,
-                          // o que passou a ser forte demais — o 3º agora tem
-                          // lugar legítimo na linha de baixo, sob rótulo
-                          // próprio. Sem um alvo para o escopo, a única saída
-                          // seria afrouxar a asserção, e afrouxar é como a
-                          // regra "quatro nomes diriam que quatro pessoas
-                          // ocupam duas vagas" morre em silêncio.
-                          data-testid="corrida-ocupantes"
-                          style={{ font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-                        >
-                          {/* Os `VAGAS` primeiros, sem ordinal: numerá-los
-                          reintroduziria a hierarquia que o resultado não tem.
-
-                          🔴 Continua `VAGAS` (2) mesmo com `topDaUf` devolvendo
-                          4 desde 19/09 — e isso NÃO é uma pendência. Esta linha
-                          não é "o top da UF": é "quem fica com as duas
-                          cadeiras". Imprimir quatro nomes num lugar que o
-                          leitor lê como os ocupantes diria que quatro pessoas
-                          ocupam duas vagas. O que os dois nomes extras fazem
-                          aqui é alimentar a margem à direita (2º−3º). */}
-                          {disputam.slice(0, VAGAS).length > 0
-                            ? disputam
-                                .slice(0, VAGAS)
-                                // Desenhado ⇒ abreviado (2026-09-19): dois
-                                // nomes + duas siglas num `truncate`.
-                                .map(rotuloCandidatura)
-                                .join(" · ")
-                            : "aguardando apuração"}
-                        </span>
-                        {/* Visível, não `sr-only`. Texto escondido é uma segunda
-                          verdade que ninguém revisa e que apodrece — e este
-                          conteúdo não é muleta de acessibilidade: quem enxerga
-                          também lia "2,3% p/ 2ª vaga" sem nunca saber contra
-                          QUEM eram os 2,3%. */}
-                        {partesFora.length > 0 ? (
-                          <span
-                            data-testid="corrida-fora"
-                            style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}
-                          >
-                            Fora das vagas: {partesFora.join(" · ")}
-                          </span>
-                        ) : null}
-                      </span>
-                      <span
-                        className="text-right"
-                        data-testid="corrida-margem"
-                        style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
-                      >
-                        {margem === null ? "—" : `${formatPercent(Math.abs(margem), 1)} p/ 2ª vaga`}
-                      </span>
-                    </a>
-                  </li>
-                );
-              })}
+            <ul
+              aria-label="Corridas estaduais de senador"
+              className="grid grid-cols-1 gap-3"
+              style={{ listStyle: "none", margin: 0, padding: 0 }}
+            >
+              {payload.por_uf.map((uf) => (
+                <li key={uf.sigla}>
+                  <a
+                    href={`/uf/${uf.sigla}/senador`}
+                    data-testid="corrida-uf"
+                    data-uf={uf.sigla}
+                    className="block"
+                    style={{ color: "inherit", textDecoration: "none" }}
+                  >
+                    <GovernorCard uf={uf} candidatos={payload.national.candidatos} cargo="sen" />
+                  </a>
+                </li>
+              ))}
             </ul>
             {/* ADR-0053 / RF-213 — só quando alguma UF tem anulada no corte. */}
             {payload.por_uf.some((uf) => haAnulada(uf.top_candidatos)) ? (

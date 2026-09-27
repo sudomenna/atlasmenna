@@ -9,7 +9,7 @@
  *     alimentam o painel "Segundo turno?" — com a anulada em `rank` 1, o painel
  *     diria "<anulada> vence no 1º turno" (com o `p_fecha_1t = 0` que o modelo
  *     dá a ela);
- *   - `/senador`: os ocupantes das duas vagas, "Fora das vagas" e a margem da
+ *   - `/senador`: o cartão por estado (formato de `/governador` desde 27/09) e a margem da
  *     2ª vaga, montados a partir de `top_candidatos`;
  *   - `/uf/[sigla]/senador`: o elenco do painel de chances (`vagas + 1`).
  */
@@ -155,45 +155,41 @@ function senadoNacional(): EdgePayload {
   };
 }
 
-describe("/senador — vagas, 'Fora das vagas' e margem", () => {
-  it("🔴 ocupantes são os dois que disputam; a anulada vai para 'Fora das vagas' com a etiqueta [mutação: `top.slice(0, VAGAS)`]", async () => {
+describe("/senador — o cartão por estado com anulada (2026-09-27: formato de /governador)", () => {
+  function linhas(doc: Document): string[] {
+    return [...doc.querySelectorAll("[data-uf='SP'] article li")].map((li) =>
+      (li.textContent ?? "").replace(/\s+/g, " ").trim(),
+    );
+  }
+
+  it("🔴 quem disputa ganha as posições; a anulada vai ao fim, sem posição e sem %", async () => {
     readProjectionMock.mockResolvedValue(senadoNacional());
     const doc = await parse(SenadoPage());
-    const sp = doc.querySelector("[data-uf='SP']");
-    expect(sp?.querySelector("[data-testid='corrida-ocupantes']")?.textContent).toBe(
-      "Ana Lima (PT) · Bruno Reis (PL, Sub judice)",
-    );
-    const fora = sp?.querySelector("[data-testid='corrida-fora']")?.textContent ?? "";
-    expect(fora).toContain("Célia Mota (MDB) 29,0%");
-    // 🔴 ALTERADO na opção A (2026-09-27): a anulada sai SEM percentual. O
-    // dado desta fixture não traz `votos_atuais`, então fica só o rótulo com a
-    // etiqueta — nem "45,0%", nem "0 votos".
-    expect(fora).toContain("Zé Anulado (NOVO, Anulado)");
-    expect(fora).not.toContain("45,0%");
-    expect(fora).not.toMatch(/Zé Anulado \(NOVO, Anulado\) \S/);
-    // Célia (a que disputa) vem ANTES da anulada.
-    expect(fora.indexOf("Célia")).toBeLessThan(fora.indexOf("Zé Anulado"));
-    // 2ª vaga: Bruno 30 − Célia 29, nunca Ana 40 − Bruno 30.
-    expect(sp?.querySelector("[data-testid='corrida-margem']")?.textContent).toBe(
-      "1,0% p/ 2ª vaga",
-    );
+    const l = linhas(doc);
+    expect(l[0]).toMatch(/^1° ?Ana Lima ?PT/);
+    expect(l[1]).toMatch(/^2° ?Bruno Reis ?PL,? ?Sub judice/i);
+    expect(l[2]).toMatch(/^3° ?Célia Mota ?MDB.*29%$/);
+    // Opção A do ADR-0053: a anulada sai SEM percentual e sem ordinal.
+    const anulada = l.find((x) => x.includes("Zé Anulado")) ?? "";
+    expect(anulada).toMatch(/^— ?Zé Anulado ?NOVO,? ?Anulado/i);
+    expect(anulada).not.toContain("45%");
+    expect(l.indexOf(anulada)).toBe(3);
     // Senado: a nota SEM a regra dos 50% (duas vagas, sem 2º turno).
     const nota = doc.querySelector("[data-testid='senado-nota-anuladas']")?.textContent ?? "";
     expect(nota).toContain("calculados sobre os votos em disputa");
     expect(nota).not.toContain("1º turno");
   });
 
-  it("sem `destino`, a linha é a de sempre (e sem nota)", async () => {
+  it("sem `destino`, a ordem é a do dado (e sem nota)", async () => {
     const p = senadoNacional();
     const row = p.por_uf[0];
     if (!row) throw new Error("fixture sem SP");
     row.top_candidatos = row.top_candidatos.map(({ destino: _d, ...t }) => t);
     readProjectionMock.mockResolvedValue(p);
     const doc = await parse(SenadoPage());
-    const sp = doc.querySelector("[data-uf='SP']");
-    expect(sp?.querySelector("[data-testid='corrida-ocupantes']")?.textContent).toBe(
-      "Zé Anulado (NOVO) · Ana Lima (PT)",
-    );
+    const l = linhas(doc);
+    expect(l[0]).toMatch(/^1° ?Zé Anulado ?NOVO.*45%$/);
+    expect(l[1]).toMatch(/^2° ?Ana Lima ?PT/);
     expect(doc.querySelector("[data-testid='senado-nota-anuladas']")).toBeNull();
   });
 });

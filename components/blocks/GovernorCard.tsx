@@ -85,7 +85,20 @@ export interface GovernorCardProps {
    */
   candidatos: EdgeCandidate[];
   mode?: "compact" | "expanded";
+  /**
+   * 🔴 2026-09-27 (decisão do dono) — a capa `/senador` passou a usar ESTE
+   * cartão, no mesmo formato de `/governador`: 4 posições + "Outros", em % dos
+   * votos válidos. Em `"sen"` o selo de status some — ele diz "eleito no 1º
+   * turno / vai a 2º turno", e o Senado é turno único com DUAS vagas por
+   * estado: "● ELEITO" só no líder negaria a segunda vaga, e "VAI A 2T" é
+   * falso por construção. A linha única do celular mostra os dois primeiros
+   * pelo mesmo motivo (duas vagas, não um líder).
+   */
+  cargo?: "gov" | "sen";
 }
+
+/** Vagas por UF no Senado em 2026 (renovação de 2/3) — só para a variante `"sen"`. */
+const VAGAS_SENADO = 2;
 
 interface StatusChip {
   label: string;
@@ -152,8 +165,14 @@ interface Row {
   votos?: number;
 }
 
-export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCardProps) {
-  const chip = chipFor(uf);
+export function GovernorCard({
+  uf,
+  candidatos,
+  mode = "expanded",
+  cargo = "gov",
+}: GovernorCardProps) {
+  const senado = cargo === "sen";
+  const chip = senado ? null : chipFor(uf);
   const nomeUf = UF_NAMES[uf.sigla] ?? uf.sigla;
   const candIndex = new Map(candidatos.map((c) => [c.id, c] as const));
 
@@ -258,11 +277,13 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
   // 🔊 `aria-label` — sigla INTEIRA, de propósito (2026-09-19). A abreviação
   // resolve largura, e aqui não há largura: "REPUBLICANOS" dito por inteiro é
   // exatamente o que o TSE publica. A regra está em `lib/utils/sigla-partido.ts`.
-  const ariaLabel = `${nomeUf}, ${chip.ariaText}${
-    liderRow
-      ? `, líder: ${liderRow.nome} (${liderRow.partido}) com ${formatPercentTrim(liderRow.pct)}`
-      : ""
-  }, ${formatPercentTrim(uf.pct_apurado)} apurado`;
+  // Senado: os que ocupam as vagas pela ordem do cartão — não "o líder".
+  const destaque = senado ? top.filter(compete).slice(0, VAGAS_SENADO) : liderRow ? [liderRow] : [];
+  const descreve = (r: Row) => `${r.nome} (${r.partido}) com ${formatPercentTrim(r.pct)}`;
+  const apurado = `${formatPercentTrim(uf.pct_apurado)} apurado`;
+  const ariaLabel = senado
+    ? `${nomeUf}${destaque.length > 0 ? `, mais votados: ${destaque.map(descreve).join(" e ")}` : ""}, ${apurado}`
+    : `${nomeUf}, ${chip?.ariaText}${liderRow ? `, líder: ${descreve(liderRow)}` : ""}, ${apurado}`;
 
   // Mobile fallback: single-line. Detectado via CSS, não JS — usamos
   // `sm:hidden` / `hidden sm:block` para alternar.
@@ -280,7 +301,7 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
       {/* Mobile compact single-line (always visible < 640px) */}
       <div className="sm:hidden text-sm" style={{ color: "var(--color-text)" }}>
         <span className="font-semibold">{uf.sigla}</span>
-        {liderRow && (
+        {destaque.length > 0 && (
           <>
             <span className="mx-1" style={{ color: "var(--color-text-muted)" }}>
               ·
@@ -288,25 +309,29 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
             <span>
               {/* Linha única de mobile — o lugar mais estreito do cartão.
                   Desenhado ⇒ abreviado (2026-09-19). */}
-              {liderRow.nome} ({siglaExibicao(liderRow.partido)})
+              {destaque.map((r) => `${r.nome} (${siglaExibicao(r.partido)})`).join(" · ")}
             </span>
           </>
         )}
-        <span className="mx-1" style={{ color: "var(--color-text-muted)" }}>
-          ·
-        </span>
-        <span
-          style={{
-            backgroundColor: chip.bg,
-            color: chip.fg,
-            padding: "1px 6px",
-            borderRadius: 4,
-            fontSize: "0.7rem",
-            fontWeight: 600,
-          }}
-        >
-          {chip.label}
-        </span>
+        {chip ? (
+          <>
+            <span className="mx-1" style={{ color: "var(--color-text-muted)" }}>
+              ·
+            </span>
+            <span
+              style={{
+                backgroundColor: chip.bg,
+                color: chip.fg,
+                padding: "1px 6px",
+                borderRadius: 4,
+                fontSize: "0.7rem",
+                fontWeight: 600,
+              }}
+            >
+              {chip.label}
+            </span>
+          </>
+        ) : null}
       </div>
 
       {/* Desktop / expanded (>= 640px) */}
@@ -355,7 +380,7 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
                       <DestinoEtiqueta destino={r.destino} />
                     </span>
                   ) : null}
-                  {isLider && (
+                  {isLider && chip && (
                     <span
                       className="ml-2"
                       style={{

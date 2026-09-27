@@ -315,51 +315,50 @@ describe("/senador (T-09)", () => {
     expect(nota).toMatch(/não publica um arquivo nacional/i);
   });
 
-  it("(f) RF-104: a margem de cada estado é a da 2ª vaga, não a do líder", async () => {
+  // 🔴 2026-09-27 (decisão do dono) — a capa passou a usar o cartão de
+  // `/governador` (`<GovernorCard cargo="sen">`): 4 posições + "Outros", em %
+  // dos votos válidos. Os casos antigos (f) "margem p/ 2ª vaga", (g) "os DOIS
+  // ocupantes sem ordinal", (g4)/(g5) "Fora das vagas" descreviam a lista de
+  // 19/09 e saíram com ela. A margem da 2ª vaga segue na tela do estado — (n).
+
+  /** As linhas do cartão de uma UF, texto normalizado. */
+  function linhasDoCartao(doc: Document, sigla: string): string[] {
+    return [...doc.querySelectorAll(`[data-uf='${sigla}'] article li`)].map((li) =>
+      (li.textContent ?? "").replace(/\s+/g, " ").trim(),
+    );
+  }
+
+  it("🔴 (f) cada estado é o cartão de governador: posições 1° a 4°, em % dos votos válidos", async () => {
     readProjectionMock.mockResolvedValue(nacional());
     const doc = await render(SenadoPage());
-    const sp = doc.querySelector("[data-uf='SP'] [data-testid='corrida-margem']")?.textContent;
-    const rj = doc.querySelector("[data-uf='RJ'] [data-testid='corrida-margem']")?.textContent;
+    const sp = linhasDoCartao(doc, "SP");
 
-    // SP: 30 − 29 = 1 pp (e NÃO 40 − 30 = 10).
-    expect(sp).toContain("1,0");
-    expect(sp).not.toContain("10,0");
-    expect(sp).toMatch(/2ª vaga/);
-    // RJ: 28 − 20 = 8 pp (e NÃO 45 − 28 = 17).
-    expect(rj).toContain("8,0");
-    expect(rj).not.toContain("17,0");
+    expect(sp[0]).toMatch(/^1° ?Ana Lima ?PT.*40%$/);
+    expect(sp[1]).toMatch(/^2° ?Bruno Reis ?PL.*30%$/);
+    expect(sp[2]).toMatch(/^3° ?Célia Mota ?MDB.*29%$/);
+    // O cabeçalho do cartão: nome do estado e o apurado, como em /governador.
+    const cartao = doc.querySelector("[data-uf='SP'] article");
+    expect(cartao?.querySelector("h3")?.textContent).toContain("São Paulo");
+    expect(cartao?.textContent).toContain("62% apur");
+    // O cartão continua sendo o link para a tela do estado.
+    expect(doc.querySelector("a[data-uf='SP']")?.getAttribute("href")).toBe("/uf/SP/senador");
   });
 
-  it("(g) cada estado nomeia os DOIS que ocupam vaga, sem ordinal", async () => {
-    // 🔴 2026-09-19 — o ESCOPO desta asserção mudou, o que ela protege não.
-    //
-    // Até esta data o alvo era o `textContent` da LINHA INTEIRA
-    // (`[data-uf='SP']`), com o comentário "o 3º não pode aparecer como se
-    // ocupasse". A intenção sempre foi essa — "como se ocupasse" — mas a
-    // medição era mais larga que a intenção: proibia o nome do 3º em qualquer
-    // lugar da linha. Naquele dia a linha ganhou uma SEGUNDA linha, "Fora das
-    // vagas", onde o 3º e o 4º aparecem sob rótulo próprio e com percentual
-    // (ver "(g4)"), e a asserção larga passou a barrar exatamente a correção
-    // de acessibilidade que o balão de hover (`aria-hidden`) exigia.
-    //
-    // Por isso o alvo virou `[data-testid='corrida-ocupantes']`, e o caso
-    // ficou MAIS forte, não mais fraco: além do 3º ausente dali, conta-se o
-    // número de nomes. A mutação que este caso mata é a que o comentário do
-    // componente descreve — trocar `top.slice(0, VAGAS)` por `top` (ou por
-    // `slice(0, 4)`) e fazer quatro nomes dizerem que quatro pessoas ocupam
-    // duas vagas.
+  it("🔴 (g) sem selo de 1º/2º turno — Senado é turno único com duas vagas", async () => {
+    // Mutação alvo: tirar a guarda `senado ? null : chipFor(uf)` e deixar o
+    // cartão imprimir "VAI A 2T" / "● ELEITO" / "EM APURAÇÃO" no líder.
     readProjectionMock.mockResolvedValue(nacional());
     const doc = await render(SenadoPage());
-    const ocupantes =
-      doc.querySelector("[data-uf='SP'] [data-testid='corrida-ocupantes']")?.textContent ?? "";
-
-    expect(ocupantes).toContain("Ana Lima");
-    expect(ocupantes).toContain("Bruno Reis");
-    // O 3º não ocupa vaga — não pode aparecer nesta linha.
-    expect(ocupantes).not.toContain("Célia Mota");
-    // Exatamente DOIS nomes, separados por " · ": um terceiro separador
-    // significa um terceiro ocupante.
-    expect(ocupantes.split("·")).toHaveLength(VAGAS_SENADO);
+    const lista = doc.querySelector("ul[aria-label='Corridas estaduais de senador']");
+    expect(lista).not.toBeNull();
+    const texto = lista?.textContent ?? "";
+    expect(texto).not.toMatch(/VAI A 2T|ELEITO|EM APURAÇÃO/);
+    // O rótulo acessível nomeia os DOIS mais votados, não "o líder".
+    const aria = doc.querySelector("[data-uf='SP'] article")?.getAttribute("aria-label") ?? "";
+    expect(aria).toContain("Ana Lima");
+    expect(aria).toContain("Bruno Reis");
+    expect(aria).not.toContain("Célia Mota");
+    expect(aria).not.toMatch(/líder/);
   });
 
   it("(g2) payload PRÉ-018 (sem `nome` em top_candidatos) → placeholder, nunca o nome do índice nacional", async () => {
@@ -378,7 +377,8 @@ describe("/senador (T-09)", () => {
     const doc = await render(SenadoPage());
     const sp = doc.querySelector("[data-uf='SP']")?.textContent ?? "";
 
-    expect(sp).toContain("Candidatura 1");
+    // Placeholder do `<GovernorCard>` (2026-09-27: a capa usa o cartão).
+    expect(sp).toContain("Cand 1");
     expect(sp).not.toContain("Ana Lima");
     expect(sp).not.toContain("Bruno Reis");
   });
@@ -438,65 +438,24 @@ describe("/senador (T-09)", () => {
     };
   }
 
-  it("(g4) a linha de baixo nomeia quem ficou de fora e soma a cauda", async () => {
-    // Mutações que este caso mata:
-    //   1. não renderizar a segunda linha (volta ao estado em que "2,3% p/ 2ª
-    //      vaga" era uma margem contra um adversário anônimo);
-    //   2. cortar `top.slice(VAGAS)` em 0 e imprimir só "Outros" — o 3º e o 4º
-    //      não estão na cauda, e some a partição;
-    //   3. trocar `outros.pct` por `100 − Σ(top)`: a fixture de SP soma
-    //      40 + 30 + 29 = 99, então a subtração daria 1,0% e não 8,1%.
+  it("(g4) 'Outros' vem do CAMPO somado, nunca de 100 − Σ(top)", async () => {
+    // Mutação alvo: trocar `outros.pct` por `100 − Σ(top)`. A fixture de SP
+    // soma 40 + 30 + 29 = 99, então a subtração daria 1% e não 8,1%.
     readProjectionMock.mockResolvedValue(comCaudaEmSP());
     const doc = await render(SenadoPage());
-    const fora =
-      doc.querySelector("[data-uf='SP'] [data-testid='corrida-fora']")?.textContent ?? "";
-
-    expect(fora).toMatch(/fora das vagas/i);
-    expect(fora).toContain("Célia Mota (MDB) 29,0%");
-    expect(fora).toContain("Outros (7)");
-    expect(fora).toContain("8,1%");
-    expect(fora).not.toContain("1,0%");
-    // O 3º está na linha de baixo — e continua fora da de cima ("(g)").
-    expect(fora).toContain("apurado 6,4%");
+    const outros = linhasDoCartao(doc, "SP").find((l) => l.startsWith("Outros"));
+    expect(outros).toMatch(/^Outros.*8,1%$/);
+    expect(outros).not.toMatch(/ 1%$/);
   });
 
-  it("(g5) `outros.pct_atual` ausente ⇒ 'parcial —', nunca 0", async () => {
-    // Mutação alvo: `outros.pct_atual ?? 0`, que escreveria "parcial 0,0%".
-    // O campo é TUDO-OU-NADA e some por UF inteira quando nenhuma zona foi
-    // apurada (docstring de `EdgeUfRow.outros`): "não medimos" e "medimos
-    // zero" são estados diferentes — decisão do dono de 14/09. A projeção
-    // (`pct`) continua na tela ao lado, então o caso também prova que o traço
-    // não engole a linha inteira.
-    const payload = comCaudaEmSP();
-    for (const uf of payload.por_uf) {
-      if (uf.sigla === "SP" && uf.outros) delete uf.outros.pct_atual;
-    }
-    readProjectionMock.mockResolvedValue(payload);
-    const doc = await render(SenadoPage());
-    const fora =
-      doc.querySelector("[data-uf='SP'] [data-testid='corrida-fora']")?.textContent ?? "";
-
-    expect(fora).toContain("apurado —");
-    expect(fora).not.toContain("apurado 0");
-    expect(fora).toContain("8,1%");
-  });
-
-  it("(g6) cauda AUSENTE ⇒ nenhuma linha de 'Outros' — e a linha de fora sobrevive", async () => {
-    // Mutação alvo: renderizar o agregado incondicionalmente. Campo ausente
-    // significa "não há mais ninguém" (UF com ≤ 4 candidaturas no cargo), não
-    // "os demais somam zero": um objeto zerado escreveria "Outros (0) 0,0%"
-    // numa corrida de três.
-    //
-    // A fixture não tem `outros` em nenhuma UF, e o 3º colocado continua
-    // sendo nomeado — a segunda linha não depende da cauda para existir.
+  it("(g6) cauda AUSENTE ⇒ nenhuma linha de 'Outros'", async () => {
+    // Campo ausente significa "não há mais ninguém" (UF com ≤ 4 candidaturas),
+    // não "os demais somam zero".
     readProjectionMock.mockResolvedValue(nacional());
     const doc = await render(SenadoPage());
-    const fora =
-      doc.querySelector("[data-uf='SP'] [data-testid='corrida-fora']")?.textContent ?? "";
-
-    expect(fora).toContain("Célia Mota");
-    expect(fora).not.toContain("Outros");
-    expect(fora).not.toContain("0,0%");
+    const sp = linhasDoCartao(doc, "SP");
+    expect(sp.some((l) => l.includes("Célia Mota"))).toBe(true);
+    expect(sp.some((l) => l.startsWith("Outros"))).toBe(false);
   });
 
   it("(h) RF-108: cadência em texto, e SEM a afirmação de nível de estado", async () => {

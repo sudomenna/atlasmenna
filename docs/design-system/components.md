@@ -101,7 +101,7 @@ Notas dos atoms não construídos:
 | `<TurnoOneRecap />` | ✅ S06 | (ADR-0016 — sem RF formal) | `components/blocks/TurnoOneRecap.tsx` | `tests/unit/components/TurnoOneRecap.test.tsx` |
 | `<TwoRoundIndicator />` | ⛔ órfão | ~~RF-030.7~~ | `components/blocks/TwoRoundIndicator.tsx` | tests existem mas sem call site em produção (RF-030.7 migrou para `<ChancesPanel />`) |
 | `<CandidateRanking />` | ✅ S05 | RF-030 ext, RF-031..044 ext (rank 3–6) | `components/blocks/CandidateRanking.tsx` | `tests/unit/components/CandidateRanking.test.tsx` |
-| `<GovernorCard />` | ✅ S06 | RF-006.3, RF-006.8 (selo com desfecho) | `components/blocks/GovernorCard.tsx` | `tests/unit/components/GovernorCard.test.tsx` |
+| `<GovernorCard />` | ✅ S06 | RF-006.3, RF-006.8 (selo com desfecho); também em `/senador` com `cargo="sen"`, sem selo (spec 016, nota 27/09) | `components/blocks/GovernorCard.tsx` | `tests/unit/components/GovernorCard.test.tsx` |
 | `<HexCartogramBrasil />` | ✅ S06 — sem uso em `/governador` | RF-006.3 (histórico pré-ADR-0048) | `components/blocks/HexCartogramBrasil.tsx` | `tests/unit/components/HexCartogramBrasil.test.tsx` (verde, preservado por decisão explícita do dono) |
 | `<RaceStatsCards />` | ✅ S06 | RF-006.1 | `components/blocks/RaceStatsCards.tsx` | `tests/unit/components/RaceStatsCards.test.tsx` |
 | `<BreakingNewsTicker />` | ✅ S06 | RF-006.4 | `components/blocks/BreakingNewsTicker.tsx` | `tests/unit/components/BreakingNewsTicker.test.tsx` |
