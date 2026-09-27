@@ -5,12 +5,12 @@ status: implementing
 priority: M
 personas: []
 screens: []
-requirements: [RF-011, RF-012, RF-013, RF-014, RF-015, RF-016, RF-017, RF-018, RF-019, RF-020, RF-020.1, RF-020.2, RF-020.3]
+requirements: [RF-011, RF-012, RF-013, RF-014, RF-015, RF-016, RF-017, RF-018, RF-019, RF-020, RF-020.1, RF-020.2, RF-020.3, RF-213]
 depends_on: [001-ingestao-tse]
 apis: [POST /api/model/project]
 components: []
 nfr: [RNF-006]
-adrs: [0006, 0007, 0012, 0014, 0018, 0020, 0021, 0023, 0035, 0038]
+adrs: [0006, 0007, 0012, 0014, 0018, 0020, 0021, 0023, 0035, 0038, 0053]
 ship_blocked_on: [simulado-tse-2026, gate-ot4-reprovando]
 ---
 
@@ -212,6 +212,31 @@ WHEN a projeção é persistida, the system SHALL gravar `votos_projetados` (int
 - Given um ciclo com pelo menos uma UF apurada, when o payload nacional é emitido, then `Σ_UF votos_projetados(c, U) == votos_projetados(c, BR)` e o total nacional é `> 0` desde o primeiro ciclo.
 - Given uma execução completa, when `projections` é inspecionada, then nenhuma linha tem `votos_projetados` nulo para candidato com projeção.
 
+### Destino do voto (`dvt`) nas decisões de corrida (2026-09-27, decisão do dono)
+
+**RF-213 — Candidatura anulada sai da disputa; sub judice segue contando como o TSE conta**
+
+WHEN a projeção classifica candidaturas para decisões de corrida — `lider`, `cand_a`/`cand_b`, `p_vitoria`, `p_fecha_1t`, `p_segundo_turno_overall`, `cenarios_2t`, `chamada`, `vai_a_2t` e, no Senado, `p_eleito` (RF-103) — the system SHALL excluir do universo considerado toda candidatura cujo `cand[].dvt` mapeie para `"anulado"` (`destino_do_dvt`, `api/model/project.py:3912`, spec 022 RF-209), e SHALL recalcular a base da regra de maioria absoluta do 1º turno como `vvc − van` (válidos + sub judice), nunca `vvc` inteiro.
+
+WHERE `cand[].dvt` mapeia para `"sub_judice"`, the system SHALL manter a candidatura no universo de decisão exatamente como antes desta regra — elegível a liderar, a compor o par de 2º turno e a contar na base de maioria absoluta —, refletindo que o TSE a mantém formalmente em disputa. **Ponto aberto** ([ADR-0053](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md)): pendente confirmação jurídica se sub judice deve mesmo contar no denominador da maioria absoluta.
+
+IF `cand[].dvt` está ausente para toda a corrida (nenhuma candidatura publicou destino — estado normal antes da 1ª totalização parcial do TSE) OU IF candidaturas do mesmo `id` reportam `dvt` divergente entre arquivos do mesmo ciclo, the system SHALL manter o comportamento vigente antes deste RF (nenhuma exclusão, base = `vvc` inteiro) e SHALL emitir aviso no log — nunca tratar ausência ou divergência como exclusão silenciosa.
+
+IF `cand[].dvt` traz valor fora do dicionário conhecido (`_DESTINO_POR_DVT`), the system SHALL tratá-lo como ausente para efeito desta regra — nunca como `"anulado"` nem como `"válido"`.
+
+WHERE a exibição de percentuais por candidato ocorre (listas, termômetros, mapas), the system SHALL continuar usando `vvc` inteiro como denominador ([ADR-0018](../../architecture/adrs/0018-termometros-hero-1t.md)) — esta regra afeta apenas as decisões de corrida, nunca o número exibido. Uma candidatura anulada pode aparecer na lista com seu percentual de `vvc` mesmo excluída do ranking de decisão; a UI/metodologia (spec 011) SHALL declarar essa divergência explicitamente.
+
+WHERE a exclusão é aplicada, the system SHALL implementá-la na **fronteira das decisões** (fora de `_extract_zone_candidatos`) — por reamostra dos resultados já extraídos, retirando as candidaturas anuladas e renormalizando as frações remanescentes por `f_i / (1 − Σ f_anulados)` DEPOIS de `estimate_uf_candidatos` (intocado: ele produz os percentuais publicados sobre `vvc`) e antes de alimentar `compute_national`, `compute_p_fecha_1t`, `compute_two_round_scenarios`, `p_vitoria`, `p_eleito` e o bloco por UF (`lider`, `margem`, `chamada`, `vai_a_2t`).
+
+**Aceitação**:
+- Given a captura real do simulado do TSE (`vvc` 120.704.576, `van` 9.218.887, `vansj` 10.503.573) com um líder hipotético em 46% de `vvc` cujo `dvt = "Anulado"`, when a projeção classifica a corrida, then esse candidato sai de `lider`, `cand_a`/`cand_b`, `p_vitoria`, do par de `cenarios_2t` e de `chamada`/`vai_a_2t`, e `p_fecha_1t` é recalculado sobre `vvc − van` sem ele.
+- Given o mesmo cenário sem a candidatura anulada, when a base é recalculada, then um segundo colocado com 41,83%–50% de `vvc` pode passar a ter >50% da nova base (`vvc − van`) e é reclassificado como líder, com `p_fecha_1t` correspondente.
+- Given uma candidatura com `dvt = "Anulado sub judice"`, when a projeção roda, then ela permanece elegível a `lider`, ao par de `cenarios_2t` e, no Senado, ao top-2 de `p_eleito` — sem mudança de comportamento em relação ao estado anterior a este RF.
+- Given um ciclo sem nenhum `dvt` publicado (antes da 1ª totalização parcial), when a projeção roda, then nenhuma candidatura é excluída, a base é `vvc` inteiro e o log registra que a regra está inativa nesta corrida.
+- Given dois arquivos do mesmo ciclo com `dvt` divergente para o mesmo `id`, when a projeção roda, then a candidatura NÃO é excluída e o log registra a divergência.
+- Given uma candidatura excluída da decisão, when a lista de resultados é exibida, then seu percentual sobre `vvc` continua visível, com nota metodológica de que ela não compete pelas vagas.
+- Given o replay 2022 (fixture sem `dvt`, `vvc == vv`), when a projeção roda, then o resultado é bit-a-bit idêntico ao anterior a este RF (gate OT-4 preservado).
+
 ## Escala de percentuais (fronteira de conversão)
 
 O modelo trabalha internamente em **fração [0, 1]** — é o espaço do bootstrap (RF-015), de RF-017/RF-018 e de `p_vitoria` (RF-016). A **fronteira única de conversão** são `compute_uf_projections` e `compute_national`: ambas convertem para **percentual 0–100** antes de devolver `rows`, via `_frac_to_pct` (arredondamento em 5 casas, a precisão de `projections.pct_projetado NUMERIC(8,5)`).
@@ -275,4 +300,6 @@ Nenhum item foi removido do frontmatter nesta passagem: retirar bloqueador é at
 - ADR-0021 Extrapolação do apurado por zona, sem 2022 (supersede ADR-0015 — origem de RF-011/012/013/017/020.2/020.3): [../../architecture/adrs/0021-extrapolacao-do-apurado-sem-2022.md](../../architecture/adrs/0021-extrapolacao-do-apurado-sem-2022.md)
 - ADR-0018 Seis termômetros no hero do 1T (origem de RF-020.1 — denominador misto, "Outros" com IC real, participação por regra de três): [../../architecture/adrs/0018-termometros-hero-1t.md](../../architecture/adrs/0018-termometros-hero-1t.md)
 - Consumo de RF-020.1 na UI: [spec 003](../003-home-nacional/spec.md) (RF-062)
+- ADR-0053 Anulado sai da disputa, sub judice segue o TSE (origem de RF-213): [../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md)
+- Consumo de RF-213 nas decisões por UF: [spec 006](../006-grid-governadores/spec.md) (RF-006.8), [spec 016](../016-senador/spec.md) (RF-102/103/104)
 - Escala de percentuais: [../../architecture/data-model.md](../../architecture/data-model.md)

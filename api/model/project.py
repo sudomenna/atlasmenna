@@ -2963,6 +2963,7 @@ def compute_swing_descritivo(
 def compute_p_eleito_by_uf(
     estimates_by_uf: dict[str, dict[int, np.ndarray]],
     vagas: int,
+    anulados: AnuladosNaDecisao | None = None,
 ) -> dict[str, dict[int, float]]:
     """RF-103 (spec 016) — `p_eleito` por candidato, por UF.
 
@@ -2993,6 +2994,13 @@ def compute_p_eleito_by_uf(
     estes dois estão à frente"), mas não carrega incerteza amostral. Quem
     exibe precisa olhar a largura do IC antes de chamar isso de "chance" —
     ver `EdgeUfCandidate.p_eleito` em `lib/edge-config/types.ts`.
+
+    `anulados` (decisão do dono de 2026-09-27): candidatura de voto anulado
+    NÃO disputa vaga — sai do sorteio por cenário e recebe `p_eleito = 0.0`
+    (publicado, não omitido: é um fato, não um "não sabemos"). Com isso a soma
+    das que competem continua sendo `min(vagas, nº das que competem)`. Não há
+    reescala aqui: dividir todas as frações de um cenário pelo mesmo número
+    positivo não muda quem fica entre as `vagas` primeiras.
     """
     if vagas < 1:
         raise ValueError(f"vagas deve ser >= 1, recebido {vagas}")
@@ -3000,6 +3008,15 @@ def compute_p_eleito_by_uf(
     for uf in sorted(estimates_by_uf):
         cand_map = estimates_by_uf[uf]
         if not cand_map:
+            continue
+        fora = anulados.da_uf(uf) if anulados is not None else frozenset()
+        if fora and any(c in fora for c in cand_map):
+            competem = {c: a for c, a in cand_map.items() if c not in fora}
+            res = p_eleito(competem, vagas) if competem else {}
+            for c in cand_map:
+                if c in fora:
+                    res[c] = 0.0
+            out[uf] = res
             continue
         out[uf] = p_eleito(cand_map, vagas)
     return out
@@ -4114,6 +4131,289 @@ def _com_pendencia(bloco: dict[str, Any], corrida: list[dict[str, Any]]) -> dict
     return bloco
 
 
+# ---------------------------------------------------------------------------
+# Destinação do voto nas DECISÕES — ADR-0053 / spec 002 RF-213 (2026-09-27)
+# ---------------------------------------------------------------------------
+#
+# O defeito: a projeção trata toda candidatura com `vap` como concorrente e
+# nunca lia `cand[].dvt`. Uma candidatura de voto ANULADO (art. 265 da Res.
+# 23.751/2026) podia virar líder, entrar no par do 2º turno, ocupar vaga do
+# Senado — e, pior, os votos dela ficavam na base da regra dos 50%: medido na
+# captura `tests/fixtures/tse/2026-sim/br-c0001-e021270-u.json`, um líder com
+# 46% de `vvc` e 16% de `vvc` anulado saía com `p_fecha_1t = 0` quando, pela
+# norma, já venceu (46/84 = 54,8% da base que conta).
+#
+# A regra (decisão do dono, não reabrir):
+#   1. `"anulado"` NÃO compete: sai de líder, par, agulha, `p_vitoria`,
+#      `p_passa_2t`, `p_fecha_1t`, cenários do 2º turno, `chamada`,
+#      `vai_a_2t` e `p_eleito`. Os votos dela saem da base da regra dos 50%
+#      por reamostra: `f_i' = f_i / (1 − Σ f_anuladas)`.
+#   2. `"sub_judice"` SEGUE O TSE — compete e fica na base, como antes (a
+#      captura real marca essa candidatura com `st: "2º turno"`).
+#   3. A EXIBIÇÃO não muda: `pct_atual`/`pct_projetado`/IC continuam sobre
+#      `vvc` (ADR-0018). Só as decisões mudam.
+#   4. Sem `dvt`, `dvt` ausente em algum arquivo, divergente entre arquivos da
+#      mesma candidatura, ou valor desconhecido ⇒ ninguém é excluído (saída
+#      byte a byte igual à de antes) + aviso no log. NUNCA default.
+#   5. A regra é aplicada na FRONTEIRA das decisões — o estimador
+#      (`_extract_zone_candidatos`/`estimate_uf_candidatos`) não sabe de
+#      `dvt`, e é por isso que a exibição fica intocada por construção.
+#      Presidente decide com o destino NACIONAL; Governador/Senador, com o da
+#      UF.
+
+#: Chave de escopo do mapa de destino para o país inteiro. `"BR"` nunca é
+#: sigla de UF no modelo (`_snapshots_por_uf` o descarta), então não colide.
+ESCOPO_NACIONAL = "BR"
+
+#: Destinos que o mapa aceita — os três de `_DESTINO_POR_DVT`, e só eles.
+_DESTINOS_CONHECIDOS = frozenset(_DESTINO_POR_DVT.values())
+
+#: Destino que tira a candidatura das decisões (regra 1). `"sub_judice"` NÃO
+#: está aqui, e é de propósito (regra 2).
+DESTINO_FORA_DA_DECISAO = "anulado"
+
+_OBS_AUSENTE = "__ausente__"
+_OBS_DESCONHECIDO = "__desconhecido__"
+
+
+def _observar_dvt(dvt: Any) -> str:
+    """Um `cand[].dvt` → destino conhecido, ou uma das duas marcas de falta.
+
+    Não usa `destino_do_dvt` de propósito: aquele loga um aviso POR CHAMADA, e
+    aqui são ~6.110 arquivos × N candidaturas por ciclo. O aviso deste caminho
+    é um só, agregado, em `montar_destino_por_candidatura`.
+    """
+    if dvt is None:
+        return _OBS_AUSENTE
+    texto = str(dvt).strip()
+    if not texto:
+        return _OBS_AUSENTE
+    return _DESTINO_POR_DVT.get(texto.casefold(), _OBS_DESCONHECIDO)
+
+
+def _sigla_do_snapshot(s: Mapping[str, Any]) -> str | None:
+    """Sigla da UF de uma linha de `snapshots`, ou `None` para BR/vazia."""
+    sigla = str(s.get("uf") or "").strip().upper()
+    if not sigla or sigla == ESCOPO_NACIONAL:
+        return None
+    return sigla
+
+
+def montar_destino_por_candidatura(
+    zonas: Iterable[Mapping[str, Any]],
+    agregados: Iterable[Mapping[str, Any]],
+) -> dict[tuple[str, int], str]:
+    """`{(escopo, cand_id): destino}` — o destino do voto de cada candidatura,
+    por escopo (`"BR"` ou sigla da UF), lido de TODOS os arquivos do escopo.
+
+    Fontes, e o escopo em que cada uma entra:
+      - agregado `br`            → `"BR"`;
+      - agregado `uf` da UF X    → `X` e `"BR"`;
+      - zona (pré-merge) da UF X → `X` e `"BR"` (a conferência com as zonas).
+
+    Uma candidatura entra no mapa SÓ quando todo arquivo do escopo que a lista
+    concorda num destino conhecido. Qualquer outra coisa — `dvt` ausente em
+    todos (começo da noite), ausente em alguns, divergente, ou valor fora do
+    dicionário do TSE — deixa a candidatura FORA do mapa (regra 4), e fora do
+    mapa ela é tratada exatamente como antes desta mudança: compete. Um aviso
+    agregado por ciclo diz quantas e por quê.
+
+    Candidatura sem `vap` legível num arquivo não conta como observação ali:
+    é o mesmo filtro de `_extract_zone_candidatos`, isto é, o modelo também não
+    a enxerga naquele arquivo.
+
+    Sem `cargo`: o modelo lê os candidatos sem filtrar `carg[].cd`
+    (`_extract_zone_candidatos(s["payload"])`), e o mapa tem de ver o mesmo
+    conjunto que o modelo vê.
+    """
+    observado: dict[tuple[str, int], set[str]] = {}
+    desconhecidos: set[str] = set()
+
+    def _anotar(escopos: tuple[str, ...], payload: Any) -> None:
+        for c in _iter_cands(payload):
+            try:
+                cod = int(c.get("n"))
+            except (TypeError, ValueError):
+                continue
+            if _parse_br_number(c.get("vap")) is None:
+                continue
+            obs = _observar_dvt(c.get("dvt"))
+            if obs == _OBS_DESCONHECIDO:
+                desconhecidos.add(str(c.get("dvt")).strip())
+            for escopo in escopos:
+                observado.setdefault((escopo, cod), set()).add(obs)
+
+    for s in agregados:
+        if nivel_do_snapshot(s) == NIVEL_BR:
+            _anotar((ESCOPO_NACIONAL,), s.get("payload"))
+            continue
+        sigla = _sigla_do_snapshot(s)
+        escopos = (sigla, ESCOPO_NACIONAL) if sigla else (ESCOPO_NACIONAL,)
+        _anotar(escopos, s.get("payload"))
+    for s in zonas:
+        sigla = _sigla_do_snapshot(s)
+        escopos = (sigla, ESCOPO_NACIONAL) if sigla else (ESCOPO_NACIONAL,)
+        _anotar(escopos, s.get("payload"))
+
+    destinos: dict[tuple[str, int], str] = {}
+    sem_decisao: dict[str, list[tuple[str, int]]] = {}
+    for chave in sorted(observado):
+        obs = observado[chave]
+        if len(obs) == 1:
+            (unico,) = obs
+            if unico in _DESTINOS_CONHECIDOS:
+                destinos[chave] = unico
+                continue
+            motivo = "sem_dvt" if unico == _OBS_AUSENTE else "desconhecido"
+        elif _OBS_DESCONHECIDO in obs:
+            motivo = "desconhecido"
+        elif _OBS_AUSENTE in obs:
+            motivo = "ausente_em_parte"
+        else:
+            motivo = "divergente"
+        sem_decisao.setdefault(motivo, []).append(chave)
+
+    if sem_decisao:
+        _log(
+            "warn",
+            "destino do voto indefinido para parte das candidaturas; elas "
+            "seguem COMPETINDO nas decisões (regra 4 da decisão de 2026-09-27)",
+            **{f"n_{m}": len(v) for m, v in sorted(sem_decisao.items())},
+            exemplos={
+                m: [f"{e}:{c}" for e, c in v[:10]]
+                for m, v in sorted(sem_decisao.items())
+                if m != "sem_dvt"
+            },
+            dvt_desconhecidos=sorted(desconhecidos),
+        )
+    return destinos
+
+
+class AnuladosNaDecisao(NamedTuple):
+    """Quem fica FORA das decisões, por escopo — derivado do mapa de destino.
+
+    `uf_segue_nacional`: Presidente decide com o destino NACIONAL em toda UF
+    (a candidatura é uma só no país); Governador/Senador, com o da própria UF.
+    """
+
+    nacional: frozenset[int]
+    por_uf: Mapping[str, frozenset[int]]
+    uf_segue_nacional: bool
+
+    def da_uf(self, sigla: str) -> frozenset[int]:
+        if self.uf_segue_nacional:
+            return self.nacional
+        return self.por_uf.get(str(sigla).strip().upper(), frozenset())
+
+
+SEM_ANULADOS = AnuladosNaDecisao(frozenset(), {}, False)
+
+
+def anulados_na_decisao(
+    destinos: Mapping[tuple[str, int], str], cargo: int
+) -> AnuladosNaDecisao:
+    """Recorta do mapa de destino as candidaturas `"anulado"` por escopo."""
+    nacional: set[int] = set()
+    por_uf: dict[str, set[int]] = {}
+    for (escopo, cod), destino in destinos.items():
+        if destino != DESTINO_FORA_DA_DECISAO:
+            continue
+        if escopo == ESCOPO_NACIONAL:
+            nacional.add(int(cod))
+        else:
+            por_uf.setdefault(escopo, set()).add(int(cod))
+    return AnuladosNaDecisao(
+        frozenset(nacional),
+        {uf: frozenset(v) for uf, v in por_uf.items()},
+        int(cargo) == 1,
+    )
+
+
+def estimativas_para_decisao(
+    estimates: dict[int, np.ndarray],
+    anulados: frozenset[int] | set[int],
+) -> dict[int, np.ndarray]:
+    """Arrays de reamostra na base das DECISÕES (regra 1).
+
+    Tira as candidaturas anuladas e reescala as demais, reamostra a
+    reamostra: `f_i' = f_i / (1 − Σ f_anuladas)`. É a base "votáveis sem os
+    anulados" = `vv + vansj`, onde a regra dos 50% é medida.
+
+    Nenhuma anulada presente ⇒ devolve o PRÓPRIO dict recebido (o mesmo
+    objeto): nada é recalculado, e toda decisão sai bit a bit igual à de antes.
+
+    Reamostra em que os anulados somam 100% (`base <= 0`) ⇒ fração 0 para
+    todos: não há voto que conte, ninguém fecha nada naquela reamostra.
+    """
+    fora = [c for c in sorted(estimates) if c in anulados]
+    if not fora:
+        return estimates
+    soma = np.zeros_like(np.asarray(estimates[fora[0]], dtype=np.float64))
+    for c in fora:
+        soma = soma + np.asarray(estimates[c], dtype=np.float64)
+    base = 1.0 - soma
+    out: dict[int, np.ndarray] = {}
+    for c, arr in estimates.items():
+        if c in anulados:
+            continue
+        a = np.asarray(arr, dtype=np.float64)
+        out[c] = np.divide(a, base, out=np.zeros_like(a), where=base > 0)
+    return out
+
+
+def _pct_na_base_da_decisao(
+    pct: float,
+    rows: list[dict[str, Any]],
+    anulados: frozenset[int] | set[int],
+) -> float:
+    """Ponto `pct_projetado` (0–100, base `vvc`) → base das decisões.
+
+    Mesma conta de `estimativas_para_decisao`, sobre os PONTOS das linhas de
+    uma UF: `pct · 100 / (100 − Σ pct_anuladas)`. Sem anulada na UF ⇒ devolve
+    `pct` intocado (nenhuma aritmética, byte a byte igual).
+    """
+    soma = sum(
+        float(r.get("pct_projetado") or 0.0)
+        for r in rows
+        if int(r["candidato_id"]) in anulados
+    )
+    if not any(int(r["candidato_id"]) in anulados for r in rows):
+        return pct
+    base = 100.0 - soma
+    return pct * 100.0 / base if base > 0 else 0.0
+
+
+def _competidores(
+    ordered: list[dict[str, Any]],
+    anulados: frozenset[int] | set[int],
+    *,
+    onde: str,
+    sigla: str,
+) -> list[dict[str, Any]]:
+    """As linhas de `ordered` que COMPETEM — mesma ordem, sem as anuladas.
+
+    Nenhuma anulada ⇒ o próprio `ordered`. Todas anuladas (a UF inteira sem
+    candidatura que compita — não há vencedor possível) ⇒ `ordered` também,
+    com erro no log: o contrato do payload exige um `lider`, e inventar um
+    "ninguém" quebraria o consumidor. Esse estado não tem como surgir de uma
+    eleição real; se surgir, é dado que precisa de olho humano.
+    """
+    if not anulados:
+        return ordered
+    competem = [r for r in ordered if int(r["candidato_id"]) not in anulados]
+    if competem:
+        return competem
+    if ordered:
+        _log(
+            "error",
+            "todas as candidaturas da UF estão anuladas; decisões da UF "
+            "caem na lista inteira",
+            onde=onde,
+            uf=sigla,
+        )
+    return ordered
+
+
 def build_votacao_uf_payloads(
     agregados: list[LatestSnapshot],
     cargo: int,
@@ -4578,6 +4878,8 @@ def compute_national(
     estimates_by_uf: dict[str, dict[int, np.ndarray]],
     eleitorado_total_by_uf: dict[str, int],
     votos_by_uf: dict[int, int] | None = None,
+    *,
+    anulados: frozenset[int] | set[int] = frozenset(),
 ) -> tuple[
     list[dict[str, Any]],
     float,
@@ -4586,6 +4888,13 @@ def compute_national(
     tuple[np.ndarray, int],
 ]:
     """Agrega estimates UF → nacional ponderado pelo eleitorado da UF.
+
+    `anulados` (decisão do dono de 2026-09-27): candidaturas de voto anulado.
+    Continuam com linha, `pct_projetado` e IC sobre `vvc` (exibição intocada,
+    e `rank`/"Outros" seguem a ordem da exibição), mas saem das DECISÕES: não
+    viram `cand_a`/`cand_b`, recebem `p_vitoria`/`p_passa_2t`/`p_fecha_1t` =
+    0.0, e as demais decidem sobre `estimativas_para_decisao` (base sem os
+    anulados). Vazio (default) ⇒ saída bit a bit igual à anterior.
 
     Para cada candidato `c`:
         national_estimates[c] = Σ_uf (estimates[uf][c] * eleitorado[uf]) / Σ eleitorado
@@ -4697,19 +5006,31 @@ def compute_national(
         national_estimates.keys(),
         key=lambda c: (-point_by_cand[c], c),
     )
-    cand_a = ordered[0]
-    cand_b = ordered[1] if len(ordered) >= 2 else None
 
-    p_a = (
-        p_vitoria(national_estimates[cand_a], national_estimates[cand_b])
-        if cand_b is not None
-        else 1.0
-    )
+    # Decisão do dono de 2026-09-27 — as DECISÕES saem da base sem os
+    # anulados. Sem anulado presente, `decisao is national_estimates` e
+    # `ordered_dec is ordered`: nada muda, bit a bit.
+    decisao = estimativas_para_decisao(national_estimates, anulados)
+    if decisao is national_estimates:
+        ordered_dec = ordered
+    else:
+        point_dec = {cand: float(np.mean(arr)) for cand, arr in decisao.items()}
+        ordered_dec = sorted(decisao.keys(), key=lambda c: (-point_dec[c], c))
+
+    cand_a = ordered_dec[0] if ordered_dec else None
+    cand_b = ordered_dec[1] if len(ordered_dec) >= 2 else None
+
+    if cand_a is None:
+        p_a = 0.0
+    elif cand_b is None:
+        p_a = 1.0
+    else:
+        p_a = p_vitoria(decisao[cand_a], decisao[cand_b])
 
     # S05/F4c (ADR-0014) — métricas multi-candidato pré-computadas a partir
     # do mesmo `national_estimates`. Zero novo bootstrap, zero random.
-    p_passa_2t_by_cand = compute_p_passa_2t(national_estimates)
-    p_fecha_1t_by_cand = compute_p_fecha_1t(national_estimates)
+    p_passa_2t_by_cand = compute_p_passa_2t(decisao)
+    p_fecha_1t_by_cand = compute_p_fecha_1t(decisao)
 
     # `rank` semântico por (-point, id) — mesma ordenação do `ordered` acima.
     rank_by_cand: dict[int, int] = {cand: i + 1 for i, cand in enumerate(ordered)}
@@ -4724,15 +5045,18 @@ def compute_national(
         point = point_by_cand[cand]
         ci_lower = float(np.percentile(arr, 2.5))
         ci_upper = float(np.percentile(arr, 97.5))
-        # p_vitoria por candidato: vs o melhor adversário (max dos outros).
-        if len(ordered) >= 2:
+        # p_vitoria por candidato: vs o melhor adversário (max dos outros)
+        # QUE COMPETE. Candidatura anulada não disputa: 0.0.
+        if cand not in decisao:
+            pv = 0.0
+        elif len(ordered_dec) >= 2:
             others_max = np.max(
                 np.stack(
-                    [national_estimates[c] for c in ordered if c != cand], axis=0
+                    [decisao[c] for c in ordered_dec if c != cand], axis=0
                 ),
                 axis=0,
             )
-            pv = float(np.mean(arr > others_max))
+            pv = float(np.mean(decisao[cand] > others_max))
         else:
             pv = 1.0
         # Escala (docs/architecture/data-model.md § "Escala de percentuais"):
@@ -5008,8 +5332,14 @@ def build_uf_payloads(
     identidade_by_cand: dict[tuple[str, int], dict[str, str]] | None = None,
     serie_bruta: SeriePorCandidatoBruta | None = None,
     votacao_by_uf: dict[str, dict[str, Any]] | None = None,
+    anulados: AnuladosNaDecisao | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Constrói payloads canônicos `EdgePayloadUf` por UF (S04/F2).
+
+    ADR-0053 / RF-213 acrescenta `anulados`: o líder e o 2º da UF — que dão a
+    agulha da UF e o líder degenerado do município sem voto — saem das
+    candidaturas que COMPETEM. `candidatos[]` (lista, %, rank local, "Outros")
+    é exibição e não muda. `None` ⇒ comportamento anterior, byte a byte.
 
     Spec 022 (RF-209) acrescenta `votacao_by_uf` (`{uf: EdgeVotacaoUf}`, de
     `build_votacao_uf_payloads`): contagens e corrida do agregado da UF.
@@ -5120,8 +5450,16 @@ def build_uf_payloads(
         ordered = sorted(
             rows, key=lambda r: float(r.get("pct_projetado") or 0.0), reverse=True
         )
-        top = ordered[0] if ordered else None
-        second = ordered[1] if len(ordered) >= 2 else None
+        # ADR-0053 / RF-213 — líder e 2º (agulha da UF) entre os que
+        # COMPETEM; `ordered` segue inteiro para a exibição abaixo.
+        competem = _competidores(
+            ordered,
+            anulados.da_uf(sigla) if anulados is not None else frozenset(),
+            onde="build_uf_payloads",
+            sigla=sigla,
+        )
+        top = competem[0] if competem else None
+        second = competem[1] if len(competem) >= 2 else None
 
         # Margem usada nas séries / display (não vai pra payload aqui — já vem
         # via candidato.pct_projetado).
@@ -5500,8 +5838,18 @@ def build_edge_payload(
     serie_bruta: SeriePorCandidatoBruta | None = None,
     swing_by_uf: dict[str, float | None] | None = None,
     votacao: dict[str, Any] | None = None,
+    anulados: AnuladosNaDecisao | None = None,
 ) -> dict[str, Any]:
     """Monta o shape canônico `EdgePayload` (lib/edge-config/types.ts).
+
+    ADR-0053 / RF-213 acrescenta `anulados`: em `por_uf[]`, `lider`, a margem
+    (entre as duas primeiras que COMPETEM, em pp de `vvc`), `chamada`,
+    `vai_a_2t` (líder sobre a base sem os anulados) e as vagas de
+    `composicao_vagas` ignoram as candidaturas de voto anulado. A agulha e a
+    ordem de `national.candidatos` já chegam decididas via `cand_a_id`/
+    `cand_b_id` e `p_vitoria` de `compute_national`. `top_candidatos`,
+    `outros` e todo percentual publicado são exibição e não mudam. `None` ⇒
+    comportamento anterior, byte a byte.
 
     Spec 021 acrescenta `votacao` (opcional, já montado por
     `build_votacao_payload`): as contagens absolutas do eleitorado e a
@@ -5866,8 +6214,15 @@ def build_edge_payload(
         rows = uf_by_sigla[sigla]
         # Ordena por pct_projetado desc para identificar líder + 2º.
         ordered = sorted(rows, key=lambda r: float(r.get("pct_projetado") or 0.0), reverse=True)
-        top = ordered[0]
-        second_pct = float(ordered[1].get("pct_projetado") or 0.0) if len(ordered) > 1 else 0.0
+        # ADR-0053 / RF-213 — as DECISÕES da UF (líder, margem, chamada,
+        # vai_a_2t, vagas) saem só de quem compete. Presidente usa o destino
+        # nacional; Governador/Senador, o da UF (`AnuladosNaDecisao.da_uf`).
+        fora_da_uf = anulados.da_uf(sigla) if anulados is not None else frozenset()
+        competem = _competidores(
+            ordered, fora_da_uf, onde="build_edge_payload", sigla=sigla
+        )
+        top = competem[0]
+        second_pct = float(competem[1].get("pct_projetado") or 0.0) if len(competem) > 1 else 0.0
         top_pct = float(top.get("pct_projetado") or 0.0)
         margem = top_pct - second_pct
         ci_lower = float(top.get("pct_projetado_lower") or top_pct) - second_pct
@@ -5875,7 +6230,7 @@ def build_edge_payload(
 
         if vagas is not None and vagas >= 2:
             ufs_com_projecao += 1
-            eleitos_da_uf = ordered[: int(vagas)]
+            eleitos_da_uf = competem[: int(vagas)]
             for r_eleito in eleitos_da_uf:
                 sigla_partido = (partido_by_cand or {}).get(
                     int(r_eleito["candidato_id"]), "—"
@@ -6138,7 +6493,11 @@ def build_edge_payload(
         # vai_a_2t: aplicável apenas a governador 1T (cargo=3, turno=1).
         # Para presidente, a decisão de 2T é NACIONAL — null por UF.
         if int(cargo) == 3 and int(turno) == 1:
-            vai_a_2t: bool | None = top_pct < 50.0
+            # ADR-0053 / RF-213 — a regra dos 50% é sobre a base sem os
+            # votos anulados (`vvc − van`), não sobre o `vvc` publicado.
+            vai_a_2t: bool | None = (
+                _pct_na_base_da_decisao(top_pct, ordered, fora_da_uf) < 50.0
+            )
         else:
             vai_a_2t = None
 
@@ -7135,6 +7494,16 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                 raw_snapshots, cargo=req.cargo, turno=req.turno
             )
             snapshots = merge_pairs_into_zonas(raw_snapshots)
+            # ADR-0053 / RF-213 — quem fica FORA das decisões (voto anulado),
+            # lido de TODOS os arquivos do ciclo: agregados `br`/`uf` e as
+            # zonas PRÉ-merge (o merge preserva só o envelope do par
+            # dominante; a conferência precisa de cada arquivo como veio).
+            # Sem `dvt`, ou com `dvt` incoerente, o conjunto sai vazio e o
+            # ciclo é byte a byte o de antes.
+            anulados = anulados_na_decisao(
+                montar_destino_por_candidatura(raw_snapshots, agregados),
+                req.cargo,
+            )
             # Plano § B — 2022 SAI da projeção de candidatos (decisão E1);
             # `historical` fica NÃO-FATAL e sem uso no cálculo — só existe
             # aqui para alimentar `compute_swing_descritivo` (Fase 5,
@@ -7255,6 +7624,7 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                 estimates_by_uf=estimates_by_uf,
                 eleitorado_total_by_uf=eleitorado_total_by_uf,
                 votos_by_uf=votos_by_uf,
+                anulados=anulados.nacional,
             )
             outros_nacional = _outros_metric_payload(outros_estimates_nat, n_outros_nat)
 
@@ -7265,7 +7635,11 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
             national_estimates = aggregate_national_estimates(
                 estimates_by_uf, eleitorado_total_by_uf
             )
-            scenarios = compute_two_round_scenarios(national_estimates)
+            # ADR-0053 / RF-213 — par e P(2º turno) sobre a base sem os
+            # anulados, a MESMA de `compute_national` acima.
+            scenarios = compute_two_round_scenarios(
+                estimativas_para_decisao(national_estimates, anulados.nacional)
+            )
 
             # Plano § B (E2/E2b) — agregado nacional da BASE COMPARECIMENTO
             # (mesma lógica de `aggregate_national_estimates`, mas sobre
@@ -7303,7 +7677,7 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
             # payload de cargo com 2+ vagas, onde a pergunta muda de fato.
             vagas_do_cargo = cargo_vagas_por_uf(req.cargo)
             p_eleito_by_uf = (
-                compute_p_eleito_by_uf(estimates_by_uf, vagas_do_cargo)
+                compute_p_eleito_by_uf(estimates_by_uf, vagas_do_cargo, anulados)
                 if vagas_do_cargo >= 2
                 else None
             )
@@ -7438,6 +7812,7 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                 votacao=build_votacao_payload(
                     agregados, req.cargo, participacao_nacional
                 ),
+                anulados=anulados,
             )
             # S04/F2 — payloads UF ricos (candidatos com votos, municípios,
             # séries temporais). Envia junto do nacional; endpoint Node
@@ -7479,6 +7854,7 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                 votacao_by_uf=build_votacao_uf_payloads(
                     agregados, req.cargo, participacao_by_uf
                 ),
+                anulados=anulados,
             )
             post_edge_write(edge_payload, payloads_uf=uf_payloads)
         except Exception as edge_exc:  # noqa: BLE001 — never block the response

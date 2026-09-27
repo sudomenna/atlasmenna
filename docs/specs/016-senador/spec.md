@@ -10,7 +10,7 @@ depends_on: [001-ingestao-tse, 002-modelo-estatistico]
 apis: [GET /api/ingest/senador, POST /api/ingest/senador, GET /api/projection?cargo=senador]
 components: [ResultPanel, CandidateListCollapse, ChancesPanel, CargoTabs, RaceHeader, ForecastTransparency, NationalChoroplethMap, ChoroplethMapUF, StateResultSheet, UfHoverLink, MunicipioTable, MunicipioExplorer]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-006, RNF-022, RNF-023, RNF-024]
-adrs: [0001, 0012, 0020, 0021, 0026, 0028, 0033, 0034, 0035, 0038, 0042, 0048]
+adrs: [0001, 0012, 0020, 0021, 0026, 0028, 0033, 0034, 0035, 0038, 0042, 0048, 0053]
 opens_after: 2026-09-11
 ---
 
@@ -219,6 +219,8 @@ atualização é a cada 5 minutos (constituição § 8, ADR-0026 item 5).
   o cargo passou a ser ingerido por zona. A guarda de tela
   (`temIncertezaMedida`) **permanece**, para o caso de uma UF vir com uma única
   zona apurada — aí o intervalo volta a ser degenerado e a chance não é exibida.
+
+> ⚠️ **Nota 2026-09-27 ([ADR-0053](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md), RF-213 da spec 002).** `p_eleito` (RF-103), o líder e a margem 2º→3º (RF-104) já saem do modelo com toda candidatura de `dvt = "Anulado"` excluída do ranking de duas vagas — nenhuma lógica nova é necessária nesta spec. Candidatura `dvt = "Anulado sub judice"` continua elegível às duas vagas normalmente (ponto aberto, pendente confirmação jurídica). Isto é especialmente relevante para Senado: com 2 vagas por UF, uma candidatura anulada em 2º lugar hoje ocuparia uma vaga real no ranking de `p_eleito` — o RF-213 fecha esse caso.
 
 ### Cobertura municipal e tabela de municípios (S08/2026-09-19/20)
 

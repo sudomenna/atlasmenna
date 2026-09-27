@@ -11,7 +11,7 @@ depends_on: [001-ingestao-tse, 002-modelo-estatistico, 005-pagina-uf-governador]
 apis: [GET /api/projection?cargo=governador]
 components: [GovernorCard, HexCartogramBrasil, RaceStatsCards, BreakingNewsTicker, LiveBadge, Tabs, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader, GovernadoresPlacarTurno, GovernadoresPorPartido]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-022, RNF-023, RNF-024]
-adrs: [0001, 0002, 0010, 0011, 0012, 0013, 0017, 0018, 0019, 0022, 0025, 0034, 0038, 0048]
+adrs: [0001, 0002, 0010, 0011, 0012, 0013, 0017, 0018, 0019, 0022, 0025, 0034, 0038, 0048, 0053]
 ---
 
 # Spec 006 — Grid Nacional Governadores
@@ -144,6 +144,8 @@ Filtros: `decididos_1t` = `eleito_1t`; `vai_2t` = `segundo_turno`; `em_disputa` 
 - Given `pct_atual` ausente em algum candidato da UF, when classificado pela contagem, then a UF fica `aguardando`, nunca classificada como se o ausente fosse 0.
 
 > ⚠️ `pct_atual` é fração de `v.vvc` (ADR-0018: válidos + anulados + anulados sub judice, o denominador do `pvap` do TSE), não de `v.vv`. Como `vvc ≥ vv`, `pct_atual > 50` implica maioria dos válidos: o erro possível da régua da contagem é só o conservador (não chamar de "fecharia" um líder que já passou de 50% dos válidos).
+>
+> ⚠️ **Nota 2026-09-27 ([ADR-0053](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md), RF-213 da spec 002).** `lider`, `chamada`, `vai_a_2t` e a base da regra de maioria absoluta do 1º turno já saem do modelo com toda candidatura de `dvt = "Anulado"` excluída — este RF-006.8 consome o campo pronto, sem lógica própria de exclusão. Candidatura `dvt = "Anulado sub judice"` continua contando normalmente (ponto aberto, pendente confirmação jurídica). A lista de `top_candidatos` pode, portanto, mostrar uma candidatura anulada com seu percentual de `vvc` mesmo que ela nunca apareça como `lider` nem entre no placar de desfecho.
 
 ### Open question resolvida (kickoff S06)
 
