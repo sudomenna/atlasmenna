@@ -446,6 +446,14 @@
       "date": "2026-09-27",
       "note": "Decisão do dono (opção B: ignorar no cálculo, não apagar). fetch_snapshots e fetch_municipio_aggregates (api/model/project.py) filtram `ts >= corte` no WHERE da CTE, corte por turno espelhando lib/config/calendar.ts (amarrado por tests/unit/model/test_corte_residuo_calendario_sync.py). Gatilho é req.trigger_ts (constituição § 6), não o relógio da máquina — achado do constitution-guard em 27/09. Apagar fisicamente o resíduo (opção A) fica para depois da eleição, decisão separada do dono.",
       "path": "docs/architecture/adrs/0054-corte-residuo-simulado-tse-por-turno.md"
+    },
+    {
+      "id": "0055",
+      "title": "Lista do ResultPanel vira top-2 em cartões lado a lado (versão D do protótipo) — emenda parcial ao ADR-0034 D22",
+      "status": "accepted",
+      "date": "2026-09-27",
+      "note": "Decisão do dono a partir do protótipo docs/design-system/prototipos/apuracao-2026-09-27/ (5 versões A-E, escolhida D). Emenda PARCIAL ao ADR-0034 D22: os dois primeiros <li> da lista já reordenada por ReordenaListaPorBase (ADR-0051) viram cartões lado a lado (foto 48px, PARTIDO-nº + NOME caixa alta, % 32px mono via textForParty, barra 12px com marca de projeção só na base Projeção, votos apurados, selo em pílula); os demais ficam num cartão único em linhas (foto 44px, % 20px, barra 8px). As duas <Figure> (Apurado/Margem) e a <VoteBar marker={50}> de D22 ficam como estão; D21/D23 intocados. Selo só nos dois primeiros da base ativa, sempre com a base ('· projeção'/'· na parcial'), nunca 'Eleito'/'Não eleito' soltos (constituição § 1). Presidente/Governador 1º turno: '2º turno · <base>', ou só no líder '(Venceria) Vence no 1º turno · <base>' se >50% dos válidos. Senador: VagaBadge existente. Presidente em /uf/[sigla]: SEM selo (2º turno é fato nacional). Turno 2: sem selo. Superfícies por token (--surface-card/--surface-page).",
+      "path": "docs/architecture/adrs/0055-resultpanel-top2-cartoes-versao-d.md"
     }
   ],
   "nfr": {

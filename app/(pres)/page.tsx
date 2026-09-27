@@ -930,8 +930,12 @@ export default async function HomePage() {
           }
           pctApurado={pct_apurado_total}
           rule="none"
+          // Versão D (2026-09-27) — "2º turno · …" / "Vence(ria) no 1º turno · …"
+          // nos dois cartões. Na fase pré (`identidade`) o painel ignora.
+          selo="turno"
           title={pre ? "Quem está concorrendo" : <ResultTitle />}
           titleId="resultado-heading"
+          turno={turno}
           variant={pre ? "identidade" : "medicao"}
         />
       ) : (

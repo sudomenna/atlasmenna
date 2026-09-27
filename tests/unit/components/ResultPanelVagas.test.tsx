@@ -110,7 +110,18 @@ describe("<ResultPanel vagas={2} /> — RF-105, as duas vagas", () => {
   it("(e) exatamente 2 linhas carregam o marcador de vaga", () => {
     const doc = renderSenado();
 
-    expect(doc.querySelectorAll("[data-testid='result-vaga-marker']").length).toBe(2);
+    // Versão D (2026-09-27): um selo POR BASE em cada linha, cada um sob o
+    // seu `data-view-only` — em cada base, exatamente 2.
+    for (const base of ["parcial", "proj"]) {
+      expect(
+        doc.querySelectorAll(`[data-view-only='${base}'] > [data-testid='result-vaga-marker']`)
+          .length,
+      ).toBe(2);
+    }
+    const comMarcador = [...doc.querySelectorAll("li")].filter(
+      (li) => li.querySelector("[data-testid='result-vaga-marker']") != null,
+    );
+    expect(comMarcador.length).toBe(2);
     expect(doc.querySelectorAll("li[data-vaga='true']").length).toBe(2);
   });
 
@@ -124,11 +135,14 @@ describe("<ResultPanel vagas={2} /> — RF-105, as duas vagas", () => {
 
   it("(g) 1º e 2º recebem o MESMO marcador — nenhuma hierarquia entre eles", () => {
     const doc = renderSenado();
-    const [primeiro, segundo] = [...doc.querySelectorAll("[data-testid='result-vaga-marker']")];
+    const [primeiro, segundo] = [
+      ...doc.querySelectorAll("[data-view-only='proj'] > [data-testid='result-vaga-marker']"),
+    ];
 
     // Mesmo texto e mesmo estilo. Um "1ª vaga"/"2ª vaga" reintroduziria a
     // hierarquia que o resultado não tem: os dois são senadores.
     expect(primeiro?.textContent).toBe(segundo?.textContent);
+    expect(primeiro?.getAttribute("class")).toBe(segundo?.getAttribute("class"));
     expect(primeiro?.getAttribute("style")).toBe(segundo?.getAttribute("style"));
     expect(primeiro?.textContent).not.toMatch(/1ª|2ª/);
   });
@@ -138,6 +152,11 @@ describe("<ResultPanel vagas={2} /> — RF-105, as duas vagas", () => {
     const marker = doc.querySelector("[data-testid='result-vaga-marker']");
 
     expect(marker?.textContent?.toLowerCase()).toContain("projetada");
+    // E TODO marcador diz de que base vem — nenhum "Eleito" solto.
+    for (const m of doc.querySelectorAll("[data-testid='result-vaga-marker']")) {
+      expect(m.textContent ?? "").toMatch(/^Vaga (projetada|na parcial)$/);
+      expect(m.textContent?.toLowerCase()).not.toMatch(/eleit/);
+    }
   });
 
   it("(i) em vaga única não existe marcador nenhum", () => {

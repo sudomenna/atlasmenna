@@ -73,6 +73,11 @@ export interface CandidateListCollapseProps {
   children: React.ReactNode;
   /** Quantidade total de candidatos — entra no rótulo do botão. */
   total: number;
+  /**
+   * Classe da `<ol>`. O `<ResultPanel>` passa a da lista da versão D
+   * (cartões + cartão único dos demais, 2026-09-27). Ausente ⇒ a de sempre.
+   */
+  className?: string;
 }
 
 /** Chevron do kit (`App.jsx:16`), decorativo — o rótulo já diz o estado. */
@@ -95,7 +100,7 @@ function Chevron({ dir }: { dir: "up" | "down" }) {
   );
 }
 
-export function CandidateListCollapse({ children, total }: CandidateListCollapseProps) {
+export function CandidateListCollapse({ children, total, className }: CandidateListCollapseProps) {
   const [aberto, setAberto] = useState(false);
   const listaId = useId();
 
@@ -106,7 +111,7 @@ export function CandidateListCollapse({ children, total }: CandidateListCollapse
           ele clipa por `data-extra-row`, que é atributo de linha e não depende
           de posição. */}
       <ol
-        className={styles.list}
+        className={className ?? styles.list}
         data-collapsed={aberto ? "false" : "true"}
         id={listaId}
         {...{ [ATRIBUTO_LISTA]: "" }}

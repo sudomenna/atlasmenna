@@ -88,17 +88,11 @@ function ordemDaBase(doc: Document, base: "parcial" | "proj"): string[] {
     .map((x) => x.nome);
 }
 
-/**
- * A CÉLULA do número à esquerda — e não a linha inteira.
- *
- * A linha tem outros `data-view-only` dentro (a barra de cada base), então uma
- * busca no `<li>` mediria a coisa errada. O número é o primeiro item da grade
- * de quatro faixas de `<CandidateResultRow>`.
- */
-function celulaDoNumero(doc: Document, nomeCompleto: string): Element | null | undefined {
-  return [...doc.querySelectorAll("li[data-ord]")]
-    .find((li) => li.textContent?.includes(nomeCompleto))
-    ?.querySelector('[data-testid="candidate-result-row"] > span[aria-hidden="true"]');
+/** O `<li>` de uma candidatura, pelo nome completo. */
+function linhaDe(doc: Document, nomeCompleto: string): Element | undefined {
+  return [...doc.querySelectorAll("li[data-ord]")].find((li) =>
+    li.textContent?.includes(nomeCompleto),
+  );
 }
 
 function renderPainel(over: Partial<React.ComponentProps<typeof ResultPanel>> = {}) {
@@ -174,36 +168,66 @@ describe("<ResultPanel /> — a ordem da lista acompanha a base ativa", () => {
   });
 });
 
-describe("<ResultPanel /> — o número da esquerda acompanha a base", () => {
-  it("(e) cada linha carrega as DUAS posições, cada uma sob a sua base", () => {
-    // Ana é a 1ª na projeção e a 3ª na parcial.
-    const ana = celulaDoNumero(renderPainel(), "Ana Lima");
+/*
+ * 🔴 2026-09-27 — "o número da esquerda acompanha a base" SAIU com a versão D.
+ *
+ * Os casos (e)/(f)/(g) daqui mediam o número de colocação à esquerda de cada
+ * linha ("1", "2", "3", um por base quando divergiam). A versão D do protótipo,
+ * escolhida pelo dono em 2026-09-27
+ * (`docs/design-system/prototipos/apuracao-2026-09-27/README.md`), NÃO tem esse
+ * número: a posição é dita pela ordem física da lista (que já acompanha a base,
+ * casos (a)–(d)) e pelos dois cartões. A versão com linhas numeradas era a E, e
+ * não foi a escolhida. O que acompanha a base no lugar dele é o SELO dos dois
+ * cartões — é isso que os casos abaixo medem.
+ */
+describe("<ResultPanel /> — versão D: sem número de colocação; o selo acompanha a base", () => {
+  it("(e) nenhuma linha imprime número de colocação — só o número na urna, ao lado da sigla", () => {
+    const doc = renderPainel();
+    const ana = linhaDe(doc, "Ana Lima");
 
-    expect(ana?.querySelector('[data-view-only="parcial"]')?.textContent).toBe("3");
-    expect(ana?.querySelector('[data-view-only="proj"]')?.textContent).toBe("1");
+    // "PT – 1": sigla e número na urna (o `id`, ADR-0042).
+    expect(ana?.textContent).toContain("PT – 1");
+    // Nenhum filho da linha é um algarismo solto — o que o número de
+    // colocação era.
+    const soltos = [...(ana?.querySelectorAll("*") ?? [])].filter(
+      (el) => el.children.length === 0 && /^\d+$/.test((el.textContent ?? "").trim()),
+    );
+    expect(soltos).toHaveLength(0);
   });
 
-  it("(f) quando as duas posições coincidem, sai UM número só", () => {
-    // Bruno é o 2º nas duas bases — a linha não paga nós por uma diferença
-    // que não existe. Idem para uma corrida em que ninguém troca de lugar.
-    const bruno = celulaDoNumero(renderPainel(), "Bruno Reis");
+  it("(f) selo de turno: só quem é top-2 DAQUELA base, sob a base dela", () => {
+    const doc = renderPainel({ selo: "turno", turno: 1 });
+    const selos = (nome: string, base: string) =>
+      [
+        ...(linhaDe(doc, nome)?.querySelectorAll(
+          `[data-view-only="${base}"] [data-testid="result-selo"]`,
+        ) ?? []),
+      ].map((el) => el.textContent);
 
-    expect(bruno?.querySelectorAll("[data-view-only]")).toHaveLength(0);
-    expect(bruno?.textContent).toBe("2");
+    // Projeção: Ana (40) e Bruno (30). Parcial: Célia (60 — > 50%, vence) só.
+    expect(selos("Ana Lima", "proj")).toEqual(["2º turno · projeção"]);
+    expect(selos("Bruno Reis", "proj")).toEqual(["2º turno · projeção"]);
+    expect(selos("Célia Mota", "proj")).toEqual([]);
+    expect(selos("Célia Mota", "parcial")).toEqual(["Venceria no 1º turno · na parcial"]);
+    // Célia passa de 50% na parcial ⇒ o 2º DA PARCIAL (Bruno) fica sem selo.
+    expect(selos("Bruno Reis", "parcial")).toEqual([]);
+    expect(selos("Ana Lima", "parcial")).toEqual([]);
+    expect(selos("Davi Nunes", "proj")).toEqual([]);
+    expect(selos("Davi Nunes", "parcial")).toEqual([]);
   });
 
-  it("(g) o número NÃO vem do `rank` do payload quando ele contradiz a base", () => {
-    // Na home o payload traz `rank` (a colocação na projeção). Se a linha o
-    // imprimisse direto, a base parcial mostraria "2, 1, 3" de cima para baixo:
-    // texto de uma base, posição de outra.
-    const comRank = INVERTIDA.map((c, i) => ({ ...c, rank: i + 1 }));
-    const doc = parse(<ResultPanel candidatos={comRank} pctApurado={62} title="BR" titleId="t" />);
-    const celia = celulaDoNumero(doc, "Célia Mota");
-
-    // Célia é a 1ª na parcial e a 3ª na projeção — e o `rank` do payload dela
-    // é 3. O número da base parcial tem de ser 1.
-    expect(celia?.querySelector('[data-view-only="parcial"]')?.textContent).toBe("1");
-    expect(celia?.querySelector('[data-view-only="proj"]')?.textContent).toBe("3");
+  it("(g) no máximo UM selo por base em cada linha, e nenhum fora de `data-view-only`", () => {
+    const doc = renderPainel({ selo: "turno", turno: 1 });
+    for (const li of doc.querySelectorAll("li[data-ord]")) {
+      for (const base of ["parcial", "proj"]) {
+        expect(
+          li.querySelectorAll(`[data-view-only="${base}"] [data-testid="result-selo"]`).length,
+        ).toBeLessThanOrEqual(1);
+      }
+      for (const selo of li.querySelectorAll('[data-testid="result-selo"]')) {
+        expect(selo.closest("[data-view-only]")).not.toBeNull();
+      }
+    }
   });
 });
 
@@ -280,17 +304,17 @@ describe("<ResultPanel vagas={2} /> — a ocupação de vaga acompanha a base", 
     expect(texto("Ana Lima")).toContain("projetada");
 
     // Bruno ocupa nas duas: os dois rótulos ficam no DOM, cada um sob a sua
-    // base — nunca os dois visíveis ao mesmo tempo.
-    const bruno = [...doc.querySelectorAll("li[data-ord]")].find((x) =>
-      x.textContent?.includes("Bruno Reis"),
-    );
-    const marcadorBruno = bruno?.querySelector("[data-testid='result-vaga-marker']");
-    expect(marcadorBruno?.querySelector('[data-view-only="parcial"]')?.textContent).toMatch(
-      /parcial/i,
-    );
-    expect(marcadorBruno?.querySelector('[data-view-only="proj"]')?.textContent).toMatch(
-      /projetada/i,
-    );
+    // base — nunca os dois visíveis ao mesmo tempo. (Versão D: dois selos, um
+    // por base, cada um dentro do seu `data-view-only`.)
+    const bruno = linhaDe(doc, "Bruno Reis");
+    expect(
+      bruno?.querySelector("[data-view-only='parcial'] [data-testid='result-vaga-marker']")
+        ?.textContent,
+    ).toMatch(/parcial/i);
+    expect(
+      bruno?.querySelector("[data-view-only='proj'] [data-testid='result-vaga-marker']")
+        ?.textContent,
+    ).toMatch(/projetada/i);
   });
 });
 
@@ -331,8 +355,12 @@ describe("<ResultPanel /> — a COR não acompanha a base (constituição § 2)"
     const linha = [...doc.querySelectorAll("li[data-ord]")].find((li) =>
       li.textContent?.includes(nomeCompleto),
     );
+    // Versão D (2026-09-27): a linha carrega a cor do partido DUAS vezes — a
+    // base (`--party-x`, preenchimento) e a de texto (`--party-x-text`, o
+    // percentual grande). São a MESMA identidade em dois papéis; o `-text` é
+    // normalizado para a base aqui, e o caso (m2) afirma o par explicitamente.
     for (const m of (linha?.innerHTML ?? "").matchAll(TOKEN)) {
-      achadas.add(m[0]);
+      achadas.add(m[0].replace(/-text\)$/, ")"));
     }
     for (const seg of doc.querySelectorAll(
       `[data-testid="vote-bar-segment"][data-label="${primeiroNome}"]`,
@@ -392,6 +420,15 @@ describe("<ResultPanel /> — a COR não acompanha a base (constituição § 2)"
     expect([...ana]).toEqual(["var(--party-pt)"]);
     expect([...bruno]).toEqual(["var(--party-psd)"]);
     expect([...celia]).toEqual(["var(--party-mdb)"]);
+
+    // E o percentual pinta com o token de TEXTO do mesmo partido, nunca com a
+    // base (que reprova contraste como texto em PSOL, PSB, NOVO e Outros).
+    const estiloDe = (nome: string) =>
+      linhaDe(doc, nome)
+        ?.querySelector('[data-testid="candidate-result-row"]')
+        ?.getAttribute("style") ?? "";
+    expect(estiloDe("Ana Lima")).toContain("--cor-texto:var(--party-pt-text)");
+    expect(estiloDe("Ana Lima")).toContain("--cor-base:var(--party-pt)");
   });
 
   it.each([

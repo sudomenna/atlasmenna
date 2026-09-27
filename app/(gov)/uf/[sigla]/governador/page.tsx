@@ -623,8 +623,12 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
         kicker="Projeção Atlas Menna · não oficial"
         note="Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados na UF."
         pctApurado={payload.pct_apurado}
+        // Versão D (2026-09-27) — a disputa é do próprio estado, então o selo
+        // de turno vale aqui. Em 2º turno o painel não põe selo nenhum.
+        selo="turno"
         title={<ResultTitle sigla={sigla} />}
         titleId="resultado-heading"
+        turno={payload.turno}
         ufDaFoto={sigla}
       />
 

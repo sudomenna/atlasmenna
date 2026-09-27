@@ -259,33 +259,38 @@ describe("<ResultPanel />", () => {
     // margem parcial, margem proj, barra parcial, barra proj.
     expect(exclusivos).toEqual(["parcial", "proj", "parcial", "proj"]);
 
-    // 🔴 2026-09-20 (2ª rodada) — as duas colunas da linha deixaram de ser
-    // simétricas. O PARCIAL segue em `data-view-cell` (sempre no DOM, só a
-    // ênfase muda); a PROJEÇÃO virou `data-view-only` e some na visão Parcial,
-    // por decisão do dono. Mutação que morre: devolver a projeção para
-    // `data-view-cell`.
+    // 🔴 2026-09-20 (2ª rodada), refeito em 2026-09-27 (versão D) — a visão
+    // Parcial não mostra NENHUMA leitura do modelo. Na versão D a Parcial tem
+    // o apurado grande (exclusivo dela) e a Projeção tem o projetado grande +
+    // "apurado X%" pequeno (exclusivos dela). A intenção que continua sendo
+    // medida: o número PROJETADO só existe dentro de `data-view-only="proj"`,
+    // e o APURADO aparece nas duas visões.
     const linha = doc.querySelector('[data-testid="candidate-result-row"]');
-    expect(
-      [...(linha?.querySelectorAll("[data-view-cell]") ?? [])].map((c) =>
-        c.getAttribute("data-view-cell"),
-      ),
-    ).toEqual(["parcial"]);
-    // Dentro da linha há DOIS `data-view-only`, e os dois são `proj`: a coluna
-    // do número projetado e o traço. Nenhum é `parcial` — a visão Parcial não
-    // tem nada de exclusivo, ela é a linha sem esses dois elementos.
-    const exclusivosDaLinha = [...(linha?.querySelectorAll("[data-view-only]") ?? [])];
-    expect(exclusivosDaLinha.map((c) => c.getAttribute("data-view-only"))).toEqual([
-      "proj",
-      "proj",
-    ]);
-    expect(linha?.querySelector('[data-view-only="parcial"]')).toBeNull();
-
-    // E são exatamente esses dois — nomeados, para que trocar um pelo outro
-    // não passe despercebido.
-    expect(linha?.querySelector('[data-view-only="proj"].text-right')?.textContent).toContain("%");
+    // Ana: 43,5% apurado, 43,2% projetado.
+    const proj = [...(linha?.querySelectorAll('[data-view-only="proj"]') ?? [])];
+    const parcial = [...(linha?.querySelectorAll('[data-view-only="parcial"]') ?? [])];
+    expect(parcial.map((el) => el.textContent).join("|")).toContain("43,5%");
+    expect(parcial.map((el) => el.textContent).join("|")).not.toContain("43,2%");
+    expect(proj.map((el) => el.textContent).join("|")).toContain("43,2%");
+    expect(proj.map((el) => el.textContent).join("|")).toContain("apurado 43,5%");
+    // Mutação que morre: tirar o projetado de `data-view-only`. Todo nó de
+    // texto com "43,2%" tem um ancestral `data-view-only="proj"`.
+    const walker = doc.createTreeWalker(linha as Node, 4 /* NodeFilter.SHOW_TEXT */);
+    let achados = 0;
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (!n.textContent?.includes("43,2%")) continue;
+      achados++;
+      expect(n.parentElement?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe(
+        "proj",
+      );
+    }
+    expect(achados).toBeGreaterThan(0);
     expect(
       linha?.querySelector('[data-testid="result-bar-marker"][data-view-only="proj"]'),
     ).not.toBeNull();
+    // A versão D não usa `data-view-cell` (recuo de cor) na linha: cada número
+    // é de uma visão só.
+    expect(linha?.querySelectorAll("[data-view-cell]")).toHaveLength(0);
   });
 
   it("(h) a barra de maioria tem os três segmentos do kit e o marcador em 50%", () => {
@@ -300,16 +305,18 @@ describe("<ResultPanel />", () => {
     expect(barras[0]?.querySelector('[data-testid="vote-bar-marker"]')).not.toBeNull();
   });
 
-  it("(i) as linhas usam a variante do kit: PartyTag, votos por extenso, 18px", () => {
+  it("(i) versão D: 'PARTIDO – nº', votos por extenso, % na cor de TEXTO do partido", () => {
     const doc = parse(render());
-    expect(doc.querySelector('[data-testid="party-tag"][data-sigla="PT"]')).not.toBeNull();
-    expect(doc.body.textContent).toContain("15.240.321 votos");
-
-    // `CandidateRow.jsx:20` — 18px na linha normal. Medido contra o protótipo:
-    // a variante densa saía a 13px, a única diferença tipográfica restante.
     const linha = doc.querySelector('[data-testid="candidate-result-row"]');
-    const numero = linha?.querySelector("[data-view-cell='parcial']")?.firstElementChild;
-    expect(numero?.getAttribute("style")).toContain("font-size:18px");
+    // A sigla em texto, com o número na urna (`id`, ADR-0042) — não mais a
+    // `<PartyTag>` do kit de 09/09.
+    expect(linha?.textContent).toContain("PT – 1");
+    expect(doc.querySelector('[data-testid="party-tag"]')).toBeNull();
+    expect(doc.body.textContent).toContain("15.240.321 votos");
+    // O percentual pinta com `--party-<x>-text` (≥ 4,5:1), via custom
+    // property da linha; a base só no preenchimento.
+    expect(linha?.getAttribute("style")).toContain("--cor-texto:var(--party-pt-text)");
+    expect(linha?.getAttribute("style")).toContain("--cor-base:var(--party-pt)");
   });
 
   it("(j) nenhuma cor de identidade vira tinta de texto (constituição § 4)", () => {

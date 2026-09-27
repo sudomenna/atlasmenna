@@ -393,16 +393,23 @@ describe("UFPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
     const doc = await renderUF();
     const linhas = doc.querySelectorAll('[data-testid="candidate-result-row"]');
     expect(linhas).toHaveLength(candidatos.length);
-    // 🔴 2026-09-20 (2ª rodada) — os DOIS números continuam no HTML servido,
-    // mas por mecanismos diferentes: o parcial em `data-view-cell` (sempre
-    // visível, só a ênfase muda) e a projeção em `data-view-only`, que a
-    // cascata esconde na visão Parcial. Era `data-view-cell` nos dois.
-    expect(linhas[0]?.querySelector('[data-view-cell="parcial"]')).not.toBeNull();
-    expect(linhas[0]?.querySelector('[data-view-cell="proj"]')).toBeNull();
-    expect(linhas[0]?.querySelector('[data-view-only="proj"]')).not.toBeNull();
+    // 🔴 2026-09-20 (2ª rodada), refeito em 2026-09-27 (versão D) — os DOIS
+    // números continuam no HTML servido: o apurado grande sob a visão Parcial,
+    // o projetado grande + "apurado X%" sob a visão Projeção.
+    expect(linhas[0]?.querySelector("[data-view-cell]")).toBeNull();
     // `pct_atual` do fixture é `pct - 1`; `pct_projetado` é `pct`.
-    expect(linhas[0]?.querySelector('[data-view-cell="parcial"]')?.textContent).toContain("40,0%");
+    expect(linhas[0]?.querySelector('[data-view-only="parcial"]')?.textContent).toContain("40,0%");
+    expect(linhas[0]?.querySelector('[data-view-only="parcial"]')?.textContent).not.toContain(
+      "41,0%",
+    );
     expect(linhas[0]?.querySelector('[data-view-only="proj"]')?.textContent).toContain("41,0%");
+    expect(linhas[0]?.querySelector('[data-view-only="proj"]')?.textContent).toContain(
+      "apurado 40,0%",
+    );
+    // 🔴 Presidente na tela do ESTADO: sem selo nenhum (decisão do dono,
+    // 2026-09-27) — quem vai ao 2º turno é decidido pelo Brasil.
+    expect(doc.querySelector('[data-testid="result-selo"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="result-vaga-marker"]')).toBeNull();
   });
 
   it("(j) o kicker da 1ª seção de dado carrega o rótulo 'não oficial' (constituição § 1)", async () => {

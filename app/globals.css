@@ -92,6 +92,10 @@
   /* Sombras: editorial = quase nenhuma. */
   --shadow-float: 0 8px 24px rgba(20, 23, 27, 0.14);
   --shadow-sheet: 0 -6px 20px rgba(20, 23, 27, 0.12);
+  /* Cartão da lista de resultado (versão D, 2026-09-27): a sombra leve que
+     separa `--surface-card` de `--surface-page`, que sozinhos quase não se
+     distinguem (#fbfbfc sobre #f3f4f6). Decorativa — nada depende dela. */
+  --shadow-card: 0 1px 2px rgba(20, 23, 27, 0.06), 0 4px 14px rgba(20, 23, 27, 0.06);
 
   /* Espaço, raio, filete, motion (kit `tokens/spacing.css`). */
   --space-1: 4px;
@@ -451,6 +455,7 @@ main[data-trilha="gov"] {
   /* Sombra sobre fundo escuro só existe se for preta de verdade. */
   --shadow-float: 0 8px 24px rgba(0, 0, 0, 0.5);
   --shadow-sheet: 0 -6px 20px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.35);
 
   /* Alias legados que são hex literal (os que usam var() já vieram junto com
    * os primitivos). Pisos: 4,5:1 para os que carregam texto. */

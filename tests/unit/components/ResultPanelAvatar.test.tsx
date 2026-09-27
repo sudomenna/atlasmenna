@@ -39,6 +39,8 @@
  * testes usam").
  */
 
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it } from "vitest";
 
@@ -52,8 +54,27 @@ beforeEach(() => {
   process.env.BLOB_PUBLIC_BASE_URL = BLOB_BASE;
 });
 
-/** Teto medido: a linha COMPACTA tem 26px de caixa de conteúdo. */
-const LIMITE_PX = 26;
+/**
+ * 🔴 2026-09-27 — versão D (decisão do dono). O teto de 26px desta suíte era o
+ * da linha COMPACTA de antes, que deixou de existir: a foto passou a 48px nos
+ * dois cartões e 44px nas demais linhas (`CandidateResultRow.module.css`), e a
+ * linha cresce para caber — o dono escolheu o protótipo sabendo disso. A
+ * intenção que fica: caixa DECLARADA (atributos, CLS zero), quadrada, circular,
+ * corte `top` e nunca porcentagem no HTML (RF-161), um diâmetro por desenho.
+ */
+const ATRIBUTO_PX = 48;
+
+const CSS_LINHA = readFileSync(
+  path.join(process.cwd(), "components", "atoms", "tables", "CandidateResultRow.module.css"),
+  "utf-8",
+).replace(/\s+/g, " ");
+
+/** O corpo de uma regra da folha, pelo seletor exato. */
+function regra(seletor: string): string {
+  const i = CSS_LINHA.indexOf(`${seletor} {`);
+  if (i < 0) return "";
+  return CSS_LINHA.slice(i, CSS_LINHA.indexOf("}", i));
+}
 
 function parse(node: React.ReactElement): Document {
   return new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
@@ -150,36 +171,30 @@ describe("a foto entra no placar de apuração, e a URL é derivada do sqcand", 
 });
 
 describe("🔴 a altura da linha não muda — o avatar cabe no que a linha JÁ tinha", () => {
-  it("o avatar é quadrado, declarado em px e não passa do teto medido de 26", () => {
+  it("o avatar é quadrado e declarado em px — a caixa existe antes da CSS (RNF-002)", () => {
     const doc = parse(<ResultPanel candidatos={DOZE} pctApurado={25} ufDaFoto="BR" />);
 
     for (const f of fotos(doc)) {
       const w = Number(f.getAttribute("width"));
       const h = Number(f.getAttribute("height"));
-      expect(w, "largura precisa estar declarada (sem ela, CLS — RNF-002)").toBeGreaterThan(0);
-      expect(h, "altura precisa estar declarada").toBeGreaterThan(0);
-      expect(w, "quadrado, senão o círculo vira elipse").toBe(h);
-      // 🔴 A asserção do pedido. A linha COMPACTA tem 26px de caixa: 27 já a
-      // empurra, e com ela o painel inteiro se desloca.
-      expect(
-        w,
-        `avatar de ${w}px alarga a linha compacta (teto ${LIMITE_PX}px)`,
-      ).toBeLessThanOrEqual(LIMITE_PX);
+      expect(w, "largura precisa estar declarada (sem ela, CLS — RNF-002)").toBe(ATRIBUTO_PX);
+      expect(h, "altura precisa estar declarada").toBe(ATRIBUTO_PX);
     }
   });
 
   it("é circular e o corte é `top` — nunca uma porcentagem (RF-161)", () => {
     const doc = parse(<ResultPanel candidatos={DOZE} pctApurado={25} ufDaFoto="BR" />);
-    const style = fotos(doc)[0]?.getAttribute("style") ?? "";
-
-    expect(style, "sem `--radius-pill` o avatar sai quadrado").toContain("--radius-pill");
-    expect(style).toContain("top");
-    // A varredura de vocabulário do RF-161 roda sobre o HTML renderizado e não
-    // distingue um `18%` dentro de um `style` de um percentual na tela. Ela já
-    // reprovou a linha de identidade por isso em 14/09.
-    expect(style, "percentual no atributo `style` reprova a varredura do RF-161").not.toContain(
-      "%",
-    );
+    // Versão D: a forma inteira vem da classe, e a foto não emite `style`.
+    // Menos HTML repetido (RNF-007a) e, de quebra, nenhum `%` possível no
+    // atributo que a varredura do RF-161 lê.
+    for (const f of fotos(doc)) {
+      expect(f.getAttribute("style") ?? "", "percentual/estilo inline na foto").toBe("");
+    }
+    const foto = regra(".foto");
+    expect(foto, "sem raio de pílula o avatar sai quadrado").toContain("border-radius: 999px");
+    expect(foto).toContain("object-position: center top");
+    expect(foto).toContain("object-fit: cover");
+    expect(foto, "porcentagem no corte").not.toMatch(/object-position:[^;]*%/);
   });
 
   it("🔴 a linha `compact` TAMBÉM recebe avatar — decisão do dono, 14/09", () => {
@@ -204,16 +219,20 @@ describe("🔴 a altura da linha não muda — o avatar cabe no que a linha JÁ 
     expect(fallbacks(doc).length, "e nenhuma caiu nas iniciais — todas têm sqcand").toBe(0);
   });
 
-  it("🔴 a foto da linha compacta tem o MESMO diâmetro da normal", () => {
-    // O caminho fácil e errado para caber na compacta seria encolher o avatar.
-    // Ele não resolve nada — o que estoura na compacta é a LARGURA, e o custo é
-    // `diâmetro + afastamento` — e produziria duas colunas de foto desalinhadas
-    // na mesma lista, que é pior que o problema.
+  it("🔴 um diâmetro por desenho: 48px nos dois cartões, 44px em todas as linhas", () => {
+    // O caminho fácil e errado para caber seria encolher a foto só em algumas
+    // linhas — produziria colunas de foto desalinhadas na mesma lista. Na
+    // versão D toda linha tem o mesmo desenho (sem `compact`) e o tamanho sai
+    // da POSIÇÃO, na folha de estilo; o atributo é um só.
     const doc = parse(<ResultPanel candidatos={COM_COMPACTAS} pctApurado={25} ufDaFoto="BR" />);
     const larguras = new Set(fotos(doc).map((f) => f.getAttribute("width")));
+    expect(larguras.size, "um único atributo na lista inteira").toBe(1);
 
-    expect(larguras.size, "um único diâmetro na lista inteira").toBe(1);
-    expect([...larguras][0]).toBe(String(LIMITE_PX));
+    expect(regra(".foto")).toContain("width: 44px");
+    expect(regra(".foto")).toContain("height: 44px");
+    const cartao = regra(".lista > li:nth-child(-n + 2) .foto");
+    expect(cartao).toContain("width: 48px");
+    expect(cartao).toContain("height: 48px");
   });
 
   it("🔴 onde há avatar, o nome QUEBRA — nunca reticências", () => {
@@ -221,21 +240,19 @@ describe("🔴 a altura da linha não muda — o avatar cabe no que a linha JÁ 
     // nome". `happy-dom` não faz layout, então o que se mede é o MECANISMO —
     // a classe `truncate` (overflow hidden + ellipsis + nowrap) é a única coisa
     // que produz "WILS…" nesta linha, e ela não pode estar aqui.
-    //
-    // Asserção deliberadamente NÃO feita: "o nome está no DOM". Ele está nos
-    // dois casos — com `truncate` o corte é do navegador, não do HTML —, então
-    // essa asserção passa com o defeito e não prova nada.
     const doc = parse(<ResultPanel candidatos={COM_COMPACTAS} pctApurado={25} ufDaFoto="BR" />);
     const nomes = [...doc.querySelectorAll('[data-testid="candidate-result-name"]')];
 
     expect(nomes.length, "uma célula de nome por linha").toBe(6);
     for (const n of nomes) {
       expect(n.getAttribute("class") ?? "", n.textContent ?? "").not.toContain("truncate");
-      // `min-width: auto` num item flex vale a maior PALAVRA e empurraria a
-      // célula de volta; sem isto a quebra existe mas a coluna estoura.
-      expect(n.getAttribute("style") ?? "").toContain("min-width:0");
-      expect(n.getAttribute("style") ?? "").toContain("break-word");
+      expect(n.parentElement?.getAttribute("class") ?? "").not.toContain("truncate");
     }
+    // Versão D: a quebra mora na classe do nome, e a célula tem `min-width: 0`
+    // (sem ele o `min-width: auto` do item de grade vale a maior PALAVRA).
+    expect(regra(".nome")).toContain("overflow-wrap: break-word");
+    expect(regra(".nome")).not.toContain("ellipsis");
+    expect(regra(".id")).toContain("min-width: 0");
   });
 
   it("🔴 (par) sem avatar, a truncagem CONTINUA — a mudança é só onde há foto", () => {

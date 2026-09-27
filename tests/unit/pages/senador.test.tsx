@@ -104,6 +104,18 @@ async function render(node: Promise<React.ReactElement> | React.ReactElement): P
 // Payloads
 // ---------------------------------------------------------------------------
 
+/**
+ * Quantas LINHAS carregam marcador de vaga. Versão D (2026-09-27): quem ocupa
+ * vaga nas duas bases leva DOIS selos (um por base, cada um sob o seu
+ * `data-view-only`), então contar os marcadores dobraria a conta — a intenção
+ * destes casos é "quantas candidaturas a tela marca", e é isso que se conta.
+ */
+function linhasComVaga(doc: Document): number {
+  return [...doc.querySelectorAll("li")].filter(
+    (li) => li.querySelector("[data-testid='result-vaga-marker']") != null,
+  ).length;
+}
+
 function ufCand(
   id: number,
   nome: string,
@@ -604,7 +616,7 @@ describe("/uf/[sigla]/senador (T-10)", () => {
     readUfProjectionMock.mockResolvedValue(ufPayload());
     const doc = await render(UFSenadorPage(PARAMS_SP));
 
-    expect(doc.querySelectorAll("[data-testid='result-vaga-marker']").length).toBe(2);
+    expect(linhasComVaga(doc)).toBe(2);
     expect(doc.querySelectorAll("[data-testid='candidate-result-row']").length).toBe(4);
   });
 
@@ -698,7 +710,7 @@ describe("/uf/[sigla]/senador (T-10)", () => {
     readUfProjectionMock.mockResolvedValue(semVagas);
     const doc = await render(UFSenadorPage(PARAMS_SP));
 
-    expect(doc.querySelectorAll("[data-testid='result-vaga-marker']").length).toBe(2);
+    expect(linhasComVaga(doc)).toBe(2);
   });
 
   it("(v) sem payload, o estado de espera já diz quantas vagas estão em jogo", async () => {
@@ -861,7 +873,7 @@ describe("/uf/[sigla]/senador (T-10)", () => {
 
     // O resumo vem da OUTRA fonte e segue inteiro nos dois casos.
     for (const doc of [semSerie, semBlob]) {
-      expect(doc.querySelectorAll("[data-testid='result-vaga-marker']").length).toBe(2);
+      expect(linhasComVaga(doc)).toBe(2);
       expect(doc.querySelectorAll("h1").length).toBe(1);
       const kickers = [...doc.querySelectorAll('[data-testid="panel-kicker"]')].map(
         (k) => k.textContent ?? "",
@@ -1225,7 +1237,7 @@ describe("/uf/[sigla]/senador — os dois ramos de borda", () => {
     expect(botao, "8 candidatos deviam render o colapso da lista").not.toBeNull();
     expect(botao?.getAttribute("aria-controls")).toBeTruthy();
     // Mesmo colapsada, as duas linhas de vaga permanecem no DOM (ADR-0017).
-    expect(doc.querySelectorAll("[data-testid='result-vaga-marker']")).toHaveLength(2);
+    expect(linhasComVaga(doc)).toBe(2);
   });
 });
 
@@ -1460,7 +1472,7 @@ describe("/uf/[sigla]/senador — RF-210: votos por eleitor vêm de `vagas`, sem
     expect(ids.indexOf("corrida-tres-circulos-heading")).toBe(1);
     expect(ids.indexOf("votacao-uf-heading")).toBe(2);
     // E o resto da página segue de pé (o marcador de vaga ainda cai na tabela).
-    expect(doc.querySelectorAll("[data-testid='result-vaga-marker']").length).toBe(VAGAS_SENADO);
+    expect(linhasComVaga(doc)).toBe(VAGAS_SENADO);
   });
 
   it("🔴 `vagas` fora de 1..2 (3, 1.5, 0) ⇒ indisponível", async () => {

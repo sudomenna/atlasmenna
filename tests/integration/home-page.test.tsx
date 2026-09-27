@@ -614,16 +614,24 @@ describe("HomePage (integration / smoke)", () => {
 
     expect(linhas.length).toBeGreaterThan(0);
     for (const linha of linhas) {
-      // 🔴 2026-09-20 (2ª rodada) — as duas colunas deixaram de ser simétricas:
-      // o parcial fica em `data-view-cell` (sempre no DOM, só a ênfase muda) e
-      // a projeção virou `data-view-only`, que some na visão Parcial. Os DOIS
-      // números continuam no HTML servido, que é o que este caso guarda.
-      const celulas = [...linha.querySelectorAll("[data-view-cell]")].map((c) =>
-        c.getAttribute("data-view-cell"),
-      );
-      expect(celulas).toEqual(["parcial"]);
-      expect(linha.querySelector('[data-view-only="proj"].text-right')).not.toBeNull();
+      // 🔴 2026-09-20 (2ª rodada), refeito em 2026-09-27 (versão D): os DOIS
+      // números continuam no HTML servido, que é o que este caso guarda — o
+      // apurado grande sob `data-view-only="parcial"`, e o projetado grande +
+      // "apurado X%" sob `data-view-only="proj"`.
+      expect(linha.querySelector('[data-view-only="parcial"]')?.textContent).toMatch(/%/);
+      expect(linha.querySelector('[data-view-only="proj"]')?.textContent).toMatch(/%.*apurado .*%/);
     }
+    // Versão D — a home pede o selo de turno: ele existe, só nos dois cartões
+    // de cada base, e sempre diz de que base vem (constituição § 1).
+    const selos = [...doc.querySelectorAll('[data-testid="result-selo"]')];
+    for (const base of ["parcial", "proj"]) {
+      const n = doc.querySelectorAll(
+        `[data-view-only="${base}"] > [data-testid="result-selo"]`,
+      ).length;
+      expect(n).toBeGreaterThanOrEqual(1);
+      expect(n).toBeLessThanOrEqual(2);
+    }
+    for (const s of selos) expect(s.textContent).toMatch(/· (projeção|na parcial)$/);
     // E nada de collapsible entrou junto com o formato do kit (ADR-0017).
     // Escopado ao `<Panel>` pelo mesmo motivo do teste (l): o `<details>` de
     // debug é filho direto do `<main>` e é dev-only.

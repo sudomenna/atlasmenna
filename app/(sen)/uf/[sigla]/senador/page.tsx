@@ -550,6 +550,8 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
         kicker="Projeção Atlas Menna · não oficial"
         note={`${vagas} vagas por estado, em turno único — as ${vagas} candidaturas mais votadas se elegem, sem diferença entre elas. A margem acima é a distância da ${vagas}ª vaga para a primeira candidatura fora dela. Projeção por regra de três sobre o boletim do estado.`}
         pctApurado={payload.pct_apurado}
+        // Versão D (2026-09-27) — "Vaga projetada" / "Vaga na parcial".
+        selo="vaga"
         title={<ResultTitle sigla={sigla} />}
         titleId="resultado-heading"
         ufDaFoto={sigla}

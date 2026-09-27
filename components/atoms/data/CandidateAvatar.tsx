@@ -132,6 +132,21 @@ export interface CandidateAvatarProps {
    * Nunca vira `priority`/`fetchpriority`: ver o bloco 4 no topo.
    */
   eager?: boolean;
+  /**
+   * `true` → o átomo NÃO emite `style` inline: caixa, forma, `object-fit`,
+   * `object-position` e as cores do fallback vêm todos de `className`.
+   *
+   * Existe por peso de HTML (2026-09-27, versão D da lista do `<ResultPanel>`):
+   * o `style` do avatar é idêntico em todas as linhas de uma lista, e repetido
+   * 12 vezes por painel ele era uma fatia grande do HTML da home — que o
+   * RNF-007a mede. Numa lista, a folha de estilo diz uma vez o que o `style`
+   * dizia doze. Os atributos `width`/`height` da `<img>` continuam saindo
+   * (reserva de caixa antes da CSS, CLS zero); a CSS os sobrescreve.
+   *
+   * 🔴 Quem liga isto é responsável pela forma inteira — sem a classe, a foto
+   * sai no tamanho dos atributos, sem círculo e sem `object-fit`.
+   */
+  semEstiloInline?: boolean;
   className?: string;
   style?: CSSProperties;
 }
@@ -147,6 +162,7 @@ export function CandidateAvatar({
   background = "var(--surface-sunken)",
   ink = "var(--text-secondary)",
   eager = false,
+  semEstiloInline = false,
   className,
   style,
 }: CandidateAvatarProps) {
@@ -186,7 +202,11 @@ export function CandidateAvatar({
         decoding="async"
         data-testid="candidate-avatar-photo"
         className={className}
-        style={{ objectFit: "cover", background: "var(--surface-sunken)", ...shape }}
+        style={
+          semEstiloInline
+            ? style
+            : { objectFit: "cover", background: "var(--surface-sunken)", ...shape }
+        }
       />
     );
   }
@@ -196,13 +216,17 @@ export function CandidateAvatar({
       aria-hidden="true"
       data-testid="candidate-avatar-fallback"
       className={["flex items-center justify-center", className].filter(Boolean).join(" ")}
-      style={{
-        background,
-        color: ink,
-        font: "var(--type-figure)",
-        letterSpacing: "var(--tracking-caps)",
-        ...shape,
-      }}
+      style={
+        semEstiloInline
+          ? style
+          : {
+              background,
+              color: ink,
+              font: "var(--type-figure)",
+              letterSpacing: "var(--tracking-caps)",
+              ...shape,
+            }
+      }
     >
       {iniciais ?? iniciaisDe(nome)}
     </div>

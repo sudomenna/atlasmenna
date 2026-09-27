@@ -242,22 +242,96 @@ describe("<CandidateResultRow />", () => {
     expect(numero?.getAttribute("style")).toContain("var(--type-figure-sm)");
   });
 
-  it("(j) `variant='kit'` traz PartyTag, votos por extenso e 18px — mas só fora de `compact`", () => {
-    const doc = parse(<CandidateResultRow {...BASE} variant="kit" />);
+  it("(j) `variant='kit'` é a versão D: sigla em texto com o número na urna, votos por extenso", () => {
+    // 🔴 2026-09-27 — a variante `kit` virou a versão D do protótipo (decisão
+    // do dono). Saíram a `<PartyTag>`, o número de colocação à esquerda e a
+    // densidade `compact` (todas as linhas iguais); o que este caso protegia
+    // — "o kit é a lista do painel, a densa é o default" — segue em (i).
+    const doc = parse(<CandidateResultRow {...BASE} numero={15} variant="kit" />);
 
-    expect(doc.querySelector('[data-testid="party-tag"][data-sigla="MDB"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="party-tag"]')).toBeNull();
+    expect(doc.body.textContent).toContain("MDB – 15");
     expect(doc.body.textContent).toContain("1.234.567 votos");
-    expect(
-      doc.querySelector("[data-view-cell='parcial']")?.firstElementChild?.getAttribute("style"),
-    ).toContain("font-size:18px");
+    // Sem `numero`, só a sigla — nunca "MDB – undefined".
+    const semNumero = parse(<CandidateResultRow {...BASE} variant="kit" />);
+    expect(semNumero.body.textContent).toContain("MDB");
+    expect(semNumero.body.textContent).not.toContain("–");
+    expect(semNumero.body.textContent).not.toContain("undefined");
+  });
+});
 
-    // Compacta volta ao algarismo pequeno, como no kit (`CandidateRow.jsx:20`).
-    const compacta = parse(<CandidateResultRow {...BASE} compact variant="kit" />);
-    expect(
-      compacta
-        .querySelector("[data-view-cell='parcial']")
-        ?.firstElementChild?.getAttribute("style"),
-    ).not.toContain("font-size:18px");
+describe("variant='kit' (versão D) — números, barra e selo por base", () => {
+  const kit = (over: Partial<React.ComponentProps<typeof CandidateResultRow>> = {}) =>
+    parse(<CandidateResultRow {...BASE} numero={15} variant="kit" {...over} />);
+
+  it("🔴 Parcial: só o apurado; Projeção: projetado grande + 'apurado X%' pequeno", () => {
+    const doc = kit();
+    const texto = (sel: string) =>
+      [...doc.querySelectorAll(sel)].map((el) => el.textContent ?? "").join("|");
+
+    expect(texto('[data-view-only="parcial"]')).toContain("8,4%");
+    expect(texto('[data-view-only="parcial"]')).not.toContain("9,1%");
+    expect(texto('[data-view-only="proj"]')).toContain("9,1%");
+    expect(texto('[data-view-only="proj"]')).toContain("apurado 8,4%");
+    // Todo nó de texto com o projetado está sob `data-view-only="proj"` —
+    // `display: none` tira da tela E da árvore de acessibilidade na Parcial.
+    const walker = doc.createTreeWalker(doc.body, 4 /* SHOW_TEXT */);
+    let n = walker.nextNode();
+    let vistos = 0;
+    while (n) {
+      if (n.textContent?.includes("9,1%")) {
+        vistos++;
+        expect(n.parentElement?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe(
+          "proj",
+        );
+      }
+      n = walker.nextNode();
+    }
+    expect(vistos).toBe(1);
+  });
+
+  it("a cor: base no preenchimento, `-text` do partido no percentual — nunca a do payload", () => {
+    const linha = kit().querySelector('[data-testid="candidate-result-row"]');
+    const style = linha?.getAttribute("style") ?? "";
+    expect(style).toContain("--cor-base:var(--color-cand-3)"); // a `cor` recebida
+    expect(style).toContain("--cor-texto:var(--party-mdb-text)"); // da SIGLA
+  });
+
+  it("🔴 a barra: preenchimento = apurado; marca = projeção, só na Projeção, IRMÃ do recorte", () => {
+    const doc = kit();
+    const fill = doc.querySelector('[data-testid="result-bar-fill"]');
+    const marca = doc.querySelector('[data-testid="result-bar-marker"]');
+    const clip = doc.querySelector('[data-testid="result-bar-clip"]');
+
+    expect(fill?.getAttribute("style")).toContain("width:8.4%");
+    expect(fill?.getAttribute("data-marca")).toBe("parcial");
+    expect(marca?.getAttribute("data-view-only")).toBe("proj");
+    expect(marca?.getAttribute("style")).toContain("min(9.1%, calc(100% - 3px))");
+    // O conserto de `8d92e95`: a marca fora do `overflow: hidden`.
+    expect(clip?.contains(marca as Node)).toBe(false);
+    expect(marca?.parentElement).toBe(clip?.parentElement);
+    // Projeção zerada ⇒ sem marca (três estados: não se afirma "0%").
+    expect(kit({ pctProjetado: 0 }).querySelector('[data-testid="result-bar-marker"]')).toBeNull();
+  });
+
+  it("selo: cada base sob o seu `data-view-only`; sem selo, nenhum nó", () => {
+    const doc = kit({ selos: { parcial: <b>P</b>, proj: <b>J</b> } });
+    expect(doc.querySelector('[data-view-only="parcial"] > b')?.textContent).toBe("P");
+    expect(doc.querySelector('[data-view-only="proj"] > b')?.textContent).toBe("J");
+    const sem = kit();
+    expect(sem.querySelectorAll("b")).toHaveLength(0);
+  });
+
+  it("anulada: '—' no lugar do %, só os votos, trilho vazio", () => {
+    const doc = kit({ destino: "anulado" });
+    expect(doc.querySelector('[data-testid="result-pct-anulada"]')?.textContent).toBe("—");
+    expect(doc.body.textContent).not.toMatch(/%/);
+    expect(doc.querySelector('[data-testid="result-bar"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="result-bar-fill"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="result-bar-marker"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="candidate-result-votos-anulada"]')?.textContent).toBe(
+      "1.234.567 votos apurados",
+    );
   });
 });
 

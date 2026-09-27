@@ -666,6 +666,10 @@ export default async function UFPage({ params }: UFPageProps) {
         kicker="Projeção Atlas Menna · não oficial"
         note="Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados na UF."
         pctApurado={payload.pct_apurado}
+        // 🔴 SEM selo (decisão do dono, 2026-09-27): quem vai ao 2º turno é
+        // decidido pelo Brasil, não pelo estado. "2º turno" no 2º colocado de
+        // SP diria algo falso quando ele é o 3º no país.
+        selo="nenhum"
         title={<ResultTitle sigla={sigla} />}
         titleId="resultado-heading"
       />

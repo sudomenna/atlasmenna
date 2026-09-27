@@ -175,13 +175,19 @@ describe("opção A — a lista de resultado", () => {
     );
     expect(nomes.at(-1)).toBe("Davi");
     const davi = linhaDe(doc, "Davi");
-    expect(davi?.querySelector("[aria-hidden='true']")?.textContent).toBe("—");
+    // Versão D (2026-09-27): o "—" fica no lugar do PERCENTUAL (não há mais
+    // número de colocação), e a barra fica VAZIA — trilho sem preenchimento.
+    expect(davi?.querySelector('[data-testid="result-pct-anulada"]')?.textContent).toBe("—");
     expect(davi?.querySelector('[data-testid="destino-etiqueta"]')?.textContent).toBe(", Anulado");
     expect(davi?.querySelector('[data-testid="candidate-result-votos-anulada"]')?.textContent).toBe(
-      "15.000votos",
+      "15.000 votos apurados",
     );
     expect(davi?.textContent).not.toMatch(/%/);
-    expect(davi?.querySelector('[data-testid="result-bar"]')).toBeNull();
+    expect(davi?.querySelector('[data-testid="result-bar-fill"]')).toBeNull();
+    expect(davi?.querySelector('[data-testid="result-bar-marker"]')).toBeNull();
+    // E nenhum selo, em base nenhuma (ADR-0053).
+    expect(davi?.querySelector('[data-testid="result-selo"]')).toBeNull();
+    expect(davi?.querySelector('[data-testid="result-vaga-marker"]')).toBeNull();
   });
 
   it("a frase da metodologia é a do dono, e só existe com anulada", () => {
@@ -217,10 +223,12 @@ describe("opção A — a lista de resultado", () => {
     });
     const d = parse(<ResultPanel candidatos={semVotos} pctApurado={40} />);
     const davi = linhaDe(d, "Davi");
-    expect(davi?.querySelector('[data-testid="candidate-result-votos-anulada"]')?.textContent).toBe(
-      "",
-    );
+    expect(
+      davi?.querySelector('[data-testid="candidate-result-votos-anulada"]')?.textContent ?? "",
+    ).toBe("");
     expect(davi?.textContent).not.toMatch(/%|votos/);
+    // O único "—" da linha é o do percentual — nunca no lugar dos votos.
+    expect(davi?.textContent?.match(/—/g)).toHaveLength(1);
   });
 });
 

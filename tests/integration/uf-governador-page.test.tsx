@@ -525,11 +525,15 @@ describe("UFGovernadorPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
     const doc = await renderGov();
     const linhas = doc.querySelectorAll('[data-testid="candidate-result-row"]');
     expect(linhas.length).toBeGreaterThan(0);
-    // 🔴 2026-09-20 (2ª rodada) — a projeção migrou de `data-view-cell` para
-    // `data-view-only`: continua no HTML servido, mas some na visão Parcial.
-    expect(linhas[0]?.querySelector('[data-view-cell="parcial"]')).not.toBeNull();
-    expect(linhas[0]?.querySelector('[data-view-cell="proj"]')).toBeNull();
-    expect(linhas[0]?.querySelector('[data-view-only="proj"].text-right')).not.toBeNull();
+    // 🔴 2026-09-20 (2ª rodada), refeito em 2026-09-27 (versão D): os dois
+    // números continuam no HTML servido, cada um sob a sua visão.
+    expect(linhas[0]?.querySelector('[data-view-only="parcial"]')?.textContent).toMatch(/%/);
+    expect(linhas[0]?.querySelector('[data-view-only="proj"]')?.textContent).toMatch(
+      /%.*apurado .*%/,
+    );
+    expect(linhas[0]?.querySelector("[data-view-cell]")).toBeNull();
+    // Versão D — Governador por UF tem selo de turno (a disputa é do estado).
+    expect(doc.querySelectorAll('[data-testid="result-selo"]').length).toBeGreaterThan(0);
   });
 
   it("(p) sem a grade, a tabela lista os municípios e é o caminho de teclado", async () => {

@@ -44,8 +44,10 @@
  * shell (ADR-0029 § 2), e a cascata de `app/globals.css` resolve o resto.
  * Duas ferramentas, com significados diferentes, ambas já em uso:
  *
- *   - `data-view-cell` — os dois números ficam visíveis; só muda a ênfase. É o
- *     que as linhas de candidato usam (`<CandidateResultRow>`).
+ *   - `data-view-cell` — os dois números ficam visíveis; só muda a ênfase.
+ *     ⚠️ Desde 2026-09-27 (versão D) as linhas DESTE painel não o usam mais:
+ *     cada número da linha é de uma visão só (`data-view-only`) — ver
+ *     `LinhaPainel` em `components/atoms/tables/CandidateResultRow.tsx`.
  *   - `data-view-only` — exclusivo, para onde exibir os dois seria ilegível: a
  *     `<Figure>` de margem e a barra de votos. Segue o padrão já estabelecido
  *     pelo `<ProjectionThermometer>`, inclusive a regra de que o atributo mora
@@ -71,13 +73,19 @@
  * o valor E O RÓTULO da figura de margem, o par que a `<VoteBar>` desenha,
  * quem ocupa vaga (e o texto do marcador), e quais linhas o colapso clipa.
  *
+ * 🔴 2026-09-27 — versão D (decisão do dono): os dois primeiros DA BASE viram
+ * cartões e o resto um cartão único, pela POSIÇÃO no DOM (a mesma reordenação
+ * de sempre; `CandidateResultRow.module.css`). O "número à esquerda" saiu (a
+ * versão D não tem colocação numerada) e o SELO dos dois cartões entrou no
+ * lugar dele como o que acompanha a base (`lib/utils/selo-resultado.ts`).
+ *
  * Duas coisas deliberadamente NÃO seguem a base, e as duas por escrito:
  *
  *   - a **cor** (`corRankDe`) — constituição § 2: estável a noite inteira,
  *     "não muda por rank". Uma candidatura sem partido mapeado trocaria de
  *     tinta a cada toque no botão;
- *   - a **densidade** (`compact`) — não está na lista do dono, e faria a
- *     altura das linhas saltar ao alternar.
+ *   - a **densidade** — desde a versão D não existe mais `compact`: todas as
+ *     linhas do 3º em diante têm o mesmo desenho.
  */
 
 import type { CSSProperties, ReactNode } from "react";
@@ -90,6 +98,8 @@ import { Panel, type PanelRule } from "@/components/atoms/surfaces/Panel";
 import {
   CandidateResultRow,
   candidateResultRowProps,
+  LISTA_PAINEL_CLASSES,
+  SeloPilula,
 } from "@/components/atoms/tables/CandidateResultRow";
 import { candidateColor } from "@/components/blocks/_candidateColor";
 import { ATRIBUTO_LISTA } from "@/components/blocks/_lista-por-base";
@@ -101,6 +111,9 @@ import { compete, haAnulada, notaAnuladas, queCompetem } from "@/lib/utils/desti
 import { formatPp, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { ordensPorBase } from "@/lib/utils/rank-parcial";
+import { type BaseSelo, type RegraSelo, selosDaBase, VAGA_LABEL } from "@/lib/utils/selo-resultado";
+
+import styles from "./ResultPanel.module.css";
 
 /**
  * O que o painel lê de um candidato — o subconjunto comum a `EdgeCandidate`
@@ -240,6 +253,23 @@ export interface ResultPanelProps {
    * exibir os mesmos miniavatares (era "ignorada fora do modo identidade").
    */
   ufDaFoto?: string;
+  /**
+   * **Versão D (2026-09-27)** — qual gramática de selo os dois cartões usam.
+   * Ver `lib/utils/selo-resultado.ts`, que tem a regra inteira.
+   *
+   * - `"turno"` — Presidente na home e Governador por UF: "2º turno · …" nos
+   *   dois primeiros, ou "Vence(ria) no 1º turno · …" só no líder com > 50%.
+   * - `"vaga"` — Senador: "Vaga projetada" / "Vaga na parcial".
+   * - `"nenhum"` — Presidente na tela do estado (decisão do dono: quem vai ao
+   *   2º turno é decidido pelo Brasil, não pelo estado).
+   *
+   * Default: `"vaga"` com `vagas > 1`, `"nenhum"` com uma vaga — ou seja, a
+   * home e o Governador precisam PEDIR o selo de turno; o Presidente por UF
+   * fica sem selo por omissão, que é o lado seguro do erro.
+   */
+  selo?: RegraSelo;
+  /** Turno da corrida. `2` ⇒ nenhum selo (com dois nomes, "2º turno" é tautologia). */
+  turno?: number;
 
   // --- repassados ao `<Panel>` ---
   kicker?: string;
@@ -361,35 +391,23 @@ function segmentos(
  * uma rodada inteira. Ele não tem controle de base e continua chamando sem
  * argumento; o default `"proj"` preserva o texto que ele já mostrava.
  */
-const VAGA_LABEL = { parcial: "Vaga na parcial", proj: "Vaga projetada" } as const;
-
 export function VagaBadge({ base = "proj" }: { base?: "parcial" | "proj" | "ambas" } = {}) {
-  return (
-    <span
-      data-testid="result-vaga-marker"
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "var(--space-1)",
-        padding: "2px var(--space-2)",
-        border: "1px solid var(--accent-text)",
-        borderRadius: "var(--radius-pill)",
-        color: "var(--accent-text)",
-        font: "var(--type-kicker)",
-        letterSpacing: "var(--tracking-caps)",
-        textTransform: "uppercase",
-      }}
-    >
-      {base === "ambas" ? (
-        <>
-          <span data-view-only="parcial">{VAGA_LABEL.parcial}</span>
-          <span data-view-only="proj">{VAGA_LABEL.proj}</span>
-        </>
-      ) : (
-        VAGA_LABEL[base]
-      )}
-    </span>
-  );
+  // 🔴 2026-09-27 (versão D) — a pílula escura dos cartões, a MESMA do selo de
+  // turno (`<SeloPilula>`). Era um contorno ocre; o texto e o `data-testid` não
+  // mudaram, e `StateResultSheet` (o 2º consumidor) herda a forma nova junto.
+  if (base === "ambas") {
+    return (
+      <span data-testid="result-vaga-marker">
+        <span data-view-only="parcial">
+          <SeloPilula texto={VAGA_LABEL.parcial} />
+        </span>
+        <span data-view-only="proj">
+          <SeloPilula texto={VAGA_LABEL.proj} />
+        </span>
+      </span>
+    );
+  }
+  return <SeloPilula testId="result-vaga-marker" texto={VAGA_LABEL[base]} />;
 }
 
 /**
@@ -516,6 +534,8 @@ export function ResultPanel({
   limit = 6,
   variant = "medicao",
   ufDaFoto = "BR",
+  selo,
+  turno,
   kicker,
   title,
   titleId,
@@ -664,6 +684,16 @@ export function ResultPanel({
   // contar a anulada aqui criaria um botão "Todos os N" que não esconde nada.
   const excedentes = Math.max(0, queCompetem(candidatos).length - limit);
 
+  // Versão D (2026-09-27) — os selos dos dois cartões, por base. A regra
+  // inteira mora em `lib/utils/selo-resultado.ts` (função pura, testada à
+  // parte). Default: vaga em corrida de várias vagas; nenhum em vaga única —
+  // quem quer o selo de turno (home, Governador por UF) pede.
+  const regraSelo: RegraSelo = identidade ? "nenhum" : (selo ?? (multiVaga ? "vaga" : "nenhum"));
+  const opcoesSelo = { regra: regraSelo, turno, vagas: nVagas };
+  const selosParcial = selosDaBase(porParcial, "parcial", opcoesSelo);
+  const selosProj = selosDaBase(porProj, "proj", opcoesSelo);
+  const classeLista = `${styles.list} ${LISTA_PAINEL_CLASSES.lista}`;
+
   const linhas = identidade
     ? candidatos.map((c) => (
         <li key={c.id}>
@@ -677,26 +707,28 @@ export function ResultPanel({
         const iProj = ordens?.posProj.get(c.id) ?? i;
 
         /*
-         * DENSIDADE — e ela NÃO acompanha a base, de propósito.
+         * 🔴 Sem `compact` desde 2026-09-27 (versão D): todas as linhas do 3º
+         * em diante têm o mesmo desenho, e os dois primeiros viram cartão pela
+         * POSIÇÃO no DOM (`CandidateResultRow.module.css`) — não por prop.
          *
-         * `compact` é a linha reduzida das candidaturas pequenas, não uma
-         * afirmação sobre a corrida: o dono listou quatro coisas que seguem a
-         * base (lista, numeração, margem, vaga) e densidade não é nenhuma
-         * delas. Se seguisse, a ALTURA das linhas mudaria ao alternar e a
-         * página saltaria sob o dedo do leitor — e, pior, a linha precisaria
-         * existir duas vezes no DOM, que é o custo que `order` evita.
-         *
-         * O critério antigo (`índice >= 2`) era de uma ordem só. Aqui a linha
-         * só é compacta se estiver fora do pódio NAS DUAS bases: assim ela
-         * nunca aparece encolhida no topo da tela por ser pequena na outra
-         * base. É estritamente mais conservador — só deixa de comprimir.
+         * `iParcial + 1` como `fallbackRank`, e não a posição do DOM: é o
+         * valor que resolve a COR, e ele tem de ser o mesmo nas duas bases
+         * (ver `corRankDe`).
          */
-        const compact = c.pct_atual < 3 && iParcial >= 2 && iProj >= 2;
+        const props = candidateResultRowProps(c, iParcial + 1);
 
-        // 🔴 `iParcial + 1` como `fallbackRank`, e não a posição do DOM: é o
-        // valor que resolve a COR, e ele tem de ser o mesmo nas duas bases
-        // (ver `corRankDe`). O número EXIBIDO vem depois, explícito.
-        const props = candidateResultRowProps(c, iParcial + 1, compact);
+        // Versão D — o selo de cada base, já decidido (`selosDaBase`). No
+        // máximo um por base, e só em quem é top-2 DAQUELA base; sob
+        // `data-view-only`, dentro da linha. Anulada nunca tem (ADR-0053).
+        const seloDe = (base: BaseSelo, mapa: Map<number, string>) => {
+          const texto = mapa.get(c.id);
+          if (texto == null) return undefined;
+          return regraSelo === "vaga" ? (
+            <VagaBadge base={base} />
+          ) : (
+            <SeloPilula testId="result-selo" texto={texto} />
+          );
+        };
 
         // RF-105 — a ocupação de vaga acompanha a base. Consequência que o
         // dono aceitou explicitamente: trocar a visualização muda quem a tela
@@ -720,6 +752,10 @@ export function ResultPanel({
 
         return (
           <li
+            // Versão D — a anulada fica sempre no fim e nunca recolhe; com ela
+            // na lista, é ELA quem fecha o cartão único dos demais
+            // (`CandidateResultRow.module.css`, "Quem é o último visível").
+            data-anulado={disputa ? undefined : ""}
             data-extra-row={extras.length > 0 ? extras.join(" ") : undefined}
             // Gancho do seletor de `order` em `app/globals.css`. O valor diz
             // qual base a ordem do DOM segue — é contrato, não decoração: um
@@ -738,17 +774,6 @@ export function ResultPanel({
             key={c.id}
             style={{ "--ord-parcial": iParcial, "--ord-proj": iProj } as CSSProperties}
           >
-            {ocupaParcial && ocupaProj ? (
-              <VagaBadge base="ambas" />
-            ) : ocupaParcial ? (
-              <span data-view-only="parcial">
-                <VagaBadge base="parcial" />
-              </span>
-            ) : ocupaProj ? (
-              <span data-view-only="proj">
-                <VagaBadge base="proj" />
-              </span>
-            ) : null}
             {/* A MESMA foto da tela de espera, no placar (pedido do dono,
                 14/09). O `avatar` vai sempre presente: é a coluna que existe,
                 não a foto. **Em toda linha, inclusive a compacta** — o dono viu
@@ -771,13 +796,12 @@ export function ResultPanel({
                 // abre. Ver `AVATARES_EAGER`.
                 eager: i < AVATARES_EAGER,
               }}
-              // 🔴 Os dois números da esquerda, explícitos, sobrescrevendo o
-              // `rank` que `candidateResultRowProps` derivou. Sem isso a home
-              // imprimiria o `rank` do payload (que é o da projeção) ao lado de
-              // uma linha reposicionada pela cascata — e a lista sairia
-              // "2, 1, 3" de cima para baixo na base parcial.
-              rank={iParcial + 1}
-              rankProj={iProj + 1}
+              // O número na urna (ADR-0042), ao lado da sigla: "PT – 13".
+              numero={c.id}
+              selos={{ parcial: seloDe("parcial", selosParcial), proj: seloDe("proj", selosProj) }}
+              // A versão D não tem número de colocação à esquerda — a ordem da
+              // lista e os dois cartões dizem a posição. `rank` segue
+              // alimentando só a COR de fallback (ver acima).
               variant="kit"
             />
           </li>
@@ -892,12 +916,11 @@ export function ResultPanel({
           {linhas}
         </ul>
       ) : excedentes > 0 ? (
-        <CandidateListCollapse total={candidatos.length}>{linhas}</CandidateListCollapse>
+        <CandidateListCollapse className={classeLista} total={candidatos.length}>
+          {linhas}
+        </CandidateListCollapse>
       ) : (
-        <ol
-          {...{ [ATRIBUTO_LISTA]: "" }}
-          style={{ listStyle: "none", margin: 0, padding: 0, display: "grid" }}
-        >
+        <ol className={classeLista} {...{ [ATRIBUTO_LISTA]: "" }}>
           {linhas}
         </ol>
       )}

@@ -1,0 +1,379 @@
+/**
+ * components/atoms/tables/CandidateResultRow.module.css
+ *
+ * A lista do `<ResultPanel>` na versão D (decisão do dono, 2026-09-27;
+ * `docs/design-system/prototipos/apuracao-2026-09-27/README.md`): os dois
+ * primeiros em dois CARTÕES lado a lado, os demais num cartão único, em LINHAS.
+ *
+ * ## 🔴 Uma marcação, dois desenhos — e quem escolhe é a POSIÇÃO
+ *
+ * Cada candidatura é UM `<li>` com UMA linha dentro (`.linha`). Não existe
+ * "o cartão do LULA" e "a linha do LULA" no DOM: a mesma marcação vira cartão
+ * quando o `<li>` é o 1º ou o 2º da lista (`:nth-child(-n + 2)`) e vira linha do
+ * 3º em diante (`:nth-child(n + 3)`).
+ *
+ * É isso que faz a troca de base funcionar sem nada novo: a lista já é
+ * reordenada FISICAMENTE no DOM a cada troca de "Parcial / Projeção"
+ * (`<ReordenaListaPorBase>` → `reordenarLista`). Quem sobe para o 2º lugar na
+ * outra base passa a ser o 2º filho, e o seletor posicional o desenha como
+ * cartão. Renderizar cada candidatura duas vezes (uma como cartão, outra como
+ * linha) dobraria nós e HTML — o custo que o `app/globals.css` já mediu e
+ * recusou para a lista inteira (+312 nós, ~42 KB).
+ *
+ * ⚠️ `order` de CSS continua proibido (`ResultPanel.ordemPorBase.test.tsx`):
+ * ele moveria pixel sem mover documento (WCAG SC 1.3.2). Nada aqui usa `order`.
+ *
+ * ## O cartão único dos demais — fundo POR LINHA, nunca pseudo-elemento
+ *
+ * As linhas do 3º em diante são irmãs dos dois cartões, na mesma `<ol>` — não
+ * há elemento que as envolva, e não pode haver (`<ol>` só aceita `<li>`, e um
+ * `<li>` a mais seria contado pelo `:nth-child` do top-2 e movido pelo
+ * `reordenarLista`). Por isso o "cartão único" é a soma dos fundos das linhas:
+ * cada `<li>` do 3º em diante pinta `--surface-card`; o 3º arredonda em cima e
+ * o ÚLTIMO VISÍVEL arredonda embaixo.
+ *
+ * 🔴 **Não é um `::before` da lista, e não pode voltar a ser** (portão de a11y,
+ * 2026-09-27): com o fundo num pseudo-elemento o axe não determina a cor de
+ * fundo de NENHUM texto por cima dele (`pseudoContent`) e manda a lista inteira
+ * para `results.incomplete` — 30 nós por página, que
+ * `tests/e2e/a11y-audit.spec.ts` reprova.
+ *
+ * ### Quem é o último visível
+ *
+ * - lista aberta (ou sem colapso): o `:last-child`;
+ * - colapsada, com anulada: também o `:last-child` — a anulada fica sempre no
+ *   fim e nunca recolhe (ADR-0053);
+ * - colapsada, sem anulada: a linha imediatamente antes da 1ª excedente DA BASE
+ *   ATIVA (`:has(+ [data-extra-row~=<base>])`). A linha recolhida é
+ *   `height: 0; overflow: hidden` (`app/globals.css`) e não desenha nada — por
+ *   isso as folgas de cima e de baixo moram na `.linha` de dentro, que é
+ *   recortada junto, e nunca no `padding` do `<li>` (padding não encolhe com
+ *   `height: 0` e sobraria como uma faixa solta).
+ *
+ * ### A sombra sem costura
+ *
+ * Cada linha tem a sombra do cartão, recortada por `clip-path` nas bordas que
+ * encostam em outra linha: sem o recorte, a sombra de cada linha subiria sobre
+ * a de cima e desenharia um vinco entre elas. As custom properties
+ * `--corte-topo`/`--corte-base` abrem o recorte só no 3º e no último visível.
+ *
+ * A lista não tem `row-gap`: um vão entre faixas de altura zero apareceria como
+ * espaço vazio no meio do cartão.
+ *
+ * ## Por que módulo e não `style` inline
+ *
+ * O HTML da home é o que o RNF-007a mede, e o `style` inline idêntico repetido
+ * em cada linha era a maior fatia dele. Aqui o que é igual em todas as linhas
+ * mora na folha de estilo; o que varia por candidatura (a cor do partido, a
+ * largura da barra, a posição da marca) continua inline, e só isso.
+ */
+
+/* ---------------------------------------------------------------- a lista */
+
+.lista {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 10px;
+}
+
+.lista > li {
+  min-width: 0;
+}
+
+/* Os dois cartões. */
+.lista > li:nth-child(-n + 2) {
+  background: var(--surface-card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  padding: 14px 12px;
+  /* Margem, e não `row-gap`: ver o cabeçalho. */
+  margin-bottom: 12px;
+}
+
+/* Os demais: largura inteira; o fundo de cada um compõe o cartão único. */
+.lista > li:nth-child(n + 3) {
+  grid-column: 1 / -1;
+  padding: 0 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  clip-path: inset(var(--corte-topo, 0) -24px var(--corte-base, 0));
+}
+
+/* Topo do cartão único. */
+.lista > li:nth-child(3) {
+  --corte-topo: -24px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+/* Base do cartão único — o último VISÍVEL (ver o cabeçalho). */
+.lista > li:nth-child(n + 3):last-child,
+:root[data-view="proj"]
+  .lista[data-collapsed="true"]:not(:has(> [data-anulado]))
+  > li:nth-child(n + 3):has(+ [data-extra-row~="proj"]),
+:root[data-view="parcial"]
+  .lista[data-collapsed="true"]:not(:has(> [data-anulado]))
+  > li:nth-child(n + 3):has(+ [data-extra-row~="parcial"]) {
+  --corte-base: -24px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+/* ------------------------------------------------- a linha (desenho padrão)
+ *
+ * O padrão é o da LINHA; o cartão sobrescreve. Assim uma `.linha` fora de
+ * `.lista` (um teste, um consumidor futuro) sai legível.
+ */
+
+.linha {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "foto id num"
+    "foto id votos"
+    ". barra barra";
+  column-gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+}
+
+/* As folgas de cima e de baixo do cartão único, na `.linha` (recortada junto
+   com o `<li>` recolhido) e não no `<li>` — ver o cabeçalho. */
+.lista > li:nth-child(3) > .linha {
+  padding-top: 16px;
+}
+
+.lista > li:nth-child(n + 3):last-child > .linha,
+:root[data-view="proj"]
+  .lista[data-collapsed="true"]:not(:has(> [data-anulado]))
+  > li:nth-child(n + 3):has(+ [data-extra-row~="proj"])
+  > .linha,
+:root[data-view="parcial"]
+  .lista[data-collapsed="true"]:not(:has(> [data-anulado]))
+  > li:nth-child(n + 3):has(+ [data-extra-row~="parcial"])
+  > .linha {
+  padding-bottom: 16px;
+}
+
+/* Filete entre as linhas — no topo de cada uma a partir da 2ª, e não embaixo
+   de cada uma: assim a última VISÍVEL nunca carrega filete, colapsada ou não. */
+.lista > li:nth-child(n + 4) > .linha {
+  border-top: 1px solid var(--border-hairline);
+}
+
+.foto {
+  grid-area: foto;
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  object-fit: cover;
+  /* 🔴 A palavra-chave `top`, NUNCA uma porcentagem (a varredura do RF-161). */
+  object-position: center top;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font: 600 14px / 1 var(--font-sans);
+  letter-spacing: var(--tracking-caps);
+}
+
+.id {
+  grid-area: id;
+  min-width: 0;
+}
+
+.partido {
+  font: 500 12px / 1.2 var(--font-sans);
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+}
+
+.nome {
+  margin-top: 2px;
+  font: 800 15px / 1.15 var(--font-sans);
+  text-transform: uppercase;
+  /* Nome quebra, nunca reticências: a foto está ali para identificar a
+     pessoa, e "WILS…" ao lado do rosto desfaz isso. */
+  overflow-wrap: break-word;
+  color: var(--text-primary);
+}
+
+.num {
+  grid-area: num;
+  align-self: end;
+  text-align: right;
+}
+
+.pct {
+  font: 700 20px / 1.1 var(--font-mono);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  /* Cor de TEXTO do partido (`--party-<x>-text`, ≥ 4,5:1 nas duas superfícies)
+     — nunca a base, que reprova em PSOL, PSB, NOVO e Outros (ADR-0047). */
+  color: var(--cor-texto, var(--text-primary));
+}
+
+/* A anulada: "—" no lugar do percentual, em tinta neutra. */
+.pctNulo {
+  color: var(--text-secondary);
+}
+
+.sub,
+.votos {
+  font: 500 11px / 1.3 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.sub {
+  white-space: nowrap;
+}
+
+.votos {
+  grid-area: votos;
+  align-self: start;
+  text-align: right;
+}
+
+.barra {
+  grid-area: barra;
+  position: relative;
+  height: 8px;
+  margin-top: 8px;
+}
+
+/* O recorte segura o preenchimento no canto arredondado. A MARCA é irmã do
+   recorte, nunca filha — é o conserto de `8d92e95` (ver `MARCADOR_SOBRA_PX` em
+   `CandidateResultRow.tsx`): dentro do `overflow: hidden` a sobra que torna a
+   marca legível sobre o preenchimento seria apagada. */
+/* 🔴 Contorno obrigatório (§ 4 / WCAG 1.4.11): é o `DATA_FILL_STROKE` de
+   `components/blocks/_candidateColor.ts` (1px `--text-secondary`), o mesmo da
+   `<VoteBar>`. Sem ele, PSOL (2,08:1), PSB (2,20), Outros (2,39) e NOVO (2,72)
+   encostam na calha sem fronteira e a extensão da barra some. Apontado pelo
+   constitution-guard em 2026-09-27. */
+.clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  border: 1px solid var(--text-secondary);
+  border-radius: 999px;
+  background: var(--surface-sunken);
+}
+
+.fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--cor-base, var(--party-outros));
+}
+
+/* A marca preta da projeção. `top`/`bottom` negativos = a sobra acima e abaixo
+   da barra; é ela que se enxerga quando a projeção cai DENTRO do
+   preenchimento. Sem `display` aqui: quem a mostra e esconde é o
+   `data-view-only="proj"` (`app/globals.css`). */
+.marca {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--text-primary);
+}
+
+.selo {
+  grid-area: selo;
+  justify-self: start;
+  margin-top: 10px;
+}
+
+/* Linha: o selo nunca aparece (só os dois cartões têm selo). Guarda para a
+   janela antes da reordenação no cliente, em que a lista ainda está na ordem
+   da projeção e a base ativa pode ser outra. */
+.lista > li:nth-child(n + 3) .selo {
+  display: none;
+}
+
+/* "N votos apurados" no cartão; "N votos" na linha. */
+.lista > li:nth-child(n + 3) .apurados {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- o cartão */
+
+/* 🔴 A foto fica ACIMA do nome, não ao lado (2026-09-27, conferido no
+   navegador). O cartão real mede ~158px no celular de 375px e ~147px úteis na
+   coluna do desktop: com a foto de 48px + 10px de vão ao lado, sobram ~76px
+   para o nome, e "TARCÍSIO" em caixa alta 16px/800 já não cabia — quebrava no
+   meio da palavra ("TARCÍSI / O"). O protótipo tinha ~8px a mais por cartão e
+   escondeu o problema. Empilhado, o nome tem a largura inteira do cartão. */
+.lista > li:nth-child(-n + 2) > .linha {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "foto"
+    "id"
+    "num"
+    "barra"
+    "votos"
+    "selo";
+  row-gap: 0;
+  padding: 0;
+}
+
+.lista > li:nth-child(-n + 2) .id {
+  margin-top: 8px;
+}
+
+.lista > li:nth-child(-n + 2) .foto {
+  width: 48px;
+  height: 48px;
+}
+
+.lista > li:nth-child(-n + 2) .nome {
+  font-size: 16px;
+}
+
+.lista > li:nth-child(-n + 2) .num {
+  margin-top: 14px;
+  text-align: left;
+}
+
+.lista > li:nth-child(-n + 2) .pct {
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.lista > li:nth-child(-n + 2) .sub {
+  margin-top: 4px;
+}
+
+.lista > li:nth-child(-n + 2) .barra {
+  height: 12px;
+  margin-top: 10px;
+}
+
+.lista > li:nth-child(-n + 2) .votos {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-primary);
+  text-align: left;
+}
+
+/* ---------------------------------------------------------------- a pílula */
+
+.pilula {
+  display: inline-block;
+  /* O texto quebra só ENTRE os pedaços (`.pedaco`, `nowrap`), nunca dentro
+     deles: "Venceria no 1º turno · na parcial" mede ~200px e o cartão tem
+     ~147px úteis na coluna do desktop — a pílula inteira em `nowrap` vazaria
+     do cartão. "2º turno · projeção" cabe numa linha e não quebra. */
+  white-space: normal;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font: 700 11px / 1.2 var(--font-sans);
+}
+
+.pedaco {
+  white-space: nowrap;
+}

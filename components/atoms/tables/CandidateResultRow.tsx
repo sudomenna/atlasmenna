@@ -86,16 +86,17 @@
  * Server Component puro — sem `"use client"`.
  */
 
-import type { CSSProperties } from "react";
+import { type CSSProperties, Fragment, type ReactNode } from "react";
 import { CandidateAvatar } from "@/components/atoms/data/CandidateAvatar";
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
-import { PartyTag } from "@/components/atoms/data/PartyTag";
-import { candidateColor } from "@/components/blocks/_candidateColor";
+import { candidateColor, candidateMarkerColor } from "@/components/blocks/_candidateColor";
 import type { EdgeCandidate, EdgeDestinoVoto } from "@/lib/edge-config/types";
 import { exibePercentual } from "@/lib/utils/destino-voto";
 import { formatPercent, formatVotes, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
+
+import s from "./CandidateResultRow.module.css";
 
 export interface CandidateResultRowProps {
   /**
@@ -148,10 +149,14 @@ export interface CandidateResultRowProps {
    *     `--type-figure-sm`. É o que as Camadas 2 e 3 do ADR-0017
    *     (`<CandidateRanking>`, `<MinorCandidatesList>`) e as duas rotas de UF
    *     usam hoje.
-   *   `"kit"` — o `CandidateRow` do protótipo, medido contra ele em
-   *     2026-09-09: `<PartyTag size="sm">` no lugar do texto puro, votos por
-   *     extenso ("15.240.321 votos") e percentuais em 18px
-   *     (`CandidateRow.jsx:17,20`). Usado pela lista do `<ResultPanel>`.
+   *   `"kit"` — a lista do `<ResultPanel>`, e SÓ dela. 🔴 **Desde 2026-09-27
+   *     é a versão D do protótipo** (`docs/design-system/prototipos/
+   *     apuracao-2026-09-27/`, decisão do dono): foto, "PARTIDO – nº", nome
+   *     em caixa alta, percentual grande na cor de texto do partido, barra e
+   *     votos — desenhada como CARTÃO quando a linha é a 1ª ou a 2ª da lista e
+   *     como LINHA do 3º em diante, pela posição (`CandidateResultRow.module.css`).
+   *     Ver {@link LinhaPainel}. Não tem número de colocação à esquerda nem
+   *     `compact`: as duas coisas saíram com a versão D.
    *
    * O default fica em `"densa"` de propósito: trocá-lo mudaria quatro telas
    * que não estão no escopo desta passada.
@@ -197,6 +202,18 @@ export interface CandidateResultRowProps {
    * etiqueta.
    */
   destino?: EdgeDestinoVoto;
+  /**
+   * **Só `variant="kit"`.** O número na urna — o `id` da candidatura
+   * (ADR-0042: em Presidente e Governador é o número do partido; em Senador,
+   * três dígitos). Sai ao lado da sigla, "PT – 13". Ausente ⇒ só a sigla.
+   */
+  numero?: number;
+  /**
+   * **Só `variant="kit"`.** O selo em pílula de cada base, já decidido por
+   * quem monta a lista (`selosDaBase`, `lib/utils/selo-resultado.ts`). Cada um
+   * sai sob `data-view-only` da sua base — nunca os dois ao mesmo tempo.
+   */
+  selos?: { parcial?: ReactNode; proj?: ReactNode };
 }
 
 /**
@@ -469,11 +486,9 @@ function deltaGlyph(delta: number): string {
  */
 function LinhaSemPercentual({
   votos,
-  kit,
   numeroStyle,
 }: {
   votos: number | null | undefined;
-  kit: boolean;
   numeroStyle: CSSProperties;
 }) {
   const temVotos = typeof votos === "number" && Number.isFinite(votos) && votos >= 0;
@@ -483,7 +498,7 @@ function LinhaSemPercentual({
         {temVotos ? (
           <>
             <div style={{ ...numeroStyle, color: "var(--text-primary)" }}>
-              {kit ? formatVotes(votos) : formatVotesCompact(votos)}
+              {formatVotesCompact(votos)}
             </div>
             <div style={{ ...KICKER, color: "var(--text-muted)", marginTop: 3 }}>votos</div>
           </>
@@ -493,6 +508,224 @@ function LinhaSemPercentual({
     </>
   );
 }
+
+/**
+ * Largura da marca da projeção na versão D, em px — o `3px` de `.marca` em
+ * `CandidateResultRow.module.css`. Precisa concordar com ele pelo mesmo motivo
+ * de {@link MARCADOR_LARGURA_PX}: é o teto do `left`, que impede a marca de uma
+ * projeção de 100% de sair da barra e virar rolagem lateral da página.
+ */
+const MARCA_PAINEL_LARGURA_PX = 3;
+
+type LinhaPainelProps = Pick<
+  CandidateResultRowProps,
+  | "nome"
+  | "partido"
+  | "cor"
+  | "pctAtual"
+  | "pctProjetado"
+  | "votos"
+  | "avatar"
+  | "destino"
+  | "numero"
+  | "selos"
+>;
+
+/**
+ * Uma candidatura da lista do `<ResultPanel>` — versão D (2026-09-27).
+ *
+ * UMA marcação que vira CARTÃO (1ª e 2ª da lista) ou LINHA (3ª em diante) pela
+ * posição do `<li>` — ver o cabeçalho de `CandidateResultRow.module.css`, que
+ * explica por que não há dois desenhos no DOM.
+ *
+ * ## Os números, por base (ADR-0029 § 7 + decisão de 20/09, 2ª rodada)
+ *
+ * | | grande | pequeno | barra | marca |
+ * |---|---|---|---|---|
+ * | **Parcial** | apurado | — | apurado | nenhuma |
+ * | **Projeção** | projetado | "apurado X%" | apurado | projetado |
+ *
+ * O número projetado mora SÓ dentro de `data-view-only="proj"` — `display:
+ * none` tira da tela e da árvore de acessibilidade ao mesmo tempo, então a
+ * visão Parcial não mostra nem anuncia leitura nenhuma do modelo.
+ *
+ * ## Cor
+ *
+ * Duas custom properties por linha, e só elas inline: `--cor-base` (o
+ * preenchimento da barra, cor base do partido) e `--cor-texto` (o percentual
+ * grande, `--party-<x>-text`, ≥ 4,5:1 nas duas superfícies — a base reprova
+ * como texto em PSOL, PSB, NOVO e Outros). As duas saem da SIGLA
+ * (`candidateColor`/`candidateMarkerColor`), nunca do `cor` do payload, que é
+ * cor por colocação (constituição § 2: "não muda por rank").
+ *
+ * ## Anulada (ADR-0053, emenda "opção A")
+ *
+ * "—" no lugar do percentual, nas duas bases; só os votos; trilho vazio, sem
+ * preenchimento nem marca; nenhum selo (quem monta a lista não passa selo para
+ * ela). A etiqueta "Anulado" vem do `<DestinoEtiqueta>`, ao lado do nome.
+ */
+function LinhaPainel({
+  nome,
+  partido,
+  cor,
+  pctAtual,
+  pctProjetado,
+  votos,
+  avatar,
+  destino,
+  numero,
+  selos,
+}: LinhaPainelProps) {
+  const atual = clampPct(pctAtual);
+  const projetado = clampPct(pctProjetado);
+  const semPercentual = !exibePercentual({ destino });
+  const temVotos = typeof votos === "number" && Number.isFinite(votos) && votos >= 0;
+  const sigla = siglaExibicao(partido);
+  const identificacao =
+    typeof numero === "number" && Number.isFinite(numero) ? `${sigla} – ${numero}` : sigla;
+
+  return (
+    <div
+      className={s.linha}
+      data-result-row=""
+      data-testid="candidate-result-row"
+      style={
+        {
+          "--cor-base": cor,
+          "--cor-texto": candidateMarkerColor(partido),
+        } as CSSProperties
+      }
+    >
+      {avatar ? (
+        <CandidateAvatar
+          className={s.foto}
+          eager={avatar.eager}
+          fotoUrl={avatar.fotoUrl}
+          height={48}
+          nome={nome}
+          responsive={false}
+          semEstiloInline
+          width={48}
+        />
+      ) : null}
+
+      <div className={s.id}>
+        <div className={s.partido}>{identificacao}</div>
+        <div className={s.nome}>
+          <span data-testid="candidate-result-name">{nome}</span>
+          {destino === "anulado" || destino === "sub_judice" ? " " : null}
+          <DestinoEtiqueta destino={destino} />
+        </div>
+      </div>
+
+      <div className={s.num}>
+        {semPercentual ? (
+          <div
+            aria-hidden="true"
+            className={`${s.pct} ${s.pctNulo}`}
+            data-testid="result-pct-anulada"
+          >
+            —
+          </div>
+        ) : (
+          <>
+            {/* Projeção: o projetado grande, o apurado pequeno embaixo. */}
+            <div data-view-only="proj">
+              <div className={s.pct}>
+                <span className="sr-only">projeção </span>
+                {formatPercent(projetado, 1)}
+              </div>
+              <div className={s.sub}>apurado {formatPercent(atual, 1)}</div>
+            </div>
+            {/* Parcial: só o apurado. */}
+            <div className={s.pct} data-view-only="parcial">
+              <span className="sr-only">apurado </span>
+              {formatPercent(atual, 1)}
+            </div>
+          </>
+        )}
+      </div>
+
+      {temVotos ? (
+        <div
+          className={s.votos}
+          data-testid={semPercentual ? "candidate-result-votos-anulada" : undefined}
+        >
+          {formatVotes(votos)} votos
+          <span className={s.apurados}> apurados</span>
+        </div>
+      ) : null}
+
+      {/* Barra: o preenchimento é SEMPRE o apurado; a marca preta é a projeção
+          e só existe na visão de Projeção. Duas caixas pelo motivo de
+          {@link MARCADOR_SOBRA_PX}: a marca é irmã do recorte, nunca filha.
+          `aria-hidden` porque o mesmo dado já está em texto logo acima. */}
+      <div aria-hidden="true" className={s.barra} data-testid="result-bar">
+        <div className={s.clip} data-testid="result-bar-clip">
+          {semPercentual ? null : (
+            <div
+              className={s.fill}
+              data-marca="parcial"
+              data-testid="result-bar-fill"
+              style={{ width: `${atual}%` }}
+            />
+          )}
+        </div>
+        {!semPercentual && marcadorVisivel(projetado) ? (
+          <div
+            className={s.marca}
+            data-marca="proj"
+            data-testid="result-bar-marker"
+            data-view-only="proj"
+            style={{ left: `min(${projetado}%, calc(100% - ${MARCA_PAINEL_LARGURA_PX}px))` }}
+          />
+        ) : null}
+      </div>
+
+      {/* Projeção primeiro: é a base default, a da ordem do DOM. */}
+      {selos?.proj != null ? (
+        <div className={s.selo} data-view-only="proj">
+          {selos.proj}
+        </div>
+      ) : null}
+      {selos?.parcial != null ? (
+        <div className={s.selo} data-view-only="parcial">
+          {selos.parcial}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * A pílula escura do selo (versão D). Exportada para o `<ResultPanel>` e para
+ * o `<VagaBadge>` desenharem o MESMO objeto. `pedacos` quebram entre si, nunca
+ * por dentro — ver `.pilula` no módulo.
+ */
+export function SeloPilula({ texto, testId }: { texto: string; testId?: string }) {
+  const pedacos = texto.split(" · ");
+  return (
+    <span className={s.pilula} data-testid={testId}>
+      {pedacos.map((p, i) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: pedaços de um texto fixo, sem reordenação.
+        <Fragment key={i}>
+          {/* O espaço ENTRE os pedaços é o único ponto de quebra; o "·" fica
+              colado ao pedaço anterior. O texto do nó continua sendo o rótulo
+              exato ("2º turno · projeção"), para busca e leitor de tela. */}
+          {i > 0 ? " " : null}
+          <span className={s.pedaco}>{i < pedacos.length - 1 ? `${p} ·` : p}</span>
+        </Fragment>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * A classe da `<ol>` da lista do `<ResultPanel>`. Cada `<li>` de anulada leva
+ * `data-anulado` — é o que a folha lê para saber quem fecha o cartão único
+ * quando a lista está recolhida (ver o cabeçalho do módulo).
+ */
+export const LISTA_PAINEL_CLASSES = { lista: s.lista } as const;
 
 export function CandidateResultRow({
   rank,
@@ -507,13 +740,30 @@ export function CandidateResultRow({
   variant = "densa",
   avatar,
   destino,
+  numero,
+  selos,
 }: CandidateResultRowProps) {
+  if (variant === "kit") {
+    return (
+      <LinhaPainel
+        avatar={avatar}
+        cor={cor}
+        destino={destino}
+        nome={nome}
+        numero={numero}
+        partido={partido}
+        pctAtual={pctAtual}
+        pctProjetado={pctProjetado}
+        selos={selos}
+        votos={votos}
+      />
+    );
+  }
   const atual = clampPct(pctAtual);
   const projetado = clampPct(pctProjetado);
   const atualLabel = formatPercent(atual, 1);
   const projLabel = formatPercent(projetado, 1);
   const glyph = deltaGlyph(projetado - atual);
-  const kit = variant === "kit";
   // Emenda "opção A" — ver a docstring de `destino`. Um booleano só, lido por
   // todos os pontos que desenham percentual (as duas colunas e a barra).
   const semPercentual = !exibePercentual({ destino });
@@ -521,14 +771,9 @@ export function CandidateResultRow({
   // os traços leem daqui — é o que garante que "a barra desenha X" e "o traço
   // marca o oposto de X" continuem falando dos mesmos dois números.
 
-  // `CandidateRow.jsx:20` — 18px na linha normal, `--type-figure-sm` na
-  // compacta. Medido contra o protótipo em 09/09: a linha densa desta base
-  // saía a 13px onde o kit tem 18px, e era a única diferença tipográfica
-  // restante entre as duas telas.
-  const numeroStyle: CSSProperties =
-    kit && !compact
-      ? { font: "var(--type-figure)", fontSize: 18 }
-      : { font: "var(--type-figure-sm)" };
+  // A linha densa usa `--type-figure-sm` nas duas densidades. (O ramo de 18px
+  // era da variante `kit`, que desde 2026-09-27 é {@link LinhaPainel}.)
+  const numeroStyle: CSSProperties = { font: "var(--type-figure-sm)" };
 
   return (
     <div
@@ -640,30 +885,23 @@ export function CandidateResultRow({
               {nome}
             </span>
             <DestinoEtiqueta destino={destino} />
-            {kit ? (
-              <span className="flex-none">
-                <PartyTag color={cor} sigla={partido} size="sm" />
-              </span>
-            ) : (
-              <span className="flex-none" style={{ ...KICKER, color: "var(--text-secondary)" }}>
-                {/* Desenhado ⇒ abreviado (2026-09-19). Este é o ramo SEM
-                    `<PartyTag>` — o do kit já abrevia dentro do átomo —, e é
-                    exatamente a linha cujo estouro de largura (medido logo
-                    acima: 174 px pedidos, 49 px dados) motivou a abreviação. */}
-                {siglaExibicao(partido)}
-              </span>
-            )}
+            <span className="flex-none" style={{ ...KICKER, color: "var(--text-secondary)" }}>
+              {/* Desenhado ⇒ abreviado (2026-09-19) — é exatamente a linha
+                  cujo estouro de largura (medido logo acima: 174 px pedidos,
+                  49 px dados) motivou a abreviação. */}
+              {siglaExibicao(partido)}
+            </span>
           </div>
           {votos != null && !compact && !semPercentual ? (
             <div style={{ font: "var(--type-data)", color: "var(--text-muted)", marginTop: 2 }}>
-              {kit ? formatVotes(votos) : formatVotesCompact(votos)} votos
+              {formatVotesCompact(votos)} votos
             </div>
           ) : null}
         </div>
       </div>
 
       {semPercentual ? (
-        <LinhaSemPercentual votos={votos} kit={kit} numeroStyle={numeroStyle} />
+        <LinhaSemPercentual votos={votos} numeroStyle={numeroStyle} />
       ) : (
         <>
           {/* Parcial. `data-view-cell` é lido pela cascata do shell — o número

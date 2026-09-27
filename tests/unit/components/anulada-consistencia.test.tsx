@@ -437,7 +437,9 @@ describe("ADR-0053 — anulada no topo: todas as superfícies apontam para o lí
     const anula = linhas[3];
     expect(anula?.getAttribute("style")).toContain("--ord-parcial:3");
     expect(anula?.querySelector('[data-testid="destino-etiqueta"]')?.textContent).toBe(", Anulado");
-    expect(anula?.querySelector("[aria-hidden='true']")?.textContent).toBe("—");
+    // Versão D (2026-09-27): não há mais número de colocação; o "—" fica no
+    // lugar do PERCENTUAL, nas duas bases.
+    expect(anula?.querySelector('[data-testid="result-pct-anulada"]')?.textContent).toBe("—");
     // Margem da figura do topo: VALIDA − JUDICE, nunca contra a anulada.
     const margem = doc.querySelector('[data-testid="result-margem-proj"]')?.textContent ?? "";
     expect(margem).toContain("Margem VALIDA");
@@ -447,11 +449,14 @@ describe("ADR-0053 — anulada no topo: todas as superfícies apontam para o lí
     expect(doc.querySelector('[data-testid="result-nota-anuladas"]')?.textContent).toContain(
       "os percentuais são calculados sobre os votos em disputa",
     );
-    expect(anula?.querySelector('[data-testid="result-bar"]')).toBeNull();
+    // Versão D: a barra fica, VAZIA — o trilho sem preenchimento nem marca.
+    expect(anula?.querySelector('[data-testid="result-bar"]')).not.toBeNull();
+    expect(anula?.querySelector('[data-testid="result-bar-fill"]')).toBeNull();
+    expect(anula?.querySelector('[data-testid="result-bar-marker"]')).toBeNull();
     expect(anula?.textContent).not.toMatch(/%/);
     expect(
       anula?.querySelector('[data-testid="candidate-result-votos-anulada"]')?.textContent,
-    ).toBe("42.000votos");
+    ).toBe("42.000 votos apurados");
   });
 
   it("balão do mapa: VALIDA primeiro, ANULA depois das que competem, com etiqueta", () => {

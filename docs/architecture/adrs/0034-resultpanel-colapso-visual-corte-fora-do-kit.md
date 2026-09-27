@@ -35,6 +35,14 @@ frente de trabalho — fazer a UI seguir o protótipo do kit Atlas Menna à risc
 registradas juntas, como o ADR-0033 já fez para D15–D17.
 
 > **Nota 2026-09-27 (decisão do dono, [ADR-0022](0022-participacao-governador-fora-do-dom.md#status) `deprecated`).** A exceção registrada abaixo (D23, tabela de poda) e nas Consequências — `/governador` mantém `<ProjectionThermometers variant="participacao-only">`, protegida pelo ADR-0022, como única rota a não receber `<ResultPanel>` mas ainda assim distinta por reter esse bloco — deixou de existir: o dono removeu o bloco de participação inteiro dessa rota, nos dois estados do payload. O ADR-0022 passou a `status: deprecated` (suas regras não têm mais objeto). Isto não reabre o que este ADR decidiu em D21/D22/D23 nas outras três rotas, nem a razão pela qual `/governador` não recebeu `<ResultPanel>` (seção "Por que `/governador` não recebeu o `<ResultPanel>`", intocada) — apenas remove a última instância ativa de `<ProjectionThermometers>` no produto.
+>
+> **Nota 2026-09-27 (emenda parcial, [ADR-0055](0055-resultpanel-top2-cartoes-versao-d.md)).** D22
+> muda de forma: a lista completa de candidatos por rank/sigla/votos/PARCIAL/PROJ dá lugar aos
+> dois primeiros da base ativa em cartões lado a lado + os demais em um único cartão em linhas
+> (versão D do protótipo de 2026-09-27). As duas `<Figure>` ("Apurado", "Margem") e a
+> `<VoteBar marker={50}>` que D22 introduziu acima da lista **ficam como estão**. D21 (colapso
+> visual, todos os candidatos sempre no DOM) e D23 (poda de blocos sem contraparte no protótipo)
+> não são tocados por essa emenda.
 
 ## Contexto
 

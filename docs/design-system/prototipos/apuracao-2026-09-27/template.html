@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protótipos da apuração</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Spectral:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper-0:#fbfbfc; --paper-1:#f3f4f6; --paper-2:#e9ebee; --paper-3:#dde0e4;
+  --ink-0:#14171b; --ink-1:#2a2f36; --ink-2:#5b636e; --ink-3:#8c949e;
+  --rule:#c9cdd3; --accent:#c98a2b; --accent-text:#8e5d18; --accent-soft:#f4e7cf; --accent-ink:#3f2a08;
+  --status-final:#2f7d4f;
+  --text-primary:var(--ink-0); --text-secondary:var(--ink-2); --text-faint:#626a75;
+  --serif:"Spectral",Georgia,serif; --sans:"Archivo",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.pct-sub{white-space:nowrap}
+body{margin:0;background:#d9dce1;font-family:var(--sans);color:var(--text-primary)}
+/* ---------- barra de controle do protótipo (não faz parte do design) ---------- */
+.ctl{position:sticky;top:0;z-index:10;background:#14171b;color:#fbfbfc;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:13px}
+.ctl b{font-weight:600;color:#c9cdd3;margin-right:6px}
+.seg{display:inline-flex;border:1px solid #5b636e;border-radius:6px;overflow:hidden}
+.seg button{background:transparent;color:#fbfbfc;border:0;padding:6px 10px;font:inherit;cursor:pointer}
+.seg button[aria-pressed=true]{background:#fbfbfc;color:#14171b;font-weight:600}
+.stage{display:flex;justify-content:center;padding:24px 12px 60px}
+.frame{background:var(--paper-1);box-shadow:0 0 0 1px #b9bec6,0 10px 40px rgba(0,0,0,.18);min-height:600px}
+.nota{max-width:720px;margin:0 auto 24px;padding:0 16px;font-size:13px;color:#2a2f36;line-height:1.5}
+.nota h2{font-family:var(--serif);font-size:20px;margin:0 0 6px}
+
+/* ---------- partes comuns ---------- */
+.painel{padding:16px}
+.kicker{font:600 11px/1.2 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary)}
+.titulo{font-family:var(--serif);font-weight:600;margin:4px 0 0}
+.apur{font:500 13px var(--mono);color:var(--text-secondary);white-space:nowrap}
+.av{position:relative;flex:none;border-radius:50%}
+.av img,.av .ini{position:absolute;border-radius:50%;object-fit:cover;object-position:center top;background:var(--paper-2)}
+.av .ini{display:flex;align-items:center;justify-content:center;font:600 14px var(--sans);color:var(--ink-2)}
+.av svg{position:absolute;inset:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.etq{display:inline-block;font:600 10px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--ink-0);border-radius:3px;padding:3px 5px;vertical-align:middle;margin-left:6px}
+.mais{display:block;width:100%;margin-top:12px;min-height:44px;background:transparent;border:1px solid var(--rule);border-radius:8px;font:600 14px var(--sans);color:var(--text-primary);cursor:pointer}
+.nota-painel{font-size:12px;color:var(--text-secondary);margin:12px 0 0;line-height:1.45}
+
+/* ================= VERSÃO A — fiel ao exemplo ================= */
+.vA .cab{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.vA .titulo{font-family:var(--sans);font-weight:800;font-size:26px;letter-spacing:-.01em}
+.vA .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.vA .card{background:#fff;border-radius:16px;box-shadow:0 1px 2px rgba(20,23,27,.06),0 4px 14px rgba(20,23,27,.06);padding:14px 12px 14px}
+.vA .card .topo{display:flex;justify-content:space-between;align-items:flex-start;gap:6px}
+.vA .card .pct{font:700 26px/1 var(--mono);letter-spacing:-.02em;text-align:right}
+.vA .card .pct-sub{font:500 11px/1.3 var(--mono);color:var(--text-secondary);text-align:right;margin-top:4px}
+.vA .card .votos{font:500 14px/1.2 var(--mono);color:var(--ink-1);text-align:right;margin-top:6px}
+.vA .card .votos small{display:block;font:400 11px var(--sans);color:var(--text-faint)}
+.vA .card .partido{font:500 12px var(--sans);color:var(--ink-2);margin-top:10px;letter-spacing:.02em}
+.vA .card .nome{font:800 17px/1.15 var(--sans);text-transform:uppercase;margin-top:2px;overflow-wrap:break-word;hyphens:manual}
+.vA .pill{display:inline-block;white-space:nowrap;margin-top:10px;font:700 11px/1 var(--sans);padding:7px 10px;border-radius:999px;background:var(--ink-0);color:var(--paper-0)}
+.vA .pill.fraca{background:var(--paper-2);color:var(--ink-1)}
+.vA .lista{background:#fff;border-radius:16px;box-shadow:0 1px 2px rgba(20,23,27,.06),0 4px 14px rgba(20,23,27,.06);padding:4px 14px}
+.vA .lin{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--paper-2)}
+.vA .lin:last-child{border-bottom:0}
+.vA .lin .partido{font:500 12px var(--sans);color:var(--ink-2)}
+.vA .lin .nome{font:800 15px/1.15 var(--sans);text-transform:uppercase;overflow-wrap:break-word;hyphens:manual}
+.vA .lin .dir{text-align:right}
+.vA .lin .votos{font:500 12px var(--mono);color:var(--ink-2)}
+.vA .lin .pct{font:700 20px/1.1 var(--mono);letter-spacing:-.02em}
+.vA .lin .pct-sub{font:500 11px var(--mono);color:var(--text-secondary)}
+
+/* ================= VERSÃO B — editorial AtlasMenna ================= */
+.vB .cab{border-top:3px double var(--ink-0);padding-top:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:flex-end}
+.vB .titulo{font-size:28px;line-height:1.05}
+.vB .duo{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--ink-0);border-bottom:1px solid var(--ink-0);margin-bottom:6px}
+.vB .card{padding:14px 12px 14px 0}
+.vB .card+.card{padding:14px 0 14px 12px;border-left:1px solid var(--rule)}
+.vB .card .linha1{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.vB .card .nome{font:700 17px/1.15 var(--serif);overflow-wrap:break-word;hyphens:manual}
+.vB .card .partido{font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;margin-top:1px}
+.vB .card .pct{font:600 40px/1 var(--mono);letter-spacing:-.04em;margin-top:12px}
+.vB .card .pct-sub{font:500 12px var(--mono);color:var(--text-secondary);margin-top:4px}
+.vB .card .barra{height:10px;background:var(--paper-2);margin-top:10px;position:relative}
+.vB .card .barra i{position:absolute;inset:0 auto 0 0}
+.vB .card .votos{font:500 12px var(--mono);color:var(--ink-2);margin-top:6px}
+.vB .selo{display:inline-block;margin-top:10px;font:600 10px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border:1px solid var(--accent-text);color:var(--accent-text);border-radius:999px}
+.vB .lin{display:grid;grid-template-columns:1.4rem auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule)}
+.vB .lin .ord{font:500 13px var(--mono);color:var(--ink-2)}
+.vB .lin .nome{font:600 16px/1.2 var(--sans);overflow-wrap:break-word;hyphens:manual}
+.vB .lin .partido{font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.vB .lin .barra{height:6px;background:var(--paper-2);margin-top:6px;position:relative}
+.vB .lin .barra i{position:absolute;inset:0 auto 0 0}
+.vB .lin .dir{text-align:right}
+.vB .lin .pct{font:600 22px/1 var(--mono);letter-spacing:-.03em}
+.vB .lin .pct-sub,.vB .lin .votos{font:500 11px var(--mono);color:var(--text-secondary);margin-top:3px}
+
+/* ================= VERSÃO C — placar compacto ================= */
+.vC .cab{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
+.vC .titulo{font-size:24px}
+.vC .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.vC .card{background:var(--paper-0);border:1px solid var(--rule);border-radius:10px;overflow:hidden;position:relative;padding:12px 12px 12px 18px}
+.vC .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--cor)}
+.vC .card .linha1{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.vC .card .nome{font:700 15px/1.15 var(--sans);overflow-wrap:break-word;hyphens:manual}
+.vC .card .partido{font:600 11px var(--mono);margin-top:2px}
+.vC .card .pct{font:700 34px/1 var(--mono);letter-spacing:-.04em;margin-top:12px}
+.vC .card .pct-sub{font:500 11px var(--mono);color:var(--text-secondary);margin-top:4px}
+.vC .card .votos{font:500 12px var(--mono);color:var(--ink-2);margin-top:2px}
+.vC .chip{display:inline-block;margin-top:10px;font:700 11px/1 var(--sans);padding:6px 9px;border-radius:6px}
+.vC .lista{background:var(--paper-0);border:1px solid var(--rule);border-radius:10px;padding:4px 10px}
+.vC .lin{position:relative;display:grid;grid-template-columns:1.3rem minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--paper-2)}
+.vC .lin:last-child{border-bottom:0}
+.vC .lin .ord{font:500 12px var(--mono);color:var(--ink-2)}
+.vC .lin .meio{position:relative;padding:4px 8px;border-radius:4px;overflow:hidden}
+.vC .lin .meio i{position:absolute;inset:0 auto 0 0;opacity:.22}
+.vC .lin .meio span{position:relative}
+.vC .lin .nome{font:600 14px/1.2 var(--sans);overflow-wrap:break-word;hyphens:manual}
+.vC .lin .partido{font:600 11px var(--mono);margin-left:6px}
+.vC .lin .dir{text-align:right}
+.vC .lin .pct{font:700 17px/1 var(--mono);letter-spacing:-.02em}
+.vC .lin .pct-sub,.vC .lin .votos{font:500 10px var(--mono);color:var(--text-secondary);margin-top:2px}
+
+/* ============ barra comum às versões D e E ============ */
+.foto{position:relative;flex:none;border-radius:50%;overflow:hidden;background:var(--paper-2);box-shadow:0 0 0 1px var(--paper-3)}
+.foto img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top}
+.foto .ini{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:600 14px var(--sans);color:var(--ink-2)}
+.trilho{position:relative;background:var(--paper-2);border-radius:999px;overflow:visible}
+.trilho .fill{position:absolute;inset:0 auto 0 0;border-radius:999px}
+.trilho .tick{position:absolute;top:-4px;bottom:-4px;width:3px;margin-left:-1.5px;background:var(--ink-0);border-radius:2px}
+.trilho .meta{position:absolute;top:-3px;bottom:-3px;left:50%;width:0;border-left:1px dashed var(--ink-2)}
+
+/* ================= VERSÃO D — cartões do exemplo, com barras ================= */
+.vD .cab{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.vD .titulo{font-family:var(--sans);font-weight:800;font-size:26px;letter-spacing:-.01em}
+.vD .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.vD .card{background:#fff;border-radius:16px;box-shadow:0 1px 2px rgba(20,23,27,.06),0 4px 14px rgba(20,23,27,.06);padding:14px 12px}
+.vD .card .topo{display:flex;align-items:center;gap:10px}
+.vD .card .partido{font:500 12px var(--sans);color:var(--ink-2);letter-spacing:.02em}
+.vD .card .nome{font:800 16px/1.15 var(--sans);text-transform:uppercase;margin-top:2px;overflow-wrap:break-word}
+.vD .card .pct{font:700 32px/1 var(--mono);letter-spacing:-.03em;margin-top:14px}
+.vD .card .pct-sub{font:500 11px var(--mono);color:var(--text-secondary);margin-top:4px}
+.vD .card .trilho{height:12px;margin-top:10px}
+.vD .card .votos{font:500 12px var(--mono);color:var(--ink-1);margin-top:8px}
+.vD .pill{display:inline-block;white-space:nowrap;margin-top:10px;font:700 11px/1 var(--sans);padding:7px 10px;border-radius:999px;background:var(--ink-0);color:var(--paper-0)}
+.vD .lista{background:#fff;border-radius:16px;box-shadow:0 1px 2px rgba(20,23,27,.06),0 4px 14px rgba(20,23,27,.06);padding:4px 14px}
+.vD .lin{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:12px;row-gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid var(--paper-2)}
+.vD .lin:last-child{border-bottom:0}
+.vD .lin .partido{font:500 12px var(--sans);color:var(--ink-2)}
+.vD .lin .nome{font:800 15px/1.15 var(--sans);text-transform:uppercase;overflow-wrap:break-word}
+.vD .lin .dir{text-align:right}
+.vD .lin .pct{font:700 20px/1.1 var(--mono);letter-spacing:-.02em}
+.vD .lin .pct-sub,.vD .lin .votos{font:500 11px var(--mono);color:var(--text-secondary)}
+.vD .lin .trilho{grid-column:2 / -1;height:8px}
+
+/* ================= VERSÃO E — barra de corrida, apurado + marca da projeção ================= */
+.vE .cab{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.vE .titulo{font-size:26px}
+.vE .duo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.vE .card{background:var(--paper-0);border:1px solid var(--rule);border-radius:12px;padding:12px}
+.vE .card .topo{display:flex;align-items:center;gap:8px}
+.vE .card .nome{font:700 15px/1.15 var(--sans);overflow-wrap:break-word}
+.vE .card .partido{font:600 11px var(--mono);margin-top:2px}
+.vE .card .pct{font:700 34px/1 var(--mono);letter-spacing:-.04em;margin-top:12px}
+.vE .card .pct-sub{font:500 11px var(--mono);color:var(--text-secondary);margin-top:4px}
+.vE .card .trilho{height:14px;margin-top:10px}
+.vE .card .votos{font:500 11px var(--mono);color:var(--ink-2);margin-top:8px}
+.vE .selo{display:inline-block;white-space:nowrap;margin-top:10px;font:600 10px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border:1px solid var(--ink-0);border-radius:999px}
+.vE .lista{border-top:1px solid var(--ink-0)}
+.vE .lin{display:grid;grid-template-columns:1.4rem auto minmax(0,1fr) auto;column-gap:10px;row-gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule)}
+.vE .lin .ord{font:500 13px var(--mono);color:var(--ink-2)}
+.vE .lin .nome{font:600 16px/1.2 var(--sans);overflow-wrap:break-word}
+.vE .lin .partido{font:600 11px var(--mono)}
+.vE .lin .dir{text-align:right}
+.vE .lin .pct{font:700 22px/1 var(--mono);letter-spacing:-.03em}
+.vE .lin .pct-sub{font:500 11px var(--mono);color:var(--text-secondary);margin-top:3px}
+.vE .lin .trilho{grid-column:3 / -1;height:10px}
+.vE .legenda{display:flex;gap:14px;flex-wrap:wrap;font:500 11px var(--sans);color:var(--text-secondary);margin:0 0 10px}
+.vE .legenda i{display:inline-block;vertical-align:middle;margin-right:5px}
+</style>
+</head>
+<body>
+<div class="ctl" role="toolbar" aria-label="Controles do protótipo">
+  <span><b>Versão</b><span class="seg" id="c-versao"></span></span>
+  <span><b>Tela</b><span class="seg" id="c-cargo"></span></span>
+  <span><b>Chave</b><span class="seg" id="c-base"></span></span>
+  <span><b>Largura</b><span class="seg" id="c-larg"></span></span>
+</div>
+<div class="stage"><div class="frame" id="frame"></div></div>
+<div class="nota" id="nota"></div>
+<script>
+const B = __BUNDLE__;
+const FOTO = "https://jbtu251tioj3y57z.public.blob.vercel-storage.com/candidatos/foto";
+// Número na urna ILUSTRATIVO: o simulado usa ids falsos para Governador/Senador.
+const NUM = {PT:13,PL:22,PSD:55,NOVO:30,PSB:40,UP:80,REPUBLICANOS:10,PP:11,PODE:20,MDB:15,PSDB:45,PDT:12,PSOL:50,
+  AVANTE:70,CIDADANIA:23,DC:27,AGIR:36,PCB:21,PCO:29,PSTU:16,REDE:18,"MISSÃO":14,DEMOCRATA:25,"UNIÃO":44,SOLIDARIEDADE:77};
+const VERSOES = {A:"A · Fiel ao exemplo", B:"B · Editorial", C:"C · Placar compacto", D:"D · Exemplo com barras", E:"E · Barra de corrida"};
+const CARGOS = {"pres-br":"Presidente · Brasil","pres-sp":"Presidente · SP","gov-sp":"Governador · SP","sen-sp":"Senador · SP"};
+const st = {versao:"A", cargo:"pres-br", base:"proj", larg:375};
+try{ Object.assign(st, JSON.parse(localStorage.getItem("proto-apur")||"{}")); }catch(e){}
+
+const slug = p => (p||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const cor = p => B.cores[slug(p)] || B.cores.outros;
+const pct = v => (v==null?"—":v.toLocaleString("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1})+"%");
+const vot = v => (v==null?"—":Math.round(v).toLocaleString("pt-BR"));
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function numero(c, cargo, i){
+  const n = NUM[c.partido];
+  if (!n) return "";
+  return cargo.startsWith("sen") ? String(n*10 + (i%9)+1) : String(n);
+}
+
+function ordenar(dados){
+  const k = st.base==="proj" ? "pct_projetado" : "pct_atual";
+  const anulada = c => c.destino==="anulado";
+  return [...dados.cands].sort((a,b)=> (anulada(a)-anulada(b)) || (b[k]??-1)-(a[k]??-1));
+}
+
+// Selo: sempre diz DE QUE BASE vem (constituição § 1).
+function selo(dados, lista, idx){
+  const onde = st.base==="proj" ? "projeção" : "na parcial";
+  if (idx>1) return null;
+  if (dados.vagas===2) return st.base==="proj" ? "Vaga projetada" : "Vaga na parcial";
+  const k = st.base==="proj" ? "pct_projetado" : "pct_atual";
+  const lider = lista[0];
+  if ((lider[k]??0) > 50) return idx===0 ? (st.base==="proj"?"Vence no 1º turno · projeção":"Venceria no 1º turno · na parcial") : null;
+  return "2º turno · " + onde;
+}
+
+function foto(c, uf, px){
+  const ini = (c.nome||"?").split(/\s+/).map(w=>w[0]).slice(0,2).join("");
+  const img = c.sqcand ? `<img alt="" src="${FOTO}/${uf}/${c.sqcand}.jpg" onerror="this.remove()">` : "";
+  return `<span class="foto" style="width:${px}px;height:${px}px" aria-hidden="true"><span class="ini">${esc(ini)}</span>${img}</span>`;
+}
+// Barra: o preenchimento é SEMPRE o apurado (regra do site); na Projeção, uma marca preta mostra onde a projeção põe o candidato.
+function trilho(c, escala, meta){
+  const co = cor(c.partido);
+  if (c.destino==="anulado") return `<div class="trilho" aria-hidden="true"></div>`;
+  const w = v => Math.max(0, Math.min(100, (v||0)*escala));
+  const tick = st.base==="proj" && c.pct_projetado!=null ? `<span class="tick" style="left:${w(c.pct_projetado)}%"></span>` : "";
+  return `<div class="trilho" aria-hidden="true"><span class="fill" style="width:${w(c.pct_atual)}%;background:${co.base}"></span>${meta?'<span class="meta"></span>':""}${tick}</div>`;
+}
+function avatar(c, uf, px, pctArco){
+  const co = cor(c.partido);
+  const r = px/2, sw = Math.max(3, Math.round(px/22)), rr = r - sw/2, circ = 2*Math.PI*rr;
+  const f = Math.max(0, Math.min(100, pctArco||0))/100;
+  const pad = sw + 3;
+  const ini = (c.nome||"?").split(/\s+/).map(w=>w[0]).slice(0,2).join("");
+  const img = c.sqcand ? `<img alt="" src="${FOTO}/${uf}/${c.sqcand}.jpg" style="inset:${pad}px;width:${px-2*pad}px;height:${px-2*pad}px" onerror="this.remove()">` : "";
+  return `<span class="av" style="width:${px}px;height:${px}px" aria-hidden="true">
+    <span class="ini" style="inset:${pad}px;width:${px-2*pad}px;height:${px-2*pad}px">${esc(ini)}</span>${img}
+    <svg viewBox="0 0 ${px} ${px}"><circle cx="${r}" cy="${r}" r="${rr}" fill="none" stroke="var(--paper-2)" stroke-width="${sw}"/>
+    <circle cx="${r}" cy="${r}" r="${rr}" fill="none" stroke="${co.base}" stroke-width="${sw}" stroke-linecap="round"
+      stroke-dasharray="${(circ*f).toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 ${r} ${r})"/></svg></span>`;
+}
+
+function etq(c){ return c.destino==="sub_judice" ? `<span class="etq">Sub judice</span>` : c.destino==="anulado" ? `<span class="etq">Anulado</span>` : ""; }
+
+// Na Projeção: projetado grande + apurado pequeno. Na Parcial: só o apurado.
+function numeros(c){
+  const anul = c.destino==="anulado";
+  if (anul) return {grande:"—", sub:"sem percentual (anulado)"};
+  if (st.base==="proj") return {grande:pct(c.pct_projetado), sub:`apurado ${pct(c.pct_atual)}`};
+  return {grande:pct(c.pct_atual), sub:""};
+}
+
+function render(){
+  try{ localStorage.setItem("proto-apur", JSON.stringify(st)); }catch(e){}
+  const dados = B.dados[st.cargo];
+  const lista = ordenar(dados);
+  const uf = dados.uf;
+  const frame = document.getElementById("frame");
+  frame.style.width = st.larg+"px";
+  const top2 = lista.slice(0,2), resto = lista.slice(2);
+  const VIS = 5;
+  const baseTxt = st.base==="proj" ? "Projeção" : "Resultado parcial";
+  const cabec = (tituloCls) => `
+    <div class="cab"><div><div class="kicker">${baseTxt} · não oficial</div>
+      <h1 class="titulo ${tituloCls||""}">${esc(dados.titulo)}</h1></div>
+      <div class="apur">${pct(dados.pct_apurado)} apurado</div></div>`;
+  let h = "";
+  const pctArco = c => st.base==="proj" ? c.pct_projetado : c.pct_atual;
+
+  if (st.versao==="A"){
+    h += cabec();
+    h += `<div class="duo">` + top2.map((c,i)=>{ const co=cor(c.partido), n=numeros(c), s=selo(dados,lista,i);
+      return `<article class="card"><div class="topo">${avatar(c,uf,64,pctArco(c))}
+        <div><div class="pct num" style="color:${co.text}">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}
+        <div class="votos">${vot(c.votos_atuais)}<small>votos apurados</small></div></div></div>
+        <div class="partido">${esc(c.partido)}${numero(c,st.cargo,i)?" – "+numero(c,st.cargo,i):""}</div>
+        <div class="nome">${esc(c.nome)}${etq(c)}</div>
+        ${s?`<span class="pill">${s}</span>`:""}</article>`;}).join("") + `</div>`;
+    h += `<div class="lista">` + resto.map((c,j)=>{ const co=cor(c.partido), n=numeros(c);
+      return `<div class="lin" ${j>=VIS?'data-extra hidden':''}>${avatar(c,uf,48,pctArco(c))}
+        <div><div class="partido">${esc(c.partido)}${numero(c,st.cargo,j+2)?" – "+numero(c,st.cargo,j+2):""}</div>
+        <div class="nome">${esc(c.nome)}${etq(c)}</div></div>
+        <div class="dir"><div class="votos">${vot(c.votos_atuais)} votos</div><div class="pct" style="color:${co.text}">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}</div></div>`;}).join("") + `</div>`;
+  }
+
+  if (st.versao==="B"){
+    h += cabec();
+    h += `<div class="duo">` + top2.map((c,i)=>{ const co=cor(c.partido), n=numeros(c), s=selo(dados,lista,i);
+      const larg = Math.min(100, st.base==="proj"?c.pct_projetado:c.pct_atual);
+      return `<article class="card"><div class="linha1">${avatar(c,uf,44,pctArco(c))}<div>
+        <div class="nome">${esc(c.nome)}${etq(c)}</div>
+        <div class="partido" style="color:${co.text}">${esc(c.partido)} · ${numero(c,st.cargo,i)}</div></div></div>
+        <div class="pct num">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}
+        <div class="barra"><i style="width:${larg}%;background:${co.base}"></i></div>
+        <div class="votos">${vot(c.votos_atuais)} votos apurados</div>
+        ${s?`<span class="selo">${s}</span>`:""}</article>`;}).join("") + `</div>`;
+    h += resto.map((c,j)=>{ const co=cor(c.partido), n=numeros(c); const larg=Math.min(100, st.base==="proj"?c.pct_projetado:c.pct_atual);
+      return `<div class="lin" ${j>=VIS?'data-extra hidden':''}><span class="ord">${j+3}º</span>${avatar(c,uf,40,pctArco(c))}
+        <div><div class="nome">${esc(c.nome)}${etq(c)}</div><div class="partido" style="color:${co.text}">${esc(c.partido)} · ${numero(c,st.cargo,j+2)}</div>
+        <div class="barra"><i style="width:${larg}%;background:${co.base}"></i></div></div>
+        <div class="dir"><div class="pct">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}<div class="votos">${vot(c.votos_atuais)} votos</div></div></div>`;}).join("");
+  }
+
+  if (st.versao==="C"){
+    h += cabec();
+    h += `<div class="duo">` + top2.map((c,i)=>{ const co=cor(c.partido), n=numeros(c), s=selo(dados,lista,i);
+      return `<article class="card" style="--cor:${co.base}"><div class="linha1">${avatar(c,uf,40,pctArco(c))}<div>
+        <div class="nome">${esc(c.nome)}${etq(c)}</div><div class="partido" style="color:${co.text}">${esc(c.partido)} ${numero(c,st.cargo,i)}</div></div></div>
+        <div class="pct num">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}
+        <div class="votos">${vot(c.votos_atuais)} votos</div>
+        ${s?`<span class="chip" style="background:${co.chip};color:${co.ink}">${s}</span>`:""}</article>`;}).join("") + `</div>`;
+    h += `<div class="lista">` + resto.map((c,j)=>{ const co=cor(c.partido), n=numeros(c); const larg=Math.min(100,(st.base==="proj"?c.pct_projetado:c.pct_atual)*2);
+      return `<div class="lin" ${j>=VIS?'data-extra hidden':''}><span class="ord">${j+3}º</span>
+        <div class="meio"><i style="width:${larg}%;background:${co.base}"></i><span class="nome">${esc(c.nome)}${etq(c)}</span><span class="partido" style="color:${co.text}">${esc(c.partido)}</span></div>
+        <div class="dir"><div class="pct">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}</div></div>`;}).join("") + `</div>`;
+  }
+
+  if (st.versao==="D"){
+    h += cabec();
+    h += `<div class="duo">` + top2.map((c,i)=>{ const co=cor(c.partido), n=numeros(c), s=selo(dados,lista,i);
+      return `<article class="card"><div class="topo">${foto(c,uf,48)}<div>
+        <div class="partido">${esc(c.partido)}${numero(c,st.cargo,i)?" – "+numero(c,st.cargo,i):""}</div>
+        <div class="nome">${esc(c.nome)}${etq(c)}</div></div></div>
+        <div class="pct num" style="color:${co.text}">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}
+        ${trilho(c,1,false)}
+        <div class="votos">${vot(c.votos_atuais)} votos apurados</div>
+        ${s?`<span class="pill">${s}</span>`:""}</article>`;}).join("") + `</div>`;
+    h += `<div class="lista">` + resto.map((c,j)=>{ const co=cor(c.partido), n=numeros(c);
+      return `<div class="lin" ${j>=VIS?'data-extra hidden':''}>${foto(c,uf,44)}
+        <div><div class="partido">${esc(c.partido)}${numero(c,st.cargo,j+2)?" – "+numero(c,st.cargo,j+2):""}</div>
+        <div class="nome">${esc(c.nome)}${etq(c)}</div></div>
+        <div class="dir"><div class="pct" style="color:${co.text}">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}<div class="votos">${vot(c.votos_atuais)} votos</div></div>
+        ${trilho(c,1,false)}</div>`;}).join("") + `</div>`;
+  }
+
+  if (st.versao==="E"){
+    h += cabec();
+    const meta = dados.vagas===1;
+    h += `<p class="legenda"><span><i style="width:14px;height:8px;border-radius:4px;background:var(--ink-3)"></i>apurado</span>`
+       + (st.base==="proj" ? `<span><i style="width:3px;height:12px;background:var(--ink-0)"></i>projeção</span>` : "")
+       + (meta ? `<span><i style="width:0;height:12px;border-left:1px dashed var(--ink-2)"></i>50% dos válidos</span>` : "") + `</p>`;
+    h += `<div class="duo">` + top2.map((c,i)=>{ const co=cor(c.partido), n=numeros(c), s=selo(dados,lista,i);
+      return `<article class="card"><div class="topo">${foto(c,uf,40)}<div>
+        <div class="nome">${esc(c.nome)}${etq(c)}</div><div class="partido" style="color:${co.text}">${esc(c.partido)} ${numero(c,st.cargo,i)}</div></div></div>
+        <div class="pct num">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}
+        ${trilho(c,1,meta)}
+        <div class="votos">${vot(c.votos_atuais)} votos apurados</div>
+        ${s?`<span class="selo">${s}</span>`:""}</article>`;}).join("") + `</div>`;
+    h += `<div class="lista">` + resto.map((c,j)=>{ const co=cor(c.partido), n=numeros(c);
+      return `<div class="lin" ${j>=VIS?'data-extra hidden':''}><span class="ord">${j+3}º</span>${foto(c,uf,36)}
+        <div><div class="nome">${esc(c.nome)}${etq(c)}</div><div class="partido" style="color:${co.text}">${esc(c.partido)} ${numero(c,st.cargo,j+2)}</div></div>
+        <div class="dir"><div class="pct">${n.grande}</div>${n.sub?`<div class="pct-sub">${n.sub}</div>`:""}</div>
+        ${trilho(c,1,meta)}</div>`;}).join("") + `</div>`;
+  }
+
+  if (resto.length > VIS) h += `<button class="mais" onclick="this.previousElementSibling.querySelectorAll('[data-extra]').forEach(e=>e.hidden=!e.hidden);document.querySelectorAll('.vB [data-extra]').forEach(e=>e.hidden=!e.hidden);this.textContent=this.textContent.startsWith('Todos')?'Mostrar menos':'Todos os ${lista.length} candidatos'">Todos os ${lista.length} candidatos</button>`;
+  h += `<p class="nota-painel">Percentual sobre os votos válidos. ${st.base==="proj"?"Projeção estatística a partir do apurado — não é resultado oficial.":"Só o que já foi apurado pelo TSE."} Fonte: TSE (simulado).</p>`;
+  frame.innerHTML = `<section class="painel v${st.versao}" aria-labelledby="t">${h}</section>`;
+  controles();
+}
+
+function seg(id, opts, key){
+  const el = document.getElementById(id);
+  el.innerHTML = Object.entries(opts).map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="${String(st[key])===v}">${l}</button>`).join("");
+  el.querySelectorAll("button").forEach(b=>b.onclick=()=>{ st[key] = key==="larg" ? Number(b.dataset.v) : b.dataset.v; render(); });
+}
+function controles(){
+  seg("c-versao", VERSOES, "versao");
+  seg("c-cargo", CARGOS, "cargo");
+  seg("c-base", {parcial:"Parcial", proj:"Projeção"}, "base");
+  seg("c-larg", {375:"Celular 375", 400:"Coluna 400", 430:"Celular 430"}, "larg");
+}
+document.getElementById("nota").innerHTML = `<h2>Como ler</h2>
+  <p>Três versões do mesmo bloco, com os dados do simulado. A chave <b>Parcial / Projeção</b> funciona como no site: muda a ordem, os dois destacados e o selo.
+  Na Projeção aparecem os dois números (projetado grande, apurado pequeno); na Parcial, só o apurado.</p>
+  <p>O selo sempre diz de onde vem ("· projeção" / "· na parcial"): o site não pode dizer "Eleito" antes do resultado oficial. Por isso as linhas de baixo não têm "Não eleito".
+  O número na urna de Governador e Senador é ilustrativo aqui (o simulado não traz o número real; o site de verdade traz).</p>`;
+render();
+</script>
+</body>
+</html>
