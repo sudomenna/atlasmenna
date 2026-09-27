@@ -61,7 +61,6 @@ import { Panel } from "@/components/atoms/surfaces/Panel";
 import { candidateColor as candidateColorDoPartido } from "@/components/blocks/_candidateColor";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
-import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { cargoInfo } from "@/lib/config/cargos";
@@ -357,17 +356,11 @@ export default async function SenadoPage() {
         </div>
       </Panel>
 
-      {/* Spec 021 (RF-192) — "Votação": o eleitorado inteiro em três círculos,
-          em `<Panel>` PRÓPRIO, imediatamente depois do painel de resultado.
-
-          🔴 Painel próprio, e não apêndice do de cima: aquele responde "quem
-          está ganhando", este "como o eleitorado se comportou". O dono pediu a
-          separação.
-
-          `payload.votacao` é opcional — sem ele o componente renderiza
-          `<DetailUnavailable>` (RF-198), nunca zeros. Os três estados que ele
-          distingue (ausente / "não começou" / apurando) estão no RF-193b. */}
-      <VotacaoEleitorado kicker="Senador · Brasil" votacao={payload.votacao} />
+      {/* Spec 021 RF-192 / spec 022 RF-200 — EMENDADOS em 2026-09-26 (noite),
+          decisão do dono: "Votação" e "A corrida" SAÍRAM desta capa. O
+          eleitorado do Brasil repetia o da capa de Presidente sem dizer nada
+          sobre 27 eleições estaduais. Os dois painéis vivem em
+          `/uf/[sigla]/senador`, com o dado DA UF. */}
 
       {/* Seção 2 — RF-107. A composição é AGREGAÇÃO, não estimativa nacional:
           o TSE não publica arquivo agregado para cargo 5 (`temArquivoBr:

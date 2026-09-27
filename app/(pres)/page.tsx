@@ -165,6 +165,7 @@ import { BreakingNewsTicker } from "@/components/blocks/BreakingNewsTicker";
 import { BulletinPanel } from "@/components/blocks/BulletinPanel";
 import { CandidaturasAguardando } from "@/components/blocks/CandidaturasAguardando";
 import { ChancesPanel } from "@/components/blocks/ChancesPanel";
+import { CorridaTresCirculos } from "@/components/blocks/CorridaTresCirculos";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { HeadlineScore } from "@/components/blocks/HeadlineScore";
 import { InsightCard } from "@/components/blocks/InsightCard";
@@ -284,10 +285,16 @@ function fixturePayload(): EdgePayload {
   // candidaturas presidenciais reais do cadastro do TSE, o campo `fase` com o
   // valor de `FASE_PRE_ELEICAO` (`lib/config/fase.ts`, o dono do literal),
   // `pct_apurado_total: 0` e `por_uf: []`. É a única forma de VER as telas
-  // T-15/T-16 em `pnpm dev`, porque o reader devolve `null` localmente
-  // (`EDGE_CONFIG` não existe em `.env.local`) e semear o Global Config de
-  // verdade publicaria a tela no site público — decisão de produto que ainda
-  // não foi tomada (spec 019, open question 5).
+  // T-15/T-16 em `pnpm dev` sem semear o Global Config de verdade, o que
+  // publicaria a tela no site público — decisão de produto que ainda não foi
+  // tomada (spec 019, open question 5).
+  //
+  // ⚠️ Corrigido em 2026-09-26: este comentário dizia que "`EDGE_CONFIG` não
+  // existe em `.env.local`". **Existe** — é a string de LEITURA do Global
+  // Config de produção, e o Next carrega o `.env.local` sozinho. Então, em
+  // `pnpm dev`, o reader lê PRODUÇÃO primeiro, e esta fixture só aparece
+  // quando a chave de produção está vazia. Para ver a fixture com certeza,
+  // rode com `EDGE_CONFIG= FIXTURE_VARIANT=pre pnpm dev`.
   //
   //     FIXTURE_VARIANT=pre pnpm dev
   const fixture =
@@ -960,6 +967,20 @@ export default async function HomePage() {
           `<DetailUnavailable>` (RF-198), nunca zeros. Os três estados que ele
           distingue (ausente / "não começou" / apurando) estão no RF-193b. */}
       <VotacaoEleitorado kicker="Presidente · Brasil" votacao={payload.votacao} />
+
+      {/* Spec 022 (RF-200/201) — "A corrida": a disputa em três círculos
+          (válidos → quem votou → eleitorado apto), IMEDIATAMENTE depois do
+          "Votação" — nunca antes, porque o RF-192 fixa aquele painel logo
+          após a lista de candidaturas. Uma corrida só ⇒ fatias por
+          CANDIDATURA; o nome sai de `national.candidatos`, cruzado por `id`.
+          Sem `votacao.corrida` ⇒ `<DetailUnavailable>` (RF-207). */}
+      <CorridaTresCirculos
+        kicker="Presidente · Brasil"
+        modo="candidatura"
+        votacao={payload.votacao}
+        candidatos={payload.national.candidatos}
+        titleId="corrida-tres-circulos-heading"
+      />
 
       {/* Seção 3 — chances (`ChancesPanel` do protótipo, 2º painel de
           conteúdo em `App.jsx:350`). Aqui, ao contrário das rotas de UF, o

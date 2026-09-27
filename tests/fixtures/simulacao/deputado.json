@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-26T17:34:17.979Z",
+  "ts": "2026-09-26T21:38:53.016Z",
   "cargo": 6,
   "turno": 1,
   "pct_apurado_total": 25,
@@ -313,11 +313,11 @@
       "instalados": 39569584,
       "comparecimento": 31737578,
       "abstencao": 7832006,
-      "validos": 24607620,
+      "validos": 24640301,
       "brancos": 1166913,
       "nulos": 1156999,
-      "anulados": 2246496,
-      "sub_judice": 2559550
+      "anulados": 2231220,
+      "sub_judice": 2542145
     },
     "projetada": {
       "validos": 98665173,

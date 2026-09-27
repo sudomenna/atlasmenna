@@ -387,7 +387,15 @@ pnpm test:e2e                  # 98 passed / 14 skipped em 47,8s (21/09)
 
 `pnpm start` não serve: o Next carrega o `.env.local` sozinho e o `DATABASE_URL`
 de lá é **produção**. O `start:e2e` declara vazias as 13 variáveis de escrita.
-Confira no log: `[db] DATABASE_URL ausente`. Detalhe e ressalvas no
+Confira no log: `[db] DATABASE_URL ausente`.
+
+🔴 **Desde 26/09 os portões leem DADO FIXO, não produção.** Até então o
+`start:e2e` deixava o `EDGE_CONFIG` (leitura) do `.env.local` e os portões
+mediam o que estivesse publicado. Agora ele sobe `scripts/edge-config-falso.ts`
+(127.0.0.1:3101, serve `tests/fixtures/simulacao/`) e o `next start` na
+**porta 3100**. Fixture só entra nas páginas sob `NODE_ENV=development`
+(conserto de 13/09) — por isso o servidor falso, e não `EDGE_CONFIG=""`, que
+faria as telas mostrarem "Aguardando dados". Detalhe no runbook. Detalhe e ressalvas no
 [runbook § portões e2e](./docs/operations/runbook.md).
 
 **🔴 Modo simulado — use `pnpm sim:full`, NUNCA `pnpm sim` sozinho.**

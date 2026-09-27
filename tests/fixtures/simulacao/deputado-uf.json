@@ -1,6 +1,6 @@
 {
   "AC": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "AC",
@@ -752,10 +752,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 612448,
+        "instalados": 71044,
+        "comparecimento": 55146,
+        "abstencao": 15898,
+        "validos": 42789,
+        "brancos": 2009,
+        "nulos": 1991,
+        "anulados": 3906,
+        "sub_judice": 4451
+      },
+      "projetada": {
+        "validos": 368874,
+        "brancos": 17314,
+        "nulos": 17167,
+        "abstencao": 137049
+      }
+    }
   },
   "AL": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "AL",
@@ -1387,10 +1406,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 2442894,
+        "instalados": 283375,
+        "comparecimento": 218649,
+        "abstencao": 64726,
+        "validos": 200009,
+        "brancos": 9360,
+        "nulos": 9280,
+        "anulados": 0,
+        "sub_judice": 0
+      },
+      "projetada": {
+        "validos": 1442489,
+        "brancos": 80688,
+        "nulos": 80002,
+        "abstencao": 557987
+      }
+    }
   },
   "AM": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "AM",
@@ -2306,10 +2344,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 2749346,
+        "instalados": 318924,
+        "comparecimento": 255521,
+        "abstencao": 63403,
+        "validos": 199593,
+        "brancos": 8510,
+        "nulos": 8437,
+        "anulados": 18221,
+        "sub_judice": 20760
+      },
+      "projetada": {
+        "validos": 1720625,
+        "brancos": 73359,
+        "nulos": 72736,
+        "abstencao": 546575
+      }
+    }
   },
   "AP": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "AP",
@@ -2977,10 +3034,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 571248,
+        "instalados": 66265,
+        "comparecimento": 54313,
+        "abstencao": 11952,
+        "validos": 41940,
+        "brancos": 2100,
+        "nulos": 2082,
+        "anulados": 3829,
+        "sub_judice": 4362
+      },
+      "projetada": {
+        "validos": 361548,
+        "brancos": 18102,
+        "nulos": 17948,
+        "abstencao": 103038
+      }
+    }
   },
   "BA": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "BA",
@@ -4186,10 +4262,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 11283507,
+        "instalados": 1308885,
+        "comparecimento": 1044863,
+        "abstencao": 264022,
+        "validos": 817420,
+        "brancos": 34042,
+        "nulos": 33752,
+        "anulados": 74625,
+        "sub_judice": 85024
+      },
+      "projetada": {
+        "validos": 7046731,
+        "brancos": 293461,
+        "nulos": 290967,
+        "abstencao": 2276071
+      }
+    }
   },
   "CE": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "CE",
@@ -5320,10 +5415,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 6935539,
+        "instalados": 804521,
+        "comparecimento": 688134,
+        "abstencao": 116387,
+        "validos": 526890,
+        "brancos": 29294,
+        "nulos": 29045,
+        "anulados": 48101,
+        "sub_judice": 54804
+      },
+      "projetada": {
+        "validos": 4542149,
+        "brancos": 252534,
+        "nulos": 250388,
+        "abstencao": 1003353
+      }
+    }
   },
   "DF": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "DF",
@@ -6433,10 +6547,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 2365513,
+        "instalados": 875238,
+        "comparecimento": 708788,
+        "abstencao": 166450,
+        "validos": 545594,
+        "brancos": 28438,
+        "nulos": 28197,
+        "anulados": 49809,
+        "sub_judice": 56750
+      },
+      "projetada": {
+        "validos": 1474579,
+        "brancos": 76861,
+        "nulos": 76208,
+        "abstencao": 449870
+      }
+    }
   },
   "ES": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "ES",
@@ -7255,10 +7388,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 2999642,
+        "instalados": 962884,
+        "comparecimento": 763308,
+        "abstencao": 199576,
+        "validos": 596485,
+        "brancos": 25270,
+        "nulos": 25055,
+        "anulados": 54455,
+        "sub_judice": 62043
+      },
+      "projetada": {
+        "validos": 1858209,
+        "brancos": 78723,
+        "nulos": 78054,
+        "abstencao": 621735
+      }
+    }
   },
   "GO": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "GO",
@@ -8209,10 +8361,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 5126435,
+        "instalados": 1584066,
+        "comparecimento": 1237654,
+        "abstencao": 346412,
+        "validos": 951700,
+        "brancos": 50253,
+        "nulos": 49827,
+        "anulados": 86883,
+        "sub_judice": 98991
+      },
+      "projetada": {
+        "validos": 3079936,
+        "brancos": 162632,
+        "nulos": 161250,
+        "abstencao": 1121083
+      }
+    }
   },
   "MA": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "MA",
@@ -9287,10 +9458,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 5180738,
+        "instalados": 600965,
+        "comparecimento": 472536,
+        "abstencao": 128429,
+        "validos": 366994,
+        "brancos": 17005,
+        "nulos": 16860,
+        "anulados": 33504,
+        "sub_judice": 38173
+      },
+      "projetada": {
+        "validos": 3163743,
+        "brancos": 146594,
+        "nulos": 145348,
+        "abstencao": 1107151
+      }
+    }
   },
   "MG": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "MG",
@@ -10679,10 +10869,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 16469155,
+        "instalados": 5335997,
+        "comparecimento": 4193162,
+        "abstencao": 1142835,
+        "validos": 3257229,
+        "brancos": 150526,
+        "nulos": 149247,
+        "anulados": 297361,
+        "sub_judice": 338799
+      },
+      "projetada": {
+        "validos": 10053176,
+        "brancos": 464587,
+        "nulos": 460640,
+        "abstencao": 3527295
+      }
+    }
   },
   "MS": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "MS",
@@ -11517,10 +11726,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 2032487,
+        "instalados": 798766,
+        "comparecimento": 639440,
+        "abstencao": 159326,
+        "validos": 495477,
+        "brancos": 23697,
+        "nulos": 23496,
+        "anulados": 45233,
+        "sub_judice": 51537
+      },
+      "projetada": {
+        "validos": 1260754,
+        "brancos": 60298,
+        "nulos": 59786,
+        "abstencao": 405414
+      }
+    }
   },
   "MT": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "MT",
@@ -12471,10 +12699,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 2588457,
+        "instalados": 711825,
+        "comparecimento": 547705,
+        "abstencao": 164120,
+        "validos": 423986,
+        "brancos": 20543,
+        "nulos": 20368,
+        "anulados": 38707,
+        "sub_judice": 44101
+      },
+      "projetada": {
+        "validos": 1541770,
+        "brancos": 74702,
+        "nulos": 74067,
+        "abstencao": 596800
+      }
+    }
   },
   "PA": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PA",
@@ -13491,10 +13738,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 6226373,
+        "instalados": 722258,
+        "comparecimento": 594227,
+        "abstencao": 128031,
+        "validos": 454171,
+        "brancos": 25787,
+        "nulos": 25567,
+        "anulados": 41462,
+        "sub_judice": 47240
+      },
+      "projetada": {
+        "validos": 3915258,
+        "brancos": 222298,
+        "nulos": 220410,
+        "abstencao": 1103729
+      }
+    }
   },
   "PB": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PB",
@@ -14490,10 +14756,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 3225312,
+        "instalados": 374136,
+        "comparecimento": 305512,
+        "abstencao": 68624,
+        "validos": 235016,
+        "brancos": 12350,
+        "nulos": 12246,
+        "anulados": 21455,
+        "sub_judice": 24445
+      },
+      "projetada": {
+        "validos": 2025996,
+        "brancos": 106468,
+        "nulos": 105564,
+        "abstencao": 591592
+      }
+    }
   },
   "PE": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PE",
@@ -15638,10 +15923,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 7152871,
+        "instalados": 829732,
+        "comparecimento": 674808,
+        "abstencao": 154924,
+        "validos": 529096,
+        "brancos": 21278,
+        "nulos": 21097,
+        "anulados": 48303,
+        "sub_judice": 55034
+      },
+      "projetada": {
+        "validos": 4561178,
+        "brancos": 183431,
+        "nulos": 181872,
+        "abstencao": 1335559
+      }
+    }
   },
   "PI": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PI",
@@ -16616,10 +16920,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 2698764,
+        "instalados": 313056,
+        "comparecimento": 256629,
+        "abstencao": 56427,
+        "validos": 198401,
+        "brancos": 9782,
+        "nulos": 9698,
+        "anulados": 18112,
+        "sub_judice": 20636
+      },
+      "projetada": {
+        "validos": 1710343,
+        "brancos": 84324,
+        "nulos": 83607,
+        "abstencao": 486447
+      }
+    }
   },
   "PR": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "PR",
@@ -17662,10 +17985,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 8645891,
+        "instalados": 3000119,
+        "comparecimento": 2477173,
+        "abstencao": 522946,
+        "validos": 1906345,
+        "brancos": 99676,
+        "nulos": 98830,
+        "anulados": 174035,
+        "sub_judice": 198287
+      },
+      "projetada": {
+        "validos": 5493787,
+        "brancos": 287252,
+        "nulos": 284811,
+        "abstencao": 1507064
+      }
+    }
   },
   "RJ": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RJ",
@@ -19061,10 +19403,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 13033929,
+        "instalados": 3988376,
+        "comparecimento": 3174255,
+        "abstencao": 814121,
+        "validos": 2420919,
+        "brancos": 140854,
+        "nulos": 139658,
+        "anulados": 221013,
+        "sub_judice": 251811
+      },
+      "projetada": {
+        "validos": 7911503,
+        "brancos": 460308,
+        "nulos": 456397,
+        "abstencao": 2660547
+      }
+    }
   },
   "RN": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RN",
@@ -19844,10 +20205,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 2649282,
+        "instalados": 307316,
+        "comparecimento": 255542,
+        "abstencao": 51774,
+        "validos": 194797,
+        "brancos": 11398,
+        "nulos": 11301,
+        "anulados": 17784,
+        "sub_judice": 20262
+      },
+      "projetada": {
+        "validos": 1679287,
+        "brancos": 98259,
+        "nulos": 97424,
+        "abstencao": 446335
+      }
+    }
   },
   "RO": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RO",
@@ -20711,10 +21091,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 1266546,
+        "instalados": 146919,
+        "comparecimento": 113270,
+        "abstencao": 33649,
+        "validos": 87656,
+        "brancos": 4266,
+        "nulos": 4229,
+        "anulados": 8002,
+        "sub_judice": 9117
+      },
+      "projetada": {
+        "validos": 755651,
+        "brancos": 36774,
+        "nulos": 36462,
+        "abstencao": 290075
+      }
+    }
   },
   "RR": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RR",
@@ -21490,10 +21889,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 389863,
+        "instalados": 45224,
+        "comparecimento": 37166,
+        "abstencao": 8058,
+        "validos": 28956,
+        "brancos": 1283,
+        "nulos": 1272,
+        "anulados": 2643,
+        "sub_judice": 3012
+      },
+      "projetada": {
+        "validos": 249617,
+        "brancos": 11060,
+        "nulos": 10966,
+        "abstencao": 69468
+      }
+    }
   },
   "RS": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "RS",
@@ -22685,10 +23103,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 8682558,
+        "instalados": 2387700,
+        "comparecimento": 1976486,
+        "abstencao": 411214,
+        "validos": 1527124,
+        "brancos": 75874,
+        "nulos": 75230,
+        "anulados": 139415,
+        "sub_judice": 158843
+      },
+      "projetada": {
+        "validos": 5553177,
+        "brancos": 275907,
+        "nulos": 273563,
+        "abstencao": 1495336
+      }
+    }
   },
   "SC": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "SC",
@@ -23647,10 +24084,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 5640659,
+        "instalados": 1353756,
+        "comparecimento": 1123759,
+        "abstencao": 229997,
+        "validos": 869597,
+        "brancos": 42341,
+        "nulos": 41982,
+        "anulados": 79388,
+        "sub_judice": 90451
+      },
+      "projetada": {
+        "validos": 3623323,
+        "brancos": 176422,
+        "nulos": 174923,
+        "abstencao": 958331
+      }
+    }
   },
   "SE": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "SE",
@@ -24588,10 +25044,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 1733785,
+        "instalados": 201119,
+        "comparecimento": 163834,
+        "abstencao": 37285,
+        "validos": 126007,
+        "brancos": 6636,
+        "nulos": 6580,
+        "anulados": 11504,
+        "sub_judice": 13107
+      },
+      "projetada": {
+        "validos": 1086275,
+        "brancos": 57210,
+        "nulos": 56724,
+        "abstencao": 321419
+      }
+    }
   },
   "SP": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "SP",
@@ -26198,10 +26673,29 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 34403609,
+        "instalados": 12041243,
+        "comparecimento": 9597359,
+        "abstencao": 2443884,
+        "validos": 7512476,
+        "brancos": 310138,
+        "nulos": 307504,
+        "anulados": 685835,
+        "sub_judice": 781406
+      },
+      "projetada": {
+        "validos": 21464217,
+        "brancos": 886110,
+        "nulos": 878581,
+        "abstencao": 6982584
+      }
+    }
   },
   "TO": {
-    "ts": "2026-09-26T17:34:17.979Z",
+    "ts": "2026-09-26T21:38:53.016Z",
     "cargo": 6,
     "turno": 1,
     "uf": "TO",
@@ -26920,6 +27414,25 @@
       }
     ],
     "vagas_nao_preenchidas": 0,
-    "empates_indeterminados": []
+    "empates_indeterminados": [],
+    "votacao": {
+      "contagens": {
+        "aptos": 1171342,
+        "instalados": 135875,
+        "comparecimento": 108339,
+        "abstencao": 27536,
+        "validos": 83634,
+        "brancos": 4203,
+        "nulos": 4168,
+        "anulados": 7635,
+        "sub_judice": 8699
+      },
+      "projetada": {
+        "validos": 720979,
+        "brancos": 36237,
+        "nulos": 35929,
+        "abstencao": 237385
+      }
+    }
   }
 }

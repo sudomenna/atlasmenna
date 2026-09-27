@@ -18,7 +18,7 @@ ship_blocked_on: []
 # Spec 021 — Votação: o eleitorado inteiro
 
 **Rotas novas**: nenhuma.
-**Superfícies emendadas**: `/`, `/governador`, `/senador`, `/deputado-federal`.
+**Superfícies emendadas**: `/` e as quatro telas de UF (`/uf/[sigla]`, `/uf/[sigla]/governador`, `/uf/[sigla]/senador`, `/uf/[sigla]/deputado-federal`). Até 2026-09-26 (tarde) eram as quatro capas nacionais — ver RF-192 emendado.
 **Pedido do dono (2026-09-26)**: um painel próprio, **depois da lista de
 candidaturas**, nas quatro telas nacionais, com **três** círculos —
 (1) sobre os aptos, com o não apurado em cinza; (2) sobre o eleitorado já
@@ -89,6 +89,35 @@ com a lista de candidaturas e **antes** de qualquer outra seção.
 resultado responde "quem está ganhando"; este responde "como o eleitorado se
 comportou". Emenda as specs 003/006/016/017 na ordem das seções.
 
+🔴 **EMENDADO em 2026-09-26 (noite), decisão do dono — o painel SAI das capas
+nacionais de Governador, Senador e Deputado e ENTRA nas telas de UF.**
+
+**Quando** a rota é `/`, **o sistema deve** renderizar o painel como acima.
+
+**Quando** a rota é `/governador`, `/senador` ou `/deputado-federal`, **o
+sistema NÃO deve** renderizar o painel.
+
+**Quando** a rota é `/uf/[sigla]`, `/uf/[sigla]/governador`,
+`/uf/[sigla]/senador` ou `/uf/[sigla]/deputado-federal`, **o sistema deve**
+renderizar o painel com as contagens **daquela UF** (`EdgePayloadUf.votacao`,
+spec 022 RF-209), imediatamente depois do `<ResultPanel>` da UF (na tela de
+Deputado, do painel de resultado equivalente) e antes do painel "A corrida"
+onde ele existir.
+
+**Onde** o motivo é de conteúdo: o eleitorado do Brasil é praticamente o mesmo
+número em todos os cargos — na capa de Governador ele repetia a de Presidente
+sem dizer nada sobre a eleição de governador, que é estadual.
+
+⚠️ O arco 3 (projeção) numa UF usa a mesma regra do RF-195 sobre as
+contagens e a participação projetada **da UF** (`projetar_fatias_em_contagens`,
+`api/model/project.py`). Sem participação projetada na UF, "aguardando
+projeção" (RF-195), nunca o número nacional.
+
+⚠️ Senado: com duas vagas cada eleitor vota duas vezes (spec 022 RF-210). Se
+as contagens do TSE para cargo 5 não fecharem nas identidades do RF-193/194,
+os arcos já devolvem "não fecha" em vez de desenhar torto — a guarda existe e
+é o comportamento correto até a medição.
+
 ### RF-193 — círculo 1: o eleitorado inteiro, com o não apurado nomeado
 
 **Quando** o painel renderiza o círculo 1, **o sistema deve** usar
@@ -96,9 +125,19 @@ comportou". Emenda as specs 003/006/016/017 na ordem das seções.
 votos válidos, votos em branco, votos nulos, abstenção, e **"Ainda não
 apurado"**.
 
-**Onde** "Ainda não apurado" = `eleitores_aptos − (validos + brancos + nulos +
-abstencao)` — isto é, o vão do § Contexto **mais** anulados e sub judice,
-quando existirem.
+**Onde** "Ainda não apurado" = `eleitores_aptos − instalados`, e **somente
+isso** — o eleitorado de seções que ainda não foram apuradas.
+
+🔴 **CORRIGIDO em 2026-09-26 (tarde).** A versão anterior definia o residual
+como `aptos − (validos + brancos + nulos + abstencao)`, ou seja "tudo o que
+sobra", o que enfiava anulados e sub judice dentro de uma fatia chamada "Ainda
+não apurado". Ver o RF-197 para a medição que derrubou isso.
+
+⚠️ Com a fatia de anulados separada, o arco 1 passa a ter **seis** fatias, e
+elas fecham em `aptos` por **identidade do TSE**, não por subtração de resto:
+`instalados = comparecimento + abstencao` e
+`comparecimento = validos + brancos + nulos + anulados + sub_judice`, logo
+`aptos = (aptos − instalados) + abstencao + validos + brancos + nulos + anulados + sub_judice`.
 
 ⚠️ A fatia cinza é **derivada por subtração**, nunca por um campo próprio: é a
 única forma de o círculo fechar em 100% por construção, com qualquer
@@ -130,8 +169,12 @@ verdade. Um `contagens` ausente nunca vira zeros (RF-198).
 ### RF-194 — círculo 2: só o que já foi apurado
 
 **Quando** o painel renderiza o círculo 2, **o sistema deve** usar
-`validos + brancos + nulos + abstencao` como total e exibir **quatro** fatias
-— válidos, brancos, nulos, abstenção — sem fatia residual.
+`instalados` como total e exibir **cinco** fatias — válidos, brancos, nulos,
+anulados+sub judice, abstenção — sem fatia residual.
+
+🔴 **CORRIGIDO em 2026-09-26 (tarde)**: a base era `validos + brancos + nulos +
+abstencao`, que só fecha quando não há voto anulado. `instalados` é a soma
+exata das cinco, por identidade do TSE, e é o que o rótulo já dizia ser.
 
 **Onde** o rótulo do total nomeia a base ("eleitorado já apurado"), nunca
 "eleitores aptos".
@@ -190,14 +233,54 @@ base dela. Não há IC neste bloco, e não é esquecimento.
 **Quando** o painel exibe um percentual, **o sistema deve** exibir junto o
 número absoluto e a base sobre a qual o percentual foi calculado.
 
-### RF-197 — anulados e sub judice saem da legenda, não da conta
+### RF-197 — anulados e sub judice são fatia PRÓPRIA
 
-**Quando** `anulados + sub_judice > 0`, **o sistema deve** mantê-los fora das
-fatias nomeadas (decisão do dono) e **dentro** do residual do RF-193, e
-declarar a soma dos dois no texto de metodologia do painel.
+🔴 **REVERTIDO em 2026-09-26, pelo dono, depois de ver a tela.** A versão
+anterior deste RF mandava mantê-los fora das fatias nomeadas e dentro do
+residual. Estava errado por duas razões, e a segunda só apareceu na tela:
 
-⚠️ Não é detalhe: medido em 14,2% do comparecimento na captura real do
-simulado. Omitir sem declarar publicaria um círculo com 14% de buraco mudo.
+1. **São grandes.** Medido: 12,2% dos aptos na projeção da fixture do simulado,
+   14,2% do comparecimento na captura real do TSE. Não é cauda.
+2. 🔴 **O residual misturava DUAS coisas cuja proporção se inverte ao longo da
+   noite.** Medido na mesma fixture, a 25% apurado:
+
+   | | arco 1 | arco 3 (projetado) |
+   |---|---|---|
+   | ainda não apurado | 118.708.609 (96,1%) | **0** |
+   | anulados + sub judice | 4.806.046 (3,9%) | 19.270.021 (**100%**) |
+
+   Ou seja: o rótulo "Ainda não apurado" está quase certo no arco 1 **hoje**, e
+   estará tão errado às 23h quanto já está no arco 3 agora — uma fatia com esse
+   nome contendo só voto anulado. Um rótulo que só é verdadeiro em parte da
+   noite é pior que um rótulo ausente.
+
+**Quando** o painel renderiza qualquer um dos três círculos, **o sistema deve**
+exibir `anulados + sub_judice` como **fatia própria e nomeada**, distinta de
+"Votos nulos".
+
+**Onde** a distinção não é cosmética, e vem da hierarquia oficial
+(`tse_docs/txt/tse-ea20-arquivo-de-resultado-unificado.txt:459-468`):
+
+```
+tv ──> vvc (votáveis) + vb (brancos) + tvn (NULOS) + vscv
+   vvc ──> vv (válidos) + van (ANULADOS) + vansj (sub judice)
+```
+
+O **nulo** é irmão de "votáveis": o eleitor não escolheu ninguém. O **anulado**
+está dentro de votáveis, ao lado dos válidos: o eleitor escolheu alguém, e a
+Justiça anulou depois. Ramos diferentes da árvore — a fatia nova não pode
+parecer variação de "nulo", nem herdar a cor dele.
+
+⚠️ No **arco 3** o anulado projetado NÃO é publicado: ele **é** o residual.
+Isso só é correto porque a projeção é para o FIM da apuração, quando
+`aptos − instalados → 0` e sobra apenas o anulado. Quem mexer aqui tem de
+manter esse raciocínio escrito no código.
+
+> **Histórico.** A 1ª versão do RF-197 (2026-09-26, manhã) dizia o oposto:
+> "manter fora das fatias nomeadas e dentro do residual, declarando a soma no
+> texto de metodologia". Foi o pedido original do dono — *"Anulados e anulados
+> sub judice pode retirar"* — e ele o reverteu na mesma tarde, ao ver a tela.
+> Fica registrado para quem encontrar a regra antiga em algum commit.
 
 ### RF-198 — o painel degrada, nunca some
 
@@ -261,7 +344,7 @@ soma de contagens inteiras, exata, sem projeção envolvida.
 
 ## Fora de escopo
 
-- Telas de UF (`/uf/[sigla]*`). O pedido é das quatro nacionais.
+- ~~Telas de UF (`/uf/[sigla]*`).~~ **Entraram no escopo em 2026-09-26 (noite)** — ver RF-192 emendado.
 - Série temporal das fatias ao longo da noite — é spec 020, não esta.
 - Reabrir o denominador de `abstencao` em `turnout.py` (`eleitores_instalados`,
   `turnout.py:169-170`). Esta spec **lê** contagens; não altera a base de
@@ -293,3 +376,9 @@ Nenhuma aberta.
    resto. Nada a decidir, e nada a implementar além de não cachear `te` entre
    turnos — o que o pipeline já não faz, porque `turno` é parte da chave
    (`EdgePayload.turno`, e os targets são por turno).
+
+## Emendas por specs posteriores
+
+### Spec 022 — A corrida em três círculos (2026-09-26)
+
+O painel "A corrida" (RF-200..210) entra imediatamente **depois** do painel "Votação" em `/` e nas telas de UF de Presidente, Governador e Senador (`/uf/[sigla]`, `/uf/[sigla]/governador`, `/uf/[sigla]/senador`). Desde 2026-09-26 (noite) nenhum dos dois painéis existe nas capas `/governador`, `/senador` e `/deputado-federal` (RF-192 emendado).

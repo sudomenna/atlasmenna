@@ -777,7 +777,21 @@ describe("/uf/[sigla]/senador (T-10)", () => {
     // municípios → metodologia). A série não se moveu.
     expect(kickers[iSerie + 1]).toBe("Municípios");
     expect(kickers[iSerie + 2]).toBe("Metodologia");
-    expect(iSerie).toBe(2);
+    // Spec 022 RF-200 (2026-09-26) — "A corrida" entra IMEDIATAMENTE depois
+    // do resultado, e a série desce uma posição. Continua entre o resultado e
+    // os municípios, que é o slot que o RF-174 protege.
+    const iCorrida = paineis.findIndex(
+      (p) => p.getAttribute("aria-labelledby") === "corrida-tres-circulos-heading",
+    );
+    // Spec 021 RF-192 EMENDADO (2026-09-26, noite) — "Votação" DA UF entra
+    // logo depois do resultado e ANTES de "A corrida"; a série desce mais uma
+    // posição. Ordem: resultado → Votação → A corrida → evolução (spec 020).
+    const iVotacao = paineis.findIndex(
+      (p) => p.getAttribute("aria-labelledby") === "votacao-uf-heading",
+    );
+    expect(iVotacao).toBe(1);
+    expect(iCorrida).toBe(2);
+    expect(iSerie).toBe(4);
 
     // Sem série no Blob deste caso: nenhum traçado.
     expect(doc.querySelectorAll("[data-traco]")).toHaveLength(0);
@@ -860,12 +874,22 @@ describe("/uf/[sigla]/senador (T-10)", () => {
    */
   it("(x3) sem série, o bloco fica no DOM com o motivo certo — e a página inteira de pé", async () => {
     readUfProjectionMock.mockResolvedValue(ufPayload());
+    // Escopado ao painel da série: desde a spec 021 RF-192 emendado
+    // (2026-09-26, noite) o painel "Votação" da UF vem ANTES dela, e sem
+    // `votacao` no payload ele tem o próprio `<DetailUnavailable>`
+    // ("not_found", do PAYLOAD) — o primeiro do documento deixou de ser o da
+    // série.
+    const estadoDaSerie = (doc: Document) =>
+      [...doc.querySelectorAll('[data-testid="panel"]')]
+        .find(
+          (p) =>
+            p.querySelector('[data-testid="panel-kicker"]')?.textContent === "Evolução da apuração",
+        )
+        ?.querySelector('[data-testid="detail-unavailable"]');
 
     readUfDetailMock.mockResolvedValueOnce(blobSenadorCom(null));
     const semSerie = await render(UFSenadorPage(PARAMS_SP));
-    expect(
-      semSerie.querySelector('[data-testid="detail-unavailable"]')?.getAttribute("data-reason"),
-    ).toBe("sem_serie");
+    expect(estadoDaSerie(semSerie)?.getAttribute("data-reason")).toBe("sem_serie");
 
     readUfDetailMock.mockResolvedValueOnce({
       status: "unavailable",
@@ -873,9 +897,7 @@ describe("/uf/[sigla]/senador (T-10)", () => {
       url: null,
     });
     const semBlob = await render(UFSenadorPage(PARAMS_SP));
-    expect(
-      semBlob.querySelector('[data-testid="detail-unavailable"]')?.getAttribute("data-reason"),
-    ).toBe("fetch_error");
+    expect(estadoDaSerie(semBlob)?.getAttribute("data-reason")).toBe("fetch_error");
 
     // O resumo vem da OUTRA fonte e segue inteiro nos dois casos.
     for (const doc of [semSerie, semBlob]) {
@@ -1356,5 +1378,58 @@ describe("/uf/[sigla]/senador — os municípios (2026-09-20)", () => {
     await render(UFSenadorPage(PARAMS_SP));
 
     expect(readUfDetailMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * Spec 021 RF-192 emendado (2026-09-26, noite) — um `votacao` de UF que FECHA
+ * nas identidades do TSE (`c + a = esi`; `vv+vb+tvn+van+vansj = c`), com
+ * números que não existem em nenhum outro lugar do payload: se a tela
+ * mostrar `instalados = 900`, só pode ter vindo daqui.
+ */
+const VOTACAO_UF = {
+  contagens: {
+    aptos: 1000,
+    instalados: 900,
+    comparecimento: 700,
+    abstencao: 200,
+    validos: 600,
+    brancos: 40,
+    nulos: 30,
+    anulados: 20,
+    sub_judice: 10,
+  },
+  projetada: { validos: 700, brancos: 50, nulos: 40, abstencao: 150 },
+};
+
+describe("spec 021 RF-192 / spec 022 RF-200 emendados (2026-09-26, noite)", () => {
+  it("🔴 /senador NÃO tem 'Votação' nem 'A corrida' — mesmo com `votacao` no payload", async () => {
+    readProjectionMock.mockResolvedValue(nacional({ votacao: VOTACAO_UF }));
+    const doc = await render(SenadoPage());
+    expect(doc.querySelector('[aria-labelledby="votacao-eleitorado-heading"]')).toBeNull();
+    expect(doc.querySelector('[aria-labelledby="corrida-tres-circulos-heading"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="votacao-eleitorado"]')).toBeNull();
+  });
+
+  it("/uf/SP/senador tem 'Votação' com o dado DA UF, e nada nele diz 'Brasil'", async () => {
+    readUfProjectionMock.mockResolvedValue(ufPayload({ votacao: VOTACAO_UF }));
+    const doc = await render(UFSenadorPage(PARAMS_SP));
+    const painel = doc.querySelector('[aria-labelledby="votacao-uf-heading"]');
+    expect(painel).not.toBeNull();
+    expect(painel?.querySelector('[data-testid="panel-kicker"]')?.textContent).toBe("Senador · SP");
+    expect(
+      painel?.querySelector('[data-testid="votacao-eleitorado"]')?.getAttribute("data-instalados"),
+    ).toBe("900");
+    expect(painel?.textContent ?? "").not.toMatch(/Brasil/);
+    // O arco 3 da UF desenha (há `projetada`), não fica em "aguardando".
+    expect(painel?.querySelector('[data-testid="votacao-circulo-3-aguardando"]')).toBeNull();
+  });
+
+  it("/uf/SP/senador sem `votacao` no payload: o painel fica no DOM, indisponível (RF-198)", async () => {
+    readUfProjectionMock.mockResolvedValue(ufPayload());
+    const doc = await render(UFSenadorPage(PARAMS_SP));
+    const painel = doc.querySelector('[aria-labelledby="votacao-uf-heading"]');
+    expect(painel?.querySelector('[data-testid="detail-unavailable"]')).not.toBeNull();
+    expect(doc.querySelectorAll("h1").length).toBe(1);
   });
 });

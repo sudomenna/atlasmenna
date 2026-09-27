@@ -461,3 +461,15 @@ describe("GovernadorGridPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
     expect(kickers).toContain("Projeção Atlas Menna · não oficial");
   });
 });
+
+describe("spec 021 RF-192 / spec 022 RF-200 emendados (2026-09-26, noite)", () => {
+  it("🔴 /governador NÃO tem 'Votação' nem 'A corrida' — os dois vivem na tela de UF", async () => {
+    const node = await GovernadorGridPage({ searchParams: Promise.resolve({}) });
+    const doc = new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
+    // O `<Panel>` destes blocos rendia SEMPRE (com dado ou `<DetailUnavailable>`),
+    // então a ausência do heading discrimina independentemente do payload.
+    expect(doc.querySelector('[aria-labelledby="votacao-eleitorado-heading"]')).toBeNull();
+    expect(doc.querySelector('[aria-labelledby="corrida-tres-circulos-heading"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="votacao-eleitorado"]')).toBeNull();
+  });
+});

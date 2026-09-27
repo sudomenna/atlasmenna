@@ -200,6 +200,16 @@ Esta rota está no escopo do hero de 1º turno (decisão D7 de 2026-09-05). Os r
 - Critério de "Chamada por AP/Reuters" — temos parceria editorial ou é placeholder? (atual: placeholder, decidir antes de F5).
 - Virtualização da tabela de municípios — Tanstack Virtual ou solução custom? (atual: pesquisar).
 
+## Emendas por specs posteriores
+
+### Spec 021 — Votação (2026-09-26)
+
+O painel "Votação" (RF-192..199) entra na tela `/uf/[sigla]` imediatamente após o `<ResultPanel>` da UF, renderizado em seu próprio `<Panel>`.
+
+### Spec 022 — A corrida em três círculos (2026-09-26)
+
+O painel "A corrida" (RF-200..210) entra imediatamente **depois** do painel "Votação" da UF. Ordem na tela da UF: resultado → "Votação" → "A corrida" → evolução (spec 020).
+
 ## v2 — S05 Multi-candidato e 2º turno
 
 Extensão da v1 (2 candidatos em foco) para visualização completa de todos os candidatos em 1T e métricas de 2º turno.

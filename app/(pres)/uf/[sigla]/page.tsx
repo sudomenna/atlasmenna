@@ -132,10 +132,12 @@ import {
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import { candidateMarkerColor } from "@/components/blocks/_candidateColor";
 import { CandidaturasAguardando } from "@/components/blocks/CandidaturasAguardando";
+import { CorridaTresCirculos } from "@/components/blocks/CorridaTresCirculos";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { MunicipioExplorer } from "@/components/blocks/MunicipioExplorer";
 import type { MunicipioRow } from "@/components/blocks/MunicipioTable";
 import { ResultPanel } from "@/components/blocks/ResultPanel";
+import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import { Footer } from "@/components/layout/Footer";
 import {
   municipiosFrom,
@@ -664,6 +666,32 @@ export default async function UFPage({ params }: UFPageProps) {
         pctApurado={payload.pct_apurado}
         title={<ResultTitle sigla={sigla} />}
         titleId="resultado-heading"
+      />
+
+      {/* Spec 021 RF-192 (EMENDADO em 2026-09-26, noite, decisão do dono) —
+          "Votação" DA UF: o eleitorado deste estado em três círculos, logo
+          depois do `<ResultPanel>` e ANTES de "A corrida". `payload.votacao`
+          é o agregado da UF (spec 022 RF-209); `projetada` sai da
+          participação projetada DA UF, nunca da nacional.
+          Payload sem `votacao` (fallback sintético em desenvolvimento, ou UF
+          sem agregado) ⇒ `<DetailUnavailable>` (RF-198) — não quebra. */}
+      <VotacaoEleitorado
+        kicker={`Presidente · ${sigla}`}
+        votacao={payload.votacao}
+        titleId="votacao-uf-heading"
+      />
+
+      {/* Spec 022 (RF-200/201) — "A corrida" da UF em três círculos,
+          imediatamente depois do `<ResultPanel>`. Uma corrida só ⇒ fatias por
+          CANDIDATURA, com o nome cruzado por `id` em `payload.candidatos`.
+          ⚠️ O payload sintetizado em desenvolvimento não traz `votacao` e cai
+          em `<DetailUnavailable>` (RF-207) — não quebra. */}
+      <CorridaTresCirculos
+        kicker={`Presidente · ${sigla}`}
+        modo="candidatura"
+        votacao={payload.votacao}
+        candidatos={payload.candidatos}
+        titleId="corrida-tres-circulos-heading"
       />
 
       {/* Seção 1b — spec 020 (RF-174): a evolução da apuração, no slot T-03

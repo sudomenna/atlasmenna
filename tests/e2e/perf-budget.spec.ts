@@ -325,7 +325,7 @@ test.describe("perf budget (RNF-007a/b/c)", () => {
   for (const route of ROUTES) {
     test(`bundle JS de script — ${route}`, async ({ page, baseURL }) => {
       await instalarProjecaoLocal(page, baseURL);
-      const result = await measureRoute(page, baseURL ?? "http://localhost:3000", route);
+      const result = await measureRoute(page, baseURL ?? "http://localhost:3100", route);
       writeArtifact(result);
 
       // RNF-007a mede o que o time controla: total above-the-fold menos o piso de

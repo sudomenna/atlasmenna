@@ -1,0 +1,523 @@
+/**
+ * components/blocks/CorridaTresCirculos.tsx
+ *
+ * Painel "A corrida" (spec 022) — a disputa em três círculos, cada um sobre uma
+ * base maior que o anterior: voto válido → voto dado → eleitorado inteiro. É a
+ * hierarquia do EA20 desenhada em três passos, e é IRMÃO do painel "Votação"
+ * (spec 021, `VotacaoEleitorado.tsx`): aquele é sobre o eleitorado, este é
+ * sobre a corrida. Mesma geometria, mesmo `Arco`, mesma regra de fatia zero.
+ *
+ * ## Os três círculos, e onde cada um fecha
+ *
+ *   1. **Dos votos válidos** — base `contagens.validos`. As quatro candidaturas
+ *      (ou partidos) de mais votos válidos e "Outros" (RF-202, RF-204).
+ *   2. **De quem votou** — base `contagens.comparecimento`. As mesmas fatias,
+ *      mais brancos, nulos e "Anulados e sub judice" (RF-205).
+ *   3. **Do eleitorado apto** — base `contagens.aptos`. As do círculo 2, mais
+ *      abstenção e "Ainda não apurado" (`aptos − instalados`, RF-206).
+ *
+ * Cada círculo confere a sua soma contra a sua base, **na unidade**, e devolve
+ * `null` quando não bate: a tela diz "não fecha" em vez de esticar uma fatia
+ * (constituição § 6). Fecham por identidade do TSE porque tudo vem do MESMO
+ * arquivo agregado da abrangência — ver {@link circuloValidos}.
+ *
+ * ## 🔴 Só voto VÁLIDO entra numa fatia com nome (RF-203)
+ *
+ * O voto por candidatura que o TSE publica (`cand[].vap`) inclui os votos de
+ * candidaturas anuladas e sub judice. Na captura real do simulado
+ * (`tests/fixtures/tse/2026-sim/br-c0001-e021270-u.json`) o MAIS votado do
+ * arquivo era `"Anulado sub judice"`. Ordenar por `votos` sem filtrar pela
+ * destinação poria em 1º lugar alguém cujos votos não contam. O filtro é
+ * `destino === "valido"`, igualdade exata — um destino ausente ou desconhecido
+ * NÃO é válido (memória `feedback_default_silencioso_enum`); ele põe o painel
+ * inteiro em "aguardando" (RF-207), ver {@link destinacaoPendente}.
+ *
+ * ## Estados (RF-207) — nenhum fabrica zero
+ *
+ * | no payload                                         | o que é              | tela                          |
+ * |----------------------------------------------------|----------------------|-------------------------------|
+ * | rota de Senador (`senado`)                         | aguardando medição   | os três em "aguardando"       |
+ * | `votacao`/`contagens` ausente                      | não sabemos          | `<DetailUnavailable>`         |
+ * | `destino_pendente` ou entrada com votos sem destino | aguardando destinação | os três em "aguardando…"     |
+ * | `corrida` (ou `corrida_por_partido`) ausente        | não sabemos          | `<DetailUnavailable>`         |
+ * | `validos == 0`                                     | não começou          | 1 e 2 "sem votos apurados"; 3 segue |
+ * | resto                                              | apurando             | RF-204..206                   |
+ *
+ * ⚠️ A ordem das linhas é decisão, não acaso:
+ *   - **Senado primeiro** (RF-210): o bloqueio é da tela, independente do que
+ *     o payload traga — "sempre no DOM".
+ *   - **pendente ANTES de ausente**: no modo partido o produtor OMITE
+ *     `corrida_por_partido` enquanto há destinação pendente (RF-209). Testar
+ *     a ausência primeiro transformaria "aguardando o TSE" em "não sabemos" —
+ *     duas notícias diferentes, com ações diferentes para quem opera.
+ *
+ * ## Cor
+ *
+ * Fatia de candidatura/partido pinta pela SIGLA, via `candidateColor`
+ * (ADR-0024, constituição § 2) — nunca pelo campo `cor` do payload
+ * (`tests/unit/components/cor-nunca-do-payload.test.ts`). Por ser
+ * preenchimento com extensão, leva a borda `--text-secondary` do
+ * `DATA_FILL_STROKE`: quatro bases da paleta ficam abaixo de 3:1 no tema claro.
+ *
+ * "Outros" é neutro: `--color-cand-other`, o mesmo token do termômetro "Outros
+ * candidatos" (`ProjectionThermometers.tsx`). Medido contra `--surface-page`:
+ *
+ *   claro  #6e6e6e sobre #f3f4f6 ... 4,63:1
+ *   escuro #737373 sobre #14171b ... 3,79:1
+ *
+ * Mas ele divide os círculos 2 e 3 com três fatias cinzentas do painel irmão
+ * (`--color-part-brancos-nulos`, `--ink-2`) e por luminância NÃO se distingue
+ * delas: 1,44:1 contra brancos/nulos e 1,19:1 contra anulados no claro (1,49 e
+ * 1,82 no escuro). Por isso ganha a terceira textura, `"trilho"` — uma linha
+ * correndo AO LONGO da fita, geometricamente diferente das listras
+ * transversais (brancos) e dos pontos (anulados). Nulos segue sólido.
+ *
+ * ## Nenhum texto dentro do SVG
+ *
+ * Mesma regra do painel irmão: o axe deste projeto põe contraste de texto em
+ * SVG no balde `incomplete`, que não reprova nada. A tradução textual
+ * (RNF-023) é a legenda VISÍVEL de cada círculo.
+ *
+ * Server Component puro — sem `"use client"`, sem estado, sem evento (RNF-007a).
+ */
+
+import { DetailUnavailable } from "@/components/atoms/surfaces/DetailUnavailable";
+import { Panel } from "@/components/atoms/surfaces/Panel";
+import { candidateColor } from "@/components/blocks/_candidateColor";
+import {
+  Arco,
+  type CorFatia,
+  FATIA_COR,
+  FATIA_LABEL,
+  type FatiaDesenho,
+  type FatiaKey,
+} from "@/components/blocks/VotacaoEleitorado";
+import type {
+  EdgeCorridaEntrada,
+  EdgeCorridaPartido,
+  EdgeDestinoVoto,
+  EdgeVotacao,
+  EdgeVotacaoContagens,
+  EdgeVotacaoUf,
+} from "@/lib/edge-config/types";
+import { formatVotes } from "@/lib/utils/format";
+
+// ---------------------------------------------------------------------------
+// Vocabulário
+// ---------------------------------------------------------------------------
+
+/** Candidatura onde há UMA corrida; partido onde há 27 (RF-201). */
+export type ModoCorrida = "candidatura" | "partido";
+
+/** Quantos concorrentes têm fatia própria antes de "Outros" (RF-202). */
+export const TOP_N = 4;
+
+/** As três destinações que o contrato admite — qualquer outra coisa é "sem destino". */
+const DESTINOS: ReadonlySet<EdgeDestinoVoto> = new Set(["valido", "anulado", "sub_judice"]);
+
+/** "Outros": neutro, com textura própria — ver o § "Cor" no cabeçalho. */
+export const COR_OUTROS: CorFatia = { fill: "var(--color-cand-other)", padrao: "trilho" };
+
+/** Borda de preenchimento com extensão — o `DATA_FILL_STROKE` aplicado ao arco. */
+const BORDA_PARTIDO = "var(--text-secondary)";
+
+/** Um concorrente já ordenado e rotulado — candidatura ou partido. */
+export interface Concorrente {
+  /** Chave estável: `cand-<número>` ou `partido-<sigla>`. */
+  key: string;
+  label: string;
+  partido: string;
+  votos: number;
+}
+
+/** Nome por número de urna — a lista `candidatos` do MESMO payload. */
+export type CandidatoNome = { id: number; nome?: string | null };
+
+// ---------------------------------------------------------------------------
+// Ordem e filtro — exportados porque é onde os defeitos moram
+// ---------------------------------------------------------------------------
+
+/**
+ * `true` quando a tela não pode separar voto válido de anulado (RF-207): o
+ * produtor sinalizou `destino_pendente`, ou alguma candidatura COM votos chegou
+ * sem destinação conhecida.
+ *
+ * "Com votos" (`votos > 0`) é deliberado: uma candidatura zerada sem destino
+ * não muda fatia nenhuma, e travar o painel por ela seria esperar à toa.
+ */
+export function destinacaoPendente(v: {
+  destino_pendente?: true;
+  corrida?: readonly EdgeCorridaEntrada[];
+}): boolean {
+  if (v.destino_pendente === true) return true;
+  return (v.corrida ?? []).some(
+    (e) => e.votos > 0 && (e.destino === undefined || !DESTINOS.has(e.destino)),
+  );
+}
+
+/** Rótulo de uma candidatura: nome quando a lista o tem, NUNCA inventado. */
+export function rotuloCandidatura(e: EdgeCorridaEntrada, nome?: string | null): string {
+  const sigla = e.partido ? ` · ${e.partido}` : "";
+  const n = nome?.trim();
+  return n ? `${n}${sigla}` : `Candidatura ${e.id}${sigla}`;
+}
+
+/**
+ * RF-202/203 — só as candidaturas `valido`, em ordem decrescente de votos, e
+ * desempate pelo número de urna CRESCENTE, para a ordem não depender da ordem
+ * de chegada do arquivo.
+ */
+export function ordenarCandidaturas(
+  corrida: readonly EdgeCorridaEntrada[],
+  candidatos: readonly CandidatoNome[] = [],
+): Concorrente[] {
+  const nomes = new Map(candidatos.map((c) => [c.id, c.nome]));
+  return corrida
+    .filter((e) => e.destino === "valido")
+    .sort((a, b) => b.votos - a.votos || a.id - b.id)
+    .map((e) => ({
+      key: `cand-${e.id}`,
+      label: rotuloCandidatura(e, nomes.get(e.id)),
+      partido: e.partido,
+      votos: e.votos,
+    }));
+}
+
+/** RF-201/202 — partidos em ordem decrescente de votos válidos, desempate pela sigla crescente. */
+export function ordenarPartidos(partidos: readonly EdgeCorridaPartido[]): Concorrente[] {
+  return [...partidos]
+    .sort(
+      (a, b) =>
+        b.votos_validos - a.votos_validos ||
+        (a.partido < b.partido ? -1 : a.partido > b.partido ? 1 : 0),
+    )
+    .map((p) => ({
+      key: `partido-${p.partido}`,
+      label: p.partido,
+      partido: p.partido,
+      votos: p.votos_validos,
+    }));
+}
+
+/** Uma fatia absoluta, ainda sem percentual — o percentual depende da base de cada círculo. */
+interface FatiaAbs {
+  key: string;
+  label: string;
+  abs: number;
+  pintura: CorFatia;
+}
+
+/**
+ * RF-202 — as quatro primeiras com fatia própria e "Outros" com a soma do
+ * resto. "Outros" sai SEMPRE da função, mesmo zerado: quem some com ele é a
+ * regra de fatia zero do `Arco` (spec 021), no mesmo ponto em que some
+ * qualquer outra fatia zerada — uma regra, um lugar.
+ */
+export function fatiasDaCorrida(ordenados: readonly Concorrente[]): FatiaAbs[] {
+  const top = ordenados.slice(0, TOP_N).map((c) => ({
+    key: c.key,
+    label: c.label,
+    abs: c.votos,
+    pintura: { fill: candidateColor(c.partido), borda: BORDA_PARTIDO },
+  }));
+  const resto = ordenados.slice(TOP_N).reduce((s, c) => s + c.votos, 0);
+  return [...top, { key: "outros", label: "Outros", abs: resto, pintura: COR_OUTROS }];
+}
+
+// ---------------------------------------------------------------------------
+// Os três círculos
+// ---------------------------------------------------------------------------
+
+function neutra(key: FatiaKey, abs: number): FatiaAbs {
+  return { key, label: FATIA_LABEL[key], abs, pintura: FATIA_COR[key] };
+}
+
+/**
+ * Fecha um círculo na sua base: nenhuma fatia negativa e soma EXATA. Qualquer
+ * outra coisa é `null` — "não fecha" na tela, nunca um círculo esticado.
+ */
+function fechar(fatias: readonly FatiaAbs[], base: number): FatiaDesenho[] | null {
+  if (fatias.some((f) => f.abs < 0)) return null;
+  const soma = fatias.reduce((s, f) => s + f.abs, 0);
+  if (soma !== base) return null;
+  return fatias.map((f) => ({ ...f, pct: base > 0 ? (f.abs / base) * 100 : 0 }));
+}
+
+/**
+ * Círculo 1 (RF-204) — só as fatias da corrida, sobre `contagens.validos`.
+ *
+ * Fecha por identidade do TSE porque `corrida` e `contagens` vêm do MESMO
+ * arquivo agregado: Σ `vap` das candidaturas `"Válido"` = `v.vv`, conferido na
+ * unidade na captura real do simulado. Se não fechar, o dado veio torto — e é
+ * isso que a tela diz.
+ */
+export function circuloValidos(
+  corrida: readonly FatiaAbs[],
+  c: EdgeVotacaoContagens,
+): FatiaDesenho[] | null {
+  return fechar(corrida, c.validos);
+}
+
+/**
+ * Círculo 2 (RF-205) — a corrida mais brancos, nulos e "Anulados e sub
+ * judice", sobre `contagens.comparecimento`. Sem a fatia dos anulados o
+ * círculo não fecha: eles estão DENTRO do comparecimento (RF-197, spec 021).
+ */
+export function circuloComparecimento(
+  corrida: readonly FatiaAbs[],
+  c: EdgeVotacaoContagens,
+): FatiaDesenho[] | null {
+  return fechar(
+    [
+      ...corrida,
+      neutra("brancos", c.brancos),
+      neutra("nulos", c.nulos),
+      neutra("anulados", c.anulados + c.sub_judice),
+    ],
+    c.comparecimento,
+  );
+}
+
+/**
+ * Círculo 3 (RF-206) — o círculo 2 mais abstenção e "Ainda não apurado",
+ * sobre `contagens.aptos`. "Ainda não apurado" é `aptos − instalados`, a
+ * mesma subtração ESPECÍFICA de `naoApuradoInstalacao` (spec 021), nunca "o
+ * resto de tudo". ⚠️ Apurado, não projetado.
+ */
+export function circuloAptos(
+  corrida: readonly FatiaAbs[],
+  c: EdgeVotacaoContagens,
+): FatiaDesenho[] | null {
+  return fechar(
+    [
+      ...corrida,
+      neutra("brancos", c.brancos),
+      neutra("nulos", c.nulos),
+      neutra("anulados", c.anulados + c.sub_judice),
+      neutra("abstencao", c.abstencao),
+      neutra("nao_apurado", c.aptos - c.instalados),
+    ],
+    c.aptos,
+  );
+}
+
+// ---------------------------------------------------------------------------
+// O painel
+// ---------------------------------------------------------------------------
+
+export interface CorridaTresCirculosProps {
+  /**
+   * Bloco `votacao` do payload — nacional (`EdgeVotacao`) ou de UF
+   * (`EdgeVotacaoUf`). Ausente ⇒ `<DetailUnavailable>`. Os payloads de UF
+   * sintetizados em desenvolvimento não o têm, e caem aqui.
+   */
+  votacao?: EdgeVotacao | EdgeVotacaoUf | null;
+  /** RF-201: `"candidatura"` lê `corrida`; `"partido"` lê `corrida_por_partido`. */
+  modo: ModoCorrida;
+  /**
+   * Lista `candidatos` do MESMO payload, só para o NOME (cruzado por `id`).
+   * Sem nome, a fatia mostra número e sigla — nunca um nome inventado.
+   */
+  candidatos?: readonly CandidatoNome[];
+  /** RF-210 — rota de Senador: os três círculos em "aguardando", sempre no DOM. */
+  senado?: boolean;
+  kicker?: string;
+  heading?: string;
+  headingLevel?: 1 | 2 | 3 | 4;
+  /**
+   * `id` do heading; amarra o `aria-labelledby` do Panel E prefixa os `id` de
+   * `<defs>` dos arcos. 🔴 Tem de ser único na página: este painel fica na
+   * mesma página que o "Votação", e `id` de SVG é global ao documento.
+   */
+  titleId?: string;
+  className?: string;
+}
+
+const TITLE_ID_PADRAO = "corrida-tres-circulos-heading";
+
+/** Estado dos três círculos quando nenhum pode ser desenhado. */
+type Espera = { sufixo: string; texto: string };
+
+const ESPERA_SENADO: Espera = {
+  sufixo: "aguardando-senado",
+  texto:
+    "Este gráfico ainda não está disponível para o Senado. Com duas vagas em disputa, cada eleitor vota duas vezes, e ainda estamos conferindo como o TSE soma esses votos.",
+};
+
+const ESPERA_DESTINO: Espera = {
+  sufixo: "aguardando-destino",
+  texto:
+    "Aguardando a separação dos votos válidos — o TSE ainda não informou quais votos de cada candidatura são válidos e quais foram anulados.",
+};
+
+const SEM_VOTOS: Espera = {
+  sufixo: "sem-votos",
+  texto: "Sem votos apurados ainda — não há base para este gráfico.",
+};
+
+function naoFecha(base: string): Espera {
+  return {
+    sufixo: "nao-fecha",
+    texto: `Não fecha: a soma das fatias difere do total de ${base} publicado pelo TSE — o gráfico não é desenhado para não inventar um número.`,
+  };
+}
+
+export function CorridaTresCirculos({
+  votacao,
+  modo,
+  candidatos = [],
+  senado = false,
+  kicker,
+  heading = "A corrida",
+  headingLevel = 2,
+  titleId = TITLE_ID_PADRAO,
+  className,
+}: CorridaTresCirculosProps) {
+  const rotuloIndisponivel =
+    modo === "partido" ? "A corrida por partido" : "A corrida por candidatura";
+  const indisponivel = (
+    <Panel
+      kicker={kicker}
+      title={heading}
+      titleId={titleId}
+      headingLevel={headingLevel}
+      className={className}
+    >
+      <DetailUnavailable label={rotuloIndisponivel} reason="not_found" />
+    </Panel>
+  );
+
+  const c = votacao?.contagens;
+
+  // RF-207, na ordem do cabeçalho. `espera` põe os TRÊS círculos no mesmo
+  // estado; `null` segue para a aritmética.
+  let espera: Espera | null = null;
+  let corrida: FatiaAbs[] = [];
+  if (senado) {
+    espera = ESPERA_SENADO;
+  } else if (!votacao || !c) {
+    return indisponivel;
+  } else if (destinacaoPendente(votacao)) {
+    espera = ESPERA_DESTINO;
+  } else if (modo === "partido") {
+    const porPartido = "corrida_por_partido" in votacao ? votacao.corrida_por_partido : undefined;
+    if (!porPartido) return indisponivel;
+    corrida = fatiasDaCorrida(ordenarPartidos(porPartido));
+  } else {
+    if (!votacao.corrida) return indisponivel;
+    corrida = fatiasDaCorrida(ordenarCandidaturas(votacao.corrida, candidatos));
+  }
+
+  const semVotos = !espera && c !== undefined && c.validos === 0;
+  const c1 = espera || semVotos || !c ? null : circuloValidos(corrida, c);
+  const c2 = espera || semVotos || !c ? null : circuloComparecimento(corrida, c);
+  const c3 = espera || !c ? null : circuloAptos(corrida, c);
+
+  const vazio = (
+    n: 1 | 2 | 3,
+    fatias: FatiaDesenho[] | null,
+    base: string,
+    semBase: boolean,
+  ): { testid: string; texto: string } | undefined => {
+    const e = espera ?? (semBase ? SEM_VOTOS : fatias ? null : naoFecha(base));
+    return e ? { testid: `corrida-circulo-${n}-${e.sufixo}`, texto: e.texto } : undefined;
+  };
+
+  const porPartido = modo === "partido";
+
+  return (
+    <Panel
+      kicker={kicker}
+      title={heading}
+      titleId={titleId}
+      headingLevel={headingLevel}
+      className={className}
+    >
+      <div
+        data-testid="corrida-tres-circulos"
+        data-modo={modo}
+        data-estado={
+          espera === ESPERA_SENADO
+            ? "aguardando-senado"
+            : espera === ESPERA_DESTINO
+              ? "aguardando-destino"
+              : semVotos
+                ? "sem-votos"
+                : "apurando"
+        }
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: "var(--space-5) var(--space-6)",
+        }}
+      >
+        {/* Círculo 1 — RF-204. Só voto válido, sobre os válidos. */}
+        <Arco
+          id="corrida-circulo-1"
+          defsPrefix={titleId}
+          titulo="Dos votos válidos"
+          baseLabel="votos válidos"
+          total={c?.validos ?? 0}
+          fatias={c1 ?? []}
+          vazio={vazio(1, c1, "votos válidos", semVotos)}
+        />
+
+        {/* Círculo 2 — RF-205. Sobre quem votou; anulado ≠ nulo. */}
+        <Arco
+          id="corrida-circulo-2"
+          defsPrefix={titleId}
+          titulo="De quem votou"
+          baseLabel="eleitores que votaram"
+          total={c?.comparecimento ?? 0}
+          fatias={c2 ?? []}
+          vazio={vazio(2, c2, "eleitores que votaram", semVotos)}
+        />
+
+        {/* Círculo 3 — RF-206. Sobre o eleitorado inteiro, APURADO (não
+            projetado), com "Ainda não apurado" nomeado. */}
+        <Arco
+          id="corrida-circulo-3"
+          defsPrefix={titleId}
+          titulo="Do eleitorado apto, até agora"
+          baseLabel="eleitores aptos"
+          total={c?.aptos ?? 0}
+          fatias={c3 ?? []}
+          vazio={vazio(3, c3, "eleitores aptos", false)}
+        />
+      </div>
+
+      {/* Metodologia (RF-208, constituição § 8): de onde vêm os círculos, por
+          que podem diferir da lista acima, e por que anulado não é nulo. */}
+      <p
+        data-testid="corrida-metodologia"
+        style={{
+          marginTop: "var(--space-4)",
+          font: "var(--type-body-sm)",
+          fontSize: "var(--text-xs)",
+          color: "var(--text-secondary)",
+        }}
+      >
+        Os três gráficos vêm do total que o TSE publica para{" "}
+        {porPartido ? "cada estado" : "esta abrangência"} — o mesmo arquivo das contagens de
+        eleitorado — e por isso cada um fecha exatamente na sua base. Os votos de cada{" "}
+        {porPartido ? "partido" : "candidatura"} aqui podem diferir por um ciclo de atualização dos
+        números exibidos em outras partes da página, que são somados zona a zona.{" "}
+        {porPartido ? (
+          <>
+            Na eleição para governador são 27 disputas estaduais, e não existe um primeiro colocado
+            nacional: cada fatia é a soma dos votos válidos das candidaturas de um partido nos 27
+            estados.{" "}
+          </>
+        ) : null}
+        Só o voto válido entra na fatia de {porPartido ? "um partido" : "uma candidatura"}: votos
+        dados a candidaturas anuladas ou sub judice ficam em “Anulados e sub judice”, que não se
+        confunde com voto nulo: no voto nulo o eleitor não escolheu ninguém, enquanto o anulado foi
+        dado a uma candidatura e anulado depois pela Justiça — sub judice é a parte ainda sob
+        decisão.
+        {c && c.aptos > 0 && !espera ? (
+          <> O terceiro gráfico é sobre os {formatVotes(c.aptos)} eleitores aptos.</>
+        ) : null}
+      </p>
+    </Panel>
+  );
+}

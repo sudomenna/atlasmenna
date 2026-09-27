@@ -1485,8 +1485,93 @@
       "ship_blocked_on": [],
       "notes": "Escrita em 2026-09-17 a partir de protótipo visual do dono do produto e de decisões dele na mesma sessão (spec.md § Decisões do dono). Fases 0, 1 e 2 implementadas (⚠️ corrige nota anterior que dizia RF-170-176 'não implementadas' e citava migration 0009/Python como bloqueadores — ambos entregues): componente `<SerieApuracaoChart />` (Server Component SVG, sem lib de charting), dados persistidos em `projections` (RF-167), forma colunar limitada por construção (RF-168), último ponto síncrono com payload (RF-169) — `fetch_series_por_candidato`/`anexar_ponto_corrente`/`montar_serie_por_candidato` em `api/model/project.py` desde 18/09. RF-170 a RF-176 têm cobertura ✅ ou 🟡 parcial em `traceability.md`; o veredito formal de RF-168/RF-169 aguarda `rf-coverage-checker`. Fases 3 (simulação) e 4 (replay 2022) seguem abertas — bloqueiam `shipped`. Consequência registrada e aceita: candidatura que cai do top-4 desaparece do gráfico inclusive do passado; ultrapassagem fica invisível — mitigado por legenda e tabela acessível, não resolvido. Duas emendas do dono em 2026-09-18, formalizadas no ADR-0047 e propagadas para RF-171 (cor por textForParty, a variante legível do token do partido — a fonte continua sendo a sigla) e RF-168e/RF-169d (ciclo sem dado_ts não vira ponto, nas duas metades: leitura e ponto corrente).",
       "path": "docs/specs/020-evolucao-da-apuracao/"
+    },
+    {
+      "id": "021-votacao-eleitorado",
+      "title": "Votação — o eleitorado inteiro em três círculos, apurado e projetado",
+      "status": "draft",
+      "priority": "M",
+      "personas": ["P1", "P2", "P3"],
+      "screens": ["T-01", "T-03", "T-10", "T-12"],
+      "requirements": [
+        "RF-192",
+        "RF-193",
+        "RF-193b",
+        "RF-194",
+        "RF-195",
+        "RF-196",
+        "RF-197",
+        "RF-198",
+        "RF-199"
+      ],
+      "depends_on": [
+        "001-ingestao-tse",
+        "002-modelo-estatistico",
+        "003-home-nacional",
+        "006-grid-governadores",
+        "016-senador",
+        "017-deputado-federal"
+      ],
+      "apis": [],
+      "components": ["VotacaoEleitorado", "Panel", "DetailUnavailable"],
+      "nfr": ["RNF-002", "RNF-007a", "RNF-022", "RNF-023", "RNF-024", "RNF-026"],
+      "adrs": ["0001", "0017", "0018", "0022", "0031"],
+      "amends": [
+        "003-home-nacional",
+        "006-grid-governadores",
+        "016-senador",
+        "017-deputado-federal"
+      ],
+      "ship_blocked_on": [],
+      "notes": "Painel de três círculos sobre o eleitorado: (1) sobre os aptos com não apurado em cinza; (2) sobre o eleitorado já apurado; (3) sobre os aptos com valores projetados. Implementação em progresso desde 2026-09-26. Decisão do dono: 14/09 fixou três estados (não começou / não sabemos / apurando), 26/09 pediu painel próprio distinto de spec 022.",
+      "path": "docs/specs/021-votacao-eleitorado/"
+    },
+    {
+      "id": "022-corrida-em-tres-circulos",
+      "title": "A corrida em três círculos — válidos, votantes e eleitorado, por candidatura ou por partido",
+      "status": "implementing",
+      "priority": "M",
+      "personas": ["P1", "P2", "P3"],
+      "screens": ["T-01", "T-03", "T-10"],
+      "requirements": [
+        "RF-200",
+        "RF-201",
+        "RF-202",
+        "RF-203",
+        "RF-204",
+        "RF-205",
+        "RF-206",
+        "RF-207",
+        "RF-208",
+        "RF-209",
+        "RF-210"
+      ],
+      "depends_on": [
+        "001-ingestao-tse",
+        "003-home-nacional",
+        "004-pagina-uf-presidencial",
+        "005-pagina-uf-governador",
+        "006-grid-governadores",
+        "016-senador",
+        "021-votacao-eleitorado"
+      ],
+      "apis": [],
+      "components": ["CorridaTresCirculos", "VotacaoEleitorado", "Panel", "DetailUnavailable"],
+      "nfr": ["RNF-002", "RNF-007a", "RNF-022", "RNF-023", "RNF-024", "RNF-026"],
+      "adrs": ["0001", "0017", "0018", "0024"],
+      "amends": [
+        "003-home-nacional",
+        "004-pagina-uf-presidencial",
+        "005-pagina-uf-governador",
+        "006-grid-governadores",
+        "016-senador",
+        "021-votacao-eleitorado"
+      ],
+      "ship_blocked_on": [],
+      "notes": "A corrida destaca os votos válidos: (1) a fatia de cada candidato/partido; (2) os demais (anulados, sub judice, brancos, nulos); (3) abstinência e não apurado. Distinção crítica do spec 021: aqui a fonte é o agregado TSE por abrangência (mesmo instante, mesmos RFs), não os votos por zona (que podem estar um ciclo atrás). Implementação completa em 2026-09-26: 46 testes TS + 39 testes Py + 18 simulado + 5 bytes. Três decisões do dono (26/09): por candidatura + por partido; levar destinação até a tela; destravar círculos 2 e 3 das UFs; antes da destinação, 'aguardando'; Senado em 'aguardando'.",
+      "path": "docs/specs/022-corrida-em-tres-circulos/"
     }
   ],
   "orquestracao_paralela": "docs/_meta/orquestracao-paralela.md",
-  "handoff_atual": "docs/_meta/handoff-2026-09-21.md"
+  "handoff_atual": "docs/_meta/handoff-2026-09-26.md"
 }

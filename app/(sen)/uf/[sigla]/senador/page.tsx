@@ -75,10 +75,12 @@ import { Panel } from "@/components/atoms/surfaces/Panel";
 import { candidateMarkerColor } from "@/components/blocks/_candidateColor";
 import { CandidaturasAguardando } from "@/components/blocks/CandidaturasAguardando";
 import { ChancesPanel } from "@/components/blocks/ChancesPanel";
+import { CorridaTresCirculos } from "@/components/blocks/CorridaTresCirculos";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { MunicipioExplorer } from "@/components/blocks/MunicipioExplorer";
 import type { MunicipioRow } from "@/components/blocks/MunicipioTable";
 import { ResultPanel } from "@/components/blocks/ResultPanel";
+import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import { Footer } from "@/components/layout/Footer";
 import {
   municipiosFrom,
@@ -525,6 +527,35 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
         titleId="resultado-heading"
         ufDaFoto={sigla}
         vagas={vagas}
+      />
+
+      {/* Spec 021 RF-192 (EMENDADO em 2026-09-26, noite, decisão do dono) —
+          "Votação" DA UF: o eleitorado deste estado em três círculos, logo
+          depois do `<ResultPanel>` e ANTES de "A corrida". `payload.votacao`
+          é o agregado da UF (spec 022 RF-209); `projetada` sai da
+          participação projetada DA UF, nunca da nacional.
+          ⚠️ Senado: duas vagas, dois votos por eleitor (spec 022 RF-210).
+          Se as contagens não fecharem nas identidades do RF-193/194, os
+          arcos dizem "não fecha" em vez de desenhar torto.
+          Payload sem `votacao` (fallback sintético em desenvolvimento, ou UF
+          sem agregado) ⇒ `<DetailUnavailable>` (RF-198) — não quebra. */}
+      <VotacaoEleitorado
+        kicker={`Senador · ${sigla}`}
+        votacao={payload.votacao}
+        titleId="votacao-uf-heading"
+      />
+
+      {/* Spec 022 (RF-200/210) — "A corrida", imediatamente depois do
+          `<ResultPanel>` da UF, e em "aguardando" por decisão do dono (26/09):
+          com duas vagas cada eleitor vota duas vezes, e ainda não há captura
+          real de Senador para medir como o TSE conta isso. Fica no DOM. */}
+      <CorridaTresCirculos
+        kicker={`Senador · ${sigla}`}
+        modo="candidatura"
+        senado
+        votacao={payload.votacao}
+        candidatos={payload.candidatos}
+        titleId="corrida-tres-circulos-heading"
       />
 
       {/* Seção 2 — RF-103. O bloco NUNCA sai do DOM (ADR-0017): sem

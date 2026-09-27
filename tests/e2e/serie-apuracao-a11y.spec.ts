@@ -130,7 +130,7 @@ for (const [nomeFixture, htmlFixture] of Object.entries(FIXTURES)) {
         request,
         baseURL,
       }) => {
-        const base = baseURL ?? "http://localhost:3000";
+        const base = baseURL ?? "http://localhost:3100";
         const css = await cssDoSitePublicado(request, base);
 
         await page.setViewportSize({ width: viewport.width, height: viewport.height });

@@ -1056,6 +1056,64 @@ def test_ciclo_do_cargo_6_publica_bancada_e_detalhe_por_uf(ciclo_deputado) -> No
     assert "vagas_obtidas" not in json.dumps(publicados[0], ensure_ascii=False)
 
 
+def test_ciclo_do_cargo_6_publica_votacao_no_detalhe_da_uf(ciclo_deputado) -> None:
+    """Spec 021 RF-192 emendado (26/09 noite) — o painel "Votação" da tela
+    `/uf/[sigla]/deputado-federal` lê `DeputadoUfDetail.votacao`.
+
+    SP tem linha agregada (`nivel = "uf"`) ⇒ `votacao` com as contagens DO
+    agregado; RJ não tem ⇒ chave OMITIDA ("não sabemos", RF-198), nunca
+    zeros. Nunca `corrida` (spec 022 RF-200). Sem `projetada`: o ciclo
+    proporcional não calcula participação projetada, e a regra é "sem a da
+    UF ⇒ aguardando", nunca emprestar outra.
+    """
+    agregado_sp = {
+        **_snapshot("SP", {
+            "e": {"te": "1000", "esi": "900", "c": "700", "a": "200"},
+            "v": {"vv": "600", "vb": "40", "tvn": "30", "van": "20", "vansj": "10"},
+        }),
+        "nivel": "uf",
+    }
+    status, _resposta, publicados = ciclo_deputado(
+        [
+            _snapshot("SP", _envelope_dez_vagas()),
+            _snapshot("RJ", _envelope_simples(3000, 1000)),
+            agregado_sp,
+        ]
+    )
+    assert status == 200
+    payload, detalhes = publicados[0]
+
+    assert detalhes["SP"]["votacao"] == {
+        "contagens": {
+            "aptos": 1000,
+            "instalados": 900,
+            "comparecimento": 700,
+            "abstencao": 200,
+            "validos": 600,
+            "brancos": 40,
+            "nulos": 30,
+            "anulados": 20,
+            "sub_judice": 10,
+        }
+    }
+    assert "votacao" not in detalhes["RJ"], "UF sem agregado é 'não sabemos'"
+    # O nacional segue sendo a soma dos agregados de UF (só SP aqui).
+    assert payload["votacao"]["contagens"]["aptos"] == 1000
+    # E o agregado não entrou no modelo: a bancada de SP é a das zonas.
+    assert payload["bancada"]["cadeiras_atribuidas"] == 12
+
+
+def test_construir_detalhe_omite_votacao_quando_none() -> None:
+    """Chave OMITIDA, não `null` — o contrato tem dois estados, não três."""
+    _nac, detalhes = _payload([_uf("RJ", _envelope_simples(3000, 1000))])
+    assert "votacao" not in detalhes["RJ"]
+    _nac2, detalhes2 = _payload(
+        [_uf("RJ", _envelope_simples(3000, 1000))],
+        votacao_by_uf={"RJ": {"contagens": {"aptos": 1}}},
+    )
+    assert detalhes2["RJ"]["votacao"] == {"contagens": {"aptos": 1}}
+
+
 def test_uf_com_mais_de_uma_linha_de_zona_loga_info_nao_warn(
     ciclo_deputado, caplog: pytest.LogCaptureFixture
 ) -> None:

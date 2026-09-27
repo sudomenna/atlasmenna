@@ -57,10 +57,18 @@
  * ⚠️ O que este stub MUDA na medição — leia antes de citar um número
  * ===========================================================================
  *
- * 🔴 **A página fica com DUAS fontes de dado, não uma.** Este stub intercepta
- * apenas `fetch` do CLIENTE. Tudo que é renderizado no SERVIDOR continua vindo
- * de onde o servidor lê — em `pnpm start` com `EDGE_CONFIG` no ambiente, isso é
- * o **Global Config de PRODUÇÃO**.
+ * ✅ **2026-09-26 — as duas pontas leem a MESMA fixture.** Este stub
+ * intercepta só o `fetch` do CLIENTE; o SERVIDOR lê o Global Config. Desde
+ * 26/09 o `pnpm start:e2e` aponta o `EDGE_CONFIG` para
+ * `scripts/edge-config-falso.ts`, que serve `tests/fixtures/simulacao/` — o
+ * mesmo diretório que este stub lê. O texto abaixo, até o fim deste bloco,
+ * descreve o estado ANTERIOR (SSR lendo produção) e fica como registro; ver
+ * `docs/operations/runbook.md` § "O dado dos portões é FIXO".
+ *
+ * (Histórico) 🔴 **A página ficava com DUAS fontes de dado, não uma.** Tudo
+ * que era renderizado no SERVIDOR vinha de onde o servidor lia — em
+ * `pnpm start` com o `EDGE_CONFIG` do `.env.local`, o **Global Config de
+ * PRODUÇÃO**.
  *
  * Medido em 2026-09-21, na home: a lista de candidaturas (SSR) exibia
  * "CANDIDATO 7", "CANDIDATO 9977" — nomes de produção; as fixtures do simulado

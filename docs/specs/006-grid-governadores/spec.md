@@ -120,6 +120,16 @@ Decisão D7 (2026-09-05): `/governador` recebe **apenas a participação** do he
 
 Mesmos da home (performance + a11y). Bundle above-the-fold: respeita RNF-007a (sem MapLibre — só SVG inline pro cartogram e cards).
 
+## Emendas por specs posteriores
+
+### Spec 021 — Votação (2026-09-26)
+
+O painel "Votação" (RF-192..199) **não entra** na tela nacional `/governador`. A tela renderiza a participação (RF-062) e a grade de 27 corridas estaduais (RF-145), sem painéis de "Votação" ou "A corrida". O painel "Votação" entra nas telas de UF `/uf/[sigla]/governador` conforme spec 021 RF-192 emendado.
+
+### Spec 022 — A corrida em três círculos (2026-09-26)
+
+O painel "A corrida" (RF-200..210) **não entra** na tela nacional `/governador`. Entra apenas nas telas de UF `/uf/[sigla]/governador`, imediatamente após o `<ResultPanel>` (e após o painel "Votação" quando presente).
+
 ## Cross-refs
 
 - Design: [./design.md](./design.md)

@@ -100,7 +100,6 @@ import {
   type UfResumoCorrida,
 } from "@/components/blocks/UfBandeirasGrid";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
-import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { cargoInfo } from "@/lib/config/cargos";
@@ -472,17 +471,10 @@ export default async function DeputadoFederalPage() {
         </div>
       </Panel>
 
-      {/* Spec 021 (RF-192) — "Votação": o eleitorado inteiro em três círculos,
-          em `<Panel>` PRÓPRIO, imediatamente depois do painel de resultado.
-
-          🔴 Painel próprio, e não apêndice do de cima: aquele responde "quem
-          está ganhando", este "como o eleitorado se comportou". O dono pediu a
-          separação.
-
-          `payload.votacao` é opcional — sem ele o componente renderiza
-          `<DetailUnavailable>` (RF-198), nunca zeros. Os três estados que ele
-          distingue (ausente / "não começou" / apurando) estão no RF-193b. */}
-      <VotacaoEleitorado kicker="Deputado Federal · Brasil" votacao={payload.votacao} />
+      {/* Spec 021 RF-192 — EMENDADO em 2026-09-26 (noite), decisão do dono:
+          "Votação" SAIU desta capa (repetia o eleitorado do Brasil da capa de
+          Presidente). Vive em `/uf/[sigla]/deputado-federal`, com o dado DA
+          UF. */}
 
       {/* Seção 2 — a bancada. RF-122, RF-125.1, RF-127, RF-130. */}
       <Panel kicker="Bancada apurada" title="Quem fica com as cadeiras" titleId="bancada-heading">

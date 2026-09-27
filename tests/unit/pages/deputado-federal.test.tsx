@@ -1217,3 +1217,75 @@ describe("ADR-0038 — hora do dado, e um relógio por frase", () => {
     expect(carimbo).not.toContain("Detalhe deste estado");
   });
 });
+
+/**
+ * Spec 021 RF-192 emendado (2026-09-26, noite) — um `votacao` de UF que FECHA
+ * nas identidades do TSE (`c + a = esi`; `vv+vb+tvn+van+vansj = c`), com
+ * números que não existem em nenhum outro lugar do payload: se a tela
+ * mostrar `instalados = 900`, só pode ter vindo daqui.
+ */
+const VOTACAO_UF = {
+  contagens: {
+    aptos: 1000,
+    instalados: 900,
+    comparecimento: 700,
+    abstencao: 200,
+    validos: 600,
+    brancos: 40,
+    nulos: 30,
+    anulados: 20,
+    sub_judice: 10,
+  },
+  projetada: { validos: 700, brancos: 50, nulos: 40, abstencao: 150 },
+};
+
+describe("spec 021 RF-192 emendado (2026-09-26, noite) — Deputado", () => {
+  it("🔴 /deputado-federal NÃO tem 'Votação' — mesmo com `votacao` no payload", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional({ votacao: VOTACAO_UF }));
+    const doc = await render(DeputadoFederalPage());
+    expect(doc.querySelector('[aria-labelledby="votacao-eleitorado-heading"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="votacao-eleitorado"]')).toBeNull();
+  });
+
+  it("/uf/SP/deputado-federal tem 'Votação' do detalhe DA UF, depois do resumo e antes da bancada, sem 'A corrida'", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(detalhe({ votacao: VOTACAO_UF })));
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const paineis = [...doc.querySelectorAll('[data-testid="panel"]')].map((p) =>
+      p.getAttribute("aria-labelledby"),
+    );
+    expect(paineis.slice(0, 3)).toEqual([
+      "resumo-heading",
+      "votacao-uf-heading",
+      "bancada-uf-heading",
+    ]);
+    const painel = doc.querySelector('[aria-labelledby="votacao-uf-heading"]');
+    expect(painel?.querySelector('[data-testid="panel-kicker"]')?.textContent).toBe(
+      "Deputado Federal · SP",
+    );
+    expect(
+      painel?.querySelector('[data-testid="votacao-eleitorado"]')?.getAttribute("data-instalados"),
+    ).toBe("900");
+    expect(painel?.textContent ?? "").not.toMatch(/Brasil/);
+    expect(doc.querySelector('[aria-labelledby="corrida-tres-circulos-heading"]')).toBeNull();
+  });
+
+  it("/uf/SP/deputado-federal com Blob fora do ar: 'Votação' fica no DOM, indisponível (RF-198)", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(indisponivel("fetch_error"));
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const painel = doc.querySelector('[aria-labelledby="votacao-uf-heading"]');
+    expect(painel).not.toBeNull();
+    expect(painel?.querySelector('[data-testid="detail-unavailable"]')).not.toBeNull();
+    expect(doc.querySelectorAll("h1").length).toBe(1);
+  });
+
+  it("/uf/SP/deputado-federal com detalhe anterior à emenda (sem `votacao`): indisponível, não quebra", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(detalhe()));
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const painel = doc.querySelector('[aria-labelledby="votacao-uf-heading"]');
+    expect(painel?.querySelector('[data-testid="detail-unavailable"]')).not.toBeNull();
+    expect(doc.querySelector("[data-testid='uf-agremiacoes']")).not.toBeNull();
+  });
+});

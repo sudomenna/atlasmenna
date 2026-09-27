@@ -264,11 +264,12 @@ estimador existente e não depende de módulo novo de cálculo.
    soma nossa das 27 UFs. Isso é **agregação**, não estimativa, e não fere a
    constituição § 6 — mas a tela precisa dizer de onde vem o número.
 
-## Cross-refs
+## Emendas por specs posteriores
 
-- [ADR-0026](../../architecture/adrs/0026-cargos-senador-deputado-ingestao-e-read-path.md) — ingestão e read path (item 1 emendado: cron por segmento de rota, não query string)
-- [ADR-0028](../../architecture/adrs/0028-corrida-explicita-por-rota.md) — corrida explícita por rota; pré-requisito implementado em 2026-09-11
-- [ADR-0021](../../architecture/adrs/0021-extrapolacao-do-apurado-sem-2022.md) — o estimador reaproveitado em nível de UF
-- [ADR-0034](../../architecture/adrs/0034-resultpanel-colapso-visual-corte-fora-do-kit.md) — `<ResultPanel>` como hero
-- `lib/config/cargos.ts` — tabela canônica (`vagasPorUf: 2`, `granularidade: "uf"`, `temSegundoTurno: false`)
-- [Spec 017](../017-deputado-federal/spec.md) — o outro cargo novo, proporcional
+### Spec 021 — Votação (2026-09-26)
+
+O painel "Votação" (RF-192..199) **não entra** na tela nacional `/senador`. Entra apenas na tela de UF `/uf/[sigla]/senador`, imediatamente após o `<ResultPanel>` (spec 021 RF-192 emendado, 2026-09-26 noite).
+
+### Spec 022 — A corrida em três círculos (2026-09-26)
+
+O painel "A corrida" (RF-200..210) **não entra** na tela nacional `/senador`. Entra apenas em `/uf/[sigla]/senador` imediatamente depois do `<ResultPanel>`. Os três círculos ficam em "aguardando" (RF-210) até haver captura real de cargo 5 para medir como o TSE conta os dois votos por eleitor. O produtor já publica `corrida` (UF) para Senador; `corrida_por_partido` não é usado neste cargo.

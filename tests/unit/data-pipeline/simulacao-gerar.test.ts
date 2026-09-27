@@ -36,6 +36,7 @@ import {
   CLI_DEFAULT,
   contagensVotacao,
   type DadosSimulacao,
+  designarDestinos,
   distribuirPctPorUf,
   gerarSimulacao,
   type Manifest,
@@ -1633,5 +1634,432 @@ describe("simulacao-gerar — o bloco `votacao` (spec 021)", () => {
     expect(() => validarSaida(gerar({ pct: 0 }))).not.toThrow();
     expect(() => validarSaida(s)).not.toThrow();
     expect(() => validarSaida(gerar({ pct: 100 }))).not.toThrow();
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Spec 022 — a corrida em três círculos (RF-203 / RF-209)
+//
+// O simulado tem de ser HONESTO como o TSE: em toda abrangência, Σ votos das
+// candidaturas `valido` == `validos`, e o mesmo para anulado e sub judice.
+// Antes da spec o gerador espalhava os anulados pelas candidaturas sem marcar
+// ninguém (medido em 26/09: Σ `votos_atuais` nacional = válidos + anulados +
+// sub judice). Nenhum teste aqui depende de as contagens serem as mesmas nos
+// três cargos — isso é coincidência da fixture, não contrato.
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe("simulacao-gerar — spec 022, a corrida", () => {
+  const s = gerar();
+
+  function somaPorDestino(
+    corrida: readonly { votos: number; destino?: string }[] | undefined,
+  ): Record<string, number> {
+    const out: Record<string, number> = { valido: 0, anulado: 0, sub_judice: 0, ausente: 0 };
+    for (const e of corrida ?? [])
+      out[e.destino ?? "ausente"] = (out[e.destino ?? "ausente"] ?? 0) + e.votos;
+    return out;
+  }
+
+  it("🔴 Presidente nacional: Σ válidos, anulados e sub judice fecham nas contagens [mutação: alocar o vvc inteiro entre as candidaturas sem destinação]", () => {
+    const v = s.presidente.votacao;
+    const soma = somaPorDestino(v?.corrida);
+    expect(soma.valido).toBe(v?.contagens.validos);
+    expect(soma.anulado).toBe(v?.contagens.anulados);
+    expect(soma.sub_judice).toBe(v?.contagens.sub_judice);
+    expect(soma.ausente).toBe(0);
+    expect(soma.anulado).toBeGreaterThan(0);
+    expect(soma.sub_judice).toBeGreaterThan(0);
+    expect(v?.corrida_por_partido).toBeUndefined();
+    expect(v?.destino_pendente).toBeUndefined();
+  });
+
+  it("🔴 cada UF dos três cargos fecha com o agregado DA UF, não com o do país [mutação: copiar as contagens nacionais para a UF]", () => {
+    for (const [nome, mapa] of [
+      ["presidente", s.presidenteUf],
+      ["governador", s.governadorUf],
+      ["senador", s.senadorUf],
+    ] as const) {
+      for (const c of s.ctxs) {
+        const v = mapa[c.uf]?.votacao;
+        expect(v, `${nome}/${c.uf}`).toBeDefined();
+        expect(v?.contagens.aptos, `${nome}/${c.uf}`).toBe(c.eleitores);
+        // Spec 021 RF-192 emendado (26/09 noite): a UF projeta quando tem base.
+        expect(v?.projetada !== undefined, `${nome}/${c.uf}`).toBe(c.pctApurado > 0);
+        const soma = somaPorDestino(v?.corrida);
+        expect(soma.valido, `${nome}/${c.uf}`).toBe(v?.contagens.validos);
+        expect(soma.anulado, `${nome}/${c.uf}`).toBe(v?.contagens.anulados);
+        expect(soma.sub_judice, `${nome}/${c.uf}`).toBe(v?.contagens.sub_judice);
+      }
+    }
+  });
+
+  it("a destinação é da CANDIDATURA: no Presidente, a mesma nas 27 UFs [mutação: designar por UF]", () => {
+    const porId = new Map<number, Set<string | undefined>>();
+    for (const c of s.ctxs) {
+      for (const e of s.presidenteUf[c.uf]?.votacao?.corrida ?? []) {
+        if (!porId.has(e.id)) porId.set(e.id, new Set());
+        porId.get(e.id)?.add(e.destino);
+      }
+    }
+    for (const [id, destinos] of porId) expect([...destinos], `id ${id}`).toHaveLength(1);
+    // E exatamente uma anulada e uma sub judice.
+    const nac = s.presidente.votacao?.corrida ?? [];
+    expect(nac.filter((e) => e.destino === "anulado")).toHaveLength(1);
+    expect(nac.filter((e) => e.destino === "sub_judice")).toHaveLength(1);
+  });
+
+  it("🔴 o líder e o 2º colocado nunca são anulados [mutação: designar entre TODAS as candidaturas]", () => {
+    const [a, b] = s.presidente.national.candidatos;
+    const destinoDe = (id: number | undefined) =>
+      s.presidente.votacao?.corrida?.find((e) => e.id === id)?.destino;
+    expect(destinoDe(a?.id)).toBe("valido");
+    expect(destinoDe(b?.id)).toBe("valido");
+    for (const c of s.ctxs) {
+      const uf = s.governadorUf[c.uf];
+      const lider = uf?.candidatos[0]?.id;
+      expect(uf?.votacao?.corrida?.find((e) => e.id === lider)?.destino, c.uf).toBe("valido");
+    }
+  });
+
+  it("🔴 Governador/Senador nacional: por PARTIDO, só voto válido [mutação: somar todas as destinações no partido]", () => {
+    for (const [nome, p, mapa] of [
+      ["governador", s.governador, s.governadorUf],
+      ["senador", s.senador, s.senadorUf],
+    ] as const) {
+      const v = p.votacao;
+      expect(v?.corrida, nome).toBeUndefined();
+      const partidos = v?.corrida_por_partido ?? [];
+      expect(
+        partidos.reduce((a, x) => a + x.votos_validos, 0),
+        nome,
+      ).toBe(v?.contagens.validos);
+      // Recalculado pelas UFs: a sigla de uma candidatura anulada não soma nada.
+      const esperado = new Map<string, number>();
+      for (const c of s.ctxs) {
+        for (const e of mapa[c.uf]?.votacao?.corrida ?? []) {
+          if (e.destino !== "valido") continue;
+          esperado.set(e.partido, (esperado.get(e.partido) ?? 0) + e.votos);
+        }
+      }
+      expect(new Map(partidos.map((x) => [x.partido, x.votos_validos])), nome).toEqual(esperado);
+      expect(
+        partidos.map((x) => x.partido),
+        nome,
+      ).toEqual([...partidos.map((x) => x.partido)].sort());
+    }
+  });
+
+  it("Deputado não ganha corrida [mutação: montarDeputado usar o bloco dos majoritários]", () => {
+    const v = s.deputado.votacao;
+    expect(v?.corrida).toBeUndefined();
+    expect(v?.corrida_por_partido).toBeUndefined();
+    expect(v?.destino_pendente).toBeUndefined();
+  });
+
+  it("pct_atual conta a mesma história que votos_atuais [mutação: manter o share sorteado depois de repartir por destinação]", () => {
+    for (const c of s.ctxs) {
+      const p = s.presidenteUf[c.uf];
+      if (c.votosApurados <= 0) continue;
+      for (const x of p?.candidatos ?? []) {
+        expect(
+          Math.abs((x.pct_atual ?? 0) - (100 * x.votos_atuais) / c.votosApurados),
+        ).toBeLessThan(0.006);
+      }
+    }
+  });
+
+  it('a 0% apurado a corrida sai SEM destino e sem pendência — "não começou" [mutação: publicar dvt antes da 1ª totalização / marcar pendência com voto zero]', () => {
+    const zero = gerar({ pct: 0 });
+    for (const e of zero.presidente.votacao?.corrida ?? []) {
+      expect(e.destino).toBeUndefined();
+      expect(e.votos).toBe(0);
+    }
+    expect(zero.presidente.votacao?.destino_pendente).toBeUndefined();
+    expect(zero.governador.votacao?.corrida_por_partido).toEqual([]);
+    for (const c of zero.ctxs) {
+      for (const mapa of [zero.presidenteUf, zero.governadorUf, zero.senadorUf]) {
+        const v = mapa[c.uf]?.votacao;
+        expect(v?.destino_pendente, c.uf).toBeUndefined();
+        expect(
+          v?.corrida?.every((e) => e.destino === undefined && e.votos === 0),
+          c.uf,
+        ).toBe(true);
+      }
+    }
+    expect(() => validarSaida(zero)).not.toThrow();
+  });
+
+  it("a 100% apurado todas as identidades seguem fechando [mutação: arredondamento independente por bolo]", () => {
+    expect(() => validarSaida(gerar({ pct: 100 }))).not.toThrow();
+  });
+
+  it("🔴 UF com corrida pequena demais fica SEM anulados, nos quatro cargos, em vez de pôr voto anulado numa válida [mutação: ignorar `anulaveis`]", () => {
+    // Alagoas real tem 2 candidaturas a governador (26/09). Reproduz: deixa 2.
+    const alvo = "AL";
+    const poucos: DadosSimulacao = {
+      ...DADOS,
+      candidatos: DADOS.candidatos.filter(
+        (c) => !(c.cargo === 3 && c.uf === alvo && Number(c.nome_urna.split("-").at(-1)) >= 2),
+      ),
+    };
+    const saida = gerarSimulacao(poucos, CLI_DEFAULT, TS);
+    const ctx = saida.ctxs.find((c) => c.uf === alvo);
+    expect(ctx?.anulaveis).toBe(false);
+    for (const mapa of [saida.presidenteUf, saida.governadorUf, saida.senadorUf]) {
+      const v = mapa[alvo]?.votacao;
+      expect(v?.contagens.anulados).toBe(0);
+      expect(v?.contagens.sub_judice).toBe(0);
+      expect(somaPorDestino(v?.corrida).valido).toBe(v?.contagens.validos);
+    }
+    expect(saida.governadorUf[alvo]?.votacao?.corrida?.every((e) => e.destino === "valido")).toBe(
+      true,
+    );
+    // O resto do país continua tendo anulados — a fixture não empobrece.
+    expect(saida.presidente.votacao?.contagens.anulados).toBeGreaterThan(0);
+    expect(() => validarSaida(saida)).not.toThrow();
+  });
+
+  it("`designarDestinos`: abaixo de 3 candidaturas todas válidas; acima, protege as `vagas + 1` primeiras e escolhe a de share mais próximo [mutação: limiar, proteção ou critério de escolha]", () => {
+    expect(designarDestinos([60, 40], 1)).toEqual(["valido", "valido"]);
+    // 3 candidaturas, 1 vaga: `min(vagas+1, n−2)` = 1 protegida, e as 2
+    // restantes carregam os bolos — o 20 é o mais próximo de 8,70.
+    expect(designarDestinos([50, 30, 20], 1)).toEqual(["valido", "anulado", "sub_judice"]);
+    // Mais próximo de 8,70 é o 9 (índice 3); de 7,64 entre os que sobram é o 7
+    // (índice 4) — e NÃO o 25 (índice 2), que é o 1º elegível.
+    expect(designarDestinos([35, 30, 25, 9, 7, 1], 1)).toEqual([
+      "valido",
+      "valido",
+      "valido",
+      "sub_judice",
+      "anulado",
+      "valido",
+    ]);
+    // 🔴 O líder é o MAIS PRÓXIMO dos dois alvos (9 de 8,70; 8 de 7,64): só a
+    // proteção o impede de ser anulado. Sem este caso a proteção era linha
+    // não medida — a mutação `protegidas = 0` sobrevivia a tudo acima.
+    expect(designarDestinos([9, 8, 7.6, 7, 1], 1)).toEqual([
+      "valido",
+      "valido",
+      "sub_judice",
+      "anulado",
+      "valido",
+    ]);
+    // Duas vagas: protege 3.
+    const sen = designarDestinos([30, 25, 20, 9, 8, 8], 2);
+    expect(sen.slice(0, 3)).toEqual(["valido", "valido", "valido"]);
+    expect(sen.filter((d) => d === "anulado")).toHaveLength(1);
+    expect(sen.filter((d) => d === "sub_judice")).toHaveLength(1);
+  });
+
+  // ── `validarSaida` reprova cada forma de corrida desonesta ────────────────
+
+  function comCorrida(f: (saida: ReturnType<typeof gerar>) => void): ReturnType<typeof gerar> {
+    const saida = gerar();
+    f(saida);
+    return saida;
+  }
+
+  it("`validarSaida` reprova candidatura anulada contada como válida [mutação: a invariante (13) não existir]", () => {
+    const podre = comCorrida((x) => {
+      const e = x.presidente.votacao?.corrida?.find((y) => y.destino === "anulado");
+      if (e === undefined) throw new Error("sem anulado");
+      e.destino = "valido";
+    });
+    expect(() => validarSaida(podre)).toThrow(/candidaturas 'valido'/);
+  });
+
+  it("`validarSaida` reprova sub judice trocado por anulado na UF [mutação: checar só o nacional]", () => {
+    const podre = comCorrida((x) => {
+      const uf = s.ctxs.find((c) => c.pctApurado > 0 && c.anulaveis)?.uf as string;
+      const e = x.senadorUf[uf]?.votacao?.corrida?.find((y) => y.destino === "sub_judice");
+      if (e === undefined) throw new Error("sem sub judice");
+      e.destino = "anulado";
+    });
+    expect(() => validarSaida(podre)).toThrow(/candidaturas 'anulado'/);
+  });
+
+  it("`validarSaida` reprova destino sumido sem `destino_pendente` [mutação: pendência não conferida]", () => {
+    const podre = comCorrida((x) => {
+      const e = x.governadorUf.SP?.votacao?.corrida?.find(
+        (y) => y.destino === "valido" && y.votos > 0,
+      );
+      if (e === undefined) throw new Error("SP sem válido");
+      delete e.destino;
+    });
+    expect(() => validarSaida(podre)).toThrow(/destino_pendente|candidaturas 'valido'/);
+  });
+
+  it("`validarSaida` reprova partido somando voto anulado [mutação: Σ por partido sem filtro]", () => {
+    const podre = comCorrida((x) => {
+      const p = x.governador.votacao?.corrida_por_partido?.[0];
+      if (p === undefined) throw new Error("sem partido");
+      p.votos_validos += 1;
+    });
+    expect(() => validarSaida(podre)).toThrow(/corrida_por_partido/);
+  });
+
+  it("`validarSaida` reprova corrida por candidatura no nacional de Governador e corrida no Deputado [mutação: RF-200/201 não conferidos]", () => {
+    const gov = comCorrida((x) => {
+      const v = x.governador.votacao;
+      if (v === undefined) throw new Error("sem votacao");
+      v.corrida = [];
+    });
+    expect(() => validarSaida(gov)).toThrow(/1º colocado nacional/);
+    const dep = comCorrida((x) => {
+      const v = x.deputado.votacao;
+      if (v === undefined) throw new Error("sem votacao");
+      v.corrida = [];
+    });
+    expect(() => validarSaida(dep)).toThrow(/Deputado Federal não tem colocados/);
+  });
+
+  it("`validarSaida` reprova UF sem `votacao` e UF com contagem do país [mutação: UF não conferida]", () => {
+    const sem = comCorrida((x) => {
+      const p = x.presidenteUf.RJ;
+      if (p === undefined) throw new Error("sem RJ");
+      p.votacao = undefined;
+    });
+    expect(() => validarSaida(sem)).toThrow(/presidente-uf.json\/RJ: bloco 'votacao' ausente/);
+    const pais = comCorrida((x) => {
+      const p = x.governadorUf.RJ;
+      const nac = x.governador.votacao;
+      if (p?.votacao === undefined || nac === undefined) throw new Error("sem RJ");
+      p.votacao = { ...p.votacao, contagens: { ...nac.contagens } };
+    });
+    expect(() => validarSaida(pais)).toThrow(/governador-uf.json/);
+  });
+
+  it("`validarSaida` reprova id da corrida que não existe na lista de candidatos [mutação: usar o número de urna no lugar do id do payload]", () => {
+    const podre = comCorrida((x) => {
+      const e = x.senadorUf.MG?.votacao?.corrida?.[0];
+      if (e === undefined) throw new Error("sem MG");
+      e.id = 99_999_999;
+    });
+    expect(() => validarSaida(podre)).toThrow(/sem candidatura de mesmo id/);
+  });
+});
+
+describe("simulacao-gerar — o painel Votação nas telas de UF (spec 021 RF-192 emendado)", () => {
+  const s = gerar();
+  const cheio = gerar({ pct: 100 });
+
+  function comUf(f: (saida: ReturnType<typeof gerar>) => void): ReturnType<typeof gerar> {
+    const saida = gerar();
+    f(saida);
+    return saida;
+  }
+
+  it("🔴 a 100% a projeção DA UF reencontra o contado DA UF [mutação: projetar a UF com as taxas do país]", () => {
+    for (const [nome, mapa] of [
+      ["presidente", cheio.presidenteUf],
+      ["governador", cheio.governadorUf],
+      ["senador", cheio.senadorUf],
+    ] as const) {
+      for (const c of cheio.ctxs) {
+        const v = mapa[c.uf]?.votacao;
+        const p = v?.projetada;
+        if (v === undefined || p === undefined)
+          throw new Error(`${nome}/${c.uf} sem projetada a 100%`);
+        for (const k of ["validos", "brancos", "nulos", "abstencao"] as const) {
+          const erroRel = Math.abs(p[k] - v.contagens[k]) / Math.max(1, v.contagens[k]);
+          expect(erroRel, `${nome}/${c.uf}.${k}: ${p[k]} contra ${v.contagens[k]}`).toBeLessThan(
+            0.001,
+          );
+        }
+      }
+    }
+  });
+
+  it("as UFs projetam com taxas DIFERENTES entre si [premissa do teste acima: sem isso ele não discrimina]", () => {
+    const taxas = new Set(
+      cheio.ctxs.map((c) => {
+        const v = cheio.presidenteUf[c.uf]?.votacao;
+        return v?.projetada ? (v.projetada.abstencao / v.contagens.aptos).toFixed(3) : "";
+      }),
+    );
+    expect(taxas.size).toBeGreaterThan(5);
+  });
+
+  it("Deputado: cada UF tem `votacao` da UF, sem corrida, e a soma é o nacional [mutação: detalhe sem votacao / com corrida]", () => {
+    const soma: Partial<Record<keyof EdgeVotacaoContagens, number>> = {};
+    for (const c of s.ctxs) {
+      const v = s.deputadoUf[c.uf]?.votacao;
+      expect(v, c.uf).toBeDefined();
+      expect(v && "corrida" in v, c.uf).toBe(false);
+      expect(v?.contagens.aptos, c.uf).toBe(c.eleitores);
+      expect(v?.projetada !== undefined, c.uf).toBe(c.pctApurado > 0);
+      for (const [k, n] of Object.entries(v?.contagens ?? {})) {
+        const kk = k as keyof EdgeVotacaoContagens;
+        soma[kk] = (soma[kk] ?? 0) + n;
+      }
+    }
+    expect(soma).toEqual(s.deputado.votacao?.contagens);
+  });
+
+  it("`validarSaida` reprova UF cujo arco 1 não fecha em aptos [mutação: a invariante não existir]", () => {
+    const podre = comUf((x) => {
+      const v = x.senadorUf.BA?.votacao;
+      if (v === undefined) throw new Error("sem BA");
+      // +1 em `aptos` NÃO serve: a fatia "Ainda não apurado" é `aptos −
+      // instalados` e absorve o voto a mais — o arco fecha por identidade.
+      // +1 em `validos` quebra a identidade `c = vv + vb + tvn + van + vansj`.
+      v.contagens = { ...v.contagens, validos: v.contagens.validos + 1 };
+    });
+    expect(() => validarSaida(podre)).toThrow(/senador-uf.json\/BA: o arco 1 não fecha/);
+  });
+
+  it("`validarSaida` reprova projeção de UF que soma mais que aptos [mutação: a invariante não existir]", () => {
+    const podre = comUf((x) => {
+      const v = x.governadorUf.PE?.votacao;
+      if (v?.projetada === undefined) throw new Error("sem PE projetada");
+      v.projetada = { ...v.projetada, validos: v.contagens.aptos };
+    });
+    expect(() => validarSaida(podre)).toThrow(/governador-uf.json\/PE: residual do círculo 3/);
+  });
+
+  it("`validarSaida` confere o arco 3 da UF de Deputado e a soma das 27 contra o nacional [mutação: Deputado fora da conferência]", () => {
+    const uf = s.ctxs.find((c) => c.pctApurado > 0)?.uf;
+    if (uf === undefined) throw new Error("nenhuma UF apurada");
+    const estoura = comUf((x) => {
+      const v = x.deputadoUf[uf]?.votacao;
+      if (v?.projetada === undefined) throw new Error("sem projetada");
+      v.projetada = { ...v.projetada, validos: v.contagens.aptos };
+    });
+    expect(() => validarSaida(estoura)).toThrow(
+      new RegExp(`deputado-uf.json/${uf}: residual do círculo 3`),
+    );
+    // +1 em `aptos` mantém o arco 1 fechado (a fatia "Ainda não apurado"
+    // absorve) — só a soma contra o nacional pega.
+    const somaErrada = comUf((x) => {
+      const v = x.deputadoUf[uf]?.votacao;
+      if (v === undefined) throw new Error("sem UF");
+      v.contagens = { ...v.contagens, aptos: v.contagens.aptos + 1 };
+    });
+    expect(() => validarSaida(somaErrada)).toThrow(/deputado-uf.json: Σ contagens.aptos/);
+  });
+
+  it("`validarSaida` reprova UF apurada sem projetada, e Deputado de UF sem votacao ou com corrida", () => {
+    const uf = s.ctxs.find((c) => c.pctApurado > 0)?.uf;
+    if (uf === undefined) throw new Error("nenhuma UF apurada");
+    const semProj = comUf((x) => {
+      const v = x.presidenteUf[uf]?.votacao;
+      if (v === undefined) throw new Error("sem UF");
+      v.projetada = undefined;
+    });
+    expect(() => validarSaida(semProj)).toThrow(/votacao.projetada ausente com a UF/);
+
+    const depSem = comUf((x) => {
+      const d = x.deputadoUf[uf];
+      if (d === undefined) throw new Error("sem UF");
+      d.votacao = undefined;
+    });
+    expect(() => validarSaida(depSem)).toThrow(/deputado-uf.json\/\w\w: bloco 'votacao' ausente/);
+
+    const depCorrida = comUf((x) => {
+      const d = x.deputadoUf[uf];
+      if (d?.votacao === undefined) throw new Error("sem UF");
+      (d.votacao as Record<string, unknown>).corrida = [];
+    });
+    expect(() => validarSaida(depCorrida)).toThrow(/deputado-uf.json.*Deputado não tem colocados/);
   });
 });

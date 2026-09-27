@@ -14,7 +14,7 @@ import { expect, test } from "@playwright/test";
  * exatamente a parte de acessibilidade que o `<Sheet>` promete (WCAG 2.1.2).
  *
  * Roda contra o servidor de produção em `PLAYWRIGHT_BASE_URL` (default
- * `http://localhost:3000`). **Precisa de um build que inclua o Bloco 2** — num
+ * `http://localhost:3100`, o `pnpm start:e2e`). **Precisa de um build que inclua o Bloco 2** — num
  * build anterior a ele a página de UF não tem botões de município e o primeiro
  * `expect` falha por ausência, não por regressão.
  *

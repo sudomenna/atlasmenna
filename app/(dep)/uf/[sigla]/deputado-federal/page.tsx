@@ -54,6 +54,7 @@ import { DadoParadoBanner } from "@/components/atoms/banners/DadoParadoBanner";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import { CandidaturasAguardando } from "@/components/blocks/CandidaturasAguardando";
 import { DeputadoMetodologia } from "@/components/blocks/DeputadoMetodologia";
+import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import { Footer } from "@/components/layout/Footer";
 import {
   type DeputadoUfAgremiacao,
@@ -498,6 +499,24 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
           ) : null}
         </div>
       </Panel>
+
+      {/* Spec 021 RF-192 (EMENDADO em 2026-09-26, noite, decisão do dono) —
+          "Votação" DA UF, logo depois do painel de resultado (o resumo, que
+          carrega o `<h1>`) e antes da bancada: a mesma posição que o painel
+          ocupava na capa nacional de Deputado, de onde saiu. Sem "A corrida":
+          a disputa é proporcional (spec 022 RF-200).
+
+          Vem do detalhe da UF no Blob (`DeputadoUfDetail.votacao`). Blob
+          indisponível, objeto anterior à emenda ou UF sem agregado ⇒
+          `<DetailUnavailable>` (RF-198) — o painel fica no DOM e nunca quebra.
+          Hoje o produtor não publica `projetada` para o cargo 6 (o ciclo
+          proporcional não calcula participação projetada), então o arco 3 fica
+          em "aguardando projeção". */}
+      <VotacaoEleitorado
+        kicker={`${DEPUTADO.label} · ${sigla}`}
+        votacao={detail?.votacao}
+        titleId="votacao-uf-heading"
+      />
 
       {/* Seção 2 — a bancada do estado. RF-122, RF-125.1, RF-127, RF-130.
           O bloco NUNCA sai do DOM (ADR-0017): sem o Blob ele diz por quê. */}

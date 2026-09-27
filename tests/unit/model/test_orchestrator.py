@@ -2704,3 +2704,135 @@ def test_agregado_mais_VELHO_que_as_zonas_sobrevive_ao_filtro_de_sentinela(
     # E as zonas reais continuam sendo o insumo do modelo: SP projetado a
     # partir das suas 2 zonas, não da linha agregada.
     assert {r["sigla"] for r in payload["por_uf"]} == {"SP", "RJ"}
+
+
+# ---------------------------------------------------------------------------
+# Spec 022 — a corrida chega ao payload publicado (RF-209)
+#
+# Unidade em `test_corrida.py`. Aqui só a FIAÇÃO: que `_do_project` entrega
+# `votacao` a cada `EdgePayloadUf` que tem agregado — inclusive com a linha
+# `br` presente, que no Presidente faz as contagens nacionais retornarem cedo.
+# ---------------------------------------------------------------------------
+
+
+def _com_corrida(linha: dict[str, Any], cands: list[tuple[int, str, int, str]]) -> dict[str, Any]:
+    linha = json.loads(json.dumps(linha))
+    linha["payload"]["carg"] = [
+        {
+            "cd": "1",
+            "agr": [
+                {
+                    "n": "1",
+                    "par": [
+                        {"n": str(n), "sg": sg, "cand": [{"n": str(n), "vap": str(v), "dvt": d}]}
+                        for n, sg, v, d in cands
+                    ],
+                }
+            ],
+        }
+    ]
+    return linha
+
+
+def test_corrida_chega_ao_payload_de_uf_mesmo_com_linha_br(
+    fake_db, minimal_dataset, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from api.model import project as proj_mod
+
+    snapshots, historical, eleitorado = minimal_dataset
+    sp = _com_corrida(
+        _agregado_uf("SP", te=30_000_000),
+        [(100, "PT", 10_000_000, "Válido"), (200, "PL", 8_000_000, "Válido")],
+    )
+    br = _com_corrida(
+        {**_agregado_uf("BR", te=163_000_000), "nivel": "br", "uf": "BR"},
+        [(100, "PT", 50_000_000, "Válido"), (200, "PL", 40_000_000, "Anulado sub judice")],
+    )
+    # RJ fica SEM agregado: o payload de RJ existe (zonas), o `votacao` dele não.
+    fake_db([*snapshots, sp, br], historical, eleitorado)
+
+    publicados: list[tuple[dict, dict]] = []
+    monkeypatch.setattr(
+        proj_mod,
+        "post_edge_write",
+        lambda payload, payloads_uf=None: publicados.append((payload, payloads_uf or {})),
+    )
+    status, _ = proj_mod._do_project(
+        json.dumps({"cargo": 1, "turno": 1, "trigger_ts": "2026-10-04T18:23:15Z"}).encode()
+    )
+    assert status == 200
+    payload, ufs = publicados[0]
+
+    # Nacional: da linha BR.
+    assert payload["votacao"]["contagens"]["aptos"] == 163_000_000
+    assert [e["id"] for e in payload["votacao"]["corrida"]] == [100, 200]
+    assert payload["votacao"]["corrida"][1]["destino"] == "sub_judice"
+    assert "corrida_por_partido" not in payload["votacao"]
+
+    # UF: das contagens da UF, não do Brasil.
+    assert set(ufs) == {"SP", "RJ"}
+    assert ufs["SP"]["votacao"]["contagens"]["aptos"] == 30_000_000
+    assert ufs["SP"]["votacao"]["corrida"] == [
+        {"id": 100, "partido": "PT", "votos": 10_000_000, "destino": "valido"},
+        {"id": 200, "partido": "PL", "votos": 8_000_000, "destino": "valido"},
+    ]
+    # Spec 021 RF-192 emendado (26/09 noite): a UF agora projeta — o painel
+    # "Votação" entrou na tela de UF. A fiação fina está no teste abaixo.
+    assert "projetada" in ufs["SP"]["votacao"]
+    assert "votacao" not in ufs["RJ"], "UF sem agregado é 'não sabemos', nunca zeros"
+
+
+def test_projetada_da_uf_sai_da_participacao_DA_UF_e_nao_da_nacional(
+    fake_db, minimal_dataset, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """🔴 Spec 021 RF-192 emendado (26/09 noite) — a fiação que discrimina.
+
+    `_do_project` tem as duas participações lado a lado (`participacao_by_uf`
+    e `participacao_nacional`); trocar uma pela outra na chamada de
+    `build_votacao_uf_payloads` compila, roda e publica um número plausível.
+    O teste força as duas a DIVERGIREM (abstenção 10% na UF, 40% no país) e
+    exige a da UF: 10% de 30.000.000 = 3.000.000.
+    """
+    from api.model import project as proj_mod
+
+    original = proj_mod.compute_participacao
+
+    def _participacao_divergente(*args: Any, **kwargs: Any):
+        by_uf, nacional = original(*args, **kwargs)
+        by_uf = {uf: dict(m) for uf, m in by_uf.items()}
+        nacional = dict(nacional)
+        for chave, pct_uf, pct_br in (
+            ("abstencao", 10.0, 40.0),
+            ("validos", 80.0, 50.0),
+            ("brancos", 5.0, 20.0),
+            ("nulos", 5.0, 20.0),
+        ):
+            base_uf = by_uf["SP"][chave]
+            base_br = nacional[chave]
+            assert base_uf is not None and base_br is not None, "premissa do teste"
+            by_uf["SP"][chave] = {**base_uf, "pct_projetado": pct_uf}
+            nacional[chave] = {**base_br, "pct_projetado": pct_br}
+        return by_uf, nacional
+
+    monkeypatch.setattr(proj_mod, "compute_participacao", _participacao_divergente)
+
+    snapshots, historical, eleitorado = minimal_dataset
+    fake_db([*snapshots, _agregado_uf("SP", te=30_000_000)], historical, eleitorado)
+    publicados: list[tuple[dict, dict]] = []
+    monkeypatch.setattr(
+        proj_mod,
+        "post_edge_write",
+        lambda payload, payloads_uf=None: publicados.append((payload, payloads_uf or {})),
+    )
+    status, _ = proj_mod._do_project(
+        json.dumps({"cargo": 1, "turno": 1, "trigger_ts": "2026-10-04T18:23:15Z"}).encode()
+    )
+    assert status == 200
+    _payload, ufs = publicados[0]
+
+    assert ufs["SP"]["votacao"]["projetada"] == {
+        "abstencao": 3_000_000,
+        "validos": 21_600_000,
+        "brancos": 1_350_000,
+        "nulos": 1_350_000,
+    }

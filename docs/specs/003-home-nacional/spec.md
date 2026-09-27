@@ -467,6 +467,16 @@ WHEN o usuário interage com um estado/município no mapa, the system SHALL aval
 - Cores partidárias: a paleta atual em [`tokens.md`](../../design-system/tokens.md) mapeia PT → vermelho, PL → azul. Confirmar com QA de design antes de F4.
 - Carrossel mobile de UFs decisivas — swipe horizontal ou vertical scroll com snap? (atual: swipe horizontal).
 
+## Emendas por specs posteriores
+
+### Spec 021 — Votação (2026-09-26)
+
+O painel "Votação" (RF-192..199) entra na tela `/` imediatamente após a lista de candidaturas (RF-192), renderizado em seu próprio `<Panel>`.
+
+### Spec 022 — A corrida em três círculos (2026-09-26)
+
+O painel "A corrida" (RF-200..210) renderiza imediatamente **depois** do painel "Votação" (spec 021) na tela `/`, em seu próprio `<Panel>`.
+
 ## v2 — S05 Multi-candidato (1º turno)
 
 Extensão da v1 binária (2 candidatos líderes) para suporte total a 2º turno e visualização de todos os candidatos em 1º turno.

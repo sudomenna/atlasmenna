@@ -34,6 +34,8 @@
  * resumo.
  */
 
+import type { EdgeVotacaoUf } from "@/lib/edge-config/types";
+
 import { blobUrlFor, deputadoUfBlobPathname } from "./paths";
 
 // ---------------------------------------------------------------------------
@@ -165,6 +167,18 @@ export interface DeputadoUfDetail {
    * a decisão desta spec é **marcar como indeterminado**, nunca escolher.
    */
   empates_indeterminados: string[];
+  /**
+   * Spec 021 RF-192 (emendado 26/09 noite) — as contagens do agregado DESTA
+   * UF para o painel "Votação" da tela `/uf/[sigla]/deputado-federal`.
+   *
+   * **Sem `corrida`**: Deputado não tem colocados (spec 022 RF-200). E, hoje,
+   * sem `projetada`: o ciclo proporcional não calcula participação projetada,
+   * e a regra é "sem participação projetada da UF ⇒ arco 3 aguardando" — nunca
+   * a nacional no lugar. Ausente ⇒ "não sabemos" ⇒ `<DetailUnavailable>`
+   * (RF-198), nunca zeros. Opcional também porque objetos gravados antes da
+   * emenda não têm a chave.
+   */
+  votacao?: Omit<EdgeVotacaoUf, "corrida" | "destino_pendente">;
 }
 
 /**

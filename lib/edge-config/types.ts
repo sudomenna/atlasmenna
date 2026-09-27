@@ -290,7 +290,7 @@ export interface EdgeVotacaoContagens {
   brancos: number;
   /** `v.tvn` — TOTAL de nulos (`v.vn` + `v.vnt`), não o `v.vn` stricto sensu. */
   nulos: number;
-  /** `v.van` — anulados. Fora das fatias nomeadas por decisão do dono; dentro do residual (RF-197). */
+  /** `v.van` — anulados. Fatia própria "Anulados e sub judice" (RF-197, revertido em 2026-09-26). */
   anulados: number;
   /** `v.vansj` — anulados sub judice. Mesmo tratamento de `anulados`. */
   sub_judice: number;
@@ -337,11 +337,93 @@ export interface EdgeVotacaoProjetada {
   abstencao: number;
 }
 
+/**
+ * Destinação do voto de uma candidatura — `cand[].dvt` do EA20
+ * (`tse_docs/txt/tse-ea20-arquivo-de-resultado-unificado.txt:790-806`), spec
+ * 022 RF-209. `"Válido"` ⇒ `"valido"`, `"Anulado"` ⇒ `"anulado"`,
+ * `"Anulado sub judice"` ⇒ `"sub_judice"`.
+ *
+ * 🔴 O TSE só publica o campo "após a primeira totalização parcial". Ausente
+ * ⇒ a entrada sai SEM `destino`, nunca com um default: valor desconhecido
+ * também sai sem `destino` (e com aviso no log). "Desconhecido ⇒ válido"
+ * poria votos anulados dentro de uma fatia com nome de candidato — medido na
+ * captura real do simulado, o MAIS votado era `"Anulado sub judice"`.
+ */
+export type EdgeDestinoVoto = "valido" | "anulado" | "sub_judice";
+
+/**
+ * Uma candidatura do arquivo AGREGADO da abrangência (spec 022 RF-209).
+ *
+ * ⚠️ Vem do MESMO arquivo que `EdgeVotacaoContagens` — é isso que faz os três
+ * círculos fecharem por identidade do TSE. NÃO é a mesma coisa que
+ * `EdgeCandidate.votos_atuais`, que é soma por zona e pode estar um ciclo
+ * atrás ou à frente. Nome e demais dados de identidade: cruzar por `id` com a
+ * lista `candidatos` do mesmo payload.
+ */
+export interface EdgeCorridaEntrada {
+  /** Número de urna (`cand[].n`) — mesma chave de `EdgeCandidate.id`. */
+  id: number;
+  /** Sigla do partido — alimenta a cor via `candidateColor` (ADR-0024). */
+  partido: string;
+  /** `cand[].vap` — votos computados, inteiro ≥ 0. */
+  votos: number;
+  destino?: EdgeDestinoVoto;
+}
+
+/** Soma dos votos VÁLIDOS de um partido nas 27 UFs (spec 022 RF-201/209). */
+export interface EdgeCorridaPartido {
+  partido: string;
+  /** Σ `vap` das candidaturas do partido com destino `"valido"`. */
+  votos_validos: number;
+}
+
 /** O bloco `votacao` do payload — contado e, quando há base, projetado. */
 export interface EdgeVotacao {
   contagens: EdgeVotacaoContagens;
   /** Ausente enquanto não houver zona apurada — o círculo 3 fica "aguardando" (RF-195). */
   projetada?: EdgeVotacaoProjetada;
+  /**
+   * Spec 022 — a corrida por CANDIDATURA, do agregado. Presidente nacional e
+   * todo `EdgePayloadUf`. Ausente ⇒ "não sabemos" (RF-207).
+   */
+  corrida?: EdgeCorridaEntrada[];
+  /**
+   * Spec 022 — a corrida por PARTIDO, nacional de Governador e Senador.
+   * OMITIDO enquanto `destino_pendente` (RF-209).
+   */
+  corrida_por_partido?: EdgeCorridaPartido[];
+  /**
+   * `true` quando alguma candidatura com votos da abrangência ainda está sem
+   * destinação — a tela fica em "aguardando a separação dos votos válidos"
+   * (RF-207). Ausente ⇒ todas as destinações conhecidas.
+   */
+  destino_pendente?: true;
+}
+
+/**
+ * O bloco `votacao` de uma UF (spec 022 RF-209 + spec 021 RF-192 emendado).
+ *
+ * 🔴 **EMENDADO em 2026-09-26 (noite), decisão do dono**: o painel "Votação"
+ * saiu das capas de Governador/Senador/Deputado e ENTROU nas quatro telas de
+ * UF. Por isso este bloco ganhou `projetada` — até então a tela de UF não
+ * tinha o painel, e o bloco trazia só o que "A corrida" usa.
+ *
+ * `projetada` sai da MESMA regra do nacional (`projetar_fatias_em_contagens`,
+ * `api/model/project.py`), sobre as contagens e a participação projetada
+ * **da UF**. Sem participação projetada da UF ⇒ ausente, e o arco 3 fica em
+ * "aguardando projeção" (RF-195). Nunca a participação nacional no lugar da
+ * UF: publicaria a abstenção do Brasil aplicada ao eleitorado de Roraima.
+ *
+ * Deputado Federal (cargo 6) publica este bloco no detalhe de UF do Blob
+ * (`DeputadoUfDetail.votacao`), **sem** `corrida` (spec 022 RF-200) e, hoje,
+ * sem `projetada`: o ciclo proporcional não calcula participação projetada.
+ */
+export interface EdgeVotacaoUf {
+  contagens: EdgeVotacaoContagens;
+  /** Ausente sem participação projetada DA UF — arco 3 em "aguardando" (RF-195). */
+  projetada?: EdgeVotacaoProjetada;
+  corrida?: EdgeCorridaEntrada[];
+  destino_pendente?: true;
 }
 
 // ---------------------------------------------------------------------------
@@ -1690,6 +1772,13 @@ export interface EdgePayloadUf {
    * calculáveis são omitidas individualmente (não emitir 0).
    */
   participacao?: EdgeParticipacao;
+  /**
+   * Spec 022 RF-209 + spec 021 RF-192 (emendado 26/09 noite) — contagens,
+   * projeção e corrida do agregado da UF: alimenta o painel "Votação" e o
+   * painel "A corrida" da tela de UF. **Opcional**: ausente ⇒
+   * `<DetailUnavailable>` nos dois (RF-198 / RF-207).
+   */
+  votacao?: EdgeVotacaoUf;
 }
 
 /**

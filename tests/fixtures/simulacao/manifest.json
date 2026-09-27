@@ -1,6 +1,6 @@
 {
   "aviso": "DADO SIMULADO. Nomes, partidos, números de urna e eleitorado são reais; votos, percentuais de apuração e probabilidades são INVENTADOS por data-pipeline/simulacao-gerar.ts. Uso exclusivo de desenvolvimento local — estes arquivos nunca devem ser publicados em destino remoto.",
-  "gerado_ts": "2026-09-26T17:34:17.979Z",
+  "gerado_ts": "2026-09-26T21:38:53.016Z",
   "gerador": "data-pipeline/simulacao-gerar.ts",
   "pct_pedido": 25,
   "pct_efetivo": 25,

@@ -75,11 +75,16 @@ contra o site publicado.
 
 ```bash
 pnpm build
-pnpm start:e2e      # 🔴 este, NUNCA `pnpm start` nem `pnpm dev`
+pnpm start:e2e      # 🔴 este, NUNCA `pnpm start` nem `pnpm dev` — sobe na porta 3100
 
 # noutro terminal
-pnpm test:e2e
+pnpm test:e2e       # o default do `playwright.config.ts` é http://localhost:3100
 ```
+
+**Porta 3100, não 3000 (26/09).** A 3000 é a do `pnpm dev`. Com as duas
+separadas, um `test:e2e` esquecido nunca audita o servidor de desenvolvimento
+(outro bundle, elementos só de dev, outra fonte de dado), e o `start:e2e` sobe
+mesmo com um `pnpm dev` de pé.
 
 🔴 **Por que existe um `start:e2e` em vez de `pnpm start`.** O Next carrega o
 `.env.local` **sozinho** — ele anuncia `Environments: .env.local` no build —, e a
@@ -94,8 +99,64 @@ arquivo, então isso basta. **Confirme sempre pelo log do servidor**:
 
 Sem essa linha, você está servindo produção para a suíte de testes — pare.
 
-O `EDGE_CONFIG` (leitura) fica **de propósito**: é ele que faz o SSR renderizar
-a página cheia em vez do estado "Aguardando dados". Ver a ressalva 1 abaixo.
+### O dado dos portões é FIXO (26/09) — o Global Config falso
+
+**Decisão do dono (26/09): os portões usam dado fixo, nunca produção.** Até essa
+data o `start:e2e` herdava do `.env.local` o `EDGE_CONFIG` — a string de
+LEITURA do Global Config de produção —, então o SSR dos portões lia o payload
+publicado: duas execuções mediam páginas diferentes, e um peso ou uma violação
+de axe mudava sem o código mudar.
+
+Apagar o `EDGE_CONFIG` **não** resolve, e foi a primeira ideia: fora do
+`pnpm dev` a fixture nunca entra (`app/(pres)/page.tsx:564-565` e as guardas
+irmãs — o conserto de 13/09, quando o site público mostrou número inventado), e
+a página cai em "Aguardando dados". O portão auditaria outra página.
+
+O que o `start:e2e` faz agora:
+
+```
+EDGE_CONFIG="http://127.0.0.1:3101/ecfg_e2efalso?token=e2e" \
+  tsx scripts/edge-config-falso.ts -- next start -p 3100
+```
+
+- `scripts/edge-config-falso.ts` é um servidor HTTP **só de teste**, em
+  `127.0.0.1:3101`, que responde as chaves canônicas de
+  `lib/edge-config/keys.ts` a partir de `tests/fixtures/simulacao/` —
+  `projection-current-{pres,gov,sen,dep}-t1` e
+  `projection-uf-<UF>-{pres,gov,sen}-t1` (85 chaves). O SDK oficial aceita
+  connection string com host arbitrário, então o app segue pelo caminho de
+  PRODUÇÃO (reader, guardas, tudo igual) e só a fonte do dado muda. Nada em
+  `app/`, `lib/` ou `components/` importa o script.
+- Chave desconhecida ⇒ **404, nunca um default**, com o cabeçalho
+  `x-edge-config-digest` que a API real manda para "chave não gravada" (o
+  reader lê como `ausente`, não como `falha`). Toda chave desconhecida vai para
+  o stderr como `[edge-config-falso] 404 …`.
+- O script **recusa subir** — e não sobe o `next` — se o `EDGE_CONFIG` do
+  ambiente não apontar para `http://127.0.0.1`.
+- O servidor falso morre junto com o `next` (Ctrl-C derruba os dois).
+
+**Confirme pelo log**, além da linha do banco:
+
+```
+[edge-config-falso] 85 chaves em http://127.0.0.1:3101/ecfg_e2efalso
+```
+
+⚠️ **O relógio.** As fixtures só têm turno 1. Depois de 25/10 o calendário
+passa a pedir `-t2`, o servidor falso responde 404 (visível no log) e as
+páginas presidenciais caem em "Aguardando dados" — o portão volta a auditar
+outra página. O `ts` gravado nas fixtures não aciona aviso de dado parado: elas
+não trazem `dado_ts`, e sem ele a tela mostra só "Atualizado às HH:MM:SS"
+(estado `ausente` de `lib/config/dado-freshness.ts`).
+
+**Regerar a fixture muda o que os portões medem.** Os JSON saem de
+`pnpm sim:full`; um peso de página que mudou depois de uma regeneração pode ser
+só o dado. Não edite esses arquivos à mão.
+
+**Medir sem os blocos novos** (a "Medição A" de 26/09): o script aceita
+`--sem-blocos-novos`, que tira NA RESPOSTA `votacao.corrida`,
+`votacao.corrida_por_partido` e `votacao.destino_pendente` dos nacionais e o
+`votacao` inteiro das UFs. Não é modo de uso corrente — para rodá-lo, repita o
+ambiente do `start:e2e` e passe a flag antes do `--`.
 
 Primeira execução (21/09): **10/10** no peso em 7 s, **64/64** na
 acessibilidade em 42,6 s, e a suíte e2e inteira em **98 passed / 14 skipped**
@@ -125,10 +186,15 @@ contra o site publicado nada muda.
 
 ### ⚠️ Duas ressalvas para quem for citar um número daqui
 
-1. **A página tem duas fontes de dado.** O stub intercepta só `fetch` do cliente;
-   o SSR continua lendo o **Global Config de produção** quando `EDGE_CONFIG` está
-   no ambiente. Sem essa variável o portão audita outra página (o estado
-   "Aguardando dados"), e duas execuções deixam de ser comparáveis.
+1. **~~A página tem duas fontes de dado~~ — resolvido em 26/09.** Até essa
+   data o stub de `_apoio-local.ts` servia o `fetch` do cliente com a fixture do
+   simulado, mas o SSR lia o **Global Config de produção**. Agora as duas
+   pontas leem `tests/fixtures/simulacao/` (ver "O dado dos portões é FIXO"
+   acima). O preço: o SSR de produção exercitava de graça o caminho de "nome
+   ausente" ("Candidato 13"), e a fixture do simulado preenche
+   `candidatos[].nome` em todo cargo — esse caminho agora só é coberto pelo
+   vitest. E um número medido aqui é do SIMULADO, não do site: pesos de 26/09
+   em `/` foram 391.710 B lendo produção e 510.219 B lendo a fixture.
 2. **Build local ≠ build da Vercel.** A referência continua sendo
    `PLAYWRIGHT_BASE_URL=https://salacofre.vercel.app`. O cruzamento dá confiança:
    o chunk do MapLibre mediu **285,0 KiB** local contra **285,3 KiB** publicados

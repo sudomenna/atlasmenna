@@ -3751,37 +3751,14 @@ def somar_contagens_agregadas(
     if not agregados:
         return None
 
-    br = [
-        s
-        for s in agregados
-        if nivel_do_snapshot(s) == NIVEL_BR
-        and _extract_zone_participacao(s["payload"]) is not None
-    ]
-    if int(cargo) == 1 and br:
-        # Mais de uma linha `br` não deveria existir (a chave é única por
-        # cargo/turno/nível); se existir, a mais fresca ganha — `ts` desc.
-        escolhida = max(br, key=lambda s: (s.get("ts") is not None, s.get("ts")))
-        bruto = _extract_zone_participacao(escolhida["payload"])
-        assert bruto is not None  # filtrado acima
-        return _contagens_de_bruto(bruto)
+    if int(cargo) == 1:
+        br = _agregado_br(agregados)
+        if br is not None:
+            return _contagens_de_bruto(br[1])
 
     # Soma dos agregados de UF. `BR` fica fora para não somar o país duas
     # vezes — ele é o total, não uma parcela.
-    por_uf: dict[str, ZonaParticipacaoRaw] = {}
-    for s in agregados:
-        if nivel_do_snapshot(s) != NIVEL_UF:
-            continue
-        sigla = str(s.get("uf") or "").strip().upper()
-        if not sigla or sigla == "BR":
-            continue
-        bruto = _extract_zone_participacao(s["payload"])
-        if bruto is None:
-            continue
-        # Uma linha por UF: `fetch_snapshots` já devolve o `rn = 1` por
-        # (uf, município, zona, nível), mas a defesa é barata e o custo de
-        # somar a mesma UF duas vezes seria um `aptos` inflado em silêncio.
-        por_uf[sigla] = bruto
-
+    por_uf = _agregados_de_uf(agregados)
     if not por_uf:
         return None
 
@@ -3796,11 +3773,67 @@ def somar_contagens_agregadas(
         "anulados": 0,
         "sub_judice": 0,
     }
-    for bruto in por_uf.values():
+    for _snap, bruto in por_uf.values():
         parcela = _contagens_de_bruto(bruto)
         for chave in total:
             total[chave] += parcela[chave]
     return total
+
+
+def _agregado_br(
+    agregados: list[LatestSnapshot],
+) -> tuple[LatestSnapshot, ZonaParticipacaoRaw] | None:
+    """A linha de nível `"br"` utilizável (com `e.te > 0`), ou `None`.
+
+    Mais de uma linha `br` não deveria existir (a chave é única por
+    cargo/turno/nível); se existir, a mais fresca ganha — `ts` desc.
+
+    Ponto ÚNICO da escolha, compartilhado por `somar_contagens_agregadas` e
+    `montar_corrida_nacional` (spec 022): contagens e corrida TÊM de sair da
+    mesma linha, senão os três círculos deixam de fechar por identidade.
+    """
+    br = [
+        s
+        for s in agregados
+        if nivel_do_snapshot(s) == NIVEL_BR
+        and _extract_zone_participacao(s["payload"]) is not None
+    ]
+    if not br:
+        return None
+    escolhida = max(br, key=lambda s: (s.get("ts") is not None, s.get("ts")))
+    bruto = _extract_zone_participacao(escolhida["payload"])
+    assert bruto is not None  # filtrado acima
+    return escolhida, bruto
+
+
+def _agregados_de_uf(
+    agregados: list[LatestSnapshot],
+) -> dict[str, tuple[LatestSnapshot, ZonaParticipacaoRaw]]:
+    """`{sigla: (linha, participação crua)}` — uma linha agregada por UF.
+
+    Só nível `"uf"`; sigla vazia e `"BR"` ficam fora (o país não é uma 28ª
+    UF, RF-199). Linha sem `e.te > 0` fica fora (nunca zero de resgate).
+
+    Uma linha por UF: `fetch_snapshots` já devolve o `rn = 1` por (uf,
+    município, zona, nível), mas a defesa é barata e o custo de somar a
+    mesma UF duas vezes seria um `aptos` inflado em silêncio. A última
+    leitura vence — comportamento anterior à spec 022, preservado.
+
+    Ponto ÚNICO da escolha, compartilhado pelas contagens, pela corrida
+    nacional e pelo `votacao` de cada `EdgePayloadUf` (spec 022).
+    """
+    por_uf: dict[str, tuple[LatestSnapshot, ZonaParticipacaoRaw]] = {}
+    for s in agregados:
+        if nivel_do_snapshot(s) != NIVEL_UF:
+            continue
+        sigla = str(s.get("uf") or "").strip().upper()
+        if not sigla or sigla == "BR":
+            continue
+        bruto = _extract_zone_participacao(s["payload"])
+        if bruto is None:
+            continue
+        por_uf[sigla] = (s, bruto)
+    return por_uf
 
 
 def _contagens_de_bruto(bruto: ZonaParticipacaoRaw) -> dict[str, int]:
@@ -3822,6 +3855,301 @@ def _contagens_de_bruto(bruto: ZonaParticipacaoRaw) -> dict[str, int]:
         "anulados": int(bruto["anulados"]),
         "sub_judice": int(bruto["sub_judice"]),
     }
+
+
+# ---------------------------------------------------------------------------
+# Spec 022 — a corrida em três círculos (RF-203 / RF-209)
+# ---------------------------------------------------------------------------
+
+#: Cargos que ganham a corrida no payload. Deputado Federal (6) fica FORA por
+#: decisão do dono (RF-200): a disputa é proporcional, não há colocados.
+CARGOS_COM_CORRIDA: tuple[int, ...] = (1, 3, 5)
+
+#: Cargos cuja corrida NACIONAL é por partido (27 corridas, RF-201). O
+#: Presidente (1) tem uma corrida só e publica por candidatura.
+CARGOS_CORRIDA_POR_PARTIDO: tuple[int, ...] = (3, 5)
+
+#: Cargos cujo `EdgePayloadUf` (ou, no 6, `DeputadoUfDetail`) publica
+#: `votacao` — spec 021 RF-192 emendado em 2026-09-26 (noite): o painel
+#: "Votação" entrou nas QUATRO telas de UF. O 6 publica contagens (e projeção,
+#: quando houver participação da UF), nunca corrida — `CARGOS_COM_CORRIDA`.
+CARGOS_COM_VOTACAO_UF: tuple[int, ...] = (1, 3, 5, 6)
+
+#: `cand[].dvt` do EA20 → `EdgeDestinoVoto` (spec 022 RF-209,
+#: `tse_docs/txt/tse-ea20-arquivo-de-resultado-unificado.txt:790-806`).
+#:
+#: 🔴 **Sem default, e é de propósito.** O que não está aqui sai SEM
+#: `destino`, e isso põe a tela em "aguardando" (RF-207). "Desconhecido ⇒
+#: válido" poria votos anulados dentro de uma fatia com nome de candidato —
+#: na captura real do simulado o MAIS votado era `"Anulado sub judice"`.
+#:
+#: ⚠️ O dicionário do TSE lista um quarto valor, `"Válido (legenda)"`. Ele é
+#: de cargo proporcional (voto que vai para a legenda, não para o nome) e
+#: por isso NÃO está aqui: se aparecer num cargo majoritário, é dado que não
+#: entendemos, e a tela espera em vez de nomear o voto de legenda como voto
+#: da candidatura.
+_DESTINO_POR_DVT: dict[str, str] = {
+    "válido": "valido",
+    "anulado": "anulado",
+    "anulado sub judice": "sub_judice",
+}
+
+
+def destino_do_dvt(dvt: Any) -> str | None:
+    """`cand[].dvt` → `"valido" | "anulado" | "sub_judice"` ou `None`.
+
+    `None` em dois casos, e só o segundo é anômalo:
+      - ausente/vazio — o TSE só publica o campo "após a primeira
+        totalização parcial"; é o estado normal do começo da noite;
+      - valor desconhecido — aviso no log, e a candidatura sai sem destino.
+    """
+    if dvt is None:
+        return None
+    texto = str(dvt).strip()
+    if not texto:
+        return None
+    destino = _DESTINO_POR_DVT.get(texto.casefold())
+    if destino is None:
+        _log(
+            "warn",
+            "dvt desconhecido; candidatura publicada SEM destino (spec 022 RF-209)",
+            dvt=texto,
+        )
+    return destino
+
+
+def extrair_corrida(payload: Any, cargo: int) -> list[dict[str, Any]] | None:
+    """`EdgeCorridaEntrada[]` de UM arquivo agregado do TSE (spec 022 RF-209).
+
+    Uma entrada por candidatura: `id` (`cand.n`), `partido` (`par.sg`),
+    `votos` (`cand.vap`) e `destino` (`cand.dvt` mapeado — AUSENTE, nunca
+    default, quando o TSE ainda não o publicou ou publicou algo que não
+    entendemos).
+
+    Ordem: `id` crescente, para o payload não depender da ordem do arquivo
+    (§ 6, determinismo). A ORDEM DA TELA é da tela (RF-202), por votos.
+
+    Candidatura sem número, sem sigla ou sem `vap` legível fica FORA, com
+    aviso: a soma deixa de fechar e a tela diz "não fecha" (RF-204) — que é
+    a verdade — em vez de um zero ou um partido inventados.
+
+    `None` quando o arquivo não tem candidatura nenhuma: é "não sabemos"
+    (RF-207), nunca uma lista vazia que a tela leria como "ninguém votou".
+    """
+    out: dict[int, dict[str, Any]] = {}
+    for c in _iter_cands(payload, cargo=cargo):
+        try:
+            cod = int(c.get("n"))
+        except (TypeError, ValueError):
+            _log("warn", "corrida: candidatura sem número legível", n=c.get("n"))
+            continue
+        sg = c.get("partido_sg")
+        if not isinstance(sg, str) or not sg.strip():
+            _log("warn", "corrida: candidatura sem sigla de partido", n=cod)
+            continue
+        votos = _parse_br_number(c.get("vap"))
+        if votos is None or votos < 0:
+            _log("warn", "corrida: candidatura sem vap legível", n=cod, vap=c.get("vap"))
+            continue
+        if cod in out:
+            # Mesmo número duas vezes no MESMO arquivo é dado corrompido;
+            # somar duplicaria votos, então a primeira leitura vence.
+            _log("warn", "corrida: número de urna repetido no agregado", n=cod)
+            continue
+        entrada: dict[str, Any] = {
+            "id": cod,
+            "partido": sg.strip(),
+            "votos": int(round(votos)),
+        }
+        destino = destino_do_dvt(c.get("dvt"))
+        if destino is not None:
+            entrada["destino"] = destino
+        out[cod] = entrada
+    if not out:
+        return None
+    return [out[k] for k in sorted(out)]
+
+
+def destino_pendente(corrida: list[dict[str, Any]]) -> bool:
+    """`True` se alguma candidatura COM voto está sem destinação (RF-209).
+
+    Candidatura com 0 voto e sem destino não pende nada: não há voto a
+    separar. É a regra de `votos > 0` do RF-207, a mesma que a tela aplica.
+    """
+    return any(int(e["votos"]) > 0 and "destino" not in e for e in corrida)
+
+
+def _somar_corridas_de_uf(corridas: list[list[dict[str, Any]]]) -> list[dict[str, Any]]:
+    """Soma por candidatura de corridas de UF — Presidente nacional quando o
+    arquivo `br` faltou no ciclo (a mesma queda das contagens).
+
+    O destino de uma candidatura é da candidatura, não da UF: se todas as UFs
+    concordam, é ele; se alguma não tem destino, a soma também não tem; se
+    duas UFs DISCORDAM, é dado que não entendemos — sai sem destino, com
+    aviso, e a tela espera.
+    """
+    soma: dict[int, dict[str, Any]] = {}
+    destinos: dict[int, set[str | None]] = {}
+    for corrida in corridas:
+        for e in corrida:
+            cod = int(e["id"])
+            if cod not in soma:
+                soma[cod] = {"id": cod, "partido": e["partido"], "votos": 0}
+                destinos[cod] = set()
+            soma[cod]["votos"] += int(e["votos"])
+            destinos[cod].add(e.get("destino"))
+    for cod, conjunto in destinos.items():
+        if len(conjunto) == 1 and None not in conjunto:
+            soma[cod]["destino"] = next(iter(conjunto))
+        elif None not in conjunto:
+            _log(
+                "warn",
+                "corrida: destino divergente entre UFs; publicado SEM destino",
+                n=cod,
+                destinos=sorted(str(d) for d in conjunto),
+            )
+    return [soma[k] for k in sorted(soma)]
+
+
+def somar_corrida_por_partido(
+    corridas: list[list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    """`EdgeCorridaPartido[]` — Σ `votos` das candidaturas `valido` por sigla,
+    somando as corridas de UF (spec 022 RF-201/RF-209).
+
+    🔴 **Só `destino == "valido"` entra (RF-203).** Candidatura anulada ou
+    sub judice não soma no partido, nem com zero: o voto dela é da fatia
+    "Anulados e sub judice". O caller NÃO pode chamar isto com destino
+    pendente — ver `montar_corrida_nacional`.
+
+    Partido sem nenhuma candidatura válida não aparece. Ordem por sigla,
+    para determinismo (a ordem da tela é por votos, RF-202).
+    """
+    por_partido: dict[str, int] = {}
+    for corrida in corridas:
+        for e in corrida:
+            if e.get("destino") != "valido":
+                continue
+            por_partido[e["partido"]] = por_partido.get(e["partido"], 0) + int(e["votos"])
+    return [
+        {"partido": sigla, "votos_validos": votos}
+        for sigla, votos in sorted(por_partido.items())
+    ]
+
+
+def montar_corrida_nacional(
+    agregados: list[LatestSnapshot],
+    cargo: int,
+) -> dict[str, Any]:
+    """As chaves de corrida do `votacao` NACIONAL (spec 022 RF-209), para
+    serem mescladas ao bloco — `{}` quando não há o que publicar.
+
+    - **Presidente (1)**: `corrida` da linha `br` (a MESMA que deu as
+      contagens, via `_agregado_br`). Sem linha `br`, soma das corridas das
+      UFs, exatamente como as contagens caem na soma das UFs.
+    - **Governador/Senador (3/5)**: `corrida_por_partido`, somando as UFs.
+      Se QUALQUER candidatura com voto, em qualquer UF, está sem destino:
+      `destino_pendente: true` e `corrida_por_partido` OMITIDO — a soma por
+      partido sem saber quem é válido seria o número errado do Contexto.
+    - **Deputado (6)** e qualquer outro: `{}` (RF-200).
+
+    "Não sabemos" (`{}`): nenhuma UF com candidatura, ou alguma UF que entra
+    nas contagens sem lista de candidaturas — uma soma parcial não fecharia
+    contra `contagens.validos` e não é publicada.
+    """
+    cargo_i = int(cargo)
+    if cargo_i not in CARGOS_COM_CORRIDA:
+        return {}
+
+    if cargo_i == 1:
+        br = _agregado_br(agregados)
+        if br is not None:
+            corrida = extrair_corrida(br[0]["payload"], cargo_i)
+            if corrida is None:
+                return {}
+            return _com_pendencia({"corrida": corrida}, corrida)
+
+    por_uf = _agregados_de_uf(agregados)
+    if not por_uf:
+        return {}
+    corridas: list[list[dict[str, Any]]] = []
+    for sigla in sorted(por_uf):
+        corrida = extrair_corrida(por_uf[sigla][0]["payload"], cargo_i)
+        if corrida is None:
+            _log(
+                "warn",
+                "corrida nacional omitida: UF agregada sem candidaturas",
+                cargo=cargo_i,
+                uf=sigla,
+            )
+            return {}
+        corridas.append(corrida)
+
+    if cargo_i not in CARGOS_CORRIDA_POR_PARTIDO:
+        somada = _somar_corridas_de_uf(corridas)
+        return _com_pendencia({"corrida": somada}, somada)
+
+    if any(destino_pendente(c) for c in corridas):
+        return {"destino_pendente": True}
+    return {"corrida_por_partido": somar_corrida_por_partido(corridas)}
+
+
+def _com_pendencia(bloco: dict[str, Any], corrida: list[dict[str, Any]]) -> dict[str, Any]:
+    if destino_pendente(corrida):
+        bloco["destino_pendente"] = True
+    return bloco
+
+
+def build_votacao_uf_payloads(
+    agregados: list[LatestSnapshot],
+    cargo: int,
+    participacao_by_uf: Mapping[str, Mapping[str, ParticipacaoEstimate | None]] | None = None,
+) -> dict[str, dict[str, Any]]:
+    """`{sigla: EdgeVotacaoUf}` — o `votacao` de cada payload de UF dos
+    cargos 1, 3, 5 e 6 (spec 022 RF-209 + spec 021 RF-192 emendado).
+
+    Sai do agregado DA UF (`nivel = "uf"`), inclusive no Presidente — que
+    tem linha `br` para o nacional mas precisa das contagens de cada UF para
+    os três círculos das telas de UF.
+
+    `projetada` (spec 021 RF-192 emendado em 2026-09-26, noite — o painel
+    "Votação" entrou nas telas de UF): a MESMA regra do nacional,
+    `projetar_fatias_em_contagens`, sobre as contagens DA UF e a participação
+    projetada DA UF (`participacao_by_uf[sigla]`, a mesma que alimenta
+    `EdgePayloadUf.participacao`). Sem participação da UF ⇒ sem `projetada`,
+    e o arco 3 fica em "aguardando projeção" (RF-195).
+
+    🔴 **Nunca a participação nacional no lugar da UF.** O parâmetro é
+    indexado por sigla de propósito: a abstenção do Brasil aplicada ao
+    eleitorado de uma UF publicaria um número que não é de ninguém, ao lado
+    do círculo 2 exibindo a contagem verdadeira daquela UF.
+
+    Deputado (6): `contagens` (+ `projetada` se houver participação da UF —
+    o ciclo proporcional hoje não a calcula), **nunca** `corrida` (RF-200).
+
+    UF sem linha agregada NÃO aparece no mapa — o `votacao` dela é omitido,
+    que é "não sabemos", nunca zeros. `BR` nunca é UF (`_agregados_de_uf`).
+    """
+    cargo_i = int(cargo)
+    if cargo_i not in CARGOS_COM_VOTACAO_UF:
+        return {}
+    participacoes = participacao_by_uf or {}
+    out: dict[str, dict[str, Any]] = {}
+    for sigla, (snap, bruto) in _agregados_de_uf(agregados).items():
+        contagens = _contagens_de_bruto(bruto)
+        bloco: dict[str, Any] = {"contagens": contagens}
+        projetada = projetar_fatias_em_contagens(
+            contagens, participacoes.get(sigla) or {}
+        )
+        if projetada is not None:
+            bloco["projetada"] = projetada
+        if cargo_i in CARGOS_COM_CORRIDA:
+            corrida = extrair_corrida(snap["payload"], cargo_i)
+            if corrida is not None:
+                bloco["corrida"] = corrida
+                _com_pendencia(bloco, corrida)
+        out[sigla] = bloco
+    return out
 
 
 def projetar_fatias_em_contagens(
@@ -3910,6 +4238,9 @@ def build_votacao_payload(
     projetada = projetar_fatias_em_contagens(contagens, participacao or {})
     if projetada is not None:
         bloco["projetada"] = projetada
+    # Spec 022 (RF-209) — a corrida sai do MESMO agregado das contagens.
+    # Deputado (6) devolve `{}` lá dentro (RF-200).
+    bloco.update(montar_corrida_nacional(agregados, cargo))
     return bloco
 
 
@@ -4589,8 +4920,13 @@ def build_uf_payloads(
     relogio_by_uf: dict[str, RelogioDoDado] | None = None,
     identidade_by_cand: dict[tuple[str, int], dict[str, str]] | None = None,
     serie_bruta: SeriePorCandidatoBruta | None = None,
+    votacao_by_uf: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Constrói payloads canônicos `EdgePayloadUf` por UF (S04/F2).
+
+    Spec 022 (RF-209) acrescenta `votacao_by_uf` (`{uf: EdgeVotacaoUf}`, de
+    `build_votacao_uf_payloads`): contagens e corrida do agregado da UF.
+    UF ausente do mapa ⇒ a chave `votacao` não aparece ("não sabemos").
 
     Adicionado em S04/F2 para enriquecer o drill-down de UF com:
       - candidatos com `votos_atuais` e `votos_projetados` (rateio do
@@ -5042,6 +5378,10 @@ def build_uf_payloads(
         # menos uma métrica pôde ser calculada (ver `build_participacao_payload`).
         if participacao_uf_payload is not None:
             uf_payload["participacao"] = participacao_uf_payload
+        # Spec 022 (RF-209) — `votacao?` só quando a UF tem linha agregada.
+        votacao_uf = (votacao_by_uf or {}).get(sigla)
+        if votacao_uf is not None:
+            uf_payload["votacao"] = votacao_uf
 
         out[sigla] = uf_payload
 
@@ -6607,6 +6947,11 @@ def _do_project_proporcional(
         # ausente: o círculo 3 exibe "aguardando projeção" — no DOM
         # (ADR-0017/0018), nunca escondido.
         votacao=build_votacao_payload(agregados, req.cargo),
+        # Spec 021 RF-192 emendado (26/09 noite) — o painel "Votação" da tela
+        # `/uf/[sigla]/deputado-federal`. Contagens do agregado de cada UF;
+        # sem `participacao_by_uf` pela mesma razão do nacional acima, então
+        # sem `projetada` (arco 3 "aguardando"). Sem `corrida` (RF-200).
+        votacao_by_uf=build_votacao_uf_payloads(agregados, req.cargo),
     )
 
     try:
@@ -7038,6 +7383,15 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                 # Spec 020 — mesma estrutura bruta do nacional; cada UF fatia a
                 # sua dentro de `build_uf_payloads`.
                 serie_bruta=serie_bruta,
+                # Spec 022 (RF-209) — contagens + corrida do agregado de cada
+                # UF. Inclusive no Presidente, que tem linha `br` para o
+                # nacional mas precisa da UF para as telas de UF.
+                # Spec 021 RF-192 emendado (26/09 noite) — `projetada` de cada
+                # UF sai da participação projetada DA UF, a mesma que vira
+                # `EdgePayloadUf.participacao` acima. Nunca a nacional.
+                votacao_by_uf=build_votacao_uf_payloads(
+                    agregados, req.cargo, participacao_by_uf
+                ),
             )
             post_edge_write(edge_payload, payloads_uf=uf_payloads)
         except Exception as edge_exc:  # noqa: BLE001 — never block the response

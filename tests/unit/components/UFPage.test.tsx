@@ -325,6 +325,25 @@ describe("UFPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
     return parse(await UFPage({ params: Promise.resolve({ sigla: "SP" }) }));
   }
 
+  it("spec 021 RF-192 emendado: 'Votação' traz o dado DA UF, com kicker da UF e sem 'Brasil'", async () => {
+    readUfProjectionMock.mockResolvedValueOnce({
+      ...buildUfPayload({ turno: 1, candidatos, comParticipacao: true }),
+      votacao: VOTACAO_UF,
+    });
+    const doc = parse(await UFPage({ params: Promise.resolve({ sigla: "SP" }) }));
+    const painel = doc.querySelector('[aria-labelledby="votacao-uf-heading"]');
+    expect(painel?.querySelector('[data-testid="panel-kicker"]')?.textContent).toBe(
+      "Presidente · SP",
+    );
+    expect(
+      painel?.querySelector('[data-testid="votacao-eleitorado"]')?.getAttribute("data-instalados"),
+    ).toBe("900");
+    expect(painel?.textContent ?? "").not.toMatch(/Brasil/);
+    // Um painel "Votação" só — `titleId` único na página.
+    expect(doc.querySelectorAll('[data-testid="votacao-eleitorado"]')).toHaveLength(1);
+    expect(doc.querySelectorAll("#votacao-uf-heading")).toHaveLength(1);
+  });
+
   it("(f) o <Footer> continua DENTRO do <main data-trilha> desta página", async () => {
     const doc = await renderUF();
     const main = doc.querySelector("main[data-trilha]");
@@ -413,7 +432,7 @@ describe("UFPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
    * painel de resultado — o único lugar proibido, porque lá vive o `<h1>`.
    * Por isso as asserções são de ÍNDICE entre os painéis irmãos.
    */
-  it("(k2) a evolução da apuração é o 2º painel: depois do resultado, antes dos municípios", async () => {
+  it("(k2) a evolução da apuração é o 4º painel: depois do resultado, da votação e da corrida, antes dos municípios", async () => {
     const doc = await renderUF();
     const paineis = [...doc.querySelectorAll('[data-testid="panel"]')];
     const kickers = paineis.map(
@@ -423,10 +442,25 @@ describe("UFPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
     // Fase 2 o painel pode conter o gráfico OU o estado "indisponível" — o que
     // não pode mudar é a POSIÇÃO do painel, que é o que este teste mede.
     const iSerie = kickers.indexOf("Evolução da apuração");
+    // Spec 022 RF-200 (2026-09-26) — "A corrida" entra IMEDIATAMENTE depois
+    // do resultado, e a série desce uma posição. Continua entre o resultado e
+    // os municípios, que é o slot que o RF-174 protege.
+    const iCorrida = paineis.findIndex(
+      (p) => p.getAttribute("aria-labelledby") === "corrida-tres-circulos-heading",
+    );
+
+    // Spec 021 RF-192 EMENDADO (2026-09-26, noite) — "Votação" DA UF entra
+    // logo depois do resultado e ANTES de "A corrida"; a série desce mais uma
+    // posição. Ordem: resultado → Votação → A corrida → evolução (spec 020).
+    const iVotacao = paineis.findIndex(
+      (p) => p.getAttribute("aria-labelledby") === "votacao-uf-heading",
+    );
 
     expect(paineis[0]?.getAttribute("aria-labelledby")).toBe("resultado-heading");
-    expect(iSerie).toBe(1);
-    expect(kickers.indexOf("Municípios")).toBe(2);
+    expect(iVotacao).toBe(1);
+    expect(iCorrida).toBe(2);
+    expect(iSerie).toBe(3);
+    expect(kickers.indexOf("Municípios")).toBe(4);
 
     // Sem série no Blob deste caso: nenhum traçado e nenhum percentual.
     expect(doc.querySelectorAll("[data-traco]")).toHaveLength(0);
@@ -610,9 +644,17 @@ describe("UFPage — degradação do detalhe municipal (ADR-0032)", () => {
 
   it("(p) erro de rede no Blob: as séries também declaram indisponibilidade", async () => {
     const doc = await render({ status: "unavailable", reason: "fetch_error", url: null });
-    const razoes = [...doc.querySelectorAll('[data-testid="detail-unavailable"]')].map((e) =>
-      e.getAttribute("data-reason"),
-    );
+    // Fora os painéis "A corrida" (spec 022) e "Votação" (spec 021 RF-192
+    // emendado): a indisponibilidade deles é do
+    // PAYLOAD (`votacao` ausente ⇒ "not_found"), não do Blob que este caso
+    // derruba — misturá-los aqui mediria outra fonte.
+    const razoes = [...doc.querySelectorAll('[data-testid="detail-unavailable"]')]
+      .filter(
+        (e) =>
+          !e.closest('[aria-labelledby="corrida-tres-circulos-heading"]') &&
+          !e.closest('[aria-labelledby="votacao-uf-heading"]'),
+      )
+      .map((e) => e.getAttribute("data-reason"));
     expect(razoes.every((r) => r === "fetch_error")).toBe(true);
     // A asserção sobre "A evolução ao longo da noite" saiu com o `<Panel>` dos
     // três charts (cortes de 2026-09-08). O estado de falha do Blob continua
@@ -738,3 +780,24 @@ describe("UFPage — produção sem Global Config (defeito 2026-09-13)", () => {
     vi.unstubAllEnvs();
   });
 });
+
+/**
+ * Spec 021 RF-192 emendado (2026-09-26, noite) — um `votacao` de UF que FECHA
+ * nas identidades do TSE (`c + a = esi`; `vv+vb+tvn+van+vansj = c`), com
+ * números que não existem em nenhum outro lugar do payload: se a tela
+ * mostrar `instalados = 900`, só pode ter vindo daqui.
+ */
+const VOTACAO_UF = {
+  contagens: {
+    aptos: 1000,
+    instalados: 900,
+    comparecimento: 700,
+    abstencao: 200,
+    validos: 600,
+    brancos: 40,
+    nulos: 30,
+    anulados: 20,
+    sub_judice: 10,
+  },
+  projetada: { validos: 700, brancos: 50, nulos: 40, abstencao: 150 },
+};

@@ -51,6 +51,8 @@ Documentação Spec-Driven Development (SDD) do SalaCofre — plataforma web pú
 | 018 | [Identidade de Candidatura](./specs/018-identidade-candidatura/) | draft | M | T-13, T-14 |
 | 019 | [Fase pré-eleição](./specs/019-fase-pre-eleicao/) | draft | M | T-15, T-16 |
 | 020 | [Evolução da apuração](./specs/020-evolucao-da-apuracao/) | draft | M | T-01, T-03, T-04, T-10 |
+| 021 | [Votação — o eleitorado inteiro](./specs/021-votacao-eleitorado/) | draft | M | T-01, T-03, T-10, T-12 |
+| 022 | [A corrida em três círculos](./specs/022-corrida-em-tres-circulos/) | implementing | M | T-01, T-03, T-10 |
 
 Cada spec contém `spec.md` (requirements em EARS) e `design.md` (decisões técnicas). `tasks.md` será adicionado no início da implementação de cada uma.
 

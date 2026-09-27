@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-26T17:34:17.979Z",
+  "ts": "2026-09-26T21:38:53.016Z",
   "cargo": 1,
   "turno": 1,
   "pct_apurado_total": 25,
@@ -10,18 +10,92 @@
       "instalados": 39569584,
       "comparecimento": 31737578,
       "abstencao": 7832006,
-      "validos": 24607620,
+      "validos": 24640301,
       "brancos": 1166913,
       "nulos": 1156999,
-      "anulados": 2246496,
-      "sub_judice": 2559550
+      "anulados": 2231220,
+      "sub_judice": 2542145
     },
     "projetada": {
       "validos": 98665173,
       "brancos": 4716327,
       "nulos": 4676259,
       "abstencao": 30950413
-    }
+    },
+    "corrida": [
+      {
+        "id": 13,
+        "partido": "PT",
+        "votos": 8889985,
+        "destino": "valido"
+      },
+      {
+        "id": 14,
+        "partido": "MISSÃO",
+        "votos": 37359,
+        "destino": "valido"
+      },
+      {
+        "id": 16,
+        "partido": "PSTU",
+        "votos": 249536,
+        "destino": "valido"
+      },
+      {
+        "id": 21,
+        "partido": "PCB",
+        "votos": 473762,
+        "destino": "valido"
+      },
+      {
+        "id": 22,
+        "partido": "PL",
+        "votos": 10104229,
+        "destino": "valido"
+      },
+      {
+        "id": 27,
+        "partido": "DC",
+        "votos": 150385,
+        "destino": "valido"
+      },
+      {
+        "id": 29,
+        "partido": "PCO",
+        "votos": 69706,
+        "destino": "valido"
+      },
+      {
+        "id": 30,
+        "partido": "NOVO",
+        "votos": 2542145,
+        "destino": "sub_judice"
+      },
+      {
+        "id": 35,
+        "partido": "DEMOCRATA",
+        "votos": 20791,
+        "destino": "valido"
+      },
+      {
+        "id": 55,
+        "partido": "PSD",
+        "votos": 4632435,
+        "destino": "valido"
+      },
+      {
+        "id": 70,
+        "partido": "AVANTE",
+        "votos": 12113,
+        "destino": "valido"
+      },
+      {
+        "id": 80,
+        "partido": "UP",
+        "votos": 2231220,
+        "destino": "anulado"
+      }
+    ]
   },
   "national": {
     "candidatos": [
@@ -30,9 +104,9 @@
         "nome": "LULA",
         "partido": "PT",
         "cor": "var(--color-cand-1)",
-        "votos_atuais": 9359449,
+        "votos_atuais": 8889985,
         "votos_projetados": 42220802,
-        "pct_atual": 31.82,
+        "pct_atual": 30.22,
         "pct_projetado": 35.8,
         "pct_projetado_lower": 33.89,
         "pct_projetado_upper": 37.71,
@@ -47,9 +121,9 @@
         "nome": "FLAVIO BOLSONARO",
         "partido": "PL",
         "cor": "var(--color-cand-2)",
-        "votos_atuais": 10545864,
+        "votos_atuais": 10104229,
         "votos_projetados": 40805574,
-        "pct_atual": 35.85,
+        "pct_atual": 34.35,
         "pct_projetado": 34.6,
         "pct_projetado_lower": 32.7,
         "pct_projetado_upper": 36.5,
@@ -64,9 +138,9 @@
         "nome": "RONALDO CAIADO",
         "partido": "PSD",
         "cor": "var(--color-cand-3)",
-        "votos_atuais": 4830236,
+        "votos_atuais": 4632435,
         "votos_projetados": 18987568,
-        "pct_atual": 16.42,
+        "pct_atual": 15.75,
         "pct_projetado": 16.1,
         "pct_projetado_lower": 14.64,
         "pct_projetado_upper": 17.56,
@@ -81,9 +155,9 @@
         "nome": "ZEMA",
         "partido": "NOVO",
         "cor": "var(--color-cand-4)",
-        "votos_atuais": 2684201,
+        "votos_atuais": 2542145,
         "votos_projetados": 8845142,
-        "pct_atual": 9.13,
+        "pct_atual": 8.64,
         "pct_projetado": 7.5,
         "pct_projetado_lower": 6.45,
         "pct_projetado_upper": 8.55,
@@ -98,9 +172,9 @@
         "nome": "SAMARA",
         "partido": "UP",
         "cor": "var(--color-cand-5)",
-        "votos_atuais": 948500,
+        "votos_atuais": 2231220,
         "votos_projetados": 3211139,
-        "pct_atual": 3.22,
+        "pct_atual": 7.59,
         "pct_projetado": 2.72,
         "pct_projetado_lower": 2.07,
         "pct_projetado_upper": 3.37,
@@ -115,9 +189,9 @@
         "nome": "EDMILSON COSTA",
         "partido": "PCB",
         "cor": "var(--color-cand-6)",
-        "votos_atuais": 486931,
+        "votos_atuais": 473762,
         "votos_projetados": 1766124,
-        "pct_atual": 1.66,
+        "pct_atual": 1.61,
         "pct_projetado": 1.5,
         "pct_projetado_lower": 1.01,
         "pct_projetado_upper": 1.98,
@@ -132,9 +206,9 @@
         "nome": "HERTZ DIAS",
         "partido": "PSTU",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 257361,
+        "votos_atuais": 249536,
         "votos_projetados": 971369,
-        "pct_atual": 0.87,
+        "pct_atual": 0.85,
         "pct_projetado": 0.82,
         "pct_projetado_lower": 0.46,
         "pct_projetado_upper": 1.18,
@@ -149,9 +223,9 @@
         "nome": "CLARIANA BARAO",
         "partido": "DC",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 155043,
+        "votos_atuais": 150385,
         "votos_projetados": 534251,
-        "pct_atual": 0.53,
+        "pct_atual": 0.51,
         "pct_projetado": 0.45,
         "pct_projetado_lower": 0.19,
         "pct_projetado_upper": 0.72,
@@ -166,9 +240,9 @@
         "nome": "RUI COSTA PIMENTA",
         "partido": "PCO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 72744,
+        "votos_atuais": 69706,
         "votos_projetados": 293839,
-        "pct_atual": 0.25,
+        "pct_atual": 0.24,
         "pct_projetado": 0.25,
         "pct_projetado_lower": 0.05,
         "pct_projetado_upper": 0.45,
@@ -183,7 +257,7 @@
         "nome": "RENAN SANTOS",
         "partido": "MISSÃO",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 39001,
+        "votos_atuais": 37359,
         "votos_projetados": 161613,
         "pct_atual": 0.13,
         "pct_projetado": 0.14,
@@ -200,7 +274,7 @@
         "nome": "VETERINÁRIO WILSON GRASSI",
         "partido": "DEMOCRATA",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 21717,
+        "votos_atuais": 20791,
         "votos_projetados": 88887,
         "pct_atual": 0.07,
         "pct_projetado": 0.08,
@@ -217,7 +291,7 @@
         "nome": "ESCRITOR AUGUSTO CURY",
         "partido": "AVANTE",
         "cor": "var(--color-cand-other)",
-        "votos_atuais": 12619,
+        "votos_atuais": 12113,
         "votos_projetados": 48886,
         "pct_atual": 0.04,
         "pct_projetado": 0.04,
@@ -282,7 +356,7 @@
       "sigla": "AC",
       "pct_apurado": 11.6,
       "lider": 22,
-      "margem_atual": 46.18,
+      "margem_atual": 39.83,
       "margem_projetada": 34.6,
       "margem_projetada_ci": [30.03, 39.17],
       "chamada": false,
@@ -294,8 +368,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 32235,
-          "pct_atual": 63.02
+          "votos_atuais": 27801,
+          "pct_atual": 54.36
         },
         {
           "id": 13,
@@ -303,8 +377,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 8616,
-          "pct_atual": 16.85
+          "votos_atuais": 7431,
+          "pct_atual": 14.53
         },
         {
           "id": 55,
@@ -312,8 +386,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 7323,
-          "pct_atual": 14.32
+          "votos_atuais": 6316,
+          "pct_atual": 12.35
         },
         {
           "id": 30,
@@ -321,14 +395,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 1095,
-          "pct_atual": 2.14
+          "votos_atuais": 4451,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 3.85,
-        "pct_atual": 3.67,
-        "votos_atuais": 1877,
+        "pct_atual": 10.06,
+        "votos_atuais": 5147,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -338,7 +412,7 @@
       "sigla": "AL",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 5.23,
+      "margem_atual": 5.45,
       "margem_projetada": 11.66,
       "margem_projetada_ci": [7.09, 16.22],
       "chamada": false,
@@ -350,8 +424,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 79351,
-          "pct_atual": 39.67
+          "votos_atuais": 82643,
+          "pct_atual": 41.32
         },
         {
           "id": 22,
@@ -359,8 +433,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 68887,
-          "pct_atual": 34.44
+          "votos_atuais": 71745,
+          "pct_atual": 35.87
         },
         {
           "id": 55,
@@ -368,8 +442,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 37662,
-          "pct_atual": 18.83
+          "votos_atuais": 39225,
+          "pct_atual": 19.61
         },
         {
           "id": 30,
@@ -377,14 +451,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 4217,
-          "pct_atual": 2.11
+          "votos_atuais": 0,
+          "pct_atual": 0
         }
       ],
       "outros": {
         "pct": 4.88,
-        "pct_atual": 4.95,
-        "votos_atuais": 9892,
+        "pct_atual": 3.2,
+        "votos_atuais": 6396,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -394,7 +468,7 @@
       "sigla": "AM",
       "pct_apurado": 11.6,
       "lider": 22,
-      "margem_atual": 6.54,
+      "margem_atual": 5.84,
       "margem_projetada": 5.25,
       "margem_projetada_ci": [0.77, 9.74],
       "chamada": false,
@@ -406,8 +480,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 95252,
-          "pct_atual": 39.93
+          "votos_atuais": 84980,
+          "pct_atual": 35.62
         },
         {
           "id": 13,
@@ -415,8 +489,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 79646,
-          "pct_atual": 33.38
+          "votos_atuais": 71056,
+          "pct_atual": 29.78
         },
         {
           "id": 55,
@@ -424,8 +498,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 41849,
-          "pct_atual": 17.54
+          "votos_atuais": 37335,
+          "pct_atual": 15.65
         },
         {
           "id": 30,
@@ -433,14 +507,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 10443,
-          "pct_atual": 4.38
+          "votos_atuais": 20760,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 4.68,
-        "pct_atual": 4.77,
-        "votos_atuais": 11384,
+        "pct_atual": 10.25,
+        "votos_atuais": 24443,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -450,7 +524,7 @@
       "sigla": "AP",
       "pct_apurado": 11.6,
       "lider": 22,
-      "margem_atual": 6.76,
+      "margem_atual": 6.08,
       "margem_projetada": 9.73,
       "margem_projetada_ci": [5.2, 14.25],
       "chamada": false,
@@ -462,8 +536,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 18576,
-          "pct_atual": 37.05
+          "votos_atuais": 16703,
+          "pct_atual": 33.32
         },
         {
           "id": 13,
@@ -471,8 +545,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 15188,
-          "pct_atual": 30.3
+          "votos_atuais": 13657,
+          "pct_atual": 27.24
         },
         {
           "id": 55,
@@ -480,8 +554,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 11058,
-          "pct_atual": 22.06
+          "votos_atuais": 9943,
+          "pct_atual": 19.83
         },
         {
           "id": 30,
@@ -489,14 +563,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 2782,
-          "pct_atual": 5.55
+          "votos_atuais": 4362,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 5.07,
-        "pct_atual": 5.04,
-        "votos_atuais": 2527,
+        "pct_atual": 10.9,
+        "votos_atuais": 5466,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -506,7 +580,7 @@
       "sigla": "BA",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 36.78,
+      "margem_atual": 31.83,
       "margem_projetada": 37.16,
       "margem_projetada_ci": [32.61, 41.72],
       "chamada": false,
@@ -518,8 +592,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 552854,
-          "pct_atual": 56.58
+          "votos_atuais": 478453,
+          "pct_atual": 48.97
         },
         {
           "id": 22,
@@ -527,8 +601,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 193458,
-          "pct_atual": 19.8
+          "votos_atuais": 167423,
+          "pct_atual": 17.14
         },
         {
           "id": 55,
@@ -536,8 +610,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 175042,
-          "pct_atual": 17.91
+          "votos_atuais": 151485,
+          "pct_atual": 15.5
         },
         {
           "id": 30,
@@ -545,14 +619,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 21307,
-          "pct_atual": 2.18
+          "votos_atuais": 85024,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 3.82,
-        "pct_atual": 3.52,
-        "votos_atuais": 34408,
+        "pct_atual": 9.69,
+        "votos_atuais": 94684,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -562,7 +636,7 @@
       "sigla": "CE",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 34.48,
+      "margem_atual": 29.92,
       "margem_projetada": 32.98,
       "margem_projetada_ci": [28.39, 37.56],
       "chamada": false,
@@ -574,8 +648,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 352158,
-          "pct_atual": 55.92
+          "votos_atuais": 305622,
+          "pct_atual": 48.53
         },
         {
           "id": 22,
@@ -583,8 +657,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 135015,
-          "pct_atual": 21.44
+          "votos_atuais": 117173,
+          "pct_atual": 18.6
         },
         {
           "id": 55,
@@ -592,8 +666,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 105610,
-          "pct_atual": 16.77
+          "votos_atuais": 91654,
+          "pct_atual": 14.55
         },
         {
           "id": 30,
@@ -601,14 +675,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 14801,
-          "pct_atual": 2.35
+          "votos_atuais": 54804,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 3.8,
-        "pct_atual": 3.53,
-        "votos_atuais": 22211,
+        "pct_atual": 9.61,
+        "votos_atuais": 60542,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -618,7 +692,7 @@
       "sigla": "DF",
       "pct_apurado": 37,
       "lider": 22,
-      "margem_atual": 22.54,
+      "margem_atual": 21.64,
       "margem_projetada": 16.81,
       "margem_projetada_ci": [14.66, 18.96],
       "chamada": false,
@@ -630,8 +704,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 293889,
-          "pct_atual": 45.06
+          "votos_atuais": 282224,
+          "pct_atual": 43.28
         },
         {
           "id": 13,
@@ -639,8 +713,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 146913,
-          "pct_atual": 22.53
+          "votos_atuais": 141081,
+          "pct_atual": 21.63
         },
         {
           "id": 55,
@@ -648,8 +722,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 101231,
-          "pct_atual": 15.52
+          "votos_atuais": 97213,
+          "pct_atual": 14.91
         },
         {
           "id": 30,
@@ -657,14 +731,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 59573,
-          "pct_atual": 9.13
+          "votos_atuais": 56750,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 8.17,
-        "pct_atual": 7.75,
-        "votos_atuais": 50547,
+        "pct_atual": 11.48,
+        "votos_atuais": 74885,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -674,7 +748,7 @@
       "sigla": "ES",
       "pct_apurado": 32.1,
       "lider": 22,
-      "margem_atual": 14.29,
+      "margem_atual": 12.89,
       "margem_projetada": 14.24,
       "margem_projetada_ci": [11.84, 16.64],
       "chamada": false,
@@ -686,8 +760,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 302067,
-          "pct_atual": 42.37
+          "votos_atuais": 272506,
+          "pct_atual": 38.22
         },
         {
           "id": 13,
@@ -695,8 +769,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 200202,
-          "pct_atual": 28.08
+          "votos_atuais": 180610,
+          "pct_atual": 25.33
         },
         {
           "id": 55,
@@ -704,8 +778,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 137871,
-          "pct_atual": 19.34
+          "votos_atuais": 124379,
+          "pct_atual": 17.44
         },
         {
           "id": 30,
@@ -713,14 +787,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 39775,
-          "pct_atual": 5.58
+          "votos_atuais": 62043,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 4.43,
-        "pct_atual": 4.64,
-        "votos_atuais": 33068,
+        "pct_atual": 10.3,
+        "votos_atuais": 73445,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -730,7 +804,7 @@
       "sigla": "GO",
       "pct_apurado": 30.9,
       "lider": 22,
-      "margem_atual": 17.68,
+      "margem_atual": 15.99,
       "margem_projetada": 17.63,
       "margem_projetada_ci": [15.14, 20.11],
       "chamada": false,
@@ -742,8 +816,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 527844,
-          "pct_atual": 46.4
+          "votos_atuais": 477205,
+          "pct_atual": 41.95
         },
         {
           "id": 13,
@@ -751,8 +825,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 326682,
-          "pct_atual": 28.72
+          "votos_atuais": 295341,
+          "pct_atual": 25.96
         },
         {
           "id": 55,
@@ -760,8 +834,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 167379,
-          "pct_atual": 14.71
+          "votos_atuais": 151321,
+          "pct_atual": 13.3
         },
         {
           "id": 30,
@@ -769,14 +843,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 63903,
-          "pct_atual": 5.62
+          "votos_atuais": 98991,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 4.57,
-        "pct_atual": 4.55,
-        "votos_atuais": 51766,
+        "pct_atual": 10.08,
+        "votos_atuais": 114716,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -786,7 +860,7 @@
       "sigla": "MA",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 34.84,
+      "margem_atual": 30.09,
       "margem_projetada": 32.79,
       "margem_projetada_ci": [28.2, 37.37],
       "chamada": false,
@@ -798,8 +872,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 246804,
-          "pct_atual": 56.26
+          "votos_atuais": 213170,
+          "pct_atual": 48.59
         },
         {
           "id": 22,
@@ -807,8 +881,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 93968,
-          "pct_atual": 21.42
+          "votos_atuais": 81162,
+          "pct_atual": 18.5
         },
         {
           "id": 55,
@@ -816,8 +890,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 72522,
-          "pct_atual": 16.53
+          "votos_atuais": 62639,
+          "pct_atual": 14.28
         },
         {
           "id": 30,
@@ -825,14 +899,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 9181,
-          "pct_atual": 2.09
+          "votos_atuais": 38173,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 3.7,
-        "pct_atual": 3.69,
-        "votos_atuais": 16196,
+        "pct_atual": 9.92,
+        "votos_atuais": 43527,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -842,7 +916,7 @@
       "sigla": "MG",
       "pct_apurado": 32.4,
       "lider": 13,
-      "margem_atual": -8.6,
+      "margem_atual": -8.52,
       "margem_projetada": 0.21,
       "margem_projetada_ci": [-2.06, 2.48],
       "chamada": false,
@@ -854,8 +928,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 1116005,
-          "pct_atual": 28.66
+          "votos_atuais": 1106046,
+          "pct_atual": 28.41
         },
         {
           "id": 22,
@@ -863,8 +937,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 1450851,
-          "pct_atual": 37.26
+          "votos_atuais": 1437903,
+          "pct_atual": 36.93
         },
         {
           "id": 55,
@@ -872,8 +946,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 606284,
-          "pct_atual": 15.57
+          "votos_atuais": 600874,
+          "pct_atual": 15.43
         },
         {
           "id": 30,
@@ -881,14 +955,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 509381,
-          "pct_atual": 13.08
+          "votos_atuais": 338799,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 5.32,
-        "pct_atual": 5.42,
-        "votos_atuais": 210868,
+        "pct_atual": 10.52,
+        "votos_atuais": 409767,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -898,7 +972,7 @@
       "sigla": "MS",
       "pct_apurado": 39.3,
       "lider": 22,
-      "margem_atual": 17.81,
+      "margem_atual": 15.99,
       "margem_projetada": 15.33,
       "margem_projetada_ci": [13.27, 17.39],
       "chamada": false,
@@ -910,8 +984,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 271639,
-          "pct_atual": 45.87
+          "votos_atuais": 243899,
+          "pct_atual": 41.18
         },
         {
           "id": 13,
@@ -919,8 +993,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 166178,
-          "pct_atual": 28.06
+          "votos_atuais": 149208,
+          "pct_atual": 25.19
         },
         {
           "id": 55,
@@ -928,8 +1002,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 98366,
-          "pct_atual": 16.61
+          "votos_atuais": 88321,
+          "pct_atual": 14.91
         },
         {
           "id": 30,
@@ -937,14 +1011,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 31448,
-          "pct_atual": 5.31
+          "votos_atuais": 51537,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 3.89,
-        "pct_atual": 4.16,
-        "votos_atuais": 24616,
+        "pct_atual": 10.01,
+        "votos_atuais": 59282,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -954,7 +1028,7 @@
       "sigla": "MT",
       "pct_apurado": 27.5,
       "lider": 22,
-      "margem_atual": 16.54,
+      "margem_atual": 14.62,
       "margem_projetada": 20.8,
       "margem_projetada_ci": [18.1, 23.51],
       "chamada": false,
@@ -966,8 +1040,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 232299,
-          "pct_atual": 45.84
+          "votos_atuais": 205358,
+          "pct_atual": 40.52
         },
         {
           "id": 13,
@@ -975,8 +1049,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 148460,
-          "pct_atual": 29.29
+          "votos_atuais": 131243,
+          "pct_atual": 25.9
         },
         {
           "id": 55,
@@ -984,8 +1058,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 86355,
-          "pct_atual": 17.04
+          "votos_atuais": 76340,
+          "pct_atual": 15.06
         },
         {
           "id": 30,
@@ -993,14 +1067,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 19688,
-          "pct_atual": 3.88
+          "votos_atuais": 44101,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 3.76,
-        "pct_atual": 3.94,
-        "votos_atuais": 19992,
+        "pct_atual": 9.82,
+        "votos_atuais": 49752,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1010,7 +1084,7 @@
       "sigla": "PA",
       "pct_apurado": 11.6,
       "lider": 22,
-      "margem_atual": -6.18,
+      "margem_atual": -5.35,
       "margem_projetada": 0.74,
       "margem_projetada_ci": [-3.76, 5.23],
       "chamada": false,
@@ -1022,8 +1096,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 192618,
-          "pct_atual": 35.48
+          "votos_atuais": 166552,
+          "pct_atual": 30.68
         },
         {
           "id": 13,
@@ -1031,8 +1105,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 226188,
-          "pct_atual": 41.66
+          "votos_atuais": 195578,
+          "pct_atual": 36.03
         },
         {
           "id": 55,
@@ -1040,8 +1114,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 94156,
-          "pct_atual": 17.34
+          "votos_atuais": 81414,
+          "pct_atual": 15
         },
         {
           "id": 30,
@@ -1049,14 +1123,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 11084,
-          "pct_atual": 2.04
+          "votos_atuais": 47240,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 3.54,
-        "pct_atual": 3.47,
-        "votos_atuais": 18827,
+        "pct_atual": 9.6,
+        "votos_atuais": 52089,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1066,7 +1140,7 @@
       "sigla": "PB",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 21.43,
+      "margem_atual": 18.73,
       "margem_projetada": 21.41,
       "margem_projetada_ci": [16.81, 26.01],
       "chamada": false,
@@ -1078,8 +1152,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 132357,
-          "pct_atual": 47.12
+          "votos_atuais": 115673,
+          "pct_atual": 41.18
         },
         {
           "id": 22,
@@ -1087,8 +1161,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 72165,
-          "pct_atual": 25.69
+          "votos_atuais": 63068,
+          "pct_atual": 22.45
         },
         {
           "id": 55,
@@ -1096,8 +1170,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 57228,
-          "pct_atual": 20.37
+          "votos_atuais": 50014,
+          "pct_atual": 17.8
         },
         {
           "id": 30,
@@ -1105,14 +1179,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 7820,
-          "pct_atual": 2.78
+          "votos_atuais": 24445,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 4.23,
-        "pct_atual": 4.04,
-        "votos_atuais": 11346,
+        "pct_atual": 9.87,
+        "votos_atuais": 27716,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1122,7 +1196,7 @@
       "sigla": "PE",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 25.46,
+      "margem_atual": 22.27,
       "margem_projetada": 26.26,
       "margem_projetada_ci": [21.66, 30.86],
       "chamada": false,
@@ -1134,8 +1208,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 328958,
-          "pct_atual": 52.01
+          "votos_atuais": 287673,
+          "pct_atual": 45.49
         },
         {
           "id": 22,
@@ -1143,8 +1217,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 167929,
-          "pct_atual": 26.55
+          "votos_atuais": 146853,
+          "pct_atual": 23.22
         },
         {
           "id": 55,
@@ -1152,8 +1226,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 92616,
-          "pct_atual": 14.64
+          "votos_atuais": 80992,
+          "pct_atual": 12.81
         },
         {
           "id": 30,
@@ -1161,14 +1235,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 18148,
-          "pct_atual": 2.87
+          "votos_atuais": 55034,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 3.99,
-        "pct_atual": 3.92,
-        "votos_atuais": 24782,
+        "pct_atual": 9.78,
+        "votos_atuais": 61881,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1178,7 +1252,7 @@
       "sigla": "PI",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 39.25,
+      "margem_atual": 33.99,
       "margem_projetada": 41.52,
       "margem_projetada_ci": [37.01, 46.03],
       "chamada": false,
@@ -1190,8 +1264,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 136014,
-          "pct_atual": 57.35
+          "votos_atuais": 117798,
+          "pct_atual": 49.67
         },
         {
           "id": 22,
@@ -1199,8 +1273,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 42936,
-          "pct_atual": 18.11
+          "votos_atuais": 37186,
+          "pct_atual": 15.68
         },
         {
           "id": 55,
@@ -1208,8 +1282,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 44617,
-          "pct_atual": 18.81
+          "votos_atuais": 38642,
+          "pct_atual": 16.29
         },
         {
           "id": 30,
@@ -1217,14 +1291,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 5302,
-          "pct_atual": 2.24
+          "votos_atuais": 20636,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 3.46,
-        "pct_atual": 3.49,
-        "votos_atuais": 8280,
+        "pct_atual": 9.65,
+        "votos_atuais": 22887,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1234,7 +1308,7 @@
       "sigla": "PR",
       "pct_apurado": 34.7,
       "lider": 22,
-      "margem_atual": 19.07,
+      "margem_atual": 17.67,
       "margem_projetada": 17.6,
       "margem_projetada_ci": [15.33, 19.87],
       "chamada": false,
@@ -1246,8 +1320,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 1051295,
-          "pct_atual": 46.14
+          "votos_atuais": 974484,
+          "pct_atual": 42.77
         },
         {
           "id": 13,
@@ -1255,8 +1329,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 616830,
-          "pct_atual": 27.07
+          "votos_atuais": 571763,
+          "pct_atual": 25.09
         },
         {
           "id": 55,
@@ -1264,8 +1338,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 317435,
-          "pct_atual": 13.93
+          "votos_atuais": 294242,
+          "pct_atual": 12.91
         },
         {
           "id": 30,
@@ -1273,14 +1347,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 182554,
-          "pct_atual": 8.01
+          "votos_atuais": 198287,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 4.95,
-        "pct_atual": 4.85,
-        "votos_atuais": 110553,
+        "pct_atual": 10.53,
+        "votos_atuais": 239891,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1290,7 +1364,7 @@
       "sigla": "RJ",
       "pct_apurado": 30.6,
       "lider": 22,
-      "margem_atual": 16.06,
+      "margem_atual": 15.21,
       "margem_projetada": 12.17,
       "margem_projetada_ci": [9.71, 14.63],
       "chamada": false,
@@ -1302,8 +1376,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 1233796,
-          "pct_atual": 42.64
+          "votos_atuais": 1169084,
+          "pct_atual": 40.4
         },
         {
           "id": 13,
@@ -1311,8 +1385,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 769194,
-          "pct_atual": 26.58
+          "votos_atuais": 728850,
+          "pct_atual": 25.19
         },
         {
           "id": 55,
@@ -1320,8 +1394,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 446691,
-          "pct_atual": 15.44
+          "votos_atuais": 423262,
+          "pct_atual": 14.63
         },
         {
           "id": 30,
@@ -1329,14 +1403,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 212985,
-          "pct_atual": 7.36
+          "votos_atuais": 251811,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 8.59,
-        "pct_atual": 7.99,
-        "votos_atuais": 231077,
+        "pct_atual": 11.08,
+        "votos_atuais": 320736,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1346,7 +1420,7 @@
       "sigla": "RN",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 26.19,
+      "margem_atual": 22.82,
       "margem_projetada": 21.46,
       "margem_projetada_ci": [16.86, 26.07],
       "chamada": false,
@@ -1358,8 +1432,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 121832,
-          "pct_atual": 52.32
+          "votos_atuais": 106150,
+          "pct_atual": 45.59
         },
         {
           "id": 22,
@@ -1367,8 +1441,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 60850,
-          "pct_atual": 26.13
+          "votos_atuais": 53018,
+          "pct_atual": 22.77
         },
         {
           "id": 55,
@@ -1376,8 +1450,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 33905,
-          "pct_atual": 14.56
+          "votos_atuais": 29541,
+          "pct_atual": 12.69
         },
         {
           "id": 30,
@@ -1385,14 +1459,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 5408,
-          "pct_atual": 2.32
+          "votos_atuais": 20262,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 4.72,
-        "pct_atual": 4.66,
-        "votos_atuais": 10848,
+        "pct_atual": 10.25,
+        "votos_atuais": 23872,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1402,7 +1476,7 @@
       "sigla": "RO",
       "pct_apurado": 11.6,
       "lider": 22,
-      "margem_atual": 36.19,
+      "margem_atual": 32.01,
       "margem_projetada": 31.96,
       "margem_projetada_ci": [27.37, 36.55],
       "chamada": false,
@@ -1414,8 +1488,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 58149,
-          "pct_atual": 55.5
+          "votos_atuais": 51437,
+          "pct_atual": 49.09
         },
         {
           "id": 13,
@@ -1423,8 +1497,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 20236,
-          "pct_atual": 19.31
+          "votos_atuais": 17900,
+          "pct_atual": 17.08
         },
         {
           "id": 55,
@@ -1432,8 +1506,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 17828,
-          "pct_atual": 17.02
+          "votos_atuais": 15770,
+          "pct_atual": 15.05
         },
         {
           "id": 30,
@@ -1441,14 +1515,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 4262,
-          "pct_atual": 4.07
+          "votos_atuais": 9117,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 4.18,
-        "pct_atual": 4.1,
-        "votos_atuais": 4300,
+        "pct_atual": 10.07,
+        "votos_atuais": 10551,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1458,7 +1532,7 @@
       "sigla": "RR",
       "pct_apurado": 11.6,
       "lider": 22,
-      "margem_atual": 41.65,
+      "margem_atual": 36.87,
       "margem_projetada": 39.25,
       "margem_projetada_ci": [34.7, 43.8],
       "chamada": false,
@@ -1470,8 +1544,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 20241,
-          "pct_atual": 58.48
+          "votos_atuais": 17919,
+          "pct_atual": 51.77
         },
         {
           "id": 13,
@@ -1479,8 +1553,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 5826,
-          "pct_atual": 16.83
+          "votos_atuais": 5157,
+          "pct_atual": 14.9
         },
         {
           "id": 55,
@@ -1488,8 +1562,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 5653,
-          "pct_atual": 16.33
+          "votos_atuais": 5005,
+          "pct_atual": 14.46
         },
         {
           "id": 30,
@@ -1497,14 +1571,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 1487,
-          "pct_atual": 4.3
+          "votos_atuais": 3012,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 4.06,
-        "pct_atual": 4.06,
-        "votos_atuais": 1404,
+        "pct_atual": 10.16,
+        "votos_atuais": 3518,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1514,7 +1588,7 @@
       "sigla": "RS",
       "pct_apurado": 27.5,
       "lider": 22,
-      "margem_atual": 11.94,
+      "margem_atual": 11.29,
       "margem_projetada": 15.2,
       "margem_projetada_ci": [12.53, 17.88],
       "chamada": false,
@@ -1526,8 +1600,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 726544,
-          "pct_atual": 39.8
+          "votos_atuais": 687467,
+          "pct_atual": 37.66
         },
         {
           "id": 13,
@@ -1535,8 +1609,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 508654,
-          "pct_atual": 27.87
+          "votos_atuais": 481297,
+          "pct_atual": 26.37
         },
         {
           "id": 55,
@@ -1544,8 +1618,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 318587,
-          "pct_atual": 17.45
+          "votos_atuais": 301452,
+          "pct_atual": 16.51
         },
         {
           "id": 30,
@@ -1553,14 +1627,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 175390,
-          "pct_atual": 9.61
+          "votos_atuais": 158843,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 5.07,
-        "pct_atual": 5.27,
-        "votos_atuais": 96207,
+        "pct_atual": 10.76,
+        "votos_atuais": 196323,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1570,7 +1644,7 @@
       "sigla": "SC",
       "pct_apurado": 24,
       "lider": 22,
-      "margem_atual": 27.3,
+      "margem_atual": 28.5,
       "margem_projetada": 25.12,
       "margem_projetada_ci": [22.17, 28.07],
       "chamada": false,
@@ -1582,8 +1656,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 470755,
-          "pct_atual": 45.29
+          "votos_atuais": 491477,
+          "pct_atual": 47.28
         },
         {
           "id": 13,
@@ -1591,8 +1665,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 187023,
-          "pct_atual": 17.99
+          "votos_atuais": 195255,
+          "pct_atual": 18.78
         },
         {
           "id": 30,
@@ -1600,8 +1674,8 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 187251,
-          "pct_atual": 18.01
+          "votos_atuais": 90451,
+          "pct_atual": 8.7
         },
         {
           "id": 55,
@@ -1609,14 +1683,14 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 144245,
-          "pct_atual": 13.88
+          "votos_atuais": 150595,
+          "pct_atual": 14.49
         }
       ],
       "outros": {
         "pct": 4.97,
-        "pct_atual": 4.83,
-        "votos_atuais": 50162,
+        "pct_atual": 10.74,
+        "votos_atuais": 111658,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1626,7 +1700,7 @@
       "sigla": "SE",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 21.89,
+      "margem_atual": 19.23,
       "margem_projetada": 23.74,
       "margem_projetada_ci": [19.14, 28.35],
       "chamada": false,
@@ -1638,8 +1712,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 71231,
-          "pct_atual": 47.29
+          "votos_atuais": 62594,
+          "pct_atual": 41.56
         },
         {
           "id": 22,
@@ -1647,8 +1721,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 38265,
-          "pct_atual": 25.41
+          "votos_atuais": 33626,
+          "pct_atual": 22.33
         },
         {
           "id": 55,
@@ -1656,8 +1730,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 27939,
-          "pct_atual": 18.55
+          "votos_atuais": 24551,
+          "pct_atual": 16.3
         },
         {
           "id": 30,
@@ -1665,14 +1739,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 4590,
-          "pct_atual": 3.05
+          "votos_atuais": 13107,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 5.99,
-        "pct_atual": 5.71,
-        "votos_atuais": 8593,
+        "pct_atual": 11.11,
+        "votos_atuais": 16740,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1682,7 +1756,7 @@
       "sigla": "SP",
       "pct_apurado": 35,
       "lider": 22,
-      "margem_atual": -1.11,
+      "margem_atual": -1.12,
       "margem_projetada": 5.86,
       "margem_projetada_ci": [3.7, 8.02],
       "chamada": false,
@@ -1694,8 +1768,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 2657127,
-          "pct_atual": 29.59
+          "votos_atuais": 2693823,
+          "pct_atual": 30
         },
         {
           "id": 13,
@@ -1703,8 +1777,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 2756488,
-          "pct_atual": 30.7
+          "votos_atuais": 2794556,
+          "pct_atual": 31.12
         },
         {
           "id": 55,
@@ -1712,8 +1786,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 1562732,
-          "pct_atual": 17.4
+          "votos_atuais": 1584313,
+          "pct_atual": 17.64
         },
         {
           "id": 30,
@@ -1721,14 +1795,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 1078044,
-          "pct_atual": 12.01
+          "votos_atuais": 781406,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 9.81,
-        "pct_atual": 10.3,
-        "votos_atuais": 925326,
+        "pct_atual": 12.54,
+        "votos_atuais": 1125619,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1738,7 +1812,7 @@
       "sigla": "TO",
       "pct_apurado": 11.6,
       "lider": 13,
-      "margem_atual": 2.35,
+      "margem_atual": 2.03,
       "margem_projetada": 1.99,
       "margem_projetada_ci": [-2.5, 6.48],
       "chamada": false,
@@ -1750,8 +1824,8 @@
           "nome": "LULA",
           "partido": "PT",
           "sqcand": "280002542548",
-          "votos_atuais": 39561,
-          "pct_atual": 39.57
+          "votos_atuais": 34180,
+          "pct_atual": 34.19
         },
         {
           "id": 22,
@@ -1759,8 +1833,8 @@
           "nome": "FLAVIO BOLSONARO",
           "partido": "PL",
           "sqcand": "280002551544",
-          "votos_atuais": 37214,
-          "pct_atual": 37.23
+          "votos_atuais": 32153,
+          "pct_atual": 32.16
         },
         {
           "id": 55,
@@ -1768,8 +1842,8 @@
           "nome": "RONALDO CAIADO",
           "partido": "PSD",
           "sqcand": "280002551932",
-          "votos_atuais": 18052,
-          "pct_atual": 18.06
+          "votos_atuais": 15597,
+          "pct_atual": 15.6
         },
         {
           "id": 30,
@@ -1777,14 +1851,14 @@
           "nome": "ZEMA",
           "partido": "NOVO",
           "sqcand": "280002539826",
-          "votos_atuais": 2282,
-          "pct_atual": 2.28
+          "votos_atuais": 8699,
+          "pct_atual": 8.7
         }
       ],
       "outros": {
         "pct": 2.97,
-        "pct_atual": 2.86,
-        "votos_atuais": 2859,
+        "pct_atual": 9.34,
+        "votos_atuais": 9339,
         "n_candidatos": 8
       },
       "vai_a_2t": null,
@@ -1803,24 +1877,24 @@
   },
   "serie_por_candidato": {
     "eixo": [
-      "2026-09-26T16:05:00Z",
-      "2026-09-26T16:10:00Z",
-      "2026-09-26T16:15:00Z",
-      "2026-09-26T16:20:00Z",
-      "2026-09-26T16:25:00Z",
-      "2026-09-26T16:30:00Z",
-      "2026-09-26T16:35:00Z",
-      "2026-09-26T16:40:00Z",
-      "2026-09-26T16:45:00Z",
-      "2026-09-26T16:50:00Z",
-      "2026-09-26T16:55:00Z",
-      "2026-09-26T17:00:00Z",
-      "2026-09-26T17:05:00Z",
-      "2026-09-26T17:10:00Z",
-      "2026-09-26T17:15:00Z",
-      "2026-09-26T17:20:00Z",
-      "2026-09-26T17:25:00Z",
-      "2026-09-26T17:30:00Z"
+      "2026-09-26T20:10:00Z",
+      "2026-09-26T20:15:00Z",
+      "2026-09-26T20:20:00Z",
+      "2026-09-26T20:25:00Z",
+      "2026-09-26T20:30:00Z",
+      "2026-09-26T20:35:00Z",
+      "2026-09-26T20:40:00Z",
+      "2026-09-26T20:45:00Z",
+      "2026-09-26T20:50:00Z",
+      "2026-09-26T20:55:00Z",
+      "2026-09-26T21:00:00Z",
+      "2026-09-26T21:05:00Z",
+      "2026-09-26T21:10:00Z",
+      "2026-09-26T21:15:00Z",
+      "2026-09-26T21:20:00Z",
+      "2026-09-26T21:25:00Z",
+      "2026-09-26T21:30:00Z",
+      "2026-09-26T21:35:00Z"
     ],
     "cadencia_min": 5,
     "candidatos": [
@@ -1829,24 +1903,24 @@
         "nome": "FLAVIO BOLSONARO",
         "partido": "PL",
         "apurado": [
-          23.3,
-          40.3,
-          33.9,
-          29.04,
-          40.25,
-          35.85,
-          32.7,
+          22.33,
+          38.61,
+          32.48,
+          27.83,
+          38.57,
+          34.35,
+          31.33,
           null,
-          36.55,
-          34.74,
-          33.72,
-          36.48,
-          35.63,
-          35.29,
-          36.08,
-          35.85,
-          35.82,
-          35.85
+          35.02,
+          33.29,
+          32.31,
+          34.95,
+          34.14,
+          33.82,
+          34.57,
+          34.35,
+          34.33,
+          34.35
         ],
         "projetado": [
           34.6,
@@ -1875,24 +1949,24 @@
         "nome": "LULA",
         "partido": "PT",
         "apurado": [
-          27.37,
-          21.95,
-          35.29,
-          30.31,
-          26.61,
-          35.15,
-          31.82,
+          25.99,
+          20.85,
+          33.51,
+          28.79,
+          25.27,
+          33.38,
+          30.22,
           null,
-          34.32,
-          32.31,
-          31.06,
-          30.43,
-          32.21,
-          31.7,
-          31.54,
-          31.91,
-          31.82,
-          31.82
+          32.59,
+          30.69,
+          29.5,
+          28.9,
+          30.59,
+          30.1,
+          29.96,
+          30.31,
+          30.22,
+          30.22
         ],
         "projetado": [
           43.32,
@@ -1921,24 +1995,24 @@
         "nome": "RONALDO CAIADO",
         "partido": "PSD",
         "apurado": [
-          17.57,
-          14.38,
-          11.95,
-          17.98,
-          15.75,
-          14.13,
-          17.86,
+          16.85,
+          13.8,
+          11.46,
+          17.25,
+          15.11,
+          13.55,
+          17.13,
           null,
-          15.45,
-          17.44,
-          16.61,
-          16.13,
-          15.92,
-          16.55,
-          16.38,
-          16.36,
-          16.43,
-          16.42
+          14.82,
+          16.73,
+          15.94,
+          15.48,
+          15.27,
+          15.87,
+          15.72,
+          15.69,
+          15.76,
+          15.75
         ],
         "projetado": [
           11.59,
@@ -1967,24 +2041,24 @@
         "nome": "ZEMA",
         "partido": "NOVO",
         "apurado": [
-          11.69,
-          9.7,
-          8.13,
-          6.96,
-          9.88,
-          8.81,
-          8.06,
+          11.06,
+          9.18,
+          7.7,
+          6.59,
+          9.35,
+          8.34,
+          7.63,
           null,
-          9.13,
-          8.71,
-          9.56,
-          9.21,
-          9.02,
-          8.95,
-          9.17,
-          9.12,
-          9.12,
-          9.13
+          8.64,
+          8.24,
+          9.05,
+          8.72,
+          8.54,
+          8.47,
+          8.68,
+          8.63,
+          8.63,
+          8.64
         ],
         "projetado": [
           6.97,

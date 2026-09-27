@@ -78,3 +78,13 @@ e válidos sem alteração nesta rota: é o **mesmo** `<MunicipioTable>`, com o 
 outra não tinha). Requisito normativo em duas cópias é a mesma classe de defeito que o produto
 passou o dia consertando no código.
 
+## Emendas por specs posteriores
+
+### Spec 021 — Votação (2026-09-26, noite)
+
+O painel "Votação" (RF-192 emendado) entra em `/uf/[sigla]/governador` com as contagens **da UF**, em `<Panel>` próprio, imediatamente depois do `<ResultPanel>`.
+
+### Spec 022 — A corrida em três círculos (2026-09-26)
+
+O painel "A corrida" (RF-200..210) entra imediatamente **depois** do painel "Votação". Ordem na tela da UF: resultado → "Votação" → "A corrida" → evolução (spec 020).
+

@@ -18,8 +18,11 @@ import { esperarMapaMontado, esperarRedeOciosa, instalarProjecaoLocal } from "./
 //     pnpm build && pnpm start:e2e     # 🔴 start:e2e, nunca start nem dev
 //     pnpm test:e2e                    # noutro terminal
 //
-// `start:e2e` é `next start` com as 13 variáveis de ESCRITA declaradas vazias —
-// o Next carrega o `.env.local` sozinho, e o `DATABASE_URL` de lá é produção.
+// `start:e2e` é `next start -p 3100` com as 13 variáveis de ESCRITA declaradas
+// vazias — o Next carrega o `.env.local` sozinho, e o `DATABASE_URL` de lá é
+// produção — e, desde 26/09, com o `EDGE_CONFIG` apontado para o Global Config
+// FALSO de `scripts/edge-config-falso.ts` (dado fixo do simulado, nunca o de
+// produção).
 // Confirme no log do servidor: "[db] DATABASE_URL ausente". Receita completa e
 // ressalvas no runbook, § "Rodar os portões e2e na máquina".
 //
@@ -52,6 +55,10 @@ const ROUTES = [
   "/uf/SP/governador",
   "/uf/SP/senador",
   "/governador",
+  // `/senador` entrou em 2026-09-26: renderiza o painel "Votação" (spec 021)
+  // e a corrida POR PARTIDO da spec 022, e estava fora do portão desde que a
+  // página existe — nenhuma outra rota nacional de Senador era auditada.
+  "/senador",
   "/sobre-o-modelo",
   // As duas rotas de Deputado Federal (spec 017) entraram em 2026-09-18, 3ª
   // sessão. Elas são a ÚNICA corrida PROPORCIONAL do produto: em vez de um

@@ -450,6 +450,16 @@ para que 2030 comece com histórico.
    votação total, depois maior votação nominal) — a norma não prevê sorteio. A
    decisão desta spec é **marcar como indeterminado na tela**, nunca escolher.
 
+## Emendas por specs posteriores
+
+### Spec 021 — Votação (2026-09-26)
+
+O painel "Votação" (RF-192..199) entra na tela de UF `/uf/[sigla]/deputado-federal`, imediatamente após o `<ResultPanel>` (que em Deputado mostra a lista de eleitos e suplentes, não uma ranking de candidatos). O painel renderiza com `EdgePayloadUf.votacao` — as contagens DE DEPUTADO na UF (voto proporcional, sem projeção de cadeiras, apenas participação apurada).
+
+### Spec 022 — A corrida em três círculos (2026-09-26)
+
+O painel "A corrida" (RF-200..210) **não entra** em nenhuma tela de Deputado Federal (`/deputado-federal` nacional nem `/uf/[sigla]/deputado-federal` de UF) — a disputa é proporcional, sem colocados (RF-200 limitação de escopo).
+
 ## Cross-refs
 
 - [ADR-0027](../../architecture/adrs/0027-conversao-votos-em-cadeiras-deputado-federal.md) — o método de cadeiras, com o texto legal vigente e a jurisprudência

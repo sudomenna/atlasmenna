@@ -166,6 +166,9 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+// As MESMAS funções que a tela usa para desenhar os arcos — o validador não
+// reimplementa a aritmética, para não divergir dela em silêncio.
+import { fatiasCirculo1, fatiasCirculo3 } from "@/components/blocks/VotacaoEleitorado";
 import type {
   DeputadoUfAgremiacao,
   DeputadoUfCandidato,
@@ -177,6 +180,9 @@ import { ehMunicipioDeVerdade } from "@/lib/config/malha-ibge";
 import type {
   EdgeAgremiacaoBancada,
   EdgeCandidate,
+  EdgeCorridaEntrada,
+  EdgeCorridaPartido,
+  EdgeDestinoVoto,
   EdgeNational,
   EdgePayload,
   EdgePayloadDeputado,
@@ -188,6 +194,7 @@ import type {
   EdgeVotacao,
   EdgeVotacaoContagens,
   EdgeVotacaoProjetada,
+  EdgeVotacaoUf,
   NeedleBand,
 } from "@/lib/edge-config/types";
 import { colorForRank } from "@/lib/utils/cand-color";
@@ -1391,6 +1398,44 @@ export interface ContextoUf {
   /** Fração de brancos+nulos sobre o comparecimento. */
   brancosNulos: number;
   fonteEleitorado: "medido" | "derivado_2022";
+  /**
+   * Spec 022 — a UF pode carregar votos anulados e sub judice POR CANDIDATURA
+   * INTEIRA em todos os cargos majoritários? Ver `ufAnulavel`.
+   *
+   * `false` ⇒ `anulados = sub_judice = 0` nesta UF, nos QUATRO cargos (as
+   * contagens desta fixture são as mesmas nos quatro — não se conserta isso
+   * aqui). É o preço de não mentir: uma corrida com 2 candidaturas não tem como
+   * pôr voto anulado E voto sub judice em candidaturas inteiras e ainda deixar
+   * uma válida.
+   */
+  anulaveis: boolean;
+}
+
+/**
+ * Quantas candidaturas uma corrida precisa para carregar as três destinações
+ * (spec 022): uma anulada, uma sub judice e pelo menos uma válida.
+ */
+export const MIN_CANDIDATURAS_PARA_DESTINO = 3;
+
+/**
+ * A UF é "anulável" quando TODA corrida majoritária dela (Presidente,
+ * Governador, Senador) tem candidaturas bastantes para as três destinações.
+ *
+ * 🔴 Existe porque o dado real tem corrida pequena: Governador de Alagoas sai
+ * com **2** candidaturas do banco (medido em 26/09 em
+ * `tests/fixtures/simulacao/governador-uf.json`). Como as contagens desta
+ * fixture são as mesmas nos quatro cargos, a UF inteira fica sem anulados —
+ * e não uma candidatura válida ganha votos anulados sem ser marcada, que era
+ * o defeito que a spec 022 veio consertar.
+ */
+export function ufAnulavel(dados: DadosSimulacao, uf: string): boolean {
+  const n = (cargo: CargoTse, onde: string): number =>
+    dados.candidatos.filter((c) => c.cargo === cargo && c.uf === onde).length;
+  return (
+    n(1, "BR") >= MIN_CANDIDATURAS_PARA_DESTINO &&
+    n(3, uf) >= MIN_CANDIDATURAS_PARA_DESTINO &&
+    n(5, uf) >= MIN_CANDIDATURAS_PARA_DESTINO
+  );
 }
 
 export function montarContextos(
@@ -1416,6 +1461,7 @@ export function montarContextos(
       votosApurados: Math.round((votosFinais * pct) / 100),
       brancosNulos: bn,
       fonteEleitorado: e.fonte,
+      anulaveis: ufAnulavel(dados, uf),
     };
   });
 }
@@ -1547,6 +1593,26 @@ export const PARAMETROS_VOTACAO: ParametrosVotacao = {
 };
 
 /**
+ * Os votáveis apurados da UF (`vvc`) repartidos pela destinação do voto:
+ * `vvc = vv + van + vansj`.
+ *
+ * 🔴 **Ponto ÚNICO desta conta** (spec 022). As contagens (`contagensDaUf`) e
+ * a repartição dos votos entre as candidaturas (`resolverCorridaUf`) leem
+ * daqui — é o que faz Σ votos das candidaturas `valido` == `validos` (e o
+ * mesmo para anulado e sub judice) valer por CONSTRUÇÃO, como no TSE, em vez
+ * de por tolerância. Duas cópias da conta divergiriam no arredondamento.
+ */
+export function repartirVotaveis(
+  ctx: ContextoUf,
+  par: ParametrosVotacao = PARAMETROS_VOTACAO,
+): { validos: number; anulados: number; subJudice: number } {
+  const votaveis = ctx.votosApurados;
+  const anulados = ctx.anulaveis ? Math.round(votaveis * par.anulados) : 0;
+  const subJudice = ctx.anulaveis ? Math.round(votaveis * par.subJudice) : 0;
+  return { validos: votaveis - anulados - subJudice, anulados, subJudice };
+}
+
+/**
  * As 9 contagens de UMA UF no instante `ctx.pctApurado`.
  *
  * 🔴 **Toda identidade sai por SOMA ou SUBTRAÇÃO de inteiros.** O consumidor
@@ -1564,7 +1630,10 @@ export const PARAMETROS_VOTACAO: ParametrosVotacao = {
  * `brancos + nulos == bnTotal` na fronteira do 0,5 — não porque um teste
  * discrimine as duas formas, e nenhum discrimina.
  */
-function contagensDaUf(ctx: ContextoUf, par: ParametrosVotacao): EdgeVotacaoContagens {
+function contagensDaUf(
+  ctx: ContextoUf,
+  par: ParametrosVotacao = PARAMETROS_VOTACAO,
+): EdgeVotacaoContagens {
   const aptos = ctx.eleitores;
   // `votosApurados` é voto A CANDIDATO já contado, isto é `vvc` do EA20 e não
   // `vv`: anulados e sub judice saem de DENTRO dele (`vvc = vv + van + vansj`),
@@ -1578,9 +1647,7 @@ function contagensDaUf(ctx: ContextoUf, par: ParametrosVotacao): EdgeVotacaoCont
   const brancos = Math.round(bnTotal * par.brancosDoPar);
   const nulos = bnTotal - brancos;
   const comparecimento = votaveis + brancos + nulos;
-  const anulados = Math.round(votaveis * par.anulados);
-  const subJudice = Math.round(votaveis * par.subJudice);
-  const validos = votaveis - anulados - subJudice;
+  const { validos, anulados, subJudice } = repartirVotaveis(ctx, par);
   // `esi` CRESCE com a apuração: uma seção só entra em `est` — e portanto em
   // `esi` — quando o boletim dela é totalizado. É daí que vem o tamanho do vão
   // do círculo 1 durante a noite (o país ainda não contado), encolhendo até o
@@ -1718,6 +1785,130 @@ export function blocoVotacao(
   const projetada = projetarVotacao(ctxs, par);
   if (projetada !== null) bloco.projetada = projetada;
   return bloco;
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Spec 022 — a corrida em três círculos (RF-209)
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * `EdgeCorridaEntrada[]` de uma corrida de UF — o que o agregado da UF do TSE
+ * traria: uma entrada por candidatura, `votos` = apurado, ordem por `id`.
+ *
+ * `destino` AUSENTE com a UF a 0% apurado: o TSE só publica `dvt` "após a
+ * primeira totalização parcial". Com todo voto em zero isso não pende nada
+ * (RF-207), e a fixture passa a exercitar a entrada sem destino de graça.
+ *
+ * `id` é o mesmo `id` de `candidatos[]` do payload (o número na urna no
+ * Presidente, o sequencial por UF nos outros dois — bloco 7(a)): é a chave
+ * que a tela usa para achar o nome.
+ */
+export function corridaDaUf(c: CorridaUf): EdgeCorridaEntrada[] {
+  const publicado = c.ctx.pctApurado > 0;
+  return [...c.resultados]
+    .sort((a, b) => a.cand.id - b.cand.id)
+    .map((r) => ({
+      id: r.cand.id,
+      partido: r.cand.partido,
+      votos: r.votosAtuais,
+      ...(publicado ? { destino: r.destino } : {}),
+    }));
+}
+
+/** `true` se alguma entrada com voto está sem destino — espelho do produtor. */
+function corridaPendente(corrida: readonly EdgeCorridaEntrada[]): boolean {
+  return corrida.some((e) => e.votos > 0 && e.destino === undefined);
+}
+
+/**
+ * O `votacao` de um `EdgePayloadUf` de cargo 1, 3 ou 5 (spec 022 RF-209 +
+ * spec 021 RF-192 emendado em 2026-09-26, noite).
+ *
+ * `contagens` e `projetada` saem de {@link blocoVotacao} sobre UMA UF — a
+ * MESMA função do nacional, aplicada ao contexto da UF. É o espelho de
+ * `build_votacao_uf_payloads` (`api/model/project.py`), que chama
+ * `projetar_fatias_em_contagens` com a participação DA UF. Um segundo caminho
+ * de projeção só para UF seria uma chance de a tela de UF e a capa divergirem
+ * sem ninguém ver.
+ */
+export function votacaoDaUf(c: CorridaUf): EdgeVotacaoUf {
+  const corrida = corridaDaUf(c);
+  const bloco: EdgeVotacaoUf = { ...blocoVotacao([c.ctx]), corrida };
+  if (corridaPendente(corrida)) bloco.destino_pendente = true;
+  return bloco;
+}
+
+/**
+ * O `votacao` do detalhe de UF de Deputado Federal (`deputado-uf.json`,
+ * spec 021 RF-192 emendado em 2026-09-26, noite). Contagens e projeção da UF
+ * pela mesma {@link blocoVotacao}; **nunca** corrida (spec 022 RF-200).
+ *
+ * ⚠️ Divergência conhecida do produtor real: o ciclo proporcional de produção
+ * não calcula participação projetada, então lá o detalhe sai SEM `projetada`
+ * (arco 3 "aguardando"). Aqui sai com ela, pela mesma razão por que o
+ * `votacao` nacional de Deputado deste gerador já sai com ela — ver a nota em
+ * {@link projetarVotacao}. Quem conferir a tela de UF de Deputado no
+ * `dev:sim` está vendo o simulado mais rico que produção nesse arco.
+ */
+export function votacaoDeputadoUf(ctx: ContextoUf): NonNullable<DeputadoUfDetail["votacao"]> {
+  return blocoVotacao([ctx]);
+}
+
+/**
+ * A corrida NACIONAL do Presidente: a soma das 27 UFs por candidatura — o
+ * que o arquivo `br` do TSE traz, e pela mesma identidade (a soma dos
+ * agregados de UF É o agregado BR).
+ *
+ * A destinação é da candidatura (`designarDestinos` roda UMA vez para o país),
+ * e é publicada assim que QUALQUER UF apurou.
+ */
+export function corridaNacionalPresidente(corridas: readonly CorridaUf[]): EdgeCorridaEntrada[] {
+  const publicado = corridas.some((c) => c.ctx.pctApurado > 0);
+  const porId = new Map<number, EdgeCorridaEntrada>();
+  for (const c of corridas) {
+    for (const r of c.resultados) {
+      const e = porId.get(r.cand.id);
+      if (e === undefined) {
+        porId.set(r.cand.id, {
+          id: r.cand.id,
+          partido: r.cand.partido,
+          votos: r.votosAtuais,
+          ...(publicado ? { destino: r.destino } : {}),
+        });
+      } else {
+        if (e.destino !== undefined && e.destino !== r.destino) {
+          throw new Error(
+            `[simulacao] candidatura ${r.cand.id} com destino ${e.destino} numa UF e ` +
+              `${r.destino} noutra — a destinação é da candidatura (spec 022).`,
+          );
+        }
+        e.votos += r.votosAtuais;
+      }
+    }
+  }
+  return [...porId.values()].sort((a, b) => a.id - b.id);
+}
+
+/**
+ * A corrida NACIONAL de Governador/Senador: Σ votos das candidaturas `valido`
+ * por sigla, nas 27 UFs (RF-201/RF-209). Anulada e sub judice NÃO somam no
+ * partido (RF-203). Ordem por sigla — a da tela é por votos (RF-202).
+ */
+export function corridaPorPartido(corridas: readonly CorridaUf[]): EdgeCorridaPartido[] {
+  const soma = new Map<string, number>();
+  for (const c of corridas) {
+    // UF a 0% não publicou destino (`corridaDaUf`): o produtor real não sabe
+    // quem é válido ali, e o voto dela é zero de qualquer forma. Pular a UF
+    // mantém a saída IGUAL à do produtor nesse estado (`[]` a 0% no país).
+    if (c.ctx.pctApurado <= 0) continue;
+    for (const r of c.resultados) {
+      if (r.destino !== "valido") continue;
+      soma.set(r.cand.partido, (soma.get(r.cand.partido) ?? 0) + r.votosAtuais);
+    }
+  }
+  return [...soma.entries()]
+    .map(([partido, votos_validos]) => ({ partido, votos_validos }))
+    .sort((a, b) => (a.partido < b.partido ? -1 : a.partido > b.partido ? 1 : 0));
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -1887,7 +2078,18 @@ function completarShares(base: readonly number[], n: number): number[] {
 
 export interface ResultadoCandUf {
   cand: CandidaturaUf;
+  /**
+   * Spec 022 — destinação do voto desta candidatura. É da CANDIDATURA (no
+   * Presidente, a mesma nas 27 UFs), como o `cand[].dvt` do TSE.
+   */
+  destino: EdgeDestinoVoto;
   shareFinal: number;
+  /**
+   * % dos votáveis apurados (`vvc`), como o `pvap` do TSE. Desde a spec 022 é
+   * DERIVADO dos votos (`100 × votosAtuais / vvc`): a repartição por
+   * destinação mexe nos votos, e o percentual publicado não pode contar outra
+   * história que o número ao lado dele.
+   */
   shareAtual: number;
   votosProjetados: number;
   votosAtuais: number;
@@ -1908,6 +2110,93 @@ export interface CorridaUf {
 }
 
 /**
+ * Quem, numa corrida, tem o voto anulado e quem tem o voto sub judice (spec
+ * 022). Uma candidatura de cada; o resto é válido.
+ *
+ * `shares` está na ordem de `cands` — da mais forte para a mais fraca
+ * (`candidaturasDaUf`). As `vagas + 1` primeiras ficam PROTEGIDAS sempre que
+ * sobrar gente: anular o líder, ou quem disputa a última vaga, trocaria a
+ * corrida que o dono está conferindo por outra.
+ *
+ * Entre as elegíveis, a escolhida é a de share final MAIS PRÓXIMO do tamanho
+ * da fatia que ela vai carregar (`par.subJudice`, depois `par.anulados`): o
+ * voto dela é forçado a esse tamanho por `resolverCorridaUf`, e a escolha
+ * mais próxima é a que menos afasta o `pct_atual` do `pct_projetado` dela.
+ * Empate ⇒ a mais fraca (maior índice), determinístico.
+ *
+ * Abaixo de {@link MIN_CANDIDATURAS_PARA_DESTINO} candidaturas, todas válidas
+ * — e a UF, por `ufAnulavel`, também não tem anulados para repartir.
+ */
+export function designarDestinos(
+  shares: readonly number[],
+  vagas: number,
+  par: ParametrosVotacao = PARAMETROS_VOTACAO,
+): EdgeDestinoVoto[] {
+  const n = shares.length;
+  const destinos: EdgeDestinoVoto[] = shares.map(() => "valido");
+  if (n < MIN_CANDIDATURAS_PARA_DESTINO) return destinos;
+  const protegidas = Math.min(vagas + 1, n - 2);
+  const maisProxima = (alvo: number): number => {
+    let melhor = -1;
+    for (let i = protegidas; i < n; i++) {
+      if (destinos[i] !== "valido") continue;
+      const d = Math.abs((shares[i] as number) - alvo);
+      const dm =
+        melhor < 0 ? Number.POSITIVE_INFINITY : Math.abs((shares[melhor] as number) - alvo);
+      if (d <= dm) melhor = i;
+    }
+    return melhor;
+  };
+  destinos[maisProxima(par.subJudice * 100)] = "sub_judice";
+  destinos[maisProxima(par.anulados * 100)] = "anulado";
+  return destinos;
+}
+
+/**
+ * Reparte os votáveis apurados entre as candidaturas POR DESTINAÇÃO (spec
+ * 022): o bolo de válidos só entre as válidas, o de anulados só entre as
+ * anuladas, o de sub judice só entre as sub judice — cada um por maiores
+ * restos sobre o share apurado de quem está no grupo.
+ *
+ * Os três bolos saem de `repartirVotaveis`, a MESMA conta das contagens, então
+ * as três identidades do TSE valem por construção. Bolo positivo sem ninguém
+ * no grupo é defeito do chamador e sai como erro alto — distribuí-lo entre as
+ * válidas recriaria exatamente o voto anulado sem marca que a spec conserta.
+ */
+function alocarPorDestino(
+  ctx: ContextoUf,
+  pesos: readonly number[],
+  destinos: readonly EdgeDestinoVoto[],
+): number[] {
+  const bolos = repartirVotaveis(ctx);
+  const porDestino: Record<EdgeDestinoVoto, number> = {
+    valido: bolos.validos,
+    anulado: bolos.anulados,
+    sub_judice: bolos.subJudice,
+  };
+  const votos: number[] = pesos.map(() => 0);
+  for (const destino of ["valido", "anulado", "sub_judice"] as const) {
+    const idx = destinos.flatMap((d, i) => (d === destino ? [i] : []));
+    const bolo = porDestino[destino];
+    if (idx.length === 0) {
+      if (bolo > 0) {
+        throw new Error(
+          `[simulacao] ${ctx.uf}: ${bolo} votos ${destino} e nenhuma candidatura ${destino} ` +
+            `para carregá-los — o voto ficaria sem dono (spec 022).`,
+        );
+      }
+      continue;
+    }
+    const w = idx.map((i) => pesos[i] as number);
+    const partes = alocarInteiros(bolo, w.some((x) => x > 0) ? w : w.map(() => 1));
+    idx.forEach((i, k) => {
+      votos[i] = partes[k] as number;
+    });
+  }
+  return votos;
+}
+
+/**
  * Resolve uma corrida numa UF: votos inteiros, ranks, ICs e probabilidades.
  *
  * Os votos saem por maiores restos sobre o total da UF, de modo que
@@ -1922,10 +2211,19 @@ export function resolverCorridaUf(
   cands: readonly CandidaturaUf[],
   sharesFinais: readonly number[],
   vagas: number,
+  destinos: readonly EdgeDestinoVoto[],
 ): CorridaUf {
+  if (destinos.length !== cands.length) {
+    throw new Error(
+      `[simulacao] ${ctx.uf}: ${destinos.length} destinos para ${cands.length} candidaturas`,
+    );
+  }
   const atuais = sharesApurados(rng.derive(`apurado|${ctx.uf}`), sharesFinais, ctx.pctApurado);
   const votosProj = alocarInteiros(ctx.votosFinais, sharesFinais);
-  const votosAt = alocarInteiros(ctx.votosApurados, atuais);
+  // Spec 022 — os votos apurados saem por DESTINAÇÃO; o share publicado sai
+  // dos votos, para `pct_atual` e `votos_atuais` contarem a mesma história.
+  const votosAt = alocarPorDestino(ctx, atuais, destinos);
+  const vvc = ctx.votosApurados;
   const prob = probabilidades(rng.derive(`prob|${ctx.uf}`), sharesFinais, ctx.pctApurado, vagas);
 
   const bruto = cands.map((cand, i) => {
@@ -1933,8 +2231,9 @@ export function resolverCorridaUf(
     const hw = meiaLarguraIc(s, ctx.pctApurado);
     return {
       cand,
+      destino: destinos[i] as EdgeDestinoVoto,
       shareFinal: s,
-      shareAtual: atuais[i] as number,
+      shareAtual: vvc > 0 ? (100 * (votosAt[i] as number)) / vvc : 0,
       votosProjetados: votosProj[i] as number,
       votosAtuais: votosAt[i] as number,
       rank: 0,
@@ -2166,7 +2465,14 @@ export function montarPresidente(
 
   const nacionais = sharesPresidenciais(cenario, cands.length);
   const porUf = sharesPorUf(r.derive("uf"), ctxs, cands, nacionais, dados.pendorPresUf);
-  const corridas = ctxs.map((c) => resolverCorridaUf(r, c, cands, porUf[c.uf] as number[], 1));
+  // Spec 022 — a destinação é da CANDIDATURA: decidida UMA vez, sobre o perfil
+  // nacional, e aplicada igual nas 27 UFs. Decidir por UF daria a mesma pessoa
+  // "válida" num estado e "anulada" no outro — e a soma nacional dela não
+  // teria destino.
+  const destinos = designarDestinos(nacionais, 1);
+  const corridas = ctxs.map((c) =>
+    resolverCorridaUf(r, c, cands, porUf[c.uf] as number[], 1, destinos),
+  );
 
   // O agregado nacional é a SOMA das UFs, não um número paralelo: se ele fosse
   // recalculado do perfil, a conta do leitor que somasse os 27 estados não
@@ -2270,7 +2576,9 @@ export function montarPresidente(
       turno: 1,
       pct_apurado_total: r1(pct),
       ufs_apuradas: ufsApuradas(porUfLinhas),
-      votacao: blocoVotacao(ctxs),
+      // Spec 022 — `corrida` (por candidatura) sai das MESMAS corridas de UF
+      // cujos `vvc` compõem as contagens: fecha por construção.
+      votacao: { ...blocoVotacao(ctxs), corrida: corridaNacionalPresidente(corridas) },
       national,
       por_uf: porUfLinhas,
       insights: insightsPresidente(candidatos, prob.pSegundoTurno, pct, porUfLinhas),
@@ -2357,7 +2665,12 @@ export function montarCorridasEstaduais(
     );
     if (cands.length === 0) throw new Error(`${ctx.uf}: nenhuma candidatura a cargo ${cargo}.`);
     const shares = completarShares(SHARES_FEITIO[feitios[ctx.uf] as FeitioUf], cands.length);
-    return resolverCorridaUf(r, ctx, cands, shares, vagas);
+    // Spec 022 — UF que não é anulável (ver `ufAnulavel`) não tem bolo de
+    // anulados; a corrida dela sai toda válida.
+    const destinos = ctx.anulaveis
+      ? designarDestinos(shares, vagas)
+      : shares.map((): EdgeDestinoVoto => "valido");
+    return resolverCorridaUf(r, ctx, cands, shares, vagas, destinos);
   });
   return { cargo, corridas, feitios };
 }
@@ -2417,7 +2730,8 @@ export function montarPayloadEstadual(
     turno: 1,
     pct_apurado_total: r1(pct),
     ufs_apuradas: ufsApuradas(linhas),
-    votacao: blocoVotacao(ctxs),
+    // Spec 022 — 27 corridas não têm 1º colocado nacional: por PARTIDO (RF-201).
+    votacao: { ...blocoVotacao(ctxs), corrida_por_partido: corridaPorPartido(corridas) },
     national,
     por_uf: linhas,
     insights: ehGov ? insightsGovernador(linhas) : insightsSenador(linhas, corridas),
@@ -2554,6 +2868,8 @@ export function montarPresidenteUf(
       needle_position: pos,
       needle_band: band,
       granularidade: cargoInfo(1).granularidade,
+      // Spec 022 (RF-209) — o agregado DA UF, não o do Brasil.
+      votacao: votacaoDaUf(c),
     };
   }
   return out;
@@ -2597,6 +2913,9 @@ export function montarSenadorUf(
       needle_band: lider === undefined ? "tossup" : band,
       vagas,
       granularidade: cargoInfo(5).granularidade,
+      // Spec 022 (RF-209). A TELA de Senador fica em "aguardando" (RF-210); o
+      // produtor publica mesmo assim, como o real.
+      votacao: votacaoDaUf(c),
     };
   }
   return out;
@@ -2706,6 +3025,8 @@ export function montarGovernadorUf(
       needle_band: lider === undefined ? "tossup" : band,
       // Sem `vagas` — ver o ponto 1 da docstring.
       granularidade: cargoInfo(3).granularidade,
+      // Spec 022 (RF-209).
+      votacao: votacaoDaUf(c),
     };
   }
   return out;
@@ -3142,6 +3463,7 @@ export function montarDeputado(
         agremiacoes: [],
         vagas_nao_preenchidas: lugares,
         empates_indeterminados: [],
+        votacao: votacaoDeputadoUf(ctx),
       };
       linhas.push({
         sigla: ctx.uf,
@@ -3217,6 +3539,7 @@ export function montarDeputado(
       agremiacoes,
       vagas_nao_preenchidas: res.vagasNaoPreenchidas,
       empates_indeterminados: res.empates,
+      votacao: votacaoDeputadoUf(ctx),
     };
 
     const lider = agremiacoes[0];
@@ -4200,6 +4523,222 @@ export function validarSaida(s: SaidaSimulacao): void {
         erro(`${nome}: residual do círculo 3 = ${residual3} < 0 — as projeções estouram aptos`);
       }
     }
+  }
+
+  // (13) Spec 022 — a corrida é HONESTA como o TSE: em toda abrangência,
+  // Σ votos das candidaturas `valido` == `validos`, Σ `anulado` == `anulados`,
+  // Σ `sub_judice` == `sub_judice`. Antes desta spec o gerador espalhava os
+  // anulados pelas candidaturas sem marcar ninguém (Σ `votos_atuais` =
+  // válidos + anulados + sub judice, medido em 26/09) — um círculo "só
+  // válidos" montado ali poria voto anulado numa fatia com nome.
+  validarCorrida(s);
+}
+
+/**
+ * As três identidades de destinação numa corrida por candidatura, mais a
+ * coerência de `destino_pendente` com as entradas. Devolve nada; reprova alto.
+ */
+function conferirCorrida(
+  nome: string,
+  corrida: readonly EdgeCorridaEntrada[] | undefined,
+  contagens: EdgeVotacaoContagens,
+  destinoPendente: true | undefined,
+  idsDoPayload: ReadonlySet<number>,
+): void {
+  if (corrida === undefined) {
+    erro(`${nome}: votacao.corrida ausente — o simulado sempre tem o agregado (spec 022)`);
+  }
+  const soma: Record<EdgeDestinoVoto, number> = { valido: 0, anulado: 0, sub_judice: 0 };
+  const vistos = new Set<number>();
+  for (const e of corrida) {
+    if (!Number.isInteger(e.votos) || e.votos < 0) {
+      erro(`${nome}: corrida[${e.id}].votos = ${e.votos} não é inteiro ≥ 0`);
+    }
+    if (vistos.has(e.id)) erro(`${nome}: id ${e.id} repetido na corrida`);
+    vistos.add(e.id);
+    if (!idsDoPayload.has(e.id)) {
+      erro(
+        `${nome}: corrida[${e.id}] sem candidatura de mesmo id no payload — a tela não acha o nome`,
+      );
+    }
+    if (e.destino !== undefined) soma[e.destino] += e.votos;
+  }
+  const alvo: Array<[EdgeDestinoVoto, keyof EdgeVotacaoContagens]> = [
+    ["valido", "validos"],
+    ["anulado", "anulados"],
+    ["sub_judice", "sub_judice"],
+  ];
+  for (const [destino, campo] of alvo) {
+    if (soma[destino] !== contagens[campo]) {
+      erro(
+        `${nome}: Σ votos das candidaturas '${destino}' = ${soma[destino]} ≠ ` +
+          `contagens.${campo} ${contagens[campo]} — a corrida não fecha como o TSE`,
+      );
+    }
+  }
+  const pende = corridaPendente(corrida);
+  if (pende !== (destinoPendente === true)) {
+    erro(`${nome}: destino_pendente ${String(destinoPendente)} com entrada pendente = ${pende}`);
+  }
+}
+
+function validarCorrida(s: SaidaSimulacao): void {
+  const { presidente, governador, senador, deputado, ctxs } = s;
+
+  // Nacional do Presidente: por candidatura.
+  const vp = presidente.votacao;
+  if (vp === undefined) erro("presidente: bloco 'votacao' ausente");
+  if (vp.corrida_por_partido !== undefined) {
+    erro("presidente: corrida_por_partido presente — uma corrida só é por candidatura (RF-201)");
+  }
+  conferirCorrida(
+    "presidente",
+    vp.corrida,
+    vp.contagens,
+    vp.destino_pendente,
+    new Set(presidente.national.candidatos.map((c) => c.id)),
+  );
+
+  // Nacional de Governador e Senador: por partido, e nunca por candidatura.
+  for (const [nome, p] of [
+    ["governador", governador],
+    ["senador", senador],
+  ] as const) {
+    const v = p.votacao;
+    if (v === undefined) erro(`${nome}: bloco 'votacao' ausente`);
+    if (v.corrida !== undefined) {
+      erro(`${nome}: votacao.corrida presente — 27 corridas não têm 1º colocado nacional (RF-201)`);
+    }
+    if (v.destino_pendente === undefined && v.corrida_por_partido === undefined) {
+      erro(`${nome}: corrida_por_partido ausente sem destino_pendente (RF-209)`);
+    }
+    if (v.corrida_por_partido !== undefined) {
+      const somaPartidos = v.corrida_por_partido.reduce((a, x) => a + x.votos_validos, 0);
+      if (somaPartidos !== v.contagens.validos) {
+        erro(
+          `${nome}: Σ corrida_por_partido = ${somaPartidos} ≠ contagens.validos ` +
+            `${v.contagens.validos} — só voto válido entra num partido (RF-203)`,
+        );
+      }
+    }
+  }
+
+  // Deputado: nada de corrida (RF-200).
+  const vd = deputado.votacao;
+  if (
+    vd !== undefined &&
+    (vd.corrida !== undefined ||
+      vd.corrida_por_partido !== undefined ||
+      vd.destino_pendente !== undefined)
+  ) {
+    erro("deputado: votacao com corrida — Deputado Federal não tem colocados (RF-200)");
+  }
+
+  // Cada UF, nos três cargos majoritários: o agregado DA UF, e a soma das 27
+  // contagens de UF é a contagem nacional (a mesma identidade do produtor).
+  const mapas: Array<[string, Record<string, EdgePayloadUf>, EdgePayload]> = [
+    ["presidente-uf.json", s.presidenteUf, presidente],
+    ["governador-uf.json", s.governadorUf, governador],
+    ["senador-uf.json", s.senadorUf, senador],
+  ];
+  for (const [arquivo, mapa, nacional] of mapas) {
+    const somaUf: Partial<Record<keyof EdgeVotacaoContagens, number>> = {};
+    for (const c of ctxs) {
+      const p = mapa[c.uf];
+      const v = p?.votacao;
+      if (p === undefined || v === undefined) {
+        erro(`${arquivo}/${c.uf}: bloco 'votacao' ausente (spec 022 RF-209)`);
+      }
+      conferirVotacaoUf(`${arquivo}/${c.uf}`, v, c);
+      conferirCorrida(
+        `${arquivo}/${c.uf}`,
+        v.corrida,
+        v.contagens,
+        v.destino_pendente,
+        new Set(p.candidatos.map((x) => x.id)),
+      );
+      for (const [k, n] of Object.entries(v.contagens)) {
+        const kk = k as keyof EdgeVotacaoContagens;
+        somaUf[kk] = (somaUf[kk] ?? 0) + n;
+      }
+    }
+    conferirSomaDasUfs(arquivo, somaUf, nacional.votacao?.contagens);
+  }
+
+  // Deputado por UF (spec 021 RF-192 emendado): o painel "Votação" da tela de
+  // UF, sem corrida (spec 022 RF-200). Mesmas invariantes das três acima.
+  const somaDep: Partial<Record<keyof EdgeVotacaoContagens, number>> = {};
+  for (const c of ctxs) {
+    const v = s.deputadoUf[c.uf]?.votacao;
+    if (v === undefined) {
+      erro(`deputado-uf.json/${c.uf}: bloco 'votacao' ausente (spec 021 RF-192 emendado)`);
+    }
+    if ("corrida" in v || "destino_pendente" in v) {
+      erro(`deputado-uf.json/${c.uf}: votacao com corrida — Deputado não tem colocados (RF-200)`);
+    }
+    conferirVotacaoUf(`deputado-uf.json/${c.uf}`, v, c);
+    for (const [k, n] of Object.entries(v.contagens)) {
+      const kk = k as keyof EdgeVotacaoContagens;
+      somaDep[kk] = (somaDep[kk] ?? 0) + n;
+    }
+  }
+  conferirSomaDasUfs("deputado-uf.json", somaDep, deputado.votacao?.contagens);
+}
+
+/** Σ das contagens das 27 UFs == contagens nacionais (identidade do produtor). */
+function conferirSomaDasUfs(
+  arquivo: string,
+  somaUf: Partial<Record<keyof EdgeVotacaoContagens, number>>,
+  nac: EdgeVotacaoContagens | undefined,
+): void {
+  if (nac === undefined) erro(`${arquivo}: nacional sem votacao`);
+  for (const [k, n] of Object.entries(nac)) {
+    if (somaUf[k as keyof EdgeVotacaoContagens] !== n) {
+      erro(
+        `${arquivo}: Σ contagens.${k} das UFs = ${String(somaUf[k as keyof EdgeVotacaoContagens])} ` +
+          `≠ nacional ${n} — a UF e o país contam votos diferentes`,
+      );
+    }
+  }
+}
+
+/**
+ * O painel "Votação" de UMA UF (spec 021 RF-192 emendado em 2026-09-26,
+ * noite) desenha os três arcos com as MESMAS funções da tela
+ * (`fatiasCirculo1`/`fatiasCirculo3`). Reprova:
+ *
+ *   - arco 1 que não fecha em `aptos` (a tela diria "não é possível montar
+ *     este gráfico" — num simulado isso é defeito do gerador, não estado);
+ *   - `projetada` presente sem base amostral na UF, ou ausente com ela
+ *     (RF-195 — a mesma regra do nacional, sobre a UF);
+ *   - projeção que soma mais que `aptos` (residual negativo desenharia torto).
+ */
+function conferirVotacaoUf(
+  nome: string,
+  v: Pick<EdgeVotacaoUf, "contagens" | "projetada">,
+  ctx: ContextoUf,
+): void {
+  if (fatiasCirculo1(v.contagens) === null) {
+    erro(`${nome}: o arco 1 não fecha em aptos ${v.contagens.aptos} (spec 021 RF-193)`);
+  }
+  const temBase = ctx.pctApurado > 0;
+  if (temBase !== (v.projetada !== undefined)) {
+    erro(
+      `${nome}: votacao.projetada ${v.projetada === undefined ? "ausente" : "presente"} com a UF ` +
+        `a ${ctx.pctApurado}% apurado — RF-195`,
+    );
+  }
+  const p = v.projetada;
+  if (p === undefined) return;
+  for (const [campo, n] of Object.entries(p)) {
+    if (!Number.isInteger(n) || n < 0)
+      erro(`${nome}: votacao.projetada.${campo} = ${n} não é inteiro ≥ 0`);
+  }
+  if (fatiasCirculo3(v.contagens, p) === null) {
+    const soma = p.validos + p.brancos + p.nulos + p.abstencao;
+    erro(
+      `${nome}: residual do círculo 3 < 0 — a projeção soma ${soma} > aptos ${v.contagens.aptos}`,
+    );
   }
 }
 

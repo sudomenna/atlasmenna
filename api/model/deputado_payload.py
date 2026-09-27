@@ -364,8 +364,15 @@ def construir_detalhe_uf(
     turno: int,
     divergencias: list[dict[str, Any]],
     relogio: RelogioDoDado | None = None,
+    votacao: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """`DeputadoUfDetail` (D6) — o payload que vai para `deputado/uf/<SIGLA>.json`.
+
+    `votacao` (spec 021 RF-192 emendado em 2026-09-26, noite) chega pronto de
+    `project.py::build_votacao_uf_payloads` — este módulo transporta e nunca
+    deriva. Chave OMITIDA quando `None`: ausência é "não sabemos" e a tela cai
+    em `<DetailUnavailable>` (RF-198); um `null` publicado seria um terceiro
+    estado que o contrato não tem.
 
     `relogio` (ADR-0038 D2) é o relógio do dado medido só sobre os pares desta
     UF. `None` — o default — publica `dado_ts`/`pares_atrasados` como `null`,
@@ -439,7 +446,7 @@ def construir_detalhe_uf(
     # ordenação não pode depender disso.
     agremiacoes.sort(key=lambda a: (-a["cadeiras"], -a["votos_validos"], a["sigla"], a["cod"]))
 
-    return {
+    detalhe: dict[str, Any] = {
         # `ts` = hora do cálculo; `dado_ts` = hora do boletim mais recente
         # desta UF (ADR-0038 D1). Os dois convivem: quando a ingestão para, o
         # primeiro anda e o segundo congela.
@@ -463,6 +470,9 @@ def construir_detalhe_uf(
             _codigos_em_empate(resultado) if resultado is not None else []
         ),
     }
+    if votacao is not None:
+        detalhe["votacao"] = votacao
+    return detalhe
 
 
 # ---------------------------------------------------------------------------
@@ -715,6 +725,7 @@ def construir_payload_deputado(
     pares_atrasados: int | None = None,
     relogio_by_uf: dict[str, RelogioDoDado] | None = None,
     votacao: dict[str, Any] | None = None,
+    votacao_by_uf: dict[str, dict[str, Any]] | None = None,
 ) -> tuple[dict[str, Any], dict[str, dict[str, Any]]]:
     """Monta `EdgePayloadDeputado` (D5) e o mapa `sigla → DeputadoUfDetail` (D6).
 
@@ -746,6 +757,11 @@ def construir_payload_deputado(
     sabemos" e faz a tela cair em `<DetailUnavailable>` (RF-198), enquanto um
     `null` publicado seria um terceiro estado que o contrato não tem.
 
+    `votacao_by_uf` (spec 021 RF-192 emendado, 26/09 noite) é o `votacao` de
+    cada UF, pronto de `project.py::build_votacao_uf_payloads`; vai para o
+    detalhe da UF (Blob), onde a tela `/uf/[sigla]/deputado-federal` o lê. UF
+    sem entrada ⇒ chave omitida no detalhe dela.
+
     ⚠️ Nível `"br"` não existe no cargo 6 (`temArquivoBr` só é `true` no
     cargo 1): o nacional aqui é a soma dos 27 agregados de UF — soma de
     contagens inteiras, exata, sem projeção envolvida.
@@ -761,6 +777,7 @@ def construir_payload_deputado(
             turno=turno,
             divergencias=divergencias_por_uf.get(dados.uf, []),
             relogio=(relogio_by_uf or {}).get(dados.uf),
+            votacao=(votacao_by_uf or {}).get(dados.uf),
         )
         detalhes[dados.uf] = detalhe
         pares.append((dados, detalhe))
