@@ -6,10 +6,10 @@ shipped_date: 2026-05-18
 priority: M
 personas: [P1, P2, P3]
 screens: [T-02]
-requirements: [RF-021, RF-022, RF-025, RF-027, RF-029, RF-006.1, RF-006.2, RF-006.3, RF-006.4, RF-006.5, RF-006.6, RF-006.7, RF-006.8, RF-062, RF-063, RF-189, RF-191]
+requirements: [RF-021, RF-022, RF-025, RF-027, RF-029, RF-006.1, RF-006.2, RF-006.3, RF-006.4, RF-006.5, RF-006.6, RF-006.7, RF-006.8, RF-063, RF-189, RF-191]
 depends_on: [001-ingestao-tse, 002-modelo-estatistico, 005-pagina-uf-governador]
 apis: [GET /api/projection?cargo=governador]
-components: [GovernorCard, HexCartogramBrasil, RaceStatsCards, BreakingNewsTicker, LiveBadge, Tabs, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader, GovernadoresPlacarTurno, GovernadoresPorPartido]
+components: [GovernorCard, HexCartogramBrasil, RaceStatsCards, BreakingNewsTicker, LiveBadge, Tabs, TrilhaKicker, RaceHeader, GovernadoresPlacarTurno, GovernadoresPorPartido]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-022, RNF-023, RNF-024]
 adrs: [0001, 0002, 0010, 0011, 0012, 0013, 0017, 0018, 0019, 0022, 0025, 0034, 0038, 0048, 0053]
 ---
@@ -159,9 +159,11 @@ Filtros: `decididos_1t` = `eleito_1t`; `vai_2t` = `segundo_turno`; `em_disputa` 
 
 Decisão D7 (2026-09-05): `/governador` recebe **apenas a participação** do hero de 1º turno — **não** os seis termômetros. Aqui não existe uma corrida nacional de governador (existem 27 corridas estaduais), então um "top 3 nacional" não teria significado. RF-061 **não se aplica** a esta rota.
 
+> **EMENDADO em 2026-09-27 (decisão do dono)**: O bloco "Participação do eleitorado" foi **removido inteiro** de `/governador`. RF-062 deixa de se aplicar a esta rota. A participação continua existindo nas demais rotas (specs 003, 004, 005).
+
 | RF | Aplicação em `/governador` |
 |---|---|
-| **RF-062** — participação e "Outros" | `<ProjectionThermometers variant="participacao-only" />` acima de `<RaceStatsCards />`, com heading "Participação do eleitorado" — 2 termômetros (brancos/nulos, abstenção). **Exceção a ADR-0017**: quando `national.participacao` está ausente o bloco é omitido inteiro, em vez de renderizar "aguardando" — um bloco vazio anunciaria uma projeção nacional que não existe nesta trilha. |
+| **RF-062** — participação e "Outros" | ~~`<ProjectionThermometers variant="participacao-only" />`~~ **REMOVIDO em 2026-09-27**. Já não se aplica a esta rota; mantém em specs 003/004/005. |
 | **RF-063** — identidade de trilha | `<main data-trilha="gov">`, `<RaceHeader />` com kicker "GOVERNADOR · Brasil (27 UFs)" e aba `Governador` ativa em `--trilha-accent`. |
 | **RF-061** — hero de seis termômetros | **Fora de escopo** nesta rota (ver acima). |
 

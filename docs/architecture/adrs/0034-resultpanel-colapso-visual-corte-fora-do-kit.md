@@ -34,6 +34,8 @@ Formaliza três decisões do usuário tomadas na sessão de 2026-09-09 (D21, D22
 frente de trabalho — fazer a UI seguir o protótipo do kit Atlas Menna à risca — e por isso
 registradas juntas, como o ADR-0033 já fez para D15–D17.
 
+> **Nota 2026-09-27 (decisão do dono, [ADR-0022](0022-participacao-governador-fora-do-dom.md#status) `deprecated`).** A exceção registrada abaixo (D23, tabela de poda) e nas Consequências — `/governador` mantém `<ProjectionThermometers variant="participacao-only">`, protegida pelo ADR-0022, como única rota a não receber `<ResultPanel>` mas ainda assim distinta por reter esse bloco — deixou de existir: o dono removeu o bloco de participação inteiro dessa rota, nos dois estados do payload. O ADR-0022 passou a `status: deprecated` (suas regras não têm mais objeto). Isto não reabre o que este ADR decidiu em D21/D22/D23 nas outras três rotas, nem a razão pela qual `/governador` não recebeu `<ResultPanel>` (seção "Por que `/governador` não recebeu o `<ResultPanel>`", intocada) — apenas remove a última instância ativa de `<ProjectionThermometers>` no produto.
+
 ## Contexto
 
 Os commits `b7c1bbb` ("painel de resultado na forma do protótipo (D21, D22)") e `910f21f` ("painel

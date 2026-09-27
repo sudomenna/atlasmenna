@@ -171,9 +171,10 @@
     {
       "id": "0022",
       "title": "Participação nacional omitida do DOM em /governador antes da 1ª apuração, exceção pontual ao ADR-0018",
-      "status": "accepted",
+      "status": "deprecated",
       "date": "2026-09-05",
-      "note": "exceção pontual ao ADR-0018, que permanece accepted e vigente para todas as demais rotas e blocos de candidato",
+      "amended": "2026-09-27",
+      "note": "deprecated em 2026-09-27: por decisão do dono, o bloco de participação nacional (termômetros e bloco explicativo estático) saiu inteiro da rota /governador, nos dois estados do payload — as regras deste ADR (bloco sempre no DOM, heading constante) não têm mais objeto. Não é superseded (não há ADR substituto).",
       "path": "docs/architecture/adrs/0022-participacao-governador-fora-do-dom.md"
     },
     {
@@ -1062,7 +1063,6 @@
         "RF-006.6",
         "RF-006.7",
         "RF-006.8",
-        "RF-062",
         "RF-063",
         "RF-189",
         "RF-191"
@@ -1076,8 +1076,6 @@
         "BreakingNewsTicker",
         "LiveBadge",
         "Tabs",
-        "ProjectionThermometer",
-        "ProjectionThermometers",
         "TrilhaKicker",
         "RaceHeader",
         "GovernadoresPlacarTurno",

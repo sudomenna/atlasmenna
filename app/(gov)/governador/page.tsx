@@ -84,10 +84,9 @@
  * página sem conteúdo. O que mudou nela é a contagem de colunas — ver o
  * comentário no ponto de uso.
  *
- * `<ProjectionThermometers variant="participacao-only">` também FICA: o
- * ADR-0022 obriga o bloco de participação de governador a nunca sair do DOM.
- * É a única das quatro rotas em que os termômetros sobreviveram aos cortes de
- * 09/09.
+ * `<ProjectionThermometers variant="participacao-only">` ficou em 09/09 (o
+ * ADR-0022 obrigava o bloco a nunca sair do DOM), mas SAIU em 2026-09-27 por
+ * decisão do dono: "Participação do eleitorado" não é mais desta página.
  *
  * ## Por que esta rota NÃO recebeu o `<ResultPanel>` do kit
  *
@@ -120,7 +119,6 @@ import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { GovernadoresPlacarTurno } from "@/components/blocks/GovernadoresPlacarTurno";
 import { GovernadoresPorPartido } from "@/components/blocks/GovernadoresPorPartido";
 import { GovernorCard } from "@/components/blocks/GovernorCard";
-import { ProjectionThermometers } from "@/components/blocks/ProjectionThermometers";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
@@ -165,14 +163,6 @@ const FILTER_LABELS: Record<StatusFilter, string> = {
 };
 
 const FILTER_ORDER: StatusFilter[] = ["todas", "em_disputa", "decididos_1t", "vai_2t", "chamadas"];
-
-/**
- * Título do bloco de participação nacional. Usado tanto pelo termômetro
- * quanto pelo bloco explicativo que ocupa o lugar dele antes da 1ª apuração
- * — o heading precisa ser o mesmo `<h2>`, no mesmo ponto da página, para que
- * a navegação por headings não mude conforme o dado chega (ADR-0022).
- */
-const PARTICIPACAO_HEADING = "Participação do eleitorado";
 
 /**
  * Predicado de filtro — spec 006, RF-006.2 + RF-006.8.
@@ -442,60 +432,12 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
               : "27 corridas estaduais — apuração em tempo real. Não oficial. Fonte: TSE."}
           </p>
 
-          {/* Participação nacional agregada (ADR-0018 + ADR-0022, emendado em
-              06/09). O bloco NUNCA sai do DOM: com dado, é o termômetro
-              normal; sem dado, é o parágrafo explicativo abaixo, com o mesmo
-              <h2> na mesma posição. Não usamos "aguardando projeção" aqui
-              porque não existe uma corrida nacional de governador a ser
-              aguardada — existem 27 corridas —, mas explicar por que o número
-              ainda não existe é honesto e mantém o bloco anunciável por leitor
-              de tela. */}
-          {/* `!pre`: o termômetro de participação é medição pura — "APURADO
-              51,6%", "PROJEÇÃO 8,1%", "IC95 [7,2–9,0]" — e imprime duas das
-              palavras que o RF-161 proíbe. O bloco NÃO sai do DOM (ADR-0022
-              obriga): o que entra no lugar é o mesmo parágrafo explicativo que
-              já existia para "ainda não há dado", com o MESMO `<h2>` na MESMA
-              posição, e ele é verdadeiro nas duas situações. É o padrão do
-              RF-158 aplicado ao bloco equivalente desta rota: o bloco fica, a
-              medição sai. */}
-          {!pre && national.participacao ? (
-            <ProjectionThermometers
-              variant="participacao-only"
-              participacao={national.participacao}
-              candidatos={national.candidatos}
-              heading={PARTICIPACAO_HEADING}
-            />
-          ) : (
-            <section
-              aria-labelledby="participacao-nacional-heading"
-              data-testid="participacao-nacional-indisponivel"
-              className="flex flex-col"
-              style={{ gap: "var(--space-2)" }}
-            >
-              <h2
-                id="participacao-nacional-heading"
-                style={{ margin: 0, font: "var(--type-title)", textWrap: "pretty" }}
-              >
-                {PARTICIPACAO_HEADING}
-              </h2>
-              <p
-                className="max-w-prose"
-                style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-              >
-                Não existe uma corrida nacional de governador — são 27 disputas estaduais
-                independentes, uma em cada estado e no Distrito Federal. A participação do
-                eleitorado desta página (abstenção, votos brancos e nulos) é a soma dessas 27
-                corridas.
-              </p>
-              <p
-                className="max-w-prose"
-                style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-              >
-                Esse número só passa a existir quando a primeira zona eleitoral for apurada em algum
-                estado: antes disso, não há voto contado em lugar nenhum para somar.
-              </p>
-            </section>
-          )}
+          {/* "Participação do eleitorado" (os termômetros de brancos/nulos e
+              abstenção, ADR-0018) SAIU desta página em 2026-09-27, decisão do
+              dono. Com isso cai aqui a obrigação do ADR-0022 de o bloco nunca
+              sair do DOM — ela valia para um bloco que existia; não há mais
+              bloco (ADR-0022, `deprecated`). O componente segue no repositório,
+              sem call site. */}
 
           {/* `<RaceStatsCards>` (eleitos / vai a 2T / em apuração) saiu em
               2026-09-09 (D23): não tem contraparte no protótipo. O componente

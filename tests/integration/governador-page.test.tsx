@@ -335,86 +335,23 @@ describe("GovernadorGridPage (integration / smoke)", () => {
     expect(doc.querySelector("h1")?.textContent).toBe("Governadores 2026");
   });
 
-  it("(j) com `participacao` renderiza só os dois termômetros de participação, acima da grade", async () => {
-    const node = await GovernadorGridPage({ searchParams: Promise.resolve({}) });
-    const doc = new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
-
-    const bloco = doc.querySelector('section[aria-labelledby="projecao-termometros-heading"]');
-    expect(bloco).not.toBeNull();
-    expect(bloco?.getAttribute("data-variant")).toBe("participacao-only");
-    expect(bloco?.querySelectorAll('[role="meter"]')).toHaveLength(2);
-    expect(doc.querySelector("#termometro-brancos-nulos")).not.toBeNull();
-    expect(doc.querySelector("#termometro-abstencao")).not.toBeNull();
-    // Sem "top 3 nacional" de governador — não existe abrangência Brasil.
-    expect(doc.querySelector('[id^="termometro-cand-"]')).toBeNull();
-    expect(doc.querySelector("#termometro-outros")).toBeNull();
-
-    // Posição: dentro do painel de resultado, portanto ANTES da seção das 27
-    // corridas. O ponto de referência era `stat-eleitos` até 09/09; com os
-    // stats cards cortados (D23), é a barra de filtros que abre aquela seção.
-    const grade = doc.querySelector('nav[aria-label="Filtros por status"]');
-    expect(
-      bloco && grade && bloco.compareDocumentPosition(grade) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-  });
-
-  it("(k) sem `participacao` renderiza o bloco explicativo no lugar dos termômetros", async () => {
-    comParticipacao = false;
-    const node = await GovernadorGridPage({ searchParams: Promise.resolve({}) });
-    const doc = new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
-
-    // Nenhum termômetro (não há dado para desenhar barra ou faixa).
-    expect(doc.querySelector('[id^="termometro-"]')).toBeNull();
-    expect(doc.querySelector('section[aria-labelledby="projecao-termometros-heading"]')).toBeNull();
-
-    // Mas o bloco continua no DOM, como region nomeada pelo próprio heading
-    // (ADR-0022 emendado — a omissão silenciosa é o que a emenda corrige).
-    const bloco = doc.querySelector('[data-testid="participacao-nacional-indisponivel"]');
-    expect(bloco).not.toBeNull();
-    expect(bloco?.tagName.toLowerCase()).toBe("section");
-    expect(bloco?.getAttribute("aria-labelledby")).toBe("participacao-nacional-heading");
-
-    const heading = doc.querySelector("#participacao-nacional-heading");
-    expect(heading?.tagName.toLowerCase()).toBe("h2");
-    expect(heading?.textContent).toBe("Participação do eleitorado");
-
-    // O texto explica a soma das 27 corridas e a condição de existência, sem
-    // prometer valor nem sugerir progresso ("aguardando", "em breve", "%").
-    const texto = bloco?.textContent?.replace(/\s+/g, " ") ?? "";
-    expect(texto).toContain("27 disputas estaduais");
-    expect(texto).toContain("primeira zona eleitoral for apurada");
-    expect(texto).not.toMatch(/aguardando|em breve|carregando|%/i);
-
-    // Mesma posição do termômetro: dentro do painel de resultado, acima da
-    // seção das 27 corridas (que abre com a barra de filtros).
-    const grade = doc.querySelector('nav[aria-label="Filtros por status"]');
-    expect(
-      bloco && grade && bloco.compareDocumentPosition(grade) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-
-    // Os cards de UF seguem lá. (O cartograma saiu para a moldura — ADR-0033 § 1.)
-    expect(doc.body.textContent).toContain("São Paulo");
-  });
-
-  it("(l) o heading 'Participação do eleitorado' existe com e sem dado, sempre como h2", async () => {
-    const headingsCom = await (async () => {
-      comParticipacao = true;
+  it("🔴 (j) 'Participação do eleitorado' SAIU (dono, 2026-09-27) — com e sem dado", async () => {
+    for (const com of [true, false]) {
+      comParticipacao = com;
       const node = await GovernadorGridPage({ searchParams: Promise.resolve({}) });
       const doc = new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
-      return [...doc.querySelectorAll("h2")].map((h) => h.textContent?.trim());
-    })();
 
-    const headingsSem = await (async () => {
-      comParticipacao = false;
-      const node = await GovernadorGridPage({ searchParams: Promise.resolve({}) });
-      const doc = new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
-      return [...doc.querySelectorAll("h2")].map((h) => h.textContent?.trim());
-    })();
+      expect(
+        doc.querySelector('section[aria-labelledby="projecao-termometros-heading"]'),
+      ).toBeNull();
+      expect(doc.querySelector('[id^="termometro-"]')).toBeNull();
+      expect(doc.querySelector('[data-testid="participacao-nacional-indisponivel"]')).toBeNull();
+      expect(doc.body.textContent).not.toContain("Participação do eleitorado");
+      expect(doc.body.textContent).not.toContain("Abstenção");
 
-    expect(headingsCom).toContain("Participação do eleitorado");
-    expect(headingsSem).toContain("Participação do eleitorado");
-    // Estrutura de navegação por headings idêntica nos dois estados.
-    expect(headingsSem).toEqual(headingsCom);
+      // A grade das 27 corridas continua.
+      expect(doc.body.textContent).toContain("São Paulo");
+    }
   });
 });
 
