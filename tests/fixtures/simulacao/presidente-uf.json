@@ -1,7 +1,7 @@
 {
   "AC": {
     "uf": "AC",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -13,11 +13,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 27801,
         "votos_projetados": 214008,
-        "pct_atual": 54.36,
-        "pct_projetado": 55.93,
+        "pct_atual": 58.85,
+        "pct_projetado": 56.44,
         "ci95": {
-          "lower": 52.78,
-          "upper": 59.08
+          "lower": 53.26,
+          "upper": 59.63
         },
         "sqcand": "280002551544"
       },
@@ -28,11 +28,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 7431,
         "votos_projetados": 81625,
-        "pct_atual": 14.53,
-        "pct_projetado": 21.33,
+        "pct_atual": 15.73,
+        "pct_projetado": 21.53,
         "ci95": {
-          "lower": 18.73,
-          "upper": 23.93
+          "lower": 18.9,
+          "upper": 24.15
         },
         "sqcand": "280002542548"
       },
@@ -43,11 +43,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 6316,
         "votos_projetados": 61988,
-        "pct_atual": 12.35,
-        "pct_projetado": 16.2,
+        "pct_atual": 13.37,
+        "pct_projetado": 16.35,
         "ci95": {
-          "lower": 13.86,
-          "upper": 18.54
+          "lower": 13.99,
+          "upper": 18.71
         },
         "sqcand": "280002551932"
       },
@@ -59,11 +59,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 4451,
         "votos_projetados": 38368,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.69,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.71,
         "ci95": {
-          "lower": 1.66,
-          "upper": 3.71
+          "lower": 1.67,
+          "upper": 3.75
         },
         "sqcand": "280002539826"
       },
@@ -74,11 +74,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 603,
         "votos_projetados": 5292,
-        "pct_atual": 1.18,
-        "pct_projetado": 1.38,
+        "pct_atual": 1.28,
+        "pct_projetado": 1.4,
         "ci95": {
-          "lower": 0.64,
-          "upper": 2.12
+          "lower": 0.65,
+          "upper": 2.14
         },
         "sqcand": "280002551975"
       },
@@ -105,11 +105,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 263,
         "votos_projetados": 2621,
-        "pct_atual": 0.51,
-        "pct_projetado": 0.68,
+        "pct_atual": 0.56,
+        "pct_projetado": 0.69,
         "ci95": {
           "lower": 0.16,
-          "upper": 1.21
+          "upper": 1.22
         },
         "sqcand": "280002541457"
       },
@@ -120,7 +120,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 144,
         "votos_projetados": 1295,
-        "pct_atual": 0.28,
+        "pct_atual": 0.3,
         "pct_projetado": 0.34,
         "ci95": {
           "lower": 0,
@@ -135,11 +135,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 115,
         "votos_projetados": 1013,
-        "pct_atual": 0.22,
-        "pct_projetado": 0.26,
+        "pct_atual": 0.24,
+        "pct_projetado": 0.27,
         "ci95": {
           "lower": 0,
-          "upper": 0.59
+          "upper": 0.6
         },
         "sqcand": "280002552487"
       },
@@ -150,11 +150,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 65,
         "votos_projetados": 567,
-        "pct_atual": 0.13,
+        "pct_atual": 0.14,
         "pct_projetado": 0.15,
         "ci95": {
           "lower": 0,
-          "upper": 0.39
+          "upper": 0.4
         },
         "sqcand": "280002540694"
       },
@@ -180,11 +180,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 17,
         "votos_projetados": 168,
-        "pct_atual": 0.03,
+        "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -288,7 +288,7 @@
   },
   "AL": {
     "uf": "AL",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -301,10 +301,10 @@
         "votos_atuais": 82643,
         "votos_projetados": 784097,
         "pct_atual": 41.32,
-        "pct_projetado": 43.54,
+        "pct_projetado": 44.39,
         "ci95": {
-          "lower": 40.39,
-          "upper": 46.69
+          "lower": 41.18,
+          "upper": 47.59
         },
         "sqcand": "280002542548"
       },
@@ -316,10 +316,10 @@
         "votos_atuais": 71745,
         "votos_projetados": 574146,
         "pct_atual": 35.87,
-        "pct_projetado": 31.88,
+        "pct_projetado": 32.5,
         "ci95": {
-          "lower": 28.92,
-          "upper": 34.84
+          "lower": 29.48,
+          "upper": 35.52
         },
         "sqcand": "280002551544"
       },
@@ -331,10 +331,10 @@
         "votos_atuais": 39225,
         "votos_projetados": 312382,
         "pct_atual": 19.61,
-        "pct_projetado": 17.35,
+        "pct_projetado": 17.68,
         "ci95": {
-          "lower": 14.94,
-          "upper": 19.75
+          "lower": 15.23,
+          "upper": 20.13
         },
         "sqcand": "280002551932"
       },
@@ -347,10 +347,10 @@
         "votos_atuais": 0,
         "votos_projetados": 0,
         "pct_atual": 0,
-        "pct_projetado": 2.35,
+        "pct_projetado": 2.4,
         "ci95": {
-          "lower": 1.39,
-          "upper": 3.31
+          "lower": 1.42,
+          "upper": 3.38
         },
         "sqcand": "280002539826"
       },
@@ -378,10 +378,10 @@
         "votos_atuais": 2515,
         "votos_projetados": 22666,
         "pct_atual": 1.26,
-        "pct_projetado": 1.26,
+        "pct_projetado": 1.28,
         "ci95": {
-          "lower": 0.55,
-          "upper": 1.97
+          "lower": 0.56,
+          "upper": 2
         },
         "sqcand": "280002551975"
       },
@@ -393,10 +393,10 @@
         "votos_atuais": 2115,
         "votos_projetados": 15391,
         "pct_atual": 1.06,
-        "pct_projetado": 0.85,
+        "pct_projetado": 0.87,
         "ci95": {
-          "lower": 0.27,
-          "upper": 1.44
+          "lower": 0.28,
+          "upper": 1.47
         },
         "sqcand": "280002541457"
       },
@@ -411,7 +411,7 @@
         "pct_projetado": 0.29,
         "ci95": {
           "lower": 0,
-          "upper": 0.62
+          "upper": 0.64
         },
         "sqcand": "280002552484"
       },
@@ -423,10 +423,10 @@
         "votos_atuais": 553,
         "votos_projetados": 5131,
         "pct_atual": 0.28,
-        "pct_projetado": 0.28,
+        "pct_projetado": 0.29,
         "ci95": {
           "lower": 0,
-          "upper": 0.62
+          "upper": 0.64
         },
         "sqcand": "280002552487"
       },
@@ -441,7 +441,7 @@
         "pct_projetado": 0.16,
         "ci95": {
           "lower": 0,
-          "upper": 0.41
+          "upper": 0.42
         },
         "sqcand": "280002540694"
       },
@@ -453,7 +453,7 @@
         "votos_atuais": 201,
         "votos_projetados": 1522,
         "pct_atual": 0.1,
-        "pct_projetado": 0.08,
+        "pct_projetado": 0.09,
         "ci95": {
           "lower": 0,
           "upper": 0.29
@@ -575,7 +575,7 @@
   },
   "AM": {
     "uf": "AM",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -587,11 +587,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 84980,
         "votos_projetados": 709673,
-        "pct_atual": 35.62,
-        "pct_projetado": 38.74,
+        "pct_atual": 38.57,
+        "pct_projetado": 39.4,
         "ci95": {
-          "lower": 35.65,
-          "upper": 41.83
+          "lower": 36.26,
+          "upper": 42.55
         },
         "sqcand": "280002551544"
       },
@@ -602,11 +602,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 71056,
         "votos_projetados": 613481,
-        "pct_atual": 29.78,
-        "pct_projetado": 33.49,
+        "pct_atual": 32.25,
+        "pct_projetado": 34.06,
         "ci95": {
-          "lower": 30.49,
-          "upper": 36.49
+          "lower": 31.01,
+          "upper": 37.11
         },
         "sqcand": "280002542548"
       },
@@ -617,11 +617,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 37335,
         "votos_projetados": 342430,
-        "pct_atual": 15.65,
-        "pct_projetado": 18.69,
+        "pct_atual": 16.94,
+        "pct_projetado": 19.01,
         "ci95": {
-          "lower": 16.22,
-          "upper": 21.17
+          "lower": 16.49,
+          "upper": 21.53
         },
         "sqcand": "280002551932"
       },
@@ -633,11 +633,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 20760,
         "votos_projetados": 178970,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.39,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.47,
         "ci95": {
-          "lower": 3.09,
-          "upper": 5.69
+          "lower": 3.14,
+          "upper": 5.79
         },
         "sqcand": "280002539826"
       },
@@ -664,11 +664,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2092,
         "votos_projetados": 19068,
-        "pct_atual": 0.88,
-        "pct_projetado": 1.04,
+        "pct_atual": 0.95,
+        "pct_projetado": 1.06,
         "ci95": {
           "lower": 0.4,
-          "upper": 1.69
+          "upper": 1.71
         },
         "sqcand": "280002551975"
       },
@@ -679,11 +679,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1959,
         "votos_projetados": 16341,
-        "pct_atual": 0.82,
-        "pct_projetado": 0.89,
+        "pct_atual": 0.89,
+        "pct_projetado": 0.91,
         "ci95": {
           "lower": 0.3,
-          "upper": 1.49
+          "upper": 1.51
         },
         "sqcand": "280002541457"
       },
@@ -694,11 +694,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 989,
         "votos_projetados": 8969,
-        "pct_atual": 0.41,
-        "pct_projetado": 0.49,
+        "pct_atual": 0.45,
+        "pct_projetado": 0.5,
         "ci95": {
           "lower": 0.05,
-          "upper": 0.93
+          "upper": 0.95
         },
         "sqcand": "280002552484"
       },
@@ -709,11 +709,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 572,
         "votos_projetados": 5255,
-        "pct_atual": 0.24,
+        "pct_atual": 0.26,
         "pct_projetado": 0.29,
         "ci95": {
           "lower": 0,
-          "upper": 0.63
+          "upper": 0.64
         },
         "sqcand": "280002552487"
       },
@@ -724,11 +724,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 322,
         "votos_projetados": 2930,
-        "pct_atual": 0.13,
+        "pct_atual": 0.15,
         "pct_projetado": 0.16,
         "ci95": {
           "lower": 0,
-          "upper": 0.41
+          "upper": 0.42
         },
         "sqcand": "280002540694"
       },
@@ -739,7 +739,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 189,
         "votos_projetados": 1604,
-        "pct_atual": 0.08,
+        "pct_atual": 0.09,
         "pct_projetado": 0.09,
         "ci95": {
           "lower": 0,
@@ -862,7 +862,7 @@
   },
   "AP": {
     "uf": "AP",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -874,11 +874,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 16703,
         "votos_projetados": 156857,
-        "pct_atual": 33.32,
-        "pct_projetado": 40.76,
+        "pct_atual": 36.07,
+        "pct_projetado": 41.38,
         "ci95": {
-          "lower": 37.64,
-          "upper": 43.88
+          "lower": 38.21,
+          "upper": 44.55
         },
         "sqcand": "280002551544"
       },
@@ -889,11 +889,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 13657,
         "votos_projetados": 119426,
-        "pct_atual": 27.24,
-        "pct_projetado": 31.04,
+        "pct_atual": 29.5,
+        "pct_projetado": 31.5,
         "ci95": {
-          "lower": 28.1,
-          "upper": 33.97
+          "lower": 28.52,
+          "upper": 34.49
         },
         "sqcand": "280002542548"
       },
@@ -904,11 +904,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 9943,
         "votos_projetados": 71479,
-        "pct_atual": 19.83,
-        "pct_projetado": 18.58,
+        "pct_atual": 21.47,
+        "pct_projetado": 18.86,
         "ci95": {
-          "lower": 16.11,
-          "upper": 21.05
+          "lower": 16.35,
+          "upper": 21.36
         },
         "sqcand": "280002551932"
       },
@@ -920,11 +920,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 4362,
         "votos_projetados": 37606,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.56,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.62,
         "ci95": {
-          "lower": 3.23,
-          "upper": 5.88
+          "lower": 3.28,
+          "upper": 5.97
         },
         "sqcand": "280002539826"
       },
@@ -951,11 +951,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 557,
         "votos_projetados": 5146,
-        "pct_atual": 1.11,
-        "pct_projetado": 1.34,
+        "pct_atual": 1.2,
+        "pct_projetado": 1.36,
         "ci95": {
-          "lower": 0.61,
-          "upper": 2.07
+          "lower": 0.62,
+          "upper": 2.1
         },
         "sqcand": "280002541457"
       },
@@ -966,11 +966,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 597,
         "votos_projetados": 4762,
-        "pct_atual": 1.19,
-        "pct_projetado": 1.24,
+        "pct_atual": 1.29,
+        "pct_projetado": 1.26,
         "ci95": {
           "lower": 0.54,
-          "upper": 1.94
+          "upper": 1.97
         },
         "sqcand": "280002551975"
       },
@@ -981,11 +981,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 227,
         "votos_projetados": 1883,
-        "pct_atual": 0.45,
-        "pct_projetado": 0.49,
+        "pct_atual": 0.49,
+        "pct_projetado": 0.5,
         "ci95": {
           "lower": 0.05,
-          "upper": 0.93
+          "upper": 0.95
         },
         "sqcand": "280002552484"
       },
@@ -996,7 +996,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 120,
         "votos_projetados": 983,
-        "pct_atual": 0.24,
+        "pct_atual": 0.26,
         "pct_projetado": 0.26,
         "ci95": {
           "lower": 0,
@@ -1011,11 +1011,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 84,
         "votos_projetados": 547,
-        "pct_atual": 0.17,
+        "pct_atual": 0.18,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.38
+          "upper": 0.39
         },
         "sqcand": "280002540694"
       },
@@ -1045,7 +1045,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -1149,7 +1149,7 @@
   },
   "BA": {
     "uf": "BA",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -1161,11 +1161,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 478453,
         "votos_projetados": 4200837,
-        "pct_atual": 48.97,
-        "pct_projetado": 57.4,
+        "pct_atual": 53.02,
+        "pct_projetado": 58.2,
         "ci95": {
-          "lower": 54.26,
-          "upper": 60.54
+          "lower": 55.02,
+          "upper": 61.38
         },
         "sqcand": "280002542548"
       },
@@ -1176,11 +1176,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 167423,
         "votos_projetados": 1481021,
-        "pct_atual": 17.14,
-        "pct_projetado": 20.24,
+        "pct_atual": 18.55,
+        "pct_projetado": 20.52,
         "ci95": {
-          "lower": 17.69,
-          "upper": 22.79
+          "lower": 17.93,
+          "upper": 23.11
         },
         "sqcand": "280002551544"
       },
@@ -1191,11 +1191,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 151485,
         "votos_projetados": 1185767,
-        "pct_atual": 15.5,
-        "pct_projetado": 16.2,
+        "pct_atual": 16.79,
+        "pct_projetado": 16.43,
         "ci95": {
-          "lower": 13.86,
-          "upper": 18.54
+          "lower": 14.06,
+          "upper": 18.8
         },
         "sqcand": "280002551932"
       },
@@ -1207,11 +1207,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 85024,
         "votos_projetados": 732962,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.34,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.37,
         "ci95": {
-          "lower": 1.38,
-          "upper": 3.3
+          "lower": 1.4,
+          "upper": 3.34
         },
         "sqcand": "280002539826"
       },
@@ -1238,11 +1238,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 9590,
         "votos_projetados": 82432,
-        "pct_atual": 0.98,
-        "pct_projetado": 1.13,
+        "pct_atual": 1.06,
+        "pct_projetado": 1.14,
         "ci95": {
           "lower": 0.46,
-          "upper": 1.8
+          "upper": 1.82
         },
         "sqcand": "280002551975"
       },
@@ -1253,11 +1253,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4166,
         "votos_projetados": 39265,
-        "pct_atual": 0.43,
+        "pct_atual": 0.46,
         "pct_projetado": 0.54,
         "ci95": {
           "lower": 0.07,
-          "upper": 1
+          "upper": 1.01
         },
         "sqcand": "280002541457"
       },
@@ -1268,7 +1268,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2441,
         "votos_projetados": 20952,
-        "pct_atual": 0.25,
+        "pct_atual": 0.27,
         "pct_projetado": 0.29,
         "ci95": {
           "lower": 0,
@@ -1283,11 +1283,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2023,
         "votos_projetados": 18164,
-        "pct_atual": 0.21,
+        "pct_atual": 0.22,
         "pct_projetado": 0.25,
         "ci95": {
           "lower": 0,
-          "upper": 0.56
+          "upper": 0.57
         },
         "sqcand": "280002552487"
       },
@@ -1298,7 +1298,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 927,
         "votos_projetados": 9929,
-        "pct_atual": 0.09,
+        "pct_atual": 0.1,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
@@ -1313,11 +1313,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 614,
         "votos_projetados": 5359,
-        "pct_atual": 0.06,
+        "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
-          "upper": 0.27
+          "upper": 0.28
         },
         "sqcand": "280002548139"
       },
@@ -1332,7 +1332,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -1436,7 +1436,7 @@
   },
   "CE": {
     "uf": "CE",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -1448,11 +1448,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 305622,
         "votos_projetados": 2578382,
-        "pct_atual": 48.53,
-        "pct_projetado": 54.69,
+        "pct_atual": 52.54,
+        "pct_projetado": 55.42,
         "ci95": {
-          "lower": 51.53,
-          "upper": 57.85
+          "lower": 52.22,
+          "upper": 58.62
         },
         "sqcand": "280002542548"
       },
@@ -1463,11 +1463,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 117173,
         "votos_projetados": 1023731,
-        "pct_atual": 18.6,
-        "pct_projetado": 21.71,
+        "pct_atual": 20.14,
+        "pct_projetado": 22,
         "ci95": {
-          "lower": 19.1,
-          "upper": 24.33
+          "lower": 19.35,
+          "upper": 24.66
         },
         "sqcand": "280002551544"
       },
@@ -1478,11 +1478,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 91654,
         "votos_projetados": 822581,
-        "pct_atual": 14.55,
-        "pct_projetado": 17.45,
+        "pct_atual": 15.76,
+        "pct_projetado": 17.68,
         "ci95": {
-          "lower": 15.04,
-          "upper": 19.86
+          "lower": 15.24,
+          "upper": 20.12
         },
         "sqcand": "280002551932"
       },
@@ -1494,11 +1494,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 54804,
         "votos_projetados": 472449,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.34,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.37,
         "ci95": {
-          "lower": 1.38,
-          "upper": 3.3
+          "lower": 1.4,
+          "upper": 3.35
         },
         "sqcand": "280002539826"
       },
@@ -1525,11 +1525,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 5751,
         "votos_projetados": 55350,
-        "pct_atual": 0.91,
-        "pct_projetado": 1.17,
+        "pct_atual": 0.99,
+        "pct_projetado": 1.19,
         "ci95": {
-          "lower": 0.49,
-          "upper": 1.86
+          "lower": 0.5,
+          "upper": 1.88
         },
         "sqcand": "280002551975"
       },
@@ -1540,11 +1540,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2663,
         "votos_projetados": 24695,
-        "pct_atual": 0.42,
-        "pct_projetado": 0.52,
+        "pct_atual": 0.46,
+        "pct_projetado": 0.53,
         "ci95": {
           "lower": 0.07,
-          "upper": 0.98
+          "upper": 1
         },
         "sqcand": "280002541457"
       },
@@ -1555,11 +1555,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1210,
         "votos_projetados": 12713,
-        "pct_atual": 0.19,
+        "pct_atual": 0.21,
         "pct_projetado": 0.27,
         "ci95": {
           "lower": 0,
-          "upper": 0.6
+          "upper": 0.61
         },
         "sqcand": "280002552487"
       },
@@ -1570,11 +1570,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1321,
         "votos_projetados": 12138,
-        "pct_atual": 0.21,
+        "pct_atual": 0.23,
         "pct_projetado": 0.26,
         "ci95": {
           "lower": 0,
-          "upper": 0.58
+          "upper": 0.59
         },
         "sqcand": "280002552484"
       },
@@ -1585,11 +1585,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 827,
         "votos_projetados": 6701,
-        "pct_atual": 0.13,
+        "pct_atual": 0.14,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.38
+          "upper": 0.39
         },
         "sqcand": "280002540694"
       },
@@ -1600,11 +1600,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 440,
         "votos_projetados": 3826,
-        "pct_atual": 0.07,
+        "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002548139"
       },
@@ -1619,7 +1619,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -1723,7 +1723,7 @@
   },
   "DF": {
     "uf": "DF",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 37.1,
@@ -1735,11 +1735,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 282971,
         "votos_projetados": 710800,
-        "pct_atual": 43.27,
-        "pct_projetado": 41.87,
+        "pct_atual": 46.85,
+        "pct_projetado": 43.63,
         "ci95": {
-          "lower": 40.39,
-          "upper": 43.34
+          "lower": 42.09,
+          "upper": 45.17
         },
         "sqcand": "280002551544"
       },
@@ -1750,11 +1750,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 141476,
         "votos_projetados": 425399,
-        "pct_atual": 21.64,
-        "pct_projetado": 25.06,
+        "pct_atual": 23.42,
+        "pct_projetado": 26.11,
         "ci95": {
-          "lower": 23.76,
-          "upper": 26.35
+          "lower": 24.76,
+          "upper": 27.46
         },
         "sqcand": "280002542548"
       },
@@ -1765,11 +1765,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 97477,
         "votos_projetados": 268404,
-        "pct_atual": 14.91,
-        "pct_projetado": 15.81,
+        "pct_atual": 16.14,
+        "pct_projetado": 16.48,
         "ci95": {
-          "lower": 14.72,
-          "upper": 16.9
+          "lower": 15.34,
+          "upper": 17.61
         },
         "sqcand": "280002551932"
       },
@@ -1781,11 +1781,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 56903,
         "votos_projetados": 153378,
-        "pct_atual": 8.7,
-        "pct_projetado": 9.1,
+        "pct_atual": 9.42,
+        "pct_projetado": 9.49,
         "ci95": {
-          "lower": 8.24,
-          "upper": 9.97
+          "lower": 8.59,
+          "upper": 10.39
         },
         "sqcand": "280002539826"
       },
@@ -1812,11 +1812,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 11846,
         "votos_projetados": 31409,
-        "pct_atual": 1.81,
-        "pct_projetado": 1.85,
+        "pct_atual": 1.96,
+        "pct_projetado": 1.93,
         "ci95": {
-          "lower": 1.45,
-          "upper": 2.25
+          "lower": 1.51,
+          "upper": 2.35
         },
         "sqcand": "280002551975"
       },
@@ -1827,11 +1827,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4967,
         "votos_projetados": 15629,
-        "pct_atual": 0.76,
-        "pct_projetado": 0.92,
+        "pct_atual": 0.82,
+        "pct_projetado": 0.96,
         "ci95": {
-          "lower": 0.63,
-          "upper": 1.21
+          "lower": 0.66,
+          "upper": 1.26
         },
         "sqcand": "280002541457"
       },
@@ -1842,11 +1842,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5457,
         "votos_projetados": 14893,
-        "pct_atual": 0.83,
-        "pct_projetado": 0.88,
+        "pct_atual": 0.9,
+        "pct_projetado": 0.91,
         "ci95": {
-          "lower": 0.6,
-          "upper": 1.16
+          "lower": 0.62,
+          "upper": 1.21
         },
         "sqcand": "280002552484"
       },
@@ -1857,11 +1857,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1369,
         "votos_projetados": 3991,
-        "pct_atual": 0.21,
+        "pct_atual": 0.23,
         "pct_projetado": 0.24,
         "ci95": {
           "lower": 0.09,
-          "upper": 0.39
+          "upper": 0.4
         },
         "sqcand": "280002552487"
       },
@@ -1872,11 +1872,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 826,
         "votos_projetados": 2185,
-        "pct_atual": 0.13,
+        "pct_atual": 0.14,
         "pct_projetado": 0.13,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002540694"
       },
@@ -1891,7 +1891,7 @@
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
-          "upper": 0.22
+          "upper": 0.23
         },
         "sqcand": "280002548139"
       },
@@ -1906,7 +1906,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.19
+          "upper": 0.2
         },
         "sqcand": "280002551547"
       }
@@ -2010,7 +2010,7 @@
   },
   "ES": {
     "uf": "ES",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 32.2,
@@ -2022,11 +2022,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 273356,
         "votos_projetados": 854397,
-        "pct_atual": 38.22,
-        "pct_projetado": 42.83,
+        "pct_atual": 41.38,
+        "pct_projetado": 43.54,
         "ci95": {
-          "lower": 41.17,
-          "upper": 44.48
+          "lower": 41.86,
+          "upper": 45.22
         },
         "sqcand": "280002551544"
       },
@@ -2037,11 +2037,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 181174,
         "votos_projetados": 570220,
-        "pct_atual": 25.33,
-        "pct_projetado": 28.58,
+        "pct_atual": 27.43,
+        "pct_projetado": 29.06,
         "ci95": {
-          "lower": 27.07,
-          "upper": 30.09
+          "lower": 27.52,
+          "upper": 30.59
         },
         "sqcand": "280002542548"
       },
@@ -2052,11 +2052,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 124764,
         "votos_projetados": 377722,
-        "pct_atual": 17.44,
-        "pct_projetado": 18.93,
+        "pct_atual": 18.89,
+        "pct_projetado": 19.25,
         "ci95": {
-          "lower": 17.63,
-          "upper": 20.24
+          "lower": 17.92,
+          "upper": 20.58
         },
         "sqcand": "280002551932"
       },
@@ -2068,11 +2068,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 62236,
         "votos_projetados": 193281,
-        "pct_atual": 8.7,
-        "pct_projetado": 5.23,
+        "pct_atual": 9.42,
+        "pct_projetado": 5.31,
         "ci95": {
-          "lower": 4.48,
-          "upper": 5.97
+          "lower": 4.56,
+          "upper": 6.07
         },
         "sqcand": "280002539826"
       },
@@ -2099,11 +2099,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 8087,
         "votos_projetados": 21918,
-        "pct_atual": 1.13,
-        "pct_projetado": 1.1,
+        "pct_atual": 1.22,
+        "pct_projetado": 1.12,
         "ci95": {
-          "lower": 0.75,
-          "upper": 1.45
+          "lower": 0.76,
+          "upper": 1.47
         },
         "sqcand": "280002551975"
       },
@@ -2114,11 +2114,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4147,
         "votos_projetados": 14175,
-        "pct_atual": 0.58,
-        "pct_projetado": 0.71,
+        "pct_atual": 0.63,
+        "pct_projetado": 0.72,
         "ci95": {
-          "lower": 0.43,
-          "upper": 0.99
+          "lower": 0.44,
+          "upper": 1.01
         },
         "sqcand": "280002541457"
       },
@@ -2129,11 +2129,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3597,
         "votos_projetados": 10318,
-        "pct_atual": 0.5,
-        "pct_projetado": 0.52,
+        "pct_atual": 0.54,
+        "pct_projetado": 0.53,
         "ci95": {
           "lower": 0.28,
-          "upper": 0.76
+          "upper": 0.77
         },
         "sqcand": "280002552484"
       },
@@ -2144,11 +2144,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1580,
         "votos_projetados": 4607,
-        "pct_atual": 0.22,
+        "pct_atual": 0.24,
         "pct_projetado": 0.23,
         "ci95": {
           "lower": 0.07,
-          "upper": 0.39
+          "upper": 0.4
         },
         "sqcand": "280002552487"
       },
@@ -2159,11 +2159,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 895,
         "votos_projetados": 2640,
-        "pct_atual": 0.13,
+        "pct_atual": 0.14,
         "pct_projetado": 0.13,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002540694"
       },
@@ -2174,11 +2174,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 452,
         "votos_projetados": 1429,
-        "pct_atual": 0.06,
+        "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
-          "upper": 0.22
+          "upper": 0.23
         },
         "sqcand": "280002548139"
       },
@@ -2297,7 +2297,7 @@
   },
   "GO": {
     "uf": "GO",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 30.9,
@@ -2309,11 +2309,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 477205,
         "votos_projetados": 1525240,
-        "pct_atual": 41.95,
-        "pct_projetado": 45.93,
+        "pct_atual": 45.42,
+        "pct_projetado": 46.83,
         "ci95": {
-          "lower": 44.21,
-          "upper": 47.64
+          "lower": 45.08,
+          "upper": 48.58
         },
         "sqcand": "280002551544"
       },
@@ -2324,11 +2324,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 295341,
         "votos_projetados": 939865,
-        "pct_atual": 25.96,
-        "pct_projetado": 28.3,
+        "pct_atual": 28.11,
+        "pct_projetado": 28.86,
         "ci95": {
-          "lower": 26.75,
-          "upper": 29.85
+          "lower": 27.28,
+          "upper": 30.44
         },
         "sqcand": "280002542548"
       },
@@ -2339,11 +2339,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 151321,
         "votos_projetados": 527115,
-        "pct_atual": 13.3,
-        "pct_projetado": 15.87,
+        "pct_atual": 14.4,
+        "pct_projetado": 16.18,
         "ci95": {
-          "lower": 14.61,
-          "upper": 17.13
+          "lower": 14.9,
+          "upper": 17.47
         },
         "sqcand": "280002551932"
       },
@@ -2355,11 +2355,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 98991,
         "votos_projetados": 320358,
-        "pct_atual": 8.7,
-        "pct_projetado": 5.33,
+        "pct_atual": 9.42,
+        "pct_projetado": 5.44,
         "ci95": {
-          "lower": 4.56,
-          "upper": 6.1
+          "lower": 4.65,
+          "upper": 6.22
         },
         "sqcand": "280002539826"
       },
@@ -2386,11 +2386,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 12240,
         "votos_projetados": 39776,
-        "pct_atual": 1.08,
-        "pct_projetado": 1.2,
+        "pct_atual": 1.16,
+        "pct_projetado": 1.22,
         "ci95": {
-          "lower": 0.82,
-          "upper": 1.57
+          "lower": 0.84,
+          "upper": 1.6
         },
         "sqcand": "280002551975"
       },
@@ -2401,11 +2401,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5655,
         "votos_projetados": 18190,
-        "pct_atual": 0.5,
-        "pct_projetado": 0.55,
+        "pct_atual": 0.54,
+        "pct_projetado": 0.56,
         "ci95": {
-          "lower": 0.29,
-          "upper": 0.8
+          "lower": 0.3,
+          "upper": 0.82
         },
         "sqcand": "280002541457"
       },
@@ -2416,11 +2416,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4343,
         "votos_projetados": 12132,
-        "pct_atual": 0.38,
+        "pct_atual": 0.41,
         "pct_projetado": 0.37,
         "ci95": {
           "lower": 0.16,
-          "upper": 0.57
+          "upper": 0.58
         },
         "sqcand": "280002552484"
       },
@@ -2431,11 +2431,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2880,
         "votos_projetados": 8733,
-        "pct_atual": 0.25,
-        "pct_projetado": 0.26,
+        "pct_atual": 0.27,
+        "pct_projetado": 0.27,
         "ci95": {
           "lower": 0.09,
-          "upper": 0.44
+          "upper": 0.45
         },
         "sqcand": "280002552487"
       },
@@ -2446,11 +2446,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1514,
         "votos_projetados": 4789,
-        "pct_atual": 0.13,
-        "pct_projetado": 0.14,
+        "pct_atual": 0.14,
+        "pct_projetado": 0.15,
         "ci95": {
           "lower": 0,
-          "upper": 0.29
+          "upper": 0.3
         },
         "sqcand": "280002540694"
       },
@@ -2461,7 +2461,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 700,
         "votos_projetados": 2645,
-        "pct_atual": 0.06,
+        "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
@@ -2476,11 +2476,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 501,
         "votos_projetados": 1450,
-        "pct_atual": 0.04,
+        "pct_atual": 0.05,
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.19
+          "upper": 0.2
         },
         "sqcand": "280002551547"
       }
@@ -2584,7 +2584,7 @@
   },
   "MA": {
     "uf": "MA",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -2596,11 +2596,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 213170,
         "votos_projetados": 1778724,
-        "pct_atual": 48.59,
-        "pct_projetado": 54.61,
+        "pct_atual": 52.61,
+        "pct_projetado": 55.19,
         "ci95": {
-          "lower": 51.45,
-          "upper": 57.77
+          "lower": 52,
+          "upper": 58.39
         },
         "sqcand": "280002542548"
       },
@@ -2611,11 +2611,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 81162,
         "votos_projetados": 710856,
-        "pct_atual": 18.5,
-        "pct_projetado": 21.82,
+        "pct_atual": 20.03,
+        "pct_projetado": 22.06,
         "ci95": {
-          "lower": 19.2,
-          "upper": 24.45
+          "lower": 19.41,
+          "upper": 24.71
         },
         "sqcand": "280002551544"
       },
@@ -2626,11 +2626,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 62639,
         "votos_projetados": 587912,
-        "pct_atual": 14.28,
-        "pct_projetado": 18.05,
+        "pct_atual": 15.46,
+        "pct_projetado": 18.24,
         "ci95": {
-          "lower": 15.61,
-          "upper": 20.49
+          "lower": 15.77,
+          "upper": 20.71
         },
         "sqcand": "280002551932"
       },
@@ -2642,11 +2642,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 38173,
         "votos_projetados": 329075,
-        "pct_atual": 8.7,
-        "pct_projetado": 1.81,
+        "pct_atual": 9.42,
+        "pct_projetado": 1.83,
         "ci95": {
-          "lower": 0.96,
-          "upper": 2.66
+          "lower": 0.97,
+          "upper": 2.69
         },
         "sqcand": "280002539826"
       },
@@ -2673,11 +2673,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3136,
         "votos_projetados": 29369,
-        "pct_atual": 0.71,
-        "pct_projetado": 0.9,
+        "pct_atual": 0.77,
+        "pct_projetado": 0.91,
         "ci95": {
           "lower": 0.3,
-          "upper": 1.5
+          "upper": 1.52
         },
         "sqcand": "280002541457"
       },
@@ -2688,11 +2688,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 3225,
         "votos_projetados": 27002,
-        "pct_atual": 0.74,
-        "pct_projetado": 0.83,
+        "pct_atual": 0.8,
+        "pct_projetado": 0.84,
         "ci95": {
-          "lower": 0.25,
-          "upper": 1.4
+          "lower": 0.26,
+          "upper": 1.42
         },
         "sqcand": "280002551975"
       },
@@ -2703,11 +2703,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1566,
         "votos_projetados": 11922,
-        "pct_atual": 0.36,
+        "pct_atual": 0.39,
         "pct_projetado": 0.37,
         "ci95": {
           "lower": 0,
-          "upper": 0.75
+          "upper": 0.76
         },
         "sqcand": "280002552484"
       },
@@ -2718,11 +2718,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1120,
         "votos_projetados": 8994,
-        "pct_atual": 0.26,
+        "pct_atual": 0.28,
         "pct_projetado": 0.28,
         "ci95": {
           "lower": 0,
-          "upper": 0.61
+          "upper": 0.62
         },
         "sqcand": "280002552487"
       },
@@ -2733,7 +2733,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 523,
         "votos_projetados": 4875,
-        "pct_atual": 0.12,
+        "pct_atual": 0.13,
         "pct_projetado": 0.15,
         "ci95": {
           "lower": 0,
@@ -2748,11 +2748,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 310,
         "votos_projetados": 2676,
-        "pct_atual": 0.07,
+        "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002548139"
       },
@@ -2763,11 +2763,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 143,
         "votos_projetados": 1413,
-        "pct_atual": 0.03,
+        "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -2871,7 +2871,7 @@
   },
   "MG": {
     "uf": "MG",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 32.4,
@@ -2883,11 +2883,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 1106046,
         "votos_projetados": 3986470,
-        "pct_atual": 28.41,
-        "pct_projetado": 33.31,
+        "pct_atual": 30.76,
+        "pct_projetado": 34.13,
         "ci95": {
-          "lower": 31.74,
-          "upper": 34.87
+          "lower": 32.52,
+          "upper": 35.73
         },
         "sqcand": "280002542548"
       },
@@ -2898,11 +2898,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 1437903,
         "votos_projetados": 3961432,
-        "pct_atual": 36.93,
-        "pct_projetado": 33.1,
+        "pct_atual": 39.99,
+        "pct_projetado": 33.92,
         "ci95": {
-          "lower": 31.53,
-          "upper": 34.66
+          "lower": 32.31,
+          "upper": 35.52
         },
         "sqcand": "280002551544"
       },
@@ -2913,11 +2913,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 600874,
         "votos_projetados": 1756986,
-        "pct_atual": 15.43,
-        "pct_projetado": 14.68,
+        "pct_atual": 16.71,
+        "pct_projetado": 15.04,
         "ci95": {
-          "lower": 13.5,
-          "upper": 15.86
+          "lower": 13.84,
+          "upper": 16.25
         },
         "sqcand": "280002551932"
       },
@@ -2929,11 +2929,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 338799,
         "votos_projetados": 1045675,
-        "pct_atual": 8.7,
-        "pct_projetado": 13.6,
+        "pct_atual": 9.42,
+        "pct_projetado": 13.93,
         "ci95": {
-          "lower": 12.46,
-          "upper": 14.73
+          "lower": 12.76,
+          "upper": 15.1
         },
         "sqcand": "280002539826"
       },
@@ -2960,11 +2960,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 54413,
         "votos_projetados": 155808,
-        "pct_atual": 1.4,
-        "pct_projetado": 1.3,
+        "pct_atual": 1.51,
+        "pct_projetado": 1.33,
         "ci95": {
-          "lower": 0.93,
-          "upper": 1.68
+          "lower": 0.95,
+          "upper": 1.72
         },
         "sqcand": "280002551975"
       },
@@ -2975,11 +2975,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 26305,
         "votos_projetados": 91170,
-        "pct_atual": 0.68,
-        "pct_projetado": 0.76,
+        "pct_atual": 0.73,
+        "pct_projetado": 0.78,
         "ci95": {
-          "lower": 0.47,
-          "upper": 1.05
+          "lower": 0.48,
+          "upper": 1.08
         },
         "sqcand": "280002541457"
       },
@@ -2990,11 +2990,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 14696,
         "votos_projetados": 46971,
-        "pct_atual": 0.38,
-        "pct_projetado": 0.39,
+        "pct_atual": 0.41,
+        "pct_projetado": 0.4,
         "ci95": {
-          "lower": 0.18,
-          "upper": 0.6
+          "lower": 0.19,
+          "upper": 0.61
         },
         "sqcand": "280002552484"
       },
@@ -3005,11 +3005,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 8650,
         "votos_projetados": 26976,
-        "pct_atual": 0.22,
+        "pct_atual": 0.24,
         "pct_projetado": 0.23,
         "ci95": {
           "lower": 0.07,
-          "upper": 0.38
+          "upper": 0.39
         },
         "sqcand": "280002552487"
       },
@@ -3020,11 +3020,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4192,
         "votos_projetados": 14747,
-        "pct_atual": 0.11,
-        "pct_projetado": 0.12,
+        "pct_atual": 0.12,
+        "pct_projetado": 0.13,
         "ci95": {
           "lower": 0,
-          "upper": 0.27
+          "upper": 0.28
         },
         "sqcand": "280002540694"
       },
@@ -3158,7 +3158,7 @@
   },
   "MS": {
     "uf": "MS",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 39.4,
@@ -3170,11 +3170,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 244515,
         "votos_projetados": 605722,
-        "pct_atual": 41.18,
-        "pct_projetado": 44.82,
+        "pct_atual": 44.59,
+        "pct_projetado": 45.51,
         "ci95": {
-          "lower": 43.41,
-          "upper": 46.24
+          "lower": 44.07,
+          "upper": 46.95
         },
         "sqcand": "280002551544"
       },
@@ -3185,11 +3185,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 149594,
         "votos_projetados": 398555,
-        "pct_atual": 25.19,
-        "pct_projetado": 29.49,
+        "pct_atual": 27.28,
+        "pct_projetado": 29.94,
         "ci95": {
-          "lower": 28.19,
-          "upper": 30.79
+          "lower": 28.62,
+          "upper": 31.26
         },
         "sqcand": "280002542548"
       },
@@ -3200,11 +3200,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 88546,
         "votos_projetados": 224267,
-        "pct_atual": 14.91,
-        "pct_projetado": 16.6,
+        "pct_atual": 16.15,
+        "pct_projetado": 16.85,
         "ci95": {
-          "lower": 15.53,
-          "upper": 17.66
+          "lower": 15.77,
+          "upper": 17.93
         },
         "sqcand": "280002551932"
       },
@@ -3216,11 +3216,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 51668,
         "votos_projetados": 131137,
-        "pct_atual": 8.7,
-        "pct_projetado": 5.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 5.28,
         "ci95": {
-          "lower": 4.57,
-          "upper": 5.83
+          "lower": 4.64,
+          "upper": 5.92
         },
         "sqcand": "280002539826"
       },
@@ -3247,11 +3247,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 6147,
         "votos_projetados": 13144,
-        "pct_atual": 1.04,
-        "pct_projetado": 0.97,
+        "pct_atual": 1.12,
+        "pct_projetado": 0.99,
         "ci95": {
-          "lower": 0.69,
-          "upper": 1.25
+          "lower": 0.7,
+          "upper": 1.27
         },
         "sqcand": "280002551975"
       },
@@ -3262,11 +3262,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3106,
         "votos_projetados": 7622,
-        "pct_atual": 0.52,
-        "pct_projetado": 0.56,
+        "pct_atual": 0.57,
+        "pct_projetado": 0.57,
         "ci95": {
-          "lower": 0.35,
-          "upper": 0.78
+          "lower": 0.36,
+          "upper": 0.79
         },
         "sqcand": "280002541457"
       },
@@ -3277,11 +3277,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2054,
         "votos_projetados": 4407,
-        "pct_atual": 0.35,
+        "pct_atual": 0.37,
         "pct_projetado": 0.33,
         "ci95": {
-          "lower": 0.16,
-          "upper": 0.49
+          "lower": 0.17,
+          "upper": 0.5
         },
         "sqcand": "280002552484"
       },
@@ -3292,7 +3292,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1389,
         "votos_projetados": 3590,
-        "pct_atual": 0.23,
+        "pct_atual": 0.25,
         "pct_projetado": 0.27,
         "ci95": {
           "lower": 0.12,
@@ -3307,7 +3307,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 702,
         "votos_projetados": 1850,
-        "pct_atual": 0.12,
+        "pct_atual": 0.13,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
@@ -3341,7 +3341,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.19
+          "upper": 0.2
         },
         "sqcand": "280002551547"
       }
@@ -3445,7 +3445,7 @@
   },
   "MT": {
     "uf": "MT",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 27.5,
@@ -3457,11 +3457,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 205358,
         "votos_projetados": 785742,
-        "pct_atual": 40.52,
-        "pct_projetado": 48.22,
+        "pct_atual": 43.87,
+        "pct_projetado": 48.86,
         "ci95": {
-          "lower": 46.35,
-          "upper": 50.08
+          "lower": 46.97,
+          "upper": 50.75
         },
         "sqcand": "280002551544"
       },
@@ -3472,11 +3472,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 131243,
         "votos_projetados": 446738,
-        "pct_atual": 25.9,
-        "pct_projetado": 27.41,
+        "pct_atual": 28.04,
+        "pct_projetado": 27.78,
         "ci95": {
-          "lower": 25.75,
-          "upper": 29.08
+          "lower": 26.09,
+          "upper": 29.47
         },
         "sqcand": "280002542548"
       },
@@ -3487,11 +3487,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 76340,
         "votos_projetados": 269299,
-        "pct_atual": 15.06,
-        "pct_projetado": 16.53,
+        "pct_atual": 16.31,
+        "pct_projetado": 16.74,
         "ci95": {
-          "lower": 15.14,
-          "upper": 17.91
+          "lower": 15.34,
+          "upper": 18.15
         },
         "sqcand": "280002551932"
       },
@@ -3503,11 +3503,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 44101,
         "votos_projetados": 160366,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.08,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.13,
         "ci95": {
-          "lower": 3.34,
-          "upper": 4.82
+          "lower": 3.39,
+          "upper": 4.88
         },
         "sqcand": "280002539826"
       },
@@ -3534,11 +3534,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 4258,
         "votos_projetados": 15392,
-        "pct_atual": 0.84,
-        "pct_projetado": 0.94,
+        "pct_atual": 0.91,
+        "pct_projetado": 0.96,
         "ci95": {
-          "lower": 0.58,
-          "upper": 1.31
+          "lower": 0.59,
+          "upper": 1.32
         },
         "sqcand": "280002551975"
       },
@@ -3549,11 +3549,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2646,
         "votos_projetados": 9577,
-        "pct_atual": 0.52,
-        "pct_projetado": 0.59,
+        "pct_atual": 0.57,
+        "pct_projetado": 0.6,
         "ci95": {
-          "lower": 0.3,
-          "upper": 0.87
+          "lower": 0.31,
+          "upper": 0.88
         },
         "sqcand": "280002541457"
       },
@@ -3564,11 +3564,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1824,
         "votos_projetados": 6081,
-        "pct_atual": 0.36,
-        "pct_projetado": 0.37,
+        "pct_atual": 0.39,
+        "pct_projetado": 0.38,
         "ci95": {
           "lower": 0.15,
-          "upper": 0.6
+          "upper": 0.61
         },
         "sqcand": "280002552484"
       },
@@ -3579,11 +3579,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1142,
         "votos_projetados": 4374,
-        "pct_atual": 0.23,
+        "pct_atual": 0.24,
         "pct_projetado": 0.27,
         "ci95": {
           "lower": 0.08,
-          "upper": 0.46
+          "upper": 0.47
         },
         "sqcand": "280002552487"
       },
@@ -3594,11 +3594,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 638,
         "votos_projetados": 2463,
-        "pct_atual": 0.13,
+        "pct_atual": 0.14,
         "pct_projetado": 0.15,
         "ci95": {
           "lower": 0,
-          "upper": 0.3
+          "upper": 0.31
         },
         "sqcand": "280002540694"
       },
@@ -3609,11 +3609,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 326,
         "votos_projetados": 1352,
-        "pct_atual": 0.06,
+        "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.23
+          "upper": 0.24
         },
         "sqcand": "280002548139"
       },
@@ -3624,7 +3624,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 211,
         "votos_projetados": 752,
-        "pct_atual": 0.04,
+        "pct_atual": 0.05,
         "pct_projetado": 0.05,
         "ci95": {
           "lower": 0,
@@ -3732,7 +3732,7 @@
   },
   "PA": {
     "uf": "PA",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -3744,11 +3744,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 166552,
         "votos_projetados": 1586356,
-        "pct_atual": 30.68,
-        "pct_projetado": 39.14,
+        "pct_atual": 33.22,
+        "pct_projetado": 39.65,
         "ci95": {
-          "lower": 36.04,
-          "upper": 42.24
+          "lower": 36.51,
+          "upper": 42.79
         },
         "sqcand": "280002551544"
       },
@@ -3759,11 +3759,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 195578,
         "votos_projetados": 1556487,
-        "pct_atual": 36.03,
-        "pct_projetado": 38.4,
+        "pct_atual": 39.01,
+        "pct_projetado": 38.91,
         "ci95": {
-          "lower": 35.31,
-          "upper": 41.49
+          "lower": 35.78,
+          "upper": 42.03
         },
         "sqcand": "280002542548"
       },
@@ -3774,11 +3774,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 81414,
         "votos_projetados": 681420,
-        "pct_atual": 15,
-        "pct_projetado": 16.81,
+        "pct_atual": 16.24,
+        "pct_projetado": 17.03,
         "ci95": {
-          "lower": 14.44,
-          "upper": 19.19
+          "lower": 14.63,
+          "upper": 19.44
         },
         "sqcand": "280002551932"
       },
@@ -3790,11 +3790,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 47240,
         "votos_projetados": 407243,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.11,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.13,
         "ci95": {
-          "lower": 1.2,
-          "upper": 3.02
+          "lower": 1.21,
+          "upper": 3.06
         },
         "sqcand": "280002539826"
       },
@@ -3821,11 +3821,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 3334,
         "votos_projetados": 30877,
-        "pct_atual": 0.61,
-        "pct_projetado": 0.76,
+        "pct_atual": 0.66,
+        "pct_projetado": 0.77,
         "ci95": {
           "lower": 0.21,
-          "upper": 1.31
+          "upper": 1.33
         },
         "sqcand": "280002551975"
       },
@@ -3836,11 +3836,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3731,
         "votos_projetados": 30093,
-        "pct_atual": 0.69,
-        "pct_projetado": 0.74,
+        "pct_atual": 0.74,
+        "pct_projetado": 0.75,
         "ci95": {
           "lower": 0.2,
-          "upper": 1.29
+          "upper": 1.3
         },
         "sqcand": "280002541457"
       },
@@ -3851,7 +3851,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1205,
         "votos_projetados": 10098,
-        "pct_atual": 0.22,
+        "pct_atual": 0.24,
         "pct_projetado": 0.25,
         "ci95": {
           "lower": 0,
@@ -3866,11 +3866,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1162,
         "votos_projetados": 9821,
-        "pct_atual": 0.21,
-        "pct_projetado": 0.24,
+        "pct_atual": 0.23,
+        "pct_projetado": 0.25,
         "ci95": {
           "lower": 0,
-          "upper": 0.55
+          "upper": 0.56
         },
         "sqcand": "280002552484"
       },
@@ -3881,8 +3881,8 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 646,
         "votos_projetados": 5447,
-        "pct_atual": 0.12,
-        "pct_projetado": 0.13,
+        "pct_atual": 0.13,
+        "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
           "upper": 0.37
@@ -3900,7 +3900,7 @@
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
-          "upper": 0.27
+          "upper": 0.28
         },
         "sqcand": "280002548139"
       },
@@ -3911,11 +3911,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 180,
         "votos_projetados": 1668,
-        "pct_atual": 0.03,
+        "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -4019,7 +4019,7 @@
   },
   "PB": {
     "uf": "PB",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4031,11 +4031,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 115673,
         "votos_projetados": 1019176,
-        "pct_atual": 41.18,
-        "pct_projetado": 48.26,
+        "pct_atual": 44.58,
+        "pct_projetado": 49.03,
         "ci95": {
-          "lower": 45.08,
-          "upper": 51.43
+          "lower": 45.8,
+          "upper": 52.25
         },
         "sqcand": "280002542548"
       },
@@ -4046,11 +4046,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 63068,
         "votos_projetados": 567078,
-        "pct_atual": 22.45,
-        "pct_projetado": 26.85,
+        "pct_atual": 24.31,
+        "pct_projetado": 27.28,
         "ci95": {
-          "lower": 24.04,
-          "upper": 29.66
+          "lower": 24.42,
+          "upper": 30.14
         },
         "sqcand": "280002551544"
       },
@@ -4061,11 +4061,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 50014,
         "votos_projetados": 383515,
-        "pct_atual": 17.8,
-        "pct_projetado": 18.16,
+        "pct_atual": 19.28,
+        "pct_projetado": 18.45,
         "ci95": {
-          "lower": 15.71,
-          "upper": 20.61
+          "lower": 15.96,
+          "upper": 20.94
         },
         "sqcand": "280002551932"
       },
@@ -4077,11 +4077,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 24445,
         "votos_projetados": 210733,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.54,
         "ci95": {
-          "lower": 1.51,
-          "upper": 3.49
+          "lower": 1.53,
+          "upper": 3.55
         },
         "sqcand": "280002539826"
       },
@@ -4108,11 +4108,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2584,
         "votos_projetados": 23349,
-        "pct_atual": 0.92,
-        "pct_projetado": 1.11,
+        "pct_atual": 1,
+        "pct_projetado": 1.12,
         "ci95": {
-          "lower": 0.44,
-          "upper": 1.77
+          "lower": 0.45,
+          "upper": 1.8
         },
         "sqcand": "280002551975"
       },
@@ -4123,11 +4123,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1459,
         "votos_projetados": 12230,
-        "pct_atual": 0.52,
-        "pct_projetado": 0.58,
+        "pct_atual": 0.56,
+        "pct_projetado": 0.59,
         "ci95": {
           "lower": 0.1,
-          "upper": 1.06
+          "upper": 1.08
         },
         "sqcand": "280002541457"
       },
@@ -4138,11 +4138,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 935,
         "votos_projetados": 8988,
-        "pct_atual": 0.33,
+        "pct_atual": 0.36,
         "pct_projetado": 0.43,
         "ci95": {
           "lower": 0.01,
-          "upper": 0.84
+          "upper": 0.85
         },
         "sqcand": "280002552484"
       },
@@ -4153,11 +4153,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 657,
         "votos_projetados": 5921,
-        "pct_atual": 0.23,
+        "pct_atual": 0.25,
         "pct_projetado": 0.28,
         "ci95": {
           "lower": 0,
-          "upper": 0.62
+          "upper": 0.63
         },
         "sqcand": "280002552487"
       },
@@ -4168,8 +4168,8 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 326,
         "votos_projetados": 3051,
-        "pct_atual": 0.12,
-        "pct_projetado": 0.14,
+        "pct_atual": 0.13,
+        "pct_projetado": 0.15,
         "ci95": {
           "lower": 0,
           "upper": 0.39
@@ -4183,11 +4183,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 202,
         "votos_projetados": 1744,
-        "pct_atual": 0.07,
+        "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002548139"
       },
@@ -4198,8 +4198,8 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 98,
         "votos_projetados": 944,
-        "pct_atual": 0.03,
-        "pct_projetado": 0.04,
+        "pct_atual": 0.04,
+        "pct_projetado": 0.05,
         "ci95": {
           "lower": 0,
           "upper": 0.25
@@ -4306,7 +4306,7 @@
   },
   "PE": {
     "uf": "PE",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4318,11 +4318,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 287673,
         "votos_projetados": 2474273,
-        "pct_atual": 45.49,
-        "pct_projetado": 51.86,
+        "pct_atual": 49.25,
+        "pct_projetado": 52.64,
         "ci95": {
-          "lower": 48.69,
-          "upper": 55.03
+          "lower": 49.42,
+          "upper": 55.86
         },
         "sqcand": "280002542548"
       },
@@ -4333,11 +4333,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 146853,
         "votos_projetados": 1221634,
-        "pct_atual": 23.22,
-        "pct_projetado": 25.61,
+        "pct_atual": 25.14,
+        "pct_projetado": 25.99,
         "ci95": {
-          "lower": 22.83,
-          "upper": 28.38
+          "lower": 23.18,
+          "upper": 28.8
         },
         "sqcand": "280002551544"
       },
@@ -4348,11 +4348,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 80992,
         "votos_projetados": 745261,
-        "pct_atual": 12.81,
-        "pct_projetado": 15.62,
+        "pct_atual": 13.87,
+        "pct_projetado": 15.85,
         "ci95": {
-          "lower": 13.32,
-          "upper": 17.93
+          "lower": 13.52,
+          "upper": 18.19
         },
         "sqcand": "280002551932"
       },
@@ -4364,11 +4364,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 55034,
         "votos_projetados": 474428,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.92,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.96,
         "ci95": {
-          "lower": 1.85,
-          "upper": 3.99
+          "lower": 1.88,
+          "upper": 4.05
         },
         "sqcand": "280002539826"
       },
@@ -4395,11 +4395,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 5632,
         "votos_projetados": 51499,
-        "pct_atual": 0.89,
-        "pct_projetado": 1.08,
+        "pct_atual": 0.96,
+        "pct_projetado": 1.1,
         "ci95": {
-          "lower": 0.42,
-          "upper": 1.74
+          "lower": 0.43,
+          "upper": 1.76
         },
         "sqcand": "280002551975"
       },
@@ -4410,11 +4410,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3340,
         "votos_projetados": 27882,
-        "pct_atual": 0.53,
-        "pct_projetado": 0.58,
+        "pct_atual": 0.57,
+        "pct_projetado": 0.59,
         "ci95": {
           "lower": 0.1,
-          "upper": 1.07
+          "upper": 1.08
         },
         "sqcand": "280002541457"
       },
@@ -4425,11 +4425,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1706,
         "votos_projetados": 14169,
-        "pct_atual": 0.27,
+        "pct_atual": 0.29,
         "pct_projetado": 0.3,
         "ci95": {
           "lower": 0,
-          "upper": 0.64
+          "upper": 0.65
         },
         "sqcand": "280002552484"
       },
@@ -4440,11 +4440,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1403,
         "votos_projetados": 12957,
-        "pct_atual": 0.22,
-        "pct_projetado": 0.27,
+        "pct_atual": 0.24,
+        "pct_projetado": 0.28,
         "ci95": {
           "lower": 0,
-          "upper": 0.6
+          "upper": 0.61
         },
         "sqcand": "280002552487"
       },
@@ -4455,11 +4455,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 787,
         "votos_projetados": 7314,
-        "pct_atual": 0.12,
-        "pct_projetado": 0.15,
+        "pct_atual": 0.13,
+        "pct_projetado": 0.16,
         "ci95": {
           "lower": 0,
-          "upper": 0.4
+          "upper": 0.41
         },
         "sqcand": "280002540694"
       },
@@ -4474,7 +4474,7 @@
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002548139"
       },
@@ -4485,7 +4485,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 220,
         "votos_projetados": 2236,
-        "pct_atual": 0.03,
+        "pct_atual": 0.04,
         "pct_projetado": 0.05,
         "ci95": {
           "lower": 0,
@@ -4593,7 +4593,7 @@
   },
   "PI": {
     "uf": "PI",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4605,11 +4605,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 117798,
         "votos_projetados": 1059259,
-        "pct_atual": 49.67,
-        "pct_projetado": 59.83,
+        "pct_atual": 53.78,
+        "pct_projetado": 60.51,
         "ci95": {
-          "lower": 56.71,
-          "upper": 62.94
+          "lower": 57.36,
+          "upper": 63.65
         },
         "sqcand": "280002542548"
       },
@@ -4620,11 +4620,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 37186,
         "votos_projetados": 324094,
-        "pct_atual": 15.68,
-        "pct_projetado": 18.3,
+        "pct_atual": 16.98,
+        "pct_projetado": 18.51,
         "ci95": {
-          "lower": 15.85,
-          "upper": 20.76
+          "lower": 16.03,
+          "upper": 21
         },
         "sqcand": "280002551544"
       },
@@ -4635,11 +4635,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 38642,
         "votos_projetados": 285572,
-        "pct_atual": 16.29,
-        "pct_projetado": 16.13,
+        "pct_atual": 17.64,
+        "pct_projetado": 16.31,
         "ci95": {
-          "lower": 13.79,
-          "upper": 18.46
+          "lower": 13.95,
+          "upper": 18.67
         },
         "sqcand": "280002551932"
       },
@@ -4651,11 +4651,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 20636,
         "votos_projetados": 177900,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.28,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.3,
         "ci95": {
-          "lower": 1.33,
-          "upper": 3.22
+          "lower": 1.35,
+          "upper": 3.26
         },
         "sqcand": "280002539826"
       },
@@ -4682,11 +4682,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2033,
         "votos_projetados": 15555,
-        "pct_atual": 0.86,
-        "pct_projetado": 0.88,
+        "pct_atual": 0.93,
+        "pct_projetado": 0.89,
         "ci95": {
           "lower": 0.29,
-          "upper": 1.47
+          "upper": 1.49
         },
         "sqcand": "280002551975"
       },
@@ -4697,11 +4697,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1140,
         "votos_projetados": 11541,
-        "pct_atual": 0.48,
-        "pct_projetado": 0.65,
+        "pct_atual": 0.52,
+        "pct_projetado": 0.66,
         "ci95": {
           "lower": 0.14,
-          "upper": 1.16
+          "upper": 1.18
         },
         "sqcand": "280002541457"
       },
@@ -4712,11 +4712,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 544,
         "votos_projetados": 4832,
-        "pct_atual": 0.23,
-        "pct_projetado": 0.27,
+        "pct_atual": 0.25,
+        "pct_projetado": 0.28,
         "ci95": {
           "lower": 0,
-          "upper": 0.6
+          "upper": 0.61
         },
         "sqcand": "280002552487"
       },
@@ -4727,7 +4727,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 471,
         "votos_projetados": 4535,
-        "pct_atual": 0.2,
+        "pct_atual": 0.22,
         "pct_projetado": 0.26,
         "ci95": {
           "lower": 0,
@@ -4742,7 +4742,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 317,
         "votos_projetados": 2702,
-        "pct_atual": 0.13,
+        "pct_atual": 0.14,
         "pct_projetado": 0.15,
         "ci95": {
           "lower": 0,
@@ -4761,7 +4761,7 @@
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002548139"
       },
@@ -4776,7 +4776,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -4880,7 +4880,7 @@
   },
   "PR": {
     "uf": "PR",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 34.8,
@@ -4892,11 +4892,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 977264,
         "votos_projetados": 2698370,
-        "pct_atual": 42.76,
-        "pct_projetado": 44.47,
+        "pct_atual": 46.3,
+        "pct_projetado": 45.29,
         "ci95": {
-          "lower": 42.9,
-          "upper": 46.03
+          "lower": 43.7,
+          "upper": 46.88
         },
         "sqcand": "280002551544"
       },
@@ -4907,11 +4907,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 573407,
         "votos_projetados": 1630352,
-        "pct_atual": 25.09,
-        "pct_projetado": 26.87,
+        "pct_atual": 27.17,
+        "pct_projetado": 27.36,
         "ci95": {
-          "lower": 25.47,
-          "upper": 28.26
+          "lower": 25.94,
+          "upper": 28.79
         },
         "sqcand": "280002542548"
       },
@@ -4922,11 +4922,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 295122,
         "votos_projetados": 975090,
-        "pct_atual": 12.91,
-        "pct_projetado": 16.07,
+        "pct_atual": 13.98,
+        "pct_projetado": 16.37,
         "ci95": {
-          "lower": 14.91,
-          "upper": 17.22
+          "lower": 15.19,
+          "upper": 17.54
         },
         "sqcand": "280002551932"
       },
@@ -4938,11 +4938,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 198859,
         "votos_projetados": 571433,
-        "pct_atual": 8.7,
-        "pct_projetado": 7.65,
+        "pct_atual": 9.42,
+        "pct_projetado": 7.79,
         "ci95": {
-          "lower": 6.81,
-          "upper": 8.49
+          "lower": 6.94,
+          "upper": 8.64
         },
         "sqcand": "280002539826"
       },
@@ -4969,11 +4969,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 29436,
         "votos_projetados": 90978,
-        "pct_atual": 1.29,
-        "pct_projetado": 1.5,
+        "pct_atual": 1.39,
+        "pct_projetado": 1.53,
         "ci95": {
-          "lower": 1.12,
-          "upper": 1.88
+          "lower": 1.14,
+          "upper": 1.92
         },
         "sqcand": "280002551975"
       },
@@ -4984,11 +4984,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 14727,
         "votos_projetados": 39341,
-        "pct_atual": 0.64,
-        "pct_projetado": 0.65,
+        "pct_atual": 0.7,
+        "pct_projetado": 0.66,
         "ci95": {
           "lower": 0.4,
-          "upper": 0.9
+          "upper": 0.92
         },
         "sqcand": "280002541457"
       },
@@ -4999,11 +4999,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 11756,
         "votos_projetados": 31562,
-        "pct_atual": 0.51,
-        "pct_projetado": 0.52,
+        "pct_atual": 0.56,
+        "pct_projetado": 0.53,
         "ci95": {
-          "lower": 0.29,
-          "upper": 0.75
+          "lower": 0.3,
+          "upper": 0.76
         },
         "sqcand": "280002552484"
       },
@@ -5014,11 +5014,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4983,
         "votos_projetados": 14021,
-        "pct_atual": 0.22,
-        "pct_projetado": 0.23,
+        "pct_atual": 0.24,
+        "pct_projetado": 0.24,
         "ci95": {
           "lower": 0.08,
-          "upper": 0.38
+          "upper": 0.39
         },
         "sqcand": "280002552487"
       },
@@ -5029,7 +5029,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2671,
         "votos_projetados": 7660,
-        "pct_atual": 0.12,
+        "pct_atual": 0.13,
         "pct_projetado": 0.13,
         "ci95": {
           "lower": 0,
@@ -5167,7 +5167,7 @@
   },
   "RJ": {
     "uf": "RJ",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 30.7,
@@ -5179,11 +5179,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 1172853,
         "votos_projetados": 3589601,
-        "pct_atual": 40.4,
-        "pct_projetado": 40.05,
+        "pct_atual": 43.74,
+        "pct_projetado": 41.97,
         "ci95": {
-          "lower": 38.36,
-          "upper": 41.75
+          "lower": 40.19,
+          "upper": 43.74
         },
         "sqcand": "280002551544"
       },
@@ -5194,11 +5194,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 731258,
         "votos_projetados": 2498809,
-        "pct_atual": 25.19,
-        "pct_projetado": 27.88,
+        "pct_atual": 27.27,
+        "pct_projetado": 29.21,
         "ci95": {
-          "lower": 26.33,
-          "upper": 29.43
+          "lower": 27.59,
+          "upper": 30.84
         },
         "sqcand": "280002542548"
       },
@@ -5209,11 +5209,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 424663,
         "votos_projetados": 1461608,
-        "pct_atual": 14.63,
-        "pct_projetado": 16.31,
+        "pct_atual": 15.84,
+        "pct_projetado": 17.09,
         "ci95": {
-          "lower": 15.03,
-          "upper": 17.59
+          "lower": 15.75,
+          "upper": 18.43
         },
         "sqcand": "280002551932"
       },
@@ -5225,11 +5225,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 252634,
         "votos_projetados": 822911,
-        "pct_atual": 8.7,
-        "pct_projetado": 7.16,
+        "pct_atual": 9.42,
+        "pct_projetado": 7.51,
         "ci95": {
-          "lower": 6.27,
-          "upper": 8.06
+          "lower": 6.57,
+          "upper": 8.44
         },
         "sqcand": "280002539826"
       },
@@ -5256,11 +5256,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 45492,
         "votos_projetados": 169634,
-        "pct_atual": 1.57,
-        "pct_projetado": 1.89,
+        "pct_atual": 1.7,
+        "pct_projetado": 1.98,
         "ci95": {
-          "lower": 1.42,
-          "upper": 2.36
+          "lower": 1.49,
+          "upper": 2.48
         },
         "sqcand": "280002551975"
       },
@@ -5271,11 +5271,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 27221,
         "votos_projetados": 99039,
-        "pct_atual": 0.94,
-        "pct_projetado": 1.11,
+        "pct_atual": 1.02,
+        "pct_projetado": 1.16,
         "ci95": {
-          "lower": 0.74,
-          "upper": 1.47
+          "lower": 0.78,
+          "upper": 1.54
         },
         "sqcand": "280002541457"
       },
@@ -5286,11 +5286,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 13829,
         "votos_projetados": 47154,
-        "pct_atual": 0.48,
-        "pct_projetado": 0.53,
+        "pct_atual": 0.52,
+        "pct_projetado": 0.55,
         "ci95": {
-          "lower": 0.28,
-          "upper": 0.78
+          "lower": 0.29,
+          "upper": 0.81
         },
         "sqcand": "280002552484"
       },
@@ -5301,11 +5301,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 6829,
         "votos_projetados": 22547,
-        "pct_atual": 0.24,
-        "pct_projetado": 0.25,
+        "pct_atual": 0.25,
+        "pct_projetado": 0.26,
         "ci95": {
           "lower": 0.08,
-          "upper": 0.42
+          "upper": 0.44
         },
         "sqcand": "280002552487"
       },
@@ -5316,11 +5316,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3846,
         "votos_projetados": 12398,
-        "pct_atual": 0.13,
+        "pct_atual": 0.14,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.29
+          "upper": 0.3
         },
         "sqcand": "280002540694"
       },
@@ -5331,11 +5331,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1805,
         "votos_projetados": 7006,
-        "pct_atual": 0.06,
+        "pct_atual": 0.07,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.23
+          "upper": 0.24
         },
         "sqcand": "280002548139"
       },
@@ -5350,7 +5350,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.19
+          "upper": 0.2
         },
         "sqcand": "280002551547"
       }
@@ -5454,7 +5454,7 @@
   },
   "RN": {
     "uf": "RN",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -5466,11 +5466,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 106150,
         "votos_projetados": 857893,
-        "pct_atual": 45.59,
-        "pct_projetado": 49.06,
+        "pct_atual": 49.36,
+        "pct_projetado": 49.94,
         "ci95": {
-          "lower": 45.89,
-          "upper": 52.24
+          "lower": 46.71,
+          "upper": 53.17
         },
         "sqcand": "280002542548"
       },
@@ -5481,11 +5481,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 53018,
         "votos_projetados": 482570,
-        "pct_atual": 22.77,
-        "pct_projetado": 27.6,
+        "pct_atual": 24.65,
+        "pct_projetado": 28.09,
         "ci95": {
-          "lower": 24.76,
-          "upper": 30.44
+          "lower": 25.2,
+          "upper": 30.98
         },
         "sqcand": "280002551544"
       },
@@ -5496,11 +5496,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 29541,
         "votos_projetados": 287114,
-        "pct_atual": 12.69,
-        "pct_projetado": 16.42,
+        "pct_atual": 13.74,
+        "pct_projetado": 16.71,
         "ci95": {
-          "lower": 14.07,
-          "upper": 18.77
+          "lower": 14.32,
+          "upper": 19.11
         },
         "sqcand": "280002551932"
       },
@@ -5512,11 +5512,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 20262,
         "votos_projetados": 174670,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.24,
         "ci95": {
-          "lower": 1.27,
-          "upper": 3.13
+          "lower": 1.29,
+          "upper": 3.19
         },
         "sqcand": "280002539826"
       },
@@ -5543,11 +5543,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2388,
         "votos_projetados": 20638,
-        "pct_atual": 1.03,
-        "pct_projetado": 1.18,
+        "pct_atual": 1.11,
+        "pct_projetado": 1.2,
         "ci95": {
-          "lower": 0.49,
-          "upper": 1.87
+          "lower": 0.5,
+          "upper": 1.9
         },
         "sqcand": "280002551975"
       },
@@ -5558,11 +5558,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1746,
         "votos_projetados": 14941,
-        "pct_atual": 0.75,
-        "pct_projetado": 0.85,
+        "pct_atual": 0.81,
+        "pct_projetado": 0.87,
         "ci95": {
           "lower": 0.27,
-          "upper": 1.44
+          "upper": 1.46
         },
         "sqcand": "280002541457"
       },
@@ -5573,11 +5573,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 821,
         "votos_projetados": 7014,
-        "pct_atual": 0.35,
-        "pct_projetado": 0.4,
+        "pct_atual": 0.38,
+        "pct_projetado": 0.41,
         "ci95": {
           "lower": 0,
-          "upper": 0.8
+          "upper": 0.82
         },
         "sqcand": "280002552484"
       },
@@ -5588,11 +5588,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 580,
         "votos_projetados": 4543,
-        "pct_atual": 0.25,
+        "pct_atual": 0.27,
         "pct_projetado": 0.26,
         "ci95": {
           "lower": 0,
-          "upper": 0.58
+          "upper": 0.59
         },
         "sqcand": "280002552487"
       },
@@ -5603,11 +5603,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 282,
         "votos_projetados": 2485,
-        "pct_atual": 0.12,
+        "pct_atual": 0.13,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.38
+          "upper": 0.39
         },
         "sqcand": "280002540694"
       },
@@ -5618,7 +5618,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 174,
         "votos_projetados": 1353,
-        "pct_atual": 0.07,
+        "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
@@ -5633,11 +5633,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 97,
         "votos_projetados": 736,
-        "pct_atual": 0.04,
+        "pct_atual": 0.05,
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -5741,7 +5741,7 @@
   },
   "RO": {
     "uf": "RO",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -5753,11 +5753,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 51437,
         "votos_projetados": 428968,
-        "pct_atual": 49.09,
-        "pct_projetado": 53.5,
+        "pct_atual": 53.15,
+        "pct_projetado": 54.32,
         "ci95": {
-          "lower": 50.33,
-          "upper": 56.67
+          "lower": 51.1,
+          "upper": 57.54
         },
         "sqcand": "280002551544"
       },
@@ -5768,11 +5768,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 17900,
         "votos_projetados": 172702,
-        "pct_atual": 17.08,
-        "pct_projetado": 21.54,
+        "pct_atual": 18.5,
+        "pct_projetado": 21.87,
         "ci95": {
-          "lower": 18.93,
-          "upper": 24.15
+          "lower": 19.22,
+          "upper": 24.52
         },
         "sqcand": "280002542548"
       },
@@ -5783,11 +5783,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 15770,
         "votos_projetados": 132590,
-        "pct_atual": 15.05,
-        "pct_projetado": 16.54,
+        "pct_atual": 16.3,
+        "pct_projetado": 16.79,
         "ci95": {
-          "lower": 14.18,
-          "upper": 18.9
+          "lower": 14.39,
+          "upper": 19.18
         },
         "sqcand": "280002551932"
       },
@@ -5799,11 +5799,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 9117,
         "votos_projetados": 78599,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.25,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.31,
         "ci95": {
-          "lower": 2.97,
-          "upper": 5.53
+          "lower": 3.01,
+          "upper": 5.61
         },
         "sqcand": "280002539826"
       },
@@ -5830,11 +5830,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 1062,
         "votos_projetados": 8452,
-        "pct_atual": 1.01,
-        "pct_projetado": 1.05,
+        "pct_atual": 1.1,
+        "pct_projetado": 1.07,
         "ci95": {
           "lower": 0.41,
-          "upper": 1.7
+          "upper": 1.73
         },
         "sqcand": "280002551975"
       },
@@ -5845,11 +5845,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 620,
         "votos_projetados": 5060,
-        "pct_atual": 0.59,
-        "pct_projetado": 0.63,
+        "pct_atual": 0.64,
+        "pct_projetado": 0.64,
         "ci95": {
           "lower": 0.13,
-          "upper": 1.13
+          "upper": 1.15
         },
         "sqcand": "280002541457"
       },
@@ -5860,11 +5860,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 373,
         "votos_projetados": 3523,
-        "pct_atual": 0.36,
-        "pct_projetado": 0.44,
+        "pct_atual": 0.39,
+        "pct_projetado": 0.45,
         "ci95": {
           "lower": 0.02,
-          "upper": 0.86
+          "upper": 0.87
         },
         "sqcand": "280002552484"
       },
@@ -5875,11 +5875,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 235,
         "votos_projetados": 2134,
-        "pct_atual": 0.22,
+        "pct_atual": 0.24,
         "pct_projetado": 0.27,
         "ci95": {
           "lower": 0,
-          "upper": 0.59
+          "upper": 0.6
         },
         "sqcand": "280002552487"
       },
@@ -5890,11 +5890,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 139,
         "votos_projetados": 1183,
-        "pct_atual": 0.13,
+        "pct_atual": 0.14,
         "pct_projetado": 0.15,
         "ci95": {
           "lower": 0,
-          "upper": 0.39
+          "upper": 0.4
         },
         "sqcand": "280002540694"
       },
@@ -5906,10 +5906,10 @@
         "votos_atuais": 82,
         "votos_projetados": 676,
         "pct_atual": 0.08,
-        "pct_projetado": 0.08,
+        "pct_projetado": 0.09,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002548139"
       },
@@ -6028,7 +6028,7 @@
   },
   "RR": {
     "uf": "RR",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -6040,11 +6040,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 17919,
         "votos_projetados": 151560,
-        "pct_atual": 51.77,
-        "pct_projetado": 57.29,
+        "pct_atual": 56.05,
+        "pct_projetado": 58.02,
         "ci95": {
-          "lower": 54.15,
-          "upper": 60.43
+          "lower": 54.84,
+          "upper": 61.2
         },
         "sqcand": "280002551544"
       },
@@ -6055,11 +6055,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 5157,
         "votos_projetados": 47735,
-        "pct_atual": 14.9,
-        "pct_projetado": 18.05,
+        "pct_atual": 16.13,
+        "pct_projetado": 18.27,
         "ci95": {
-          "lower": 15.6,
-          "upper": 20.49
+          "lower": 15.8,
+          "upper": 20.75
         },
         "sqcand": "280002542548"
       },
@@ -6070,11 +6070,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 5005,
         "votos_projetados": 42883,
-        "pct_atual": 14.46,
-        "pct_projetado": 16.21,
+        "pct_atual": 15.66,
+        "pct_projetado": 16.42,
         "ci95": {
-          "lower": 13.87,
-          "upper": 18.55
+          "lower": 14.05,
+          "upper": 18.79
         },
         "sqcand": "280002551932"
       },
@@ -6086,11 +6086,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 3012,
         "votos_projetados": 25964,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.39,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.44,
         "ci95": {
-          "lower": 3.09,
-          "upper": 5.69
+          "lower": 3.13,
+          "upper": 5.76
         },
         "sqcand": "280002539826"
       },
@@ -6117,11 +6117,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 314,
         "votos_projetados": 2655,
-        "pct_atual": 0.91,
-        "pct_projetado": 1,
+        "pct_atual": 0.98,
+        "pct_projetado": 1.02,
         "ci95": {
-          "lower": 0.37,
-          "upper": 1.64
+          "lower": 0.38,
+          "upper": 1.66
         },
         "sqcand": "280002541457"
       },
@@ -6132,11 +6132,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 266,
         "votos_projetados": 2303,
-        "pct_atual": 0.77,
-        "pct_projetado": 0.87,
+        "pct_atual": 0.83,
+        "pct_projetado": 0.88,
         "ci95": {
           "lower": 0.28,
-          "upper": 1.46
+          "upper": 1.48
         },
         "sqcand": "280002551975"
       },
@@ -6147,11 +6147,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 135,
         "votos_projetados": 1094,
-        "pct_atual": 0.39,
-        "pct_projetado": 0.41,
+        "pct_atual": 0.42,
+        "pct_projetado": 0.42,
         "ci95": {
           "lower": 0.01,
-          "upper": 0.82
+          "upper": 0.83
         },
         "sqcand": "280002552484"
       },
@@ -6162,11 +6162,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 80,
         "votos_projetados": 686,
-        "pct_atual": 0.23,
+        "pct_atual": 0.25,
         "pct_projetado": 0.26,
         "ci95": {
           "lower": 0,
-          "upper": 0.58
+          "upper": 0.59
         },
         "sqcand": "280002552487"
       },
@@ -6177,11 +6177,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 43,
         "votos_projetados": 377,
-        "pct_atual": 0.12,
+        "pct_atual": 0.13,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.38
+          "upper": 0.39
         },
         "sqcand": "280002540694"
       },
@@ -6192,7 +6192,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 24,
         "votos_projetados": 210,
-        "pct_atual": 0.07,
+        "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
@@ -6211,7 +6211,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -6315,7 +6315,7 @@
   },
   "RS": {
     "uf": "RS",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 27.5,
@@ -6327,11 +6327,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 687467,
         "votos_projetados": 2635189,
-        "pct_atual": 37.66,
-        "pct_projetado": 42.29,
+        "pct_atual": 40.78,
+        "pct_projetado": 43.16,
         "ci95": {
-          "lower": 40.44,
-          "upper": 44.13
+          "lower": 41.28,
+          "upper": 45.04
         },
         "sqcand": "280002551544"
       },
@@ -6342,11 +6342,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 481297,
         "votos_projetados": 1687909,
-        "pct_atual": 26.37,
-        "pct_projetado": 27.09,
+        "pct_atual": 28.55,
+        "pct_projetado": 27.64,
         "ci95": {
-          "lower": 25.43,
-          "upper": 28.74
+          "lower": 25.95,
+          "upper": 29.34
         },
         "sqcand": "280002542548"
       },
@@ -6357,11 +6357,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 301452,
         "votos_projetados": 1039933,
-        "pct_atual": 16.51,
-        "pct_projetado": 16.69,
+        "pct_atual": 17.88,
+        "pct_projetado": 17.03,
         "ci95": {
-          "lower": 15.29,
-          "upper": 18.08
+          "lower": 15.61,
+          "upper": 18.45
         },
         "sqcand": "280002551932"
       },
@@ -6373,11 +6373,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 158843,
         "votos_projetados": 577611,
-        "pct_atual": 8.7,
-        "pct_projetado": 8.87,
+        "pct_atual": 9.42,
+        "pct_projetado": 9.05,
         "ci95": {
-          "lower": 7.81,
-          "upper": 9.93
+          "lower": 7.97,
+          "upper": 10.14
         },
         "sqcand": "280002539826"
       },
@@ -6404,11 +6404,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 26731,
         "votos_projetados": 86082,
-        "pct_atual": 1.46,
-        "pct_projetado": 1.38,
+        "pct_atual": 1.59,
+        "pct_projetado": 1.41,
         "ci95": {
-          "lower": 0.95,
-          "upper": 1.82
+          "lower": 0.96,
+          "upper": 1.85
         },
         "sqcand": "280002551975"
       },
@@ -6419,11 +6419,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 13584,
         "votos_projetados": 47400,
-        "pct_atual": 0.74,
-        "pct_projetado": 0.76,
+        "pct_atual": 0.81,
+        "pct_projetado": 0.78,
         "ci95": {
-          "lower": 0.44,
-          "upper": 1.09
+          "lower": 0.45,
+          "upper": 1.11
         },
         "sqcand": "280002541457"
       },
@@ -6434,11 +6434,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 7777,
         "votos_projetados": 26358,
-        "pct_atual": 0.43,
-        "pct_projetado": 0.42,
+        "pct_atual": 0.46,
+        "pct_projetado": 0.43,
         "ci95": {
           "lower": 0.18,
-          "upper": 0.67
+          "upper": 0.68
         },
         "sqcand": "280002552484"
       },
@@ -6449,11 +6449,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4172,
         "votos_projetados": 14820,
-        "pct_atual": 0.23,
+        "pct_atual": 0.25,
         "pct_projetado": 0.24,
         "ci95": {
           "lower": 0.06,
-          "upper": 0.42
+          "upper": 0.43
         },
         "sqcand": "280002552487"
       },
@@ -6464,11 +6464,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2346,
         "votos_projetados": 8301,
-        "pct_atual": 0.13,
-        "pct_projetado": 0.13,
+        "pct_atual": 0.14,
+        "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002540694"
       },
@@ -6479,7 +6479,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1524,
         "votos_projetados": 4734,
-        "pct_atual": 0.08,
+        "pct_atual": 0.09,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
@@ -6494,7 +6494,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 774,
         "votos_projetados": 2450,
-        "pct_atual": 0.04,
+        "pct_atual": 0.05,
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
@@ -6602,7 +6602,7 @@
   },
   "SC": {
     "uf": "SC",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 24,
@@ -6614,11 +6614,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 491477,
         "votos_projetados": 1973029,
-        "pct_atual": 47.28,
-        "pct_projetado": 44.15,
+        "pct_atual": 51.19,
+        "pct_projetado": 45.08,
         "ci95": {
-          "lower": 42.11,
-          "upper": 46.18
+          "lower": 43,
+          "upper": 47.15
         },
         "sqcand": "280002551544"
       },
@@ -6629,11 +6629,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 195255,
         "votos_projetados": 850304,
-        "pct_atual": 18.78,
-        "pct_projetado": 19.03,
+        "pct_atual": 20.34,
+        "pct_projetado": 19.43,
         "ci95": {
-          "lower": 17.42,
-          "upper": 20.63
+          "lower": 17.79,
+          "upper": 21.07
         },
         "sqcand": "280002542548"
       },
@@ -6645,11 +6645,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 90451,
         "votos_projetados": 376878,
-        "pct_atual": 8.7,
-        "pct_projetado": 16.87,
+        "pct_atual": 9.42,
+        "pct_projetado": 17.22,
         "ci95": {
-          "lower": 15.33,
-          "upper": 18.4
+          "lower": 15.66,
+          "upper": 18.79
         },
         "sqcand": "280002539826"
       },
@@ -6660,11 +6660,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 150595,
         "votos_projetados": 670069,
-        "pct_atual": 14.49,
-        "pct_projetado": 14.99,
+        "pct_atual": 15.69,
+        "pct_projetado": 15.31,
         "ci95": {
-          "lower": 13.53,
-          "upper": 16.45
+          "lower": 13.82,
+          "upper": 16.8
         },
         "sqcand": "280002551932"
       },
@@ -6691,11 +6691,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 16285,
         "votos_projetados": 64267,
-        "pct_atual": 1.57,
-        "pct_projetado": 1.44,
+        "pct_atual": 1.7,
+        "pct_projetado": 1.47,
         "ci95": {
-          "lower": 0.95,
-          "upper": 1.93
+          "lower": 0.97,
+          "upper": 1.97
         },
         "sqcand": "280002551975"
       },
@@ -6706,11 +6706,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 6857,
         "votos_projetados": 29099,
-        "pct_atual": 0.66,
-        "pct_projetado": 0.65,
+        "pct_atual": 0.71,
+        "pct_projetado": 0.66,
         "ci95": {
-          "lower": 0.32,
-          "upper": 0.98
+          "lower": 0.33,
+          "upper": 1
         },
         "sqcand": "280002541457"
       },
@@ -6721,11 +6721,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4100,
         "votos_projetados": 16230,
-        "pct_atual": 0.39,
-        "pct_projetado": 0.36,
+        "pct_atual": 0.43,
+        "pct_projetado": 0.37,
         "ci95": {
           "lower": 0.12,
-          "upper": 0.61
+          "upper": 0.62
         },
         "sqcand": "280002552484"
       },
@@ -6736,11 +6736,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2463,
         "votos_projetados": 10086,
-        "pct_atual": 0.24,
+        "pct_atual": 0.26,
         "pct_projetado": 0.23,
         "ci95": {
           "lower": 0.03,
-          "upper": 0.42
+          "upper": 0.43
         },
         "sqcand": "280002552487"
       },
@@ -6751,7 +6751,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1423,
         "votos_projetados": 5645,
-        "pct_atual": 0.14,
+        "pct_atual": 0.15,
         "pct_projetado": 0.13,
         "ci95": {
           "lower": 0,
@@ -6889,7 +6889,7 @@
   },
   "SE": {
     "uf": "SE",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -6901,11 +6901,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 62594,
         "votos_projetados": 561597,
-        "pct_atual": 41.56,
-        "pct_projetado": 49.28,
+        "pct_atual": 44.99,
+        "pct_projetado": 50.26,
         "ci95": {
-          "lower": 46.11,
-          "upper": 52.46
+          "lower": 47.03,
+          "upper": 53.5
         },
         "sqcand": "280002542548"
       },
@@ -6916,11 +6916,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 33626,
         "votos_projetados": 291020,
-        "pct_atual": 22.33,
-        "pct_projetado": 25.54,
+        "pct_atual": 24.17,
+        "pct_projetado": 26.05,
         "ci95": {
-          "lower": 22.77,
-          "upper": 28.31
+          "lower": 23.22,
+          "upper": 28.87
         },
         "sqcand": "280002551544"
       },
@@ -6931,11 +6931,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 24551,
         "votos_projetados": 187640,
-        "pct_atual": 16.3,
-        "pct_projetado": 16.47,
+        "pct_atual": 17.65,
+        "pct_projetado": 16.79,
         "ci95": {
-          "lower": 14.11,
-          "upper": 18.82
+          "lower": 14.39,
+          "upper": 19.2
         },
         "sqcand": "280002551932"
       },
@@ -6947,11 +6947,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 13107,
         "votos_projetados": 112988,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.72,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.78,
         "ci95": {
-          "lower": 1.69,
-          "upper": 3.76
+          "lower": 1.72,
+          "upper": 3.83
         },
         "sqcand": "280002539826"
       },
@@ -6978,11 +6978,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2225,
         "votos_projetados": 21286,
-        "pct_atual": 1.48,
-        "pct_projetado": 1.87,
+        "pct_atual": 1.6,
+        "pct_projetado": 1.91,
         "ci95": {
-          "lower": 1.01,
-          "upper": 2.73
+          "lower": 1.03,
+          "upper": 2.78
         },
         "sqcand": "280002541457"
       },
@@ -6993,11 +6993,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 1562,
         "votos_projetados": 12635,
-        "pct_atual": 1.04,
-        "pct_projetado": 1.11,
+        "pct_atual": 1.12,
+        "pct_projetado": 1.13,
         "ci95": {
-          "lower": 0.44,
-          "upper": 1.77
+          "lower": 0.45,
+          "upper": 1.81
         },
         "sqcand": "280002551975"
       },
@@ -7008,11 +7008,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 646,
         "votos_projetados": 5868,
-        "pct_atual": 0.43,
-        "pct_projetado": 0.51,
+        "pct_atual": 0.46,
+        "pct_projetado": 0.53,
         "ci95": {
           "lower": 0.06,
-          "upper": 0.97
+          "upper": 0.99
         },
         "sqcand": "280002552484"
       },
@@ -7023,11 +7023,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 390,
         "votos_projetados": 3155,
-        "pct_atual": 0.26,
+        "pct_atual": 0.28,
         "pct_projetado": 0.28,
         "ci95": {
           "lower": 0,
-          "upper": 0.61
+          "upper": 0.62
         },
         "sqcand": "280002552487"
       },
@@ -7038,7 +7038,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 236,
         "votos_projetados": 1654,
-        "pct_atual": 0.16,
+        "pct_atual": 0.17,
         "pct_projetado": 0.15,
         "ci95": {
           "lower": 0,
@@ -7053,11 +7053,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 112,
         "votos_projetados": 919,
-        "pct_atual": 0.07,
+        "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "sqcand": "280002548139"
       },
@@ -7068,11 +7068,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 65,
         "votos_projetados": 501,
-        "pct_atual": 0.04,
+        "pct_atual": 0.05,
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "sqcand": "280002551547"
       }
@@ -7176,7 +7176,7 @@
   },
   "SP": {
     "uf": "SP",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 35,
@@ -7188,11 +7188,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 2693823,
         "votos_projetados": 8930855,
-        "pct_atual": 30,
-        "pct_projetado": 34.57,
+        "pct_atual": 32.48,
+        "pct_projetado": 36.46,
         "ci95": {
-          "lower": 33.08,
-          "upper": 36.06
+          "lower": 34.88,
+          "upper": 38.03
         },
         "sqcand": "280002551544"
       },
@@ -7203,11 +7203,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 2794556,
         "votos_projetados": 7416295,
-        "pct_atual": 31.12,
-        "pct_projetado": 28.71,
+        "pct_atual": 33.69,
+        "pct_projetado": 30.27,
         "ci95": {
-          "lower": 27.29,
-          "upper": 30.12
+          "lower": 28.78,
+          "upper": 31.77
         },
         "sqcand": "280002542548"
       },
@@ -7218,11 +7218,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 1584313,
         "votos_projetados": 3921267,
-        "pct_atual": 17.64,
-        "pct_projetado": 15.18,
+        "pct_atual": 19.1,
+        "pct_projetado": 16.01,
         "ci95": {
-          "lower": 14.05,
-          "upper": 16.3
+          "lower": 14.82,
+          "upper": 17.19
         },
         "sqcand": "280002551932"
       },
@@ -7234,11 +7234,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 781406,
         "votos_projetados": 2232589,
-        "pct_atual": 8.7,
-        "pct_projetado": 11.74,
+        "pct_atual": 9.42,
+        "pct_projetado": 12.38,
         "ci95": {
-          "lower": 10.73,
-          "upper": 12.75
+          "lower": 11.32,
+          "upper": 13.45
         },
         "sqcand": "280002539826"
       },
@@ -7265,11 +7265,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 215339,
         "votos_projetados": 609521,
-        "pct_atual": 2.4,
-        "pct_projetado": 2.36,
+        "pct_atual": 2.6,
+        "pct_projetado": 2.49,
         "ci95": {
-          "lower": 1.88,
-          "upper": 2.83
+          "lower": 1.99,
+          "upper": 2.99
         },
         "sqcand": "280002551975"
       },
@@ -7280,11 +7280,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 110701,
         "votos_projetados": 287381,
-        "pct_atual": 1.23,
-        "pct_projetado": 1.11,
+        "pct_atual": 1.33,
+        "pct_projetado": 1.17,
         "ci95": {
-          "lower": 0.78,
-          "upper": 1.44
+          "lower": 0.83,
+          "upper": 1.52
         },
         "sqcand": "280002541457"
       },
@@ -7295,11 +7295,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 67217,
         "votos_projetados": 171438,
-        "pct_atual": 0.75,
-        "pct_projetado": 0.66,
+        "pct_atual": 0.81,
+        "pct_projetado": 0.7,
         "ci95": {
-          "lower": 0.41,
-          "upper": 0.92
+          "lower": 0.43,
+          "upper": 0.97
         },
         "sqcand": "280002552484"
       },
@@ -7310,11 +7310,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 23283,
         "votos_projetados": 62628,
-        "pct_atual": 0.26,
-        "pct_projetado": 0.24,
+        "pct_atual": 0.28,
+        "pct_projetado": 0.26,
         "ci95": {
           "lower": 0.09,
-          "upper": 0.4
+          "upper": 0.42
         },
         "sqcand": "280002552487"
       },
@@ -7325,11 +7325,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 12342,
         "votos_projetados": 34933,
-        "pct_atual": 0.14,
+        "pct_atual": 0.15,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.29
+          "upper": 0.3
         },
         "sqcand": "280002540694"
       },
@@ -7341,10 +7341,10 @@
         "votos_atuais": 6746,
         "votos_projetados": 19235,
         "pct_atual": 0.08,
-        "pct_projetado": 0.07,
+        "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.22
+          "upper": 0.24
         },
         "sqcand": "280002548139"
       },
@@ -7359,7 +7359,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.19
+          "upper": 0.2
         },
         "sqcand": "280002551547"
       }
@@ -7463,7 +7463,7 @@
   },
   "TO": {
     "uf": "TO",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 1,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -7475,11 +7475,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 34180,
         "votos_projetados": 291869,
-        "pct_atual": 34.19,
-        "pct_projetado": 39.06,
+        "pct_atual": 37.02,
+        "pct_projetado": 39.43,
         "ci95": {
-          "lower": 35.96,
-          "upper": 42.15
+          "lower": 36.31,
+          "upper": 42.56
         },
         "sqcand": "280002542548"
       },
@@ -7490,11 +7490,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 32153,
         "votos_projetados": 276982,
-        "pct_atual": 32.16,
-        "pct_projetado": 37.06,
+        "pct_atual": 34.82,
+        "pct_projetado": 37.42,
         "ci95": {
-          "lower": 34,
-          "upper": 40.13
+          "lower": 34.33,
+          "upper": 40.52
         },
         "sqcand": "280002551544"
       },
@@ -7505,11 +7505,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 15597,
         "votos_projetados": 137150,
-        "pct_atual": 15.6,
-        "pct_projetado": 18.35,
+        "pct_atual": 16.89,
+        "pct_projetado": 18.53,
         "ci95": {
-          "lower": 15.89,
-          "upper": 20.81
+          "lower": 16.05,
+          "upper": 21.01
         },
         "sqcand": "280002551932"
       },
@@ -7521,11 +7521,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 8699,
         "votos_projetados": 74992,
-        "pct_atual": 8.7,
-        "pct_projetado": 2.56,
+        "pct_atual": 9.42,
+        "pct_projetado": 2.59,
         "ci95": {
-          "lower": 1.56,
-          "upper": 3.57
+          "lower": 1.57,
+          "upper": 3.6
         },
         "sqcand": "280002539826"
       },
@@ -7552,11 +7552,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 562,
         "votos_projetados": 5097,
-        "pct_atual": 0.56,
-        "pct_projetado": 0.68,
+        "pct_atual": 0.61,
+        "pct_projetado": 0.69,
         "ci95": {
           "lower": 0.16,
-          "upper": 1.2
+          "upper": 1.22
         },
         "sqcand": "280002551975"
       },
@@ -7567,11 +7567,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 355,
         "votos_projetados": 3054,
-        "pct_atual": 0.36,
+        "pct_atual": 0.38,
         "pct_projetado": 0.41,
         "ci95": {
           "lower": 0,
-          "upper": 0.81
+          "upper": 0.82
         },
         "sqcand": "280002541457"
       },
@@ -7582,11 +7582,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 356,
         "votos_projetados": 2944,
-        "pct_atual": 0.36,
-        "pct_projetado": 0.39,
+        "pct_atual": 0.39,
+        "pct_projetado": 0.4,
         "ci95": {
           "lower": 0,
-          "upper": 0.79
+          "upper": 0.8
         },
         "sqcand": "280002552484"
       },
@@ -7597,11 +7597,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 210,
         "votos_projetados": 1947,
-        "pct_atual": 0.21,
+        "pct_atual": 0.23,
         "pct_projetado": 0.26,
         "ci95": {
           "lower": 0,
-          "upper": 0.58
+          "upper": 0.59
         },
         "sqcand": "280002552487"
       },
@@ -7612,7 +7612,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 121,
         "votos_projetados": 1056,
-        "pct_atual": 0.12,
+        "pct_atual": 0.13,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,

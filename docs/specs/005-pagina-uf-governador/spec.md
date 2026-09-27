@@ -11,7 +11,7 @@ depends_on: [001-ingestao-tse, 002-modelo-estatistico, 004-pagina-uf-presidencia
 apis: [GET /api/projection?cargo=governador&uf=<sigla>]
 components: [WinnerBanner, CandidateRow, ChoroplethMapUF, MunicipioTable, ForecastTransparency, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader, CandidateResultRow, MunicipioExplorer, ResultPanel, CandidateListCollapse]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-008, RNF-022, RNF-023, RNF-024, RNF-025, RNF-027]
-adrs: [0001, 0003, 0004, 0007, 0010, 0012, 0013, 0018, 0019, 0025, 0032, 0033, 0034, 0038]
+adrs: [0001, 0003, 0004, 0007, 0010, 0012, 0013, 0018, 0019, 0025, 0032, 0033, 0034, 0038, 0053]
 ---
 
 # Spec 005 — Página de UF (Governador)
@@ -87,4 +87,8 @@ O painel "Votação" (RF-192 emendado) entra em `/uf/[sigla]/governador` com as 
 ### Spec 022 — A corrida em três círculos (2026-09-26)
 
 O painel "A corrida" (RF-200..210) entra imediatamente **depois** do painel "Votação". Ordem na tela da UF: resultado → "Votação" → "A corrida" → evolução (spec 020).
+
+### ADR-0053 — emenda 2026-09-27 (tarde): a lista passa a mostrar a base da disputa
+
+Decisão do dono, opção A ([ADR-0053, emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)): sempre que a UF tem ao menos uma candidatura com `dvt = "Anulado"`, todo percentual publicado de candidatura que compete nesta rota (`<CandidateRow />`, `<MunicipioTable>`/`<MunicipioWaffleGrid />` por município, apuração por mesorregião) passa a ter como base os **votos em disputa** (`vvc − Σ votos das candidaturas anuladas`), não `vvc` inteiro — a mesma base que já decide o desfecho da UF (RF-006.8, spec 006; RF-213, spec 002). A candidatura anulada permanece na lista, ao final, só com votos absolutos (sem percentual). Sem candidatura anulada — o caso hoje observado —, nada muda: a base continua `vvc` inteiro, igual ao `pvap` do TSE. Ver RF-202/203/204/205/212 da [spec 022](../022-corrida-em-tres-circulos/spec.md) para o efeito nos três círculos "A corrida".
 

@@ -53,7 +53,12 @@
  */
 
 import type { EdgeUfRow } from "@/lib/edge-config/types";
-import { anuladasAoFim, sufixoAriaDestino } from "@/lib/utils/destino-voto";
+import {
+  anuladasAoFim,
+  exibePercentual,
+  sufixoAriaDestino,
+  votosDaAnulada,
+} from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 
@@ -116,11 +121,16 @@ export function descricaoCandidaturasUf(row: EdgeUfRow): string {
   // paralela ao que a tela mostra (RF-025).
   // ADR-0053 / RF-213 — a anulada no fim (a mesma ordem do balão e da
   // ficha) e com a etiqueta dita em voz alta.
-  const partes = anuladasAoFim(row.top_candidatos ?? []).map(
-    (tc) =>
-      entrada(tc.nome ? nomeExibicao(tc.nome, tc.sqcand) : `Cand ${tc.id}`, tc.partido, tc.pct) +
-      sufixoAriaDestino(tc.destino),
-  );
+  // Emenda "opção A" (2026-09-27): a anulada é dita com os VOTOS, nunca com o
+  // percentual — o dela é sobre outra base. Sem voto no dado, só o nome.
+  const partes = anuladasAoFim(row.top_candidatos ?? []).map((tc) => {
+    const nome = tc.nome ? nomeExibicao(tc.nome, tc.sqcand) : `Cand ${tc.id}`;
+    if (exibePercentual(tc))
+      return entrada(nome, tc.partido, tc.pct) + sufixoAriaDestino(tc.destino);
+    const votos = votosDaAnulada(tc.votos_atuais);
+    const sigla = tc.partido?.trim();
+    return `${nome}${sigla ? ` (${sigla})` : ""}${votos ? ` ${votos}` : ""}${sufixoAriaDestino(tc.destino)}`;
+  });
 
   const outros = row.outros;
   if (outros) {

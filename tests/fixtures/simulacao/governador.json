@@ -1,5 +1,5 @@
 {
-  "ts": "2026-09-27T08:01:20.613Z",
+  "ts": "2026-09-27T10:40:14.806Z",
   "cargo": 3,
   "turno": 1,
   "pct_apurado_total": 25,
@@ -3068,23 +3068,23 @@
     "cenarios_2t": [],
     "chamadas_recentes": [
       {
-        "ts": "2026-09-27T08:01:20.613Z",
+        "ts": "2026-09-27T10:40:14.806Z",
         "texto": "DF chamada para LEANDRO GRASS (PT) com 37,1% apurado."
       },
       {
-        "ts": "2026-09-27T08:01:20.613Z",
+        "ts": "2026-09-27T10:40:14.806Z",
         "texto": "ES chamada para LORENZO PAZOLINI (REPUBLICANOS) com 32,2% apurado."
       },
       {
-        "ts": "2026-09-27T08:01:20.613Z",
+        "ts": "2026-09-27T10:40:14.806Z",
         "texto": "GO chamada para WILDER MORAIS (PL) com 30,9% apurado."
       },
       {
-        "ts": "2026-09-27T08:01:20.613Z",
+        "ts": "2026-09-27T10:40:14.806Z",
         "texto": "MG chamada para FLÁVIO ROSCOE (PL) com 32,4% apurado."
       },
       {
-        "ts": "2026-09-27T08:01:20.613Z",
+        "ts": "2026-09-27T10:40:14.806Z",
         "texto": "PR chamada para SANDRO ALEX (PSD) com 34,8% apurado."
       }
     ],
@@ -3116,55 +3116,55 @@
       "sigla": "AC",
       "pct_apurado": 11.6,
       "lider": 1000,
-      "margem_atual": -2.38,
-      "margem_projetada": 2.2,
-      "margem_projetada_ci": [-2.07, 6.47],
+      "margem_atual": -2.58,
+      "margem_projetada": 2.3,
+      "margem_projetada_ci": [-2.01, 6.62],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 1000,
-          "pct": 31.2,
+          "pct": 32.67,
           "nome": "TIÃO BOCALOM",
           "partido": "PSDB",
           "sqcand": "10002544015",
           "votos_atuais": 14378,
-          "pct_atual": 28.11
+          "pct_atual": 30.44
         },
         {
           "id": 1001,
-          "pct": 29,
+          "pct": 30.37,
           "nome": "ALAN RICK",
           "partido": "REPUBLICANOS",
           "sqcand": "10002532492",
           "votos_atuais": 15595,
-          "pct_atual": 30.49
+          "pct_atual": 33.01
         },
         {
           "id": 1002,
-          "pct": 26.4,
+          "pct": 27.64,
           "nome": "THOR DANTAS",
           "partido": "PSB",
           "sqcand": "10002550719",
           "votos_atuais": 11519,
-          "pct_atual": 22.52
+          "pct_atual": 24.38
         },
         {
           "id": 1003,
-          "pct": 6.2,
+          "pct": 6.49,
           "nome": "MAILZA ASSIS",
           "partido": "PP",
           "destino": "sub_judice",
           "sqcand": "10002544107",
           "votos_atuais": 4451,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 7.2,
-        "pct_atual": 10.17,
-        "votos_atuais": 5203,
-        "n_candidatos": 2
+        "pct": 2.83,
+        "pct_atual": 2.75,
+        "votos_atuais": 1297,
+        "n_candidatos": 1
       },
       "vai_a_2t": true,
       "bucket": "indefinido"
@@ -3205,55 +3205,55 @@
       "sigla": "AM",
       "pct_apurado": 11.6,
       "lider": 3000,
-      "margem_atual": 4.29,
-      "margem_projetada": 2.2,
-      "margem_projetada_ci": [-2.07, 6.47],
+      "margem_atual": 4.64,
+      "margem_projetada": 2.28,
+      "margem_projetada_ci": [-2.02, 6.59],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 3000,
-          "pct": 31.2,
+          "pct": 32.39,
           "nome": "PROFESSORA MARIA DO CARMO",
           "partido": "PL",
           "sqcand": "40002541626",
           "votos_atuais": 71543,
-          "pct_atual": 29.99
+          "pct_atual": 32.47
         },
         {
           "id": 3001,
-          "pct": 29,
+          "pct": 30.11,
           "nome": "ROBERTO CIDADE",
           "partido": "UNIÃO",
           "sqcand": "40002541741",
           "votos_atuais": 61314,
-          "pct_atual": 25.7
+          "pct_atual": 27.83
         },
         {
           "id": 3002,
-          "pct": 26.4,
+          "pct": 27.41,
           "nome": "OMAR AZIZ",
           "partido": "PSD",
           "sqcand": "40002532272",
           "votos_atuais": 59221,
-          "pct_atual": 24.82
+          "pct_atual": 26.88
         },
         {
           "id": 3003,
-          "pct": 6.2,
+          "pct": 6.44,
           "nome": "ISAEL MUNDURUKU",
           "partido": "REDE",
           "destino": "sub_judice",
           "sqcand": "40002550776",
           "votos_atuais": 20760,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 7.2,
-        "pct_atual": 10.79,
-        "votos_atuais": 25736,
-        "n_candidatos": 3
+        "pct": 3.66,
+        "pct_atual": 3.41,
+        "votos_atuais": 7515,
+        "n_candidatos": 2
       },
       "vai_a_2t": true,
       "bucket": "indefinido"
@@ -3262,56 +3262,50 @@
       "sigla": "AP",
       "pct_apurado": 11.6,
       "lider": 4000,
-      "margem_atual": 6.73,
-      "margem_projetada": 2.2,
-      "margem_projetada_ci": [-2.07, 6.47],
+      "margem_atual": 7.28,
+      "margem_projetada": 2.35,
+      "margem_projetada_ci": [-1.99, 6.68],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 4000,
-          "pct": 31.2,
+          "pct": 33.26,
           "nome": "CLÉCIO",
           "partido": "UNIÃO",
           "sqcand": "30002536311",
           "votos_atuais": 17290,
-          "pct_atual": 34.49
+          "pct_atual": 37.34
         },
         {
           "id": 4001,
-          "pct": 29,
+          "pct": 30.92,
           "nome": "DR. FURLAN",
           "partido": "PSD",
           "sqcand": "30002530014",
           "votos_atuais": 13917,
-          "pct_atual": 27.76
+          "pct_atual": 30.06
         },
         {
           "id": 4002,
-          "pct": 26.4,
+          "pct": 28.14,
           "nome": "CARLOS CLEY",
           "partido": "PSTU",
           "sqcand": "30002536313",
           "votos_atuais": 10733,
-          "pct_atual": 21.41
+          "pct_atual": 23.18
         },
         {
           "id": 4004,
-          "pct": 7.2,
+          "pct": 7.68,
           "nome": "JAIRO PALHETA",
           "partido": "PCO",
           "destino": "sub_judice",
           "sqcand": "30002551388",
           "votos_atuais": 4362,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
-      "outros": {
-        "pct": 6.2,
-        "pct_atual": 7.64,
-        "votos_atuais": 3829,
-        "n_candidatos": 1
-      },
       "vai_a_2t": true,
       "bucket": "indefinido"
     },
@@ -3319,39 +3313,39 @@
       "sigla": "BA",
       "pct_apurado": 11.6,
       "lider": 5000,
-      "margem_atual": 34.98,
-      "margem_projetada": 33.5,
-      "margem_projetada_ci": [28.95, 38.05],
+      "margem_atual": 37.88,
+      "margem_projetada": 34.9,
+      "margem_projetada_ci": [30.38, 39.41],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 5000,
-          "pct": 57.5,
+          "pct": 59.9,
           "nome": "ACM NETO",
           "partido": "UNIÃO",
           "sqcand": "50002533190",
           "votos_atuais": 563760,
-          "pct_atual": 57.7
+          "pct_atual": 62.47
         },
         {
           "id": 5001,
-          "pct": 24,
+          "pct": 25,
           "nome": "JERÔNIMO RODRIGUES",
           "partido": "PT",
           "sqcand": "50002536314",
           "votos_atuais": 221935,
-          "pct_atual": 22.71
+          "pct_atual": 24.59
         },
         {
           "id": 5002,
-          "pct": 11,
+          "pct": 11.46,
           "nome": "RONALDO MANSUR",
           "partido": "PSOL",
           "destino": "sub_judice",
           "sqcand": "50002532269",
           "votos_atuais": 85024,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         },
         {
           "id": 5003,
@@ -3365,8 +3359,8 @@
         }
       ],
       "outros": {
-        "pct": 3.5,
-        "pct_atual": 3.25,
+        "pct": 3.65,
+        "pct_atual": 3.52,
         "votos_atuais": 31725,
         "n_candidatos": 3
       },
@@ -3377,55 +3371,55 @@
       "sigla": "CE",
       "pct_apurado": 11.6,
       "lider": 6000,
-      "margem_atual": -0.78,
-      "margem_projetada": 3.1,
-      "margem_projetada_ci": [-1.38, 7.58],
+      "margem_atual": -0.85,
+      "margem_projetada": 3.19,
+      "margem_projetada_ci": [-1.31, 7.69],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 6000,
-          "pct": 38.5,
+          "pct": 39.59,
           "nome": "CIRO GOMES",
           "partido": "PSDB",
           "sqcand": "60002531351",
           "votos_atuais": 211349,
-          "pct_atual": 33.56
+          "pct_atual": 36.33
         },
         {
           "id": 6001,
-          "pct": 35.4,
+          "pct": 36.4,
           "nome": "ELMANO DE FREITAS",
           "partido": "PT",
           "sqcand": "60002543969",
           "votos_atuais": 216284,
-          "pct_atual": 34.34
+          "pct_atual": 37.18
         },
         {
           "id": 6002,
-          "pct": 15.6,
+          "pct": 16.04,
           "nome": "VERA LÚCIA",
           "partido": "NOVO",
           "sqcand": "60002553922",
           "votos_atuais": 82256,
-          "pct_atual": 13.06
+          "pct_atual": 14.14
         },
         {
           "id": 6003,
-          "pct": 4.5,
+          "pct": 4.63,
           "nome": "SERLEY LEAL",
           "partido": "UP",
           "destino": "sub_judice",
           "sqcand": "60002533729",
           "votos_atuais": 54804,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 6,
-        "pct_atual": 10.34,
-        "votos_atuais": 65102,
-        "n_candidatos": 4
+        "pct": 3.33,
+        "pct_atual": 2.92,
+        "votos_atuais": 17001,
+        "n_candidatos": 3
       },
       "vai_a_2t": true,
       "bucket": "indefinido"
@@ -3434,39 +3428,39 @@
       "sigla": "DF",
       "pct_apurado": 37.1,
       "lider": 7000,
-      "margem_atual": 37.43,
-      "margem_projetada": 33.5,
-      "margem_projetada_ci": [31.35, 35.65],
+      "margem_atual": 40.52,
+      "margem_projetada": 34.9,
+      "margem_projetada_ci": [32.77, 37.02],
       "chamada": true,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 7000,
-          "pct": 57.5,
+          "pct": 59.9,
           "nome": "LEANDRO GRASS",
           "partido": "PT",
           "sqcand": "70002552496",
           "votos_atuais": 385583,
-          "pct_atual": 58.97
+          "pct_atual": 63.84
         },
         {
           "id": 7001,
-          "pct": 24,
+          "pct": 25,
           "nome": "ARRUDA",
           "partido": "PSD",
           "sqcand": "70002552586",
           "votos_atuais": 140837,
-          "pct_atual": 21.54
+          "pct_atual": 23.32
         },
         {
           "id": 7002,
-          "pct": 11,
+          "pct": 11.46,
           "nome": "PAULA BELMONTE",
           "partido": "PSDB",
           "destino": "sub_judice",
           "sqcand": "70002552965",
           "votos_atuais": 56903,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         },
         {
           "id": 7003,
@@ -3480,8 +3474,8 @@
         }
       ],
       "outros": {
-        "pct": 3.5,
-        "pct_atual": 3.16,
+        "pct": 3.65,
+        "pct_atual": 3.42,
         "votos_atuais": 20649,
         "n_candidatos": 7
       },
@@ -3492,56 +3486,50 @@
       "sigla": "ES",
       "pct_apurado": 32.2,
       "lider": 8000,
-      "margem_atual": 3.54,
-      "margem_projetada": 3.1,
-      "margem_projetada_ci": [0.75, 5.45],
+      "margem_atual": 3.83,
+      "margem_projetada": 3.25,
+      "margem_projetada_ci": [0.87, 5.62],
       "chamada": true,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 8000,
-          "pct": 38.5,
+          "pct": 40.31,
           "nome": "LORENZO PAZOLINI",
           "partido": "REPUBLICANOS",
           "sqcand": "80002552682",
           "votos_atuais": 255863,
-          "pct_atual": 35.77
+          "pct_atual": 38.73
         },
         {
           "id": 8001,
-          "pct": 35.4,
+          "pct": 37.07,
           "nome": "HELDER SALOMÃO",
           "partido": "PT",
           "sqcand": "80002551833",
           "votos_atuais": 230565,
-          "pct_atual": 32.24
+          "pct_atual": 34.9
         },
         {
           "id": 8002,
-          "pct": 15.6,
+          "pct": 16.34,
           "nome": "RICARDO FERRAÇO",
           "partido": "MDB",
           "sqcand": "80002552172",
           "votos_atuais": 111916,
-          "pct_atual": 15.65
+          "pct_atual": 16.94
         },
         {
           "id": 8004,
-          "pct": 6,
+          "pct": 6.28,
           "nome": "BRENO BARCELOS",
           "partido": "MISSÃO",
           "destino": "sub_judice",
           "sqcand": "80002541012",
           "votos_atuais": 62236,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
-      "outros": {
-        "pct": 4.5,
-        "pct_atual": 7.64,
-        "votos_atuais": 54624,
-        "n_candidatos": 1
-      },
       "vai_a_2t": true,
       "bucket": "chamada"
     },
@@ -3549,55 +3537,55 @@
       "sigla": "GO",
       "pct_apurado": 30.9,
       "lider": 9000,
-      "margem_atual": 5.39,
-      "margem_projetada": 3.1,
-      "margem_projetada_ci": [0.67, 5.53],
+      "margem_atual": 5.83,
+      "margem_projetada": 3.22,
+      "margem_projetada_ci": [0.78, 5.66],
       "chamada": true,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 9000,
-          "pct": 38.5,
+          "pct": 40,
           "nome": "WILDER MORAIS",
           "partido": "PL",
           "sqcand": "90002551791",
           "votos_atuais": 418299,
-          "pct_atual": 36.77
+          "pct_atual": 39.81
         },
         {
           "id": 9001,
-          "pct": 35.4,
+          "pct": 36.78,
           "nome": "LUIS CESAR BUENO",
           "partido": "PT",
           "sqcand": "90002545476",
           "votos_atuais": 357021,
-          "pct_atual": 31.38
+          "pct_atual": 33.98
         },
         {
           "id": 9002,
-          "pct": 15.6,
+          "pct": 16.21,
           "nome": "DANIEL VILELA",
           "partido": "MDB",
           "sqcand": "90002540993",
           "votos_atuais": 152329,
-          "pct_atual": 13.39
+          "pct_atual": 14.5
         },
         {
           "id": 9003,
-          "pct": 4.5,
+          "pct": 4.68,
           "nome": "MARCONI PERILLO",
           "partido": "PSDB",
           "destino": "sub_judice",
           "sqcand": "90002543463",
           "votos_atuais": 98991,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 6,
-        "pct_atual": 9.75,
-        "votos_atuais": 110934,
-        "n_candidatos": 2
+        "pct": 2.34,
+        "pct_atual": 2.29,
+        "votos_atuais": 24051,
+        "n_candidatos": 1
       },
       "vai_a_2t": true,
       "bucket": "chamada"
@@ -3606,55 +3594,55 @@
       "sigla": "MA",
       "pct_apurado": 11.6,
       "lider": 10000,
-      "margem_atual": -7.22,
-      "margem_projetada": 3.1,
-      "margem_projetada_ci": [-1.38, 7.58],
+      "margem_atual": -7.81,
+      "margem_projetada": 3.22,
+      "margem_projetada_ci": [-1.29, 7.73],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 10000,
-          "pct": 38.5,
+          "pct": 40,
           "nome": "ORLEANS BRANDÃO",
           "partido": "MDB",
           "sqcand": "100002543869",
           "votos_atuais": 128850,
-          "pct_atual": 29.37
+          "pct_atual": 31.8
         },
         {
           "id": 10001,
-          "pct": 35.4,
+          "pct": 36.78,
           "nome": "FELIPE CAMARÃO",
           "partido": "PT",
           "sqcand": "100002542556",
           "votos_atuais": 160510,
-          "pct_atual": 36.59
+          "pct_atual": 39.62
         },
         {
           "id": 10002,
-          "pct": 15.6,
+          "pct": 16.21,
           "nome": "EDUARDO BRAIDE",
           "partido": "PSD",
           "sqcand": "100002545679",
           "votos_atuais": 68305,
-          "pct_atual": 15.57
+          "pct_atual": 16.86
         },
         {
           "id": 10003,
-          "pct": 4.5,
+          "pct": 4.68,
           "nome": "REGINALDO LIMA",
           "partido": "PCB",
           "destino": "sub_judice",
           "sqcand": "100002544073",
           "votos_atuais": 38173,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 6,
-        "pct_atual": 9.76,
-        "votos_atuais": 42833,
-        "n_candidatos": 2
+        "pct": 2.34,
+        "pct_atual": 2.3,
+        "votos_atuais": 9329,
+        "n_candidatos": 1
       },
       "vai_a_2t": true,
       "bucket": "indefinido"
@@ -3663,55 +3651,55 @@
       "sigla": "MG",
       "pct_apurado": 32.4,
       "lider": 11000,
-      "margem_atual": 4.37,
-      "margem_projetada": 3.1,
-      "margem_projetada_ci": [0.76, 5.44],
+      "margem_atual": 4.73,
+      "margem_projetada": 3.18,
+      "margem_projetada_ci": [0.82, 5.53],
       "chamada": true,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 11000,
-          "pct": 38.5,
+          "pct": 39.47,
           "nome": "FLÁVIO ROSCOE",
           "partido": "PL",
           "sqcand": "130002550834",
           "votos_atuais": 1343310,
-          "pct_atual": 34.5
+          "pct_atual": 37.36
         },
         {
           "id": 11001,
-          "pct": 35.4,
+          "pct": 36.3,
           "nome": "PATRUS ANANIAS",
           "partido": "PT",
           "sqcand": "130002550464",
           "votos_atuais": 1173173,
-          "pct_atual": 30.13
+          "pct_atual": 32.62
         },
         {
           "id": 11002,
-          "pct": 15.6,
+          "pct": 15.99,
           "nome": "CLEITINHO AZEVEDO",
           "partido": "REPUBLICANOS",
           "sqcand": "130002552296",
           "votos_atuais": 611050,
-          "pct_atual": 15.69
+          "pct_atual": 16.99
         },
         {
           "id": 11003,
-          "pct": 4.5,
+          "pct": 4.61,
           "nome": "GABRIEL",
           "partido": "MDB",
           "destino": "sub_judice",
           "sqcand": "130002549557",
           "votos_atuais": 338799,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 6,
-        "pct_atual": 10.97,
-        "votos_atuais": 427057,
-        "n_candidatos": 7
+        "pct": 3.62,
+        "pct_atual": 3.61,
+        "votos_atuais": 129696,
+        "n_candidatos": 6
       },
       "vai_a_2t": true,
       "bucket": "chamada"
@@ -3720,55 +3708,55 @@
       "sigla": "MS",
       "pct_apurado": 39.4,
       "lider": 12000,
-      "margem_atual": 1.75,
-      "margem_projetada": 2.2,
-      "margem_projetada_ci": [0.28, 4.12],
+      "margem_atual": 1.89,
+      "margem_projetada": 2.28,
+      "margem_projetada_ci": [0.34, 4.21],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 12000,
-          "pct": 31.2,
+          "pct": 32.27,
           "nome": "JOÃO HENRIQUE CATAN",
           "partido": "NOVO",
           "sqcand": "120002552191",
           "votos_atuais": 172532,
-          "pct_atual": 29.06
+          "pct_atual": 31.46
         },
         {
           "id": 12001,
-          "pct": 29,
+          "pct": 29.99,
           "nome": "FÁBIO TRAD",
           "partido": "PT",
           "sqcand": "120002539834",
           "votos_atuais": 162168,
-          "pct_atual": 27.31
+          "pct_atual": 29.57
         },
         {
           "id": 12002,
-          "pct": 26.4,
+          "pct": 27.3,
           "nome": "EDUARDO RIEDEL",
           "partido": "PP",
           "sqcand": "120002536582",
           "votos_atuais": 141773,
-          "pct_atual": 23.88
+          "pct_atual": 25.85
         },
         {
           "id": 12003,
-          "pct": 6.2,
+          "pct": 6.41,
           "nome": "LUCIEN REZENDE",
           "partido": "PSOL",
           "destino": "sub_judice",
           "sqcand": "120002532257",
           "votos_atuais": 51668,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 7.2,
-        "pct_atual": 11.05,
-        "votos_atuais": 65613,
-        "n_candidatos": 4
+        "pct": 4.02,
+        "pct_atual": 3.7,
+        "votos_atuais": 20264,
+        "n_candidatos": 3
       },
       "vai_a_2t": true,
       "bucket": "vai_2t"
@@ -3777,56 +3765,50 @@
       "sigla": "MT",
       "pct_apurado": 27.5,
       "lider": 13000,
-      "margem_atual": 3.23,
-      "margem_projetada": 3.1,
-      "margem_projetada_ci": [0.47, 5.73],
+      "margem_atual": 3.49,
+      "margem_projetada": 3.25,
+      "margem_projetada_ci": [0.59, 5.9],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 13000,
-          "pct": 38.5,
+          "pct": 40.31,
           "nome": "WELLINGTON FAGUNDES",
           "partido": "PL",
           "sqcand": "110002551737",
           "votos_atuais": 186049,
-          "pct_atual": 36.71
+          "pct_atual": 39.75
         },
         {
           "id": 13001,
-          "pct": 35.4,
+          "pct": 37.07,
           "nome": "OTAVIANO PIVETTA",
           "partido": "REPUBLICANOS",
           "sqcand": "110002551480",
           "votos_atuais": 169694,
-          "pct_atual": 33.48
+          "pct_atual": 36.25
         },
         {
           "id": 13002,
-          "pct": 15.6,
+          "pct": 16.34,
           "nome": "DOUTORA NATASHA",
           "partido": "PSD",
           "sqcand": "110002544985",
           "votos_atuais": 68243,
-          "pct_atual": 13.47
+          "pct_atual": 14.58
         },
         {
           "id": 13004,
-          "pct": 6,
+          "pct": 6.28,
           "nome": "MAURICIO COELHO",
           "partido": "MOBILIZA",
           "destino": "sub_judice",
           "sqcand": "110002553058",
           "votos_atuais": 44101,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
-      "outros": {
-        "pct": 4.5,
-        "pct_atual": 7.64,
-        "votos_atuais": 38707,
-        "n_candidatos": 1
-      },
       "vai_a_2t": true,
       "bucket": "vai_2t"
     },
@@ -3834,56 +3816,50 @@
       "sigla": "PA",
       "pct_apurado": 11.6,
       "lider": 14000,
-      "margem_atual": 5.97,
-      "margem_projetada": 3.1,
-      "margem_projetada_ci": [-1.38, 7.58],
+      "margem_atual": 6.46,
+      "margem_projetada": 3.25,
+      "margem_projetada_ci": [-1.27, 7.76],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 14000,
-          "pct": 38.5,
+          "pct": 40.31,
           "nome": "DR. DANIEL",
           "partido": "PODE",
           "sqcand": "140002549930",
           "votos_atuais": 201829,
-          "pct_atual": 37.18
+          "pct_atual": 40.25
         },
         {
           "id": 14001,
-          "pct": 35.4,
+          "pct": 37.07,
           "nome": "HANA GHASSAN",
           "partido": "MDB",
           "sqcand": "140002551598",
           "votos_atuais": 169431,
-          "pct_atual": 31.21
+          "pct_atual": 33.79
         },
         {
           "id": 14002,
-          "pct": 15.6,
+          "pct": 16.34,
           "nome": "ARACELI",
           "partido": "PSOL",
           "sqcand": "140002542386",
           "votos_atuais": 82911,
-          "pct_atual": 15.27
+          "pct_atual": 16.54
         },
         {
           "id": 14004,
-          "pct": 6,
+          "pct": 6.28,
           "nome": "WELL MACEDO",
           "partido": "PSTU",
           "destino": "sub_judice",
           "sqcand": "140002554108",
           "votos_atuais": 47240,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
-      "outros": {
-        "pct": 4.5,
-        "pct_atual": 7.64,
-        "votos_atuais": 41462,
-        "n_candidatos": 1
-      },
       "vai_a_2t": true,
       "bucket": "indefinido"
     },
@@ -3891,55 +3867,55 @@
       "sigla": "PB",
       "pct_apurado": 11.6,
       "lider": 15000,
-      "margem_atual": 9.24,
-      "margem_projetada": 2.2,
-      "margem_projetada_ci": [-2.07, 6.47],
+      "margem_atual": 10.01,
+      "margem_projetada": 2.3,
+      "margem_projetada_ci": [-2.01, 6.62],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 15000,
-          "pct": 31.2,
+          "pct": 32.67,
           "nome": "CÍCERO LUCENA",
           "partido": "MDB",
           "sqcand": "150002544133",
           "votos_atuais": 89842,
-          "pct_atual": 31.98
+          "pct_atual": 34.63
         },
         {
           "id": 15001,
-          "pct": 29,
+          "pct": 30.37,
           "nome": "EFRAIM FILHO",
           "partido": "PL",
           "sqcand": "150002538692",
           "votos_atuais": 63877,
-          "pct_atual": 22.74
+          "pct_atual": 24.62
         },
         {
           "id": 15002,
-          "pct": 26.4,
+          "pct": 27.64,
           "nome": "LUCAS RIBEIRO",
           "partido": "PP",
           "sqcand": "150002551789",
           "votos_atuais": 74351,
-          "pct_atual": 26.47
+          "pct_atual": 28.66
         },
         {
           "id": 15003,
-          "pct": 6.2,
+          "pct": 6.49,
           "nome": "YURI EZEQUIEL",
           "partido": "UP",
           "destino": "sub_judice",
           "sqcand": "150002540204",
           "votos_atuais": 24445,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 7.2,
-        "pct_atual": 10.11,
-        "votos_atuais": 28401,
-        "n_candidatos": 2
+        "pct": 2.83,
+        "pct_atual": 2.68,
+        "votos_atuais": 6946,
+        "n_candidatos": 1
       },
       "vai_a_2t": true,
       "bucket": "indefinido"
@@ -3948,39 +3924,39 @@
       "sigla": "PE",
       "pct_apurado": 11.6,
       "lider": 16000,
-      "margem_atual": 39.5,
-      "margem_projetada": 33.5,
-      "margem_projetada_ci": [28.95, 38.05],
+      "margem_atual": 42.76,
+      "margem_projetada": 34.9,
+      "margem_projetada_ci": [30.38, 39.41],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 16000,
-          "pct": 57.5,
+          "pct": 59.9,
           "nome": "JOÃO CAMPOS",
           "partido": "PSB",
           "sqcand": "170002537230",
           "votos_atuais": 379930,
-          "pct_atual": 60.07
+          "pct_atual": 65.04
         },
         {
           "id": 16001,
-          "pct": 24,
+          "pct": 25,
           "nome": "RAQUEL LYRA",
           "partido": "PSD",
           "sqcand": "170002537227",
           "votos_atuais": 130129,
-          "pct_atual": 20.58
+          "pct_atual": 22.28
         },
         {
           "id": 16002,
-          "pct": 11,
+          "pct": 11.46,
           "nome": "IVAN MORAES",
           "partido": "PSOL",
           "destino": "sub_judice",
           "sqcand": "170002538097",
           "votos_atuais": 55034,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         },
         {
           "id": 16003,
@@ -3994,8 +3970,8 @@
         }
       ],
       "outros": {
-        "pct": 3.5,
-        "pct_atual": 3.01,
+        "pct": 3.65,
+        "pct_atual": 3.26,
         "votos_atuais": 19037,
         "n_candidatos": 4
       },
@@ -4006,55 +3982,55 @@
       "sigla": "PI",
       "pct_apurado": 11.6,
       "lider": 17000,
-      "margem_atual": 3.03,
-      "margem_projetada": 3.1,
-      "margem_projetada_ci": [-1.38, 7.58],
+      "margem_atual": 3.28,
+      "margem_projetada": 3.18,
+      "margem_projetada_ci": [-1.32, 7.68],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 17000,
-          "pct": 38.5,
+          "pct": 39.53,
           "nome": "RAFAEL FONTELES",
           "partido": "PT",
           "sqcand": "180002532987",
           "votos_atuais": 82754,
-          "pct_atual": 34.9
+          "pct_atual": 37.78
         },
         {
           "id": 17001,
-          "pct": 35.4,
+          "pct": 36.35,
           "nome": "DRA. LÚCIA SANTOS",
           "partido": "PSDB",
           "sqcand": "180002544216",
           "votos_atuais": 75561,
-          "pct_atual": 31.86
+          "pct_atual": 34.5
         },
         {
           "id": 17002,
-          "pct": 15.6,
+          "pct": 16.02,
           "nome": "JOEL RODRIGUES",
           "partido": "PP",
           "sqcand": "180002538530",
           "votos_atuais": 32971,
-          "pct_atual": 13.9
+          "pct_atual": 15.05
         },
         {
           "id": 17003,
-          "pct": 4.5,
+          "pct": 4.62,
           "nome": "PROFESSOR GISVALDO",
           "partido": "PSOL",
           "destino": "sub_judice",
           "sqcand": "180002549970",
           "votos_atuais": 20636,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 6,
-        "pct_atual": 10.64,
-        "votos_atuais": 25227,
-        "n_candidatos": 5
+        "pct": 3.49,
+        "pct_atual": 3.25,
+        "votos_atuais": 7115,
+        "n_candidatos": 4
       },
       "vai_a_2t": true,
       "bucket": "indefinido"
@@ -4063,39 +4039,39 @@
       "sigla": "PR",
       "pct_apurado": 34.8,
       "lider": 18000,
-      "margem_atual": 30.92,
-      "margem_projetada": 33.5,
-      "margem_projetada_ci": [31.24, 35.76],
+      "margem_atual": 33.47,
+      "margem_projetada": 34.9,
+      "margem_projetada_ci": [32.66, 37.13],
       "chamada": true,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 18000,
-          "pct": 57.5,
+          "pct": 59.9,
           "nome": "SANDRO ALEX",
           "partido": "PSD",
           "sqcand": "160002549553",
           "votos_atuais": 1266334,
-          "pct_atual": 55.41
+          "pct_atual": 60
         },
         {
           "id": 18001,
-          "pct": 24,
+          "pct": 25,
           "nome": "SERGIO MORO",
           "partido": "PL",
           "sqcand": "160002540833",
           "votos_atuais": 559840,
-          "pct_atual": 24.5
+          "pct_atual": 26.52
         },
         {
           "id": 18002,
-          "pct": 11,
+          "pct": 11.46,
           "nome": "REQUIÃO FILHO",
           "partido": "PDT",
           "destino": "sub_judice",
           "sqcand": "160002547666",
           "votos_atuais": 198859,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         },
         {
           "id": 18003,
@@ -4109,8 +4085,8 @@
         }
       ],
       "outros": {
-        "pct": 3.5,
-        "pct_atual": 3.75,
+        "pct": 3.65,
+        "pct_atual": 4.06,
         "votos_atuais": 85664,
         "n_candidatos": 3
       },
@@ -4121,55 +4097,55 @@
       "sigla": "RJ",
       "pct_apurado": 30.7,
       "lider": 19000,
-      "margem_atual": 2.23,
-      "margem_projetada": 2.2,
-      "margem_projetada_ci": [-0.12, 4.52],
+      "margem_atual": 2.41,
+      "margem_projetada": 2.28,
+      "margem_projetada_ci": [-0.06, 4.63],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 19000,
-          "pct": 31.2,
+          "pct": 32.39,
           "nome": "DOUGLAS RUAS",
           "partido": "PL",
           "sqcand": "190002542887",
           "votos_atuais": 819361,
-          "pct_atual": 28.22
+          "pct_atual": 30.56
         },
         {
           "id": 19001,
-          "pct": 29,
+          "pct": 30.11,
           "nome": "ANDRÉ MARINHO",
           "partido": "NOVO",
           "sqcand": "190002537524",
           "votos_atuais": 754664,
-          "pct_atual": 25.99
+          "pct_atual": 28.14
         },
         {
           "id": 19002,
-          "pct": 26.4,
+          "pct": 27.41,
           "nome": "WILLIAM SIRI",
           "partido": "PSOL",
           "sqcand": "190002536162",
           "votos_atuais": 758478,
-          "pct_atual": 26.13
+          "pct_atual": 28.29
         },
         {
           "id": 19003,
-          "pct": 6.2,
+          "pct": 6.44,
           "nome": "JULIETE",
           "partido": "UP",
           "destino": "sub_judice",
           "sqcand": "190002547272",
           "votos_atuais": 252634,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 7.2,
-        "pct_atual": 10.96,
-        "votos_atuais": 318063,
-        "n_candidatos": 3
+        "pct": 3.66,
+        "pct_atual": 3.59,
+        "votos_atuais": 96328,
+        "n_candidatos": 2
       },
       "vai_a_2t": true,
       "bucket": "indefinido"
@@ -4178,55 +4154,55 @@
       "sigla": "RN",
       "pct_apurado": 11.6,
       "lider": 20000,
-      "margem_atual": 3.43,
-      "margem_projetada": 2.2,
-      "margem_projetada_ci": [-2.07, 6.47],
+      "margem_atual": 3.72,
+      "margem_projetada": 2.27,
+      "margem_projetada_ci": [-2.03, 6.57],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 20000,
-          "pct": 31.2,
+          "pct": 32.21,
           "nome": "ÁLVARO DIAS",
           "partido": "PL",
           "sqcand": "200002534442",
           "votos_atuais": 68516,
-          "pct_atual": 29.43
+          "pct_atual": 31.86
         },
         {
           "id": 20001,
-          "pct": 29,
+          "pct": 29.93,
           "nome": "CADU DE LULA",
           "partido": "PT",
           "sqcand": "200002534001",
           "votos_atuais": 60523,
-          "pct_atual": 25.99
+          "pct_atual": 28.14
         },
         {
           "id": 20002,
-          "pct": 26.4,
+          "pct": 27.25,
           "nome": "ALLYSON",
           "partido": "UNIÃO",
           "sqcand": "200002535255",
           "votos_atuais": 57607,
-          "pct_atual": 24.74
+          "pct_atual": 26.79
         },
         {
           "id": 20003,
-          "pct": 6.2,
+          "pct": 6.4,
           "nome": "PROFESSOR ROBERIO PAULINO",
           "partido": "PSOL",
           "destino": "sub_judice",
           "sqcand": "200002546757",
           "votos_atuais": 20262,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 7.2,
-        "pct_atual": 11.14,
-        "votos_atuais": 25935,
-        "n_candidatos": 5
+        "pct": 4.21,
+        "pct_atual": 3.79,
+        "votos_atuais": 8151,
+        "n_candidatos": 4
       },
       "vai_a_2t": true,
       "bucket": "indefinido"
@@ -4235,39 +4211,39 @@
       "sigla": "RO",
       "pct_apurado": 11.6,
       "lider": 21000,
-      "margem_atual": 27.05,
-      "margem_projetada": 33.5,
-      "margem_projetada_ci": [28.95, 38.05],
+      "margem_atual": 29.28,
+      "margem_projetada": 34.9,
+      "margem_projetada_ci": [30.38, 39.41],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 21000,
-          "pct": 57.5,
+          "pct": 59.9,
           "nome": "EXPEDITO NETTO",
           "partido": "PT",
           "sqcand": "220002542185",
           "votos_atuais": 56159,
-          "pct_atual": 53.6
+          "pct_atual": 58.03
         },
         {
           "id": 21001,
-          "pct": 24,
+          "pct": 25,
           "nome": "MARCOS ROGÉRIO",
           "partido": "PL",
           "sqcand": "220002541939",
           "votos_atuais": 27821,
-          "pct_atual": 26.55
+          "pct_atual": 28.75
         },
         {
           "id": 21002,
-          "pct": 11,
+          "pct": 11.46,
           "nome": "HILDON CHAVES",
           "partido": "UNIÃO",
           "destino": "sub_judice",
           "sqcand": "220002542916",
           "votos_atuais": 9117,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         },
         {
           "id": 21003,
@@ -4281,8 +4257,8 @@
         }
       ],
       "outros": {
-        "pct": 3.5,
-        "pct_atual": 3.51,
+        "pct": 3.65,
+        "pct_atual": 3.8,
         "votos_atuais": 3676,
         "n_candidatos": 2
       },
@@ -4293,39 +4269,39 @@
       "sigla": "RR",
       "pct_apurado": 11.6,
       "lider": 22000,
-      "margem_atual": 33.74,
-      "margem_projetada": 33.5,
-      "margem_projetada_ci": [28.95, 38.05],
+      "margem_atual": 36.53,
+      "margem_projetada": 34.9,
+      "margem_projetada_ci": [30.38, 39.41],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 22000,
-          "pct": 57.5,
+          "pct": 59.9,
           "nome": "ARTHUR HENRIQUE",
           "partido": "PL",
           "sqcand": "230002549223",
           "votos_atuais": 19730,
-          "pct_atual": 57
+          "pct_atual": 61.72
         },
         {
           "id": 22001,
-          "pct": 24,
+          "pct": 25,
           "nome": "SOLDADO SAMPAIO",
           "partido": "REPUBLICANOS",
           "sqcand": "230002551571",
           "votos_atuais": 8053,
-          "pct_atual": 23.27
+          "pct_atual": 25.19
         },
         {
           "id": 22002,
-          "pct": 11,
+          "pct": 11.46,
           "nome": "FARAH MESQUITA",
           "partido": "SOLIDARIEDADE",
           "destino": "sub_judice",
           "sqcand": "230002549294",
           "votos_atuais": 3012,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         },
         {
           "id": 22003,
@@ -4339,8 +4315,8 @@
         }
       ],
       "outros": {
-        "pct": 3.5,
-        "pct_atual": 3.39,
+        "pct": 3.65,
+        "pct_atual": 3.67,
         "votos_atuais": 1173,
         "n_candidatos": 1
       },
@@ -4351,39 +4327,39 @@
       "sigla": "RS",
       "pct_apurado": 27.5,
       "lider": 23000,
-      "margem_atual": 24.07,
-      "margem_projetada": 33.5,
-      "margem_projetada_ci": [30.82, 36.18],
+      "margem_atual": 26.06,
+      "margem_projetada": 34.9,
+      "margem_projetada_ci": [32.24, 37.55],
       "chamada": true,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 23000,
-          "pct": 57.5,
+          "pct": 59.9,
           "nome": "GABRIEL SOUZA",
           "partido": "MDB",
           "sqcand": "210002542892",
           "votos_atuais": 946499,
-          "pct_atual": 51.85
+          "pct_atual": 56.14
         },
         {
           "id": 23001,
-          "pct": 24,
+          "pct": 25,
           "nome": "ZUCCO",
           "partido": "PL",
           "sqcand": "210002547857",
           "votos_atuais": 507193,
-          "pct_atual": 27.79
+          "pct_atual": 30.08
         },
         {
           "id": 23002,
-          "pct": 11,
+          "pct": 11.46,
           "nome": "MARCELO MARANATA",
           "partido": "PSDB",
           "destino": "sub_judice",
           "sqcand": "210002535802",
           "votos_atuais": 158843,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         },
         {
           "id": 23003,
@@ -4397,8 +4373,8 @@
         }
       ],
       "outros": {
-        "pct": 3.5,
-        "pct_atual": 4.02,
+        "pct": 3.65,
+        "pct_atual": 4.36,
         "votos_atuais": 73432,
         "n_candidatos": 2
       },
@@ -4409,39 +4385,39 @@
       "sigla": "SC",
       "pct_apurado": 24,
       "lider": 24000,
-      "margem_atual": 35.3,
-      "margem_projetada": 33.5,
-      "margem_projetada_ci": [30.57, 36.43],
+      "margem_atual": 38.21,
+      "margem_projetada": 34.9,
+      "margem_projetada_ci": [31.99, 37.8],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 24000,
-          "pct": 57.5,
+          "pct": 59.9,
           "nome": "JORGINHO MELLO",
           "partido": "PL",
           "sqcand": "240002537073",
           "votos_atuais": 598690,
-          "pct_atual": 57.6
+          "pct_atual": 62.36
         },
         {
           "id": 24001,
-          "pct": 24,
+          "pct": 25,
           "nome": "JOÃO RODRIGUES",
           "partido": "PSD",
           "sqcand": "240002551001",
           "votos_atuais": 231812,
-          "pct_atual": 22.3
+          "pct_atual": 24.15
         },
         {
           "id": 24002,
-          "pct": 11,
+          "pct": 11.46,
           "nome": "GELSON MERÍSIO",
           "partido": "PSB",
           "destino": "sub_judice",
           "sqcand": "240002548628",
           "votos_atuais": 90451,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         },
         {
           "id": 24003,
@@ -4455,8 +4431,8 @@
         }
       ],
       "outros": {
-        "pct": 3.5,
-        "pct_atual": 3.76,
+        "pct": 3.65,
+        "pct_atual": 4.07,
         "votos_atuais": 39095,
         "n_candidatos": 2
       },
@@ -4467,55 +4443,55 @@
       "sigla": "SE",
       "pct_apurado": 11.6,
       "lider": 25000,
-      "margem_atual": -2.25,
-      "margem_projetada": 3.1,
-      "margem_projetada_ci": [-1.38, 7.58],
+      "margem_atual": -2.43,
+      "margem_projetada": 3.22,
+      "margem_projetada_ci": [-1.29, 7.73],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 25000,
-          "pct": 38.5,
+          "pct": 40,
           "nome": "RICARDO MARQUES",
           "partido": "PL",
           "sqcand": "260002549466",
           "votos_atuais": 48142,
-          "pct_atual": 31.96
+          "pct_atual": 34.61
         },
         {
           "id": 25001,
-          "pct": 35.4,
+          "pct": 36.78,
           "nome": "VALMIR DE FRANCISQUINHO",
           "partido": "REPUBLICANOS",
           "sqcand": "260002532010",
           "votos_atuais": 51529,
-          "pct_atual": 34.21
+          "pct_atual": 37.04
         },
         {
           "id": 25002,
-          "pct": 15.6,
+          "pct": 16.21,
           "nome": "FÁBIO",
           "partido": "PSD",
           "sqcand": "260002542491",
           "votos_atuais": 23041,
-          "pct_atual": 15.3
+          "pct_atual": 16.56
         },
         {
           "id": 25003,
-          "pct": 4.5,
+          "pct": 4.68,
           "nome": "EMANUEL CACHO",
           "partido": "PSDB",
           "destino": "sub_judice",
           "sqcand": "260002551712",
           "votos_atuais": 13107,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 6,
-        "pct_atual": 9.83,
-        "votos_atuais": 14799,
-        "n_candidatos": 2
+        "pct": 2.34,
+        "pct_atual": 2.37,
+        "votos_atuais": 3295,
+        "n_candidatos": 1
       },
       "vai_a_2t": true,
       "bucket": "indefinido"
@@ -4524,55 +4500,55 @@
       "sigla": "SP",
       "pct_apurado": 35,
       "lider": 26000,
-      "margem_atual": 0.41,
-      "margem_projetada": 2.2,
-      "margem_projetada_ci": [0.09, 4.31],
+      "margem_atual": 0.45,
+      "margem_projetada": 2.28,
+      "margem_projetada_ci": [0.16, 4.41],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 26000,
-          "pct": 31.2,
+          "pct": 32.39,
           "nome": "FERNANDO HADDAD",
           "partido": "PT",
           "sqcand": "250002549705",
           "votos_atuais": 2527899,
-          "pct_atual": 28.15
+          "pct_atual": 30.48
         },
         {
           "id": 26001,
-          "pct": 29,
+          "pct": 30.11,
           "nome": "TARCÍSIO",
           "partido": "REPUBLICANOS",
           "sqcand": "250002541303",
           "votos_atuais": 2490725,
-          "pct_atual": 27.74
+          "pct_atual": 30.03
         },
         {
           "id": 26002,
-          "pct": 26.4,
+          "pct": 27.41,
           "nome": "VIVIAN MENDES",
           "partido": "UP",
           "sqcand": "250002544912",
           "votos_atuais": 2197587,
-          "pct_atual": 24.47
+          "pct_atual": 26.5
         },
         {
           "id": 26003,
-          "pct": 6.2,
+          "pct": 6.44,
           "nome": "CARLOS MACHADO",
           "partido": "PCB",
           "destino": "sub_judice",
           "sqcand": "250002550913",
           "votos_atuais": 781406,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         }
       ],
       "outros": {
-        "pct": 7.2,
-        "pct_atual": 10.94,
-        "votos_atuais": 982100,
-        "n_candidatos": 3
+        "pct": 3.66,
+        "pct_atual": 3.57,
+        "votos_atuais": 296265,
+        "n_candidatos": 2
       },
       "vai_a_2t": true,
       "bucket": "vai_2t"
@@ -4581,39 +4557,39 @@
       "sigla": "TO",
       "pct_apurado": 11.6,
       "lider": 27000,
-      "margem_atual": 32.8,
-      "margem_projetada": 33.5,
-      "margem_projetada_ci": [28.95, 38.05],
+      "margem_atual": 35.51,
+      "margem_projetada": 34.9,
+      "margem_projetada_ci": [30.38, 39.41],
       "chamada": false,
       "swing_vs_2022": null,
       "top_candidatos": [
         {
           "id": 27000,
-          "pct": 57.5,
+          "pct": 59.9,
           "nome": "LAUREZ MOREIRA",
           "partido": "PSD",
           "sqcand": "270002544494",
           "votos_atuais": 56495,
-          "pct_atual": 56.51
+          "pct_atual": 61.19
         },
         {
           "id": 27001,
-          "pct": 24,
+          "pct": 25,
           "nome": "PROFESSORA DORINHA",
           "partido": "UNIÃO",
           "sqcand": "270002544599",
           "votos_atuais": 23709,
-          "pct_atual": 23.72
+          "pct_atual": 25.68
         },
         {
           "id": 27002,
-          "pct": 11,
+          "pct": 11.46,
           "nome": "VICENTINHO JÚNIOR",
           "partido": "PSDB",
           "destino": "sub_judice",
           "sqcand": "270002544544",
           "votos_atuais": 8699,
-          "pct_atual": 8.7
+          "pct_atual": 9.42
         },
         {
           "id": 27003,
@@ -4627,8 +4603,8 @@
         }
       ],
       "outros": {
-        "pct": 3.5,
-        "pct_atual": 3.43,
+        "pct": 3.65,
+        "pct_atual": 3.71,
         "votos_atuais": 3430,
         "n_candidatos": 2
       },

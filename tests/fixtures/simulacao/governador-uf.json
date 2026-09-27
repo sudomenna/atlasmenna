@@ -1,7 +1,7 @@
 {
   "AC": {
     "uf": "AC",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -12,11 +12,11 @@
         "partido": "PSDB",
         "votos_atuais": 14378,
         "votos_projetados": 128879,
-        "pct_atual": 28.11,
-        "pct_projetado": 31.2,
+        "pct_atual": 30.44,
+        "pct_projetado": 32.67,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.59,
+          "upper": 35.75
         },
         "sqcand": "10002544015"
       },
@@ -26,11 +26,11 @@
         "partido": "REPUBLICANOS",
         "votos_atuais": 15595,
         "votos_projetados": 119791,
-        "pct_atual": 30.49,
-        "pct_projetado": 29,
+        "pct_atual": 33.01,
+        "pct_projetado": 30.37,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 27.35,
+          "upper": 33.38
         },
         "sqcand": "10002532492"
       },
@@ -40,11 +40,11 @@
         "partido": "PSB",
         "votos_atuais": 11519,
         "votos_projetados": 109051,
-        "pct_atual": 22.52,
-        "pct_projetado": 26.4,
+        "pct_atual": 24.38,
+        "pct_projetado": 27.64,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.71,
+          "upper": 30.57
         },
         "sqcand": "10002550719"
       },
@@ -55,11 +55,11 @@
         "destino": "sub_judice",
         "votos_atuais": 4451,
         "votos_projetados": 38368,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.49,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.89,
+          "upper": 8.1
         },
         "sqcand": "10002544107"
       },
@@ -84,11 +84,11 @@
         "partido": "AGIR",
         "votos_atuais": 1297,
         "votos_projetados": 11153,
-        "pct_atual": 2.54,
-        "pct_projetado": 2.7,
+        "pct_atual": 2.75,
+        "pct_projetado": 2.83,
         "ci95": {
-          "lower": 1.67,
-          "upper": 3.73
+          "lower": 1.75,
+          "upper": 3.9
         },
         "sqcand": "10002533539"
       }
@@ -156,7 +156,7 @@
   },
   "AL": {
     "uf": "AL",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -229,7 +229,7 @@
   },
   "AM": {
     "uf": "AM",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -240,11 +240,11 @@
         "partido": "PL",
         "votos_atuais": 71543,
         "votos_projetados": 595646,
-        "pct_atual": 29.99,
-        "pct_projetado": 31.2,
+        "pct_atual": 32.47,
+        "pct_projetado": 32.39,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.34,
+          "upper": 35.44
         },
         "sqcand": "40002541626"
       },
@@ -254,11 +254,11 @@
         "partido": "UNIÃO",
         "votos_atuais": 61314,
         "votos_projetados": 553645,
-        "pct_atual": 25.7,
-        "pct_projetado": 29,
+        "pct_atual": 27.83,
+        "pct_projetado": 30.11,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 27.11,
+          "upper": 33.1
         },
         "sqcand": "40002541741"
       },
@@ -268,11 +268,11 @@
         "partido": "PSD",
         "votos_atuais": 59221,
         "votos_projetados": 504008,
-        "pct_atual": 24.82,
-        "pct_projetado": 26.4,
+        "pct_atual": 26.88,
+        "pct_projetado": 27.41,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.5,
+          "upper": 30.31
         },
         "sqcand": "40002532272"
       },
@@ -283,11 +283,11 @@
         "destino": "sub_judice",
         "votos_atuais": 20760,
         "votos_projetados": 178970,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.44,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.85,
+          "upper": 8.03
         },
         "sqcand": "40002550776"
       },
@@ -312,11 +312,11 @@
         "partido": "MOBILIZA",
         "votos_atuais": 5003,
         "votos_projetados": 42079,
-        "pct_atual": 2.1,
-        "pct_projetado": 2.2,
+        "pct_atual": 2.27,
+        "pct_projetado": 2.29,
         "ci95": {
-          "lower": 1.27,
-          "upper": 3.14
+          "lower": 1.32,
+          "upper": 3.26
         },
         "sqcand": "40002551740"
       },
@@ -326,11 +326,11 @@
         "partido": "AVANTE",
         "votos_atuais": 2512,
         "votos_projetados": 25247,
-        "pct_atual": 1.05,
-        "pct_projetado": 1.32,
+        "pct_atual": 1.14,
+        "pct_projetado": 1.37,
         "ci95": {
-          "lower": 0.6,
-          "upper": 2.05
+          "lower": 0.62,
+          "upper": 2.13
         },
         "sqcand": "40002536086"
       }
@@ -404,7 +404,7 @@
   },
   "AP": {
     "uf": "AP",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -415,11 +415,11 @@
         "partido": "UNIÃO",
         "votos_atuais": 17290,
         "votos_projetados": 130257,
-        "pct_atual": 34.49,
-        "pct_projetado": 31.2,
+        "pct_atual": 37.34,
+        "pct_projetado": 33.26,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 30.13,
+          "upper": 36.4
         },
         "sqcand": "30002536311"
       },
@@ -429,11 +429,11 @@
         "partido": "PSD",
         "votos_atuais": 13917,
         "votos_projetados": 121073,
-        "pct_atual": 27.76,
-        "pct_projetado": 29,
+        "pct_atual": 30.06,
+        "pct_projetado": 30.92,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 27.85,
+          "upper": 33.99
         },
         "sqcand": "30002530014"
       },
@@ -443,11 +443,11 @@
         "partido": "PSTU",
         "votos_atuais": 10733,
         "votos_projetados": 110218,
-        "pct_atual": 21.41,
-        "pct_projetado": 26.4,
+        "pct_atual": 23.18,
+        "pct_projetado": 28.14,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 25.16,
+          "upper": 31.13
         },
         "sqcand": "30002536313"
       },
@@ -458,11 +458,11 @@
         "destino": "sub_judice",
         "votos_atuais": 4362,
         "votos_projetados": 37606,
-        "pct_atual": 8.7,
-        "pct_projetado": 7.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 7.68,
         "ci95": {
-          "lower": 5.56,
-          "upper": 8.84
+          "lower": 5.93,
+          "upper": 9.43
         },
         "sqcand": "30002551388"
       },
@@ -539,7 +539,7 @@
   },
   "BA": {
     "uf": "BA",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -550,11 +550,11 @@
         "partido": "UNIÃO",
         "votos_atuais": 563760,
         "votos_projetados": 4766906,
-        "pct_atual": 57.7,
-        "pct_projetado": 57.5,
+        "pct_atual": 62.47,
+        "pct_projetado": 59.9,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 56.63,
+          "upper": 63.17
         },
         "sqcand": "50002533190"
       },
@@ -564,11 +564,11 @@
         "partido": "PT",
         "votos_atuais": 221935,
         "votos_projetados": 1989665,
-        "pct_atual": 22.71,
-        "pct_projetado": 24,
+        "pct_atual": 24.59,
+        "pct_projetado": 25,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 22.18,
+          "upper": 27.82
         },
         "sqcand": "50002536314"
       },
@@ -579,11 +579,11 @@
         "destino": "sub_judice",
         "votos_atuais": 85024,
         "votos_projetados": 732962,
-        "pct_atual": 8.7,
-        "pct_projetado": 11,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.46,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.39,
+          "upper": 13.53
         },
         "sqcand": "50002532269"
       },
@@ -608,11 +608,11 @@
         "partido": "DC",
         "votos_atuais": 16647,
         "votos_projetados": 148040,
-        "pct_atual": 1.7,
-        "pct_projetado": 1.79,
+        "pct_atual": 1.84,
+        "pct_projetado": 1.86,
         "ci95": {
-          "lower": 0.94,
-          "upper": 2.63
+          "lower": 0.98,
+          "upper": 2.74
         },
         "sqcand": "50002535253"
       },
@@ -622,11 +622,11 @@
         "partido": "DC",
         "votos_atuais": 8998,
         "votos_projetados": 88824,
-        "pct_atual": 0.92,
-        "pct_projetado": 1.07,
+        "pct_atual": 1,
+        "pct_projetado": 1.12,
         "ci95": {
-          "lower": 0.42,
-          "upper": 1.73
+          "lower": 0.44,
+          "upper": 1.8
         },
         "sqcand": "50002536579"
       },
@@ -636,11 +636,11 @@
         "partido": "PCO",
         "votos_atuais": 6080,
         "votos_projetados": 53295,
-        "pct_atual": 0.62,
-        "pct_projetado": 0.64,
+        "pct_atual": 0.67,
+        "pct_projetado": 0.67,
         "ci95": {
           "lower": 0.14,
-          "upper": 1.15
+          "upper": 1.2
         },
         "sqcand": "50002552489"
       }
@@ -714,7 +714,7 @@
   },
   "CE": {
     "uf": "CE",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -725,11 +725,11 @@
         "partido": "PSDB",
         "votos_atuais": 211349,
         "votos_projetados": 1885570,
-        "pct_atual": 33.56,
-        "pct_projetado": 38.5,
+        "pct_atual": 36.33,
+        "pct_projetado": 39.59,
         "ci95": {
-          "lower": 35.41,
-          "upper": 41.59
+          "lower": 36.41,
+          "upper": 42.77
         },
         "sqcand": "60002531351"
       },
@@ -739,11 +739,11 @@
         "partido": "PT",
         "votos_atuais": 216284,
         "votos_projetados": 1733745,
-        "pct_atual": 34.34,
-        "pct_projetado": 35.4,
+        "pct_atual": 37.18,
+        "pct_projetado": 36.4,
         "ci95": {
-          "lower": 32.36,
-          "upper": 38.44
+          "lower": 33.28,
+          "upper": 39.53
         },
         "sqcand": "60002543969"
       },
@@ -753,11 +753,11 @@
         "partido": "NOVO",
         "votos_atuais": 82256,
         "votos_projetados": 764023,
-        "pct_atual": 13.06,
-        "pct_projetado": 15.6,
+        "pct_atual": 14.14,
+        "pct_projetado": 16.04,
         "ci95": {
-          "lower": 13.3,
-          "upper": 17.9
+          "lower": 13.67,
+          "upper": 18.41
         },
         "sqcand": "60002553922"
       },
@@ -768,11 +768,11 @@
         "destino": "sub_judice",
         "votos_atuais": 54804,
         "votos_projetados": 472449,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.63,
         "ci95": {
-          "lower": 3.18,
-          "upper": 5.82
+          "lower": 3.27,
+          "upper": 5.98
         },
         "sqcand": "60002533729"
       },
@@ -797,11 +797,11 @@
         "partido": "PCO",
         "votos_atuais": 8361,
         "votos_projetados": 81026,
-        "pct_atual": 1.33,
-        "pct_projetado": 1.65,
+        "pct_atual": 1.44,
+        "pct_projetado": 1.7,
         "ci95": {
-          "lower": 0.84,
-          "upper": 2.46
+          "lower": 0.87,
+          "upper": 2.53
         },
         "sqcand": "60002552320"
       },
@@ -811,11 +811,11 @@
         "partido": "MISSÃO",
         "votos_atuais": 5482,
         "votos_projetados": 48616,
-        "pct_atual": 0.87,
-        "pct_projetado": 0.99,
+        "pct_atual": 0.94,
+        "pct_projetado": 1.02,
         "ci95": {
-          "lower": 0.36,
-          "upper": 1.62
+          "lower": 0.37,
+          "upper": 1.67
         },
         "sqcand": "60002540417"
       },
@@ -825,11 +825,11 @@
         "partido": "DEMOCRATA",
         "votos_atuais": 3158,
         "votos_projetados": 29170,
-        "pct_atual": 0.5,
-        "pct_projetado": 0.6,
+        "pct_atual": 0.54,
+        "pct_projetado": 0.61,
         "ci95": {
           "lower": 0.11,
-          "upper": 1.08
+          "upper": 1.11
         },
         "sqcand": "60002552498"
       }
@@ -909,7 +909,7 @@
   },
   "DF": {
     "uf": "DF",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 37.1,
@@ -920,11 +920,11 @@
         "partido": "PT",
         "votos_atuais": 385583,
         "votos_projetados": 997509,
-        "pct_atual": 58.97,
-        "pct_projetado": 57.5,
+        "pct_atual": 63.84,
+        "pct_projetado": 59.9,
         "ci95": {
-          "lower": 56.02,
-          "upper": 58.98
+          "lower": 58.35,
+          "upper": 61.44
         },
         "sqcand": "70002552496"
       },
@@ -934,11 +934,11 @@
         "partido": "PSD",
         "votos_atuais": 140837,
         "votos_projetados": 416352,
-        "pct_atual": 21.54,
-        "pct_projetado": 24,
+        "pct_atual": 23.32,
+        "pct_projetado": 25,
         "ci95": {
-          "lower": 22.72,
-          "upper": 25.28
+          "lower": 23.67,
+          "upper": 26.33
         },
         "sqcand": "70002552586"
       },
@@ -949,11 +949,11 @@
         "destino": "sub_judice",
         "votos_atuais": 56903,
         "votos_projetados": 153378,
-        "pct_atual": 8.7,
-        "pct_projetado": 11,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.46,
         "ci95": {
-          "lower": 10.06,
-          "upper": 11.94
+          "lower": 10.48,
+          "upper": 12.43
         },
         "sqcand": "70002552965"
       },
@@ -978,11 +978,11 @@
         "partido": "PSB",
         "votos_atuais": 7917,
         "votos_projetados": 24987,
-        "pct_atual": 1.21,
-        "pct_projetado": 1.44,
+        "pct_atual": 1.31,
+        "pct_projetado": 1.5,
         "ci95": {
-          "lower": 1.08,
-          "upper": 1.8
+          "lower": 1.13,
+          "upper": 1.87
         },
         "sqcand": "70002551557"
       },
@@ -992,11 +992,11 @@
         "partido": "PP",
         "votos_atuais": 5563,
         "votos_projetados": 14992,
-        "pct_atual": 0.85,
-        "pct_projetado": 0.86,
+        "pct_atual": 0.92,
+        "pct_projetado": 0.9,
         "ci95": {
-          "lower": 0.59,
-          "upper": 1.14
+          "lower": 0.61,
+          "upper": 1.19
         },
         "sqcand": "70002553055"
       },
@@ -1006,11 +1006,11 @@
         "partido": "PRTB",
         "votos_atuais": 3138,
         "votos_projetados": 8995,
-        "pct_atual": 0.48,
-        "pct_projetado": 0.52,
+        "pct_atual": 0.52,
+        "pct_projetado": 0.54,
         "ci95": {
-          "lower": 0.3,
-          "upper": 0.73
+          "lower": 0.32,
+          "upper": 0.76
         },
         "sqcand": "70002553982"
       },
@@ -1020,11 +1020,11 @@
         "partido": "UP",
         "votos_atuais": 1973,
         "votos_projetados": 5397,
-        "pct_atual": 0.3,
-        "pct_projetado": 0.31,
+        "pct_atual": 0.33,
+        "pct_projetado": 0.32,
         "ci95": {
-          "lower": 0.14,
-          "upper": 0.48
+          "lower": 0.15,
+          "upper": 0.5
         },
         "sqcand": "70002537111"
       },
@@ -1034,11 +1034,11 @@
         "partido": "PSTU",
         "votos_atuais": 1080,
         "votos_projetados": 3238,
-        "pct_atual": 0.17,
+        "pct_atual": 0.18,
         "pct_projetado": 0.19,
         "ci95": {
           "lower": 0.04,
-          "upper": 0.34
+          "upper": 0.35
         },
         "sqcand": "70002535930"
       },
@@ -1048,11 +1048,11 @@
         "partido": "PCO",
         "votos_atuais": 574,
         "votos_projetados": 1943,
-        "pct_atual": 0.09,
-        "pct_projetado": 0.11,
+        "pct_atual": 0.1,
+        "pct_projetado": 0.12,
         "ci95": {
           "lower": 0,
-          "upper": 0.26
+          "upper": 0.27
         },
         "sqcand": "70002552341"
       },
@@ -1062,11 +1062,11 @@
         "partido": "AGIR",
         "votos_atuais": 404,
         "votos_projetados": 1166,
-        "pct_atual": 0.06,
+        "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
-          "upper": 0.22
+          "upper": 0.23
         },
         "sqcand": "70002551298"
       }
@@ -1164,7 +1164,7 @@
   },
   "ES": {
     "uf": "ES",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 32.2,
@@ -1175,11 +1175,11 @@
         "partido": "REPUBLICANOS",
         "votos_atuais": 255863,
         "votos_projetados": 799341,
-        "pct_atual": 35.77,
-        "pct_projetado": 38.5,
+        "pct_atual": 38.73,
+        "pct_projetado": 40.31,
         "ci95": {
-          "lower": 36.88,
-          "upper": 40.12
+          "lower": 38.61,
+          "upper": 42.01
         },
         "sqcand": "80002552682"
       },
@@ -1189,11 +1189,11 @@
         "partido": "PT",
         "votos_atuais": 230565,
         "votos_projetados": 734978,
-        "pct_atual": 32.24,
-        "pct_projetado": 35.4,
+        "pct_atual": 34.9,
+        "pct_projetado": 37.07,
         "ci95": {
-          "lower": 33.8,
-          "upper": 37
+          "lower": 35.4,
+          "upper": 38.74
         },
         "sqcand": "80002551833"
       },
@@ -1203,11 +1203,11 @@
         "partido": "MDB",
         "votos_atuais": 111916,
         "votos_projetados": 323889,
-        "pct_atual": 15.65,
-        "pct_projetado": 15.6,
+        "pct_atual": 16.94,
+        "pct_projetado": 16.34,
         "ci95": {
-          "lower": 14.39,
-          "upper": 16.81
+          "lower": 15.07,
+          "upper": 17.6
         },
         "sqcand": "80002552172"
       },
@@ -1218,11 +1218,11 @@
         "destino": "sub_judice",
         "votos_atuais": 62236,
         "votos_projetados": 193281,
-        "pct_atual": 8.7,
-        "pct_projetado": 6,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.28,
         "ci95": {
-          "lower": 5.21,
-          "upper": 6.79
+          "lower": 5.45,
+          "upper": 7.11
         },
         "sqcand": "80002541012"
       },
@@ -1299,7 +1299,7 @@
   },
   "GO": {
     "uf": "GO",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 30.9,
@@ -1310,11 +1310,11 @@
         "partido": "PL",
         "votos_atuais": 418299,
         "votos_projetados": 1292398,
-        "pct_atual": 36.77,
-        "pct_projetado": 38.5,
+        "pct_atual": 39.81,
+        "pct_projetado": 40,
         "ci95": {
-          "lower": 36.83,
-          "upper": 40.17
+          "lower": 38.26,
+          "upper": 41.74
         },
         "sqcand": "90002551791"
       },
@@ -1324,11 +1324,11 @@
         "partido": "PT",
         "votos_atuais": 357021,
         "votos_projetados": 1188334,
-        "pct_atual": 31.38,
-        "pct_projetado": 35.4,
+        "pct_atual": 33.98,
+        "pct_projetado": 36.78,
         "ci95": {
-          "lower": 33.76,
-          "upper": 37.04
+          "lower": 35.07,
+          "upper": 38.49
         },
         "sqcand": "90002545476"
       },
@@ -1338,11 +1338,11 @@
         "partido": "MDB",
         "votos_atuais": 152329,
         "votos_projetados": 523673,
-        "pct_atual": 13.39,
-        "pct_projetado": 15.6,
+        "pct_atual": 14.5,
+        "pct_projetado": 16.21,
         "ci95": {
-          "lower": 14.35,
-          "upper": 16.85
+          "lower": 14.91,
+          "upper": 17.5
         },
         "sqcand": "90002540993"
       },
@@ -1353,11 +1353,11 @@
         "destino": "sub_judice",
         "votos_atuais": 98991,
         "votos_projetados": 320358,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.68,
         "ci95": {
-          "lower": 3.79,
-          "upper": 5.21
+          "lower": 3.93,
+          "upper": 5.42
         },
         "sqcand": "90002543463"
       },
@@ -1382,11 +1382,11 @@
         "partido": "PCO",
         "votos_atuais": 24051,
         "votos_projetados": 75530,
-        "pct_atual": 2.11,
-        "pct_projetado": 2.25,
+        "pct_atual": 2.29,
+        "pct_projetado": 2.34,
         "ci95": {
-          "lower": 1.74,
-          "upper": 2.76
+          "lower": 1.81,
+          "upper": 2.87
         },
         "sqcand": "90002553733"
       }
@@ -1454,7 +1454,7 @@
   },
   "MA": {
     "uf": "MA",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -1465,11 +1465,11 @@
         "partido": "MDB",
         "votos_atuais": 128850,
         "votos_projetados": 1327565,
-        "pct_atual": 29.37,
-        "pct_projetado": 38.5,
+        "pct_atual": 31.8,
+        "pct_projetado": 40,
         "ci95": {
-          "lower": 35.41,
-          "upper": 41.59
+          "lower": 36.79,
+          "upper": 43.21
         },
         "sqcand": "100002543869"
       },
@@ -1479,11 +1479,11 @@
         "partido": "PT",
         "votos_atuais": 160510,
         "votos_projetados": 1220670,
-        "pct_atual": 36.59,
-        "pct_projetado": 35.4,
+        "pct_atual": 39.62,
+        "pct_projetado": 36.78,
         "ci95": {
-          "lower": 32.36,
-          "upper": 38.44
+          "lower": 33.62,
+          "upper": 39.93
         },
         "sqcand": "100002542556"
       },
@@ -1493,11 +1493,11 @@
         "partido": "PSD",
         "votos_atuais": 68305,
         "votos_projetados": 537923,
-        "pct_atual": 15.57,
-        "pct_projetado": 15.6,
+        "pct_atual": 16.86,
+        "pct_projetado": 16.21,
         "ci95": {
-          "lower": 13.3,
-          "upper": 17.9
+          "lower": 13.81,
+          "upper": 18.6
         },
         "sqcand": "100002545679"
       },
@@ -1508,11 +1508,11 @@
         "destino": "sub_judice",
         "votos_atuais": 38173,
         "votos_projetados": 329075,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.68,
         "ci95": {
-          "lower": 3.18,
-          "upper": 5.82
+          "lower": 3.31,
+          "upper": 6.04
         },
         "sqcand": "100002544073"
       },
@@ -1537,11 +1537,11 @@
         "partido": "MISSÃO",
         "votos_atuais": 9329,
         "votos_projetados": 77585,
-        "pct_atual": 2.13,
-        "pct_projetado": 2.25,
+        "pct_atual": 2.3,
+        "pct_projetado": 2.34,
         "ci95": {
-          "lower": 1.31,
-          "upper": 3.19
+          "lower": 1.36,
+          "upper": 3.32
         },
         "sqcand": "100002544076"
       }
@@ -1609,7 +1609,7 @@
   },
   "MG": {
     "uf": "MG",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 32.4,
@@ -1620,11 +1620,11 @@
         "partido": "PL",
         "votos_atuais": 1343310,
         "votos_projetados": 4160417,
-        "pct_atual": 34.5,
-        "pct_projetado": 38.5,
+        "pct_atual": 37.36,
+        "pct_projetado": 39.47,
         "ci95": {
-          "lower": 36.88,
-          "upper": 40.12
+          "lower": 37.82,
+          "upper": 41.13
         },
         "sqcand": "130002550834"
       },
@@ -1634,11 +1634,11 @@
         "partido": "PT",
         "votos_atuais": 1173173,
         "votos_projetados": 3825423,
-        "pct_atual": 30.13,
-        "pct_projetado": 35.4,
+        "pct_atual": 32.62,
+        "pct_projetado": 36.3,
         "ci95": {
-          "lower": 33.81,
-          "upper": 36.99
+          "lower": 34.67,
+          "upper": 37.93
         },
         "sqcand": "130002550464"
       },
@@ -1648,11 +1648,11 @@
         "partido": "REPUBLICANOS",
         "votos_atuais": 611050,
         "votos_projetados": 1685779,
-        "pct_atual": 15.69,
-        "pct_projetado": 15.6,
+        "pct_atual": 16.99,
+        "pct_projetado": 15.99,
         "ci95": {
-          "lower": 14.39,
-          "upper": 16.81
+          "lower": 14.76,
+          "upper": 17.23
         },
         "sqcand": "130002552296"
       },
@@ -1663,11 +1663,11 @@
         "destino": "sub_judice",
         "votos_atuais": 338799,
         "votos_projetados": 1045675,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.61,
         "ci95": {
-          "lower": 3.81,
-          "upper": 5.19
+          "lower": 3.91,
+          "upper": 5.32
         },
         "sqcand": "130002549557"
       },
@@ -1692,11 +1692,11 @@
         "partido": "PDT",
         "votos_atuais": 53002,
         "votos_projetados": 160092,
-        "pct_atual": 1.36,
-        "pct_projetado": 1.48,
+        "pct_atual": 1.47,
+        "pct_projetado": 1.52,
         "ci95": {
-          "lower": 1.08,
-          "upper": 1.88
+          "lower": 1.11,
+          "upper": 1.93
         },
         "sqcand": "130002539775"
       },
@@ -1706,11 +1706,11 @@
         "partido": "UP",
         "votos_atuais": 33943,
         "votos_projetados": 96055,
-        "pct_atual": 0.87,
-        "pct_projetado": 0.89,
+        "pct_atual": 0.94,
+        "pct_projetado": 0.91,
         "ci95": {
-          "lower": 0.58,
-          "upper": 1.2
+          "lower": 0.59,
+          "upper": 1.23
         },
         "sqcand": "130002547874"
       },
@@ -1720,11 +1720,11 @@
         "partido": "PCB",
         "votos_atuais": 18521,
         "votos_projetados": 57633,
-        "pct_atual": 0.48,
-        "pct_projetado": 0.53,
+        "pct_atual": 0.52,
+        "pct_projetado": 0.55,
         "ci95": {
-          "lower": 0.29,
-          "upper": 0.78
+          "lower": 0.3,
+          "upper": 0.79
         },
         "sqcand": "130002544122"
       },
@@ -1734,11 +1734,11 @@
         "partido": "PSTU",
         "votos_atuais": 11599,
         "votos_projetados": 34580,
-        "pct_atual": 0.3,
-        "pct_projetado": 0.32,
+        "pct_atual": 0.32,
+        "pct_projetado": 0.33,
         "ci95": {
-          "lower": 0.13,
-          "upper": 0.51
+          "lower": 0.14,
+          "upper": 0.52
         },
         "sqcand": "130002546802"
       },
@@ -1748,11 +1748,11 @@
         "partido": "PCO",
         "votos_atuais": 7985,
         "votos_projetados": 20748,
-        "pct_atual": 0.21,
-        "pct_projetado": 0.19,
+        "pct_atual": 0.22,
+        "pct_projetado": 0.2,
         "ci95": {
           "lower": 0.04,
-          "upper": 0.34
+          "upper": 0.35
         },
         "sqcand": "130002552308"
       },
@@ -1762,7 +1762,7 @@
         "partido": "MISSÃO",
         "votos_atuais": 4646,
         "votos_projetados": 12449,
-        "pct_atual": 0.12,
+        "pct_atual": 0.13,
         "pct_projetado": 0.12,
         "ci95": {
           "lower": 0,
@@ -1864,7 +1864,7 @@
   },
   "MS": {
     "uf": "MS",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 39.4,
@@ -1875,11 +1875,11 @@
         "partido": "NOVO",
         "votos_atuais": 172532,
         "votos_projetados": 434689,
-        "pct_atual": 29.06,
-        "pct_projetado": 31.2,
+        "pct_atual": 31.46,
+        "pct_projetado": 32.27,
         "ci95": {
-          "lower": 29.88,
-          "upper": 32.52
+          "lower": 30.9,
+          "upper": 33.63
         },
         "sqcand": "120002552191"
       },
@@ -1889,11 +1889,11 @@
         "partido": "PT",
         "votos_atuais": 162168,
         "votos_projetados": 404038,
-        "pct_atual": 27.31,
-        "pct_projetado": 29,
+        "pct_atual": 29.57,
+        "pct_projetado": 29.99,
         "ci95": {
-          "lower": 27.71,
-          "upper": 30.29
+          "lower": 28.65,
+          "upper": 31.33
         },
         "sqcand": "120002539834"
       },
@@ -1903,11 +1903,11 @@
         "partido": "PP",
         "votos_atuais": 141773,
         "votos_projetados": 367814,
-        "pct_atual": 23.88,
-        "pct_projetado": 26.4,
+        "pct_atual": 25.85,
+        "pct_projetado": 27.3,
         "ci95": {
-          "lower": 25.14,
-          "upper": 27.66
+          "lower": 26,
+          "upper": 28.6
         },
         "sqcand": "120002536582"
       },
@@ -1918,11 +1918,11 @@
         "destino": "sub_judice",
         "votos_atuais": 51668,
         "votos_projetados": 131137,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.41,
         "ci95": {
-          "lower": 5.51,
-          "upper": 6.89
+          "lower": 5.7,
+          "upper": 7.12
         },
         "sqcand": "120002532257"
       },
@@ -1947,11 +1947,11 @@
         "partido": "PCO",
         "votos_atuais": 10784,
         "votos_projetados": 27660,
-        "pct_atual": 1.82,
-        "pct_projetado": 1.99,
+        "pct_atual": 1.97,
+        "pct_projetado": 2.05,
         "ci95": {
-          "lower": 1.59,
-          "upper": 2.38
+          "lower": 1.64,
+          "upper": 2.46
         },
         "sqcand": "120002552201"
       },
@@ -1961,11 +1961,11 @@
         "partido": "AGIR",
         "votos_atuais": 5691,
         "votos_projetados": 16596,
-        "pct_atual": 0.96,
-        "pct_projetado": 1.19,
+        "pct_atual": 1.04,
+        "pct_projetado": 1.23,
         "ci95": {
-          "lower": 0.88,
-          "upper": 1.5
+          "lower": 0.91,
+          "upper": 1.55
         },
         "sqcand": "120002550198"
       },
@@ -1975,11 +1975,11 @@
         "partido": "PRD",
         "votos_atuais": 3789,
         "votos_projetados": 9957,
-        "pct_atual": 0.64,
-        "pct_projetado": 0.71,
+        "pct_atual": 0.69,
+        "pct_projetado": 0.74,
         "ci95": {
-          "lower": 0.47,
-          "upper": 0.95
+          "lower": 0.49,
+          "upper": 0.99
         },
         "sqcand": "120002552155"
       }
@@ -2059,7 +2059,7 @@
   },
   "MT": {
     "uf": "MT",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 27.5,
@@ -2070,11 +2070,11 @@
         "partido": "PL",
         "votos_atuais": 186049,
         "votos_projetados": 663220,
-        "pct_atual": 36.71,
-        "pct_projetado": 38.5,
+        "pct_atual": 39.75,
+        "pct_projetado": 40.31,
         "ci95": {
-          "lower": 36.68,
-          "upper": 40.32
+          "lower": 38.41,
+          "upper": 42.22
         },
         "sqcand": "110002551737"
       },
@@ -2084,11 +2084,11 @@
         "partido": "REPUBLICANOS",
         "votos_atuais": 169694,
         "votos_projetados": 609817,
-        "pct_atual": 33.48,
-        "pct_projetado": 35.4,
+        "pct_atual": 36.25,
+        "pct_projetado": 37.07,
         "ci95": {
-          "lower": 33.61,
-          "upper": 37.19
+          "lower": 35.2,
+          "upper": 38.94
         },
         "sqcand": "110002551480"
       },
@@ -2098,11 +2098,11 @@
         "partido": "PSD",
         "votos_atuais": 68243,
         "votos_projetados": 268733,
-        "pct_atual": 13.47,
-        "pct_projetado": 15.6,
+        "pct_atual": 14.58,
+        "pct_projetado": 16.34,
         "ci95": {
-          "lower": 14.24,
-          "upper": 16.96
+          "lower": 14.92,
+          "upper": 17.75
         },
         "sqcand": "110002544985"
       },
@@ -2113,11 +2113,11 @@
         "destino": "sub_judice",
         "votos_atuais": 44101,
         "votos_projetados": 160366,
-        "pct_atual": 8.7,
-        "pct_projetado": 6,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.28,
         "ci95": {
-          "lower": 5.11,
-          "upper": 6.89
+          "lower": 5.35,
+          "upper": 7.21
         },
         "sqcand": "110002553058"
       },
@@ -2194,7 +2194,7 @@
   },
   "PA": {
     "uf": "PA",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -2205,11 +2205,11 @@
         "partido": "PODE",
         "votos_atuais": 201829,
         "votos_projetados": 1684217,
-        "pct_atual": 37.18,
-        "pct_projetado": 38.5,
+        "pct_atual": 40.25,
+        "pct_projetado": 40.31,
         "ci95": {
-          "lower": 35.41,
-          "upper": 41.59
+          "lower": 37.08,
+          "upper": 43.55
         },
         "sqcand": "140002549930"
       },
@@ -2219,11 +2219,11 @@
         "partido": "MDB",
         "votos_atuais": 169431,
         "votos_projetados": 1548605,
-        "pct_atual": 31.21,
-        "pct_projetado": 35.4,
+        "pct_atual": 33.79,
+        "pct_projetado": 37.07,
         "ci95": {
-          "lower": 32.36,
-          "upper": 38.44
+          "lower": 33.89,
+          "upper": 40.25
         },
         "sqcand": "140002551598"
       },
@@ -2233,11 +2233,11 @@
         "partido": "PSOL",
         "votos_atuais": 82911,
         "votos_projetados": 682436,
-        "pct_atual": 15.27,
-        "pct_projetado": 15.6,
+        "pct_atual": 16.54,
+        "pct_projetado": 16.34,
         "ci95": {
-          "lower": 13.3,
-          "upper": 17.9
+          "lower": 13.92,
+          "upper": 18.75
         },
         "sqcand": "140002542386"
       },
@@ -2248,11 +2248,11 @@
         "destino": "sub_judice",
         "votos_atuais": 47240,
         "votos_projetados": 407243,
-        "pct_atual": 8.7,
-        "pct_projetado": 6,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.28,
         "ci95": {
-          "lower": 4.49,
-          "upper": 7.51
+          "lower": 4.7,
+          "upper": 7.86
         },
         "sqcand": "140002554108"
       },
@@ -2329,7 +2329,7 @@
   },
   "PB": {
     "uf": "PB",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -2340,11 +2340,11 @@
         "partido": "MDB",
         "votos_atuais": 89842,
         "votos_projetados": 707851,
-        "pct_atual": 31.98,
-        "pct_projetado": 31.2,
+        "pct_atual": 34.63,
+        "pct_projetado": 32.67,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.59,
+          "upper": 35.75
         },
         "sqcand": "150002544133"
       },
@@ -2354,11 +2354,11 @@
         "partido": "PL",
         "votos_atuais": 63877,
         "votos_projetados": 657938,
-        "pct_atual": 22.74,
-        "pct_projetado": 29,
+        "pct_atual": 24.62,
+        "pct_projetado": 30.37,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 27.35,
+          "upper": 33.38
         },
         "sqcand": "150002538692"
       },
@@ -2368,11 +2368,11 @@
         "partido": "PP",
         "votos_atuais": 74351,
         "votos_projetados": 598951,
-        "pct_atual": 26.47,
-        "pct_projetado": 26.4,
+        "pct_atual": 28.66,
+        "pct_projetado": 27.64,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.71,
+          "upper": 30.57
         },
         "sqcand": "150002551789"
       },
@@ -2383,11 +2383,11 @@
         "destino": "sub_judice",
         "votos_atuais": 24445,
         "votos_projetados": 210733,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.49,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.89,
+          "upper": 8.1
         },
         "sqcand": "150002540204"
       },
@@ -2412,11 +2412,11 @@
         "partido": "PCO",
         "votos_atuais": 6946,
         "votos_projetados": 61256,
-        "pct_atual": 2.47,
-        "pct_projetado": 2.7,
+        "pct_atual": 2.68,
+        "pct_projetado": 2.83,
         "ci95": {
-          "lower": 1.67,
-          "upper": 3.73
+          "lower": 1.75,
+          "upper": 3.9
         },
         "sqcand": "150002552603"
       }
@@ -2484,7 +2484,7 @@
   },
   "PE": {
     "uf": "PE",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -2495,11 +2495,11 @@
         "partido": "PSB",
         "votos_atuais": 379930,
         "votos_projetados": 3085503,
-        "pct_atual": 60.07,
-        "pct_projetado": 57.5,
+        "pct_atual": 65.04,
+        "pct_projetado": 59.9,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 56.63,
+          "upper": 63.17
         },
         "sqcand": "170002537230"
       },
@@ -2509,11 +2509,11 @@
         "partido": "PSD",
         "votos_atuais": 130129,
         "votos_projetados": 1287862,
-        "pct_atual": 20.58,
-        "pct_projetado": 24,
+        "pct_atual": 22.28,
+        "pct_projetado": 25,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 22.18,
+          "upper": 27.82
         },
         "sqcand": "170002537227"
       },
@@ -2524,11 +2524,11 @@
         "destino": "sub_judice",
         "votos_atuais": 55034,
         "votos_projetados": 474428,
-        "pct_atual": 8.7,
-        "pct_projetado": 11,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.46,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.39,
+          "upper": 13.53
         },
         "sqcand": "170002538097"
       },
@@ -2553,11 +2553,11 @@
         "partido": "PSTU",
         "votos_atuais": 8285,
         "votos_projetados": 86311,
-        "pct_atual": 1.31,
-        "pct_projetado": 1.61,
+        "pct_atual": 1.42,
+        "pct_projetado": 1.68,
         "ci95": {
-          "lower": 0.81,
-          "upper": 2.41
+          "lower": 0.84,
+          "upper": 2.51
         },
         "sqcand": "170002536575"
       },
@@ -2567,11 +2567,11 @@
         "partido": "PCO",
         "votos_atuais": 5393,
         "votos_projetados": 51787,
-        "pct_atual": 0.85,
-        "pct_projetado": 0.97,
+        "pct_atual": 0.92,
+        "pct_projetado": 1.01,
         "ci95": {
-          "lower": 0.34,
-          "upper": 1.59
+          "lower": 0.36,
+          "upper": 1.65
         },
         "sqcand": "170002552776"
       },
@@ -2581,11 +2581,11 @@
         "partido": "MISSÃO",
         "votos_atuais": 3581,
         "votos_projetados": 31072,
-        "pct_atual": 0.57,
-        "pct_projetado": 0.58,
+        "pct_atual": 0.61,
+        "pct_projetado": 0.6,
         "ci95": {
           "lower": 0.1,
-          "upper": 1.06
+          "upper": 1.1
         },
         "sqcand": "170002540337"
       },
@@ -2595,11 +2595,11 @@
         "partido": "DEMOCRATA",
         "votos_atuais": 1778,
         "votos_projetados": 18643,
-        "pct_atual": 0.28,
-        "pct_projetado": 0.35,
+        "pct_atual": 0.3,
+        "pct_projetado": 0.36,
         "ci95": {
           "lower": 0,
-          "upper": 0.72
+          "upper": 0.75
         },
         "sqcand": "170002541258"
       }
@@ -2679,7 +2679,7 @@
   },
   "PI": {
     "uf": "PI",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -2690,11 +2690,11 @@
         "partido": "PT",
         "votos_atuais": 82754,
         "votos_projetados": 708826,
-        "pct_atual": 34.9,
-        "pct_projetado": 38.5,
+        "pct_atual": 37.78,
+        "pct_projetado": 39.53,
         "ci95": {
-          "lower": 35.41,
-          "upper": 41.59
+          "lower": 36.36,
+          "upper": 42.7
         },
         "sqcand": "180002532987"
       },
@@ -2704,11 +2704,11 @@
         "partido": "PSDB",
         "votos_atuais": 75561,
         "votos_projetados": 651752,
-        "pct_atual": 31.86,
-        "pct_projetado": 35.4,
+        "pct_atual": 34.5,
+        "pct_projetado": 36.35,
         "ci95": {
-          "lower": 32.36,
-          "upper": 38.44
+          "lower": 33.23,
+          "upper": 39.46
         },
         "sqcand": "180002544216"
       },
@@ -2718,11 +2718,11 @@
         "partido": "PP",
         "votos_atuais": 32971,
         "votos_projetados": 287213,
-        "pct_atual": 13.9,
-        "pct_projetado": 15.6,
+        "pct_atual": 15.05,
+        "pct_projetado": 16.02,
         "ci95": {
-          "lower": 13.3,
-          "upper": 17.9
+          "lower": 13.65,
+          "upper": 18.38
         },
         "sqcand": "180002538530"
       },
@@ -2733,11 +2733,11 @@
         "destino": "sub_judice",
         "votos_atuais": 20636,
         "votos_projetados": 177900,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.62,
         "ci95": {
-          "lower": 3.18,
-          "upper": 5.82
+          "lower": 3.27,
+          "upper": 5.97
         },
         "sqcand": "180002549970"
       },
@@ -2762,11 +2762,11 @@
         "partido": "PSTU",
         "votos_atuais": 3210,
         "votos_projetados": 28747,
-        "pct_atual": 1.35,
-        "pct_projetado": 1.56,
+        "pct_atual": 1.47,
+        "pct_projetado": 1.6,
         "ci95": {
-          "lower": 0.77,
-          "upper": 2.35
+          "lower": 0.79,
+          "upper": 2.41
         },
         "sqcand": "180002537422"
       },
@@ -2776,11 +2776,11 @@
         "partido": "DC",
         "votos_atuais": 1884,
         "votos_projetados": 17248,
-        "pct_atual": 0.79,
-        "pct_projetado": 0.94,
+        "pct_atual": 0.86,
+        "pct_projetado": 0.96,
         "ci95": {
           "lower": 0.33,
-          "upper": 1.55
+          "upper": 1.59
         },
         "sqcand": "180002548565"
       },
@@ -2790,11 +2790,11 @@
         "partido": "PCO",
         "votos_atuais": 1288,
         "votos_projetados": 10349,
-        "pct_atual": 0.54,
-        "pct_projetado": 0.56,
+        "pct_atual": 0.59,
+        "pct_projetado": 0.58,
         "ci95": {
           "lower": 0.09,
-          "upper": 1.04
+          "upper": 1.06
         },
         "sqcand": "180002553722"
       },
@@ -2804,11 +2804,11 @@
         "partido": "DEMOCRATA",
         "votos_atuais": 733,
         "votos_projetados": 6209,
-        "pct_atual": 0.31,
-        "pct_projetado": 0.34,
+        "pct_atual": 0.33,
+        "pct_projetado": 0.35,
         "ci95": {
           "lower": 0,
-          "upper": 0.71
+          "upper": 0.72
         },
         "sqcand": "180002548388"
       }
@@ -2894,7 +2894,7 @@
   },
   "PR": {
     "uf": "PR",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 34.8,
@@ -2905,11 +2905,11 @@
         "partido": "PSD",
         "votos_atuais": 1266334,
         "votos_projetados": 3716386,
-        "pct_atual": 55.41,
-        "pct_projetado": 57.5,
+        "pct_atual": 60,
+        "pct_projetado": 59.9,
         "ci95": {
-          "lower": 55.94,
-          "upper": 59.06
+          "lower": 58.27,
+          "upper": 61.52
         },
         "sqcand": "160002549553"
       },
@@ -2919,11 +2919,11 @@
         "partido": "PL",
         "votos_atuais": 559840,
         "votos_projetados": 1551187,
-        "pct_atual": 24.5,
-        "pct_projetado": 24,
+        "pct_atual": 26.52,
+        "pct_projetado": 25,
         "ci95": {
-          "lower": 22.66,
-          "upper": 25.34
+          "lower": 23.6,
+          "upper": 26.4
         },
         "sqcand": "160002540833"
       },
@@ -2934,11 +2934,11 @@
         "destino": "sub_judice",
         "votos_atuais": 198859,
         "votos_projetados": 571433,
-        "pct_atual": 8.7,
-        "pct_projetado": 11,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.46,
         "ci95": {
-          "lower": 10.01,
-          "upper": 11.99
+          "lower": 10.43,
+          "upper": 12.48
         },
         "sqcand": "160002547666"
       },
@@ -2963,11 +2963,11 @@
         "partido": "PSTU",
         "votos_atuais": 45464,
         "votos_projetados": 115416,
-        "pct_atual": 1.99,
-        "pct_projetado": 1.79,
+        "pct_atual": 2.15,
+        "pct_projetado": 1.86,
         "ci95": {
-          "lower": 1.37,
-          "upper": 2.2
+          "lower": 1.43,
+          "upper": 2.29
         },
         "sqcand": "160002548010"
       },
@@ -2977,11 +2977,11 @@
         "partido": "MISSÃO",
         "votos_atuais": 24016,
         "votos_projetados": 69249,
-        "pct_atual": 1.05,
-        "pct_projetado": 1.07,
+        "pct_atual": 1.14,
+        "pct_projetado": 1.12,
         "ci95": {
-          "lower": 0.75,
-          "upper": 1.4
+          "lower": 0.78,
+          "upper": 1.45
         },
         "sqcand": "160002551353"
       },
@@ -2991,11 +2991,11 @@
         "partido": "MOBILIZA",
         "votos_atuais": 16184,
         "votos_projetados": 41550,
-        "pct_atual": 0.71,
-        "pct_projetado": 0.64,
+        "pct_atual": 0.77,
+        "pct_projetado": 0.67,
         "ci95": {
-          "lower": 0.39,
-          "upper": 0.89
+          "lower": 0.41,
+          "upper": 0.93
         },
         "sqcand": "160002547594"
       }
@@ -3069,7 +3069,7 @@
   },
   "RJ": {
     "uf": "RJ",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 30.7,
@@ -3080,11 +3080,11 @@
         "partido": "PL",
         "votos_atuais": 819361,
         "votos_projetados": 2738804,
-        "pct_atual": 28.22,
-        "pct_projetado": 31.2,
+        "pct_atual": 30.56,
+        "pct_projetado": 32.39,
         "ci95": {
-          "lower": 29.6,
-          "upper": 32.8
+          "lower": 30.73,
+          "upper": 34.05
         },
         "sqcand": "190002542887"
       },
@@ -3094,11 +3094,11 @@
         "partido": "NOVO",
         "votos_atuais": 754664,
         "votos_projetados": 2545683,
-        "pct_atual": 25.99,
-        "pct_projetado": 29,
+        "pct_atual": 28.14,
+        "pct_projetado": 30.11,
         "ci95": {
-          "lower": 27.43,
-          "upper": 30.57
+          "lower": 28.48,
+          "upper": 31.73
         },
         "sqcand": "190002537524"
       },
@@ -3108,11 +3108,11 @@
         "partido": "PSOL",
         "votos_atuais": 758478,
         "votos_projetados": 2317450,
-        "pct_atual": 26.13,
-        "pct_projetado": 26.4,
+        "pct_atual": 28.29,
+        "pct_projetado": 27.41,
         "ci95": {
-          "lower": 24.88,
-          "upper": 27.92
+          "lower": 25.83,
+          "upper": 28.99
         },
         "sqcand": "190002536162"
       },
@@ -3123,11 +3123,11 @@
         "destino": "sub_judice",
         "votos_atuais": 252634,
         "votos_projetados": 822911,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.44,
         "ci95": {
-          "lower": 5.37,
-          "upper": 7.03
+          "lower": 5.57,
+          "upper": 7.3
         },
         "sqcand": "190002547272"
       },
@@ -3152,11 +3152,11 @@
         "partido": "PCO",
         "votos_atuais": 62189,
         "votos_projetados": 193479,
-        "pct_atual": 2.14,
-        "pct_projetado": 2.2,
+        "pct_atual": 2.32,
+        "pct_projetado": 2.29,
         "ci95": {
-          "lower": 1.7,
-          "upper": 2.71
+          "lower": 1.76,
+          "upper": 2.81
         },
         "sqcand": "190002552513"
       },
@@ -3166,11 +3166,11 @@
         "partido": "MISSÃO",
         "votos_atuais": 34139,
         "votos_projetados": 116087,
-        "pct_atual": 1.18,
-        "pct_projetado": 1.32,
+        "pct_atual": 1.27,
+        "pct_projetado": 1.37,
         "ci95": {
-          "lower": 0.93,
-          "upper": 1.72
+          "lower": 0.96,
+          "upper": 1.78
         },
         "sqcand": "190002544120"
       }
@@ -3244,7 +3244,7 @@
   },
   "RN": {
     "uf": "RN",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -3255,11 +3255,11 @@
         "partido": "PL",
         "votos_atuais": 68516,
         "votos_projetados": 577805,
-        "pct_atual": 29.43,
-        "pct_projetado": 31.2,
+        "pct_atual": 31.86,
+        "pct_projetado": 32.21,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.17,
+          "upper": 35.24
         },
         "sqcand": "200002534442"
       },
@@ -3269,11 +3269,11 @@
         "partido": "PT",
         "votos_atuais": 60523,
         "votos_projetados": 537063,
-        "pct_atual": 25.99,
-        "pct_projetado": 29,
+        "pct_atual": 28.14,
+        "pct_projetado": 29.93,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 26.96,
+          "upper": 32.91
         },
         "sqcand": "200002534001"
       },
@@ -3283,11 +3283,11 @@
         "partido": "UNIÃO",
         "votos_atuais": 57607,
         "votos_projetados": 488912,
-        "pct_atual": 24.74,
-        "pct_projetado": 26.4,
+        "pct_atual": 26.79,
+        "pct_projetado": 27.25,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.36,
+          "upper": 30.14
         },
         "sqcand": "200002535255"
       },
@@ -3298,11 +3298,11 @@
         "destino": "sub_judice",
         "votos_atuais": 20262,
         "votos_projetados": 174670,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.4,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.82,
+          "upper": 7.98
         },
         "sqcand": "200002546757"
       },
@@ -3327,11 +3327,11 @@
         "partido": "PSTU",
         "votos_atuais": 3911,
         "votos_projetados": 34700,
-        "pct_atual": 1.68,
-        "pct_projetado": 1.87,
+        "pct_atual": 1.82,
+        "pct_projetado": 1.93,
         "ci95": {
-          "lower": 1.01,
-          "upper": 2.73
+          "lower": 1.05,
+          "upper": 2.82
         },
         "sqcand": "200002542481"
       },
@@ -3341,11 +3341,11 @@
         "partido": "DC",
         "votos_atuais": 2344,
         "votos_projetados": 20820,
-        "pct_atual": 1.01,
-        "pct_projetado": 1.12,
+        "pct_atual": 1.09,
+        "pct_projetado": 1.16,
         "ci95": {
-          "lower": 0.45,
-          "upper": 1.79
+          "lower": 0.47,
+          "upper": 1.85
         },
         "sqcand": "200002550223"
       },
@@ -3355,11 +3355,11 @@
         "partido": "PCO",
         "votos_atuais": 1059,
         "votos_projetados": 12492,
-        "pct_atual": 0.45,
-        "pct_projetado": 0.67,
+        "pct_atual": 0.49,
+        "pct_projetado": 0.7,
         "ci95": {
-          "lower": 0.15,
-          "upper": 1.19
+          "lower": 0.16,
+          "upper": 1.23
         },
         "sqcand": "200002553301"
       },
@@ -3369,11 +3369,11 @@
         "partido": "AGIR",
         "votos_atuais": 837,
         "votos_projetados": 7495,
-        "pct_atual": 0.36,
-        "pct_projetado": 0.4,
+        "pct_atual": 0.39,
+        "pct_projetado": 0.42,
         "ci95": {
           "lower": 0,
-          "upper": 0.81
+          "upper": 0.83
         },
         "sqcand": "200002546756"
       }
@@ -3459,7 +3459,7 @@
   },
   "RO": {
     "uf": "RO",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -3470,11 +3470,11 @@
         "partido": "PT",
         "votos_atuais": 56159,
         "votos_projetados": 511176,
-        "pct_atual": 53.6,
-        "pct_projetado": 57.5,
+        "pct_atual": 58.03,
+        "pct_projetado": 59.9,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 56.63,
+          "upper": 63.17
         },
         "sqcand": "220002542185"
       },
@@ -3484,11 +3484,11 @@
         "partido": "PL",
         "votos_atuais": 27821,
         "votos_projetados": 213360,
-        "pct_atual": 26.55,
-        "pct_projetado": 24,
+        "pct_atual": 28.75,
+        "pct_projetado": 25,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 22.18,
+          "upper": 27.82
         },
         "sqcand": "220002541939"
       },
@@ -3499,11 +3499,11 @@
         "destino": "sub_judice",
         "votos_atuais": 9117,
         "votos_projetados": 78599,
-        "pct_atual": 8.7,
-        "pct_projetado": 11,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.46,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.39,
+          "upper": 13.53
         },
         "sqcand": "220002542916"
       },
@@ -3528,11 +3528,11 @@
         "partido": "PSD",
         "votos_atuais": 2237,
         "votos_projetados": 19447,
-        "pct_atual": 2.14,
-        "pct_projetado": 2.19,
+        "pct_atual": 2.31,
+        "pct_projetado": 2.28,
         "ci95": {
-          "lower": 1.26,
-          "upper": 3.12
+          "lower": 1.31,
+          "upper": 3.25
         },
         "sqcand": "220002536806"
       },
@@ -3542,11 +3542,11 @@
         "partido": "PSB",
         "votos_atuais": 1439,
         "votos_projetados": 11668,
-        "pct_atual": 1.37,
-        "pct_projetado": 1.31,
+        "pct_atual": 1.49,
+        "pct_projetado": 1.37,
         "ci95": {
-          "lower": 0.59,
-          "upper": 2.04
+          "lower": 0.61,
+          "upper": 2.12
         },
         "sqcand": "220002550927"
       }
@@ -3614,7 +3614,7 @@
   },
   "RR": {
     "uf": "RR",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -3625,11 +3625,11 @@
         "partido": "PL",
         "votos_atuais": 19730,
         "votos_projetados": 168859,
-        "pct_atual": 57,
-        "pct_projetado": 57.5,
+        "pct_atual": 61.72,
+        "pct_projetado": 59.9,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 56.63,
+          "upper": 63.17
         },
         "sqcand": "230002549223"
       },
@@ -3639,11 +3639,11 @@
         "partido": "REPUBLICANOS",
         "votos_atuais": 8053,
         "votos_projetados": 70480,
-        "pct_atual": 23.27,
-        "pct_projetado": 24,
+        "pct_atual": 25.19,
+        "pct_projetado": 25,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 22.18,
+          "upper": 27.82
         },
         "sqcand": "230002551571"
       },
@@ -3654,11 +3654,11 @@
         "destino": "sub_judice",
         "votos_atuais": 3012,
         "votos_projetados": 25964,
-        "pct_atual": 8.7,
-        "pct_projetado": 11,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.46,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.39,
+          "upper": 13.53
         },
         "sqcand": "230002549294"
       },
@@ -3683,11 +3683,11 @@
         "partido": "PCO",
         "votos_atuais": 1173,
         "votos_projetados": 10278,
-        "pct_atual": 3.39,
-        "pct_projetado": 3.5,
+        "pct_atual": 3.67,
+        "pct_projetado": 3.65,
         "ci95": {
-          "lower": 2.33,
-          "upper": 4.67
+          "lower": 2.43,
+          "upper": 4.86
         },
         "sqcand": "230002553857"
       }
@@ -3749,7 +3749,7 @@
   },
   "RS": {
     "uf": "RS",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 27.5,
@@ -3760,11 +3760,11 @@
         "partido": "MDB",
         "votos_atuais": 946499,
         "votos_projetados": 3756560,
-        "pct_atual": 51.85,
-        "pct_projetado": 57.5,
+        "pct_atual": 56.14,
+        "pct_projetado": 59.9,
         "ci95": {
-          "lower": 55.65,
-          "upper": 59.35
+          "lower": 57.97,
+          "upper": 61.82
         },
         "sqcand": "210002542892"
       },
@@ -3774,11 +3774,11 @@
         "partido": "PL",
         "votos_atuais": 507193,
         "votos_projetados": 1567956,
-        "pct_atual": 27.79,
-        "pct_projetado": 24,
+        "pct_atual": 30.08,
+        "pct_projetado": 25,
         "ci95": {
-          "lower": 22.41,
-          "upper": 25.59
+          "lower": 23.34,
+          "upper": 26.66
         },
         "sqcand": "210002547857"
       },
@@ -3789,11 +3789,11 @@
         "destino": "sub_judice",
         "votos_atuais": 158843,
         "votos_projetados": 577611,
-        "pct_atual": 8.7,
-        "pct_projetado": 11,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.46,
         "ci95": {
-          "lower": 9.83,
-          "upper": 12.17
+          "lower": 10.24,
+          "upper": 12.68
         },
         "sqcand": "210002535802"
       },
@@ -3818,11 +3818,11 @@
         "partido": "UP",
         "votos_atuais": 43050,
         "votos_projetados": 142913,
-        "pct_atual": 2.36,
-        "pct_projetado": 2.19,
+        "pct_atual": 2.55,
+        "pct_projetado": 2.28,
         "ci95": {
-          "lower": 1.64,
-          "upper": 2.73
+          "lower": 1.71,
+          "upper": 2.85
         },
         "sqcand": "210002533355"
       },
@@ -3832,11 +3832,11 @@
         "partido": "PSTU",
         "votos_atuais": 30382,
         "votos_projetados": 85747,
-        "pct_atual": 1.66,
-        "pct_projetado": 1.31,
+        "pct_atual": 1.8,
+        "pct_projetado": 1.37,
         "ci95": {
-          "lower": 0.89,
-          "upper": 1.74
+          "lower": 0.92,
+          "upper": 1.81
         },
         "sqcand": "210002541367"
       }
@@ -3904,7 +3904,7 @@
   },
   "SC": {
     "uf": "SC",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 24,
@@ -3915,11 +3915,11 @@
         "partido": "PL",
         "votos_atuais": 598690,
         "votos_projetados": 2451072,
-        "pct_atual": 57.6,
-        "pct_projetado": 57.5,
+        "pct_atual": 62.36,
+        "pct_projetado": 59.9,
         "ci95": {
-          "lower": 55.48,
-          "upper": 59.52
+          "lower": 57.79,
+          "upper": 62
         },
         "sqcand": "240002537073"
       },
@@ -3929,11 +3929,11 @@
         "partido": "PSD",
         "votos_atuais": 231812,
         "votos_projetados": 1023056,
-        "pct_atual": 22.3,
-        "pct_projetado": 24,
+        "pct_atual": 24.15,
+        "pct_projetado": 25,
         "ci95": {
-          "lower": 22.25,
-          "upper": 25.75
+          "lower": 23.18,
+          "upper": 26.82
         },
         "sqcand": "240002551001"
       },
@@ -3944,11 +3944,11 @@
         "destino": "sub_judice",
         "votos_atuais": 90451,
         "votos_projetados": 376878,
-        "pct_atual": 8.7,
-        "pct_projetado": 11,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.46,
         "ci95": {
-          "lower": 9.72,
-          "upper": 12.28
+          "lower": 10.12,
+          "upper": 12.79
         },
         "sqcand": "240002548628"
       },
@@ -3973,11 +3973,11 @@
         "partido": "PCO",
         "votos_atuais": 25801,
         "votos_projetados": 93247,
-        "pct_atual": 2.48,
-        "pct_projetado": 2.19,
+        "pct_atual": 2.69,
+        "pct_projetado": 2.28,
         "ci95": {
-          "lower": 1.59,
-          "upper": 2.79
+          "lower": 1.66,
+          "upper": 2.9
         },
         "sqcand": "240002553718"
       },
@@ -3987,11 +3987,11 @@
         "partido": "PRD",
         "votos_atuais": 13294,
         "votos_projetados": 55948,
-        "pct_atual": 1.28,
-        "pct_projetado": 1.31,
+        "pct_atual": 1.38,
+        "pct_projetado": 1.37,
         "ci95": {
-          "lower": 0.85,
-          "upper": 1.78
+          "lower": 0.88,
+          "upper": 1.85
         },
         "sqcand": "240002552157"
       }
@@ -4059,7 +4059,7 @@
   },
   "SE": {
     "uf": "SE",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4070,11 +4070,11 @@
         "partido": "PL",
         "votos_atuais": 48142,
         "votos_projetados": 455821,
-        "pct_atual": 31.96,
-        "pct_projetado": 38.5,
+        "pct_atual": 34.61,
+        "pct_projetado": 40,
         "ci95": {
-          "lower": 35.41,
-          "upper": 41.59
+          "lower": 36.79,
+          "upper": 43.21
         },
         "sqcand": "260002549466"
       },
@@ -4084,11 +4084,11 @@
         "partido": "REPUBLICANOS",
         "votos_atuais": 51529,
         "votos_projetados": 419119,
-        "pct_atual": 34.21,
-        "pct_projetado": 35.4,
+        "pct_atual": 37.04,
+        "pct_projetado": 36.78,
         "ci95": {
-          "lower": 32.36,
-          "upper": 38.44
+          "lower": 33.62,
+          "upper": 39.93
         },
         "sqcand": "260002532010"
       },
@@ -4098,11 +4098,11 @@
         "partido": "PSD",
         "votos_atuais": 23041,
         "votos_projetados": 184696,
-        "pct_atual": 15.3,
-        "pct_projetado": 15.6,
+        "pct_atual": 16.56,
+        "pct_projetado": 16.21,
         "ci95": {
-          "lower": 13.3,
-          "upper": 17.9
+          "lower": 13.81,
+          "upper": 18.6
         },
         "sqcand": "260002542491"
       },
@@ -4113,11 +4113,11 @@
         "destino": "sub_judice",
         "votos_atuais": 13107,
         "votos_projetados": 112988,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.68,
         "ci95": {
-          "lower": 3.18,
-          "upper": 5.82
+          "lower": 3.31,
+          "upper": 6.04
         },
         "sqcand": "260002551712"
       },
@@ -4142,11 +4142,11 @@
         "partido": "DC",
         "votos_atuais": 3295,
         "votos_projetados": 26639,
-        "pct_atual": 2.19,
-        "pct_projetado": 2.25,
+        "pct_atual": 2.37,
+        "pct_projetado": 2.34,
         "ci95": {
-          "lower": 1.31,
-          "upper": 3.19
+          "lower": 1.36,
+          "upper": 3.32
         },
         "sqcand": "260002550683"
       }
@@ -4214,7 +4214,7 @@
   },
   "SP": {
     "uf": "SP",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 35,
@@ -4225,11 +4225,11 @@
         "partido": "PT",
         "votos_atuais": 2527899,
         "votos_projetados": 7430482,
-        "pct_atual": 28.15,
-        "pct_projetado": 31.2,
+        "pct_atual": 30.48,
+        "pct_projetado": 32.39,
         "ci95": {
-          "lower": 29.75,
-          "upper": 32.65
+          "lower": 30.88,
+          "upper": 33.9
         },
         "sqcand": "250002549705"
       },
@@ -4239,11 +4239,11 @@
         "partido": "REPUBLICANOS",
         "votos_atuais": 2490725,
         "votos_projetados": 6906538,
-        "pct_atual": 27.74,
-        "pct_projetado": 29,
+        "pct_atual": 30.03,
+        "pct_projetado": 30.11,
         "ci95": {
-          "lower": 27.58,
-          "upper": 30.42
+          "lower": 28.63,
+          "upper": 31.58
         },
         "sqcand": "250002541303"
       },
@@ -4253,11 +4253,11 @@
         "partido": "UP",
         "votos_atuais": 2197587,
         "votos_projetados": 6287331,
-        "pct_atual": 24.47,
-        "pct_projetado": 26.4,
+        "pct_atual": 26.5,
+        "pct_projetado": 27.41,
         "ci95": {
-          "lower": 25.02,
-          "upper": 27.78
+          "lower": 25.97,
+          "upper": 28.84
         },
         "sqcand": "250002544912"
       },
@@ -4268,11 +4268,11 @@
         "destino": "sub_judice",
         "votos_atuais": 781406,
         "votos_projetados": 2232589,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.44,
         "ci95": {
-          "lower": 5.44,
-          "upper": 6.96
+          "lower": 5.65,
+          "upper": 7.22
         },
         "sqcand": "250002550913"
       },
@@ -4297,11 +4297,11 @@
         "partido": "PCO",
         "votos_atuais": 185055,
         "votos_projetados": 524916,
-        "pct_atual": 2.06,
-        "pct_projetado": 2.2,
+        "pct_atual": 2.23,
+        "pct_projetado": 2.29,
         "ci95": {
-          "lower": 1.74,
-          "upper": 2.66
+          "lower": 1.81,
+          "upper": 2.77
         },
         "sqcand": "250002553062"
       },
@@ -4311,11 +4311,11 @@
         "partido": "AGIR",
         "votos_atuais": 111210,
         "votos_projetados": 314950,
-        "pct_atual": 1.24,
-        "pct_projetado": 1.32,
+        "pct_atual": 1.34,
+        "pct_projetado": 1.37,
         "ci95": {
-          "lower": 0.96,
-          "upper": 1.68
+          "lower": 1,
+          "upper": 1.74
         },
         "sqcand": "250002548080"
       }
@@ -4389,7 +4389,7 @@
   },
   "TO": {
     "uf": "TO",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 3,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4400,11 +4400,11 @@
         "partido": "PSD",
         "votos_atuais": 56495,
         "votos_projetados": 487722,
-        "pct_atual": 56.51,
-        "pct_projetado": 57.5,
+        "pct_atual": 61.19,
+        "pct_projetado": 59.9,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 56.63,
+          "upper": 63.17
         },
         "sqcand": "270002544494"
       },
@@ -4414,11 +4414,11 @@
         "partido": "UNIÃO",
         "votos_atuais": 23709,
         "votos_projetados": 203571,
-        "pct_atual": 23.72,
-        "pct_projetado": 24,
+        "pct_atual": 25.68,
+        "pct_projetado": 25,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 22.18,
+          "upper": 27.82
         },
         "sqcand": "270002544599"
       },
@@ -4429,11 +4429,11 @@
         "destino": "sub_judice",
         "votos_atuais": 8699,
         "votos_projetados": 74992,
-        "pct_atual": 8.7,
-        "pct_projetado": 11,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.46,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.39,
+          "upper": 13.53
         },
         "sqcand": "270002544544"
       },
@@ -4458,11 +4458,11 @@
         "partido": "PSOL",
         "votos_atuais": 2146,
         "votos_projetados": 18554,
-        "pct_atual": 2.15,
-        "pct_projetado": 2.19,
+        "pct_atual": 2.32,
+        "pct_projetado": 2.28,
         "ci95": {
-          "lower": 1.26,
-          "upper": 3.12
+          "lower": 1.31,
+          "upper": 3.25
         },
         "sqcand": "270002539187"
       },
@@ -4472,11 +4472,11 @@
         "partido": "DC",
         "votos_atuais": 1284,
         "votos_projetados": 11133,
-        "pct_atual": 1.28,
-        "pct_projetado": 1.31,
+        "pct_atual": 1.39,
+        "pct_projetado": 1.37,
         "ci95": {
-          "lower": 0.59,
-          "upper": 2.04
+          "lower": 0.61,
+          "upper": 2.12
         },
         "sqcand": "270002550458"
       }

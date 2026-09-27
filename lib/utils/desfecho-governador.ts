@@ -54,13 +54,18 @@
  * válidos, já passou de 50%. Nunca o contrário.
  *
  * **ADR-0053 / RF-213 (2026-09-27)** — candidatura de voto `"anulado"` não
- * disputa: nunca é "o 1º" nem "o 2º" aqui, nas duas bases, e o percentual
- * dela sai da régua dos 50% da contagem — `pct_lider > (100 − Σ pct_atual das
- * anuladas do corte) / 2`, a mesma base "válidos + sub judice" que o modelo
- * usa para `vai_a_2t`. Só as anuladas DENTRO de `top_candidatos` são
- * descontadas: uma anulada fora do corte fica na base, e o erro possível
- * continua sendo só o conservador. `"sub_judice"` e destino ausente competem e
- * ficam na base. Sem anulada no corte, a régua é o `> 50` de sempre.
+ * disputa: nunca é "o 1º" nem "o 2º" aqui, nas duas bases. `"sub_judice"` e
+ * destino ausente competem.
+ *
+ * 🔴 **Emenda "opção A" (dono, 2026-09-27, 2ª rodada)** — a régua da contagem
+ * VOLTOU a ser `pct_atual do 1º que compete > 50`, sem desconto nenhum. Com
+ * anulada na UF, o PRODUTOR passou a publicar o percentual de quem compete
+ * sobre os votos em disputa (`vvc − anuladas`), que é exatamente a base
+ * "válidos + sub judice" de `vai_a_2t`. A régua da 1ª rodada,
+ * `> (100 − Σ pct_atual das anuladas) / 2`, descontava a anulada uma SEGUNDA
+ * vez sobre um número que já não a contém — e chamaria de "eleito" um líder
+ * com 45% dos votos em disputa ao lado de uma anulada de 15% (45 > 42,5). O
+ * `pct_atual` da anulada, sobre `vvc`, não entra em conta nenhuma aqui.
  *
  * O líder da contagem sai de `ordenarTopCandidatosPorBase(…, "parcial")` —
  * NÃO de `top_candidatos[0]`, que é o líder por PROJEÇÃO. Desde o RF-190 o
@@ -76,7 +81,7 @@
 
 import { UF_NOMES } from "@/components/atoms/maps/_shared";
 import type { EdgeUfRow } from "@/lib/edge-config/types";
-import { compete, queCompetem } from "@/lib/utils/destino-voto";
+import { queCompetem } from "@/lib/utils/destino-voto";
 import { ordenarTopCandidatosPorBase, type TopCandidatoUf } from "@/lib/utils/lider-por-base";
 
 /** Os quatro desfechos possíveis de uma corrida estadual, em uma base. */
@@ -141,11 +146,10 @@ export function classificarContagem(row: LinhaContagem): DesfechoGovernador {
   if (ordem === null) return "aguardando";
   const lider = queCompetem(ordem)[0]?.pct_atual;
   if (lider === undefined) return "aguardando";
-  // ADR-0053 — a régua dos 50% sobre a base sem as anuladas do corte. Ver o
-  // cabeçalho. `pct_atual` das anuladas está definido: `ordemDaContagem` só
-  // devolve ordem quando TODO o corte tem `pct_atual`.
-  const anuladas = ordem.reduce((soma, tc) => soma + (compete(tc) ? 0 : (tc.pct_atual ?? 0)), 0);
-  return lider > (100 - anuladas) / 2 ? "eleito_1t" : "segundo_turno";
+  // Opção A — o `pct_atual` de quem compete já está nos votos em disputa; a
+  // régua é o `> 50` de sempre. Ver o cabeçalho: descontar a anulada aqui de
+  // novo é a régua da 1ª rodada, que dupla-desconta.
+  return lider > 50 ? "eleito_1t" : "segundo_turno";
 }
 
 /** Classificador da base pedida — sem ramo default: as duas bases são nomeadas. */

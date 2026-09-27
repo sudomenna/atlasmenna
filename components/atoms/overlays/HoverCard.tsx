@@ -74,6 +74,7 @@ import { Fragment } from "react";
 
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
+import { exibePercentual } from "@/lib/utils/destino-voto";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 
@@ -160,7 +161,8 @@ export interface HoverCardRow {
   /**
    * ADR-0053 / RF-213 — `"anulado"`/`"sub_judice"` ganham a etiqueta textual
    * ao lado do nome. Quem monta as linhas é quem ordena (anulada no fim, antes
-   * de "Outros").
+   * de "Outros"). `"anulado"` também apaga as células "Parcial" e "Proj." da
+   * linha (emenda "opção A"): só os votos.
    */
   destino?: EdgeDestinoVoto;
 }
@@ -525,6 +527,13 @@ export function HoverCard({
           const isOutros = row.kind === "outros";
           const isCalledWinner = !isOutros && row.winnerBackground != null;
           const ink = isCalledWinner ? row.winnerInk : undefined;
+          // 🔴 Emenda "opção A" ao ADR-0053 (dono, 2026-09-27) — a linha da
+          // candidatura anulada não mostra PERCENTUAL nenhum, nem o apurado
+          // nem o projetado: o dela é sobre `vvc`, o das demais sobre os votos
+          // em disputa. Fica só a coluna "Votos". O portão é AQUI, no átomo,
+          // e não em cada caller: são três balões (nacional, municipal,
+          // cartograma) e um quarto caller esqueceria.
+          const comPercentual = exibePercentual(row);
           return (
             <Fragment key={row.name}>
               {isCalledWinner ? (
@@ -694,7 +703,7 @@ export function HoverCard({
                   {fmtVotos(row.votos)}
                 </span>
               ) : null}
-              {parcial ? (
+              {parcial && comPercentual ? (
                 <span
                   data-testid="hover-card-parcial"
                   style={{
@@ -708,7 +717,7 @@ export function HoverCard({
                   {fmt(row.pct)}
                 </span>
               ) : null}
-              {proj ? (
+              {proj && comPercentual ? (
                 <span
                   data-testid="hover-card-proj"
                   style={{

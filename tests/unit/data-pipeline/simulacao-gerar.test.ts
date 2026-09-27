@@ -48,6 +48,7 @@ import {
   gerarSimulacao,
   type Manifest,
   type MunicipioBruto,
+  naBaseDaDisputa,
   PARAMETROS_VOTACAO,
   PERFIL_VELOCIDADE_2022,
   parseCli,
@@ -67,12 +68,16 @@ import type {
   EdgePayloadDeputado,
   EdgePayloadUf,
   EdgeUfCandidate,
+  EdgeUfRow,
   EdgeVotacao,
   EdgeVotacaoContagens,
 } from "@/lib/edge-config/types";
 
 /** Alias local só para encurtar as asserções de ordenação. */
 type EdgeUfCandidateLike = EdgeUfCandidate;
+
+/** ADR-0053 — quem disputa: tudo que não tem destino `"anulado"` (sub judice compete). */
+const compete = (c: { destino?: string }): boolean => c.destino !== "anulado";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Dados sintéticos — a camada hermética
@@ -400,11 +405,15 @@ describe("simulacao-gerar — invariantes de conteúdo", () => {
   });
 
   it("os percentuais de uma corrida somam 100 [mutação: escalar um share sem renormalizar]", () => {
-    const soma = s.presidente.national.candidatos.reduce((a, c) => a + c.pct_projetado, 0);
+    // Emenda ao ADR-0053 (27/09): a soma é de quem COMPETE — a anulada fica
+    // com o percentual sobre o `vvc`, fora da conta.
+    const soma = s.presidente.national.candidatos
+      .filter(compete)
+      .reduce((a, c) => a + c.pct_projetado, 0);
     expect(Math.abs(soma - 100)).toBeLessThanOrEqual(TOLERANCIA.pctSoma);
     for (const uf of UFS) {
       const p = s.senadorUf[uf] as EdgePayloadUf;
-      const sm = p.candidatos.reduce((a, c) => a + c.pct_projetado, 0);
+      const sm = p.candidatos.filter(compete).reduce((a, c) => a + c.pct_projetado, 0);
       expect(Math.abs(sm - 100)).toBeLessThanOrEqual(TOLERANCIA.pctSoma);
     }
   });
@@ -712,10 +721,13 @@ describe("simulacao-gerar — a votação presidencial por estado", () => {
         const p = g.presidenteUf[l.sigla] as EdgePayloadUf;
         expect(p.candidatos[0]?.id, `líder de ${l.sigla} (${cenario})`).toBe(l.lider);
         expect(p.candidatos[0]?.pct_projetado).toBe(l.top_candidatos[0]?.pct);
-        // Ordem canônica: `pct_projetado` desc.
-        for (let i = 1; i < p.candidatos.length; i++) {
-          expect((p.candidatos[i - 1] as EdgeUfCandidateLike).pct_projetado).toBeGreaterThanOrEqual(
-            (p.candidatos[i] as EdgeUfCandidateLike).pct_projetado,
+        // Ordem canônica: `pct_projetado` desc ENTRE QUEM COMPETE. A anulada
+        // fica no lugar do rank (perfil sobre o `vvc`), mas o percentual dela
+        // é de outro denominador (emenda ao ADR-0053, 27/09).
+        const disputa = p.candidatos.filter(compete);
+        for (let i = 1; i < disputa.length; i++) {
+          expect((disputa[i - 1] as EdgeUfCandidateLike).pct_projetado).toBeGreaterThanOrEqual(
+            (disputa[i] as EdgeUfCandidateLike).pct_projetado,
           );
         }
         const porApurado = [...p.candidatos].sort(
@@ -823,7 +835,7 @@ describe("simulacao-gerar — a votação presidencial por estado", () => {
         expect(c.ci95.lower).toBeLessThanOrEqual(c.pct_projetado);
         expect(c.pct_projetado).toBeLessThanOrEqual(c.ci95.upper);
       }
-      const soma = p.candidatos.reduce((a, c) => a + c.pct_projetado, 0);
+      const soma = p.candidatos.filter(compete).reduce((a, c) => a + c.pct_projetado, 0);
       expect(Math.abs(soma - 100)).toBeLessThanOrEqual(TOLERANCIA.pctSoma);
     }
   });
@@ -976,14 +988,21 @@ describe("simulacao-gerar — top_candidatos: votos e parcial por candidato (bal
     expect(conferidos).toBeGreaterThan(0);
   });
 
-  it("Governador/Senador: top_candidatos carrega votos_atuais/pct_atual IDÊNTICOS aos de national.candidatos (id único por UF nestes 2 cargos) [mutação: não copiar os dois campos em linhaUf / copiar de uma fonte paralela]", () => {
-    for (const payload of [s.governador, s.senador]) {
-      const natPorId = new Map(payload.national.candidatos.map((c) => [c.id, c] as const));
+  it("Governador/Senador: top_candidatos carrega votos_atuais/pct_atual IDÊNTICOS aos do resumo da UF (`governador-uf`/`senador-uf`) [mutação: não copiar os dois campos em linhaUf / copiar de uma fonte paralela]", () => {
+    // Até 27/09 a referência era `national.candidatos` (id único por UF nestes
+    // 2 cargos). A emenda ao ADR-0053 põe o `pct_atual` de quem compete sobre
+    // os votos em disputa DA UF, e o bloco nacional destes dois cargos não
+    // muda (decisão do dono) — a fonte certa passou a ser o resumo da UF.
+    for (const [payload, porUf] of [
+      [s.governador, s.governadorUf],
+      [s.senador, s.senadorUf],
+    ] as const) {
       let conferidos = 0;
       for (const linha of payload.por_uf) {
+        const daUf = new Map((porUf[linha.sigla]?.candidatos ?? []).map((c) => [c.id, c] as const));
         for (const tc of linha.top_candidatos) {
-          const nat = natPorId.get(tc.id);
-          expect(nat, `${linha.sigla} / id ${tc.id} sem par em national.candidatos`).toBeDefined();
+          const nat = daUf.get(tc.id);
+          expect(nat, `${linha.sigla} / id ${tc.id} sem par no resumo da UF`).toBeDefined();
           expect(tc.votos_atuais, `${linha.sigla} / ${tc.nome}`).toBe(nat?.votos_atuais);
           expect(tc.pct_atual, `${linha.sigla} / ${tc.nome}`).toBe(nat?.pct_atual);
           conferidos++;
@@ -1784,10 +1803,14 @@ describe("simulacao-gerar — spec 022, a corrida", () => {
     for (const c of s.ctxs) {
       const p = s.presidenteUf[c.uf];
       if (c.votosApurados <= 0) continue;
+      // Emenda ao ADR-0053 (27/09): quem compete sobre os votos em disputa;
+      // a anulada sobre o `vvc`.
+      const anuladas = (p?.candidatos ?? [])
+        .filter((x) => !compete(x))
+        .reduce((a, x) => a + x.votos_atuais, 0);
       for (const x of p?.candidatos ?? []) {
-        expect(
-          Math.abs((x.pct_atual ?? 0) - (100 * x.votos_atuais) / c.votosApurados),
-        ).toBeLessThan(0.006);
+        const base = compete(x) ? c.votosApurados - anuladas : c.votosApurados;
+        expect(Math.abs((x.pct_atual ?? 0) - (100 * x.votos_atuais) / base)).toBeLessThan(0.006);
       }
     }
   });
@@ -2444,16 +2467,18 @@ describe("simulacao-gerar — o Senado em votos, 2 por eleitor (spec 022 RF-210)
     for (const uf of UFS) {
       const p = s.senadorUf[uf];
       if (p === undefined || p.pct_apurado <= 0) continue;
-      const total = p.candidatos.reduce((a, x) => a + x.votos_atuais, 0);
-      const somaAtual = p.candidatos.reduce((a, x) => a + x.pct_atual, 0);
-      const somaProj = p.candidatos.reduce((a, x) => a + x.pct_projetado, 0);
+      // Emenda ao ADR-0053 (27/09): somas e base de quem COMPETE.
+      const disputa = p.candidatos.filter(compete);
+      const total = disputa.reduce((a, x) => a + x.votos_atuais, 0);
+      const somaAtual = disputa.reduce((a, x) => a + x.pct_atual, 0);
+      const somaProj = disputa.reduce((a, x) => a + x.pct_projetado, 0);
       expect(Math.abs(somaAtual - 100), `${uf} Σ pct_atual`).toBeLessThanOrEqual(
         TOLERANCIA.pctSoma,
       );
       expect(Math.abs(somaProj - 100), `${uf} Σ pct_projetado`).toBeLessThanOrEqual(
         TOLERANCIA.pctSoma,
       );
-      for (const cand of p.candidatos) {
+      for (const cand of disputa) {
         expect(cand.pct_atual, `${uf}/${cand.id}`).toBeCloseTo(
           (100 * cand.votos_atuais) / total,
           1,
@@ -2843,5 +2868,296 @@ describe("simulacao-gerar — ADR-0053 / RF-213: `destino` nas listas e líder q
         /anulável/,
       );
     });
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Emenda ao ADR-0053 (opção A, decisão do dono 2026-09-27) — percentuais sobre
+// os votos EM DISPUTA (`vvc − Σ anuladas`)
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe("simulacao-gerar — emenda ao ADR-0053: percentuais sobre os votos em disputa", () => {
+  type Saida = ReturnType<typeof gerar>;
+  type Item = {
+    id: number;
+    destino?: string;
+    votos_atuais?: number | null;
+    pct_atual?: number | null;
+    pct_projetado: number;
+  };
+  const s = gerar();
+  const votos = (x: { votos_atuais?: number | null }): number => x.votos_atuais ?? 0;
+
+  /** Toda lista INTEIRA publicada de uma abrangência (o nacional de Gov/Sen fica fora). */
+  function listasInteiras(x: Saida): Array<[string, readonly Item[]]> {
+    const out: Array<[string, readonly Item[]]> = [
+      ["presidente/national", x.presidente.national.candidatos],
+    ];
+    for (const [nome, porUf] of [
+      ["presidente-uf", x.presidenteUf],
+      ["governador-uf", x.governadorUf],
+      ["senador-uf", x.senadorUf],
+    ] as const) {
+      for (const [uf, p] of Object.entries(porUf)) out.push([`${nome}/${uf}`, p.candidatos]);
+    }
+    return out;
+  }
+
+  /** `[nome, linha de por_uf, lista inteira da UF]` nos três cargos. */
+  function linhas(x: Saida): Array<[string, EdgeUfRow, readonly Item[]]> {
+    const out: Array<[string, EdgeUfRow, readonly Item[]]> = [];
+    for (const [nome, nac, porUf] of [
+      ["presidente", x.presidente, x.presidenteUf],
+      ["governador", x.governador, x.governadorUf],
+      ["senador", x.senador, x.senadorUf],
+    ] as const) {
+      for (const l of nac.por_uf)
+        out.push([`${nome}/${l.sigla}`, l, porUf[l.sigla]?.candidatos ?? []]);
+    }
+    return out;
+  }
+
+  it("🔴 lista inteira: cada `pct_atual` de quem compete é votos ÷ (vvc − anuladas), a anulada fica sobre o vvc, e Σ de quem compete ≈ 100 [mutação: esquecer uma abrangência; sub judice tratada como anulada; anulada renormalizada junto]", () => {
+    let comAnulada = 0;
+    let comSubJudice = 0;
+    for (const [nome, lista] of listasInteiras(s)) {
+      const vvc = lista.reduce((a, x) => a + votos(x), 0);
+      const d = vvc - lista.filter((x) => !compete(x)).reduce((a, x) => a + votos(x), 0);
+      if (lista.some((x) => !compete(x)) && d > 0) comAnulada++;
+      if (lista.some((x) => x.destino === "sub_judice") && d > 0) comSubJudice++;
+      for (const x of lista) {
+        const base = compete(x) ? d : vvc;
+        const esperado = base > 0 ? (100 * votos(x)) / base : 0;
+        expect(Math.abs((x.pct_atual ?? 0) - esperado), `${nome}/${x.id}`).toBeLessThan(0.0051);
+      }
+      const disputa = lista.filter(compete);
+      const somaProj = disputa.reduce((a, x) => a + x.pct_projetado, 0);
+      expect(Math.abs(somaProj - 100), `${nome} Σ pct_projetado`).toBeLessThanOrEqual(
+        TOLERANCIA.pctSoma,
+      );
+      if (d > 0) {
+        const somaAt = disputa.reduce((a, x) => a + (x.pct_atual ?? 0), 0);
+        expect(Math.abs(somaAt - 100), `${nome} Σ pct_atual`).toBeLessThanOrEqual(
+          TOLERANCIA.pctSoma,
+        );
+      }
+    }
+    // Premissas: sem anulada e sem sub judice com voto, as asserções acima
+    // passariam com a regra antiga.
+    expect(comAnulada).toBeGreaterThan(50);
+    expect(comSubJudice).toBeGreaterThan(50);
+  });
+
+  it('🔴 `top_candidatos` + "Outros": quem compete fecha EXATO nos votos em disputa e ≈ 100 nos dois percentuais; a anulada da cauda não entra em "Outros" [mutação: "Outros" com a anulada; "Outros" sem renormalizar]', () => {
+    let anuladaNaCauda = 0;
+    let comOutros = 0;
+    for (const [nome, l, inteira] of linhas(s)) {
+      const anuladas = new Set(inteira.filter((x) => !compete(x)).map((x) => x.id));
+      const vvc = inteira.reduce((a, x) => a + votos(x), 0);
+      const d = vvc - inteira.filter((x) => anuladas.has(x.id)).reduce((a, x) => a + votos(x), 0);
+      const topQueCompete = l.top_candidatos.filter((t) => !anuladas.has(t.id));
+      if ([...anuladas].some((id) => !l.top_candidatos.some((t) => t.id === id))) anuladaNaCauda++;
+      if (l.outros !== undefined && anuladas.size > 0 && d > 0) comOutros++;
+      expect(
+        topQueCompete.reduce((a, t) => a + votos(t), 0) + (l.outros?.votos_atuais ?? 0),
+        `${nome}: votos de quem compete`,
+      ).toBe(d);
+      const somaProj = topQueCompete.reduce((a, t) => a + t.pct, 0) + (l.outros?.pct ?? 0);
+      expect(Math.abs(somaProj - 100), `${nome} Σ pct`).toBeLessThanOrEqual(TOLERANCIA.pctSoma);
+      if (d > 0) {
+        const somaAt =
+          topQueCompete.reduce((a, t) => a + (t.pct_atual ?? 0), 0) + (l.outros?.pct_atual ?? 0);
+        expect(Math.abs(somaAt - 100), `${nome} Σ pct_atual`).toBeLessThanOrEqual(
+          TOLERANCIA.pctSoma,
+        );
+      }
+    }
+    expect(
+      anuladaNaCauda,
+      "nenhuma anulada caiu na cauda — o filtro de Outros não é exercitado",
+    ).toBeGreaterThan(0);
+    expect(comOutros).toBeGreaterThan(0);
+  });
+
+  it("🔴 município: `margem_pp` é sobre os votos em disputa DELE [mutação: esquecer o município (margem sobre os apurados)]", () => {
+    let difere = 0;
+    for (const [nome, mapa, porUf] of [
+      ["pres", s.municipiosPresT1, s.presidenteUf],
+      ["gov", s.municipiosGovT1, s.governadorUf],
+      ["sen", s.municipiosSenT1, s.senadorUf],
+    ] as const) {
+      for (const [uf, blob] of Object.entries(mapa)) {
+        const anuladas = new Set(
+          (porUf[uf]?.candidatos ?? []).filter((x) => !compete(x)).map((x) => x.id),
+        );
+        for (const m of blob.municipios) {
+          const vs = Object.entries(m.votos_reportados).map(([id, v]) => [Number(id), v] as const);
+          const total = vs.reduce((a, [, v]) => a + v, 0);
+          const d = total - vs.reduce((a, [id, v]) => a + (anuladas.has(id) ? v : 0), 0);
+          const qc = vs
+            .filter(([id]) => !anuladas.has(id))
+            .map(([, v]) => v)
+            .sort((a, b) => b - a);
+          const dif = (qc[0] ?? 0) - (qc[1] ?? 0);
+          const esperado = d > 0 ? Math.round((100 * dif * 100) / d) / 100 : 0;
+          expect(m.lider.margem_pp, `${nome}/${uf}/${m.cod_ibge}`).toBeCloseTo(esperado, 9);
+          if (total > 0 && Math.round((100 * dif * 100) / total) / 100 !== esperado) difere++;
+        }
+      }
+    }
+    // Premissa: sem município em que as duas bases dão números diferentes, a
+    // mutação passaria.
+    expect(difere).toBeGreaterThan(20);
+  });
+
+  it("🔴 sem anulada PUBLICADA nada muda: numa UF a 0% o resumo de Governador/Senador é o bloco nacional, byte a byte [mutação: renormalizar sem anulada publicada]", () => {
+    const baixo = gerar({ pct: 0.08 });
+    const zeradas = baixo.ctxs.filter((c) => c.pctApurado === 0).map((c) => c.uf);
+    const apuradas = baixo.ctxs.filter((c) => c.pctApurado > 0).map((c) => c.uf);
+    expect(zeradas.length).toBeGreaterThan(0);
+    let mudaramNasApuradas = 0;
+    for (const [nac, porUf] of [
+      [baixo.governador, baixo.governadorUf],
+      [baixo.senador, baixo.senadorUf],
+    ] as const) {
+      const bruto = new Map(nac.national.candidatos.map((c) => [c.id, c] as const));
+      for (const uf of zeradas) {
+        for (const c of porUf[uf]?.candidatos ?? []) {
+          expect(c.pct_projetado, `${uf}/${c.id}`).toBe(bruto.get(c.id)?.pct_projetado);
+          expect(c.ci95.upper, `${uf}/${c.id}`).toBe(bruto.get(c.id)?.pct_projetado_upper);
+        }
+      }
+      for (const uf of apuradas) {
+        for (const c of porUf[uf]?.candidatos ?? []) {
+          if (c.pct_projetado !== bruto.get(c.id)?.pct_projetado) mudaramNasApuradas++;
+        }
+      }
+    }
+    // Premissa: a regra atua onde a destinação saiu — senão o teste não separa.
+    expect(mudaramNasApuradas).toBeGreaterThan(0);
+    expect(() => validarSaida(baixo)).not.toThrow();
+  });
+
+  it("`naBaseDaDisputa`: sub judice compete; sem anulada ou sem publicação devolve os MESMOS objetos; o IC segue contendo o ponto [mutação: sub judice fora; renormalizar sem anulada; fator só no ponto]", () => {
+    const item = (destino: "valido" | "anulado" | "sub_judice", s_: number, v: number) => ({
+      destino,
+      shareFinal: s_,
+      shareAtual: v / 10,
+      votosAtuais: v,
+      lower: s_ - 2,
+      upper: s_ + 2,
+    });
+    const tres = [item("valido", 50, 500), item("sub_judice", 30, 300), item("anulado", 20, 200)];
+    const pub = naBaseDaDisputa(tres, true);
+    expect(pub[2]).toBe(tres[2]); // a anulada sai intacta
+    expect(pub[0]?.shareAtual).toBeCloseTo(62.5, 9); // 500 / (1000 − 200)
+    expect(pub[1]?.shareAtual).toBeCloseTo(37.5, 9); // sub judice COMPETE
+    expect(pub[0]?.shareFinal).toBeCloseTo(62.5, 9); // 50 × 100/80
+    expect(pub[0]?.lower).toBeCloseTo(60, 9);
+    expect(pub[0]?.upper).toBeCloseTo(65, 9);
+    const semAnulada = [item("valido", 60, 600), item("sub_judice", 40, 400)];
+    const r1_ = naBaseDaDisputa(semAnulada, true);
+    expect(r1_[0]).toBe(semAnulada[0]);
+    expect(r1_[1]).toBe(semAnulada[1]);
+    const naoPublicado = naBaseDaDisputa(tres, false);
+    naoPublicado.forEach((x, i) => {
+      expect(x).toBe(tres[i]);
+    });
+  });
+
+  it("cenário `--anulado-lidera`: com a anulada em metade dos votos, quem compete ainda soma 100 [mutação: renormalizar pela soma de TODOS]", () => {
+    const sc = gerar({ anuladoLidera: "SP" });
+    for (const p of [sc.governadorUf.SP, sc.senadorUf.SP] as EdgePayloadUf[]) {
+      const anulada = p.candidatos.find((c) => !compete(c));
+      expect(anulada?.pct_atual ?? 0).toBeGreaterThan(40);
+      const soma = p.candidatos.filter(compete).reduce((a, c) => a + c.pct_atual, 0);
+      expect(Math.abs(soma - 100)).toBeLessThanOrEqual(TOLERANCIA.pctSoma);
+    }
+    expect(() => validarSaida(sc)).not.toThrow();
+  });
+
+  it('🔴 `validarSaida` reprova percentual sobre o vvc, "Outros" com a anulada e margem municipal sobre os apurados [mutação: a invariante (16) não existir]', () => {
+    const uf = s.ctxs.find((c) => c.pctApurado > 0)?.uf as string;
+    const com = (f: (x: Saida) => void): Saida => {
+      const x = gerar();
+      f(x);
+      return x;
+    };
+
+    const sobreVvc = com((x) => {
+      const p = x.presidenteUf[uf] as EdgePayloadUf;
+      const vvc = p.candidatos.reduce((a, c) => a + c.votos_atuais, 0);
+      const c = p.candidatos.find(compete);
+      if (c === undefined) throw new Error("sem quem compete");
+      c.pct_atual = Math.round((10000 * c.votos_atuais) / vvc) / 100;
+    });
+    expect(() => validarSaida(sobreVvc)).toThrow(/presidente-uf.json\/.*emenda ao ADR-0053/);
+
+    const anuladaNaDisputa = com((x) => {
+      const c = x.presidente.national.candidatos.find((y) => !compete(y));
+      if (c === undefined) throw new Error("sem anulada");
+      const vvc = x.presidente.national.candidatos.reduce((a, y) => a + y.votos_atuais, 0);
+      c.pct_atual = Math.round((10000 * c.votos_atuais) / (vvc - c.votos_atuais)) / 100;
+    });
+    expect(() => validarSaida(anuladaNaDisputa)).toThrow(/presidente.json\/national.*sobre o vvc/);
+
+    const outrosComAnulada = com((x) => {
+      for (const [, l, inteira] of linhas(x)) {
+        const fora = inteira.find(
+          (c) => !compete(c) && !l.top_candidatos.some((t) => t.id === c.id),
+        );
+        if (fora !== undefined && l.outros !== undefined) {
+          l.outros.votos_atuais = (l.outros.votos_atuais ?? 0) + votos(fora);
+          return;
+        }
+      }
+      throw new Error("nenhuma anulada na cauda");
+    });
+    expect(() => validarSaida(outrosComAnulada)).toThrow(/Outros/);
+
+    const margemSobreApurados = com((x) => {
+      const p = x.governadorUf[uf] as EdgePayloadUf;
+      const anulada = p.candidatos.find((c) => !compete(c))?.id as number;
+      const m = x.municipiosGovT1[uf]?.municipios.find(
+        (y) => (y.votos_reportados[anulada] ?? 0) > 0,
+      );
+      if (m === undefined) throw new Error("sem município com voto anulado");
+      // A margem que o gerador publicava até 27/09: mesma diferença de votos,
+      // sobre TODOS os apurados do município (anulada inclusa).
+      const total = Object.values(m.votos_reportados).reduce((a, v) => a + v, 0);
+      const d = total - (m.votos_reportados[anulada] ?? 0);
+      const antiga = Math.round((m.lider.margem_pp * d * 100) / total) / 100;
+      expect(antiga, "premissa: as duas bases dão margens diferentes").not.toBe(m.lider.margem_pp);
+      m.lider.margem_pp = antiga;
+    });
+    expect(() => validarSaida(margemSobreApurados)).toThrow(/margem_pp.*emenda ao ADR-0053/);
+  });
+
+  it("🔴 `margem_atual`/`margem_projetada` da UF são a diferença dos dois primeiros que competem, na base da disputa; `validarSaida` reprova a margem sobre o vvc [mutação: margem calculada sobre o vvc; a checagem de margem da (16) não existir]", () => {
+    let comAnulada = 0;
+    for (const [nome, l, inteira] of linhas(s)) {
+      const anuladas = new Set(inteira.filter((x) => !compete(x)).map((x) => x.id));
+      const [p1, p2] = l.top_candidatos.filter((t) => !anuladas.has(t.id));
+      if (p1 === undefined) continue;
+      if (anuladas.size > 0 && l.pct_apurado > 0) comAnulada++;
+      const at = l.pct_apurado > 0 ? (p1.pct_atual ?? 0) - (p2?.pct_atual ?? 0) : 0;
+      expect(Math.abs(l.margem_atual - at), `${nome} margem_atual`).toBeLessThan(0.0151);
+      expect(Math.abs(l.margem_projetada - (p1.pct - (p2?.pct ?? 0))), nome).toBeLessThan(0.0151);
+    }
+    expect(comAnulada).toBeGreaterThan(50);
+
+    // A margem que o gerador publicava antes: mesma diferença de votos, sobre o vvc.
+    const x = gerar();
+    const alvo = linhas(x).find(([, l, inteira]) => {
+      const vvc = inteira.reduce((a, c) => a + votos(c), 0);
+      const d = vvc - inteira.filter((c) => !compete(c)).reduce((a, c) => a + votos(c), 0);
+      return d < vvc && l.pct_apurado > 0 && Math.abs(l.margem_atual) > 1;
+    });
+    if (alvo === undefined) throw new Error("nenhuma UF apurada com anulada e margem > 1");
+    const [, l, inteira] = alvo;
+    const vvc = inteira.reduce((a, c) => a + votos(c), 0);
+    const d = vvc - inteira.filter((c) => !compete(c)).reduce((a, c) => a + votos(c), 0);
+    l.margem_atual = Math.round((l.margem_atual * d * 100) / vvc) / 100;
+    expect(() => validarSaida(x)).toThrow(/margem_atual.*emenda ao ADR-0053/);
   });
 });

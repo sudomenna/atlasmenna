@@ -234,7 +234,13 @@ import {
 } from "@/components/layout/UfPicker";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import type { ViewMode } from "@/lib/state/view-mode";
-import { compete, haAnulada, NOTA_ANULADAS } from "@/lib/utils/destino-voto";
+import {
+  compete,
+  exibePercentual,
+  haAnulada,
+  notaAnuladas,
+  votosDaAnulada,
+} from "@/lib/utils/destino-voto";
 import { formatPercent, formatPp } from "@/lib/utils/format";
 import { liderIdPorBase, ordenarTopCandidatosPorBase } from "@/lib/utils/lider-por-base";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -759,7 +765,20 @@ export function StateResultSheet({
                       font: "var(--type-figure-sm)",
                     }}
                   >
-                    {temParcialMedida(tc) ? (
+                    {!exibePercentual(tc) ? (
+                      // Emenda "opção A" ao ADR-0053 — a anulada não mostra
+                      // percentual (o dela é sobre outra base): só os votos,
+                      // ou nada quando o dado não os traz.
+                      votosDaAnulada(tc.votos_atuais) !== null ? (
+                        <span
+                          data-testid="state-sheet-cand-votos-anulada"
+                          className="flex-none"
+                          style={{ color: "var(--text-primary)", whiteSpace: "nowrap" }}
+                        >
+                          {votosDaAnulada(tc.votos_atuais)}
+                        </span>
+                      ) : null
+                    ) : temParcialMedida(tc) ? (
                       <span
                         data-testid="state-sheet-cand-parcial"
                         className="flex-none"
@@ -771,22 +790,24 @@ export function StateResultSheet({
                         </span>
                       </span>
                     ) : null}
-                    <span
-                      data-testid="state-sheet-cand-proj"
-                      className="flex-none"
-                      style={{ color: "var(--accent-text)", whiteSpace: "nowrap" }}
-                    >
-                      {formatPercent(tc.pct, 1)}
-                      {/* Abreviado na tela (a linha é estreita), por extenso
+                    {exibePercentual(tc) ? (
+                      <span
+                        data-testid="state-sheet-cand-proj"
+                        className="flex-none"
+                        style={{ color: "var(--accent-text)", whiteSpace: "nowrap" }}
+                      >
+                        {formatPercent(tc.pct, 1)}
+                        {/* Abreviado na tela (a linha é estreita), por extenso
                           para quem ouve. `aria-hidden` no desenhado + `sr-only`
                           com a palavra inteira, nunca os dois audíveis — senão o
                           leitor de tela ouve "proj. projeção". A parcial não
                           precisa do par: a palavra desenhada já é a inteira. */}
-                      <span aria-hidden="true" style={KICKER_NUMERO}>
-                        proj.
+                        <span aria-hidden="true" style={KICKER_NUMERO}>
+                          proj.
+                        </span>
+                        <span className="sr-only"> projeção</span>
                       </span>
-                      <span className="sr-only"> projeção</span>
-                    </span>
+                    ) : null}
                   </div>
                 </li>
               );
@@ -805,7 +826,7 @@ export function StateResultSheet({
                 textWrap: "pretty",
               }}
             >
-              {NOTA_ANULADAS}
+              {notaAnuladas(!multiVaga)}
             </p>
           ) : null}
 

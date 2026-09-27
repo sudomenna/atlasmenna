@@ -92,6 +92,7 @@ import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { PartyTag } from "@/components/atoms/data/PartyTag";
 import { candidateColor } from "@/components/blocks/_candidateColor";
 import type { EdgeCandidate, EdgeDestinoVoto } from "@/lib/edge-config/types";
+import { exibePercentual } from "@/lib/utils/destino-voto";
 import { formatPercent, formatVotes, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -187,6 +188,13 @@ export interface CandidateResultRowProps {
    * anulada troca o número da colocação por "—", porque não disputa
    * colocação nenhuma (ela está no fim da lista, e "13" ao lado de quem tem
    * 30% leria como um erro de ordem). Ausente ⇒ linha idêntica à de antes.
+   *
+   * 🔴 Emenda "opção A" (dono, 2026-09-27): a anulada NÃO mostra percentual
+   * nem barra. O percentual dela está em `vvc`; o das demais, nos votos em
+   * disputa — pôr os dois lado a lado (ou uma barra ao lado das outras) seria
+   * comparar números de bases diferentes. No lugar das duas colunas de
+   * percentual vão os VOTOS; sem voto no dado, a linha fica só com nome e
+   * etiqueta.
    */
   destino?: EdgeDestinoVoto;
 }
@@ -448,6 +456,44 @@ function deltaGlyph(delta: number): string {
   return delta > 0 ? " ▲" : " ▼";
 }
 
+/**
+ * As duas colunas numéricas de uma candidatura ANULADA (emenda "opção A"): os
+ * votos, na coluna do parcial, e a coluna da projeção VAZIA — ela precisa
+ * existir para a grade de quatro faixas não mudar de forma na visão Projeção
+ * (ver `--linha-faixas`). Sem barra: ver a docstring de
+ * {@link CandidateResultRowProps.destino}. Sem voto no dado, a coluna fica
+ * vazia também — nunca "0 votos" nem "—".
+ *
+ * Sem `data-view-cell`/`data-view-only` na coluna dos votos: voto contado não
+ * é de base nenhuma, e ele tem de aparecer nas duas visões.
+ */
+function LinhaSemPercentual({
+  votos,
+  kit,
+  numeroStyle,
+}: {
+  votos: number | null | undefined;
+  kit: boolean;
+  numeroStyle: CSSProperties;
+}) {
+  const temVotos = typeof votos === "number" && Number.isFinite(votos) && votos >= 0;
+  return (
+    <>
+      <div className="text-right" data-testid="candidate-result-votos-anulada">
+        {temVotos ? (
+          <>
+            <div style={{ ...numeroStyle, color: "var(--text-primary)" }}>
+              {kit ? formatVotes(votos) : formatVotesCompact(votos)}
+            </div>
+            <div style={{ ...KICKER, color: "var(--text-muted)", marginTop: 3 }}>votos</div>
+          </>
+        ) : null}
+      </div>
+      <div data-view-only="proj" aria-hidden="true" />
+    </>
+  );
+}
+
 export function CandidateResultRow({
   rank,
   rankProj,
@@ -468,6 +514,9 @@ export function CandidateResultRow({
   const projLabel = formatPercent(projetado, 1);
   const glyph = deltaGlyph(projetado - atual);
   const kit = variant === "kit";
+  // Emenda "opção A" — ver a docstring de `destino`. Um booleano só, lido por
+  // todos os pontos que desenham percentual (as duas colunas e a barra).
+  const semPercentual = !exibePercentual({ destino });
   // O percentual de cada base, endereçável pelo nome dela. Os preenchimentos e
   // os traços leem daqui — é o que garante que "a barra desenha X" e "o traço
   // marca o oposto de X" continuem falando dos mesmos dois números.
@@ -605,7 +654,7 @@ export function CandidateResultRow({
               </span>
             )}
           </div>
-          {votos != null && !compact ? (
+          {votos != null && !compact && !semPercentual ? (
             <div style={{ font: "var(--type-data)", color: "var(--text-muted)", marginTop: 2 }}>
               {kit ? formatVotes(votos) : formatVotesCompact(votos)} votos
             </div>
@@ -613,37 +662,45 @@ export function CandidateResultRow({
         </div>
       </div>
 
-      {/* Parcial. `data-view-cell` é lido pela cascata do shell — o número
+      {semPercentual ? (
+        <LinhaSemPercentual votos={votos} kit={kit} numeroStyle={numeroStyle} />
+      ) : (
+        <>
+          {/* Parcial. `data-view-cell` é lido pela cascata do shell — o número
           continua no DOM e visível nas duas bases; só a ênfase muda. */}
-      <div className="text-right" data-view-cell="parcial">
-        {/* As cores passam por `--cell-ink`/`--cell-kicker` em vez de irem
+          <div className="text-right" data-view-cell="parcial">
+            {/* As cores passam por `--cell-ink`/`--cell-kicker` em vez de irem
             diretas no `style`: é o que permite à cascata do shell recuar a
             coluna inativa TROCANDO A COR, com contraste medido. Recuar por
             `opacity` (a primeira tentativa, 2026-09-08) compõe com a cor do
             filho e derrubou o rótulo para 2,27:1 — o axe pegou em 16 nós. */}
-        <div style={{ ...numeroStyle, color: "var(--cell-ink, var(--text-primary))" }}>
-          {atualLabel}
-        </div>
-        <div style={{ ...KICKER, color: "var(--cell-kicker, var(--text-muted))", marginTop: 3 }}>
-          parcial
-        </div>
-      </div>
+            <div style={{ ...numeroStyle, color: "var(--cell-ink, var(--text-primary))" }}>
+              {atualLabel}
+            </div>
+            <div
+              style={{ ...KICKER, color: "var(--cell-kicker, var(--text-muted))", marginTop: 3 }}
+            >
+              parcial
+            </div>
+          </div>
 
-      {/* 🔴 `data-view-only`, e não `data-view-cell`: na base parcial esta
+          {/* 🔴 `data-view-only`, e não `data-view-cell`: na base parcial esta
           coluna inteira sai do DOM (decisão do dono, 2026-09-20, 2ª rodada).
           `data-view-cell` só recuava a cor, mantendo o número na árvore de
           acessibilidade — e um leitor de tela anunciaria, na visão Parcial, um
           número que a tela não mostra. */}
-      <div className="text-right" data-view-only="proj" style={{ minWidth: "3.5rem" }}>
-        <div style={{ ...numeroStyle, color: "var(--cell-ink, var(--accent-text))" }}>
-          {projLabel}
-        </div>
-        <div style={{ ...KICKER, color: "var(--cell-kicker, var(--accent-text))", marginTop: 3 }}>
-          proj.{glyph}
-        </div>
-      </div>
+          <div className="text-right" data-view-only="proj" style={{ minWidth: "3.5rem" }}>
+            <div style={{ ...numeroStyle, color: "var(--cell-ink, var(--accent-text))" }}>
+              {projLabel}
+            </div>
+            <div
+              style={{ ...KICKER, color: "var(--cell-kicker, var(--accent-text))", marginTop: 3 }}
+            >
+              proj.{glyph}
+            </div>
+          </div>
 
-      {/* Barra: UM preenchimento, sempre o apurado, nas duas bases; e UM
+          {/* Barra: UM preenchimento, sempre o apurado, nas duas bases; e UM
           traço, sempre a projeção, exclusivo da visão de Projeção via
           `data-view-only`. Ver a tabela no topo do arquivo. `aria-hidden`
           porque o mesmo dado já está nos dois números acima, em texto — uma
@@ -667,67 +724,69 @@ export function CandidateResultRow({
           {@link BARRA_ALTURA_PX} de antes e o traço é `position: absolute`,
           fora do fluxo — a aritmética documentada em {@link AVATAR_LINHA_PX}
           (16 + 1 + 26 + 8 + 8 = 59px) continua exata. */}
-      <div
-        aria-hidden="true"
-        data-testid="result-bar"
-        style={{
-          gridColumn: "2 / -1",
-          position: "relative",
-          height: BARRA_ALTURA_PX,
-        }}
-      >
-        <div
-          data-testid="result-bar-clip"
-          style={{
-            position: "absolute",
-            inset: 0,
-            overflow: "hidden",
-            borderRadius: "var(--radius-xs)",
-            background: "var(--surface-sunken)",
-          }}
-        >
-          {/* 🔴 UM preenchimento, e ele é o APURADO — nas duas bases.
+          <div
+            aria-hidden="true"
+            data-testid="result-bar"
+            style={{
+              gridColumn: "2 / -1",
+              position: "relative",
+              height: BARRA_ALTURA_PX,
+            }}
+          >
+            <div
+              data-testid="result-bar-clip"
+              style={{
+                position: "absolute",
+                inset: 0,
+                overflow: "hidden",
+                borderRadius: "var(--radius-xs)",
+                background: "var(--surface-sunken)",
+              }}
+            >
+              {/* 🔴 UM preenchimento, e ele é o APURADO — nas duas bases.
               Eram dois, um por base, até 2026-09-20 (2ª rodada). Ver a tabela
               no topo do arquivo: é isto que torna o defeito do traço
               coincidente com a ponta da barra inalcançável, em vez de
               corrigido por regra. De quebra é a forma do kit
               (`CandidateRow.jsx:29-31`), que sempre teve um preenchimento só. */}
-          <div
-            data-testid="result-bar-fill"
-            data-marca="parcial"
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: `${atual}%`,
-              background: cor,
-            }}
-          />
-        </div>
-        {/* 🔴 Os DOIS traços são irmãos do recorte, nunca filhos — é o que faz
+              <div
+                data-testid="result-bar-fill"
+                data-marca="parcial"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: `${atual}%`,
+                  background: cor,
+                }}
+              />
+            </div>
+            {/* 🔴 Os DOIS traços são irmãos do recorte, nunca filhos — é o que faz
             a sobra de {@link MARCADOR_SOBRA_PX} chegar ao vidro, e a inversão
             depende dela para ser legível (a tabela de contraste está lá).
             {@link MARCADOR_LARGURA_PX} explica o teto no `left`. */}
-        {marcadorVisivel(projetado) ? (
-          <div
-            data-testid="result-bar-marker"
-            // Só na visão de Projeção. Na Parcial não há traço nenhum — a
-            // barra do apurado fica sozinha (decisão do dono, 2026-09-20).
-            data-view-only="proj"
-            // Nomeia, no próprio DOM, o que o traço marca. Sem ele um teste só
-            // distinguiria traço de preenchimento pelo número no `left`, que
-            // empata no dia em que `atual === projetado`.
-            data-marca="proj"
-            style={{
-              position: "absolute",
-              top: -MARCADOR_SOBRA_PX,
-              bottom: -MARCADOR_SOBRA_PX,
-              left: `min(${projetado}%, calc(100% - ${MARCADOR_LARGURA_PX}px))`,
-              width: MARCADOR_LARGURA_PX,
-              background: "var(--accent-strong)",
-            }}
-          />
-        ) : null}
-      </div>
+            {marcadorVisivel(projetado) ? (
+              <div
+                data-testid="result-bar-marker"
+                // Só na visão de Projeção. Na Parcial não há traço nenhum — a
+                // barra do apurado fica sozinha (decisão do dono, 2026-09-20).
+                data-view-only="proj"
+                // Nomeia, no próprio DOM, o que o traço marca. Sem ele um teste só
+                // distinguiria traço de preenchimento pelo número no `left`, que
+                // empata no dia em que `atual === projetado`.
+                data-marca="proj"
+                style={{
+                  position: "absolute",
+                  top: -MARCADOR_SOBRA_PX,
+                  bottom: -MARCADOR_SOBRA_PX,
+                  left: `min(${projetado}%, calc(100% - ${MARCADOR_LARGURA_PX}px))`,
+                  width: MARCADOR_LARGURA_PX,
+                  background: "var(--accent-strong)",
+                }}
+              />
+            ) : null}
+          </div>
+        </>
+      )}
     </div>
   );
 }

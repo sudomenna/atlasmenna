@@ -193,6 +193,25 @@ function mkPainel(linhas: readonly Linha[]): ResultPanelCandidate[] {
   }));
 }
 
+/**
+ * Emenda "opção A" ao ADR-0053 (dono, 2026-09-27): com anulada na UF, o
+ * produtor publica o percentual de quem COMPETE sobre os votos em disputa
+ * (`vvc − anuladas`); o da anulada segue sobre `vvc`. Esta função leva uma
+ * fixture "tudo sobre `vvc`" ao formato que o produtor passa a gravar — é o
+ * que os testes de régua (desfecho pela contagem) precisam, porque a régua
+ * voltou a ser `> 50` sobre esse número.
+ */
+function opcaoA(linhas: readonly Linha[]): Linha[] {
+  const disputa = linhas.filter((l) => l.destino !== "anulado");
+  const sPct = disputa.reduce((s, l) => s + l.pct, 0);
+  const sAtual = disputa.reduce((s, l) => s + l.atual, 0);
+  return linhas.map((l) =>
+    l.destino === "anulado"
+      ? l
+      : { ...l, pct: (l.pct / sPct) * 100, atual: (l.atual / sAtual) * 100 },
+  );
+}
+
 const ROW = mkRow(BASE, 11, 20);
 const ROW_SEM = mkRow(SEM_DESTINO, 10, 5);
 const ROW_JUDICE = mkRow(JUDICE_NO_TOPO, 12, 25);
@@ -386,12 +405,17 @@ describe("ADR-0053 — anulada no topo: todas as superfícies apontam para o lí
     expect(margemSegundaVaga(ROW)).toBe(10);
   });
 
+  // 🔴 ALTERADO na opção A: a fixture passa pelo formato que o produtor grava
+  // (percentuais de quem compete sobre os votos em disputa). VALIDA tem 33 de
+  // 54 em disputa = 61,1% > 50 ⇒ eleito. Antes a régua descontava a anulada
+  // aqui (`> (100 − 42) / 2`), o que hoje dupla-desconta — ver o caso 45 × 42,5
+  // em `anulada-listas.test.tsx`.
   it("desfecho de Governador (contagem): eleito no 1º turno, e o partido creditado é o PT", () => {
-    // 33 > (100 − 42) / 2 = 29 ⇒ fecha no 1º turno pela base sem a anulada.
-    // Sem a régua nova, 33 > 50 é falso ⇒ "segundo_turno". Sem o filtro de
-    // líder, a ANULA (42) seria "o 1º" e o partido creditado, NOVO.
-    expect(classificarContagem(ROW)).toBe("eleito_1t");
-    const porPartido = agregarPorPartido([ROW], "contagem");
+    const row = mkRow(opcaoA(BASE), 11, 20);
+    expect(classificarContagem(row)).toBe("eleito_1t");
+    // Sem o filtro de líder, a ANULA (42, sobre `vvc`) seria "o 1º" e o
+    // partido creditado, NOVO.
+    const porPartido = agregarPorPartido([row], "contagem");
     expect(porPartido).toEqual([{ partido: "PT", eleitos: 1, segundo_turno: 0 }]);
   });
 
@@ -418,9 +442,16 @@ describe("ADR-0053 — anulada no topo: todas as superfícies apontam para o lí
     const margem = doc.querySelector('[data-testid="result-margem-proj"]')?.textContent ?? "";
     expect(margem).toContain("Margem VALIDA");
     expect(margem).toContain("20,0");
+    // Opção A: a nota é a do dono, e a linha da anulada não tem percentual
+    // nenhum — só os votos (42.000).
     expect(doc.querySelector('[data-testid="result-nota-anuladas"]')?.textContent).toContain(
-      "não contam para definir quem lidera",
+      "os percentuais são calculados sobre os votos em disputa",
     );
+    expect(anula?.querySelector('[data-testid="result-bar"]')).toBeNull();
+    expect(anula?.textContent).not.toMatch(/%/);
+    expect(
+      anula?.querySelector('[data-testid="candidate-result-votos-anulada"]')?.textContent,
+    ).toBe("42.000votos");
   });
 
   it("balão do mapa: VALIDA primeiro, ANULA depois das que competem, com etiqueta", () => {
@@ -437,8 +468,9 @@ describe("ADR-0053 — contraprovas", () => {
     expect(corDoMapa(ROW_JUDICE, JUDICE_NO_TOPO, "parcial")).toBe(TOKENS["--party-pl"]);
     expect(hex(ROW_JUDICE, JUDICE_NO_TOPO).rotulo).toContain("líder JUDICE (PL)");
     expect(ficha(ROW_JUDICE, JUDICE_NO_TOPO).lider).toContain("Líder: JUDICE");
-    // 46 > (100 − 31) / 2 = 34,5 ⇒ eleito; o crédito é do PL.
-    expect(agregarPorPartido([ROW_JUDICE], "contagem")).toEqual([
+    // Opção A: JUDICE tem 46 de 69 em disputa = 66,7% > 50 ⇒ eleito; o
+    // crédito é do PL.
+    expect(agregarPorPartido([mkRow(opcaoA(JUDICE_NO_TOPO), 12, 25)], "contagem")).toEqual([
       { partido: "PL", eleitos: 1, segundo_turno: 0 },
     ]);
     // 2ª vaga: VALIDA 20 − QUARTA 5 (a anulada sai do par 2º/3º).

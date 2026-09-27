@@ -165,14 +165,22 @@ describe("/senador — vagas, 'Fora das vagas' e margem", () => {
     );
     const fora = sp?.querySelector("[data-testid='corrida-fora']")?.textContent ?? "";
     expect(fora).toContain("Célia Mota (MDB) 29,0%");
-    expect(fora).toContain("Zé Anulado (NOVO, Anulado) 45,0%");
+    // 🔴 ALTERADO na opção A (2026-09-27): a anulada sai SEM percentual. O
+    // dado desta fixture não traz `votos_atuais`, então fica só o rótulo com a
+    // etiqueta — nem "45,0%", nem "0 votos".
+    expect(fora).toContain("Zé Anulado (NOVO, Anulado)");
+    expect(fora).not.toContain("45,0%");
+    expect(fora).not.toMatch(/Zé Anulado \(NOVO, Anulado\) \S/);
     // Célia (a que disputa) vem ANTES da anulada.
     expect(fora.indexOf("Célia")).toBeLessThan(fora.indexOf("Zé Anulado"));
     // 2ª vaga: Bruno 30 − Célia 29, nunca Ana 40 − Bruno 30.
     expect(sp?.querySelector("[data-testid='corrida-margem']")?.textContent).toBe(
       "1,0% p/ 2ª vaga",
     );
-    expect(doc.querySelector("[data-testid='senado-nota-anuladas']")).not.toBeNull();
+    // Senado: a nota SEM a regra dos 50% (duas vagas, sem 2º turno).
+    const nota = doc.querySelector("[data-testid='senado-nota-anuladas']")?.textContent ?? "";
+    expect(nota).toContain("calculados sobre os votos em disputa");
+    expect(nota).not.toContain("1º turno");
   });
 
   it("sem `destino`, a linha é a de sempre (e sem nota)", async () => {

@@ -10,7 +10,7 @@ depends_on: [001-ingestao-tse, 002-modelo-estatistico, 008-interatividade-brushi
 apis: [GET /api/projection?uf=<sigla>]
 components: [WinnerBanner, CandidateRow, ChoroplethMapUF, MunicipioTable, ForecastTransparency, Footer, ProjectionThermometer, TrilhaKicker, RaceHeader, CandidateResultRow, MunicipioExplorer, ResultPanel, CandidateListCollapse]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-008, RNF-022, RNF-023, RNF-024, RNF-025, RNF-027]
-adrs: [0001, 0003, 0004, 0007, 0010, 0013, 0014, 0017, 0018, 0019, 0025, 0032, 0033, 0034, 0038]
+adrs: [0001, 0003, 0004, 0007, 0010, 0013, 0014, 0017, 0018, 0019, 0025, 0032, 0033, 0034, 0038, 0053]
 shipped_with_carry_overs:
   - NewsClippingPlaceholder-sem-RF-formal-clipping-midias-BR-virara-spec-em-F4b-F5
   - chunk-MapLibre-287KB-acima-RNF-007b-pendente-ADR-aumentar-meta-300KB
@@ -209,6 +209,10 @@ O painel "Votação" (RF-192..199) entra na tela `/uf/[sigla]` imediatamente ap�
 ### Spec 022 — A corrida em três círculos (2026-09-26)
 
 O painel "A corrida" (RF-200..210) entra imediatamente **depois** do painel "Votação" da UF. Ordem na tela da UF: resultado → "Votação" → "A corrida" → evolução (spec 020).
+
+### ADR-0053 — emenda 2026-09-27 (tarde): a lista passa a mostrar a base da disputa
+
+Decisão do dono, opção A ([ADR-0053, emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)): sempre que a UF tem ao menos uma candidatura com `dvt = "Anulado"`, todo percentual publicado de candidatura que compete nesta rota (`<CandidateRow />`, RF-061, o balão do mapa e `<StateResultSheet>` herdados da spec 003) passa a ter como base os **votos em disputa** (`vvc − Σ votos das candidaturas anuladas`), não `vvc` inteiro — a mesma base que já decide `p_fecha_1t` por UF (RF-213, spec 002). A candidatura anulada permanece na lista, ao final, só com votos absolutos (sem percentual). Sem candidatura anulada — o caso hoje observado —, nada muda: a base continua `vvc` inteiro, igual ao `pvap` do TSE. Ver RF-202/203/204/205/212 da [spec 022](../022-corrida-em-tres-circulos/spec.md) para o efeito nos três círculos "A corrida".
 
 ## v2 — S05 Multi-candidato e 2º turno
 

@@ -21,7 +21,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import govNacional from "../../../tests/fixtures/simulacao/governador.json";
+import resumosGov from "../../../tests/fixtures/simulacao/governador-uf.json";
 import detalhesGov from "../../../tests/fixtures/simulacao/municipios-gov-t1.json";
 import detalhesUf from "../../../tests/fixtures/simulacao/municipios-pres-t1.json";
 import detalhesSen from "../../../tests/fixtures/simulacao/municipios-sen-t1.json";
@@ -46,6 +46,7 @@ interface Serie {
 }
 interface Placar {
   id: number;
+  destino?: string;
   pct_atual?: number | null;
   pct_projetado?: number | null;
 }
@@ -103,6 +104,9 @@ function conferir(serie: Serie, placar: Placar[], onde: string): void {
 
     // --- 🔴 GATE DE COERÊNCIA
     const doPlacar = porId.get(c.id);
+    // --- 🔴 anulada NUNCA no gráfico (decisão do dono, 27/09 — emenda ao
+    // ADR-0053): o percentual dela é sobre o vvc, o das outras sobre a disputa.
+    expect(doPlacar?.destino, `${q}: candidatura anulada na série`).not.toBe("anulado");
     expect(doPlacar, `${q}: candidatura da série não existe no placar`).toBeDefined();
     expect(ultimoNaoNulo(c.apurado), `${q}: último apurado ≠ placar`).toBe(doPlacar?.pct_atual);
     expect(ultimoNaoNulo(c.projetado), `${q}: último projetado ≠ placar`).toBe(
@@ -153,19 +157,15 @@ describe("fixtures de simulação — a série existe e bate com o placar", () =
     }
   });
 
-  it("as 27 UFs de Governador têm série coerente com a SÍNTESE que a tela usa", () => {
-    // 🔴 O placar de referência aqui NÃO é `por_uf[].top_candidatos`, e essa é
-    // a parte fácil de errar. `synthesizeGovUfFromFixture`
-    // (`app/(gov)/uf/[sigla]/governador/page.tsx:254`) monta a corrida da UF
-    // com a IDENTIDADE de `top_candidatos` e os NÚMEROS de
-    // `national.candidatos`, casados por `id` — `top_candidatos.pct` é outra
-    // grandeza. Conferir contra a fonte errada faria o teste passar com uma
-    // série que discorda do painel na tela.
-    const nac = govNacional as unknown as {
-      national: { candidatos: Placar[] };
-      por_uf: { sigla: string; top_candidatos?: { id: number }[] }[];
-    };
-    const numeros = new Map(nac.national.candidatos.map((c) => [c.id, c]));
+  it("as 27 UFs de Governador têm série coerente com o RESUMO da UF que a página mostra", () => {
+    // 🔴 O placar de referência é `governador-uf.json[uf].candidatos` — o que
+    // a página lê desde 21/09 (`simulacaoGovernadorUf`, antes da síntese). Até
+    // 27/09 era a síntese (`synthesizeGovUfFromFixture`: identidade de
+    // `top_candidatos`, números de `national.candidatos`); com a emenda ao
+    // ADR-0053 o resumo da UF passou a publicar os percentuais sobre os votos
+    // em disputa e o bloco nacional de Governador não — conferir contra ele
+    // aprovaria uma série que discorda do painel da tela.
+    const resumos = resumosGov as unknown as Record<string, { candidatos: Placar[] }>;
     const detalhes = detalhesGov as unknown as Record<
       string,
       { series_temporais?: { por_candidato?: Serie } }
@@ -173,13 +173,10 @@ describe("fixtures de simulação — a série existe e bate com o placar", () =
 
     expect(Object.keys(detalhes).length, "esperado 27 UFs em Governador").toBe(27);
 
-    for (const row of nac.por_uf) {
-      const serie = detalhes[row.sigla]?.series_temporais?.por_candidato;
-      expect(serie, `${row.sigla} (gov): sem por_candidato`).toBeDefined();
-      const placar = (row.top_candidatos ?? [])
-        .map((t) => numeros.get(t.id))
-        .filter((c): c is Placar => c !== undefined);
-      conferir(serie as Serie, placar, `gov/${row.sigla}`);
+    for (const sigla of Object.keys(detalhes)) {
+      const serie = detalhes[sigla]?.series_temporais?.por_candidato;
+      expect(serie, `${sigla} (gov): sem por_candidato`).toBeDefined();
+      conferir(serie as Serie, resumos[sigla]?.candidatos ?? [], `gov/${sigla}`);
     }
   });
 

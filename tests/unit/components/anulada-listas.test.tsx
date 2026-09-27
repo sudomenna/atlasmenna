@@ -209,13 +209,33 @@ describe("corrida curta — o filtro é o único que segura", () => {
     expect(agregarPorPartido([soAnulada], "contagem")).toEqual([]);
   });
 
-  it("desfecho pela contagem: com 61% anulado, 39% já é maioria dos que disputam", () => {
-    // 39 > (100 − 61) / 2 = 19,5. Pela régua antiga, "segundo_turno".
-    expect(classificarContagem(row(CURTA))).toBe("eleito_1t");
-    // Sem a régua, mas com o filtro: 39 > 50 é falso.
-    expect(agregarPorPartido([row(CURTA)], "contagem")).toEqual([
+  // 🔴 ALTERADO na emenda "opção A" (2026-09-27). O teste dizia "com 61%
+  // anulado, 39% já é maioria dos que disputam" e provava a régua
+  // `> (100 − Σ anuladas) / 2`. Com a opção A o produtor publica o % de quem
+  // compete JÁ sobre os votos em disputa: a mesma UF chega com VALIDA a 100%
+  // (é a única que disputa). A régua voltou a `> 50`, e a antiga passaria a
+  // DUPLA-descontar — é o que o caso abaixo pega.
+  it("desfecho pela contagem (opção A): a única que disputa, publicada a 100%, é eleita", () => {
+    const publicada = row([
+      tc(10, "ANULA", "NOVO", 60, 61, "anulado"),
+      tc(11, "VALIDA", "PT", 100, 100, "valido"),
+    ]);
+    expect(classificarContagem(publicada)).toBe("eleito_1t");
+    expect(agregarPorPartido([publicada], "contagem")).toEqual([
       { partido: "PT", eleitos: 1, segundo_turno: 0 },
     ]);
+  });
+
+  it("🔴 desfecho pela contagem: 45% dos votos em disputa NÃO fecha, mesmo com anulada de 15% [mutação: régua `(100 − anuladas) / 2`]", () => {
+    // Pela régua da 1ª rodada, 45 > (100 − 15) / 2 = 42,5 ⇒ "eleito" — errado:
+    // o 45 já está sobre os votos em disputa.
+    const r = row([
+      tc(11, "VALIDA", "PT", 45, 45, "valido"),
+      tc(12, "OUTRA", "PL", 40, 40, "valido"),
+      tc(13, "TERCA", "PSB", 15, 15, "valido"),
+      tc(10, "ANULA", "NOVO", 15, 15, "anulado"),
+    ]);
+    expect(classificarContagem(r)).toBe("segundo_turno");
   });
 
   it("`<ResultPanel>` com 2: sem duelo (a margem não é medida contra a anulada) [mutação: `disputaParcial = porParcial`]", () => {

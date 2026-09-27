@@ -1501,8 +1501,25 @@ def montar_serie_por_candidato(
     uf: str | None,
     candidatos: list[dict[str, Any]],
     limite: int = SERIE_ELENCO,
+    *,
+    anulados: frozenset[int] | set[int] = frozenset(),
 ) -> dict[str, Any] | None:
     """`EdgeSeriePorCandidato` de um escopo — `uf=None` é o nacional.
+
+    `anulados` (emenda de 2026-09-27 ao ADR-0053): as candidaturas de voto
+    anulado do escopo (Presidente: as nacionais, em todo escopo; Gov/Sen: as da
+    UF; vazio no bloco nacional de Gov/Sen). Cada ponto de quem COMPETE vai
+    para os votos em disputa DAQUELE balde: `pct · 100 / (100 − Σ pct_anuladas
+    no balde)`, apurado com o Σ do apurado e projetado com o do projetado — a
+    mesma conta do placar ao lado (`base_da_disputa`). `projections` segue em
+    `vvc`; o conjunto de anuladas é o de AGORA, aplicado à noite inteira, para a
+    linha ter uma base só. Anulada sem ponto no balde não entrou naquele ciclo
+    (fração 0); anulada com o valor ausente no balde ⇒ a base daquele balde é
+    desconhecida e o ponto de quem compete vira furo (`None`), nunca um número
+    em outra base. A própria anulada NÃO entra no elenco (2ª parte da decisão,
+    2026-09-27), nem quando competem menos de `limite`.
+    Vazio (default), ou nenhuma anulada com ponto no escopo ⇒ saída byte a byte
+    igual à de antes.
 
     `candidatos` são os do PAYLOAD daquele escopo (com `id`, `nome`, `partido`,
     `sqcand?`, `pct_atual`, `pct_projetado`), em qualquer ordem: o elenco e a
@@ -1530,7 +1547,15 @@ def montar_serie_por_candidato(
     if not dados_escopo:
         return None
 
-    elenco = ordenar_por_parcial(candidatos)[:limite]
+    # Emenda ADR-0053 (2ª parte, decisão do dono): a candidatura ANULADA não
+    # entra na série — nem no fim, nem quando sobra vaga. Reconhecida pelo
+    # conjunto do escopo OU pela etiqueta `destino` (o mesmo mapa). Sem anulada,
+    # o filtro não remove ninguém e o elenco é o de antes.
+    elenco = [
+        c
+        for c in ordenar_por_parcial(candidatos)
+        if int(c["id"]) not in anulados and c.get("destino") != DESTINO_FORA_DA_DECISAO
+    ][:limite]
     if not elenco:
         return None
 
@@ -1570,6 +1595,46 @@ def montar_serie_por_candidato(
 
     grade = list(range(ocupados[0], ocupados[-1] + 1, largura))
 
+    # Emenda ADR-0053 — os pontos das anuladas, na MESMA cadência do elenco,
+    # para achar a base em disputa de cada balde. Só as que têm ponto no escopo:
+    # sem nenhuma, `pontos_anuladas` é vazio e nada abaixo muda.
+    pontos_anuladas = {
+        a: _rebucketizar(dict(dados_escopo[a]), cadencia)
+        for a in sorted(anulados)
+        if dados_escopo.get(a)
+    }
+
+    def _fator_no_balde(balde: int, campo: str) -> float | None:
+        soma = 0.0
+        for pts in pontos_anuladas.values():
+            ponto = pts.get(balde)
+            if ponto is None:
+                continue
+            valor = ponto.get(campo)
+            if valor is None:
+                return None
+            soma += float(valor)
+        return _fator_da_base(soma)
+
+    def _serie(cid: int, pontos: dict[int, dict[str, Any]], campo: str) -> list:
+        if not pontos_anuladas or cid in anulados:
+            return [
+                _arredondar_pct(pontos[b][campo]) if b in pontos else None
+                for b in grade
+            ]
+        saida: list[float | None] = []
+        for b in grade:
+            if b not in pontos or pontos[b][campo] is None:
+                saida.append(None)
+                continue
+            fator = _fator_no_balde(b, campo)
+            saida.append(
+                None
+                if fator is None
+                else _arredondar_pct(float(pontos[b][campo]) * fator)
+            )
+        return saida
+
     saida_candidatos: list[dict[str, Any]] = []
     for c in elenco:
         cid = int(c["id"])
@@ -1583,14 +1648,8 @@ def montar_serie_por_candidato(
             # rank que o ADR-0024 aposentou, e aqui ela seria visível como
             # MOVIMENTO — a linha trocando de cor no instante da ultrapassagem.
             "partido": str(c.get("partido") or "—"),
-            "apurado": [
-                _arredondar_pct(pontos[b]["pct_atual"]) if b in pontos else None
-                for b in grade
-            ],
-            "projetado": [
-                _arredondar_pct(pontos[b]["pct_projetado"]) if b in pontos else None
-                for b in grade
-            ],
+            "apurado": _serie(cid, pontos, "pct_atual"),
+            "projetado": _serie(cid, pontos, "pct_projetado"),
         }
         sqcand = c.get("sqcand")
         if sqcand:
@@ -4456,6 +4515,111 @@ def _pct_na_base_da_decisao(
     return pct * 100.0 / base if base > 0 else 0.0
 
 
+# ---------------------------------------------------------------------------
+# Emenda de 2026-09-27 ao ADR-0053 (decisão do dono, opção A) — a EXIBIÇÃO
+# também passa para os votos em disputa
+# ---------------------------------------------------------------------------
+#
+# O item 3 do ADR-0053 mantinha todo percentual publicado sobre `vvc`. A emenda
+# o revoga, e só ele: quando a abrangência tem ao menos uma candidatura de
+# destino `"anulado"`, TODO percentual publicado de candidatura que COMPETE
+# passa a ser sobre os votos em disputa = `vvc − Σ anuladas` — a mesma base em
+# que as decisões já são tomadas (`estimativas_para_decisao`). Sem isso a tela
+# mostrava "Ana 45%" ao lado de "Ana fecha no 1º turno", e as duas afirmações
+# não cabiam na mesma base.
+#
+# Regras (não reabrir):
+#   1. Escopo = o das decisões (`AnuladosNaDecisao.da_uf`): Presidente decide
+#      com o destino NACIONAL em toda abrangência; Governador/Senador, com o da
+#      UF. Município e mesorregião herdam o escopo da UF.
+#   2. Sem anulada presente no escopo ⇒ NADA muda, byte a byte: os helpers
+#      abaixo devolvem `None` e nenhum número é tocado — nem multiplicado por
+#      1,0, nem re-arredondado.
+#   3. Sub judice NÃO renormaliza nada: compete e fica na base (ADR-0053 item 2).
+#   4. A candidatura ANULADA mantém os campos, sobre `vvc` (o `pvap` oficial):
+#      o tipo exige número, e a tela não o exibe.
+#   5. A conta é UMA para ponto, IC e apurado: `pct · 100 / (100 − Σ pct_anuladas)`,
+#      cada qual com o Σ da sua própria grandeza (projetado para ponto e IC,
+#      apurado para apurado). É a mesma de `_pct_na_base_da_decisao` (que o
+#      `vai_a_2t` já usava) — por isso "> 50% publicado ⇔ decide no 1º turno"
+#      vale na UF por construção. O IC é escalado pelo MESMO fator do ponto
+#      (e não recalculado reamostra a reamostra): o IC da UF é INFLADO em
+#      apuração baixa (`inflate_ci_low_apurado`), inflação que não vive nas
+#      reamostras, e escalar com o fator do ponto preserva `lower ≤ ponto ≤
+#      upper` por construção.
+#   6. `projections` (o banco) segue sobre `vvc`: é o dado bruto do modelo e a
+#      fonte da série. A série é levada à base em disputa NA PUBLICAÇÃO
+#      (`montar_serie_por_candidato`), com o conjunto de anuladas de AGORA
+#      aplicado a todos os pontos — uma linha só, numa base só.
+#   7. Margens (2ª parte da decisão do dono, 2026-09-27): `por_uf[].margem_*`
+#      e a agulha da UF (`margem/20`) também vão para a base em disputa — a
+#      margem é a diferença EXATA dos dois primeiros que competem como
+#      publicados, e `chamada` (margem > 10) lê essa margem. A série não
+#      carrega a linha da anulada.
+#   8. Não renormalizados, de propósito: `comparecimento` (outra base,
+#      ADR-0020), `votacao.*`, `p_*`/agulha NACIONAL (já decididos na base
+#      certa), `votos_*` (contagens) e o bloco nacional de Governador/Senador
+#      (união de 27 corridas — não há escopo inequívoco).
+
+
+class BaseDaDisputa(NamedTuple):
+    """Fatores que levam um percentual sobre `vvc` aos votos em disputa.
+
+    `projetado` vale para `pct_projetado` e o IC; `atual`, para `pct_atual`.
+    `atual = None` ⇒ o apurado de alguma anulada não foi medido (só a imputação
+    nacional produz isso, e ela anula a UF inteira) — o apurado segue como veio.
+    """
+
+    projetado: float
+    atual: float | None
+
+
+def _fator_da_base(soma_anuladas: float) -> float | None:
+    base = 100.0 - soma_anuladas
+    return 100.0 / base if base > 0 else None
+
+
+def base_da_disputa(
+    linhas: Iterable[Mapping[str, Any]],
+    anulados: frozenset[int] | set[int],
+    *,
+    campo_id: str = "candidato_id",
+) -> BaseDaDisputa | None:
+    """Os fatores da base em disputa para UMA abrangência, ou `None`.
+
+    `linhas` são as candidaturas da abrangência com `pct_projetado`/`pct_atual`
+    em 0–100 sobre `vvc`. `None` ⇒ nada a fazer (regra 2 da emenda): nenhuma
+    anulada presente nas linhas — inclusive `anulados` vazio —, ou todas as
+    candidaturas anuladas (não há votos em disputa; `_competidores` já registra
+    esse estado no log).
+    """
+    if not anulados:
+        return None
+    anuladas = [r for r in linhas if int(r[campo_id]) in anulados]
+    if not anuladas:
+        return None
+    fator_proj = _fator_da_base(
+        sum(float(r.get("pct_projetado") or 0.0) for r in anuladas)
+    )
+    if fator_proj is None:
+        return None
+    atuais = [r.get("pct_atual") for r in anuladas]
+    fator_atual = (
+        None
+        if any(v is None for v in atuais)
+        else _fator_da_base(sum(float(v) for v in atuais))
+    )
+    return BaseDaDisputa(fator_proj, fator_atual)
+
+
+def na_disputa(valor: float | None, fator: float | None) -> float | None:
+    """`valor` (0–100 sobre `vvc`) → votos em disputa, em 5 casas (a precisão
+    de `_frac_to_pct`/`NUMERIC(8,5)`). `None` em qualquer lado ⇒ `valor` intocado."""
+    if valor is None or fator is None:
+        return valor
+    return round(float(valor) * fator, 5)
+
+
 def _competidores(
     ordered: list[dict[str, Any]],
     anulados: frozenset[int] | set[int],
@@ -4963,8 +5127,12 @@ def compute_national(
     """Agrega estimates UF → nacional ponderado pelo eleitorado da UF.
 
     `anulados` (decisão do dono de 2026-09-27): candidaturas de voto anulado.
-    Continuam com linha, `pct_projetado` e IC sobre `vvc` (exibição intocada,
-    e `rank`/"Outros" seguem a ordem da exibição), mas saem das DECISÕES: não
+    Continuam com linha, `pct_projetado` e IC sobre `vvc` — `rows` é o dado
+    bruto do modelo, gravado em `projections`; quem leva os percentuais das
+    que competem à base em disputa é a PUBLICAÇÃO (`build_edge_payload`,
+    emenda de 2026-09-27) — e `rank` segue a ordem de `vvc`. No Presidente
+    (cargo 1) a soma de "Outros" deixa a anulada de fora (a cauda que
+    compete). Saem das DECISÕES: não
     viram `cand_a`/`cand_b`, recebem `p_vitoria`/`p_passa_2t`/`p_fecha_1t` =
     0.0, e as demais decidem sobre `estimativas_para_decisao` (base sem os
     anulados). Vazio (default) ⇒ saída bit a bit igual à anterior.
@@ -5111,7 +5279,19 @@ def compute_national(
     # D4 — "Outros" com IC real: soma de resamples de rank >= 4. Zero novo
     # bootstrap, zero random (mesma filosofia de `p_passa_2t`/`p_fecha_1t`
     # acima — pura função dos `national_estimates` já computados).
-    outros = compute_outros_estimates(national_estimates, rank_by_cand, min_rank=4)
+    #
+    # Emenda de 2026-09-27 ao ADR-0053: no Presidente (a única corrida nacional
+    # de fato — ver `AnuladosNaDecisao.uf_segue_nacional`), "Outros" é a cauda
+    # QUE COMPETE: a anulada não entra na soma, porque o número publicado vai
+    # para a base em disputa (`build_edge_payload` aplica o fator) e ali os
+    # votos dela não existem. Mesmo corte de rank de antes. Governador/Senador:
+    # o bloco nacional é a união de 27 corridas e fica como estava.
+    cauda_estimates = national_estimates
+    if anulados and int(cargo) == 1:
+        cauda_estimates = {
+            c: a for c, a in national_estimates.items() if c not in anulados
+        }
+    outros = compute_outros_estimates(cauda_estimates, rank_by_cand, min_rank=4)
 
     rows: list[dict[str, Any]] = []
     for cand, arr in national_estimates.items():
@@ -5181,8 +5361,9 @@ def aggregate_by_mesorregiao(
     ADR-0053 / RF-213 acrescenta `fora_da_decisao` — as candidaturas de voto
     ANULADO no escopo da UF (`AnuladosNaDecisao.da_uf`: Presidente nacional,
     Gov/Sen a UF). O líder da mesorregião e o 2º da margem saem de quem
-    COMPETE; sub judice compete. `lider_pct`/`margem` seguem em pp do total
-    da mesorregião, que inclui a anulada (base `vvc`, exibição). Mesorregião
+    COMPETE; sub judice compete. Desde a emenda de 2026-09-27 ao ADR-0053,
+    `lider_pct`/`margem` são sobre os votos EM DISPUTA da mesorregião (o total
+    sem os votos das anuladas), a mesma base dos percentuais da UF. Mesorregião
     em que só a anulada tem voto cai na lista inteira — mesma regra de
     `_competidores` e do líder de município. Vazio/`None` ⇒ comportamento
     anterior, byte a byte.
@@ -5308,8 +5489,16 @@ def aggregate_by_mesorregiao(
                 ] or sorted_cands
             lider_id, lider_votos = sorted_cands[0]
             second_votos = sorted_cands[1][1] if len(sorted_cands) >= 2 else 0
-            lider_pct = 100.0 * lider_votos / total
-            margem = 100.0 * (lider_votos - second_votos) / total
+            # Emenda de 2026-09-27 ao ADR-0053 — `lider_pct`/`margem` sobre os
+            # votos em disputa da mesorregião (`total − Σ anuladas`). Sem
+            # anulada com voto, a conta é a de antes; só a anulada com voto ⇒
+            # total inteiro (não há voto em disputa para dividir).
+            votos_anulados = sum(
+                v for c, v in votos_cand.items() if int(c) in (fora_da_decisao or ())
+            )
+            base_meso = total - votos_anulados if 0 < votos_anulados < total else total
+            lider_pct = 100.0 * lider_votos / base_meso
+            margem = 100.0 * (lider_votos - second_votos) / base_meso
         elif votos_cand:
             # Degenerado: tem cand_id mas total=0 (todos zero). Estável.
             # RF-213 — o menor id entre os que COMPETEM (todos anulados ⇒
@@ -5431,10 +5620,19 @@ def build_uf_payloads(
     ADR-0053 / RF-213 acrescenta `anulados`: o líder e o 2º da UF — que dão a
     agulha da UF e o líder degenerado do município sem voto — saem das
     candidaturas que COMPETEM, e o líder (e o 2º da margem) de cada MUNICÍPIO
-    também. `candidatos[]` (lista, %, rank local, "Outros") é exibição e não
-    muda, exceto por ganhar `destino` quando o mapa o conhece
+    também. `candidatos[]` ganha `destino` quando o mapa o conhece
     (`AnuladosNaDecisao.destino_de`). `None` ⇒ comportamento anterior, byte a
     byte.
+
+    Emenda de 2026-09-27 ao ADR-0053 (ver o bloco sobre `BaseDaDisputa`): com
+    anulada no escopo da UF, `candidatos[].pct_atual`/`pct_projetado`/`ci95` de
+    quem COMPETE, `participacao.outros` (a cauda que compete), a
+    `lider.margem_pp` de cada município, `lider_pct`/`margem` de cada
+    mesorregião e a `series_temporais.por_candidato` saem sobre os votos em
+    disputa (a série sem a linha da anulada), e a agulha da UF acompanha a
+    margem nessa base. A anulada fica em `vvc`. A ordem, o rank local, a base
+    `comparecimento`, `p_eleito` e as séries antigas
+    (`margem`/`p_vitoria`/`turnout`, lidas de `projections`) não mudam.
 
     Spec 022 (RF-209) acrescenta `votacao_by_uf` (`{uf: EdgeVotacaoUf}`, de
     `build_votacao_uf_payloads`): contagens e corrida do agregado da UF.
@@ -5565,15 +5763,30 @@ def build_uf_payloads(
         # estadual), distinto de `rank_by_cand` (rank NACIONAL usado só
         # para cor). "Outros" da UF (Fase 1a) usa o rank local — top-3 da
         # disputa estadual, não do ranking nacional.
+        #
+        # Emenda de 2026-09-27 ao ADR-0053 — com anulada no escopo da UF, os
+        # percentuais das que COMPETEM (`pct_atual`, `pct_projetado`, `ci95`)
+        # vão para os votos em disputa; a anulada fica em `vvc`. A ORDEM de
+        # `ordered` (e o rank local, e o corte de "Outros") é a de `vvc`, e não
+        # muda. Sem anulada, `base_uf is None` e nada é tocado.
+        base_uf = base_da_disputa(ordered, fora_da_uf)
         candidatos: list[dict[str, Any]] = []
         local_rank_by_cand: dict[int, int] = {}
         comparecimento_by_cid: dict[int, dict[str, Any] | None] = {}
         for idx, r in enumerate(ordered):
             cid = int(r["candidato_id"])
             local_rank_by_cand[cid] = idx + 1
-            pct_proj = float(r.get("pct_projetado") or 0.0)
-            pct_proj_lower = float(r.get("pct_projetado_lower") or pct_proj)
-            pct_proj_upper = float(r.get("pct_projetado_upper") or pct_proj)
+            compete = base_uf is not None and cid not in fora_da_uf
+            f_proj = base_uf.projetado if compete else None
+            f_atual = base_uf.atual if compete else None
+            pct_proj_vvc = float(r.get("pct_projetado") or 0.0)
+            pct_proj = na_disputa(pct_proj_vvc, f_proj)
+            pct_proj_lower = na_disputa(
+                float(r.get("pct_projetado_lower") or pct_proj_vvc), f_proj
+            )
+            pct_proj_upper = na_disputa(
+                float(r.get("pct_projetado_upper") or pct_proj_vvc), f_proj
+            )
 
             # Fase 1 (plano § A/B): `pct_atual`/`votos_atuais`/
             # `votos_projetados` vêm DIRETO do `row` — resultado real de
@@ -5584,7 +5797,11 @@ def build_uf_payloads(
             # payload degrada para `0.0` (nunca `None` — contrato TS
             # espera `number`).
             pct_atual_raw = r.get("pct_atual")
-            pct_atual = float(pct_atual_raw) if pct_atual_raw is not None else 0.0
+            pct_atual = (
+                na_disputa(float(pct_atual_raw), f_atual)
+                if pct_atual_raw is not None
+                else 0.0
+            )
             votos_cand = int(r.get("votos_atuais") or 0)
             votos_proj = int(r.get("votos_projetados") or 0)
             comparecimento_by_cid[cid] = r.get("comparecimento")
@@ -5667,10 +5884,24 @@ def build_uf_payloads(
         outros_uf: dict[str, Any] | None = None
         cand_map_uf = (estimates_by_uf or {}).get(sigla)
         if cand_map_uf:
+            # Emenda ADR-0053 — com anulada na UF, "Outros" é a cauda QUE
+            # COMPETE (mesmo corte de rank local), na base em disputa. Sem
+            # anulada, `base_uf is None`: a cauda, a soma e o IC são os de antes.
+            cand_map_cauda = (
+                {c: a for c, a in cand_map_uf.items() if c not in fora_da_uf}
+                if base_uf is not None
+                else cand_map_uf
+            )
             outros_estimates_uf, n_outros_uf = compute_outros_estimates(
-                cand_map_uf, local_rank_by_cand, min_rank=4
+                cand_map_cauda, local_rank_by_cand, min_rank=4
             )
             outros_uf = _outros_metric_payload(outros_estimates_uf, n_outros_uf)
+            if outros_uf is not None and base_uf is not None:
+                outros_uf["pct_projetado"] = na_disputa(
+                    outros_uf["pct_projetado"], base_uf.projetado
+                )
+                outros_uf["lower"] = na_disputa(outros_uf["lower"], base_uf.projetado)
+                outros_uf["upper"] = na_disputa(outros_uf["upper"], base_uf.projetado)
             if outros_uf is not None:
                 # `pct_atual` real da cauda: soma dos `pct_atual` (base
                 # votáveis, LITERAL) dos candidatos com rank local >= 4 —
@@ -5684,13 +5915,22 @@ def build_uf_payloads(
                     for r2 in ordered
                     if local_rank_by_cand.get(int(r2["candidato_id"]), 0) >= 4
                 ]
+                # Emenda ADR-0053 — o apurado da cauda QUE COMPETE, na base em
+                # disputa. `tail_ids` (com a anulada) segue valendo para a base
+                # comparecimento logo abaixo, que não muda.
                 tail_pct_atual = [
                     r2.get("pct_atual")
                     for r2 in ordered
                     if int(r2["candidato_id"]) in tail_ids
+                    and (base_uf is None or int(r2["candidato_id"]) not in fora_da_uf)
                 ]
                 if tail_pct_atual and all(v is not None for v in tail_pct_atual):
-                    outros_uf["pct_atual"] = sum(float(v) for v in tail_pct_atual)
+                    soma_tail_atual = sum(float(v) for v in tail_pct_atual)
+                    outros_uf["pct_atual"] = (
+                        na_disputa(soma_tail_atual, base_uf.atual)
+                        if base_uf is not None and base_uf.atual is not None
+                        else soma_tail_atual
+                    )
 
                 # Plano § B — "outros" na 2a base (comparecimento), campo
                 # aninhado `outros.comparecimento` (`EdgeBaseComparecimento`
@@ -5770,6 +6010,17 @@ def build_uf_payloads(
                 lider_id, lider_votos = sorted_cands[0]
                 second_votos = sorted_cands[1][1] if len(sorted_cands) >= 2 else 0
                 total_munic = sum(votos_por_cand.values())
+                # Emenda de 2026-09-27 ao ADR-0053 — a margem do município vai
+                # para os votos em disputa (`total − Σ anuladas` do município),
+                # a mesma base dos percentuais da UF. Sem anulada com voto no
+                # município, `votos_anulados == 0` e a conta é a de antes;
+                # município em que SÓ a anulada tem voto fica com o total
+                # inteiro (não há voto em disputa para dividir).
+                votos_anulados = sum(
+                    int(v) for k, v in votos_por_cand.items() if int(k) in fora_da_uf
+                )
+                if 0 < votos_anulados < total_munic:
+                    total_munic -= votos_anulados
                 if total_munic > 0:
                     margem_pp = 100.0 * (lider_votos - second_votos) / total_munic
                 else:
@@ -5847,12 +6098,20 @@ def build_uf_payloads(
         # MESMA lista que a tela recebe, reordenada pelo comparador de
         # `rankByParcial`. Passar `ordered` (que está por `pct_projetado`) no
         # lugar é a mutação que o teste T2 mata.
-        serie_uf_payload = montar_serie_por_candidato(serie_bruta, sigla, candidatos)
+        # Emenda ADR-0053 — a série da UF na base em disputa, com as anuladas do
+        # escopo desta UF (Presidente: as nacionais; Gov/Sen: as da UF).
+        serie_uf_payload = montar_serie_por_candidato(
+            serie_bruta, sigla, candidatos, anulados=fora_da_uf
+        )
 
         # Margem atual UF p/ derivar needle.
         top_pct = float(top.get("pct_projetado") or 0.0) if top else 0.0
         second_pct = float(second.get("pct_projetado") or 0.0) if second else 0.0
-        margem = top_pct - second_pct
+        # Emenda ADR-0053 (2ª parte) — a agulha da UF acompanha a margem na base
+        # em disputa: a diferença exata dos `pct_projetado` publicados acima.
+        # Sem anulada, `f_agulha is None` e a conta é a de antes.
+        f_agulha = base_uf.projetado if base_uf is not None else None
+        margem = na_disputa(top_pct, f_agulha) - na_disputa(second_pct, f_agulha)
         needle_position = max(-1.0, min(1.0, margem / 20.0))
         needle_band = _needle_band(needle_position)
 
@@ -5963,12 +6222,21 @@ def build_edge_payload(
     `vai_a_2t` (líder sobre a base sem os anulados) e as vagas de
     `composicao_vagas` ignoram as candidaturas de voto anulado. A agulha e a
     ordem de `national.candidatos` já chegam decididas via `cand_a_id`/
-    `cand_b_id` e `p_vitoria` de `compute_national`. `top_candidatos`,
-    `outros` e todo percentual publicado são exibição e não mudam; ganham só
-    a etiqueta `destino` — `national.candidatos[]` (Presidente apenas) e
+    `cand_b_id` e `p_vitoria` de `compute_national`. As listas ganham a
+    etiqueta `destino` — `national.candidatos[]` (Presidente apenas) e
     `por_uf[].top_candidatos[]` — quando o mapa a conhece
     (`AnuladosNaDecisao.destino_de`). `None` ⇒ comportamento anterior, byte a
     byte.
+
+    Emenda de 2026-09-27 ao ADR-0053 (ver o bloco sobre `BaseDaDisputa`): com
+    anulada no escopo, os percentuais das que COMPETEM saem sobre os votos em
+    disputa — `national.candidatos[]` (Presidente: `pct_atual`,
+    `pct_projetado`, `_lower`/`_upper`), `participacao.outros` (sem a anulada,
+    que `compute_national` já tirou da cauda), `serie_por_candidato`, e em
+    `por_uf[]` os `top_candidatos[].pct`/`pct_atual`, `outros` e as margens
+    (`margem_*` = diferença exata dos dois primeiros que competem, como
+    publicados; `chamada` lê essa margem). A anulada fica em `vvc`. Bloco
+    nacional de Gov/Sen: intocado.
 
     Spec 021 acrescenta `votacao` (opcional, já montado por
     `build_votacao_payload`): as contagens absolutas do eleitorado e a
@@ -6186,6 +6454,30 @@ def build_edge_payload(
                 (_uf_ident, numero_ident)
             ]
 
+    # Emenda de 2026-09-27 ao ADR-0053 — base em disputa do bloco NACIONAL.
+    # Só Presidente: é a única corrida nacional de fato (o mesmo escopo de
+    # `AnuladosNaDecisao.destino_de(None, …)`). Em Governador/Senador o bloco é
+    # a união de 27 corridas, o número de urna repete, e não há "votos em
+    # disputa" de uma corrida nacional para dividir — fica sobre `vvc`.
+    fora_nacional: frozenset[int] = (
+        anulados.nacional
+        if anulados is not None and anulados.uf_segue_nacional
+        else frozenset()
+    )
+    base_nacional = base_da_disputa(
+        (
+            {
+                "candidato_id": int(r["candidato_id"]),
+                "pct_projetado": r.get("pct_projetado"),
+                "pct_atual": pct_atual_nat.get(int(r["candidato_id"]), 0.0),
+            }
+            for r in national_rows
+        ),
+        fora_nacional,
+    )
+    fator_proj_nat = base_nacional.projetado if base_nacional is not None else None
+    fator_atual_nat = base_nacional.atual if base_nacional is not None else None
+
     national_candidatos: list[dict[str, Any]] = []
     pct_atual_outros_sum = 0.0
     for r in sorted_national:
@@ -6200,8 +6492,16 @@ def build_edge_payload(
         # destino é um gráfico, onde `0` seria um mergulho ao chão e `NULL` é
         # um furo na linha.
         pct_atual_cand = pct_atual_nat.get(cid, 0.0)
-        if rank >= 4:
+        # Emenda ADR-0053: a anulada fica fora da soma de "Outros" (a cauda que
+        # compete — ver `compute_national`). Sem anulada, `fora_nacional` é
+        # vazio e a soma é a de sempre.
+        if rank >= 4 and cid not in fora_nacional:
             pct_atual_outros_sum += pct_atual_cand
+        # A anulada mantém `vvc` (o `pvap` oficial; a tela não o exibe); quem
+        # compete vai para a base em disputa. Fator `None` ⇒ intocado.
+        compete_nat = cid not in fora_nacional
+        f_proj = fator_proj_nat if compete_nat else None
+        f_atual = fator_atual_nat if compete_nat else None
         ident_nat = identidade_nacional.get(cid) or {}
         candidato_nat: dict[str, Any] = {
             "id": cid,
@@ -6226,10 +6526,14 @@ def build_edge_payload(
             # contrato TS só porque payloads antigos ainda o trazem.
             "votos_atuais": votos_por_cand_nat.get(cid, 0),
             "votos_projetados": int(r.get("votos_projetados") or 0),
-            "pct_atual": pct_atual_cand,
-            "pct_projetado": float(r.get("pct_projetado") or 0.0),
-            "pct_projetado_lower": float(r.get("pct_projetado_lower") or 0.0),
-            "pct_projetado_upper": float(r.get("pct_projetado_upper") or 0.0),
+            "pct_atual": na_disputa(pct_atual_cand, f_atual),
+            "pct_projetado": na_disputa(float(r.get("pct_projetado") or 0.0), f_proj),
+            "pct_projetado_lower": na_disputa(
+                float(r.get("pct_projetado_lower") or 0.0), f_proj
+            ),
+            "pct_projetado_upper": na_disputa(
+                float(r.get("pct_projetado_upper") or 0.0), f_proj
+            ),
             "p_vitoria": float(r.get("p_vitoria") or 0.0),
             # S05/F4c (ADR-0014) — métricas multi-candidato.
             "rank": rank,
@@ -6276,14 +6580,31 @@ def build_edge_payload(
     # `pct_atual`/`pct_projetado` — os mesmos números que a tela lê. O elenco sai
     # dele, reordenado pelo comparador de `rankByParcial`, e NÃO da ordem
     # semântica acima (líder, segundo, cauda por `pct_projetado`).
-    serie_nacional = montar_serie_por_candidato(serie_bruta, None, national_candidatos)
+    #
+    # Emenda ADR-0053: a série também vai para a base em disputa, ponto a ponto,
+    # com as anuladas do escopo (Presidente; vazio em Gov/Sen).
+    serie_nacional = montar_serie_por_candidato(
+        serie_bruta, None, national_candidatos, anulados=fora_nacional
+    )
 
     # Fase 1a — patch `pct_atual` de "outros" com o dado real recém
     # computado (só quando houve alguma fonte de votos reais; sem ela,
     # `outros_nacional["pct_atual"]` permanece `None`, vindo de
     # `_outros_metric_payload`).
     if outros_nacional is not None and total_votos_nat > 0:
-        outros_nacional = {**outros_nacional, "pct_atual": pct_atual_outros_sum}
+        outros_nacional = {
+            **outros_nacional,
+            "pct_atual": na_disputa(pct_atual_outros_sum, fator_atual_nat),
+        }
+    # Emenda ADR-0053 — "Outros" nacional na base em disputa. A cauda já chega
+    # SEM a anulada (`compute_national`); aqui só o fator, o MESMO do ponto.
+    if outros_nacional is not None and fator_proj_nat is not None:
+        outros_nacional = {
+            **outros_nacional,
+            "pct_projetado": na_disputa(outros_nacional["pct_projetado"], fator_proj_nat),
+            "lower": na_disputa(outros_nacional["lower"], fator_proj_nat),
+            "upper": na_disputa(outros_nacional["upper"], fator_proj_nat),
+        }
 
     # Plano § B — "outros" nacional na 2a base (comparecimento), campo
     # aninhado `outros.comparecimento`, mesma filosofia da UF.
@@ -6352,9 +6673,22 @@ def build_edge_payload(
         top = competem[0]
         second_pct = float(competem[1].get("pct_projetado") or 0.0) if len(competem) > 1 else 0.0
         top_pct = float(top.get("pct_projetado") or 0.0)
-        margem = top_pct - second_pct
-        ci_lower = float(top.get("pct_projetado_lower") or top_pct) - second_pct
-        ci_upper = float(top.get("pct_projetado_upper") or top_pct) - second_pct
+        # Emenda de 2026-09-27 ao ADR-0053 (decisão do dono, 2ª parte): com
+        # anulada no escopo da UF, a MARGEM também vai para os votos em disputa
+        # — e é a diferença EXATA entre os dois primeiros que competem como
+        # aparecem em `top_candidatos[].pct` (os mesmos `na_disputa`, mesmo
+        # arredondamento). `chamada` (margem > 10) passa a ler essa margem.
+        # `top_pct` segue em `vvc` porque `vai_a_2t` o leva à base da decisão
+        # sozinho (`_pct_na_base_da_decisao`). Sem anulada, `f_proj_uf is None`
+        # e cada `na_disputa` devolve o próprio número: a conta de antes.
+        base_uf = base_da_disputa(ordered, fora_da_uf)
+        f_proj_uf = base_uf.projetado if base_uf is not None else None
+        f_atual_uf = base_uf.atual if base_uf is not None else None
+        top_pub = na_disputa(top_pct, f_proj_uf)
+        second_pub = na_disputa(second_pct, f_proj_uf)
+        margem = top_pub - second_pub
+        ci_lower = na_disputa(float(top.get("pct_projetado_lower") or top_pct), f_proj_uf) - second_pub
+        ci_upper = na_disputa(float(top.get("pct_projetado_upper") or top_pct), f_proj_uf) - second_pub
 
         if vagas is not None and vagas >= 2:
             ufs_com_projecao += 1
@@ -6433,6 +6767,16 @@ def build_edge_payload(
         #      ordens concordam) **nada é anexado** e o payload sai idêntico ao
         #      de antes — que é o que o replay de 2022 mostra em 133 de 133
         #      observações.
+        #
+        # ── Emenda de 2026-09-27 ao ADR-0053 — base em disputa ─────────────
+        #
+        # `pct`/`pct_atual` de quem COMPETE vão para `vvc − Σ anuladas` da UF
+        # (mesmo escopo das decisões: Presidente nacional, Gov/Sen a UF); a
+        # anulada fica em `vvc`. A SELEÇÃO abaixo (prefixo por projeção + resgate
+        # por apurado, RF-190) é feita sobre os valores de `vvc` e não muda: o
+        # fator é o mesmo para todas as que competem, então a ordem entre elas é
+        # a mesma nas duas bases, e a posição da anulada na lista é a de antes.
+        # (`base_uf`/`f_proj_uf`/`f_atual_uf` já calculados acima, junto da margem.)
         prefixo = ordered[:TOP_CANDIDATOS_POR_UF]
         ids_prefixo = {int(r["candidato_id"]) for r in prefixo}
         com_apurado = [rc for rc in ordered if rc.get("pct_atual") is not None]
@@ -6449,9 +6793,13 @@ def build_edge_payload(
         top_candidatos: list[dict[str, Any]] = []
         for r in selecionados:
             cid_top = int(r["candidato_id"])
+            compete_top = cid_top not in fora_da_uf
             item_top: dict[str, Any] = {
                 "id": cid_top,
-                "pct": float(r.get("pct_projetado") or 0.0),
+                "pct": na_disputa(
+                    float(r.get("pct_projetado") or 0.0),
+                    f_proj_uf if compete_top else None,
+                ),
             }
             ident_top = (identidade_by_cand or {}).get((sigla, cid_top)) or {}
             nome_top = ident_top.get("nome")
@@ -6468,7 +6816,9 @@ def build_edge_payload(
                 item_top["votos_atuais"] = int(votos_atuais_top)
             pct_atual_top = r.get("pct_atual")
             if pct_atual_top is not None:
-                item_top["pct_atual"] = float(pct_atual_top)
+                item_top["pct_atual"] = na_disputa(
+                    float(pct_atual_top), f_atual_uf if compete_top else None
+                )
             # ADR-0053 / RF-213 — etiqueta do destino, no escopo desta corrida
             # (Presidente: nacional; Gov/Sen: o da UF `sigla`). A anulada
             # CONTINUA na lista, na posição da projeção: quem a leva para o
@@ -6612,16 +6962,31 @@ def build_edge_payload(
         # continua exata — sem sobra e sem sobreposição —, só que agora a
         # chave é o id, que é o que de fato identifica a candidatura.
         cauda = [r for r in ordered if int(r["candidato_id"]) not in ids_selecionados]
+        # Emenda ADR-0053 — com anulada na UF, "Outros" é a cauda QUE COMPETE,
+        # na base em disputa: `Σtop que compete + outros = 100` nessa base. A
+        # anulada que caiu na cauda some daqui (e de `n_candidatos`) — a tela
+        # não a exibe, e somá-la inflaria "Outros" com votos que não disputam.
+        # Sem anulada, `base_uf is None` e a cauda e as contas são as de antes.
+        if base_uf is not None:
+            cauda = [r for r in cauda if int(r["candidato_id"]) not in fora_da_uf]
         outros_top: dict[str, Any] | None = None
         if cauda:
+            soma_proj_cauda = sum(float(rc.get("pct_projetado") or 0.0) for rc in cauda)
             outros_top = {
-                "pct": round(
-                    sum(float(rc.get("pct_projetado") or 0.0) for rc in cauda), 5
+                "pct": (
+                    na_disputa(soma_proj_cauda, f_proj_uf)
+                    if f_proj_uf is not None
+                    else round(soma_proj_cauda, 5)
                 )
             }
             pcts_cauda = [rc.get("pct_atual") for rc in cauda]
             if all(p is not None for p in pcts_cauda):
-                outros_top["pct_atual"] = round(sum(float(p) for p in pcts_cauda), 5)
+                soma_atual_cauda = sum(float(p) for p in pcts_cauda)
+                outros_top["pct_atual"] = (
+                    na_disputa(soma_atual_cauda, f_atual_uf)
+                    if f_atual_uf is not None
+                    else round(soma_atual_cauda, 5)
+                )
             votos_cauda = [rc.get("votos_atuais") for rc in cauda]
             if all(v is not None for v in votos_cauda):
                 outros_top["votos_atuais"] = int(sum(int(v) for v in votos_cauda))

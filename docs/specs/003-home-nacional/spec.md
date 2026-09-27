@@ -10,7 +10,7 @@ depends_on: [001-ingestao-tse, 002-modelo-estatistico, 008-interatividade-brushi
 apis: [GET /api/projection]
 components: [HeadlineScore, NationalChoroplethMap, MapViewToggle, StateGroupedTable, NationalNeedle, ChancesPanel, InsightCard, ForecastTransparency, LiveBadge, Tabs, MinorCandidatesList, RaceTypeIndicator, TurnoBadge, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader, ApuracaoMeta, BreakingNewsTicker, NationalWinnerBanner, TurnoOneRecap, ResultPanel, CandidateListCollapse]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-007, RNF-008, RNF-022, RNF-023, RNF-024, RNF-025, RNF-026, RNF-028]
-adrs: [0001, 0002, 0003, 0004, 0005, 0010, 0012, 0013, 0014, 0017, 0018, 0019, 0025, 0033, 0034, 0038, 0050, 0051]
+adrs: [0001, 0002, 0003, 0004, 0005, 0010, 0012, 0013, 0014, 0017, 0018, 0019, 0025, 0033, 0034, 0038, 0050, 0051, 0053]
 shipped_with_carry_overs:
   - RF-025-UFForecastTable-completa-deferida-S05
   - RF-030.4-hachura-flip-MapLibre-sprite-deferida-S05
@@ -476,6 +476,10 @@ O painel "Votação" (RF-192..199) entra na tela `/` imediatamente após a lista
 ### Spec 022 — A corrida em três círculos (2026-09-26)
 
 O painel "A corrida" (RF-200..210) renderiza imediatamente **depois** do painel "Votação" (spec 021) na tela `/`, em seu próprio `<Panel>`.
+
+### ADR-0053 — emenda 2026-09-27 (tarde): a lista passa a mostrar a base da disputa
+
+Decisão do dono, opção A ([ADR-0053, emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)): sempre que a corrida nacional tem ao menos uma candidatura com `dvt = "Anulado"`, todo percentual publicado de candidatura que compete (RF-023, RF-030.8/`<MinorCandidatesList />`, o balão do mapa do RF-177, `<StateResultSheet>` do RF-186) passa a ter como base os **votos em disputa** (`vvc − Σ votos das candidaturas anuladas`), não `vvc` inteiro — a mesma base que já decide `p_fecha_1t` e `p_segundo_turno_overall` (RF-213, spec 002). A candidatura anulada permanece na lista, ao final, só com votos absolutos (sem percentual). Sem candidatura anulada — o caso hoje observado —, nada muda: a base continua `vvc` inteiro, igual ao `pvap` do TSE. Ver RF-202/203/204/205/212 da [spec 022](../022-corrida-em-tres-circulos/spec.md) para o efeito nos três círculos "A corrida".
 
 ## v2 — S05 Multi-candidato (1º turno)
 

@@ -31,7 +31,7 @@ import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { candidateColor } from "@/components/blocks/_candidateColor";
 import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
 import { classificarProjecao } from "@/lib/utils/desfecho-governador";
-import { anuladasAoFim, compete } from "@/lib/utils/destino-voto";
+import { anuladasAoFim, compete, exibePercentual, votosDaAnulada } from "@/lib/utils/destino-voto";
 import { formatPercentTrim } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -148,6 +148,8 @@ interface Row {
   rank: number; // só pra "Outros" virar cinza
   /** ADR-0053 / RF-213 — etiqueta e posição; ausente ⇒ compete. */
   destino?: EdgeDestinoVoto;
+  /** Votos apurados — lidos SÓ na linha da anulada, que não mostra % (opção A). */
+  votos?: number;
 }
 
 export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCardProps) {
@@ -201,6 +203,7 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
       corResolvida: candidateColor(meta?.partido, meta?.rank ?? i + 1),
       rank: meta?.rank ?? i + 1,
       ...(t.destino ? { destino: t.destino } : {}),
+      ...(typeof t.votos_atuais === "number" ? { votos: t.votos_atuais } : {}),
     };
   });
 
@@ -369,22 +372,39 @@ export function GovernorCard({ uf, candidatos, mode = "expanded" }: GovernorCard
                     </span>
                   )}
                 </span>
-                <span
-                  className="relative h-2 w-16 rounded-sm"
-                  style={{ backgroundColor: "var(--color-bg-muted)" }}
-                  aria-hidden
-                >
+                {r.id !== null && !exibePercentual(r) ? (
+                  // Emenda "opção A" ao ADR-0053 — a anulada não tem barra nem
+                  // percentual (o % dela é sobre outra base). Os votos ocupam
+                  // as DUAS colunas (barra + número, 4rem + 0,5rem + 2,5rem),
+                  // para a linha continuar alinhada com as de cima; sem voto
+                  // no dado, o espaço fica vazio.
                   <span
-                    className="absolute left-0 top-0 h-full rounded-sm"
-                    style={{ width: `${pctWidth}%`, backgroundColor: r.corResolvida }}
-                  />
-                </span>
-                <span
-                  className="w-10 text-right tabular-nums"
-                  style={{ color: "var(--color-text)" }}
-                >
-                  {formatPercentTrim(r.pct)}
-                </span>
+                    data-testid="governor-card-votos-anulada"
+                    className="text-right tabular-nums whitespace-nowrap"
+                    style={{ width: "7rem", color: "var(--color-text)" }}
+                  >
+                    {votosDaAnulada(r.votos, true)}
+                  </span>
+                ) : (
+                  <>
+                    <span
+                      className="relative h-2 w-16 rounded-sm"
+                      style={{ backgroundColor: "var(--color-bg-muted)" }}
+                      aria-hidden
+                    >
+                      <span
+                        className="absolute left-0 top-0 h-full rounded-sm"
+                        style={{ width: `${pctWidth}%`, backgroundColor: r.corResolvida }}
+                      />
+                    </span>
+                    <span
+                      className="w-10 text-right tabular-nums"
+                      style={{ color: "var(--color-text)" }}
+                    >
+                      {formatPercentTrim(r.pct)}
+                    </span>
+                  </>
+                )}
               </li>
             );
           })}

@@ -356,9 +356,9 @@ def test_lider_do_municipio_pula_a_anulada_e_mantem_a_sub_judice() -> None:
     m = _municipios({"SP": votos}, {"SP": shares}, cargo=1, anulados=an)["SP"]
     assert m["lider"]["candidato_id"] == SUBJ
     assert m["lider"]["votos"] == 400
-    # margem entre as que COMPETEM (400 − 300), em pp do total do município
-    # — que segue incluindo a anulada (base `vvc`, exibição).
-    assert m["lider"]["margem_pp"] == pytest.approx(100.0 * 100 / 1200)
+    # margem entre as que COMPETEM (400 − 300), em pp dos votos EM DISPUTA do
+    # município (emenda de 2026-09-27 ao ADR-0053): 1200 − 500 = 700.
+    assert m["lider"]["margem_pp"] == pytest.approx(100.0 * 100 / 700)
     assert m["votos_reportados"] == votos
 
     # Sem destino conhecido: exatamente como antes — a anulada lidera.
@@ -375,7 +375,7 @@ def test_lider_do_municipio_sub_judice_na_frente_continua_lider() -> None:
     m = _municipios({"SP": votos}, {"SP": shares}, cargo=1, anulados=an)["SP"]
     assert m["lider"]["candidato_id"] == SUBJ
     # o 2º da margem é quem compete (300), não a anulada (400).
-    assert m["lider"]["margem_pp"] == pytest.approx(100.0 * 200 / 1200)
+    assert m["lider"]["margem_pp"] == pytest.approx(100.0 * 200 / 800)
 
 
 def test_lider_do_municipio_governador_usa_o_destino_da_uf() -> None:
@@ -417,15 +417,16 @@ def _meso(votos: dict[int, int], fora: frozenset[int] | set[int] | None) -> dict
 def test_lider_da_mesorregiao_pula_a_anulada_e_mantem_a_sub_judice() -> None:
     m = _meso({ANUL: 500, SUBJ: 400, LIDER: 300}, frozenset({ANUL}))
     assert m["lider_candidato_id"] == SUBJ
-    # pp do total da mesorregião, que segue incluindo a anulada (base vvc).
-    assert m["lider_pct"] == pytest.approx(100.0 * 400 / 1200)
-    assert m["margem"] == pytest.approx(100.0 * (400 - 300) / 1200)
+    # Emenda de 2026-09-27 ao ADR-0053: pp dos votos EM DISPUTA da
+    # mesorregião — o total sem a anulada (1200 − 500 = 700).
+    assert m["lider_pct"] == pytest.approx(100.0 * 400 / 700)
+    assert m["margem"] == pytest.approx(100.0 * (400 - 300) / 700)
 
 
 def test_lider_da_mesorregiao_sub_judice_na_frente_e_margem_entre_as_que_competem() -> None:
     m = _meso({SUBJ: 500, ANUL: 400, LIDER: 300}, frozenset({ANUL}))
     assert m["lider_candidato_id"] == SUBJ
-    assert m["margem"] == pytest.approx(100.0 * (500 - 300) / 1200)
+    assert m["margem"] == pytest.approx(100.0 * (500 - 300) / 800)
 
 
 def test_lider_da_mesorregiao_so_a_anulada_com_voto_volta_a_ser_lider() -> None:

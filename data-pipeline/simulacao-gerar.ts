@@ -2162,6 +2162,65 @@ function competidores(
   return destinoPublicado ? resultados.filter((r) => r.destino !== "anulado") : [...resultados];
 }
 
+/** O que {@link naBaseDaDisputa} lê e reescreve de uma candidatura. */
+export interface ParcelaDaDisputa {
+  destino: EdgeDestinoVoto;
+  shareFinal: number;
+  shareAtual: number;
+  votosAtuais: number;
+  lower: number;
+  upper: number;
+}
+
+/**
+ * 🔴 Emenda ao ADR-0053 (opção A, decisão do dono 2026-09-27) — a VISTA
+ * PUBLICADA de uma abrangência. Ponto ÚNICO da regra: toda lista publicada
+ * (`national.candidatos` do Presidente, `por_uf[].top_candidatos` + "Outros",
+ * `EdgePayloadUf.candidatos`, margens, série e municípios) passa por aqui.
+ *
+ * Com uma candidatura de destino `"anulado"` PUBLICADO na abrangência, todo
+ * percentual de quem COMPETE (válida e sub judice — segue o TSE) passa a ser
+ * sobre os **votos em disputa** = `vvc − Σ anuladas`:
+ *
+ *   - `shareAtual` = `100 × votosAtuais ÷ (Σ votosAtuais − Σ anuladas)` — dos
+ *     VOTOS, como a spec 022 manda, para o percentual e o número ao lado
+ *     contarem a mesma história (`Σ votosAtuais` É o `vvc`, por construção);
+ *   - `shareFinal`, `lower` e `upper` = o perfil × `100 ÷ Σ shareFinal` de
+ *     quem compete — o mesmo fator nos três, então o IC continua contendo o
+ *     ponto; clampado em [0, 100].
+ *
+ * A anulada sai INTACTA (percentual sobre o `vvc`; a tela não o exibe). Sem
+ * anulada publicada — nenhuma, ou destinação ainda não publicada — devolve os
+ * MESMOS objetos: o payload sai byte a byte o de antes.
+ *
+ * O que NÃO passa por aqui, de propósito: rank, probabilidades e agulha (não
+ * são percentuais; um fator comum entre quem compete não muda a ordem deles),
+ * a escolha de quem entra no `top_candidatos` (comparar anulada e quem
+ * compete só faz sentido no mesmo denominador — o `vvc`) e o bloco nacional de
+ * Governador/Senador, cujo número de urna se repete entre UFs.
+ */
+export function naBaseDaDisputa<T extends ParcelaDaDisputa>(
+  itens: readonly T[],
+  destinoPublicado: boolean,
+): T[] {
+  if (!destinoPublicado || !itens.some((r) => r.destino === "anulado")) return [...itens];
+  const disputa = itens.filter((r) => r.destino !== "anulado");
+  const votosEmDisputa = disputa.reduce((a, r) => a + r.votosAtuais, 0);
+  const somaPerfil = disputa.reduce((a, r) => a + r.shareFinal, 0);
+  const fator = somaPerfil > 0 ? 100 / somaPerfil : 1;
+  return itens.map((r) =>
+    r.destino === "anulado"
+      ? r
+      : {
+          ...r,
+          shareFinal: r.shareFinal * fator,
+          lower: Math.max(0, r.lower * fator),
+          upper: Math.min(100, r.upper * fator),
+          shareAtual: votosEmDisputa > 0 ? (100 * r.votosAtuais) / votosEmDisputa : 0,
+        },
+  );
+}
+
 /**
  * `destino` de uma candidatura nas três LISTAS (`national.candidatos`,
  * `por_uf[].top_candidatos`, `EdgePayloadUf.candidatos`) — espelho de
@@ -2772,10 +2831,19 @@ function linhaUf(
   destinoPublicado: boolean,
 ): EdgeUfRow {
   const { ctx, resultados } = corrida;
+  // Emenda ao ADR-0053 (27/09) — todo percentual desta linha (margens,
+  // `top_candidatos`, "Outros", e o `fecha1t` dos 50%) é sobre os votos em
+  // disputa. A SELEÇÃO do top continua sobre `resultados` (o `vvc`, único
+  // denominador em que anulada e quem compete se comparam); cada selecionado
+  // é então trocado pela sua versão publicada.
+  const publicados = naBaseDaDisputa(resultados, destinoPublicado);
+  const pubPorId = new Map(publicados.map((r) => [r.cand.id, r] as const));
+  const pub = (r: ResultadoCandUf): ResultadoCandUf => pubPorId.get(r.cand.id) ?? r;
+  const { selecionados, cauda } = selecionarComResgate(resultados);
   // ADR-0053 / RF-213 — líder e margem (e daí a cor do mapa, a chamada e o
   // balde) saem só de quem COMPETE; a anulada segue em `top_candidatos`, com
   // `destino`, para a tela pô-la no fim com a etiqueta.
-  const disputa = competidores(resultados, destinoPublicado);
+  const disputa = competidores(publicados, destinoPublicado);
   const lider = disputa[0];
   const segundo = disputa[1];
   if (lider === undefined) throw new Error(`UF ${ctx.uf} sem candidatura que compete`);
@@ -2829,7 +2897,7 @@ function linhaUf(
     // `null`, nunca `0`: um zero aqui leria como "não mudou nada desde 2022",
     // que é uma afirmação. Não há dado de swing numa simulação.
     swing_vs_2022: null,
-    top_candidatos: selecionarComResgate(resultados).selecionados.map((r) => ({
+    top_candidatos: selecionados.map(pub).map((r) => ({
       id: r.cand.id,
       pct: r2(r.shareFinal),
       nome: r.cand.nome,
@@ -2880,7 +2948,11 @@ function linhaUf(
     // resgate por apurado, quem foi resgatado está no topo E estaria naquele
     // fatiamento. Publicá-lo nos dois lugares faria `Σtop + outros` passar de
     // 100% sem nenhuma exceção ser levantada.
-    outros: outrosDaCauda(selecionarComResgate(resultados).cauda),
+    //
+    // Emenda ao ADR-0053 (27/09): "Outros" soma só quem COMPETE — a anulada da
+    // cauda não entra (o percentual dela é sobre outro denominador, e somá-lo
+    // aqui faria `Σtop + outros` passar de 100%).
+    outros: outrosDaCauda(competidores(cauda.map(pub), destinoPublicado)),
     vai_a_2t: vaiA2t,
     bucket,
   };
@@ -2996,33 +3068,45 @@ export function montarPresidente(
   const pct = pctNacional(ctxs);
   const prob = probabilidades(r.derive("prob-nacional"), sharesNac, pct, 1);
 
-  const linhas = cands
-    .map((cand, i) => ({
-      cand,
-      i,
-      share: sharesNac[i] as number,
-      shareAt: sharesNacAt[i] as number,
-      votosProjetados: votosProj[i] as number,
-      votosAtuais: votosAt[i] as number,
-    }))
-    .sort((a, b) => b.share - a.share || a.cand.id - b.cand.id);
-
   // RF-213 — a destinação do Presidente é NACIONAL, e é a mesma nas 27 UFs.
   const destinoPublicado = destinoPublicadoNoPais(corridas);
+  // Rank (e daí cor e ordem) pelo perfil sobre o `vvc`; os PERCENTUAIS saem da
+  // vista publicada (emenda ao ADR-0053, 27/09) — um fator comum entre quem
+  // compete não muda a ordem entre eles.
+  const linhas = naBaseDaDisputa(
+    cands.map((cand, i) => {
+      const share = sharesNac[i] as number;
+      const hw = meiaLarguraIc(share, pct);
+      return {
+        cand,
+        i,
+        destino: destinos[i] as EdgeDestinoVoto,
+        shareFinal: share,
+        shareAtual: sharesNacAt[i] as number,
+        lower: Math.max(0, share - hw),
+        upper: Math.min(100, share + hw),
+        votosProjetados: votosProj[i] as number,
+        votosAtuais: votosAt[i] as number,
+      };
+    }),
+    destinoPublicado,
+  ).sort(
+    (a, b) => (sharesNac[b.i] as number) - (sharesNac[a.i] as number) || a.cand.id - b.cand.id,
+  );
+
   const candidatos: EdgeCandidate[] = linhas.map((l, idx) => {
-    const hw = meiaLarguraIc(l.share, pct);
     return {
       id: l.cand.id,
       nome: l.cand.nome,
       partido: l.cand.partido,
-      ...destinoNaLista(destinos[l.i] as EdgeDestinoVoto, destinoPublicado),
+      ...destinoNaLista(l.destino, destinoPublicado),
       cor: colorForRank(idx + 1),
       votos_atuais: l.votosAtuais,
       votos_projetados: l.votosProjetados,
-      pct_atual: r2(l.shareAt),
-      pct_projetado: r2(l.share),
-      pct_projetado_lower: r2(Math.max(0, l.share - hw)),
-      pct_projetado_upper: r2(Math.min(100, l.share + hw)),
+      pct_atual: r2(l.shareAtual),
+      pct_projetado: r2(l.shareFinal),
+      pct_projetado_lower: r2(l.lower),
+      pct_projetado_upper: r2(l.upper),
       p_vitoria: prob.pVitoria[l.i] as number,
       rank: idx + 1,
       p_passa_2t: prob.pTop2[l.i] as number,
@@ -3051,7 +3135,13 @@ export function montarPresidente(
     prob: p.prob,
   }));
 
-  const outrosPct = candidatos.slice(3).reduce((a, c) => a + c.pct_projetado, 0);
+  // "Outros" = quem COMPETE depois dos 3 primeiros que competem — a mesma
+  // partição que a tela faz ao pôr a anulada no fim (`anuladasAoFim`). Sem
+  // anulada publicada é `candidatos.slice(3)`, como sempre foi.
+  const caudaQueCompete = candidatos
+    .filter((c) => !(destinoPublicado && c.destino === "anulado"))
+    .slice(3);
+  const outrosPct = caudaQueCompete.reduce((a, c) => a + c.pct_projetado, 0);
   const national: EdgeNational = {
     candidatos,
     needle_position: pos,
@@ -3064,7 +3154,7 @@ export function montarPresidente(
     vai_a_2t_nacional: prob.pSegundoTurno >= 0.5,
     participacao: blocoParticipacao(ctxs, pct, contarZonas(ctxs), {
       pct: outrosPct,
-      n: Math.max(0, candidatos.length - 3),
+      n: caudaQueCompete.length,
     }),
   };
 
@@ -3297,7 +3387,9 @@ function insightsSenador(linhas: readonly EdgeUfRow[], corridas: readonly Corrid
     (l) => l.bucket === "decidido_1t" || l.bucket === "chamada",
   ).length;
   const disputadas = corridas.filter((c) => {
-    const disputa = competidores(c.resultados, destinoPublicadoNaUf(c));
+    const publicado = destinoPublicadoNaUf(c);
+    // "Dentro de 3 pontos" nos pontos que a tela mostra: os da disputa.
+    const disputa = competidores(naBaseDaDisputa(c.resultados, publicado), publicado);
     const seg = disputa[1];
     const ter = disputa[2];
     return seg !== undefined && ter !== undefined && seg.shareFinal - ter.shareFinal < 3;
@@ -3360,19 +3452,22 @@ export function montarPresidenteUf(
   const destinoPublicado = destinoPublicadoNoPais(corridas);
   const out: Record<string, EdgePayloadUf> = {};
   for (const c of corridas) {
-    const candidatos: EdgeUfCandidate[] = c.resultados.map((r) => ({
-      id: r.cand.id,
-      nome: r.cand.nome,
-      partido: r.cand.partido,
-      ...campoDestino(r, destinoPublicado),
-      cor: corPorId.get(r.cand.id) ?? colorForRank(r.rank),
-      votos_atuais: r.votosAtuais,
-      votos_projetados: r.votosProjetados,
-      pct_atual: r2(r.shareAtual),
-      pct_projetado: r2(r.shareFinal),
-      ci95: { lower: r2(r.lower), upper: r2(r.upper) },
-      sqcand: r.cand.sqcand,
-    }));
+    // Percentuais sobre os votos em disputa (emenda ao ADR-0053, 27/09).
+    const candidatos: EdgeUfCandidate[] = naBaseDaDisputa(c.resultados, destinoPublicado).map(
+      (r) => ({
+        id: r.cand.id,
+        nome: r.cand.nome,
+        partido: r.cand.partido,
+        ...campoDestino(r, destinoPublicado),
+        cor: corPorId.get(r.cand.id) ?? colorForRank(r.rank),
+        votos_atuais: r.votosAtuais,
+        votos_projetados: r.votosProjetados,
+        pct_atual: r2(r.shareAtual),
+        pct_projetado: r2(r.shareFinal),
+        ci95: { lower: r2(r.lower), upper: r2(r.upper) },
+        sqcand: r.cand.sqcand,
+      }),
+    );
     // A ordem é a mesma de `resultados` (rank por projetado), e é isso que
     // garante `candidatos[0].id === por_uf.lider` — salvo se o 1º for uma
     // candidatura anulada (RF-213): aí o `lider` é o 1º que COMPETE, e a
@@ -3409,7 +3504,8 @@ export function montarSenadorUf(
     const disputa = competidores(c.resultados, publicado);
     const lider = disputa[0];
     const segundo = disputa[1];
-    const candidatos: EdgeUfCandidate[] = c.resultados.map((r) => ({
+    // Percentuais sobre os votos em disputa (emenda ao ADR-0053, 27/09).
+    const candidatos: EdgeUfCandidate[] = naBaseDaDisputa(c.resultados, publicado).map((r) => ({
       id: r.cand.id,
       nome: r.cand.nome,
       partido: r.cand.partido,
@@ -3518,7 +3614,8 @@ export function montarGovernadorUf(
     // Agulha entre quem COMPETE (RF-213).
     const disputa = competidores(c.resultados, publicado);
     const lider = disputa[0];
-    const candidatos: EdgeUfCandidate[] = c.resultados.map((r) => ({
+    // Percentuais sobre os votos em disputa (emenda ao ADR-0053, 27/09).
+    const candidatos: EdgeUfCandidate[] = naBaseDaDisputa(c.resultados, publicado).map((r) => ({
       id: r.cand.id,
       nome: r.cand.nome,
       partido: r.cand.partido,
@@ -4238,8 +4335,12 @@ function serieDaUf(
   destinoPublicado: boolean,
 ): EdgeUfSeriesTemporais {
   const fim = Date.parse(tsFinal);
-  // Margem e p_vitoria do líder entre quem COMPETE (RF-213).
-  const disputa = competidores(corrida.resultados, destinoPublicado);
+  // Margem e p_vitoria do líder entre quem COMPETE (RF-213), a margem em
+  // pontos dos votos em disputa (emenda ao ADR-0053, 27/09).
+  const disputa = competidores(
+    naBaseDaDisputa(corrida.resultados, destinoPublicado),
+    destinoPublicado,
+  );
   const lider = disputa[0];
   const segundo = disputa[1];
   const margemFinal = (lider?.shareAtual ?? 0) - (segundo?.shareAtual ?? 0);
@@ -4388,6 +4489,9 @@ export function montarMunicipios(
       let v1 = -1;
       let v2 = -1;
       let lider: ResultadoCandUf | undefined;
+      // Emenda ao ADR-0053 (27/09) — a margem do município é sobre os votos em
+      // DISPUTA dele: os apurados menos os da anulada ali.
+      let emDisputa = apurados;
       corrida.resultados.forEach((res, k) => {
         const v = votos[k] as number;
         // Sparse por contrato (`EdgeUfMunicipio.votos_reportados`): quem não
@@ -4396,7 +4500,10 @@ export function montarMunicipios(
         // ADR-0053 / RF-213 — a anulada tem voto (fica em `votos_reportados`)
         // mas não disputa: não lidera o município nem pinta o mapa, e a
         // margem é sobre o 2º que COMPETE. Sub judice compete.
-        if (destinoPublicado && res.destino === "anulado") return;
+        if (destinoPublicado && res.destino === "anulado") {
+          emDisputa -= v;
+          return;
+        }
         if (v > v1) {
           v2 = v1;
           v1 = v;
@@ -4412,8 +4519,10 @@ export function montarMunicipios(
           candidato_id: lider?.cand.id ?? 0,
           partido: lider?.cand.partido ?? "—",
           votos: Math.max(0, v1),
-          // Margem em pp sobre o 2º, sempre ≥ 0, sobre os votos do município.
-          margem_pp: apurados > 0 ? r2((100 * (Math.max(0, v1) - Math.max(0, v2))) / apurados) : 0,
+          // Margem em pp sobre o 2º, sempre ≥ 0, sobre os votos EM DISPUTA do
+          // município (= os apurados, quando não há anulada publicada).
+          margem_pp:
+            emDisputa > 0 ? r2((100 * (Math.max(0, v1) - Math.max(0, v2))) / emDisputa) : 0,
         },
         votos_reportados: reportados,
         eleitores: el,
@@ -4733,11 +4842,9 @@ export function validarSaida(s: SaidaSimulacao): void {
     }
   }
 
-  // Presidente: a corrida nacional inteira.
-  const somaPctPres = presidente.national.candidatos.reduce((a, c) => a + c.pct_projetado, 0);
-  if (Math.abs(somaPctPres - 100) > TOLERANCIA.pctSoma) {
-    erro(`presidente: Σ pct_projetado = ${somaPctPres.toFixed(3)}, esperado 100`);
-  }
+  // Presidente: Σ `pct_projetado` da corrida nacional ≈ 100 é conferida na
+  // (16), sobre quem COMPETE (emenda ao ADR-0053, 27/09) — e lá, depois da
+  // (15), para um `destino` apagado ser reprovado pelo nome certo.
   const somaVitPres = presidente.national.candidatos.reduce((a, c) => a + c.p_vitoria, 0);
   if (Math.abs(somaVitPres - 1) > TOLERANCIA.prob) {
     erro(`presidente: Σ p_vitoria = ${somaVitPres.toFixed(4)}, esperado 1`);
@@ -5117,6 +5224,10 @@ export function validarSaida(s: SaidaSimulacao): void {
   // (15) ADR-0053 / RF-213 — o `destino` das LISTAS é o de `votacao.corrida`
   // da mesma abrangência, e nenhum `lider` é uma candidatura anulada.
   validarDestinoNasListas(s);
+
+  // (16) Emenda ao ADR-0053 (27/09) — com anulada publicada, todo percentual
+  // de quem compete é sobre os votos EM DISPUTA.
+  validarBaseDaDisputa(s);
 }
 
 /** `id → destino` (ou `undefined`, se ainda não publicado) de uma corrida. */
@@ -5219,6 +5330,193 @@ function validarDestinoNasListas(s: SaidaSimulacao): void {
       for (const m of blob.municipios) {
         liderCompete(`municipios-${sufixo}-t1/${uf}/${m.cod_ibge}`, m.lider.candidato_id, ref);
       }
+    }
+  }
+}
+
+/** Folga de uma comparação de percentual publicado com 2 casas (`r2`). */
+const MEIO_CENTESIMO = 0.005 + 1e-9;
+
+/**
+ * (16) Emenda ao ADR-0053 (opção A, decisão do dono 2026-09-27). Numa
+ * abrangência com candidatura de destino `"anulado"` PUBLICADO (Presidente: o
+ * país, em toda UF; Governador/Senador: a UF; o município herda a UF), com
+ * `d = vvc − Σ votos das anuladas`:
+ *
+ *   - cada `pct_atual` de quem compete é `100 × votos ÷ d` (meio centésimo de
+ *     folga, o `r2`); o da anulada segue `100 × votos ÷ vvc`;
+ *   - Σ `pct_atual` e Σ `pct_projetado` de quem compete ≈ 100 (a lista
+ *     inteira, ou `top_candidatos` + "Outros"). Sem anulada, `d = vvc` e a
+ *     mesma conta vira "Σ de todas ≈ 100", a regra de antes;
+ *   - `top_candidatos` + "Outros": Σ votos de quem compete == `d`, EXATO — é o
+ *     que pega "Outros" com a anulada dentro, ou "Outros" esquecido;
+ *   - município: `lider.margem_pp` = `100 × (1º − 2º que competem) ÷ d` do
+ *     município;
+ *   - `margem_atual`/`margem_projetada` da linha de UF: a diferença entre os
+ *     dois primeiros que competem em `top_candidatos` (decisão do dono,
+ *     27/09 — a `margem_projetada_ci` sai da mesma margem);
+ *   - série da UF: o último ponto da margem é a diferença dos `pct_atual` do
+ *     1º e do 2º que competem.
+ *
+ * "Nenhuma série traz candidatura anulada" NÃO está aqui: `serie_por_candidato`
+ * é escrita depois, por `scripts/gerar-serie-fixtures.py`, e não passa por
+ * esta função. O portão dela é `tests/unit/dev/serie-fixtures.test.ts`.
+ *
+ * Fica FORA, de propósito: o bloco nacional de Governador/Senador (número de
+ * urna repete entre UFs; decisão do dono).
+ */
+function validarBaseDaDisputa(s: SaidaSimulacao): void {
+  type Item = {
+    id: number;
+    destino?: EdgeDestinoVoto;
+    votos_atuais?: number | null;
+    pct_atual?: number | null;
+    pct_projetado: number;
+  };
+  const votosDe = (x: { votos_atuais?: number | null }): number => x.votos_atuais ?? 0;
+  const ehAnulada = (x: Item): boolean => x.destino === "anulado";
+
+  /** Lista INTEIRA de uma abrangência; devolve `d` (votos em disputa). */
+  const conferirLista = (nome: string, lista: readonly Item[]): number => {
+    const vvc = lista.reduce((a, x) => a + votosDe(x), 0);
+    const d = vvc - lista.filter(ehAnulada).reduce((a, x) => a + votosDe(x), 0);
+    let somaAt = 0;
+    let somaProj = 0;
+    for (const x of lista) {
+      const base = ehAnulada(x) ? vvc : d;
+      const esperado = base > 0 ? (100 * votosDe(x)) / base : 0;
+      if (Math.abs((x.pct_atual ?? 0) - esperado) > MEIO_CENTESIMO) {
+        erro(
+          `${nome}/${x.id}: pct_atual ${String(x.pct_atual)} ≠ ${esperado.toFixed(4)} — ` +
+            `${ehAnulada(x) ? "anulada: sobre o vvc" : "sobre os votos em disputa"} ` +
+            "(emenda ao ADR-0053)",
+        );
+      }
+      if (ehAnulada(x)) continue;
+      somaAt += x.pct_atual ?? 0;
+      somaProj += x.pct_projetado;
+    }
+    if (d > 0 && Math.abs(somaAt - 100) > TOLERANCIA.pctSoma) {
+      erro(`${nome}: Σ pct_atual de quem compete = ${somaAt.toFixed(3)}, esperado 100`);
+    }
+    if (Math.abs(somaProj - 100) > TOLERANCIA.pctSoma) {
+      erro(`${nome}: Σ pct_projetado de quem compete = ${somaProj.toFixed(3)}, esperado 100`);
+    }
+    return d;
+  };
+
+  /** `top_candidatos` + "Outros" de uma linha de UF, contra a lista inteira da UF. */
+  const conferirLinha = (nome: string, l: EdgeUfRow, inteira: readonly Item[]): void => {
+    const d = conferirLista(`${nome}[lista da UF]`, inteira);
+    const vvc = inteira.reduce((a, x) => a + votosDe(x), 0);
+    const anuladas = new Set(inteira.filter(ehAnulada).map((x) => x.id));
+    const outros = l.outros;
+    let votos = outros?.votos_atuais ?? 0;
+    let somaAt = outros?.pct_atual ?? 0;
+    let somaProj = outros?.pct ?? 0;
+    for (const t of l.top_candidatos) {
+      const anulada = anuladas.has(t.id);
+      const base = anulada ? vvc : d;
+      const esperado = base > 0 ? (100 * votosDe(t)) / base : 0;
+      if (Math.abs((t.pct_atual ?? 0) - esperado) > MEIO_CENTESIMO) {
+        erro(
+          `${nome}/${t.id}: pct_atual ${String(t.pct_atual)} ≠ ${esperado.toFixed(4)} ` +
+            "(emenda ao ADR-0053)",
+        );
+      }
+      if (anulada) continue;
+      votos += votosDe(t);
+      somaAt += t.pct_atual ?? 0;
+      somaProj += t.pct;
+    }
+    // Margens: a diferença entre os DOIS PRIMEIROS QUE COMPETEM de
+    // `top_candidatos` (o prefixo está na ordem do rank; a anulada, mesmo no
+    // topo, não entra) — na base da disputa, como os percentuais ao lado.
+    // Folga: três arredondamentos de 2 casas.
+    const [p1, p2] = l.top_candidatos.filter((t) => !anuladas.has(t.id));
+    if (p1 !== undefined) {
+      const margemAt = l.pct_apurado > 0 ? (p1.pct_atual ?? 0) - (p2?.pct_atual ?? 0) : 0;
+      const margemProj = p1.pct - (p2?.pct ?? 0);
+      for (const [campo, obtido, esperado] of [
+        ["margem_atual", l.margem_atual, margemAt],
+        ["margem_projetada", l.margem_projetada, margemProj],
+      ] as const) {
+        if (Math.abs(obtido - esperado) > 3 * MEIO_CENTESIMO) {
+          erro(
+            `${nome}: ${campo} ${obtido} ≠ ${esperado.toFixed(2)} — a diferença entre os dois ` +
+              "primeiros que competem, sobre os votos em disputa (emenda ao ADR-0053)",
+          );
+        }
+      }
+    }
+    if (votos !== d) {
+      erro(
+        `${nome}: Σ votos de quem compete em top_candidatos + outros = ${votos}, mas os votos ` +
+          `em disputa da UF são ${d} — "Outros" com anulada dentro, ou sem alguém que compete`,
+      );
+    }
+    if (d > 0 && Math.abs(somaAt - 100) > TOLERANCIA.pctSoma) {
+      erro(
+        `${nome}: Σ pct_atual (top + outros) de quem compete = ${somaAt.toFixed(3)}, esperado 100`,
+      );
+    }
+    if (Math.abs(somaProj - 100) > TOLERANCIA.pctSoma) {
+      erro(`${nome}: Σ pct (top + outros) de quem compete = ${somaProj.toFixed(3)}, esperado 100`);
+    }
+  };
+
+  /** Margem de cada município e último ponto da série da UF. */
+  const conferirDetalhe = (
+    nome: string,
+    blob: UfDetailBlob | undefined,
+    inteira: readonly Item[],
+  ): void => {
+    if (blob === undefined) return; // já reportado em (10)
+    const anuladas = new Set(inteira.filter(ehAnulada).map((x) => x.id));
+    for (const m of blob.municipios) {
+      const votos = Object.entries(m.votos_reportados ?? {}).map(([id, v]) => [Number(id), v]);
+      const total = votos.reduce((a, [, v]) => a + (v as number), 0);
+      const d =
+        total -
+        votos.reduce((a, [id, v]) => a + (anuladas.has(id as number) ? (v as number) : 0), 0);
+      const quemCompete = votos
+        .filter(([id]) => !anuladas.has(id as number))
+        .map(([, v]) => v as number)
+        .sort((a, b) => b - a);
+      const esperado = d > 0 ? r2((100 * ((quemCompete[0] ?? 0) - (quemCompete[1] ?? 0))) / d) : 0;
+      if (Math.abs(m.lider.margem_pp - esperado) > 1e-9) {
+        erro(
+          `${nome}/${m.cod_ibge}: margem_pp ${m.lider.margem_pp} ≠ ${esperado} — a margem do ` +
+            "município é sobre os votos em disputa dele (emenda ao ADR-0053)",
+        );
+      }
+    }
+    const margem = blob.series_temporais?.margem ?? [];
+    const ultimo = margem[margem.length - 1];
+    const disputa = inteira.filter((x) => !ehAnulada(x));
+    if (ultimo !== undefined && disputa.length > 0) {
+      const esperado = (disputa[0]?.pct_atual ?? 0) - (disputa[1]?.pct_atual ?? 0);
+      if (Math.abs(ultimo.margem_pp - esperado) > 2 * MEIO_CENTESIMO + 0.005) {
+        erro(
+          `${nome}: último ponto da série de margem ${ultimo.margem_pp} ≠ ${esperado.toFixed(2)} ` +
+            "(1º − 2º que competem, em pontos da disputa)",
+        );
+      }
+    }
+  };
+
+  conferirLista("presidente.json/national", s.presidente.national.candidatos);
+  const cargos = [
+    ["presidente", s.presidente, s.presidenteUf, s.municipiosPresT1, "pres"],
+    ["governador", s.governador, s.governadorUf, s.municipiosGovT1, "gov"],
+    ["senador", s.senador, s.senadorUf, s.municipiosSenT1, "sen"],
+  ] as const;
+  for (const [nome, nacional, porUf, municipios, sufixo] of cargos) {
+    for (const [uf, p] of Object.entries(porUf)) {
+      conferirLista(`${nome}-uf.json/${uf}`, p.candidatos);
+      const l = nacional.por_uf.find((y) => y.sigla === uf);
+      if (l !== undefined) conferirLinha(`${nome}.json/por_uf/${uf}`, l, p.candidatos);
+      conferirDetalhe(`municipios-${sufixo}-t1/${uf}`, municipios[uf], p.candidatos);
     }
   }
 }

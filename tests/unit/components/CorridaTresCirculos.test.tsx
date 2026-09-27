@@ -32,13 +32,14 @@ import {
   CorridaTresCirculos,
   circuloAptos,
   circuloComparecimento,
-  circuloValidos,
+  circuloDisputa,
   destinacaoPendente,
   fatiasDaCorrida,
   fatiasProjecaoCorrida,
   maiorResto,
   ordenarCandidaturas,
   ordenarPartidos,
+  projecaoDaCorrida,
 } from "@/components/blocks/CorridaTresCirculos";
 import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import type {
@@ -171,6 +172,15 @@ const CANDIDATOS_PROJ = [
   { id: 90, nome: "Fábio Anulado", votos_projetados: 7_000_000 },
 ];
 
+/**
+ * A mesma lista SEM a sub judice (44). Opção A: a sub judice COMPETE e entra
+ * na divisão, somando a projeção dela ao total. Os testes de mecânica
+ * (desempate, maior resto, ramos de espera) rodam sobre esta lista, em que o
+ * total é `projetada.validos` exato — os que tratam da sub judice usam a
+ * lista inteira. A anulada (90, 7 mi) continua aqui: ela nunca entra.
+ */
+const CANDIDATOS_PROJ_VALIDOS = CANDIDATOS_PROJ.filter((c) => c.id !== 44);
+
 /** Total de válidos projetado — o arco 3 do "Votação". ≠ Σ acima (98 mi). */
 const PROJETADA = {
   validos: 50_000_001,
@@ -183,10 +193,15 @@ const PROJETADA = {
 // RF-203 — o filtro de destinação
 // ---------------------------------------------------------------------------
 
-describe("RF-203 — só voto válido entra em fatia com nome", () => {
-  it("🔴 a candidatura sub judice MAIS votada fica fora — o 1º é o maior VÁLIDO", () => {
+// 🔴 ALTERADO na emenda "opção A" ao ADR-0053 (dono, 2026-09-27): a sub judice
+// COMPETE e passou a ter fatia própria; só a anulada fica fora. Os testes
+// abaixo afirmavam o contrário ("a sub judice fica fora", "Anulados e sub
+// judice" = 13 mi) e foram invertidos, não afrouxados.
+describe("RF-203 + opção A — só quem COMPETE entra em fatia com nome", () => {
+  it("🔴 a candidatura sub judice MAIS votada entra, e em 1º — a anulada fica fora [mutação: filtro só `valido`]", () => {
     const ord = ordenarCandidaturas(corridaReal());
     expect(ord.map((c) => c.key)).toEqual([
+      "cand-44",
       "cand-13",
       "cand-22",
       "cand-15",
@@ -196,17 +211,17 @@ describe("RF-203 — só voto válido entra em fatia com nome", () => {
     ]);
   });
 
-  it("🔴 nem anulado, nem sub judice, nem sem destino entram", () => {
+  it("🔴 nem anulado, nem sem destino entram; válido e sub judice sim", () => {
     const ord = ordenarCandidaturas([
       { id: 1, partido: "PT", votos: 9, destino: "anulado" },
       { id: 2, partido: "PL", votos: 8, destino: "sub_judice" },
       { id: 3, partido: "MDB", votos: 7 },
       { id: 4, partido: "PDT", votos: 6, destino: "valido" },
     ]);
-    expect(ord.map((c) => c.key)).toEqual(["cand-4"]);
+    expect(ord.map((c) => c.key)).toEqual(["cand-2", "cand-4"]);
   });
 
-  it("no render, a sub judice não aparece em legenda nenhuma, nem pelo nome", () => {
+  it("no render, a sub judice aparece com a etiqueta; a anulada em legenda nenhuma, nem pelo nome", () => {
     const doc = parse(
       <CorridaTresCirculos
         modo="candidatura"
@@ -215,22 +230,25 @@ describe("RF-203 — só voto válido entra em fatia com nome", () => {
       />,
     );
     for (const n of [1, 2, 3] as const) {
-      expect(legendaKeys(doc, n)).not.toContain("cand-44");
+      expect(legendaKeys(doc, n)).toContain("cand-44");
       expect(legendaKeys(doc, n)).not.toContain("cand-90");
+      expect(q(doc, `corrida-circulo-${n}-legenda-cand-44`)?.textContent).toContain(
+        "Eduardo Sub Judice · UNIAO (Sub judice)",
+      );
     }
-    expect(doc.body.textContent).not.toContain("Eduardo Sub Judice");
     expect(doc.body.textContent).not.toContain("Fábio Anulado");
-    expect(legendaKeys(doc, 1)[0]).toBe("cand-13");
+    expect(legendaKeys(doc, 1)[0]).toBe("cand-44");
   });
 
-  it("os votos sub judice e anulados vão para 'Anulados e sub judice' nos círculos 2 e 3", () => {
+  it("🔴 só os votos ANULADOS vão para 'Anulados' nos círculos 2 e 3 — o sub judice não [mutação: `anulados + sub_judice`]", () => {
     const doc = parse(
       <CorridaTresCirculos modo="candidatura" votacao={votacaoDe(corridaReal())} />,
     );
     for (const n of [2, 3] as const) {
       const li = q(doc, `corrida-circulo-${n}-legenda-anulados`);
-      expect(li?.getAttribute("data-abs")).toBe(String(13_000_000));
-      expect(li?.textContent).toContain("Anulados e sub judice");
+      expect(li?.getAttribute("data-abs")).toBe(String(2_000_000));
+      expect(li?.textContent).toContain("Anulados");
+      expect(li?.textContent).not.toContain("sub judice");
     }
     expect(q(doc, "corrida-circulo-1-legenda-anulados")).toBeNull();
   });
@@ -241,10 +259,10 @@ describe("RF-203 — só voto válido entra em fatia com nome", () => {
 // ---------------------------------------------------------------------------
 
 describe("RF-202 — as fatias da corrida", () => {
-  it("quatro com fatia própria e 'Outros' com a soma das demais válidas", () => {
+  it("quatro com fatia própria e 'Outros' com a soma das demais que competem", () => {
     const f = fatiasDaCorrida(ordenarCandidaturas(corridaReal()));
-    expect(f.map((x) => x.key)).toEqual(["cand-13", "cand-22", "cand-15", "cand-12", "outros"]);
-    expect(f.at(-1)?.abs).toBe(3_500_000); // 30 (2 mi) + 50 (1,5 mi)
+    expect(f.map((x) => x.key)).toEqual(["cand-44", "cand-13", "cand-22", "cand-15", "outros"]);
+    expect(f.at(-1)?.abs).toBe(6_500_000); // 12 (3 mi) + 30 (2 mi) + 50 (1,5 mi)
   });
 
   it("🔴 desempate pelo NÚMERO de urna crescente, nas duas ordens de chegada", () => {
@@ -297,10 +315,10 @@ describe("RF-202 — as fatias da corrida", () => {
     expect(legendaKeys(doc, 1)).toEqual(["cand-13", "cand-22", "cand-15"]);
   });
 
-  it("com exatamente cinco válidas, 'Outros' é a quinta", () => {
-    const corrida = corridaReal().filter((e) => e.id !== 50);
+  it("com exatamente cinco que competem, 'Outros' é a quinta", () => {
+    const corrida = corridaReal().filter((e) => e.id !== 50 && e.id !== 30);
     const doc = parse(<CorridaTresCirculos modo="candidatura" votacao={votacaoDe(corrida)} />);
-    expect(q(doc, "corrida-circulo-1-legenda-outros")?.getAttribute("data-abs")).toBe("2000000");
+    expect(q(doc, "corrida-circulo-1-legenda-outros")?.getAttribute("data-abs")).toBe("3000000");
   });
 });
 
@@ -315,17 +333,17 @@ describe("RF-204..206 — cada círculo fecha na sua base", () => {
 
   it("🔴 as três identidades fecham na unidade", () => {
     const soma = (f: { abs: number }[] | null) => (f ?? []).reduce((s, x) => s + x.abs, 0);
-    expect(soma(circuloValidos(fatias, c))).toBe(c.validos);
+    expect(soma(circuloDisputa(fatias, c))).toBe(c.validos + c.sub_judice);
     expect(soma(circuloComparecimento(fatias, c))).toBe(c.comparecimento);
     expect(soma(circuloAptos(fatias, c))).toBe(c.aptos);
   });
 
   it("círculo 2 = corrida + brancos + nulos + anulados; círculo 3 + abstenção + não apurado", () => {
     expect(circuloComparecimento(fatias, c)?.map((f) => f.key)).toEqual([
+      "cand-44",
       "cand-13",
       "cand-22",
       "cand-15",
-      "cand-12",
       "outros",
       "brancos",
       "nulos",
@@ -337,31 +355,34 @@ describe("RF-204..206 — cada círculo fecha na sua base", () => {
   });
 
   it("os percentuais são sobre a base de CADA círculo", () => {
-    expect(circuloValidos(fatias, c)?.[0]?.pct).toBeCloseTo((10_000_000 / c.validos) * 100, 8);
-    expect(circuloComparecimento(fatias, c)?.[0]?.pct).toBeCloseTo(
-      (10_000_000 / c.comparecimento) * 100,
+    expect(circuloDisputa(fatias, c)?.[0]?.pct).toBeCloseTo(
+      (11_000_000 / (c.validos + c.sub_judice)) * 100,
       8,
     );
-    expect(circuloAptos(fatias, c)?.[0]?.pct).toBeCloseTo((10_000_000 / c.aptos) * 100, 8);
+    expect(circuloComparecimento(fatias, c)?.[0]?.pct).toBeCloseTo(
+      (11_000_000 / c.comparecimento) * 100,
+      8,
+    );
+    expect(circuloAptos(fatias, c)?.[0]?.pct).toBeCloseTo((11_000_000 / c.aptos) * 100, 8);
   });
 
   it("🔴 círculo 1 não fecha por UM voto ⇒ null, e só ele", () => {
     const torto = { ...c, validos: c.validos + 1 };
-    expect(circuloValidos(fatias, torto)).toBeNull();
+    expect(circuloDisputa(fatias, torto)).toBeNull();
     expect(circuloComparecimento(fatias, torto)).not.toBeNull();
     expect(circuloAptos(fatias, torto)).not.toBeNull();
   });
 
   it("🔴 círculo 2 não fecha por UM voto ⇒ null, e só ele", () => {
     const torto = { ...c, comparecimento: c.comparecimento - 1 };
-    expect(circuloValidos(fatias, torto)).not.toBeNull();
+    expect(circuloDisputa(fatias, torto)).not.toBeNull();
     expect(circuloComparecimento(fatias, torto)).toBeNull();
     expect(circuloAptos(fatias, torto)).not.toBeNull();
   });
 
   it("🔴 círculo 3 não fecha por UM eleitor ⇒ null, e só ele", () => {
     const torto = { ...c, instalados: c.instalados - 1 };
-    expect(circuloValidos(fatias, torto)).not.toBeNull();
+    expect(circuloDisputa(fatias, torto)).not.toBeNull();
     expect(circuloComparecimento(fatias, torto)).not.toBeNull();
     expect(circuloAptos(fatias, torto)).toBeNull();
   });
@@ -378,7 +399,7 @@ describe("RF-204..206 — cada círculo fecha na sua base", () => {
     //                       = comparecimento + (abstencao+5+naoAp) + (−5) = aptos
     expect(circuloAptos(fatias, torto)).toBeNull();
     const negCorrida = [{ key: "x", label: "x", abs: -1, pintura: { fill: "x" } }, ...fatias];
-    expect(circuloValidos(negCorrida, { ...c, validos: c.validos - 1 })).toBeNull();
+    expect(circuloDisputa(negCorrida, { ...c, validos: c.validos - 1 })).toBeNull();
   });
 
   it("no DOM, cada círculo que não fecha diz 'não fecha' e NÃO desenha", () => {
@@ -417,7 +438,9 @@ describe("RF-204..206 — cada círculo fecha na sua base", () => {
       const fig = q(doc, `corrida-circulo-${n}`);
       expect(fig?.getAttribute("data-soma-abs")).toBe(fig?.getAttribute("data-total"));
     }
-    expect(q(doc, "corrida-circulo-1")?.getAttribute("data-total")).toBe(String(c.validos));
+    expect(q(doc, "corrida-circulo-1")?.getAttribute("data-total")).toBe(
+      String(c.validos + c.sub_judice),
+    );
     expect(q(doc, "corrida-circulo-2")?.getAttribute("data-total")).toBe(String(c.comparecimento));
     expect(q(doc, "corrida-circulo-3")?.getAttribute("data-total")).toBe(String(c.aptos));
   });
@@ -783,14 +806,14 @@ describe("RF-208 — base e fonte declaradas", () => {
     const caps = (visao: string) =>
       [...doc.querySelectorAll(`[data-view-only="${visao}"] figcaption`)].map((f) => f.textContent);
     expect(caps("parcial")).toEqual([
-      "Dos votos válidos",
+      "Dos votos em disputa",
       "De quem votou",
       "Do eleitorado apto, até agora",
     ]);
     expect(caps("proj")).toEqual(["Projeção para o fim da apuração"]);
     expect(doc.querySelectorAll("figcaption")).toHaveLength(4);
     expect(q(doc, "corrida-circulo-1-legenda-cand-13")?.getAttribute("data-base")).toBe(
-      "votos válidos",
+      "votos em disputa",
     );
     expect(q(doc, "corrida-circulo-3-legenda-cand-13")?.getAttribute("data-base")).toBe(
       "eleitores aptos",
@@ -946,10 +969,10 @@ describe("RF-212 — fatiasProjecaoCorrida", () => {
   const v = votacaoDe(corridaReal(), { projetada: PROJETADA });
   const keys = (f: { key: string }[] | null) => (f ?? []).map((x) => x.key);
 
-  it("🔴 ordem pela PROJEÇÃO, só `valido`, desempate por número de urna crescente", () => {
+  it("🔴 ordem pela PROJEÇÃO, sem a anulada, desempate por número de urna crescente", () => {
     // apurado: 13, 22, 15, 12, 30, 50 · projeção: 22, 13, 50, 15≡30 (empate).
-    // Sub judice (44) e anulado (90) têm as maiores projeções e ficam fora.
-    const f = fatiasProjecaoCorrida(v, CANDIDATOS_PROJ, PROJETADA.validos);
+    // O anulado (90) tem projeção de 7 mi — à frente de 15 e 30 — e fica fora.
+    const f = fatiasProjecaoCorrida(v, CANDIDATOS_PROJ_VALIDOS, PROJETADA.validos);
     expect(keys(f)).toEqual(["cand-22", "cand-13", "cand-50", "cand-15", "outros"]);
   });
 
@@ -957,10 +980,10 @@ describe("RF-212 — fatiasProjecaoCorrida", () => {
     const corridaInv = [...corridaReal()].reverse();
     const vInv = votacaoDe(corridaInv, { projetada: PROJETADA });
     for (const [vv, lista] of [
-      [v, CANDIDATOS_PROJ],
-      [vInv, CANDIDATOS_PROJ],
-      [v, [...CANDIDATOS_PROJ].reverse()],
-      [vInv, [...CANDIDATOS_PROJ].reverse()],
+      [v, CANDIDATOS_PROJ_VALIDOS],
+      [vInv, CANDIDATOS_PROJ_VALIDOS],
+      [v, [...CANDIDATOS_PROJ_VALIDOS].reverse()],
+      [vInv, [...CANDIDATOS_PROJ_VALIDOS].reverse()],
     ] as const) {
       expect(keys(fatiasProjecaoCorrida(vv, lista, PROJETADA.validos))).toEqual([
         "cand-22",
@@ -973,7 +996,7 @@ describe("RF-212 — fatiasProjecaoCorrida", () => {
   });
 
   it("🔴 Σ fatias === `projetada.validos` na unidade — e NÃO Σ das projeções", () => {
-    const f = fatiasProjecaoCorrida(v, CANDIDATOS_PROJ, PROJETADA.validos) ?? [];
+    const f = fatiasProjecaoCorrida(v, CANDIDATOS_PROJ_VALIDOS, PROJETADA.validos) ?? [];
     const soma = f.reduce((s, x) => s + x.abs, 0);
     expect(soma).toBe(50_000_001);
     // Σ projeções válidas = 98.000.000; o total NÃO é esse.
@@ -1011,7 +1034,7 @@ describe("RF-212 — fatiasProjecaoCorrida", () => {
   });
 
   it("candidatura ausente da lista NÃO entra — as outras seguem", () => {
-    const sem22 = CANDIDATOS_PROJ.filter((c) => c.id !== 22);
+    const sem22 = CANDIDATOS_PROJ_VALIDOS.filter((c) => c.id !== 22);
     const f = fatiasProjecaoCorrida(v, sem22, PROJETADA.validos);
     expect(keys(f)).toEqual(["cand-13", "cand-50", "cand-15", "cand-30", "outros"]);
     expect(f?.reduce((s, x) => s + x.abs, 0)).toBe(PROJETADA.validos);
@@ -1036,7 +1059,7 @@ describe("RF-212 — fatiasProjecaoCorrida", () => {
   });
 
   it("o rótulo vem da lista, como no Parcial", () => {
-    const f = fatiasProjecaoCorrida(v, CANDIDATOS_PROJ, PROJETADA.validos);
+    const f = fatiasProjecaoCorrida(v, CANDIDATOS_PROJ_VALIDOS, PROJETADA.validos);
     expect(f?.[0]?.label).toBe("Bruno Lima · PL");
     expect(f?.[4]?.label).toBe("Outros");
   });
@@ -1044,45 +1067,74 @@ describe("RF-212 — fatiasProjecaoCorrida", () => {
   describe("🔴 cada ramo de 'aguardando' devolve null", () => {
     it("sem `projetada`, ou total zero, negativo ou não inteiro", () => {
       for (const t of [undefined, null, 0, -1, 1.5, Number.NaN]) {
-        expect(fatiasProjecaoCorrida(v, CANDIDATOS_PROJ, t), String(t)).toBeNull();
+        expect(fatiasProjecaoCorrida(v, CANDIDATOS_PROJ_VALIDOS, t), String(t)).toBeNull();
       }
     });
 
     it("destinação pendente — pela flag", () => {
       const p = votacaoDe(corridaReal(), { projetada: PROJETADA, destino_pendente: true });
-      expect(fatiasProjecaoCorrida(p, CANDIDATOS_PROJ, PROJETADA.validos)).toBeNull();
+      expect(fatiasProjecaoCorrida(p, CANDIDATOS_PROJ_VALIDOS, PROJETADA.validos)).toBeNull();
     });
 
     it("destinação pendente — por entrada com votos e sem destino", () => {
       const corrida = corridaReal().map((e) => (e.id === 12 ? { ...e, destino: undefined } : e));
-      expect(fatiasProjecaoCorrida({ corrida }, CANDIDATOS_PROJ, PROJETADA.validos)).toBeNull();
+      expect(
+        fatiasProjecaoCorrida({ corrida }, CANDIDATOS_PROJ_VALIDOS, PROJETADA.validos),
+      ).toBeNull();
     });
 
     it("`corrida` ausente", () => {
-      expect(fatiasProjecaoCorrida({}, CANDIDATOS_PROJ, PROJETADA.validos)).toBeNull();
+      expect(fatiasProjecaoCorrida({}, CANDIDATOS_PROJ_VALIDOS, PROJETADA.validos)).toBeNull();
     });
 
     it("Σ projeções válidas = 0 (todas zeradas)", () => {
-      const zeradas = CANDIDATOS_PROJ.map((c) =>
-        c.id === 44 || c.id === 90 ? c : { ...c, votos_projetados: 0 },
+      const zeradas = CANDIDATOS_PROJ_VALIDOS.map((c) =>
+        c.id === 90 ? c : { ...c, votos_projetados: 0 },
       );
-      // 44 e 90 seguem com projeção — e não podem salvar a divisão
+      // 90 (anulado) segue com projeção — e não pode salvar a divisão
       expect(fatiasProjecaoCorrida(v, zeradas, PROJETADA.validos)).toBeNull();
     });
 
-    it("nenhuma válida está na lista (só nomes, sem `votos_projetados`)", () => {
+    it("ninguém que compete está na lista (só nomes, sem `votos_projetados`)", () => {
       expect(fatiasProjecaoCorrida(v, CANDIDATOS, PROJETADA.validos)).toBeNull();
       expect(fatiasProjecaoCorrida(v, [], PROJETADA.validos)).toBeNull();
     });
 
     it("projeção torta (negativa ou não inteira) não vira fatia", () => {
       for (const torta of [-5, 1.5]) {
-        const lista = CANDIDATOS_PROJ.map((c) =>
+        const lista = CANDIDATOS_PROJ_VALIDOS.map((c) =>
           c.id === 12 ? { ...c, votos_projetados: torta } : c,
         );
         expect(fatiasProjecaoCorrida(v, lista, PROJETADA.validos), String(torta)).toBeNull();
       }
     });
+  });
+});
+
+describe("RF-212 + opção A — a sub judice entra na projeção e soma ao total", () => {
+  const v = votacaoDe(corridaReal(), { projetada: PROJETADA });
+
+  it("🔴 total = `projetada.validos` + projeção da sub judice, e ela ganha fatia [mutação: sem sub judice]", () => {
+    const p = projecaoDaCorrida(v, CANDIDATOS_PROJ, PROJETADA.validos);
+    expect(p?.somaSubJudice).toBe(60_000_000);
+    expect(p?.total).toBe(110_000_001);
+    // projeção: 44 (60), 22 (40), 13 (38), 50 (9); Outros = 15 + 30 + 12 = 11.
+    // T × w ÷ 158, maior resto: faltam 3 unidades → restos 145 (Outros),
+    // 133 (50) e 82 (22).
+    expect(Object.fromEntries((p?.fatias ?? []).map((f) => [f.key, f.abs]))).toEqual({
+      "cand-44": 41_772_152,
+      "cand-22": 27_848_102,
+      "cand-13": 26_455_696,
+      "cand-50": 6_265_823,
+      outros: 7_658_228,
+    });
+    expect(p?.fatias[0]?.label).toBe("Eduardo Sub Judice · UNIAO (Sub judice)");
+  });
+
+  it("sub judice FORA da lista não soma ao total — ele volta a ser `projetada.validos`", () => {
+    const p = projecaoDaCorrida(v, CANDIDATOS_PROJ_VALIDOS, PROJETADA.validos);
+    expect(p?.somaSubJudice).toBe(0);
+    expect(p?.total).toBe(PROJETADA.validos);
   });
 });
 
@@ -1101,20 +1153,37 @@ describe("RF-212 — o círculo de projeção no painel", () => {
     const lis = [...doc.querySelectorAll('[data-testid="corrida-projecao-legenda"] li')].map((li) =>
       (li.getAttribute("data-testid") ?? "").replace("corrida-projecao-legenda-", ""),
     );
-    expect(lis).toEqual(["cand-22", "cand-13", "cand-50", "cand-15", "outros"]);
+    expect(lis).toEqual(["cand-44", "cand-22", "cand-13", "cand-50", "outros"]);
     expect(q(doc, "corrida-projecao-legenda-cand-22")?.getAttribute("data-base")).toBe(
-      "votos válidos (projetado)",
+      "votos em disputa (projetado)",
     );
   });
 
-  it("🔴 o total é o MESMO da fatia de válidos do arco 3 do 'Votação'", () => {
+  // 🔴 ALTERADO na opção A: com sub judice projetada, o total é a fatia de
+  // válidos do "Votação" MAIS a projeção dela — não mais o mesmo número.
+  it("🔴 o total é a fatia de válidos do arco 3 do 'Votação' + a projeção da sub judice", () => {
     const fig = q(doc, "corrida-projecao");
     const validosVotacao = q(doc, "votacao-circulo-3-fatia-validos")?.getAttribute("data-abs");
     expect(validosVotacao).toBe(String(PROJETADA.validos));
-    expect(fig?.getAttribute("data-total")).toBe(validosVotacao);
-    expect(fig?.getAttribute("data-soma-abs")).toBe(validosVotacao);
-    expect(q(doc, "corrida-projecao-total")?.textContent).toBe("50.000.001");
-    expect(q(doc, "corrida-projecao-base")?.textContent).toBe("votos válidos (projetado)");
+    expect(fig?.getAttribute("data-total")).toBe(String(PROJETADA.validos + 60_000_000));
+    expect(fig?.getAttribute("data-soma-abs")).toBe(String(PROJETADA.validos + 60_000_000));
+    expect(q(doc, "corrida-projecao-total")?.textContent).toBe("110.000.001");
+    expect(q(doc, "corrida-projecao-base")?.textContent).toBe("votos em disputa (projetado)");
+  });
+
+  it("sem sub judice projetada, o total é o MESMO da fatia de válidos do 'Votação'", () => {
+    const d = parse(
+      <>
+        <VotacaoEleitorado votacao={v} />
+        <CorridaTresCirculos modo="candidatura" votacao={v} candidatos={CANDIDATOS_PROJ_VALIDOS} />
+      </>,
+    );
+    const validosVotacao = q(d, "votacao-circulo-3-fatia-validos")?.getAttribute("data-abs");
+    expect(q(d, "corrida-projecao")?.getAttribute("data-total")).toBe(validosVotacao);
+    expect(q(d, "corrida-projecao")?.getAttribute("data-soma-abs")).toBe(validosVotacao);
+    const t = q(d, "corrida-metodologia-proj")?.textContent ?? "";
+    expect(t).toContain("é o mesmo da projeção de votos válidos do painel “Votação”");
+    expect(t).not.toContain("sub judice");
   });
 
   it("a fatia pinta pela sigla, 'Outros' neutro", () => {
@@ -1128,10 +1197,12 @@ describe("RF-212 — o círculo de projeção no painel", () => {
     const m = q(doc, "corrida-metodologia-proj");
     expect(m?.getAttribute("data-view-only")).toBe("proj");
     const t = m?.textContent ?? "";
-    expect(t).toContain("é o mesmo da projeção do painel “Votação”");
+    expect(t).toContain("somada à projeção das candidaturas sub judice");
     expect(t).toContain("segue a projeção de cada uma");
     expect(t).toContain("podem diferir nos últimos dígitos");
+    expect(t).toContain("110.000.001");
     expect(t).toContain("50.000.001");
+    expect(t).toContain("60.000.000");
     expect(t).toContain("as demais somam “Outros”");
     // não cita os três círculos do Parcial …
     expect(t).not.toMatch(/três gráficos|terceiro|primeiro gráfico|até agora/i);
@@ -1157,7 +1228,7 @@ describe("RF-212 — o círculo de projeção no painel", () => {
       />,
     );
     const t = q(d, "corrida-metodologia-proj")?.textContent ?? "";
-    expect(t).toContain("segue a projeção de cada uma. Só o voto válido entra");
+    expect(t).toContain("segue a projeção de cada uma. Candidaturas anuladas ficam fora");
     expect(t).not.toContain("Outros");
   });
 
@@ -1253,12 +1324,13 @@ describe("RF-210 / RF-207 — Senado segue o seletor; <DetailUnavailable> vale n
   it("🔴 Senado (2 por eleitor): os três no 'parcial', a projeção no 'proj' — como os outros cargos", () => {
     // Desde 2026-09-27 o Senado desenha: não há mais o "aguardando" que valia
     // nas duas visões. A projeção entra com o total `projetada.validos`, SEM
-    // fator — já é de votos.
+    // fator — já é de votos. (Lista sem a sub judice: com ela o total ganha a
+    // projeção dela, também sem fator — ver o bloco da opção A.)
     const doc = parse(
       <CorridaTresCirculos
         modo="candidatura"
         votacao={{ ...votacaoSenadoDe(corridaReal()), projetada: PROJETADA }}
-        candidatos={CANDIDATOS_PROJ}
+        candidatos={CANDIDATOS_PROJ_VALIDOS}
         votosPorEleitor={2}
       />,
     );

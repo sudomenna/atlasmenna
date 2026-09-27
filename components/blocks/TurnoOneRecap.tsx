@@ -44,7 +44,14 @@
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { candidateMarkerColor } from "@/components/blocks/_candidateColor";
 import type { EdgePayload } from "@/lib/edge-config/types";
-import { anuladasAoFim, compete, queCompetem, sufixoAriaDestino } from "@/lib/utils/destino-voto";
+import {
+  anuladasAoFim,
+  compete,
+  exibePercentual,
+  queCompetem,
+  sufixoAriaDestino,
+  votosDaAnulada,
+} from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -127,11 +134,15 @@ export function TurnoOneRecap({ recap, className }: TurnoOneRecapProps) {
           const pctSafe = Number.isFinite(c.pct_projetado)
             ? Math.max(0, Math.min(100, c.pct_projetado))
             : 0;
-          const pctLabel = formatPercent(pctSafe, 1);
+          // Emenda "opção A" ao ADR-0053 — a anulada não mostra percentual
+          // (o dela é sobre outra base): só os votos, ou nada.
+          const pctLabel = exibePercentual(c)
+            ? formatPercent(pctSafe, 1)
+            : (votosDaAnulada(c.votos_atuais) ?? "");
           return (
             <li
               key={c.id}
-              aria-label={`${nomeExibicao(c.nome, c.sqcand)}${sufixoAriaDestino(c.destino)} (${c.partido}): ${pctLabel}`}
+              aria-label={`${nomeExibicao(c.nome, c.sqcand)}${sufixoAriaDestino(c.destino)} (${c.partido})${pctLabel ? `: ${pctLabel}` : ""}`}
               className="flex items-center gap-1.5"
             >
               <span
@@ -149,7 +160,9 @@ export function TurnoOneRecap({ recap, className }: TurnoOneRecapProps) {
                 ({siglaExibicao(c.partido)})
               </span>
               <DestinoEtiqueta destino={c.destino} />
-              <span className="text-sm font-semibold tabular-nums">{pctLabel}</span>
+              {pctLabel ? (
+                <span className="text-sm font-semibold tabular-nums">{pctLabel}</span>
+              ) : null}
             </li>
           );
         })}

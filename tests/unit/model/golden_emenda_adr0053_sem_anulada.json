@@ -1,0 +1,3366 @@
+{
+  "gov_anulada_so_em_sp": {
+    "national": {
+      "candidatos": [
+        {
+          "id": 13,
+          "nome": "Candidato 13",
+          "partido": "P13",
+          "votos_atuais": 917058,
+          "votos_projetados": 917058,
+          "pct_atual": 37.98766742305809,
+          "pct_projetado": 37.98724,
+          "pct_projetado_lower": 37.94342,
+          "pct_projetado_upper": 38.03557,
+          "p_vitoria": 1.0,
+          "rank": 1,
+          "p_passa_2t": 1.0,
+          "p_fecha_1t": 0.0,
+          "comparecimento": {
+            "pct_atual": null,
+            "pct_projetado": 35.89366,
+            "lower": 35.85225,
+            "upper": 35.93933
+          }
+        },
+        {
+          "id": 22,
+          "nome": "Candidato 22",
+          "partido": "P22",
+          "votos_atuais": 531366,
+          "votos_projetados": 531366,
+          "pct_atual": 22.01099045853227,
+          "pct_projetado": 22.01135,
+          "pct_projetado_lower": 21.98833,
+          "pct_projetado_upper": 22.03363,
+          "p_vitoria": 0.0,
+          "rank": 2,
+          "p_passa_2t": 1.0,
+          "p_fecha_1t": 0.0,
+          "comparecimento": {
+            "pct_atual": null,
+            "pct_projetado": 20.79824,
+            "lower": 20.77649,
+            "upper": 20.8193
+          }
+        },
+        {
+          "id": 60,
+          "nome": "Candidato 60",
+          "partido": "P60",
+          "votos_atuais": 362300,
+          "votos_projetados": 362300,
+          "pct_atual": 15.007700611492345,
+          "pct_projetado": 15.008,
+          "pct_projetado_lower": 14.94763,
+          "pct_projetado_upper": 15.06594,
+          "p_vitoria": 0.0,
+          "rank": 3,
+          "p_passa_2t": 0.0,
+          "p_fecha_1t": 0.0,
+          "comparecimento": {
+            "pct_atual": null,
+            "pct_projetado": 14.18087,
+            "lower": 14.12382,
+            "upper": 14.23561
+          }
+        },
+        {
+          "id": 57,
+          "nome": "Candidato 57",
+          "partido": "P57",
+          "votos_atuais": 289598,
+          "votos_projetados": 289598,
+          "pct_atual": 11.996136024529285,
+          "pct_projetado": 11.996,
+          "pct_projetado_lower": 11.9802,
+          "pct_projetado_upper": 12.01254,
+          "p_vitoria": 0.0,
+          "rank": 4,
+          "p_passa_2t": 0.0,
+          "p_fecha_1t": 0.0,
+          "comparecimento": {
+            "pct_atual": null,
+            "pct_projetado": 11.33487,
+            "lower": 11.31994,
+            "upper": 11.35049
+          }
+        },
+        {
+          "id": 44,
+          "nome": "Candidato 44",
+          "partido": "P44",
+          "votos_atuais": 193068,
+          "votos_projetados": 193068,
+          "pct_atual": 7.997534478773403,
+          "pct_projetado": 7.99748,
+          "pct_projetado_lower": 7.97039,
+          "pct_projetado_upper": 8.02546,
+          "p_vitoria": 0.0,
+          "rank": 5,
+          "p_passa_2t": 0.0,
+          "p_fecha_1t": 0.0,
+          "comparecimento": {
+            "pct_atual": null,
+            "pct_projetado": 7.55672,
+            "lower": 7.53112,
+            "upper": 7.58315
+          }
+        },
+        {
+          "id": 77,
+          "nome": "Candidato 77",
+          "partido": "P77",
+          "votos_atuais": 120704,
+          "votos_projetados": 120704,
+          "pct_atual": 4.999971003614607,
+          "pct_projetado": 4.99992,
+          "pct_projetado_lower": 4.9597,
+          "pct_projetado_upper": 5.04016,
+          "p_vitoria": 0.0,
+          "rank": 6,
+          "p_passa_2t": 0.0,
+          "p_fecha_1t": 0.0,
+          "comparecimento": {
+            "pct_atual": null,
+            "pct_projetado": 4.72436,
+            "lower": 4.68636,
+            "upper": 4.76238
+          }
+        }
+      ],
+      "needle_position": 1.0,
+      "needle_band": "very_likely_a",
+      "candidato_a_id": 13,
+      "candidato_b_id": 22,
+      "p_segundo_turno_overall": 1.0,
+      "cenarios_2t": [
+        {
+          "par": [13, 22],
+          "prob": 1.0
+        }
+      ],
+      "vai_a_2t_nacional": true,
+      "participacao": {
+        "abstencao": {
+          "pct_atual": 14.99997,
+          "pct_projetado": 14.99997,
+          "lower": 14.99996,
+          "upper": 14.99999,
+          "base": "eleitores_instalados"
+        },
+        "brancos_nulos": {
+          "pct_atual": 5.51129,
+          "pct_projetado": 5.51129,
+          "lower": 5.51128,
+          "upper": 5.51129,
+          "base": "comparecimento"
+        },
+        "outros": {
+          "pct_atual": 24.993641506917296,
+          "pct_projetado": 24.99341,
+          "lower": 24.96123,
+          "upper": 25.02608,
+          "base": "votaveis",
+          "n_candidatos": 3,
+          "comparecimento": {
+            "pct_atual": null,
+            "pct_projetado": 23.61595,
+            "lower": 23.58554,
+            "upper": 23.64682
+          }
+        },
+        "metodo": {
+          "tipo": "extrapolacao_apurado",
+          "n_zonas": 12,
+          "pct_apurado": 100.0,
+          "n_zonas_imputadas": 0
+        }
+      }
+    },
+    "por_uf_rj": {
+      "sigla": "RJ",
+      "pct_apurado": 100.0,
+      "lider": 13,
+      "margem_atual": 15.976680000000002,
+      "margem_projetada": 15.976680000000002,
+      "margem_projetada_ci": [15.91252, 16.04072],
+      "chamada": true,
+      "swing_vs_2022": null,
+      "top_candidatos": [
+        {
+          "id": 13,
+          "pct": 37.98767,
+          "nome": "CANDIDATO 13",
+          "sqcand": "130000000001",
+          "partido": "P13",
+          "votos_atuais": 458529,
+          "pct_atual": 37.98767
+        },
+        {
+          "id": 22,
+          "pct": 22.01099,
+          "nome": "CANDIDATO 22",
+          "sqcand": "220000000001",
+          "partido": "P22",
+          "votos_atuais": 265683,
+          "pct_atual": 22.01099
+        },
+        {
+          "id": 60,
+          "pct": 15.0077,
+          "nome": "CANDIDATO 60",
+          "sqcand": "600000000001",
+          "partido": "P60",
+          "votos_atuais": 181150,
+          "pct_atual": 15.0077
+        },
+        {
+          "id": 57,
+          "pct": 11.99614,
+          "nome": "CANDIDATO 57",
+          "sqcand": "570000000001",
+          "partido": "P57",
+          "votos_atuais": 144799,
+          "pct_atual": 11.99614,
+          "destino": "sub_judice"
+        }
+      ],
+      "vai_a_2t": true,
+      "bucket": "chamada",
+      "outros": {
+        "pct": 12.9975,
+        "pct_atual": 12.9975,
+        "votos_atuais": 156886,
+        "n_candidatos": 2
+      }
+    },
+    "payload_uf_rj": {
+      "uf": "RJ",
+      "ts": "<TS>",
+      "dado_ts": "2026-10-04T23:00:00+00:00",
+      "pares_atrasados": 0,
+      "cargo": 3,
+      "turno": 1,
+      "pct_apurado": 100.0,
+      "candidatos": [
+        {
+          "id": 13,
+          "nome": "CANDIDATO 13",
+          "partido": "P13",
+          "votos_atuais": 458529,
+          "votos_projetados": 458529,
+          "pct_atual": 37.98767,
+          "pct_projetado": 37.98767,
+          "ci95": {
+            "lower": 37.92351,
+            "upper": 38.05171
+          },
+          "sqcand": "130000000001",
+          "comparecimento": {
+            "pct_atual": 35.89406,
+            "pct_projetado": 35.89406,
+            "lower": 35.83344,
+            "upper": 35.95457
+          }
+        },
+        {
+          "id": 22,
+          "nome": "CANDIDATO 22",
+          "partido": "P22",
+          "votos_atuais": 265683,
+          "votos_projetados": 265683,
+          "pct_atual": 22.01099,
+          "pct_projetado": 22.01099,
+          "ci95": {
+            "lower": 21.97471,
+            "upper": 22.04767
+          },
+          "sqcand": "220000000001",
+          "comparecimento": {
+            "pct_atual": 20.7979,
+            "pct_projetado": 20.7979,
+            "lower": 20.76362,
+            "upper": 20.83256
+          }
+        },
+        {
+          "id": 60,
+          "nome": "CANDIDATO 60",
+          "partido": "P60",
+          "votos_atuais": 181150,
+          "votos_projetados": 181150,
+          "pct_atual": 15.0077,
+          "pct_projetado": 15.0077,
+          "ci95": {
+            "lower": 14.92743,
+            "upper": 15.08794
+          },
+          "sqcand": "600000000001",
+          "comparecimento": {
+            "pct_atual": 14.18058,
+            "pct_projetado": 14.18058,
+            "lower": 14.10474,
+            "upper": 14.2564
+          }
+        },
+        {
+          "id": 57,
+          "nome": "CANDIDATO 57",
+          "partido": "P57",
+          "votos_atuais": 144799,
+          "votos_projetados": 144799,
+          "pct_atual": 11.99614,
+          "pct_projetado": 11.99614,
+          "ci95": {
+            "lower": 11.97317,
+            "upper": 12.0189
+          },
+          "sqcand": "570000000001",
+          "destino": "sub_judice",
+          "comparecimento": {
+            "pct_atual": 11.33499,
+            "pct_projetado": 11.33499,
+            "lower": 11.31329,
+            "upper": 11.3565
+          }
+        },
+        {
+          "id": 44,
+          "nome": "CANDIDATO 44",
+          "partido": "P44",
+          "votos_atuais": 96534,
+          "votos_projetados": 96534,
+          "pct_atual": 7.99753,
+          "pct_projetado": 7.99753,
+          "ci95": {
+            "lower": 7.96026,
+            "upper": 8.03474
+          },
+          "sqcand": "440000000001",
+          "comparecimento": {
+            "pct_atual": 7.55677,
+            "pct_projetado": 7.55677,
+            "lower": 7.52155,
+            "upper": 7.59192
+          }
+        },
+        {
+          "id": 77,
+          "nome": "CANDIDATO 77",
+          "partido": "P77",
+          "votos_atuais": 60352,
+          "votos_projetados": 60352,
+          "pct_atual": 4.99997,
+          "pct_projetado": 4.99997,
+          "ci95": {
+            "lower": 4.94629,
+            "upper": 5.05366
+          },
+          "sqcand": "770000000001",
+          "comparecimento": {
+            "pct_atual": 4.72441,
+            "pct_projetado": 4.72441,
+            "lower": 4.67369,
+            "upper": 4.77514
+          }
+        }
+      ],
+      "needle_position": 0.798834,
+      "needle_band": "likely_a",
+      "municipios": [],
+      "series_temporais": {
+        "margem": [],
+        "p_vitoria": [],
+        "turnout": [],
+        "por_candidato": {
+          "eixo": ["2026-10-04T23:00:00Z"],
+          "cadencia_min": 5,
+          "candidatos": [
+            {
+              "id": 13,
+              "nome": "CANDIDATO 13",
+              "partido": "P13",
+              "apurado": [37.99],
+              "projetado": [37.99],
+              "sqcand": "130000000001"
+            },
+            {
+              "id": 22,
+              "nome": "CANDIDATO 22",
+              "partido": "P22",
+              "apurado": [22.01],
+              "projetado": [22.01],
+              "sqcand": "220000000001"
+            },
+            {
+              "id": 60,
+              "nome": "CANDIDATO 60",
+              "partido": "P60",
+              "apurado": [15.01],
+              "projetado": [15.01],
+              "sqcand": "600000000001"
+            },
+            {
+              "id": 57,
+              "nome": "CANDIDATO 57",
+              "partido": "P57",
+              "apurado": [12.0],
+              "projetado": [12.0],
+              "sqcand": "570000000001"
+            }
+          ]
+        }
+      },
+      "granularidade": "zona",
+      "participacao": {
+        "abstencao": {
+          "pct_atual": 14.99997,
+          "pct_projetado": 14.99997,
+          "lower": 14.99995,
+          "upper": 14.99999,
+          "base": "eleitores_instalados"
+        },
+        "brancos_nulos": {
+          "pct_atual": 5.51129,
+          "pct_projetado": 5.51129,
+          "lower": 5.51128,
+          "upper": 5.5113,
+          "base": "comparecimento"
+        },
+        "outros": {
+          "pct_atual": 24.99364,
+          "pct_projetado": 24.994,
+          "lower": 24.94764,
+          "upper": 25.03964,
+          "base": "votaveis",
+          "n_candidatos": 3,
+          "comparecimento": {
+            "pct_atual": 23.61617,
+            "pct_projetado": 23.61651,
+            "lower": 23.5727,
+            "upper": 23.65963
+          }
+        },
+        "metodo": {
+          "tipo": "extrapolacao_apurado",
+          "n_zonas": 6,
+          "pct_apurado": 100.0,
+          "n_zonas_imputadas": 0
+        }
+      },
+      "votacao": {
+        "contagens": {
+          "aptos": 1502890,
+          "instalados": 1502890,
+          "comparecimento": 1277457,
+          "abstencao": 225433,
+          "validos": 1062248,
+          "brancos": 30176,
+          "nulos": 40234,
+          "anulados": 0,
+          "sub_judice": 144799
+        },
+        "projetada": {
+          "validos": 1062253,
+          "brancos": 30174,
+          "nulos": 40230,
+          "abstencao": 225433
+        },
+        "corrida": [
+          {
+            "id": 13,
+            "partido": "P13",
+            "votos": 458529,
+            "destino": "valido"
+          },
+          {
+            "id": 22,
+            "partido": "P22",
+            "votos": 265683,
+            "destino": "valido"
+          },
+          {
+            "id": 44,
+            "partido": "P44",
+            "votos": 96534,
+            "destino": "valido"
+          },
+          {
+            "id": 57,
+            "partido": "P57",
+            "votos": 144799,
+            "destino": "sub_judice"
+          },
+          {
+            "id": 60,
+            "partido": "P60",
+            "votos": 181150,
+            "destino": "valido"
+          },
+          {
+            "id": 77,
+            "partido": "P77",
+            "votos": 60352,
+            "destino": "valido"
+          }
+        ]
+      }
+    }
+  },
+  "gov_sub_judice": {
+    "payload": {
+      "ts": "<TS>",
+      "dado_ts": "2026-10-04T23:00:00+00:00",
+      "pares_atrasados": 0,
+      "cargo": 3,
+      "turno": 1,
+      "pct_apurado_total": 100.0,
+      "ufs_apuradas": 2,
+      "votacao": {
+        "contagens": {
+          "aptos": 3005780,
+          "instalados": 3005780,
+          "comparecimento": 2554914,
+          "abstencao": 450866,
+          "validos": 2124496,
+          "brancos": 60352,
+          "nulos": 80468,
+          "anulados": 0,
+          "sub_judice": 289598
+        },
+        "projetada": {
+          "validos": 2124508,
+          "brancos": 60348,
+          "nulos": 80460,
+          "abstencao": 450866
+        },
+        "corrida_por_partido": [
+          {
+            "partido": "P13",
+            "votos_validos": 917058
+          },
+          {
+            "partido": "P22",
+            "votos_validos": 531366
+          },
+          {
+            "partido": "P44",
+            "votos_validos": 193068
+          },
+          {
+            "partido": "P60",
+            "votos_validos": 362300
+          },
+          {
+            "partido": "P77",
+            "votos_validos": 120704
+          }
+        ]
+      },
+      "national": {
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "Candidato 13",
+            "partido": "P13",
+            "votos_atuais": 917058,
+            "votos_projetados": 917058,
+            "pct_atual": 37.98766742305809,
+            "pct_projetado": 37.98724,
+            "pct_projetado_lower": 37.94342,
+            "pct_projetado_upper": 38.03557,
+            "p_vitoria": 1.0,
+            "rank": 1,
+            "p_passa_2t": 1.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 35.89366,
+              "lower": 35.85225,
+              "upper": 35.93933
+            }
+          },
+          {
+            "id": 22,
+            "nome": "Candidato 22",
+            "partido": "P22",
+            "votos_atuais": 531366,
+            "votos_projetados": 531366,
+            "pct_atual": 22.01099045853227,
+            "pct_projetado": 22.01135,
+            "pct_projetado_lower": 21.98833,
+            "pct_projetado_upper": 22.03363,
+            "p_vitoria": 0.0,
+            "rank": 2,
+            "p_passa_2t": 1.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 20.79824,
+              "lower": 20.77649,
+              "upper": 20.8193
+            }
+          },
+          {
+            "id": 60,
+            "nome": "Candidato 60",
+            "partido": "P60",
+            "votos_atuais": 362300,
+            "votos_projetados": 362300,
+            "pct_atual": 15.007700611492345,
+            "pct_projetado": 15.008,
+            "pct_projetado_lower": 14.94763,
+            "pct_projetado_upper": 15.06594,
+            "p_vitoria": 0.0,
+            "rank": 3,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 14.18087,
+              "lower": 14.12382,
+              "upper": 14.23561
+            }
+          },
+          {
+            "id": 57,
+            "nome": "Candidato 57",
+            "partido": "P57",
+            "votos_atuais": 289598,
+            "votos_projetados": 289598,
+            "pct_atual": 11.996136024529285,
+            "pct_projetado": 11.996,
+            "pct_projetado_lower": 11.9802,
+            "pct_projetado_upper": 12.01254,
+            "p_vitoria": 0.0,
+            "rank": 4,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 11.33487,
+              "lower": 11.31994,
+              "upper": 11.35049
+            }
+          },
+          {
+            "id": 44,
+            "nome": "Candidato 44",
+            "partido": "P44",
+            "votos_atuais": 193068,
+            "votos_projetados": 193068,
+            "pct_atual": 7.997534478773403,
+            "pct_projetado": 7.99748,
+            "pct_projetado_lower": 7.97039,
+            "pct_projetado_upper": 8.02546,
+            "p_vitoria": 0.0,
+            "rank": 5,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 7.55672,
+              "lower": 7.53112,
+              "upper": 7.58315
+            }
+          },
+          {
+            "id": 77,
+            "nome": "Candidato 77",
+            "partido": "P77",
+            "votos_atuais": 120704,
+            "votos_projetados": 120704,
+            "pct_atual": 4.999971003614607,
+            "pct_projetado": 4.99992,
+            "pct_projetado_lower": 4.9597,
+            "pct_projetado_upper": 5.04016,
+            "p_vitoria": 0.0,
+            "rank": 6,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 4.72436,
+              "lower": 4.68636,
+              "upper": 4.76238
+            }
+          }
+        ],
+        "needle_position": 1.0,
+        "needle_band": "very_likely_a",
+        "candidato_a_id": 13,
+        "candidato_b_id": 22,
+        "p_segundo_turno_overall": 1.0,
+        "cenarios_2t": [
+          {
+            "par": [13, 22],
+            "prob": 1.0
+          }
+        ],
+        "vai_a_2t_nacional": true,
+        "participacao": {
+          "abstencao": {
+            "pct_atual": 14.99997,
+            "pct_projetado": 14.99997,
+            "lower": 14.99996,
+            "upper": 14.99999,
+            "base": "eleitores_instalados"
+          },
+          "brancos_nulos": {
+            "pct_atual": 5.51129,
+            "pct_projetado": 5.51129,
+            "lower": 5.51128,
+            "upper": 5.51129,
+            "base": "comparecimento"
+          },
+          "outros": {
+            "pct_atual": 24.993641506917296,
+            "pct_projetado": 24.99341,
+            "lower": 24.96123,
+            "upper": 25.02608,
+            "base": "votaveis",
+            "n_candidatos": 3,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 23.61595,
+              "lower": 23.58554,
+              "upper": 23.64682
+            }
+          },
+          "metodo": {
+            "tipo": "extrapolacao_apurado",
+            "n_zonas": 12,
+            "pct_apurado": 100.0,
+            "n_zonas_imputadas": 0
+          }
+        }
+      },
+      "por_uf": [
+        {
+          "sigla": "RJ",
+          "pct_apurado": 100.0,
+          "lider": 13,
+          "margem_atual": 15.976680000000002,
+          "margem_projetada": 15.976680000000002,
+          "margem_projetada_ci": [15.91252, 16.04072],
+          "chamada": true,
+          "swing_vs_2022": null,
+          "top_candidatos": [
+            {
+              "id": 13,
+              "pct": 37.98767,
+              "nome": "CANDIDATO 13",
+              "sqcand": "130000000001",
+              "partido": "P13",
+              "votos_atuais": 458529,
+              "pct_atual": 37.98767
+            },
+            {
+              "id": 22,
+              "pct": 22.01099,
+              "nome": "CANDIDATO 22",
+              "sqcand": "220000000001",
+              "partido": "P22",
+              "votos_atuais": 265683,
+              "pct_atual": 22.01099
+            },
+            {
+              "id": 60,
+              "pct": 15.0077,
+              "nome": "CANDIDATO 60",
+              "sqcand": "600000000001",
+              "partido": "P60",
+              "votos_atuais": 181150,
+              "pct_atual": 15.0077
+            },
+            {
+              "id": 57,
+              "pct": 11.99614,
+              "nome": "CANDIDATO 57",
+              "sqcand": "570000000001",
+              "partido": "P57",
+              "votos_atuais": 144799,
+              "pct_atual": 11.99614,
+              "destino": "sub_judice"
+            }
+          ],
+          "vai_a_2t": true,
+          "bucket": "chamada",
+          "outros": {
+            "pct": 12.9975,
+            "pct_atual": 12.9975,
+            "votos_atuais": 156886,
+            "n_candidatos": 2
+          }
+        },
+        {
+          "sigla": "SP",
+          "pct_apurado": 100.0,
+          "lider": 13,
+          "margem_atual": 15.976680000000002,
+          "margem_projetada": 15.976680000000002,
+          "margem_projetada_ci": [15.90457, 16.04072],
+          "chamada": true,
+          "swing_vs_2022": null,
+          "top_candidatos": [
+            {
+              "id": 13,
+              "pct": 37.98767,
+              "nome": "CANDIDATO 13",
+              "sqcand": "130000000001",
+              "partido": "P13",
+              "votos_atuais": 458529,
+              "pct_atual": 37.98767
+            },
+            {
+              "id": 22,
+              "pct": 22.01099,
+              "nome": "CANDIDATO 22",
+              "sqcand": "220000000001",
+              "partido": "P22",
+              "votos_atuais": 265683,
+              "pct_atual": 22.01099
+            },
+            {
+              "id": 60,
+              "pct": 15.0077,
+              "nome": "CANDIDATO 60",
+              "sqcand": "600000000001",
+              "partido": "P60",
+              "votos_atuais": 181150,
+              "pct_atual": 15.0077
+            },
+            {
+              "id": 57,
+              "pct": 11.99614,
+              "nome": "CANDIDATO 57",
+              "sqcand": "570000000001",
+              "partido": "P57",
+              "votos_atuais": 144799,
+              "pct_atual": 11.99614,
+              "destino": "sub_judice"
+            }
+          ],
+          "vai_a_2t": true,
+          "bucket": "chamada",
+          "outros": {
+            "pct": 12.9975,
+            "pct_atual": 12.9975,
+            "votos_atuais": 156886,
+            "n_candidatos": 2
+          }
+        }
+      ],
+      "serie_por_candidato": {
+        "eixo": ["2026-10-04T23:00:00Z"],
+        "cadencia_min": 5,
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "Candidato 13",
+            "partido": "P13",
+            "apurado": [37.99],
+            "projetado": [37.99]
+          },
+          {
+            "id": 22,
+            "nome": "Candidato 22",
+            "partido": "P22",
+            "apurado": [22.01],
+            "projetado": [22.01]
+          },
+          {
+            "id": 60,
+            "nome": "Candidato 60",
+            "partido": "P60",
+            "apurado": [15.01],
+            "projetado": [15.01]
+          },
+          {
+            "id": 57,
+            "nome": "Candidato 57",
+            "partido": "P57",
+            "apurado": [12.0],
+            "projetado": [12.0]
+          }
+        ]
+      },
+      "insights": [],
+      "composition": {
+        "pre_election": 0.0,
+        "model": 1.0,
+        "actual_results": 0.0
+      }
+    },
+    "payloads_uf": {
+      "RJ": {
+        "uf": "RJ",
+        "ts": "<TS>",
+        "dado_ts": "2026-10-04T23:00:00+00:00",
+        "pares_atrasados": 0,
+        "cargo": 3,
+        "turno": 1,
+        "pct_apurado": 100.0,
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "CANDIDATO 13",
+            "partido": "P13",
+            "votos_atuais": 458529,
+            "votos_projetados": 458529,
+            "pct_atual": 37.98767,
+            "pct_projetado": 37.98767,
+            "ci95": {
+              "lower": 37.92351,
+              "upper": 38.05171
+            },
+            "sqcand": "130000000001",
+            "comparecimento": {
+              "pct_atual": 35.89406,
+              "pct_projetado": 35.89406,
+              "lower": 35.83344,
+              "upper": 35.95457
+            }
+          },
+          {
+            "id": 22,
+            "nome": "CANDIDATO 22",
+            "partido": "P22",
+            "votos_atuais": 265683,
+            "votos_projetados": 265683,
+            "pct_atual": 22.01099,
+            "pct_projetado": 22.01099,
+            "ci95": {
+              "lower": 21.97471,
+              "upper": 22.04767
+            },
+            "sqcand": "220000000001",
+            "comparecimento": {
+              "pct_atual": 20.7979,
+              "pct_projetado": 20.7979,
+              "lower": 20.76362,
+              "upper": 20.83256
+            }
+          },
+          {
+            "id": 60,
+            "nome": "CANDIDATO 60",
+            "partido": "P60",
+            "votos_atuais": 181150,
+            "votos_projetados": 181150,
+            "pct_atual": 15.0077,
+            "pct_projetado": 15.0077,
+            "ci95": {
+              "lower": 14.92743,
+              "upper": 15.08794
+            },
+            "sqcand": "600000000001",
+            "comparecimento": {
+              "pct_atual": 14.18058,
+              "pct_projetado": 14.18058,
+              "lower": 14.10474,
+              "upper": 14.2564
+            }
+          },
+          {
+            "id": 57,
+            "nome": "CANDIDATO 57",
+            "partido": "P57",
+            "votos_atuais": 144799,
+            "votos_projetados": 144799,
+            "pct_atual": 11.99614,
+            "pct_projetado": 11.99614,
+            "ci95": {
+              "lower": 11.97317,
+              "upper": 12.0189
+            },
+            "sqcand": "570000000001",
+            "destino": "sub_judice",
+            "comparecimento": {
+              "pct_atual": 11.33499,
+              "pct_projetado": 11.33499,
+              "lower": 11.31329,
+              "upper": 11.3565
+            }
+          },
+          {
+            "id": 44,
+            "nome": "CANDIDATO 44",
+            "partido": "P44",
+            "votos_atuais": 96534,
+            "votos_projetados": 96534,
+            "pct_atual": 7.99753,
+            "pct_projetado": 7.99753,
+            "ci95": {
+              "lower": 7.96026,
+              "upper": 8.03474
+            },
+            "sqcand": "440000000001",
+            "comparecimento": {
+              "pct_atual": 7.55677,
+              "pct_projetado": 7.55677,
+              "lower": 7.52155,
+              "upper": 7.59192
+            }
+          },
+          {
+            "id": 77,
+            "nome": "CANDIDATO 77",
+            "partido": "P77",
+            "votos_atuais": 60352,
+            "votos_projetados": 60352,
+            "pct_atual": 4.99997,
+            "pct_projetado": 4.99997,
+            "ci95": {
+              "lower": 4.94629,
+              "upper": 5.05366
+            },
+            "sqcand": "770000000001",
+            "comparecimento": {
+              "pct_atual": 4.72441,
+              "pct_projetado": 4.72441,
+              "lower": 4.67369,
+              "upper": 4.77514
+            }
+          }
+        ],
+        "needle_position": 0.798834,
+        "needle_band": "likely_a",
+        "municipios": [],
+        "series_temporais": {
+          "margem": [],
+          "p_vitoria": [],
+          "turnout": [],
+          "por_candidato": {
+            "eixo": ["2026-10-04T23:00:00Z"],
+            "cadencia_min": 5,
+            "candidatos": [
+              {
+                "id": 13,
+                "nome": "CANDIDATO 13",
+                "partido": "P13",
+                "apurado": [37.99],
+                "projetado": [37.99],
+                "sqcand": "130000000001"
+              },
+              {
+                "id": 22,
+                "nome": "CANDIDATO 22",
+                "partido": "P22",
+                "apurado": [22.01],
+                "projetado": [22.01],
+                "sqcand": "220000000001"
+              },
+              {
+                "id": 60,
+                "nome": "CANDIDATO 60",
+                "partido": "P60",
+                "apurado": [15.01],
+                "projetado": [15.01],
+                "sqcand": "600000000001"
+              },
+              {
+                "id": 57,
+                "nome": "CANDIDATO 57",
+                "partido": "P57",
+                "apurado": [12.0],
+                "projetado": [12.0],
+                "sqcand": "570000000001"
+              }
+            ]
+          }
+        },
+        "granularidade": "zona",
+        "participacao": {
+          "abstencao": {
+            "pct_atual": 14.99997,
+            "pct_projetado": 14.99997,
+            "lower": 14.99995,
+            "upper": 14.99999,
+            "base": "eleitores_instalados"
+          },
+          "brancos_nulos": {
+            "pct_atual": 5.51129,
+            "pct_projetado": 5.51129,
+            "lower": 5.51128,
+            "upper": 5.5113,
+            "base": "comparecimento"
+          },
+          "outros": {
+            "pct_atual": 24.99364,
+            "pct_projetado": 24.994,
+            "lower": 24.94764,
+            "upper": 25.03964,
+            "base": "votaveis",
+            "n_candidatos": 3,
+            "comparecimento": {
+              "pct_atual": 23.61617,
+              "pct_projetado": 23.61651,
+              "lower": 23.5727,
+              "upper": 23.65963
+            }
+          },
+          "metodo": {
+            "tipo": "extrapolacao_apurado",
+            "n_zonas": 6,
+            "pct_apurado": 100.0,
+            "n_zonas_imputadas": 0
+          }
+        },
+        "votacao": {
+          "contagens": {
+            "aptos": 1502890,
+            "instalados": 1502890,
+            "comparecimento": 1277457,
+            "abstencao": 225433,
+            "validos": 1062248,
+            "brancos": 30176,
+            "nulos": 40234,
+            "anulados": 0,
+            "sub_judice": 144799
+          },
+          "projetada": {
+            "validos": 1062253,
+            "brancos": 30174,
+            "nulos": 40230,
+            "abstencao": 225433
+          },
+          "corrida": [
+            {
+              "id": 13,
+              "partido": "P13",
+              "votos": 458529,
+              "destino": "valido"
+            },
+            {
+              "id": 22,
+              "partido": "P22",
+              "votos": 265683,
+              "destino": "valido"
+            },
+            {
+              "id": 44,
+              "partido": "P44",
+              "votos": 96534,
+              "destino": "valido"
+            },
+            {
+              "id": 57,
+              "partido": "P57",
+              "votos": 144799,
+              "destino": "sub_judice"
+            },
+            {
+              "id": 60,
+              "partido": "P60",
+              "votos": 181150,
+              "destino": "valido"
+            },
+            {
+              "id": 77,
+              "partido": "P77",
+              "votos": 60352,
+              "destino": "valido"
+            }
+          ]
+        }
+      },
+      "SP": {
+        "uf": "SP",
+        "ts": "<TS>",
+        "dado_ts": "2026-10-04T23:00:00+00:00",
+        "pares_atrasados": 0,
+        "cargo": 3,
+        "turno": 1,
+        "pct_apurado": 100.0,
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "CANDIDATO 13",
+            "partido": "P13",
+            "votos_atuais": 458529,
+            "votos_projetados": 458529,
+            "pct_atual": 37.98767,
+            "pct_projetado": 37.98767,
+            "ci95": {
+              "lower": 37.91556,
+              "upper": 38.05171
+            },
+            "sqcand": "130000000001",
+            "comparecimento": {
+              "pct_atual": 35.89406,
+              "pct_projetado": 35.89406,
+              "lower": 35.82593,
+              "upper": 35.95457
+            }
+          },
+          {
+            "id": 22,
+            "nome": "CANDIDATO 22",
+            "partido": "P22",
+            "votos_atuais": 265683,
+            "votos_projetados": 265683,
+            "pct_atual": 22.01099,
+            "pct_projetado": 22.01099,
+            "ci95": {
+              "lower": 21.98112,
+              "upper": 22.04776
+            },
+            "sqcand": "220000000001",
+            "comparecimento": {
+              "pct_atual": 20.7979,
+              "pct_projetado": 20.7979,
+              "lower": 20.76967,
+              "upper": 20.83264
+            }
+          },
+          {
+            "id": 60,
+            "nome": "CANDIDATO 60",
+            "partido": "P60",
+            "votos_atuais": 181150,
+            "votos_projetados": 181150,
+            "pct_atual": 15.0077,
+            "pct_projetado": 15.0077,
+            "ci95": {
+              "lower": 14.92741,
+              "upper": 15.09301
+            },
+            "sqcand": "600000000001",
+            "comparecimento": {
+              "pct_atual": 14.18058,
+              "pct_projetado": 14.18058,
+              "lower": 14.10472,
+              "upper": 14.26119
+            }
+          },
+          {
+            "id": 57,
+            "nome": "CANDIDATO 57",
+            "partido": "P57",
+            "votos_atuais": 144799,
+            "votos_projetados": 144799,
+            "pct_atual": 11.99614,
+            "pct_projetado": 11.99614,
+            "ci95": {
+              "lower": 11.97077,
+              "upper": 12.01891
+            },
+            "sqcand": "570000000001",
+            "destino": "sub_judice",
+            "comparecimento": {
+              "pct_atual": 11.33499,
+              "pct_projetado": 11.33499,
+              "lower": 11.31103,
+              "upper": 11.35651
+            }
+          },
+          {
+            "id": 44,
+            "nome": "CANDIDATO 44",
+            "partido": "P44",
+            "votos_atuais": 96534,
+            "votos_projetados": 96534,
+            "pct_atual": 7.99753,
+            "pct_projetado": 7.99753,
+            "ci95": {
+              "lower": 7.96027,
+              "upper": 8.03657
+            },
+            "sqcand": "440000000001",
+            "comparecimento": {
+              "pct_atual": 7.55677,
+              "pct_projetado": 7.55677,
+              "lower": 7.52155,
+              "upper": 7.59365
+            }
+          },
+          {
+            "id": 77,
+            "nome": "CANDIDATO 77",
+            "partido": "P77",
+            "votos_atuais": 60352,
+            "votos_projetados": 60352,
+            "pct_atual": 4.99997,
+            "pct_projetado": 4.99997,
+            "ci95": {
+              "lower": 4.94612,
+              "upper": 5.05366
+            },
+            "sqcand": "770000000001",
+            "comparecimento": {
+              "pct_atual": 4.72441,
+              "pct_projetado": 4.72441,
+              "lower": 4.67353,
+              "upper": 4.77513
+            }
+          }
+        ],
+        "needle_position": 0.798834,
+        "needle_band": "likely_a",
+        "municipios": [],
+        "series_temporais": {
+          "margem": [],
+          "p_vitoria": [],
+          "turnout": [],
+          "por_candidato": {
+            "eixo": ["2026-10-04T23:00:00Z"],
+            "cadencia_min": 5,
+            "candidatos": [
+              {
+                "id": 13,
+                "nome": "CANDIDATO 13",
+                "partido": "P13",
+                "apurado": [37.99],
+                "projetado": [37.99],
+                "sqcand": "130000000001"
+              },
+              {
+                "id": 22,
+                "nome": "CANDIDATO 22",
+                "partido": "P22",
+                "apurado": [22.01],
+                "projetado": [22.01],
+                "sqcand": "220000000001"
+              },
+              {
+                "id": 60,
+                "nome": "CANDIDATO 60",
+                "partido": "P60",
+                "apurado": [15.01],
+                "projetado": [15.01],
+                "sqcand": "600000000001"
+              },
+              {
+                "id": 57,
+                "nome": "CANDIDATO 57",
+                "partido": "P57",
+                "apurado": [12.0],
+                "projetado": [12.0],
+                "sqcand": "570000000001"
+              }
+            ]
+          }
+        },
+        "granularidade": "zona",
+        "participacao": {
+          "abstencao": {
+            "pct_atual": 14.99997,
+            "pct_projetado": 14.99997,
+            "lower": 14.99995,
+            "upper": 14.99999,
+            "base": "eleitores_instalados"
+          },
+          "brancos_nulos": {
+            "pct_atual": 5.51129,
+            "pct_projetado": 5.51129,
+            "lower": 5.51128,
+            "upper": 5.5113,
+            "base": "comparecimento"
+          },
+          "outros": {
+            "pct_atual": 24.99364,
+            "pct_projetado": 24.99281,
+            "lower": 24.9435,
+            "upper": 25.0396,
+            "base": "votaveis",
+            "n_candidatos": 3,
+            "comparecimento": {
+              "pct_atual": 23.61617,
+              "pct_projetado": 23.61538,
+              "lower": 23.56879,
+              "upper": 23.6596
+            }
+          },
+          "metodo": {
+            "tipo": "extrapolacao_apurado",
+            "n_zonas": 6,
+            "pct_apurado": 100.0,
+            "n_zonas_imputadas": 0
+          }
+        },
+        "votacao": {
+          "contagens": {
+            "aptos": 1502890,
+            "instalados": 1502890,
+            "comparecimento": 1277457,
+            "abstencao": 225433,
+            "validos": 1062248,
+            "brancos": 30176,
+            "nulos": 40234,
+            "anulados": 0,
+            "sub_judice": 144799
+          },
+          "projetada": {
+            "validos": 1062253,
+            "brancos": 30174,
+            "nulos": 40230,
+            "abstencao": 225433
+          },
+          "corrida": [
+            {
+              "id": 13,
+              "partido": "P13",
+              "votos": 458529,
+              "destino": "valido"
+            },
+            {
+              "id": 22,
+              "partido": "P22",
+              "votos": 265683,
+              "destino": "valido"
+            },
+            {
+              "id": 44,
+              "partido": "P44",
+              "votos": 96534,
+              "destino": "valido"
+            },
+            {
+              "id": 57,
+              "partido": "P57",
+              "votos": 144799,
+              "destino": "sub_judice"
+            },
+            {
+              "id": 60,
+              "partido": "P60",
+              "votos": 181150,
+              "destino": "valido"
+            },
+            {
+              "id": 77,
+              "partido": "P77",
+              "votos": 60352,
+              "destino": "valido"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "pres_sub_judice": {
+    "payload": {
+      "ts": "<TS>",
+      "dado_ts": "2026-10-04T23:00:00+00:00",
+      "pares_atrasados": 0,
+      "cargo": 1,
+      "turno": 1,
+      "pct_apurado_total": 100.0,
+      "ufs_apuradas": 2,
+      "votacao": {
+        "contagens": {
+          "aptos": 3005782,
+          "instalados": 3005782,
+          "comparecimento": 2554915,
+          "abstencao": 450867,
+          "validos": 2124496,
+          "brancos": 60352,
+          "nulos": 80469,
+          "anulados": 0,
+          "sub_judice": 289598
+        },
+        "projetada": {
+          "validos": 2124520,
+          "brancos": 60348,
+          "nulos": 80460,
+          "abstencao": 450866
+        },
+        "corrida": [
+          {
+            "id": 13,
+            "partido": "P13",
+            "votos": 917058,
+            "destino": "valido"
+          },
+          {
+            "id": 22,
+            "partido": "P22",
+            "votos": 531366,
+            "destino": "valido"
+          },
+          {
+            "id": 44,
+            "partido": "P44",
+            "votos": 193068,
+            "destino": "valido"
+          },
+          {
+            "id": 57,
+            "partido": "P57",
+            "votos": 289598,
+            "destino": "sub_judice"
+          },
+          {
+            "id": 60,
+            "partido": "P60",
+            "votos": 362300,
+            "destino": "valido"
+          },
+          {
+            "id": 77,
+            "partido": "P77",
+            "votos": 120704,
+            "destino": "valido"
+          }
+        ]
+      },
+      "national": {
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "CANDIDATO 13",
+            "partido": "P13",
+            "votos_atuais": 917058,
+            "votos_projetados": 917058,
+            "pct_atual": 37.98766742305809,
+            "pct_projetado": 37.98781,
+            "pct_projetado_lower": 37.93958,
+            "pct_projetado_upper": 38.0318,
+            "p_vitoria": 1.0,
+            "rank": 1,
+            "p_passa_2t": 1.0,
+            "p_fecha_1t": 0.0,
+            "sqcand": "130000000001",
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 35.8942,
+              "lower": 35.84863,
+              "upper": 35.93576
+            }
+          },
+          {
+            "id": 22,
+            "nome": "CANDIDATO 22",
+            "partido": "P22",
+            "votos_atuais": 531366,
+            "votos_projetados": 531366,
+            "pct_atual": 22.01099045853227,
+            "pct_projetado": 22.011,
+            "pct_projetado_lower": 21.98542,
+            "pct_projetado_upper": 22.03679,
+            "p_vitoria": 0.0,
+            "rank": 2,
+            "p_passa_2t": 1.0,
+            "p_fecha_1t": 0.0,
+            "sqcand": "220000000001",
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 20.79791,
+              "lower": 20.77374,
+              "upper": 20.82228
+            }
+          },
+          {
+            "id": 60,
+            "nome": "CANDIDATO 60",
+            "partido": "P60",
+            "votos_atuais": 362300,
+            "votos_projetados": 362300,
+            "pct_atual": 15.007700611492345,
+            "pct_projetado": 15.00741,
+            "pct_projetado_lower": 14.94763,
+            "pct_projetado_upper": 15.07021,
+            "p_vitoria": 0.0,
+            "rank": 3,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "sqcand": "600000000001",
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 14.18031,
+              "lower": 14.12382,
+              "upper": 14.23965
+            }
+          },
+          {
+            "id": 57,
+            "nome": "CANDIDATO 57",
+            "partido": "P57",
+            "votos_atuais": 289598,
+            "votos_projetados": 289598,
+            "pct_atual": 11.996136024529285,
+            "pct_projetado": 11.9962,
+            "pct_projetado_lower": 11.97898,
+            "pct_projetado_upper": 12.01207,
+            "p_vitoria": 0.0,
+            "rank": 4,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "sqcand": "570000000001",
+            "destino": "sub_judice",
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 11.33505,
+              "lower": 11.31878,
+              "upper": 11.35005
+            }
+          },
+          {
+            "id": 44,
+            "nome": "CANDIDATO 44",
+            "partido": "P44",
+            "votos_atuais": 193068,
+            "votos_projetados": 193068,
+            "pct_atual": 7.997534478773403,
+            "pct_projetado": 7.99734,
+            "pct_projetado_lower": 7.96957,
+            "pct_projetado_upper": 8.02545,
+            "p_vitoria": 0.0,
+            "rank": 5,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "sqcand": "440000000001",
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 7.55659,
+              "lower": 7.53035,
+              "upper": 7.58315
+            }
+          },
+          {
+            "id": 77,
+            "nome": "CANDIDATO 77",
+            "partido": "P77",
+            "votos_atuais": 120704,
+            "votos_projetados": 120704,
+            "pct_atual": 4.999971003614607,
+            "pct_projetado": 5.00024,
+            "pct_projetado_lower": 4.95974,
+            "pct_projetado_upper": 5.04024,
+            "p_vitoria": 0.0,
+            "rank": 6,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "sqcand": "770000000001",
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 4.72466,
+              "lower": 4.6864,
+              "upper": 4.76246
+            }
+          }
+        ],
+        "needle_position": 1.0,
+        "needle_band": "very_likely_a",
+        "candidato_a_id": 13,
+        "candidato_b_id": 22,
+        "p_segundo_turno_overall": 1.0,
+        "cenarios_2t": [
+          {
+            "par": [13, 22],
+            "prob": 1.0
+          }
+        ],
+        "vai_a_2t_nacional": true,
+        "participacao": {
+          "abstencao": {
+            "pct_atual": 14.99997,
+            "pct_projetado": 14.99997,
+            "lower": 14.99996,
+            "upper": 14.99999,
+            "base": "eleitores_instalados"
+          },
+          "brancos_nulos": {
+            "pct_atual": 5.51129,
+            "pct_projetado": 5.51129,
+            "lower": 5.51128,
+            "upper": 5.51129,
+            "base": "comparecimento"
+          },
+          "outros": {
+            "pct_atual": 24.993641506917296,
+            "pct_projetado": 24.99378,
+            "lower": 24.9591,
+            "upper": 25.02608,
+            "base": "votaveis",
+            "n_candidatos": 3,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 23.6163,
+              "lower": 23.58354,
+              "upper": 23.64682
+            }
+          },
+          "metodo": {
+            "tipo": "extrapolacao_apurado",
+            "n_zonas": 12,
+            "pct_apurado": 100.0,
+            "n_zonas_imputadas": 0
+          }
+        }
+      },
+      "por_uf": [
+        {
+          "sigla": "RJ",
+          "pct_apurado": 100.0,
+          "lider": 13,
+          "margem_atual": 15.976680000000002,
+          "margem_projetada": 15.976680000000002,
+          "margem_projetada_ci": [15.91252, 16.040770000000002],
+          "chamada": true,
+          "swing_vs_2022": null,
+          "top_candidatos": [
+            {
+              "id": 13,
+              "pct": 37.98767,
+              "nome": "CANDIDATO 13",
+              "sqcand": "130000000001",
+              "partido": "P13",
+              "votos_atuais": 458529,
+              "pct_atual": 37.98767
+            },
+            {
+              "id": 22,
+              "pct": 22.01099,
+              "nome": "CANDIDATO 22",
+              "sqcand": "220000000001",
+              "partido": "P22",
+              "votos_atuais": 265683,
+              "pct_atual": 22.01099
+            },
+            {
+              "id": 60,
+              "pct": 15.0077,
+              "nome": "CANDIDATO 60",
+              "sqcand": "600000000001",
+              "partido": "P60",
+              "votos_atuais": 181150,
+              "pct_atual": 15.0077
+            },
+            {
+              "id": 57,
+              "pct": 11.99614,
+              "nome": "CANDIDATO 57",
+              "sqcand": "570000000001",
+              "partido": "P57",
+              "votos_atuais": 144799,
+              "pct_atual": 11.99614,
+              "destino": "sub_judice"
+            }
+          ],
+          "vai_a_2t": null,
+          "bucket": "chamada",
+          "outros": {
+            "pct": 12.9975,
+            "pct_atual": 12.9975,
+            "votos_atuais": 156886,
+            "n_candidatos": 2
+          }
+        },
+        {
+          "sigla": "SP",
+          "pct_apurado": 100.0,
+          "lider": 13,
+          "margem_atual": 15.976680000000002,
+          "margem_projetada": 15.976680000000002,
+          "margem_projetada_ci": [15.912489999999998, 16.040799999999997],
+          "chamada": true,
+          "swing_vs_2022": null,
+          "top_candidatos": [
+            {
+              "id": 13,
+              "pct": 37.98767,
+              "nome": "CANDIDATO 13",
+              "sqcand": "130000000001",
+              "partido": "P13",
+              "votos_atuais": 458529,
+              "pct_atual": 37.98767
+            },
+            {
+              "id": 22,
+              "pct": 22.01099,
+              "nome": "CANDIDATO 22",
+              "sqcand": "220000000001",
+              "partido": "P22",
+              "votos_atuais": 265683,
+              "pct_atual": 22.01099
+            },
+            {
+              "id": 60,
+              "pct": 15.0077,
+              "nome": "CANDIDATO 60",
+              "sqcand": "600000000001",
+              "partido": "P60",
+              "votos_atuais": 181150,
+              "pct_atual": 15.0077
+            },
+            {
+              "id": 57,
+              "pct": 11.99614,
+              "nome": "CANDIDATO 57",
+              "sqcand": "570000000001",
+              "partido": "P57",
+              "votos_atuais": 144799,
+              "pct_atual": 11.99614,
+              "destino": "sub_judice"
+            }
+          ],
+          "vai_a_2t": null,
+          "bucket": "chamada",
+          "outros": {
+            "pct": 12.9975,
+            "pct_atual": 12.9975,
+            "votos_atuais": 156886,
+            "n_candidatos": 2
+          }
+        }
+      ],
+      "serie_por_candidato": {
+        "eixo": ["2026-10-04T23:00:00Z"],
+        "cadencia_min": 5,
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "CANDIDATO 13",
+            "partido": "P13",
+            "apurado": [37.99],
+            "projetado": [37.99],
+            "sqcand": "130000000001"
+          },
+          {
+            "id": 22,
+            "nome": "CANDIDATO 22",
+            "partido": "P22",
+            "apurado": [22.01],
+            "projetado": [22.01],
+            "sqcand": "220000000001"
+          },
+          {
+            "id": 60,
+            "nome": "CANDIDATO 60",
+            "partido": "P60",
+            "apurado": [15.01],
+            "projetado": [15.01],
+            "sqcand": "600000000001"
+          },
+          {
+            "id": 57,
+            "nome": "CANDIDATO 57",
+            "partido": "P57",
+            "apurado": [12.0],
+            "projetado": [12.0],
+            "sqcand": "570000000001"
+          }
+        ]
+      },
+      "insights": [],
+      "composition": {
+        "pre_election": 0.0,
+        "model": 1.0,
+        "actual_results": 0.0
+      }
+    },
+    "payloads_uf": {
+      "RJ": {
+        "uf": "RJ",
+        "ts": "<TS>",
+        "dado_ts": "2026-10-04T23:00:00+00:00",
+        "pares_atrasados": 0,
+        "cargo": 1,
+        "turno": 1,
+        "pct_apurado": 100.0,
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "CANDIDATO 13",
+            "partido": "P13",
+            "votos_atuais": 458529,
+            "votos_projetados": 458529,
+            "pct_atual": 37.98767,
+            "pct_projetado": 37.98767,
+            "ci95": {
+              "lower": 37.92351,
+              "upper": 38.05176
+            },
+            "sqcand": "130000000001",
+            "comparecimento": {
+              "pct_atual": 35.89406,
+              "pct_projetado": 35.89406,
+              "lower": 35.83344,
+              "upper": 35.95462
+            }
+          },
+          {
+            "id": 22,
+            "nome": "CANDIDATO 22",
+            "partido": "P22",
+            "votos_atuais": 265683,
+            "votos_projetados": 265683,
+            "pct_atual": 22.01099,
+            "pct_projetado": 22.01099,
+            "ci95": {
+              "lower": 21.98069,
+              "upper": 22.04776
+            },
+            "sqcand": "220000000001",
+            "comparecimento": {
+              "pct_atual": 20.7979,
+              "pct_projetado": 20.7979,
+              "lower": 20.76927,
+              "upper": 20.83264
+            }
+          },
+          {
+            "id": 60,
+            "nome": "CANDIDATO 60",
+            "partido": "P60",
+            "votos_atuais": 181150,
+            "votos_projetados": 181150,
+            "pct_atual": 15.0077,
+            "pct_projetado": 15.0077,
+            "ci95": {
+              "lower": 14.92741,
+              "upper": 15.08816
+            },
+            "sqcand": "600000000001",
+            "comparecimento": {
+              "pct_atual": 14.18058,
+              "pct_projetado": 14.18058,
+              "lower": 14.10472,
+              "upper": 14.25661
+            }
+          },
+          {
+            "id": 57,
+            "nome": "CANDIDATO 57",
+            "partido": "P57",
+            "votos_atuais": 144799,
+            "votos_projetados": 144799,
+            "pct_atual": 11.99614,
+            "pct_projetado": 11.99614,
+            "ci95": {
+              "lower": 11.97325,
+              "upper": 12.01892
+            },
+            "sqcand": "570000000001",
+            "destino": "sub_judice",
+            "comparecimento": {
+              "pct_atual": 11.33499,
+              "pct_projetado": 11.33499,
+              "lower": 11.31337,
+              "upper": 11.35652
+            }
+          },
+          {
+            "id": 44,
+            "nome": "CANDIDATO 44",
+            "partido": "P44",
+            "votos_atuais": 96534,
+            "votos_projetados": 96534,
+            "pct_atual": 7.99753,
+            "pct_projetado": 7.99753,
+            "ci95": {
+              "lower": 7.96026,
+              "upper": 8.03482
+            },
+            "sqcand": "440000000001",
+            "comparecimento": {
+              "pct_atual": 7.55677,
+              "pct_projetado": 7.55677,
+              "lower": 7.52155,
+              "upper": 7.592
+            }
+          },
+          {
+            "id": 77,
+            "nome": "CANDIDATO 77",
+            "partido": "P77",
+            "votos_atuais": 60352,
+            "votos_projetados": 60352,
+            "pct_atual": 4.99997,
+            "pct_projetado": 4.99997,
+            "ci95": {
+              "lower": 4.9462,
+              "upper": 5.05366
+            },
+            "sqcand": "770000000001",
+            "comparecimento": {
+              "pct_atual": 4.72441,
+              "pct_projetado": 4.72441,
+              "lower": 4.6736,
+              "upper": 4.77514
+            }
+          }
+        ],
+        "needle_position": 0.798834,
+        "needle_band": "likely_a",
+        "municipios": [],
+        "series_temporais": {
+          "margem": [],
+          "p_vitoria": [],
+          "turnout": [],
+          "por_candidato": {
+            "eixo": ["2026-10-04T23:00:00Z"],
+            "cadencia_min": 5,
+            "candidatos": [
+              {
+                "id": 13,
+                "nome": "CANDIDATO 13",
+                "partido": "P13",
+                "apurado": [37.99],
+                "projetado": [37.99],
+                "sqcand": "130000000001"
+              },
+              {
+                "id": 22,
+                "nome": "CANDIDATO 22",
+                "partido": "P22",
+                "apurado": [22.01],
+                "projetado": [22.01],
+                "sqcand": "220000000001"
+              },
+              {
+                "id": 60,
+                "nome": "CANDIDATO 60",
+                "partido": "P60",
+                "apurado": [15.01],
+                "projetado": [15.01],
+                "sqcand": "600000000001"
+              },
+              {
+                "id": 57,
+                "nome": "CANDIDATO 57",
+                "partido": "P57",
+                "apurado": [12.0],
+                "projetado": [12.0],
+                "sqcand": "570000000001"
+              }
+            ]
+          }
+        },
+        "granularidade": "zona",
+        "participacao": {
+          "abstencao": {
+            "pct_atual": 14.99997,
+            "pct_projetado": 14.99997,
+            "lower": 14.99995,
+            "upper": 14.99999,
+            "base": "eleitores_instalados"
+          },
+          "brancos_nulos": {
+            "pct_atual": 5.51129,
+            "pct_projetado": 5.51129,
+            "lower": 5.51128,
+            "upper": 5.5113,
+            "base": "comparecimento"
+          },
+          "outros": {
+            "pct_atual": 24.99364,
+            "pct_projetado": 24.99239,
+            "lower": 24.94754,
+            "upper": 25.0396,
+            "base": "votaveis",
+            "n_candidatos": 3,
+            "comparecimento": {
+              "pct_atual": 23.61617,
+              "pct_projetado": 23.61499,
+              "lower": 23.57261,
+              "upper": 23.6596
+            }
+          },
+          "metodo": {
+            "tipo": "extrapolacao_apurado",
+            "n_zonas": 6,
+            "pct_apurado": 100.0,
+            "n_zonas_imputadas": 0
+          }
+        },
+        "votacao": {
+          "contagens": {
+            "aptos": 1502890,
+            "instalados": 1502890,
+            "comparecimento": 1277457,
+            "abstencao": 225433,
+            "validos": 1062248,
+            "brancos": 30176,
+            "nulos": 40234,
+            "anulados": 0,
+            "sub_judice": 144799
+          },
+          "projetada": {
+            "validos": 1062253,
+            "brancos": 30174,
+            "nulos": 40230,
+            "abstencao": 225433
+          },
+          "corrida": [
+            {
+              "id": 13,
+              "partido": "P13",
+              "votos": 458529,
+              "destino": "valido"
+            },
+            {
+              "id": 22,
+              "partido": "P22",
+              "votos": 265683,
+              "destino": "valido"
+            },
+            {
+              "id": 44,
+              "partido": "P44",
+              "votos": 96534,
+              "destino": "valido"
+            },
+            {
+              "id": 57,
+              "partido": "P57",
+              "votos": 144799,
+              "destino": "sub_judice"
+            },
+            {
+              "id": 60,
+              "partido": "P60",
+              "votos": 181150,
+              "destino": "valido"
+            },
+            {
+              "id": 77,
+              "partido": "P77",
+              "votos": 60352,
+              "destino": "valido"
+            }
+          ]
+        }
+      },
+      "SP": {
+        "uf": "SP",
+        "ts": "<TS>",
+        "dado_ts": "2026-10-04T23:00:00+00:00",
+        "pares_atrasados": 0,
+        "cargo": 1,
+        "turno": 1,
+        "pct_apurado": 100.0,
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "CANDIDATO 13",
+            "partido": "P13",
+            "votos_atuais": 458529,
+            "votos_projetados": 458529,
+            "pct_atual": 37.98767,
+            "pct_projetado": 37.98767,
+            "ci95": {
+              "lower": 37.92348,
+              "upper": 38.05179
+            },
+            "sqcand": "130000000001",
+            "comparecimento": {
+              "pct_atual": 35.89406,
+              "pct_projetado": 35.89406,
+              "lower": 35.83341,
+              "upper": 35.95465
+            }
+          },
+          {
+            "id": 22,
+            "nome": "CANDIDATO 22",
+            "partido": "P22",
+            "votos_atuais": 265683,
+            "votos_projetados": 265683,
+            "pct_atual": 22.01099,
+            "pct_projetado": 22.01099,
+            "ci95": {
+              "lower": 21.97431,
+              "upper": 22.04094
+            },
+            "sqcand": "220000000001",
+            "comparecimento": {
+              "pct_atual": 20.7979,
+              "pct_projetado": 20.7979,
+              "lower": 20.76324,
+              "upper": 20.82621
+            }
+          },
+          {
+            "id": 60,
+            "nome": "CANDIDATO 60",
+            "partido": "P60",
+            "votos_atuais": 181150,
+            "votos_projetados": 181150,
+            "pct_atual": 15.0077,
+            "pct_projetado": 15.0077,
+            "ci95": {
+              "lower": 14.92743,
+              "upper": 15.09277
+            },
+            "sqcand": "600000000001",
+            "comparecimento": {
+              "pct_atual": 14.18058,
+              "pct_projetado": 14.18058,
+              "lower": 14.10474,
+              "upper": 14.26097
+            }
+          },
+          {
+            "id": 57,
+            "nome": "CANDIDATO 57",
+            "partido": "P57",
+            "votos_atuais": 144799,
+            "votos_projetados": 144799,
+            "pct_atual": 11.99614,
+            "pct_projetado": 11.99614,
+            "ci95": {
+              "lower": 11.97317,
+              "upper": 12.01892
+            },
+            "sqcand": "570000000001",
+            "destino": "sub_judice",
+            "comparecimento": {
+              "pct_atual": 11.33499,
+              "pct_projetado": 11.33499,
+              "lower": 11.31329,
+              "upper": 11.35652
+            }
+          },
+          {
+            "id": 44,
+            "nome": "CANDIDATO 44",
+            "partido": "P44",
+            "votos_atuais": 96534,
+            "votos_projetados": 96534,
+            "pct_atual": 7.99753,
+            "pct_projetado": 7.99753,
+            "ci95": {
+              "lower": 7.95853,
+              "upper": 8.03656
+            },
+            "sqcand": "440000000001",
+            "comparecimento": {
+              "pct_atual": 7.55677,
+              "pct_projetado": 7.55677,
+              "lower": 7.51991,
+              "upper": 7.59364
+            }
+          },
+          {
+            "id": 77,
+            "nome": "CANDIDATO 77",
+            "partido": "P77",
+            "votos_atuais": 60352,
+            "votos_projetados": 60352,
+            "pct_atual": 4.99997,
+            "pct_projetado": 4.99997,
+            "ci95": {
+              "lower": 4.94612,
+              "upper": 5.05367
+            },
+            "sqcand": "770000000001",
+            "comparecimento": {
+              "pct_atual": 4.72441,
+              "pct_projetado": 4.72441,
+              "lower": 4.67353,
+              "upper": 4.77515
+            }
+          }
+        ],
+        "needle_position": 0.798834,
+        "needle_band": "likely_a",
+        "municipios": [],
+        "series_temporais": {
+          "margem": [],
+          "p_vitoria": [],
+          "turnout": [],
+          "por_candidato": {
+            "eixo": ["2026-10-04T23:00:00Z"],
+            "cadencia_min": 5,
+            "candidatos": [
+              {
+                "id": 13,
+                "nome": "CANDIDATO 13",
+                "partido": "P13",
+                "apurado": [37.99],
+                "projetado": [37.99],
+                "sqcand": "130000000001"
+              },
+              {
+                "id": 22,
+                "nome": "CANDIDATO 22",
+                "partido": "P22",
+                "apurado": [22.01],
+                "projetado": [22.01],
+                "sqcand": "220000000001"
+              },
+              {
+                "id": 60,
+                "nome": "CANDIDATO 60",
+                "partido": "P60",
+                "apurado": [15.01],
+                "projetado": [15.01],
+                "sqcand": "600000000001"
+              },
+              {
+                "id": 57,
+                "nome": "CANDIDATO 57",
+                "partido": "P57",
+                "apurado": [12.0],
+                "projetado": [12.0],
+                "sqcand": "570000000001"
+              }
+            ]
+          }
+        },
+        "granularidade": "zona",
+        "participacao": {
+          "abstencao": {
+            "pct_atual": 14.99997,
+            "pct_projetado": 14.99997,
+            "lower": 14.99995,
+            "upper": 14.99999,
+            "base": "eleitores_instalados"
+          },
+          "brancos_nulos": {
+            "pct_atual": 5.51129,
+            "pct_projetado": 5.51129,
+            "lower": 5.51128,
+            "upper": 5.5113,
+            "base": "comparecimento"
+          },
+          "outros": {
+            "pct_atual": 24.99364,
+            "pct_projetado": 24.99517,
+            "lower": 24.94749,
+            "upper": 25.0396,
+            "base": "votaveis",
+            "n_candidatos": 3,
+            "comparecimento": {
+              "pct_atual": 23.61617,
+              "pct_projetado": 23.61761,
+              "lower": 23.57257,
+              "upper": 23.6596
+            }
+          },
+          "metodo": {
+            "tipo": "extrapolacao_apurado",
+            "n_zonas": 6,
+            "pct_apurado": 100.0,
+            "n_zonas_imputadas": 0
+          }
+        },
+        "votacao": {
+          "contagens": {
+            "aptos": 1502890,
+            "instalados": 1502890,
+            "comparecimento": 1277457,
+            "abstencao": 225433,
+            "validos": 1062248,
+            "brancos": 30176,
+            "nulos": 40234,
+            "anulados": 0,
+            "sub_judice": 144799
+          },
+          "projetada": {
+            "validos": 1062253,
+            "brancos": 30174,
+            "nulos": 40230,
+            "abstencao": 225433
+          },
+          "corrida": [
+            {
+              "id": 13,
+              "partido": "P13",
+              "votos": 458529,
+              "destino": "valido"
+            },
+            {
+              "id": 22,
+              "partido": "P22",
+              "votos": 265683,
+              "destino": "valido"
+            },
+            {
+              "id": 44,
+              "partido": "P44",
+              "votos": 96534,
+              "destino": "valido"
+            },
+            {
+              "id": 57,
+              "partido": "P57",
+              "votos": 144799,
+              "destino": "sub_judice"
+            },
+            {
+              "id": 60,
+              "partido": "P60",
+              "votos": 181150,
+              "destino": "valido"
+            },
+            {
+              "id": 77,
+              "partido": "P77",
+              "votos": 60352,
+              "destino": "valido"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "sen_sub_judice": {
+    "payload": {
+      "ts": "<TS>",
+      "dado_ts": "2026-10-04T23:00:00+00:00",
+      "pares_atrasados": 0,
+      "cargo": 5,
+      "turno": 1,
+      "pct_apurado_total": 100.0,
+      "ufs_apuradas": 2,
+      "votacao": {
+        "contagens": {
+          "aptos": 1502888,
+          "instalados": 1502888,
+          "comparecimento": 1277456,
+          "abstencao": 225432,
+          "validos": 2124496,
+          "brancos": 60352,
+          "nulos": 80468,
+          "anulados": 0,
+          "sub_judice": 289598
+        },
+        "projetada": {
+          "validos": 2124513,
+          "brancos": 60348,
+          "nulos": 80460,
+          "abstencao": 225433
+        },
+        "corrida_por_partido": [
+          {
+            "partido": "P13",
+            "votos_validos": 917058
+          },
+          {
+            "partido": "P22",
+            "votos_validos": 531366
+          },
+          {
+            "partido": "P44",
+            "votos_validos": 193068
+          },
+          {
+            "partido": "P60",
+            "votos_validos": 362300
+          },
+          {
+            "partido": "P77",
+            "votos_validos": 120704
+          }
+        ]
+      },
+      "national": {
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "Candidato 13",
+            "partido": "P13",
+            "votos_atuais": 917058,
+            "votos_projetados": 917058,
+            "pct_atual": 37.98766742305809,
+            "pct_projetado": 37.98722,
+            "pct_projetado_lower": 37.93963,
+            "pct_projetado_upper": 38.03566,
+            "p_vitoria": 1.0,
+            "rank": 1,
+            "p_passa_2t": 1.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 35.89372,
+              "lower": 35.84878,
+              "upper": 35.93951
+            }
+          },
+          {
+            "id": 22,
+            "nome": "Candidato 22",
+            "partido": "P22",
+            "votos_atuais": 531366,
+            "votos_projetados": 531366,
+            "pct_atual": 22.01099045853227,
+            "pct_projetado": 22.0107,
+            "pct_projetado_lower": 21.98834,
+            "pct_projetado_upper": 22.03587,
+            "p_vitoria": 0.0,
+            "rank": 2,
+            "p_passa_2t": 1.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 20.79768,
+              "lower": 20.77654,
+              "upper": 20.82144
+            }
+          },
+          {
+            "id": 60,
+            "nome": "Candidato 60",
+            "partido": "P60",
+            "votos_atuais": 362300,
+            "votos_projetados": 362300,
+            "pct_atual": 15.007700611492345,
+            "pct_projetado": 15.00899,
+            "pct_projetado_lower": 14.94504,
+            "pct_projetado_upper": 15.07068,
+            "p_vitoria": 0.0,
+            "rank": 3,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 14.18183,
+              "lower": 14.1214,
+              "upper": 14.24011
+            }
+          },
+          {
+            "id": 57,
+            "nome": "Candidato 57",
+            "partido": "P57",
+            "votos_atuais": 289598,
+            "votos_projetados": 289598,
+            "pct_atual": 11.996136024529285,
+            "pct_projetado": 11.99593,
+            "pct_projetado_lower": 11.97952,
+            "pct_projetado_upper": 12.01324,
+            "p_vitoria": 0.0,
+            "rank": 4,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 11.33482,
+              "lower": 11.31933,
+              "upper": 11.35119
+            }
+          },
+          {
+            "id": 44,
+            "nome": "Candidato 44",
+            "partido": "P44",
+            "votos_atuais": 193068,
+            "votos_projetados": 193068,
+            "pct_atual": 7.997534478773403,
+            "pct_projetado": 7.99853,
+            "pct_projetado_lower": 7.96744,
+            "pct_projetado_upper": 8.02728,
+            "p_vitoria": 0.0,
+            "rank": 5,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 7.55773,
+              "lower": 7.52836,
+              "upper": 7.58489
+            }
+          },
+          {
+            "id": 77,
+            "nome": "Candidato 77",
+            "partido": "P77",
+            "votos_atuais": 120704,
+            "votos_projetados": 120704,
+            "pct_atual": 4.999971003614607,
+            "pct_projetado": 4.99864,
+            "pct_projetado_lower": 4.95954,
+            "pct_projetado_upper": 5.04037,
+            "p_vitoria": 0.0,
+            "rank": 6,
+            "p_passa_2t": 0.0,
+            "p_fecha_1t": 0.0,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 4.72316,
+              "lower": 4.68622,
+              "upper": 4.76258
+            }
+          }
+        ],
+        "needle_position": 1.0,
+        "needle_band": "very_likely_a",
+        "candidato_a_id": 13,
+        "candidato_b_id": 22,
+        "p_segundo_turno_overall": 1.0,
+        "cenarios_2t": [
+          {
+            "par": [13, 22],
+            "prob": 1.0
+          }
+        ],
+        "vai_a_2t_nacional": true,
+        "participacao": {
+          "abstencao": {
+            "pct_atual": 15.0,
+            "pct_projetado": 15.0,
+            "lower": 15.0,
+            "upper": 15.0,
+            "base": "eleitores_instalados"
+          },
+          "brancos_nulos": {
+            "pct_atual": 5.5113,
+            "pct_projetado": 5.5113,
+            "lower": 5.5113,
+            "upper": 5.5113,
+            "base": "comparecimento"
+          },
+          "outros": {
+            "pct_atual": 24.993641506917296,
+            "pct_projetado": 24.9931,
+            "lower": 24.95916,
+            "upper": 25.02918,
+            "base": "votaveis",
+            "n_candidatos": 3,
+            "comparecimento": {
+              "pct_atual": null,
+              "pct_projetado": 23.61571,
+              "lower": 23.58366,
+              "upper": 23.64981
+            }
+          },
+          "metodo": {
+            "tipo": "extrapolacao_apurado",
+            "n_zonas": 12,
+            "pct_apurado": 100.0,
+            "n_zonas_imputadas": 0
+          }
+        }
+      },
+      "por_uf": [
+        {
+          "sigla": "RJ",
+          "pct_apurado": 100.0,
+          "lider": 13,
+          "margem_atual": 15.976680000000002,
+          "margem_projetada": 15.976680000000002,
+          "margem_projetada_ci": [15.92044, 16.04114],
+          "chamada": true,
+          "swing_vs_2022": null,
+          "top_candidatos": [
+            {
+              "id": 13,
+              "pct": 37.98767,
+              "nome": "CANDIDATO 13",
+              "sqcand": "130000000001",
+              "partido": "P13",
+              "votos_atuais": 458529,
+              "pct_atual": 37.98767
+            },
+            {
+              "id": 22,
+              "pct": 22.01099,
+              "nome": "CANDIDATO 22",
+              "sqcand": "220000000001",
+              "partido": "P22",
+              "votos_atuais": 265683,
+              "pct_atual": 22.01099
+            },
+            {
+              "id": 60,
+              "pct": 15.0077,
+              "nome": "CANDIDATO 60",
+              "sqcand": "600000000001",
+              "partido": "P60",
+              "votos_atuais": 181150,
+              "pct_atual": 15.0077
+            },
+            {
+              "id": 57,
+              "pct": 11.99614,
+              "nome": "CANDIDATO 57",
+              "sqcand": "570000000001",
+              "partido": "P57",
+              "votos_atuais": 144799,
+              "pct_atual": 11.99614,
+              "destino": "sub_judice"
+            }
+          ],
+          "vai_a_2t": null,
+          "bucket": "chamada",
+          "outros": {
+            "pct": 12.9975,
+            "pct_atual": 12.9975,
+            "votos_atuais": 156886,
+            "n_candidatos": 2
+          }
+        },
+        {
+          "sigla": "SP",
+          "pct_apurado": 100.0,
+          "lider": 13,
+          "margem_atual": 15.976680000000002,
+          "margem_projetada": 15.976680000000002,
+          "margem_projetada_ci": [15.904650000000004, 16.040840000000003],
+          "chamada": true,
+          "swing_vs_2022": null,
+          "top_candidatos": [
+            {
+              "id": 13,
+              "pct": 37.98767,
+              "nome": "CANDIDATO 13",
+              "sqcand": "130000000001",
+              "partido": "P13",
+              "votos_atuais": 458529,
+              "pct_atual": 37.98767
+            },
+            {
+              "id": 22,
+              "pct": 22.01099,
+              "nome": "CANDIDATO 22",
+              "sqcand": "220000000001",
+              "partido": "P22",
+              "votos_atuais": 265683,
+              "pct_atual": 22.01099
+            },
+            {
+              "id": 60,
+              "pct": 15.0077,
+              "nome": "CANDIDATO 60",
+              "sqcand": "600000000001",
+              "partido": "P60",
+              "votos_atuais": 181150,
+              "pct_atual": 15.0077
+            },
+            {
+              "id": 57,
+              "pct": 11.99614,
+              "nome": "CANDIDATO 57",
+              "sqcand": "570000000001",
+              "partido": "P57",
+              "votos_atuais": 144799,
+              "pct_atual": 11.99614,
+              "destino": "sub_judice"
+            }
+          ],
+          "vai_a_2t": null,
+          "bucket": "chamada",
+          "outros": {
+            "pct": 12.9975,
+            "pct_atual": 12.9975,
+            "votos_atuais": 156886,
+            "n_candidatos": 2
+          }
+        }
+      ],
+      "serie_por_candidato": {
+        "eixo": ["2026-10-04T23:00:00Z"],
+        "cadencia_min": 5,
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "Candidato 13",
+            "partido": "P13",
+            "apurado": [37.99],
+            "projetado": [37.99]
+          },
+          {
+            "id": 22,
+            "nome": "Candidato 22",
+            "partido": "P22",
+            "apurado": [22.01],
+            "projetado": [22.01]
+          },
+          {
+            "id": 60,
+            "nome": "Candidato 60",
+            "partido": "P60",
+            "apurado": [15.01],
+            "projetado": [15.01]
+          },
+          {
+            "id": 57,
+            "nome": "Candidato 57",
+            "partido": "P57",
+            "apurado": [12.0],
+            "projetado": [12.0]
+          }
+        ]
+      },
+      "insights": [],
+      "composition": {
+        "pre_election": 0.0,
+        "model": 1.0,
+        "actual_results": 0.0
+      },
+      "composicao_vagas": {
+        "vagas_por_uf": 2,
+        "ufs_projetadas": 2,
+        "ufs_aguardando": 25,
+        "vagas_projetadas": 4,
+        "por_partido": [
+          {
+            "partido": "P13",
+            "vagas": 2
+          },
+          {
+            "partido": "P22",
+            "vagas": 2
+          }
+        ],
+        "vagas_em_disputa": 54,
+        "total_cadeiras": 81
+      }
+    },
+    "payloads_uf": {
+      "RJ": {
+        "uf": "RJ",
+        "ts": "<TS>",
+        "dado_ts": "2026-10-04T23:00:00+00:00",
+        "pares_atrasados": 0,
+        "cargo": 5,
+        "turno": 1,
+        "pct_apurado": 100.0,
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "CANDIDATO 13",
+            "partido": "P13",
+            "votos_atuais": 458529,
+            "votos_projetados": 458529,
+            "pct_atual": 37.98767,
+            "pct_projetado": 37.98767,
+            "ci95": {
+              "lower": 37.93143,
+              "upper": 38.05213
+            },
+            "sqcand": "130000000001",
+            "comparecimento": {
+              "pct_atual": 35.89414,
+              "pct_projetado": 35.89414,
+              "lower": 35.84107,
+              "upper": 35.95499
+            },
+            "p_eleito": 1.0
+          },
+          {
+            "id": 22,
+            "nome": "CANDIDATO 22",
+            "partido": "P22",
+            "votos_atuais": 265683,
+            "votos_projetados": 265683,
+            "pct_atual": 22.01099,
+            "pct_projetado": 22.01099,
+            "ci95": {
+              "lower": 21.98069,
+              "upper": 22.04096
+            },
+            "sqcand": "220000000001",
+            "comparecimento": {
+              "pct_atual": 20.79795,
+              "pct_projetado": 20.79795,
+              "lower": 20.7693,
+              "upper": 20.82629
+            },
+            "p_eleito": 1.0
+          },
+          {
+            "id": 60,
+            "nome": "CANDIDATO 60",
+            "partido": "P60",
+            "votos_atuais": 181150,
+            "votos_projetados": 181150,
+            "pct_atual": 15.0077,
+            "pct_projetado": 15.0077,
+            "ci95": {
+              "lower": 14.92253,
+              "upper": 15.0878
+            },
+            "sqcand": "600000000001",
+            "comparecimento": {
+              "pct_atual": 14.18062,
+              "pct_projetado": 14.18062,
+              "lower": 14.10014,
+              "upper": 14.25631
+            },
+            "p_eleito": 0.0
+          },
+          {
+            "id": 57,
+            "nome": "CANDIDATO 57",
+            "partido": "P57",
+            "votos_atuais": 144799,
+            "votos_projetados": 144799,
+            "pct_atual": 11.99614,
+            "pct_projetado": 11.99614,
+            "ci95": {
+              "lower": 11.97443,
+              "upper": 12.02045
+            },
+            "sqcand": "570000000001",
+            "destino": "sub_judice",
+            "comparecimento": {
+              "pct_atual": 11.33502,
+              "pct_projetado": 11.33502,
+              "lower": 11.31451,
+              "upper": 11.35798
+            },
+            "p_eleito": 0.0
+          },
+          {
+            "id": 44,
+            "nome": "CANDIDATO 44",
+            "partido": "P44",
+            "votos_atuais": 96534,
+            "votos_projetados": 96534,
+            "pct_atual": 7.99753,
+            "pct_projetado": 7.99753,
+            "ci95": {
+              "lower": 7.96026,
+              "upper": 8.03649
+            },
+            "sqcand": "440000000001",
+            "comparecimento": {
+              "pct_atual": 7.55679,
+              "pct_projetado": 7.55679,
+              "lower": 7.52156,
+              "upper": 7.59358
+            },
+            "p_eleito": 0.0
+          },
+          {
+            "id": 77,
+            "nome": "CANDIDATO 77",
+            "partido": "P77",
+            "votos_atuais": 60352,
+            "votos_projetados": 60352,
+            "pct_atual": 4.99997,
+            "pct_projetado": 4.99997,
+            "ci95": {
+              "lower": 4.9462,
+              "upper": 5.05366
+            },
+            "sqcand": "770000000001",
+            "comparecimento": {
+              "pct_atual": 4.72442,
+              "pct_projetado": 4.72442,
+              "lower": 4.67361,
+              "upper": 4.77515
+            },
+            "p_eleito": 0.0
+          }
+        ],
+        "needle_position": 0.798834,
+        "needle_band": "likely_a",
+        "municipios": [],
+        "series_temporais": {
+          "margem": [],
+          "p_vitoria": [],
+          "turnout": [],
+          "por_candidato": {
+            "eixo": ["2026-10-04T23:00:00Z"],
+            "cadencia_min": 5,
+            "candidatos": [
+              {
+                "id": 13,
+                "nome": "CANDIDATO 13",
+                "partido": "P13",
+                "apurado": [37.99],
+                "projetado": [37.99],
+                "sqcand": "130000000001"
+              },
+              {
+                "id": 22,
+                "nome": "CANDIDATO 22",
+                "partido": "P22",
+                "apurado": [22.01],
+                "projetado": [22.01],
+                "sqcand": "220000000001"
+              },
+              {
+                "id": 60,
+                "nome": "CANDIDATO 60",
+                "partido": "P60",
+                "apurado": [15.01],
+                "projetado": [15.01],
+                "sqcand": "600000000001"
+              },
+              {
+                "id": 57,
+                "nome": "CANDIDATO 57",
+                "partido": "P57",
+                "apurado": [12.0],
+                "projetado": [12.0],
+                "sqcand": "570000000001"
+              }
+            ]
+          }
+        },
+        "vagas": 2,
+        "granularidade": "zona",
+        "participacao": {
+          "abstencao": {
+            "pct_atual": 15.0,
+            "pct_projetado": 15.0,
+            "lower": 15.0,
+            "upper": 15.0,
+            "base": "eleitores_instalados"
+          },
+          "brancos_nulos": {
+            "pct_atual": 5.5113,
+            "pct_projetado": 5.5113,
+            "lower": 5.5113,
+            "upper": 5.5113,
+            "base": "comparecimento"
+          },
+          "outros": {
+            "pct_atual": 24.99364,
+            "pct_projetado": 24.99375,
+            "lower": 24.94774,
+            "upper": 25.04381,
+            "base": "votaveis",
+            "n_candidatos": 3,
+            "comparecimento": {
+              "pct_atual": 23.61623,
+              "pct_projetado": 23.61633,
+              "lower": 23.57286,
+              "upper": 23.66366
+            }
+          },
+          "metodo": {
+            "tipo": "extrapolacao_apurado",
+            "n_zonas": 6,
+            "pct_apurado": 100.0,
+            "n_zonas_imputadas": 0
+          }
+        },
+        "votacao": {
+          "contagens": {
+            "aptos": 751444,
+            "instalados": 751444,
+            "comparecimento": 638728,
+            "abstencao": 112716,
+            "validos": 1062248,
+            "brancos": 30176,
+            "nulos": 40234,
+            "anulados": 0,
+            "sub_judice": 144799
+          },
+          "projetada": {
+            "validos": 1062254,
+            "brancos": 30174,
+            "nulos": 40230,
+            "abstencao": 112717
+          },
+          "corrida": [
+            {
+              "id": 13,
+              "partido": "P13",
+              "votos": 458529,
+              "destino": "valido"
+            },
+            {
+              "id": 22,
+              "partido": "P22",
+              "votos": 265683,
+              "destino": "valido"
+            },
+            {
+              "id": 44,
+              "partido": "P44",
+              "votos": 96534,
+              "destino": "valido"
+            },
+            {
+              "id": 57,
+              "partido": "P57",
+              "votos": 144799,
+              "destino": "sub_judice"
+            },
+            {
+              "id": 60,
+              "partido": "P60",
+              "votos": 181150,
+              "destino": "valido"
+            },
+            {
+              "id": 77,
+              "partido": "P77",
+              "votos": 60352,
+              "destino": "valido"
+            }
+          ]
+        }
+      },
+      "SP": {
+        "uf": "SP",
+        "ts": "<TS>",
+        "dado_ts": "2026-10-04T23:00:00+00:00",
+        "pares_atrasados": 0,
+        "cargo": 5,
+        "turno": 1,
+        "pct_apurado": 100.0,
+        "candidatos": [
+          {
+            "id": 13,
+            "nome": "CANDIDATO 13",
+            "partido": "P13",
+            "votos_atuais": 458529,
+            "votos_projetados": 458529,
+            "pct_atual": 37.98767,
+            "pct_projetado": 37.98767,
+            "ci95": {
+              "lower": 37.91564,
+              "upper": 38.05183
+            },
+            "sqcand": "130000000001",
+            "comparecimento": {
+              "pct_atual": 35.89414,
+              "pct_projetado": 35.89414,
+              "lower": 35.82611,
+              "upper": 35.95473
+            },
+            "p_eleito": 1.0
+          },
+          {
+            "id": 22,
+            "nome": "CANDIDATO 22",
+            "partido": "P22",
+            "votos_atuais": 265683,
+            "votos_projetados": 265683,
+            "pct_atual": 22.01099,
+            "pct_projetado": 22.01099,
+            "ci95": {
+              "lower": 21.97435,
+              "upper": 22.04776
+            },
+            "sqcand": "220000000001",
+            "comparecimento": {
+              "pct_atual": 20.79795,
+              "pct_projetado": 20.79795,
+              "lower": 20.76335,
+              "upper": 20.83271
+            },
+            "p_eleito": 1.0
+          },
+          {
+            "id": 60,
+            "nome": "CANDIDATO 60",
+            "partido": "P60",
+            "votos_atuais": 181150,
+            "votos_projetados": 181150,
+            "pct_atual": 15.0077,
+            "pct_projetado": 15.0077,
+            "ci95": {
+              "lower": 14.9226,
+              "upper": 15.09364
+            },
+            "sqcand": "600000000001",
+            "comparecimento": {
+              "pct_atual": 14.18062,
+              "pct_projetado": 14.18062,
+              "lower": 14.10022,
+              "upper": 14.26181
+            },
+            "p_eleito": 0.0
+          },
+          {
+            "id": 57,
+            "nome": "CANDIDATO 57",
+            "partido": "P57",
+            "votos_atuais": 144799,
+            "votos_projetados": 144799,
+            "pct_atual": 11.99614,
+            "pct_projetado": 11.99614,
+            "ci95": {
+              "lower": 11.97077,
+              "upper": 12.01902
+            },
+            "sqcand": "570000000001",
+            "destino": "sub_judice",
+            "comparecimento": {
+              "pct_atual": 11.33502,
+              "pct_projetado": 11.33502,
+              "lower": 11.31107,
+              "upper": 11.35663
+            },
+            "p_eleito": 0.0
+          },
+          {
+            "id": 44,
+            "nome": "CANDIDATO 44",
+            "partido": "P44",
+            "votos_atuais": 96534,
+            "votos_projetados": 96534,
+            "pct_atual": 7.99753,
+            "pct_projetado": 7.99753,
+            "ci95": {
+              "lower": 7.96026,
+              "upper": 8.03656
+            },
+            "sqcand": "440000000001",
+            "comparecimento": {
+              "pct_atual": 7.55679,
+              "pct_projetado": 7.55679,
+              "lower": 7.52156,
+              "upper": 7.59366
+            },
+            "p_eleito": 0.0
+          },
+          {
+            "id": 77,
+            "nome": "CANDIDATO 77",
+            "partido": "P77",
+            "votos_atuais": 60352,
+            "votos_projetados": 60352,
+            "pct_atual": 4.99997,
+            "pct_projetado": 4.99997,
+            "ci95": {
+              "lower": 4.94612,
+              "upper": 5.05366
+            },
+            "sqcand": "770000000001",
+            "comparecimento": {
+              "pct_atual": 4.72442,
+              "pct_projetado": 4.72442,
+              "lower": 4.67354,
+              "upper": 4.77515
+            },
+            "p_eleito": 0.0
+          }
+        ],
+        "needle_position": 0.798834,
+        "needle_band": "likely_a",
+        "municipios": [],
+        "series_temporais": {
+          "margem": [],
+          "p_vitoria": [],
+          "turnout": [],
+          "por_candidato": {
+            "eixo": ["2026-10-04T23:00:00Z"],
+            "cadencia_min": 5,
+            "candidatos": [
+              {
+                "id": 13,
+                "nome": "CANDIDATO 13",
+                "partido": "P13",
+                "apurado": [37.99],
+                "projetado": [37.99],
+                "sqcand": "130000000001"
+              },
+              {
+                "id": 22,
+                "nome": "CANDIDATO 22",
+                "partido": "P22",
+                "apurado": [22.01],
+                "projetado": [22.01],
+                "sqcand": "220000000001"
+              },
+              {
+                "id": 60,
+                "nome": "CANDIDATO 60",
+                "partido": "P60",
+                "apurado": [15.01],
+                "projetado": [15.01],
+                "sqcand": "600000000001"
+              },
+              {
+                "id": 57,
+                "nome": "CANDIDATO 57",
+                "partido": "P57",
+                "apurado": [12.0],
+                "projetado": [12.0],
+                "sqcand": "570000000001"
+              }
+            ]
+          }
+        },
+        "vagas": 2,
+        "granularidade": "zona",
+        "participacao": {
+          "abstencao": {
+            "pct_atual": 15.0,
+            "pct_projetado": 15.0,
+            "lower": 15.0,
+            "upper": 15.0,
+            "base": "eleitores_instalados"
+          },
+          "brancos_nulos": {
+            "pct_atual": 5.5113,
+            "pct_projetado": 5.5113,
+            "lower": 5.5113,
+            "upper": 5.5113,
+            "base": "comparecimento"
+          },
+          "outros": {
+            "pct_atual": 24.99364,
+            "pct_projetado": 24.99244,
+            "lower": 24.9435,
+            "upper": 25.04167,
+            "base": "votaveis",
+            "n_candidatos": 3,
+            "comparecimento": {
+              "pct_atual": 23.61623,
+              "pct_projetado": 23.61509,
+              "lower": 23.56887,
+              "upper": 23.66155
+            }
+          },
+          "metodo": {
+            "tipo": "extrapolacao_apurado",
+            "n_zonas": 6,
+            "pct_apurado": 100.0,
+            "n_zonas_imputadas": 0
+          }
+        },
+        "votacao": {
+          "contagens": {
+            "aptos": 751444,
+            "instalados": 751444,
+            "comparecimento": 638728,
+            "abstencao": 112716,
+            "validos": 1062248,
+            "brancos": 30176,
+            "nulos": 40234,
+            "anulados": 0,
+            "sub_judice": 144799
+          },
+          "projetada": {
+            "validos": 1062254,
+            "brancos": 30174,
+            "nulos": 40230,
+            "abstencao": 112717
+          },
+          "corrida": [
+            {
+              "id": 13,
+              "partido": "P13",
+              "votos": 458529,
+              "destino": "valido"
+            },
+            {
+              "id": 22,
+              "partido": "P22",
+              "votos": 265683,
+              "destino": "valido"
+            },
+            {
+              "id": 44,
+              "partido": "P44",
+              "votos": 96534,
+              "destino": "valido"
+            },
+            {
+              "id": 57,
+              "partido": "P57",
+              "votos": 144799,
+              "destino": "sub_judice"
+            },
+            {
+              "id": 60,
+              "partido": "P60",
+              "votos": 181150,
+              "destino": "valido"
+            },
+            {
+              "id": 77,
+              "partido": "P77",
+              "votos": 60352,
+              "destino": "valido"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -294,9 +294,12 @@ def test_a_lider_46_com_16_anulado_fecha_no_1o_turno(monkeypatch) -> None:
     assert _cand(nat, ANUL)["p_vitoria"] == 0.0
     assert _cand(nat, ANUL)["p_passa_2t"] == 0.0
     assert _cand(nat, ANUL)["p_fecha_1t"] == 0.0
-    # …mas a EXIBIÇÃO continua sobre vvc: 16% dela, 46% do líder.
+    # Emenda de 2026-09-27 ao ADR-0053: a anulada segue publicada sobre vvc
+    # (16%, a tela não a exibe) e o líder sai sobre os votos em disputa —
+    # 46/84 = 54,8%, o mesmo número em que ele fecha no 1º turno.
     assert _cand(nat, ANUL)["pct_projetado"] == pytest.approx(16.0, abs=0.5)
-    assert _cand(nat, LIDER)["pct_projetado"] == pytest.approx(46.0, abs=0.5)
+    assert _cand(nat, LIDER)["pct_projetado"] == pytest.approx(100 * 46 / 84, abs=0.5)
+    assert _cand(nat, LIDER)["pct_projetado"] > 50.0
 
 
 def test_a_sem_dvt_o_mesmo_cenario_continua_indo_ao_2o_turno(monkeypatch) -> None:
@@ -307,8 +310,11 @@ def test_a_sem_dvt_o_mesmo_cenario_continua_indo_ao_2o_turno(monkeypatch) -> Non
     assert nat["p_segundo_turno_overall"] == 1.0
 
 
-def test_a_exibicao_identica_com_e_sem_dvt(monkeypatch) -> None:
-    """Regra 3 — todo percentual publicado é o mesmo; só as decisões mudam."""
+def test_a_exibicao_com_dvt_e_a_sem_dvt_dividida_pelos_votos_em_disputa(monkeypatch) -> None:
+    """Emenda de 2026-09-27 ao ADR-0053 (revoga a regra 3): com a anulada, o
+    percentual publicado de quem compete é o de SEM `dvt` × 100/(100 − anulada)
+    — o mesmo fator no ponto, no IC e (com o Σ do apurado) no apurado. A
+    anulada e as contagens (`votos_*`) e o `rank` não mudam."""
     com, _ = _cenario(
         {"SP": _SHARES_A, "RJ": _SHARES_A},
         _dvt_fixo({ANUL: ANULADO, SUBJ: SUB_JUDICE}),
@@ -317,22 +323,37 @@ def test_a_exibicao_identica_com_e_sem_dvt(monkeypatch) -> None:
     sem, eleit = _cenario({"SP": _SHARES_A, "RJ": _SHARES_A}, _sem_dvt, cargo=1)
     p_com = _rodar(monkeypatch, com, eleit, cargo=1)
     p_sem = _rodar(monkeypatch, sem, eleit, cargo=1)
-    campos = ("pct_atual", "pct_projetado", "pct_projetado_lower",
-              "pct_projetado_upper", "votos_atuais", "votos_projetados", "rank")
+    nat_com = p_com["payload"]["national"]
+    nat_sem = p_sem["payload"]["national"]
+    f_proj = 100.0 / (100.0 - _cand(nat_sem, ANUL)["pct_projetado"])
+    f_atual = 100.0 / (100.0 - _cand(nat_sem, ANUL)["pct_atual"])
     for cid in _SHARES_A:
-        for campo in campos:
-            assert _cand(p_com["payload"]["national"], cid)[campo] == _cand(
-                p_sem["payload"]["national"], cid
-            )[campo], (cid, campo)
+        c_com, c_sem = _cand(nat_com, cid), _cand(nat_sem, cid)
+        for campo in ("votos_atuais", "votos_projetados", "rank"):
+            assert c_com[campo] == c_sem[campo], (cid, campo)
+        fp = 1.0 if cid == ANUL else f_proj
+        fa = 1.0 if cid == ANUL else f_atual
+        for campo in ("pct_projetado", "pct_projetado_lower", "pct_projetado_upper"):
+            assert c_com[campo] == pytest.approx(c_sem[campo] * fp, abs=1e-4), (cid, campo)
+        assert c_com["pct_atual"] == pytest.approx(c_sem["pct_atual"] * fa, abs=1e-4), cid
     for sigla in ("SP", "RJ"):
-        # RF-213 (exibição) — a única diferença admitida é a etiqueta
-        # `destino`, que só existe quando o `dvt` existe
-        # (`test_destino_do_voto_exibicao.py` a cobre). Todo o resto: igual.
-        com_sem_etiqueta = [
-            {k: v for k, v in c.items() if k != "destino"}
-            for c in p_com["payloads_uf"][sigla]["candidatos"]
-        ]
-        assert com_sem_etiqueta == p_sem["payloads_uf"][sigla]["candidatos"]
+        # Presidente: o escopo é o NACIONAL também na UF. A base da UF é a da
+        # própria UF (a anulada tem a sua fração ali).
+        sem_uf = {c["id"]: c for c in p_sem["payloads_uf"][sigla]["candidatos"]}
+        com_uf = {c["id"]: c for c in p_com["payloads_uf"][sigla]["candidatos"]}
+        fp = 100.0 / (100.0 - sem_uf[ANUL]["pct_projetado"])
+        fa = 100.0 / (100.0 - sem_uf[ANUL]["pct_atual"])
+        for cid, c_sem in sem_uf.items():
+            c_com = {k: v for k, v in com_uf[cid].items() if k != "destino"}
+            k_p = 1.0 if cid == ANUL else fp
+            k_a = 1.0 if cid == ANUL else fa
+            assert c_com["pct_projetado"] == pytest.approx(c_sem["pct_projetado"] * k_p, abs=1e-4)
+            assert c_com["ci95"]["lower"] == pytest.approx(c_sem["ci95"]["lower"] * k_p, abs=1e-4)
+            assert c_com["ci95"]["upper"] == pytest.approx(c_sem["ci95"]["upper"] * k_p, abs=1e-4)
+            assert c_com["pct_atual"] == pytest.approx(c_sem["pct_atual"] * k_a, abs=1e-4)
+            # a base comparecimento NÃO muda, nem as contagens.
+            for campo in ("comparecimento", "votos_atuais", "votos_projetados"):
+                assert c_com[campo] == c_sem[campo], (sigla, cid, campo)
 
 
 # ---------------------------------------------------------------------------
@@ -386,9 +407,13 @@ def test_presidente_uf_onde_a_anulada_lidera_usa_o_destino_nacional(monkeypatch)
     body = _rodar(monkeypatch, snaps, eleit, cargo=1)
     linha = _por_uf(body["payload"], "RJ")
     assert linha["lider"] == LIDER
-    assert linha["margem_projetada"] == pytest.approx(10.0, abs=1.0)
-    # agulha da UF = margem entre as que competem / 20.
-    assert body["payloads_uf"]["RJ"]["needle_position"] == pytest.approx(0.5, abs=0.05)
+    # Emenda de 2026-09-27 (2ª parte): margem entre as que competem, sobre os
+    # votos em disputa da UF — (30 − 20) / 55.
+    assert linha["margem_projetada"] == pytest.approx(100 * 10 / 55, abs=1.0)
+    # agulha da UF = essa margem / 20.
+    assert body["payloads_uf"]["RJ"]["needle_position"] == pytest.approx(
+        100 * 10 / 55 / 20, abs=0.05
+    )
     # A lista da UF continua exibindo a anulada em 1º por projeção.
     assert body["payloads_uf"]["RJ"]["candidatos"][0]["id"] == ANUL
 
@@ -576,8 +601,9 @@ def test_governador_lider_chamada_e_vai_a_2t_ignoram_a_anulada_da_uf(monkeypatch
 
     linha_sp = _por_uf(body["payload"], "SP")
     assert linha_sp["lider"] == G13
-    # margem entre as que competem, em pp de vvc: 33 − 20.
-    assert linha_sp["margem_projetada"] == pytest.approx(13.0, abs=1.0)
+    # margem entre as que competem, sobre os votos em disputa (emenda de
+    # 2026-09-27, 2ª parte): (33 − 20) / 53.
+    assert linha_sp["margem_projetada"] == pytest.approx(100 * 13 / 53, abs=1.0)
     assert linha_sp["chamada"] is True
     # 33 / 53 = 62% da base sem os anulados ⇒ decidido no 1º turno.
     assert linha_sp["vai_a_2t"] is False
@@ -622,8 +648,13 @@ def test_senado_anulada_nao_ocupa_vaga(monkeypatch) -> None:
     assert cands_sp[S221]["p_eleito"] > 0.99
     competem = [c["p_eleito"] for cid, c in cands_sp.items() if cid != S451]
     assert sum(competem) == pytest.approx(2.0)
-    # exibição: a anulada continua com o maior % de vvc da UF.
-    assert cands_sp[S451]["pct_projetado"] == max(c["pct_projetado"] for c in cands_sp.values())
+    # exibição: a anulada continua publicada sobre vvc (30%); quem compete
+    # sai sobre os votos em disputa da UF, que somam 100%.
+    assert cands_sp[S451]["pct_projetado"] == pytest.approx(30.0, abs=0.5)
+    assert sum(c["pct_projetado"] for cid, c in cands_sp.items() if cid != S451) == (
+        pytest.approx(100.0, abs=0.01)
+    )
+    assert cands_sp[S131]["pct_projetado"] == pytest.approx(100 * 27 / 70, abs=0.5)
 
     # composição das vagas: SP elege 131 e 221; RJ elege 131 e 221.
     comp = body["payload"]["composicao_vagas"]

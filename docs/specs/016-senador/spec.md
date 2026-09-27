@@ -221,6 +221,8 @@ atualização é a cada 5 minutos (constituição § 8, ADR-0026 item 5).
   zona apurada — aí o intervalo volta a ser degenerado e a chance não é exibida.
 
 > ⚠️ **Nota 2026-09-27 ([ADR-0053](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md), RF-213 da spec 002).** `p_eleito` (RF-103), o líder e a margem 2º→3º (RF-104) já saem do modelo com toda candidatura de `dvt = "Anulado"` excluída do ranking de duas vagas — nenhuma lógica nova é necessária nesta spec. Candidatura `dvt = "Anulado sub judice"` continua elegível às duas vagas normalmente (ponto aberto, pendente confirmação jurídica). Isto é especialmente relevante para Senado: com 2 vagas por UF, uma candidatura anulada em 2º lugar hoje ocuparia uma vaga real no ranking de `p_eleito` — o RF-213 fecha esse caso.
+>
+> 🔴 **EMENDADO em 2026-09-27 (tarde), decisão do dono, opção A ([ADR-0053, emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)).** Além de sair do ranking de duas vagas, a candidatura `dvt = "Anulado"` também deixa de ter percentual na lista de candidatos (`<CandidateListCollapse>`, `<StateResultSheet>`) — mostra só o total de votos, em VOTOS (RF-210, 2 por eleitor). Quando há candidatura anulada na UF, o percentual de toda candidatura que compete passa a ser fração dos **votos em disputa** (`vvc − Σ votos das candidaturas anuladas`, em votos), não de `vvc` inteiro — a mesma base que decide `p_eleito`, líder e margem. Sem candidatura anulada na UF — o caso hoje observado —, nada muda.
 
 ### Cobertura municipal e tabela de municípios (S08/2026-09-19/20)
 

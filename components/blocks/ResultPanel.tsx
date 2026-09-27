@@ -97,7 +97,7 @@ import { CandidateListCollapse } from "@/components/blocks/CandidateListCollapse
 import { ReordenaListaPorBase } from "@/components/blocks/ReordenaListaPorBase";
 import { candidatoFotoUrl } from "@/lib/blob/paths";
 import type { EdgeCandidate } from "@/lib/edge-config/types";
-import { compete, haAnulada, NOTA_ANULADAS, queCompetem } from "@/lib/utils/destino-voto";
+import { compete, haAnulada, notaAnuladas, queCompetem } from "@/lib/utils/destino-voto";
 import { formatPp, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { ordensPorBase } from "@/lib/utils/rank-parcial";
@@ -615,7 +615,13 @@ export function ResultPanel({
 
   // DERIVAÇÃO 1 — o payload não traz "votos apurados" agregados; some-se os
   // dos candidatos. Brancos e nulos não entram (não são voto em candidato).
-  const counted = candidatos.reduce((soma, c) => soma + (c.votos_atuais ?? 0), 0);
+  //
+  // 🔴 Emenda "opção A" ao ADR-0053 (dono, 2026-09-27) — só de quem COMPETE.
+  // Com anulada, os percentuais da lista estão sobre os votos em disputa (sem
+  // os anulados); somar os votos dela aqui daria à nota um total que não é a
+  // base de nenhum número da tela. Sem anulada, `queCompetem` é a lista toda.
+  const temAnulada = !identidade && haAnulada(candidatos);
+  const counted = queCompetem(candidatos).reduce((soma, c) => soma + (c.votos_atuais ?? 0), 0);
 
   // DERIVAÇÃO 2 — o universo de válidos ao final. É a MESMA regra de três que
   // produz a projeção (votos ÷ % apurado), aplicada ao denominador; não é um
@@ -623,10 +629,14 @@ export function ResultPanel({
   // para só o apurado, em vez de imprimir uma divisão por zero como se fosse
   // estimativa.
   const total = pctApurado > 0 ? counted / (pctApurado / 100) : null;
+  // O nome da base acompanha a nota de metodologia: com anulada, a soma é a
+  // dos votos em disputa (válidos + sub judice), e é esse o nome que a frase
+  // lá embaixo usa. Sem anulada, o texto de sempre.
+  const baseVotos = temAnulada ? "votos em disputa" : "votos válidos";
   const notaApurado =
     total === null
-      ? `${formatVotesCompact(counted)} votos válidos apurados`
-      : `${formatVotesCompact(counted)} de ${formatVotesCompact(total)} votos válidos`;
+      ? `${formatVotesCompact(counted)} ${baseVotos} apurados`
+      : `${formatVotesCompact(counted)} de ${formatVotesCompact(total)} ${baseVotos}`;
 
   // DERIVAÇÃO 3 — a margem que decide a corrida, nas duas bases. O payload
   // nacional não tem margem agregada pronta.
@@ -653,7 +663,6 @@ export function ResultPanel({
   // sempre, no fim. Então quem pode sobrar do `limit` são só as que competem —
   // contar a anulada aqui criaria um botão "Todos os N" que não esconde nada.
   const excedentes = Math.max(0, queCompetem(candidatos).length - limit);
-  const temAnulada = !identidade && haAnulada(candidatos);
 
   const linhas = identidade
     ? candidatos.map((c) => (
@@ -894,7 +903,9 @@ export function ResultPanel({
       )}
 
       {/* ADR-0053 / RF-213 — a frase só existe quando há anulada na lista:
-          sem ela, ninguém precisa saber que a regra existe. */}
+          sem ela, ninguém precisa saber que a regra existe. A regra dos 50%
+          só é dita onde ela decide: com uma vaga. Em Senado (duas vagas, sem
+          2º turno) ela seria falsa. */}
       {temAnulada ? (
         <p
           data-testid="result-nota-anuladas"
@@ -906,7 +917,7 @@ export function ResultPanel({
             textWrap: "pretty",
           }}
         >
-          {NOTA_ANULADAS}
+          {notaAnuladas(nVagas === 1)}
         </p>
       ) : null}
 

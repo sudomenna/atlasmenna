@@ -46,14 +46,49 @@ A norma eleitoral (CF art. 77 § 2º para Presidente, art. 28 por remissão para
 
 **Os votos sub judice contam no denominador da maioria absoluta do 1º turno?** Este ADR assume que sim (mantém `vansj` na base `vvc − van`), seguindo o TSE, que mantém a candidatura sub judice formalmente em disputa (`st`/`e` observados na captura real). Pendente de confirmação jurídica pelo dono do produto antes do 1º turno (04/10/2026); se a orientação mudar, requer ADR de emenda ou substituição deste.
 
+## Emenda 2026-09-27 (tarde): a lista passa a mostrar a base da disputa
+
+### Contexto
+
+A decisão 3 original deste ADR manteve a exibição intocada: todo percentual de candidato continuava sobre `vvc` inteiro ([ADR-0018](0018-termometros-hero-1t.md)), e só as decisões de corrida (líder, `p_fecha_1t`, chamada) passaram a ignorar a candidatura anulada. Isso produz três números diferentes contando a mesma corrida. Medido pelo dono com um exemplo de bancada: candidaturas Ana 45%, Bruno 30%, Carla (sub judice) 10% e Davi (anulado) 15%, todos percentuais de `vvc`. Com a decisão original, a lista mostraria "Ana 45%", o círculo 1 do gráfico "A corrida" ([spec 022](../../specs/022-corrida-em-tres-circulos/spec.md), base `contagens.validos`) mostraria "Ana 60%", e a decisão de corrida (RF-213, base `vvc − van`) apontaria "Ana venceu no 1º turno" com 53% — três números para a mesma pessoa, e só o terceiro conta a história que a própria tela também afirma ("Ana venceu"). É exatamente o caso descrito na consequência negativa já registrada acima ("a lista pode mostrar uma candidatura anulada com X% de `vvc` enquanto a agulha, o `p_fecha_1t` e o 1º/2º turno a ignoram inteiramente") — mas o problema alcança também as candidaturas que **continuam** competindo, não só a anulada.
+
+### Decisão (opção A do dono)
+
+Quando a abrangência da tela — Brasil para Presidente; a UF para Governador e Senador; município e mesorregião dentro do escopo da UF — tem ao menos uma candidatura com destino `"anulado"`, **todo percentual de candidatura que compete** passa a ser publicado e exibido sobre os **votos em disputa** = `vvc − Σ votos das candidaturas anuladas` (válidos + sub judice) — a mesma base que, desde a decisão original deste ADR, já decide 1º turno, líder, chamada e vagas. O líder mostrado com mais de 50% nessa base é exatamente quem vence no 1º turno: a lista e a decisão de corrida voltam a contar a mesma história. A candidatura anulada permanece na lista, ao final, com etiqueta "Anulado", mostrando **apenas o total de votos**, sem percentual algum. Sem nenhuma candidatura anulada na abrangência, nada muda: a base continua sendo `vvc` inteiro, igual ao `pvap` publicado pelo TSE — o caso observado em todos os ciclos do simulado até esta data. Sempre que a base publicada diverge do `pvap` do arquivo do TSE, a metodologia ([spec 011](../../specs/011-sobre-o-modelo/spec.md)) declara essa divergência explicitamente.
+
+No gráfico "A corrida" ([spec 022](../../specs/022-corrida-em-tres-circulos/spec.md)): o **círculo 1** passa a ter como base os "votos em disputa" (`validos + sub_judice`, em vez de só `validos`), com a(s) candidatura(s) sub judice aparecendo como fatia própria e nomeada, ao lado das quatro maiores válidas + "Outros"; nos **círculos 2 e 3**, a fatia hoje rotulada "Anulados e sub judice" passa a se chamar apenas **"Anulados"** (`contagens.anulados`, isto é, `van`) — a candidatura sub judice sai dela e passa a contar dentro das fatias de candidatura/"Outros", já que compete. O **círculo de projeção** (RF-212) passa a ter como total `votacao.projetada.validos + Σ votos_projetados das candidaturas sub judice`, com as fatias divididas pela proporção de votos projetados entre quem compete (excluída a anulada). O painel "Votação" ([spec 021](../../specs/021-votacao-eleitorado/spec.md)) **não muda** — continua seguindo a árvore de contagem do TSE tal como publicada, sem excluir nada.
+
+Isto substitui a decisão 3 original deste ADR ("a exibição não muda... continuam sobre `vvc` inteiro") sempre que há candidatura anulada na abrangência. Fora desse caso — hoje a totalidade dos ciclos observados — a decisão 3 original permanece exatamente como estava.
+
+### Consequências
+
+**Positivas**:
+- O número que a lista mostra para um líder com mais de 50% conta a mesma história que o resto da tela: "lidera com X%" e "venceu no 1º turno" deixam de poder discordar sobre o mesmo candidato.
+- Fecha o caso medido pelo dono (45% / 60% / 53% para a mesma pessoa, na mesma tela) sem introduzir uma quarta base nova — reaproveita exatamente a base que o RF-213 original já calcula para as decisões de corrida.
+- Séries históricas e percentuais publicados por município (dentro do escopo da UF) herdam a mesma base sem regra própria: é o mesmo mecanismo de exclusão/renormalização de RF-213 ([spec 002](../../specs/002-modelo-estatistico/spec.md)), agora estendido também ao caminho de exibição.
+- Continua degradando com segurança: sem nenhuma candidatura `"anulado"` na abrangência, a base publicada continua sendo `vvc` inteiro, idêntica ao `pvap` do TSE — nada nesta emenda muda o número exibido nesse caso.
+
+**Negativas**:
+- **Percentuais publicados deixam de bater com o `pvap` do TSE sempre que há candidatura anulada** — diferente de toda a exibição anterior a esta emenda (e de todo o ADR-0018, que nunca divergia do denominador oficial). Exige nota explícita na metodologia (spec 011, constituição § 8); sem ela, um leitor comparando com o boletim do TSE veria um número aparentemente "errado".
+- **A candidatura anulada perde comparabilidade direta na lista**: mostra só votos absolutos, nunca um percentual — "quanto ela tirou em proporção de tudo" deixa de estar num só lugar e passa a exigir ida à metodologia ou ao painel "Votação" (que segue publicando a árvore completa do TSE, sem excluir nada).
+- **O ADR-0018 deixa de valer "sempre `vvc`"** — qualquer leitura futura que cite aquele ADR como garantia de denominador único e invariável precisa primeiro checar se a abrangência tem candidatura anulada (ver nota de emenda parcial adicionada naquele ADR).
+- **Mais um ponto de troca de base em cascata**: a lista de candidatos, os três círculos de "A corrida" (RF-202/204/205/212) e as séries por município agora precisam concordar sobre a mesma exclusão/renormalização — divergência entre esses pontos reproduziria a mesma classe de bug que esta emenda corrige (mesmo risco já registrado nas Consequências Negativas originais deste ADR sobre "complexidade duplicada na fronteira de decisão", agora estendido à camada de exibição).
+- **O ponto aberto sobre sub judice no denominador (acima) passa a governar também o que a lista publica** — se a orientação jurídica mudar e sub judice sair do denominador da maioria absoluta, o mesmo corte precisa sair do denominador exibido, sob pena da lista voltar a divergir da decisão de corrida.
+
+### Adendo — a margem e o selo de "chamada" seguem a mesma base (decisão do dono, 2026-09-27)
+
+Com anulada no escopo, `margem_atual`, `margem_projetada` e `margem_projetada_ci` do `por_uf[]` passam a ser calculadas sobre os votos em disputa — a margem publicada é a diferença entre os dois primeiros que competem, como aparecem na lista (exemplo-guia: Ana 52,94 − Bruno 35,29 = 17,65, e não 15 sobre `vvc`). A `chamada` (`margem > 10`) e a agulha da UF (`margem/20`) usam essa margem. Consequência assumida: com anulada, a chamada pode sair um pouco antes, porque a mesma diferença de votos vale mais pontos sobre um total menor. A série da noite deixa de trazer a linha da anulada. Sem anulada, nada muda.
+
 ## Cross-refs
 
-- [ADR-0018](0018-termometros-hero-1t.md) — denominador `v.vvc` (mesmo do `pvap` oficial), inalterado pela exibição.
+- [ADR-0018](0018-termometros-hero-1t.md) — denominador `v.vvc` (mesmo do `pvap` oficial); **emendado parcialmente** por esta decisão (ver nota adicionada naquele ADR) — deixa de valer "sempre `vvc`" quando há candidatura anulada na abrangência.
 - [ADR-0021](0021-extrapolacao-do-apurado-sem-2022.md) — o replay 2022 não expõe este caso (sem `dvt`, `vvc == vv` em 2022).
 - [ADR-0006](0006-bootstrap-nao-bayesiano.md) — bootstrap não-paramétrico consumido por `p_vitoria`/`p_eleito`, ponto de aplicação da renormalização.
 - [ADR-0014](0014-p-segundo-turno-primeira-classe.md) — `p_segundo_turno_overall`/`cenarios_2t`, afetados pela exclusão.
-- Spec: [002-modelo-estatistico](../../specs/002-modelo-estatistico/spec.md) — novo RF-213.
-- Spec: [006-grid-governadores](../../specs/006-grid-governadores/spec.md) — nota em RF-006.8 (`lider`/`chamada`/`vai_a_2t` por UF).
-- Spec: [016-senador](../../specs/016-senador/spec.md) — nota em RF-102/103/104 (`p_eleito`, líder, margem).
+- Spec: [002-modelo-estatistico](../../specs/002-modelo-estatistico/spec.md) — novo RF-213, emendado (2026-09-27, tarde) com o item de publicação/exibição.
+- Spec: [022-corrida-em-tres-circulos](../../specs/022-corrida-em-tres-circulos/spec.md) — RF-202/203/204/205/212 emendados: base do círculo 1, fatia "Anulados", círculo de projeção.
+- Spec: [003-home-nacional](../../specs/003-home-nacional/spec.md), [004-pagina-uf-presidencial](../../specs/004-pagina-uf-presidencial/spec.md), [005-pagina-uf-governador](../../specs/005-pagina-uf-governador/spec.md) — nota curta onde a lista de candidatos é descrita.
+- Spec: [006-grid-governadores](../../specs/006-grid-governadores/spec.md) — nota em RF-006.8 (`lider`/`chamada`/`vai_a_2t` por UF), com adendo desta emenda.
+- Spec: [016-senador](../../specs/016-senador/spec.md) — nota em RF-102/103/104 (`p_eleito`, líder, margem), com adendo desta emenda.
 - [docs/reference/regulatory.md](../../reference/regulatory.md) — lacuna normativa confirmada sobre tratamento de anulados/sub judice.
 - Constituição § 6 (determinismo) e § 8 (transparência metodológica): [../../constitution.md](../../constitution.md).

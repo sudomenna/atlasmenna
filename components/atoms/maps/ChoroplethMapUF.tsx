@@ -212,7 +212,9 @@ function buildMunicipioHoverRows(
       color: textForParty(v.partido),
       partido: v.partido,
       votos: v.votos,
-      pct: v.pct,
+      // Emenda "opção A" — `null` é a anulada: sem percentual, só votos (o
+      // `<HoverCard>` também apaga a célula pelo `destino`).
+      ...(v.pct !== null ? { pct: v.pct } : {}),
       ...(v.destino ? { destino: v.destino } : {}),
     };
   });
@@ -233,7 +235,9 @@ function buildMunicipioHoverRows(
       // resíduo de fechamento. A subtração, ao contrário, empurraria para
       // dentro de "Outros" qualquer diferença de arredondamento das quatro
       // linhas de cima e a publicaria como voto de alguém.
-      pct: cauda.reduce((acc, v) => acc + v.pct, 0),
+      // `?? 0` nunca dispara: a cauda é só de quem compete (`competem`), e
+      // só a anulada tem `pct === null`.
+      pct: cauda.reduce((acc, v) => acc + (v.pct ?? 0), 0),
       // Votos absolutos: soma de inteiros, exata e conhecida. Deixá-la de
       // fora mostraria "—" na coluna "Votos" de uma linha cujo total o
       // produto sabe de cor.

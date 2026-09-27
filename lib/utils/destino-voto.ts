@@ -12,15 +12,25 @@
  * partido dela enquanto o modelo, ao lado, aponta outra pessoa.
  *
  * Decisão de exibição do dono (2026-09-27):
- *   - `"anulado"`    ⇒ NÃO compete. Continua na lista, com o percentual
- *                      oficial, no FIM (depois das que competem, antes de
- *                      "Outros"), com a etiqueta textual "Anulado".
+ *   - `"anulado"`    ⇒ NÃO compete. Continua na lista, no FIM (depois das que
+ *                      competem, antes de "Outros"), com a etiqueta textual
+ *                      "Anulado" — e **SEM percentual** (emenda "opção A",
+ *                      abaixo): só os votos, ou só nome e etiqueta quando não
+ *                      há voto absoluto no dado.
  *   - `"sub_judice"` ⇒ compete (segue o TSE). Posição normal, etiqueta
  *                      "Sub judice".
  *   - **ausente**    ⇒ compete. O TSE só publica `dvt` depois da 1ª
  *                      totalização parcial, e o produtor omite o campo quando
  *                      os arquivos divergem. "Desconhecido ⇒ anulado" tiraria
  *                      da disputa, em silêncio, quem o TSE nunca anulou.
+ *
+ * ## Emenda "opção A" ao ADR-0053 (dono, 2026-09-27, 2ª rodada)
+ *
+ * Com anulada na abrangência, o PRODUTOR publica o percentual de quem compete
+ * sobre os **votos em disputa** (`vvc − anuladas`) — a mesma base que decide
+ * 1º turno e líder. O percentual da anulada continua no dado, mas sobre `vvc`:
+ * outra base. Por isso a tela nunca o exibe ({@link exibePercentual}) e nunca
+ * o soma com o de quem compete. Sem anulada, nada muda.
  *
  * 🔴 Por isso a regra é `destino !== "anulado"` e NUNCA `destino === "valido"`
  * ou `destino === "valido" || destino === "sub_judice"`: as duas formas
@@ -29,6 +39,7 @@
  */
 
 import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
+import { formatPercent, formatVotes, formatVotesCompact } from "@/lib/utils/format";
 
 /** Qualquer coisa que carregue (ou não) a destinação do voto. */
 export interface ComDestino {
@@ -83,8 +94,59 @@ export function sufixoAriaDestino(destino: EdgeDestinoVoto | undefined): string 
 }
 
 /**
+ * `true` ⇔ a tela pode mostrar o PERCENTUAL desta candidatura (emenda "opção
+ * A"). Hoje é exatamente {@link compete}: o percentual de quem compete está na
+ * base "votos em disputa", o da anulada está em `vvc` — outra base, que não
+ * pode aparecer ao lado nem somada. Nome próprio para o ponto de uso dizer O
+ * QUE decide ("mostra o número?"), não só "compete?".
+ */
+export function exibePercentual(c: ComDestino | undefined | null): boolean {
+  return compete(c);
+}
+
+/**
+ * O número que a linha de uma anulada mostra no lugar do percentual:
+ * `"1.234.567 votos"` (ou `"1,2 mi votos"` com `compacto`). `null` quando o
+ * dado não traz voto absoluto — a linha fica só com nome e etiqueta, nunca com
+ * um "0 votos" inventado nem com um "—" que leria como "não sabemos o %".
+ */
+export function votosDaAnulada(votos: number | null | undefined, compacto = false): string | null {
+  if (typeof votos !== "number" || !Number.isFinite(votos) || votos < 0) return null;
+  return `${compacto ? formatVotesCompact(votos) : formatVotes(votos)} votos`;
+}
+
+/**
+ * A parte NUMÉRICA do nome acessível de uma linha de resultado: `"45,0%
+ * apurado, 47,1% projetado"` para quem compete; `"1.234 votos"` (ou `""`) para
+ * a anulada. Um lugar só para as listas que montam `aria-label` à mão.
+ */
+export function ariaNumerosResultado(
+  c: ComDestino & { votos_atuais?: number | null },
+  pctAtual: number,
+  pctProjetado: number,
+): string {
+  if (!exibePercentual(c)) return votosDaAnulada(c.votos_atuais) ?? "";
+  return `${formatPercent(pctAtual, 1)} apurado, ${formatPercent(pctProjetado, 1)} projetado`;
+}
+
+/**
  * A frase de metodologia — só renderizada quando {@link haAnulada} é `true`.
- * Sem jargão: não diz "vvc", "dvt" nem "destinação".
+ * Sem jargão: não diz "vvc", "dvt" nem "destinação". Texto do dono
+ * (2026-09-27, opção A), literal.
  */
 export const NOTA_ANULADAS =
-  "Candidaturas com votos anulados pela Justiça Eleitoral aparecem no fim da lista com o percentual oficial do TSE, mas não contam para definir quem lidera.";
+  "Quando há candidatura com votos anulados pela Justiça Eleitoral, os percentuais são calculados sobre os votos em disputa — sem os anulados. Assim, quem aparece com mais de 50% é quem vence no 1º turno. As candidaturas anuladas aparecem no fim da lista, só com o número de votos.";
+
+/**
+ * A mesma frase SEM a segunda sentença, para onde "mais de 50% vence no 1º
+ * turno" seria falso: Senado (duas vagas, sem 2º turno) e a folha do
+ * município (o município não decide eleição nenhuma). As outras duas
+ * sentenças são as do dono, palavra por palavra.
+ */
+export const NOTA_ANULADAS_SEM_REGRA_1T =
+  "Quando há candidatura com votos anulados pela Justiça Eleitoral, os percentuais são calculados sobre os votos em disputa — sem os anulados. As candidaturas anuladas aparecem no fim da lista, só com o número de votos.";
+
+/** A nota certa para a superfície: com a regra dos 50% só onde ela decide. */
+export function notaAnuladas(regraDoPrimeiroTurno: boolean): string {
+  return regraDoPrimeiroTurno ? NOTA_ANULADAS : NOTA_ANULADAS_SEM_REGRA_1T;
+}

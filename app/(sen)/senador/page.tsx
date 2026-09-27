@@ -68,7 +68,14 @@ import { isPreEleicao } from "@/lib/config/fase";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgeDestinoVoto, EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
-import { compete, haAnulada, NOTA_ANULADAS, sufixoAriaDestino } from "@/lib/utils/destino-voto";
+import {
+  compete,
+  exibePercentual,
+  haAnulada,
+  NOTA_ANULADAS_SEM_REGRA_1T,
+  sufixoAriaDestino,
+  votosDaAnulada,
+} from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -232,6 +239,7 @@ function topDaUf(uf: EdgeUfRow): Array<{
   partido: string;
   cor: string;
   destino?: EdgeDestinoVoto;
+  votos?: number;
 }> {
   return (uf.top_candidatos ?? []).map((t, i) => {
     return {
@@ -249,6 +257,8 @@ function topDaUf(uf: EdgeUfRow): Array<{
       // no índice nacional, e cor de rank quando estava.
       cor: candidateColorDoPartido(t.partido, i + 1),
       ...(t.destino ? { destino: t.destino } : {}),
+      // Lido SÓ na anulada, que aparece com os votos no lugar do % (opção A).
+      ...(typeof t.votos_atuais === "number" ? { votos: t.votos_atuais } : {}),
     };
   });
 }
@@ -606,7 +616,15 @@ export default async function SenadoPage() {
                   // Desenhado ⇒ abreviado (2026-09-19). Esta cauda é texto
                   // VISÍVEL (ver o comentário três blocos abaixo), espremida na
                   // coluna do meio de uma linha de 3 colunas.
-                  ...deFora.map((c) => `${rotuloCandidatura(c)} ${formatPercent(c.pct, 1)}`),
+                  // Emenda "opção A" ao ADR-0053 — a anulada vai com os
+                  // VOTOS, nunca com o % (o dela é sobre outra base); sem voto
+                  // no dado, só o rótulo com a etiqueta.
+                  ...deFora.map((c) => {
+                    if (exibePercentual(c))
+                      return `${rotuloCandidatura(c)} ${formatPercent(c.pct, 1)}`;
+                    const votos = votosDaAnulada(c.votos, true);
+                    return votos ? `${rotuloCandidatura(c)} ${votos}` : rotuloCandidatura(c);
+                  }),
                   // ⚠️ Rótulo ANTES do número nos dois valores da cauda, e não
                   // "8,1% · parcial 6,4%": o separador da lista é " · ", então
                   // um "·" dentro de um item faria a cauda parecer DOIS itens
@@ -705,7 +723,7 @@ export default async function SenadoPage() {
                 data-testid="senado-nota-anuladas"
                 style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-muted)" }}
               >
-                {NOTA_ANULADAS}
+                {NOTA_ANULADAS_SEM_REGRA_1T}
               </p>
             ) : null}
           </div>

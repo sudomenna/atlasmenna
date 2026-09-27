@@ -33,8 +33,9 @@ As regras que o gerador respeita — todas do contrato do produtor
    e colapsá-los desenha um mergulho ao chão que nunca aconteceu. O gerador
    **injeta um furo de propósito** — sem ele, `pnpm dev:sim` nunca exercita
    o RF-175b (a linha que interrompe) e o defeito só apareceria em 04/10.
-4. **Elenco = as 4 primeiras por `rankByParcial`**: `pct_atual` desc →
-   `pct_projetado` desc → `id` asc (`lib/utils/rank-parcial.ts`). **Não** é o
+4. **Elenco = as 4 primeiras que COMPETEM por `rankByParcial`**: `pct_atual`
+   desc → `pct_projetado` desc → `id` asc (`lib/utils/rank-parcial.ts`); a
+   anulada nunca entra (emenda ao ADR-0053, 27/09). **Não** é o
    rank por `pct_projetado` que o Python calcula — os dois divergem
    justamente quando apurado e projetado discordam.
 5. **Ordem do array é contrato** (ADR-0046 D4): o consumidor não reordena.
@@ -69,12 +70,14 @@ de leitura). O que não pode acontecer é um arquivo POVOADO virar vazio.
 
 De onde vêm os números de cada corrida, e por que não é a mesma fonte:
 
-  - **Governador** — a tela sintetiza a corrida da UF em
-    `synthesizeGovUfFromFixture`: a IDENTIDADE (nome, partido, sqcand) sai de
-    `por_uf[uf].top_candidatos` e os NÚMEROS saem de `national.candidatos`,
-    casados por `id`. O gerador repete exatamente essa junção — se ele lesse
-    o `pct` de `top_candidatos`, a série discordaria do painel ao lado, que é
-    o defeito que o gate de coerência existe para pegar.
+  - **Governador** — desde 2026-09-27, `governador-uf.json[uf].candidatos`
+    (`cands_gov`), que é o que a página lê desde 21/09. Até então a série
+    repetia a junção de `synthesizeGovUfFromFixture` (IDENTIDADE de
+    `por_uf[uf].top_candidatos`, NÚMEROS de `national.candidatos`); com a
+    emenda ao ADR-0053 os percentuais da UF passaram a ser sobre os votos em
+    disputa e o bloco nacional de Governador não, e aquela junção poria na
+    série um número que o painel não mostra. Ela segue como fallback, para
+    quando o arquivo da UF não existe.
   - **Senador** — `senador-uf.json[uf].candidatos` já traz tudo junto.
 """
 
@@ -189,7 +192,17 @@ def coluna(valor_final: float, n: int, semente: int) -> list[float | None]:
 
 
 def serie_de(candidatos: list[dict[str, Any]], ts_iso: str) -> dict[str, Any] | None:
-    elenco = rank_parcial([c for c in candidatos if c.get("id") is not None])[:ELENCO_MAX]
+    # 🔴 Decisão do dono (2026-09-27, emenda ao ADR-0053): com anulada no
+    # escopo, a linha dela NÃO entra no gráfico — nem quando competem menos de
+    # 4 e sobraria vaga. O percentual dela é sobre o `vvc` e o das outras sobre
+    # os votos em disputa: desenhar as duas no mesmo eixo compararia bases
+    # diferentes. `rank_parcial` segue pondo a anulada no fim (paridade de
+    # ORDEM com o produtor); o corte é aqui.
+    elenco = [
+        c
+        for c in rank_parcial([c for c in candidatos if c.get("id") is not None])
+        if c.get("destino") != DESTINO_ANULADO
+    ][:ELENCO_MAX]
     if not elenco:
         return None
 
@@ -238,6 +251,34 @@ def cands_gov_da_uf(row: dict[str, Any], numeros: dict[Any, dict[str, Any]]) -> 
             c["destino"] = t["destino"]
         cands.append(c)
     return cands
+
+
+def cands_gov(
+    sigla: str,
+    row: dict[str, Any],
+    numeros: dict[Any, dict[str, Any]],
+    resumos_gov: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Candidaturas de Governador de UMA UF — a MESMA lista que a tela mostra.
+
+    🔴 Emenda ao ADR-0053 (opção A, decisão do dono 2026-09-27): com anulada
+    publicada na UF, o `pct_atual`/`pct_projetado` de quem compete é sobre os
+    votos EM DISPUTA (`vvc − anuladas`) — e o bloco nacional de Governador NÃO
+    muda (o número de urna repete entre UFs). Ler os números dele, como
+    `cands_gov_da_uf` faz, poria na série um percentual sobre o `vvc` ao lado
+    de um painel sobre a disputa.
+
+    Por isso a fonte é `governador-uf.json[sigla].candidatos`: é o que a
+    página lê desde 2026-09-21 (`simulacaoGovernadorUf`, antes da síntese — ver
+    `app/(gov)/uf/[sigla]/governador/page.tsx`), e já traz identidade, números
+    e `destino` juntos, como `senador-uf.json`. A junção antiga fica só como
+    fallback para quando o arquivo não existe — é também o último recurso da
+    página.
+    """
+    resumo = resumos_gov.get(sigla) or {}
+    if resumo.get("candidatos"):
+        return list(resumo["candidatos"])
+    return cands_gov_da_uf(row, numeros)
 
 
 def _carregar_detalhes(nome: str) -> dict[str, Any]:
@@ -339,17 +380,19 @@ def main() -> int:
     # ---- 3. Governador → `/uf/<sigla>/governador`
     gov = json.loads((FIXTURES / "governador.json").read_text())
     numeros = {c["id"]: c for c in gov["national"]["candidatos"]}
+    # A lista que a página mostra (emenda ao ADR-0053) — ver `cands_gov`.
+    resumos_gov: dict[str, Any] = _carregar_detalhes("governador-uf.json")
     # 🔴 Parte do que JÁ ESTÁ no disco — os municípios do gerador. Ver o
     # cabeçalho: até 19/09 este dicionário nascia vazio e o arquivo era
     # reescrito do zero.
     det_gov: dict[str, Any] = _carregar_detalhes("municipios-gov-t1.json")
     for row in gov["por_uf"]:
         sigla = row["sigla"]
-        # Mesma junção de `synthesizeGovUfFromFixture`: identidade da UF,
-        # números do nacional, casados por `id`. Não é o `pct` de
-        # `top_candidatos` — esse é outro número, e usá-lo faria a série
-        # discordar do painel.
-        cands = cands_gov_da_uf(row, numeros)
+        # O resumo DA UF (`governador-uf.json`), que é o que a página mostra;
+        # a junção de `synthesizeGovUfFromFixture` (identidade da UF, números
+        # do nacional) só quando ele falta. Não é o `pct` de `top_candidatos`
+        # — esse é outro número, e usá-lo faria a série discordar do painel.
+        cands = cands_gov(sigla, row, numeros, resumos_gov)
         s_ = serie_de(cands, gov["ts"])
         if s_ is None:
             continue

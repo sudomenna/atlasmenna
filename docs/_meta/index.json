@@ -423,6 +423,20 @@
       "date": "2026-09-20",
       "note": "Decisão do dono, caminho (a) de duas opções apresentadas (emendar vs. reverter). Formaliza RETROATIVAMENTE uma decisão já em produção: RF-181 (290b8de/3e83759, spec 003 shipped) e RF-177 (b3029e8, balão do mapa), achado pelo constitution-guard em auditoria de b3029e8 — sem ADR nem versionamento da constituição no momento em que o comportamento foi ao ar, inversão da ordem que o SDD deste projeto exige. Distingue 'ordem que o produto escolhe por critério editorial' (proibida) de 'ordem que reflete métrica de voto selecionada pelo leitor num controle explícito/visível/reversível' (permitida sob 3 condições cumulativas: métrica é sempre de voto; mesma derivação rege ordem+cor+destaque na mesma tela; dado ausente nunca produz zero fabricado que desloque candidato). Preserva sem exceção as duas leituras restritivas já registradas — spec 019 (RF-161, número de urna na fase pré) e design.md da spec 018 (numero ascendente, identidade de candidatura) — porque nenhuma das duas telas tem controle de base ativa. Propõe texto de emenda ao § 2 e nota de versão 1.4→1.5 para aplicação do dono (este ADR NÃO edita a constituição). Negativas nomeadas: ordem de leitura deixa de ser invariante (duas capturas da mesma UF em bases diferentes mostram ordens diferentes); decisão pós-implementação; não resolve a dívida de acessibilidade correlata (dividas-tecnicas.md item 17 — ordem visual via CSS order diverge do DOM, WCAG SC 1.3.2); condição 'controle explícito/visível/reversível' não é totalmente mecanizável como ΔE76. ⚠️ Colisão de numeração: ADR-0031 também propôs emenda ao § 2 rotulada '1.4 → 1.5' (piso ΔE76≥12 entre partidos), nunca aplicada à constituição vigente (ainda em ΔE76≥10) — as duas propostas não podem ocupar a mesma versão; quem aplicar por último vira 1.5→1.6.",
       "path": "docs/architecture/adrs/0051-ordem-de-candidatos-segue-base-de-apuracao-selecionada.md"
+    },
+    {
+      "id": "0052",
+      "title": "Ingerir o agregado TSE (uf/br) aditivamente, com coluna `nivel` em snapshots — não substituir a granularidade por zona",
+      "status": "accepted",
+      "date": "2026-09-26",
+      "path": "docs/architecture/adrs/0052-agregado-uf-br-aditivo-coluna-nivel.md"
+    },
+    {
+      "id": "0053",
+      "title": "Candidatura com dvt 'Anulado' sai da disputa; 'Anulado sub judice' segue contando como o TSE conta",
+      "status": "accepted",
+      "date": "2026-09-27",
+      "path": "docs/architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md"
     }
   ],
   "nfr": {
@@ -748,13 +762,26 @@
         "RF-020",
         "RF-020.1",
         "RF-020.2",
-        "RF-020.3"
+        "RF-020.3",
+        "RF-213"
       ],
       "depends_on": ["001-ingestao-tse"],
       "apis": ["POST /api/model/project"],
       "components": [],
       "nfr": ["RNF-006"],
-      "adrs": ["0006", "0007", "0012", "0014", "0018", "0020", "0021", "0023", "0035", "0038"],
+      "adrs": [
+        "0006",
+        "0007",
+        "0012",
+        "0014",
+        "0018",
+        "0020",
+        "0021",
+        "0023",
+        "0035",
+        "0038",
+        "0053"
+      ],
       "ship_blocked_on": ["simulado-tse-2026"]
     },
     {
@@ -1063,7 +1090,8 @@
         "0025",
         "0034",
         "0038",
-        "0048"
+        "0048",
+        "0053"
       ]
     },
     {
@@ -1250,7 +1278,8 @@
         "0035",
         "0038",
         "0042",
-        "0048"
+        "0048",
+        "0053"
       ],
       "opens_after": "2026-09-11"
     },
@@ -1504,6 +1533,8 @@
         "RF-193b",
         "RF-194",
         "RF-195",
+        "RF-195b",
+        "RF-195c",
         "RF-196",
         "RF-197",
         "RF-198",
@@ -1520,7 +1551,7 @@
       "apis": [],
       "components": ["VotacaoEleitorado", "Panel", "DetailUnavailable"],
       "nfr": ["RNF-002", "RNF-007a", "RNF-022", "RNF-023", "RNF-024", "RNF-026"],
-      "adrs": ["0001", "0017", "0018", "0022", "0031"],
+      "adrs": ["0001", "0017", "0018", "0022", "0031", "0029", "0052"],
       "amends": [
         "003-home-nacional",
         "006-grid-governadores",
@@ -1549,7 +1580,9 @@
         "RF-207",
         "RF-208",
         "RF-209",
-        "RF-210"
+        "RF-210",
+        "RF-211",
+        "RF-212"
       ],
       "depends_on": [
         "001-ingestao-tse",
@@ -1563,7 +1596,7 @@
       "apis": [],
       "components": ["CorridaTresCirculos", "VotacaoEleitorado", "Panel", "DetailUnavailable"],
       "nfr": ["RNF-002", "RNF-007a", "RNF-022", "RNF-023", "RNF-024", "RNF-026"],
-      "adrs": ["0001", "0017", "0018", "0024"],
+      "adrs": ["0001", "0017", "0018", "0024", "0029", "0052", "0053"],
       "amends": [
         "003-home-nacional",
         "004-pagina-uf-presidencial",
@@ -1573,7 +1606,7 @@
         "021-votacao-eleitorado"
       ],
       "ship_blocked_on": [],
-      "notes": "A corrida destaca os votos válidos: (1) a fatia de cada candidato/partido; (2) os demais (anulados, sub judice, brancos, nulos); (3) abstinência e não apurado. Distinção crítica do spec 021: aqui a fonte é o agregado TSE por abrangência (mesmo instante, mesmos RFs), não os votos por zona (que podem estar um ciclo atrás). Implementação completa em 2026-09-26: 46 testes TS + 39 testes Py + 18 simulado + 5 bytes. Três decisões do dono (26/09): por candidatura + por partido; levar destinação até a tela; destravar círculos 2 e 3 das UFs; antes da destinação, 'aguardando'; Senado em 'aguardando'.",
+      "notes": "A corrida destaca os votos válidos: (1) a fatia de cada candidato/partido; (2) os demais (anulados, sub judice, brancos, nulos); (3) abstinência e não apurado. Distinção crítica do spec 021: aqui a fonte é o agregado TSE por abrangência (mesmo instante, mesmos RFs), não os votos por zona (que podem estar um ciclo atrás). Implementação completa em 2026-09-26/2026-09-27: 46+ testes TS + 39+ testes Py + 18 simulado. Quatro decisões do dono (26/09): por candidatura + por partido; levar destinação até a tela; destravar círculos 2 e 3 das UFs; antes da destinação, 'aguardando'. Quinta decisão (27/09): Senado em 'votos, 2 por eleitor' (RF-210).",
       "path": "docs/specs/022-corrida-em-tres-circulos/"
     }
   ],

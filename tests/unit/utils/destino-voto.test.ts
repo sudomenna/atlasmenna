@@ -16,10 +16,14 @@ import {
   anuladasAoFim,
   compete,
   etiquetaDestino,
+  exibePercentual,
   haAnulada,
   NOTA_ANULADAS,
+  NOTA_ANULADAS_SEM_REGRA_1T,
+  notaAnuladas,
   queCompetem,
   sufixoAriaDestino,
+  votosDaAnulada,
 } from "@/lib/utils/destino-voto";
 
 describe("compete", () => {
@@ -91,11 +95,37 @@ describe("texto", () => {
     expect(sufixoAriaDestino(undefined)).toBe("");
   });
 
-  it("a nota da metodologia não carrega jargão", () => {
-    for (const termo of ["vvc", "dvt", "destinação", "votáveis"]) {
-      expect(NOTA_ANULADAS.toLowerCase()).not.toContain(termo);
+  // 🔴 ALTERADO na opção A (2026-09-27): a frase é a do dono, literal.
+  it("a nota da metodologia é a do dono e não carrega jargão", () => {
+    for (const nota of [NOTA_ANULADAS, NOTA_ANULADAS_SEM_REGRA_1T]) {
+      for (const termo of ["vvc", "dvt", "destinação", "votáveis"]) {
+        expect(nota.toLowerCase()).not.toContain(termo);
+      }
     }
-    expect(NOTA_ANULADAS).toContain("fim da lista");
-    expect(NOTA_ANULADAS).toContain("não contam para definir quem lidera");
+    expect(NOTA_ANULADAS).toBe(
+      "Quando há candidatura com votos anulados pela Justiça Eleitoral, os percentuais são calculados sobre os votos em disputa — sem os anulados. Assim, quem aparece com mais de 50% é quem vence no 1º turno. As candidaturas anuladas aparecem no fim da lista, só com o número de votos.",
+    );
+    // Sem a regra dos 50%: as duas outras frases, iguais.
+    expect(NOTA_ANULADAS_SEM_REGRA_1T).toBe(
+      NOTA_ANULADAS.replace(" Assim, quem aparece com mais de 50% é quem vence no 1º turno.", ""),
+    );
+    expect(notaAnuladas(true)).toBe(NOTA_ANULADAS);
+    expect(notaAnuladas(false)).toBe(NOTA_ANULADAS_SEM_REGRA_1T);
+  });
+
+  it("votosDaAnulada: votos com a palavra; sem número no dado ⇒ null, nunca '0 votos'", () => {
+    expect(votosDaAnulada(15_000)).toBe("15.000 votos");
+    expect(votosDaAnulada(1_234_567, true)).toBe("1,2 mi votos");
+    expect(votosDaAnulada(0)).toBe("0 votos");
+    expect(votosDaAnulada(undefined)).toBeNull();
+    expect(votosDaAnulada(null)).toBeNull();
+    expect(votosDaAnulada(Number.NaN)).toBeNull();
+  });
+
+  it("exibePercentual: só a anulada perde o percentual — sub judice e ausente não", () => {
+    expect(exibePercentual({ destino: "anulado" })).toBe(false);
+    expect(exibePercentual({ destino: "sub_judice" })).toBe(true);
+    expect(exibePercentual({ destino: "valido" })).toBe(true);
+    expect(exibePercentual({})).toBe(true);
   });
 });

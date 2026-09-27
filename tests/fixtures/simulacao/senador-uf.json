@@ -1,7 +1,7 @@
 {
   "AC": {
     "uf": "AC",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -13,11 +13,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 30237,
         "votos_projetados": 256201,
-        "pct_atual": 29.35,
-        "pct_projetado": 31.2,
+        "pct_atual": 31.77,
+        "pct_projetado": 32.27,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.23,
+          "upper": 35.31
         },
         "p_eleito": 0.994,
         "sqcand": "10002536441"
@@ -29,11 +29,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 28238,
         "votos_projetados": 238135,
-        "pct_atual": 27.41,
-        "pct_projetado": 29,
+        "pct_atual": 29.67,
+        "pct_projetado": 29.99,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 27.01,
+          "upper": 32.97
         },
         "p_eleito": 0.8935,
         "sqcand": "10002548050"
@@ -45,11 +45,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 24067,
         "votos_projetados": 216785,
-        "pct_atual": 23.36,
-        "pct_projetado": 26.4,
+        "pct_atual": 25.29,
+        "pct_projetado": 27.3,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.41,
+          "upper": 30.2
         },
         "p_eleito": 0.1125,
         "sqcand": "10002533895"
@@ -62,11 +62,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 8966,
         "votos_projetados": 77290,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.41,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.83,
+          "upper": 8
         },
         "p_eleito": 0,
         "sqcand": "10002535804"
@@ -95,11 +95,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 1785,
         "votos_projetados": 16302,
-        "pct_atual": 1.73,
-        "pct_projetado": 1.99,
+        "pct_atual": 1.88,
+        "pct_projetado": 2.05,
         "ci95": {
-          "lower": 1.1,
-          "upper": 2.87
+          "lower": 1.14,
+          "upper": 2.97
         },
         "p_eleito": 0,
         "sqcand": "10002548046"
@@ -111,11 +111,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1189,
         "votos_projetados": 9782,
-        "pct_atual": 1.15,
-        "pct_projetado": 1.19,
+        "pct_atual": 1.25,
+        "pct_projetado": 1.23,
         "ci95": {
-          "lower": 0.5,
-          "upper": 1.88
+          "lower": 0.52,
+          "upper": 1.94
         },
         "p_eleito": 0,
         "sqcand": "10002544110"
@@ -127,11 +127,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 680,
         "votos_projetados": 5869,
-        "pct_atual": 0.66,
-        "pct_projetado": 0.71,
+        "pct_atual": 0.71,
+        "pct_projetado": 0.74,
         "ci95": {
-          "lower": 0.18,
-          "upper": 1.25
+          "lower": 0.19,
+          "upper": 1.29
         },
         "p_eleito": 0,
         "sqcand": "10002536710"
@@ -213,7 +213,7 @@
   },
   "AL": {
     "uf": "AL",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -313,7 +313,7 @@
   },
   "AM": {
     "uf": "AM",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -325,11 +325,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 130280,
         "votos_projetados": 1190631,
-        "pct_atual": 27.15,
-        "pct_projetado": 31.2,
+        "pct_atual": 29.4,
+        "pct_projetado": 32.21,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.17,
+          "upper": 35.24
         },
         "p_eleito": 0.9965,
         "sqcand": "40002542686"
@@ -341,11 +341,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 135834,
         "votos_projetados": 1106676,
-        "pct_atual": 28.31,
-        "pct_projetado": 29,
+        "pct_atual": 30.65,
+        "pct_projetado": 29.93,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 26.96,
+          "upper": 32.91
         },
         "p_eleito": 0.8975,
         "sqcand": "40002541744"
@@ -357,11 +357,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 116728,
         "votos_projetados": 1007457,
-        "pct_atual": 24.33,
-        "pct_projetado": 26.4,
+        "pct_atual": 26.34,
+        "pct_projetado": 27.25,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.36,
+          "upper": 30.14
         },
         "p_eleito": 0.106,
         "sqcand": "40002531447"
@@ -374,11 +374,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 41751,
         "votos_projetados": 359927,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.4,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.82,
+          "upper": 7.98
         },
         "p_eleito": 0,
         "sqcand": "40002537344"
@@ -407,11 +407,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 8064,
         "votos_projetados": 71503,
-        "pct_atual": 1.68,
-        "pct_projetado": 1.87,
+        "pct_atual": 1.82,
+        "pct_projetado": 1.93,
         "ci95": {
-          "lower": 1.01,
-          "upper": 2.73
+          "lower": 1.05,
+          "upper": 2.82
         },
         "p_eleito": 0,
         "sqcand": "40002551283"
@@ -423,11 +423,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5588,
         "votos_projetados": 42901,
-        "pct_atual": 1.16,
-        "pct_projetado": 1.12,
+        "pct_atual": 1.26,
+        "pct_projetado": 1.16,
         "ci95": {
-          "lower": 0.45,
-          "upper": 1.79
+          "lower": 0.47,
+          "upper": 1.85
         },
         "p_eleito": 0,
         "sqcand": "40002535270"
@@ -439,11 +439,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3000,
         "votos_projetados": 25741,
-        "pct_atual": 0.63,
-        "pct_projetado": 0.67,
+        "pct_atual": 0.68,
+        "pct_projetado": 0.7,
         "ci95": {
-          "lower": 0.15,
-          "upper": 1.19
+          "lower": 0.16,
+          "upper": 1.23
         },
         "p_eleito": 0,
         "sqcand": "40002535391"
@@ -455,11 +455,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1907,
         "votos_projetados": 15444,
-        "pct_atual": 0.4,
-        "pct_projetado": 0.4,
+        "pct_atual": 0.43,
+        "pct_projetado": 0.42,
         "ci95": {
           "lower": 0,
-          "upper": 0.81
+          "upper": 0.83
         },
         "p_eleito": 0,
         "sqcand": "40002550806"
@@ -547,7 +547,7 @@
   },
   "AP": {
     "uf": "AP",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -559,11 +559,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 50969,
         "votos_projetados": 446924,
-        "pct_atual": 50.05,
-        "pct_projetado": 57.5,
+        "pct_atual": 54.19,
+        "pct_projetado": 58.39,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 55.2,
+          "upper": 61.57
         },
         "p_eleito": 1,
         "sqcand": "30002549909"
@@ -575,11 +575,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 22338,
         "votos_projetados": 186542,
-        "pct_atual": 21.94,
-        "pct_projetado": 24,
+        "pct_atual": 23.75,
+        "pct_projetado": 24.37,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 21.62,
+          "upper": 27.12
         },
         "p_eleito": 1,
         "sqcand": "30002551576"
@@ -591,11 +591,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 10056,
         "votos_projetados": 85498,
-        "pct_atual": 9.88,
-        "pct_projetado": 11,
+        "pct_atual": 10.69,
+        "pct_projetado": 11.17,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.15,
+          "upper": 13.19
         },
         "p_eleito": 0,
         "sqcand": "30002549911"
@@ -608,11 +608,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 8861,
         "votos_projetados": 76385,
-        "pct_atual": 8.7,
-        "pct_projetado": 4,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.06,
         "ci95": {
-          "lower": 2.76,
-          "upper": 5.24
+          "lower": 2.8,
+          "upper": 5.33
         },
         "p_eleito": 0,
         "sqcand": "30002530069"
@@ -641,11 +641,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 855,
         "votos_projetados": 7079,
-        "pct_atual": 0.84,
-        "pct_projetado": 0.91,
+        "pct_atual": 0.91,
+        "pct_projetado": 0.92,
         "ci95": {
           "lower": 0.31,
-          "upper": 1.51
+          "upper": 1.54
         },
         "p_eleito": 0,
         "sqcand": "30002530071"
@@ -657,11 +657,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 497,
         "votos_projetados": 4248,
-        "pct_atual": 0.49,
+        "pct_atual": 0.53,
         "pct_projetado": 0.55,
         "ci95": {
           "lower": 0.08,
-          "upper": 1.01
+          "upper": 1.03
         },
         "p_eleito": 0,
         "sqcand": "30002551381"
@@ -673,11 +673,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 311,
         "votos_projetados": 2549,
-        "pct_atual": 0.31,
+        "pct_atual": 0.33,
         "pct_projetado": 0.33,
         "ci95": {
           "lower": 0,
-          "upper": 0.69
+          "upper": 0.7
         },
         "p_eleito": 0,
         "sqcand": "30002551382"
@@ -689,11 +689,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 162,
         "votos_projetados": 1529,
-        "pct_atual": 0.16,
+        "pct_atual": 0.17,
         "pct_projetado": 0.2,
         "ci95": {
           "lower": 0,
-          "upper": 0.48
+          "upper": 0.49
         },
         "p_eleito": 0,
         "sqcand": "30002553708"
@@ -781,7 +781,7 @@
   },
   "BA": {
     "uf": "BA",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -793,11 +793,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 560490,
         "votos_projetados": 4836041,
-        "pct_atual": 28.73,
-        "pct_projetado": 31.2,
+        "pct_atual": 31.1,
+        "pct_projetado": 32.17,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.14,
+          "upper": 35.21
         },
         "p_eleito": 0.9955,
         "sqcand": "50002536321"
@@ -809,11 +809,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 506432,
         "votos_projetados": 4495038,
-        "pct_atual": 25.96,
-        "pct_projetado": 29,
+        "pct_atual": 28.1,
+        "pct_projetado": 29.9,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 26.93,
+          "upper": 32.87
         },
         "p_eleito": 0.906,
         "sqcand": "50002536317"
@@ -825,11 +825,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 498439,
         "votos_projetados": 4092035,
-        "pct_atual": 25.55,
-        "pct_projetado": 26.4,
+        "pct_atual": 27.66,
+        "pct_projetado": 27.22,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.34,
+          "upper": 30.11
         },
         "p_eleito": 0.0985,
         "sqcand": "50002533123"
@@ -842,11 +842,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 169775,
         "votos_projetados": 1463574,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.39,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.81,
+          "upper": 7.97
         },
         "p_eleito": 0,
         "sqcand": "50002533124"
@@ -875,11 +875,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 28368,
         "votos_projetados": 280950,
-        "pct_atual": 1.45,
-        "pct_projetado": 1.81,
+        "pct_atual": 1.57,
+        "pct_projetado": 1.87,
         "ci95": {
-          "lower": 0.97,
-          "upper": 2.66
+          "lower": 1,
+          "upper": 2.74
         },
         "p_eleito": 0,
         "sqcand": "50002550314"
@@ -891,11 +891,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 16971,
         "votos_projetados": 168570,
-        "pct_atual": 0.87,
-        "pct_projetado": 1.09,
+        "pct_atual": 0.94,
+        "pct_projetado": 1.12,
         "ci95": {
-          "lower": 0.43,
-          "upper": 1.75
+          "lower": 0.44,
+          "upper": 1.8
         },
         "p_eleito": 0,
         "sqcand": "50002534774"
@@ -907,11 +907,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 10458,
         "votos_projetados": 101142,
-        "pct_atual": 0.54,
-        "pct_projetado": 0.65,
+        "pct_atual": 0.58,
+        "pct_projetado": 0.67,
         "ci95": {
-          "lower": 0.14,
-          "upper": 1.16
+          "lower": 0.15,
+          "upper": 1.2
         },
         "p_eleito": 0,
         "sqcand": "50002536577"
@@ -923,11 +923,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 6575,
         "votos_projetados": 60685,
-        "pct_atual": 0.34,
-        "pct_projetado": 0.39,
+        "pct_atual": 0.36,
+        "pct_projetado": 0.4,
         "ci95": {
           "lower": 0,
-          "upper": 0.79
+          "upper": 0.81
         },
         "p_eleito": 0,
         "sqcand": "50002553643"
@@ -939,11 +939,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4489,
         "votos_projetados": 36411,
-        "pct_atual": 0.23,
-        "pct_projetado": 0.23,
+        "pct_atual": 0.25,
+        "pct_projetado": 0.24,
         "ci95": {
           "lower": 0,
-          "upper": 0.54
+          "upper": 0.56
         },
         "p_eleito": 0,
         "sqcand": "50002536625"
@@ -1037,7 +1037,7 @@
   },
   "CE": {
     "uf": "CE",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -1049,11 +1049,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 445675,
         "votos_projetados": 3833482,
-        "pct_atual": 34.81,
-        "pct_projetado": 38.5,
+        "pct_atual": 37.69,
+        "pct_projetado": 39.59,
         "ci95": {
-          "lower": 35.41,
-          "upper": 41.59
+          "lower": 36.41,
+          "upper": 42.77
         },
         "p_eleito": 1,
         "sqcand": "60002540753"
@@ -1065,11 +1065,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 419829,
         "votos_projetados": 3524812,
-        "pct_atual": 32.79,
-        "pct_projetado": 35.4,
+        "pct_atual": 35.5,
+        "pct_projetado": 36.4,
         "ci95": {
-          "lower": 32.36,
-          "upper": 38.44
+          "lower": 33.28,
+          "upper": 39.53
         },
         "p_eleito": 1,
         "sqcand": "60002540754"
@@ -1081,11 +1081,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 169167,
         "votos_projetados": 1553307,
-        "pct_atual": 13.21,
-        "pct_projetado": 15.6,
+        "pct_atual": 14.3,
+        "pct_projetado": 16.04,
         "ci95": {
-          "lower": 13.3,
-          "upper": 17.9
+          "lower": 13.67,
+          "upper": 18.41
         },
         "p_eleito": 0,
         "sqcand": "60002539687"
@@ -1098,11 +1098,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 111420,
         "votos_projetados": 960519,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.63,
         "ci95": {
-          "lower": 3.18,
-          "upper": 5.82
+          "lower": 3.27,
+          "upper": 5.98
         },
         "p_eleito": 0,
         "sqcand": "60002542479"
@@ -1131,11 +1131,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 17037,
         "votos_projetados": 164732,
-        "pct_atual": 1.33,
-        "pct_projetado": 1.65,
+        "pct_atual": 1.44,
+        "pct_projetado": 1.7,
         "ci95": {
-          "lower": 0.84,
-          "upper": 2.46
+          "lower": 0.87,
+          "upper": 2.53
         },
         "p_eleito": 0,
         "sqcand": "60002542476"
@@ -1147,11 +1147,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 11729,
         "votos_projetados": 98839,
-        "pct_atual": 0.92,
-        "pct_projetado": 0.99,
+        "pct_atual": 0.99,
+        "pct_projetado": 1.02,
         "ci95": {
-          "lower": 0.36,
-          "upper": 1.62
+          "lower": 0.37,
+          "upper": 1.67
         },
         "p_eleito": 0,
         "sqcand": "60002550748"
@@ -1163,11 +1163,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 7763,
         "votos_projetados": 59303,
-        "pct_atual": 0.61,
-        "pct_projetado": 0.6,
+        "pct_atual": 0.66,
+        "pct_projetado": 0.61,
         "ci95": {
           "lower": 0.11,
-          "upper": 1.08
+          "upper": 1.11
         },
         "p_eleito": 0,
         "sqcand": "60002551397"
@@ -1249,7 +1249,7 @@
   },
   "DF": {
     "uf": "DF",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 37.1,
@@ -1261,11 +1261,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 675303,
         "votos_projetados": 1826676,
-        "pct_atual": 50.68,
-        "pct_projetado": 57.5,
+        "pct_atual": 54.88,
+        "pct_projetado": 58.33,
         "ci95": {
-          "lower": 56.02,
-          "upper": 58.98
+          "lower": 56.83,
+          "upper": 59.83
         },
         "p_eleito": 1,
         "sqcand": "70002552936"
@@ -1277,11 +1277,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 292196,
         "votos_projetados": 762439,
-        "pct_atual": 21.93,
-        "pct_projetado": 24,
+        "pct_atual": 23.74,
+        "pct_projetado": 24.35,
         "ci95": {
-          "lower": 22.72,
-          "upper": 25.28
+          "lower": 23.05,
+          "upper": 25.64
         },
         "p_eleito": 1,
         "sqcand": "70002552490"
@@ -1293,11 +1293,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 123233,
         "votos_projetados": 349451,
-        "pct_atual": 9.25,
-        "pct_projetado": 11,
+        "pct_atual": 10.01,
+        "pct_projetado": 11.16,
         "ci95": {
-          "lower": 10.06,
-          "upper": 11.94
+          "lower": 10.21,
+          "upper": 12.11
         },
         "p_eleito": 0,
         "sqcand": "70002552934"
@@ -1310,11 +1310,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 115942,
         "votos_projetados": 312513,
-        "pct_atual": 8.7,
-        "pct_projetado": 4,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.06,
         "ci95": {
-          "lower": 3.41,
-          "upper": 4.59
+          "lower": 3.46,
+          "upper": 4.65
         },
         "p_eleito": 0,
         "sqcand": "70002553751"
@@ -1343,11 +1343,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 9782,
         "votos_projetados": 27141,
-        "pct_atual": 0.73,
-        "pct_projetado": 0.85,
+        "pct_atual": 0.79,
+        "pct_projetado": 0.87,
         "ci95": {
-          "lower": 0.58,
-          "upper": 1.13
+          "lower": 0.59,
+          "upper": 1.15
         },
         "p_eleito": 0,
         "sqcand": "70002548624"
@@ -1359,11 +1359,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5783,
         "votos_projetados": 16285,
-        "pct_atual": 0.43,
-        "pct_projetado": 0.51,
+        "pct_atual": 0.47,
+        "pct_projetado": 0.52,
         "ci95": {
           "lower": 0.3,
-          "upper": 0.73
+          "upper": 0.74
         },
         "p_eleito": 0,
         "sqcand": "70002552492"
@@ -1375,11 +1375,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3825,
         "votos_projetados": 9771,
-        "pct_atual": 0.29,
+        "pct_atual": 0.31,
         "pct_projetado": 0.31,
         "ci95": {
           "lower": 0.14,
-          "upper": 0.47
+          "upper": 0.48
         },
         "p_eleito": 0,
         "sqcand": "70002537112"
@@ -1391,11 +1391,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2140,
         "votos_projetados": 5863,
-        "pct_atual": 0.16,
-        "pct_projetado": 0.18,
+        "pct_atual": 0.17,
+        "pct_projetado": 0.19,
         "ci95": {
-          "lower": 0.03,
-          "upper": 0.33
+          "lower": 0.04,
+          "upper": 0.34
         },
         "p_eleito": 0,
         "sqcand": "70002536445"
@@ -1423,7 +1423,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 863,
         "votos_projetados": 2110,
-        "pct_atual": 0.06,
+        "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
@@ -1549,7 +1549,7 @@
   },
   "ES": {
     "uf": "ES",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 32.2,
@@ -1561,11 +1561,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 493230,
         "votos_projetados": 1526081,
-        "pct_atual": 34.75,
-        "pct_projetado": 38.5,
+        "pct_atual": 37.62,
+        "pct_projetado": 39.47,
         "ci95": {
-          "lower": 36.88,
-          "upper": 40.12
+          "lower": 37.81,
+          "upper": 41.14
         },
         "p_eleito": 1,
         "sqcand": "80002553269"
@@ -1577,11 +1577,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 463333,
         "votos_projetados": 1403202,
-        "pct_atual": 32.64,
-        "pct_projetado": 35.4,
+        "pct_atual": 35.34,
+        "pct_projetado": 36.3,
         "ci95": {
-          "lower": 33.8,
-          "upper": 37
+          "lower": 34.66,
+          "upper": 37.93
         },
         "p_eleito": 1,
         "sqcand": "80002550187"
@@ -1593,11 +1593,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 189166,
         "votos_projetados": 618360,
-        "pct_atual": 13.33,
-        "pct_projetado": 15.6,
+        "pct_atual": 14.43,
+        "pct_projetado": 15.99,
         "ci95": {
-          "lower": 14.39,
-          "upper": 16.81
+          "lower": 14.75,
+          "upper": 17.24
         },
         "p_eleito": 0,
         "sqcand": "80002553265"
@@ -1610,11 +1610,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 123508,
         "votos_projetados": 383564,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.61,
         "ci95": {
-          "lower": 3.81,
-          "upper": 5.19
+          "lower": 3.9,
+          "upper": 5.32
         },
         "p_eleito": 0,
         "sqcand": "80002551368"
@@ -1643,11 +1643,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 19032,
         "votos_projetados": 58723,
-        "pct_atual": 1.34,
-        "pct_projetado": 1.48,
+        "pct_atual": 1.45,
+        "pct_projetado": 1.52,
         "ci95": {
-          "lower": 1.08,
-          "upper": 1.88
+          "lower": 1.11,
+          "upper": 1.93
         },
         "p_eleito": 0,
         "sqcand": "80002530022"
@@ -1659,11 +1659,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 9894,
         "votos_projetados": 35234,
-        "pct_atual": 0.7,
-        "pct_projetado": 0.89,
+        "pct_atual": 0.75,
+        "pct_projetado": 0.91,
         "ci95": {
-          "lower": 0.58,
-          "upper": 1.2
+          "lower": 0.59,
+          "upper": 1.23
         },
         "p_eleito": 0,
         "sqcand": "80002551370"
@@ -1675,11 +1675,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5853,
         "votos_projetados": 21141,
-        "pct_atual": 0.41,
-        "pct_projetado": 0.53,
+        "pct_atual": 0.45,
+        "pct_projetado": 0.55,
         "ci95": {
-          "lower": 0.29,
-          "upper": 0.78
+          "lower": 0.3,
+          "upper": 0.8
         },
         "p_eleito": 0,
         "sqcand": "80002552373"
@@ -1691,11 +1691,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3505,
         "votos_projetados": 12684,
-        "pct_atual": 0.25,
-        "pct_projetado": 0.32,
+        "pct_atual": 0.27,
+        "pct_projetado": 0.33,
         "ci95": {
           "lower": 0.13,
-          "upper": 0.51
+          "upper": 0.52
         },
         "p_eleito": 0,
         "sqcand": "80002549404"
@@ -1707,11 +1707,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2134,
         "votos_projetados": 7611,
-        "pct_atual": 0.15,
-        "pct_projetado": 0.19,
+        "pct_atual": 0.16,
+        "pct_projetado": 0.2,
         "ci95": {
           "lower": 0.04,
-          "upper": 0.34
+          "upper": 0.35
         },
         "p_eleito": 0,
         "sqcand": "80002542401"
@@ -1723,7 +1723,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1260,
         "votos_projetados": 4566,
-        "pct_atual": 0.09,
+        "pct_atual": 0.1,
         "pct_projetado": 0.12,
         "ci95": {
           "lower": 0,
@@ -1827,7 +1827,7 @@
   },
   "GO": {
     "uf": "GO",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 30.9,
@@ -1839,11 +1839,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 784848,
         "votos_projetados": 2593630,
-        "pct_atual": 33.91,
-        "pct_projetado": 38.5,
+        "pct_atual": 36.71,
+        "pct_projetado": 39.47,
         "ci95": {
-          "lower": 36.83,
-          "upper": 40.17
+          "lower": 37.76,
+          "upper": 41.19
         },
         "p_eleito": 1,
         "sqcand": "90002543560"
@@ -1855,11 +1855,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 793086,
         "votos_projetados": 2384793,
-        "pct_atual": 34.26,
-        "pct_projetado": 35.4,
+        "pct_atual": 37.09,
+        "pct_projetado": 36.3,
         "ci95": {
-          "lower": 33.76,
-          "upper": 37.04
+          "lower": 34.61,
+          "upper": 37.98
         },
         "p_eleito": 1,
         "sqcand": "90002543556"
@@ -1871,11 +1871,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 288153,
         "votos_projetados": 1050926,
-        "pct_atual": 12.45,
-        "pct_projetado": 15.6,
+        "pct_atual": 13.48,
+        "pct_projetado": 15.99,
         "ci95": {
-          "lower": 14.35,
-          "upper": 16.85
+          "lower": 14.72,
+          "upper": 17.27
         },
         "p_eleito": 0,
         "sqcand": "90002540997"
@@ -1888,11 +1888,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 201431,
         "votos_projetados": 651881,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.61,
         "ci95": {
-          "lower": 3.79,
-          "upper": 5.21
+          "lower": 3.88,
+          "upper": 5.34
         },
         "p_eleito": 0,
         "sqcand": "90002546974"
@@ -1921,11 +1921,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 32003,
         "votos_projetados": 99802,
-        "pct_atual": 1.38,
-        "pct_projetado": 1.48,
+        "pct_atual": 1.5,
+        "pct_projetado": 1.52,
         "ci95": {
-          "lower": 1.07,
-          "upper": 1.9
+          "lower": 1.09,
+          "upper": 1.95
         },
         "p_eleito": 0,
         "sqcand": "90002545243"
@@ -1937,11 +1937,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 16706,
         "votos_projetados": 59881,
-        "pct_atual": 0.72,
-        "pct_projetado": 0.89,
+        "pct_atual": 0.78,
+        "pct_projetado": 0.91,
         "ci95": {
-          "lower": 0.57,
-          "upper": 1.21
+          "lower": 0.58,
+          "upper": 1.24
         },
         "p_eleito": 0,
         "sqcand": "90002541455"
@@ -1953,11 +1953,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 8826,
         "votos_projetados": 35929,
-        "pct_atual": 0.38,
-        "pct_projetado": 0.53,
+        "pct_atual": 0.41,
+        "pct_projetado": 0.55,
         "ci95": {
-          "lower": 0.28,
-          "upper": 0.78
+          "lower": 0.29,
+          "upper": 0.8
         },
         "p_eleito": 0,
         "sqcand": "90002541454"
@@ -1969,11 +1969,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 6646,
         "votos_projetados": 21557,
-        "pct_atual": 0.29,
-        "pct_projetado": 0.32,
+        "pct_atual": 0.31,
+        "pct_projetado": 0.33,
         "ci95": {
           "lower": 0.13,
-          "upper": 0.51
+          "upper": 0.53
         },
         "p_eleito": 0,
         "sqcand": "90002545244"
@@ -1985,11 +1985,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3892,
         "votos_projetados": 12934,
-        "pct_atual": 0.17,
-        "pct_projetado": 0.19,
+        "pct_atual": 0.18,
+        "pct_projetado": 0.2,
         "ci95": {
           "lower": 0.04,
-          "upper": 0.34
+          "upper": 0.35
         },
         "p_eleito": 0,
         "sqcand": "90002551198"
@@ -2001,7 +2001,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2409,
         "votos_projetados": 7761,
-        "pct_atual": 0.1,
+        "pct_atual": 0.11,
         "pct_projetado": 0.12,
         "ci95": {
           "lower": 0,
@@ -2105,7 +2105,7 @@
   },
   "MA": {
     "uf": "MA",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -2117,11 +2117,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 261785,
         "votos_projetados": 2203710,
-        "pct_atual": 29.45,
-        "pct_projetado": 31.2,
+        "pct_atual": 31.88,
+        "pct_projetado": 32.17,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.14,
+          "upper": 35.21
         },
         "p_eleito": 0.994,
         "sqcand": "100002537364"
@@ -2133,11 +2133,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 230670,
         "votos_projetados": 2048320,
-        "pct_atual": 25.95,
-        "pct_projetado": 29,
+        "pct_atual": 28.09,
+        "pct_projetado": 29.9,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 26.93,
+          "upper": 32.87
         },
         "p_eleito": 0.9025,
         "sqcand": "100002541459"
@@ -2149,11 +2149,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 215523,
         "votos_projetados": 1864678,
-        "pct_atual": 24.24,
-        "pct_projetado": 26.4,
+        "pct_atual": 26.25,
+        "pct_projetado": 27.22,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.34,
+          "upper": 30.11
         },
         "p_eleito": 0.1035,
         "sqcand": "100002549583"
@@ -2166,11 +2166,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 77364,
         "votos_projetados": 666928,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.39,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.81,
+          "upper": 7.97
         },
         "p_eleito": 0,
         "sqcand": "100002548011"
@@ -2199,11 +2199,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 15299,
         "votos_projetados": 128025,
-        "pct_atual": 1.72,
-        "pct_projetado": 1.81,
+        "pct_atual": 1.86,
+        "pct_projetado": 1.87,
         "ci95": {
-          "lower": 0.97,
-          "upper": 2.66
+          "lower": 1,
+          "upper": 2.74
         },
         "p_eleito": 0,
         "sqcand": "100002542867"
@@ -2215,11 +2215,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 9769,
         "votos_projetados": 76815,
-        "pct_atual": 1.1,
-        "pct_projetado": 1.09,
+        "pct_atual": 1.19,
+        "pct_projetado": 1.12,
         "ci95": {
-          "lower": 0.43,
-          "upper": 1.75
+          "lower": 0.44,
+          "upper": 1.8
         },
         "p_eleito": 0,
         "sqcand": "100002548853"
@@ -2231,11 +2231,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 6034,
         "votos_projetados": 46089,
-        "pct_atual": 0.68,
-        "pct_projetado": 0.65,
+        "pct_atual": 0.73,
+        "pct_projetado": 0.67,
         "ci95": {
-          "lower": 0.14,
-          "upper": 1.16
+          "lower": 0.15,
+          "upper": 1.2
         },
         "p_eleito": 0,
         "sqcand": "100002549014"
@@ -2247,11 +2247,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2710,
         "votos_projetados": 27653,
-        "pct_atual": 0.3,
-        "pct_projetado": 0.39,
+        "pct_atual": 0.33,
+        "pct_projetado": 0.4,
         "ci95": {
           "lower": 0,
-          "upper": 0.79
+          "upper": 0.81
         },
         "p_eleito": 0,
         "sqcand": "100002536212"
@@ -2263,11 +2263,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1987,
         "votos_projetados": 16592,
-        "pct_atual": 0.22,
-        "pct_projetado": 0.23,
+        "pct_atual": 0.24,
+        "pct_projetado": 0.24,
         "ci95": {
           "lower": 0,
-          "upper": 0.54
+          "upper": 0.56
         },
         "p_eleito": 0,
         "sqcand": "100002550418"
@@ -2361,7 +2361,7 @@
   },
   "MG": {
     "uf": "MG",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 32.4,
@@ -2373,11 +2373,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 2442820,
         "votos_projetados": 6873873,
-        "pct_atual": 31.49,
-        "pct_projetado": 31.2,
+        "pct_atual": 34.1,
+        "pct_projetado": 32.13,
         "ci95": {
-          "lower": 29.66,
-          "upper": 32.74
+          "lower": 30.54,
+          "upper": 33.71
         },
         "p_eleito": 1,
         "sqcand": "130002550560"
@@ -2389,11 +2389,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 1931975,
         "votos_projetados": 6389177,
-        "pct_atual": 24.91,
-        "pct_projetado": 29,
+        "pct_atual": 26.97,
+        "pct_projetado": 29.86,
         "ci95": {
-          "lower": 27.49,
-          "upper": 30.51
+          "lower": 28.31,
+          "upper": 31.41
         },
         "p_eleito": 0.9915,
         "sqcand": "130002551786"
@@ -2405,11 +2405,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 1822632,
         "votos_projetados": 5816354,
-        "pct_atual": 23.5,
-        "pct_projetado": 26.4,
+        "pct_atual": 25.44,
+        "pct_projetado": 27.18,
         "ci95": {
-          "lower": 24.94,
-          "upper": 27.86
+          "lower": 25.68,
+          "upper": 28.69
         },
         "p_eleito": 0.0085,
         "sqcand": "130002552299"
@@ -2422,11 +2422,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 675017,
         "votos_projetados": 2083387,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.38,
         "ci95": {
-          "lower": 5.4,
-          "upper": 7
+          "lower": 5.56,
+          "upper": 7.21
         },
         "p_eleito": 0,
         "sqcand": "130002552302"
@@ -2455,11 +2455,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 113600,
         "votos_projetados": 381537,
-        "pct_atual": 1.46,
-        "pct_projetado": 1.73,
+        "pct_atual": 1.59,
+        "pct_projetado": 1.78,
         "ci95": {
-          "lower": 1.3,
-          "upper": 2.17
+          "lower": 1.34,
+          "upper": 2.23
         },
         "p_eleito": 0,
         "sqcand": "130002554332"
@@ -2471,11 +2471,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 70321,
         "votos_projetados": 228922,
-        "pct_atual": 0.91,
-        "pct_projetado": 1.04,
+        "pct_atual": 0.98,
+        "pct_projetado": 1.07,
         "ci95": {
-          "lower": 0.7,
-          "upper": 1.38
+          "lower": 0.72,
+          "upper": 1.42
         },
         "p_eleito": 0,
         "sqcand": "130002551284"
@@ -2487,11 +2487,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 41218,
         "votos_projetados": 137354,
-        "pct_atual": 0.53,
-        "pct_projetado": 0.62,
+        "pct_atual": 0.58,
+        "pct_projetado": 0.64,
         "ci95": {
-          "lower": 0.36,
-          "upper": 0.88
+          "lower": 0.37,
+          "upper": 0.91
         },
         "p_eleito": 0,
         "sqcand": "130002548381"
@@ -2503,11 +2503,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 27505,
         "votos_projetados": 82412,
-        "pct_atual": 0.35,
-        "pct_projetado": 0.37,
+        "pct_atual": 0.38,
+        "pct_projetado": 0.39,
         "ci95": {
-          "lower": 0.17,
-          "upper": 0.58
+          "lower": 0.18,
+          "upper": 0.59
         },
         "p_eleito": 0,
         "sqcand": "130002550557"
@@ -2519,11 +2519,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 16389,
         "votos_projetados": 49447,
-        "pct_atual": 0.21,
-        "pct_projetado": 0.22,
+        "pct_atual": 0.23,
+        "pct_projetado": 0.23,
         "ci95": {
           "lower": 0.07,
-          "upper": 0.38
+          "upper": 0.39
         },
         "p_eleito": 0,
         "sqcand": "130002547882"
@@ -2535,11 +2535,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 10226,
         "votos_projetados": 29668,
-        "pct_atual": 0.13,
-        "pct_projetado": 0.13,
+        "pct_atual": 0.14,
+        "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "p_eleito": 0,
         "sqcand": "130002547884"
@@ -2551,11 +2551,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5798,
         "votos_projetados": 17801,
-        "pct_atual": 0.07,
+        "pct_atual": 0.08,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.23
+          "upper": 0.24
         },
         "p_eleito": 0,
         "sqcand": "130002551929"
@@ -2619,7 +2619,7 @@
         "pct_projetado": 0.01,
         "ci95": {
           "lower": 0,
-          "upper": 0.16
+          "upper": 0.17
         },
         "p_eleito": 0,
         "sqcand": "130002552186"
@@ -2749,7 +2749,7 @@
   },
   "MS": {
     "uf": "MS",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 39.4,
@@ -2761,11 +2761,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 585107,
         "votos_projetados": 1531235,
-        "pct_atual": 49.35,
-        "pct_projetado": 57.5,
+        "pct_atual": 53.43,
+        "pct_projetado": 58.36,
         "ci95": {
-          "lower": 56.09,
-          "upper": 58.91
+          "lower": 56.93,
+          "upper": 59.79
         },
         "p_eleito": 1,
         "sqcand": "120002547435"
@@ -2777,11 +2777,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 249261,
         "votos_projetados": 639124,
-        "pct_atual": 21.02,
-        "pct_projetado": 24,
+        "pct_atual": 22.76,
+        "pct_projetado": 24.36,
         "ci95": {
-          "lower": 22.78,
-          "upper": 25.22
+          "lower": 23.12,
+          "upper": 25.59
         },
         "p_eleito": 1,
         "sqcand": "120002535769"
@@ -2793,11 +2793,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 136988,
         "votos_projetados": 292932,
-        "pct_atual": 11.55,
-        "pct_projetado": 11,
+        "pct_atual": 12.51,
+        "pct_projetado": 11.16,
         "ci95": {
-          "lower": 10.11,
-          "upper": 11.89
+          "lower": 10.26,
+          "upper": 12.07
         },
         "p_eleito": 0,
         "sqcand": "120002535764"
@@ -2810,11 +2810,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 103167,
         "votos_projetados": 261845,
-        "pct_atual": 8.7,
-        "pct_projetado": 4,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.06,
         "ci95": {
-          "lower": 3.44,
-          "upper": 4.56
+          "lower": 3.49,
+          "upper": 4.63
         },
         "p_eleito": 0,
         "sqcand": "120002552115"
@@ -2843,11 +2843,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 8359,
         "votos_projetados": 23464,
-        "pct_atual": 0.71,
-        "pct_projetado": 0.88,
+        "pct_atual": 0.76,
+        "pct_projetado": 0.89,
         "ci95": {
-          "lower": 0.61,
-          "upper": 1.15
+          "lower": 0.62,
+          "upper": 1.16
         },
         "p_eleito": 0,
         "sqcand": "120002532721"
@@ -2859,11 +2859,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5787,
         "votos_projetados": 14078,
-        "pct_atual": 0.49,
-        "pct_projetado": 0.53,
+        "pct_atual": 0.53,
+        "pct_projetado": 0.54,
         "ci95": {
-          "lower": 0.32,
-          "upper": 0.74
+          "lower": 0.33,
+          "upper": 0.75
         },
         "p_eleito": 0,
         "sqcand": "120002551909"
@@ -2875,7 +2875,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3125,
         "votos_projetados": 8447,
-        "pct_atual": 0.26,
+        "pct_atual": 0.29,
         "pct_projetado": 0.32,
         "ci95": {
           "lower": 0.16,
@@ -2891,11 +2891,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2045,
         "votos_projetados": 5068,
-        "pct_atual": 0.17,
+        "pct_atual": 0.19,
         "pct_projetado": 0.19,
         "ci95": {
           "lower": 0.04,
-          "upper": 0.34
+          "upper": 0.35
         },
         "p_eleito": 0,
         "sqcand": "120002534952"
@@ -2907,11 +2907,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1179,
         "votos_projetados": 3041,
-        "pct_atual": 0.1,
-        "pct_projetado": 0.11,
+        "pct_atual": 0.11,
+        "pct_projetado": 0.12,
         "ci95": {
           "lower": 0,
-          "upper": 0.26
+          "upper": 0.27
         },
         "p_eleito": 0,
         "sqcand": "120002552183"
@@ -3005,7 +3005,7 @@
   },
   "MT": {
     "uf": "MT",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 27.5,
@@ -3017,11 +3017,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 355430,
         "votos_projetados": 1295319,
-        "pct_atual": 34.6,
-        "pct_projetado": 38.5,
+        "pct_atual": 37.46,
+        "pct_projetado": 39.53,
         "ci95": {
-          "lower": 36.68,
-          "upper": 40.32
+          "lower": 37.66,
+          "upper": 41.39
         },
         "p_eleito": 1,
         "sqcand": "110002552693"
@@ -3033,11 +3033,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 318765,
         "votos_projetados": 1191021,
-        "pct_atual": 31.03,
-        "pct_projetado": 35.4,
+        "pct_atual": 33.59,
+        "pct_projetado": 36.35,
         "ci95": {
-          "lower": 33.61,
-          "upper": 37.19
+          "lower": 34.51,
+          "upper": 38.18
         },
         "p_eleito": 1,
         "sqcand": "110002551966"
@@ -3049,11 +3049,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 154654,
         "votos_projetados": 524857,
-        "pct_atual": 15.05,
-        "pct_projetado": 15.6,
+        "pct_atual": 16.3,
+        "pct_projetado": 16.02,
         "ci95": {
-          "lower": 14.24,
-          "upper": 16.96
+          "lower": 14.63,
+          "upper": 17.41
         },
         "p_eleito": 0,
         "sqcand": "110002552698"
@@ -3066,11 +3066,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 89402,
         "votos_projetados": 325098,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.62,
         "ci95": {
-          "lower": 3.73,
-          "upper": 5.27
+          "lower": 3.83,
+          "upper": 5.42
         },
         "p_eleito": 0,
         "sqcand": "110002544986"
@@ -3099,11 +3099,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 14273,
         "votos_projetados": 52533,
-        "pct_atual": 1.39,
-        "pct_projetado": 1.56,
+        "pct_atual": 1.5,
+        "pct_projetado": 1.6,
         "ci95": {
-          "lower": 1.1,
-          "upper": 2.02
+          "lower": 1.13,
+          "upper": 2.08
         },
         "p_eleito": 0,
         "sqcand": "110002551967"
@@ -3115,11 +3115,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 7990,
         "votos_projetados": 31520,
-        "pct_atual": 0.78,
-        "pct_projetado": 0.94,
+        "pct_atual": 0.84,
+        "pct_projetado": 0.96,
         "ci95": {
-          "lower": 0.58,
-          "upper": 1.3
+          "lower": 0.59,
+          "upper": 1.33
         },
         "p_eleito": 0,
         "sqcand": "110002553701"
@@ -3131,11 +3131,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5201,
         "votos_projetados": 18912,
-        "pct_atual": 0.51,
-        "pct_projetado": 0.56,
+        "pct_atual": 0.55,
+        "pct_projetado": 0.58,
         "ci95": {
-          "lower": 0.28,
-          "upper": 0.84
+          "lower": 0.29,
+          "upper": 0.86
         },
         "p_eleito": 0,
         "sqcand": "110002548042"
@@ -3147,11 +3147,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3201,
         "votos_projetados": 11347,
-        "pct_atual": 0.31,
-        "pct_projetado": 0.34,
+        "pct_atual": 0.34,
+        "pct_projetado": 0.35,
         "ci95": {
           "lower": 0.12,
-          "upper": 0.55
+          "upper": 0.57
         },
         "p_eleito": 0,
         "sqcand": "110002540403"
@@ -3239,7 +3239,7 @@
   },
   "PA": {
     "uf": "PA",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -3251,11 +3251,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 560001,
         "votos_projetados": 4865578,
-        "pct_atual": 50.57,
-        "pct_projetado": 57.5,
+        "pct_atual": 54.75,
+        "pct_projetado": 58.44,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 55.25,
+          "upper": 61.63
         },
         "p_eleito": 1,
         "sqcand": "140002544855"
@@ -3267,11 +3267,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 233704,
         "votos_projetados": 2030850,
-        "pct_atual": 21.1,
-        "pct_projetado": 24,
+        "pct_atual": 22.85,
+        "pct_projetado": 24.39,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 21.64,
+          "upper": 27.15
         },
         "p_eleito": 1,
         "sqcand": "140002550780"
@@ -3283,11 +3283,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 114605,
         "votos_projetados": 930806,
-        "pct_atual": 10.35,
-        "pct_projetado": 11,
+        "pct_atual": 11.2,
+        "pct_projetado": 11.18,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.16,
+          "upper": 13.2
         },
         "p_eleito": 0,
         "sqcand": "140002538404"
@@ -3300,11 +3300,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 96372,
         "votos_projetados": 830794,
-        "pct_atual": 8.7,
-        "pct_projetado": 4,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.07,
         "ci95": {
-          "lower": 2.76,
-          "upper": 5.24
+          "lower": 2.8,
+          "upper": 5.33
         },
         "p_eleito": 0,
         "sqcand": "140002542691"
@@ -3333,11 +3333,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 8623,
         "votos_projetados": 81663,
-        "pct_atual": 0.78,
-        "pct_projetado": 0.97,
+        "pct_atual": 0.84,
+        "pct_projetado": 0.98,
         "ci95": {
-          "lower": 0.34,
-          "upper": 1.59
+          "lower": 0.35,
+          "upper": 1.61
         },
         "p_eleito": 0,
         "sqcand": "140002545671"
@@ -3349,11 +3349,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5355,
         "votos_projetados": 48998,
-        "pct_atual": 0.48,
-        "pct_projetado": 0.58,
+        "pct_atual": 0.52,
+        "pct_projetado": 0.59,
         "ci95": {
           "lower": 0.1,
-          "upper": 1.06
+          "upper": 1.08
         },
         "p_eleito": 0,
         "sqcand": "140002548387"
@@ -3365,11 +3365,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4239,
         "votos_projetados": 29399,
-        "pct_atual": 0.38,
+        "pct_atual": 0.41,
         "pct_projetado": 0.35,
         "ci95": {
           "lower": 0,
-          "upper": 0.72
+          "upper": 0.73
         },
         "p_eleito": 0,
         "sqcand": "140002554209"
@@ -3451,7 +3451,7 @@
   },
   "PB": {
     "uf": "PB",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -3463,11 +3463,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 270243,
         "votos_projetados": 2486302,
-        "pct_atual": 47.68,
-        "pct_projetado": 57.5,
+        "pct_atual": 51.62,
+        "pct_projetado": 58.36,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 55.17,
+          "upper": 61.54
         },
         "p_eleito": 1,
         "sqcand": "150002538459"
@@ -3479,11 +3479,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 140617,
         "votos_projetados": 1037761,
-        "pct_atual": 24.81,
-        "pct_projetado": 24,
+        "pct_atual": 26.86,
+        "pct_projetado": 24.36,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 21.61,
+          "upper": 27.11
         },
         "p_eleito": 1,
         "sqcand": "150002549791"
@@ -3495,11 +3495,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 52670,
         "votos_projetados": 475640,
-        "pct_atual": 9.29,
-        "pct_projetado": 11,
+        "pct_atual": 10.06,
+        "pct_projetado": 11.16,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.15,
+          "upper": 13.18
         },
         "p_eleito": 0,
         "sqcand": "150002544909"
@@ -3512,11 +3512,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 49319,
         "votos_projetados": 425164,
-        "pct_atual": 8.7,
-        "pct_projetado": 4,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.06,
         "ci95": {
-          "lower": 2.76,
-          "upper": 5.24
+          "lower": 2.8,
+          "upper": 5.32
         },
         "p_eleito": 0,
         "sqcand": "150002544905"
@@ -3545,11 +3545,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 5267,
         "votos_projetados": 38099,
-        "pct_atual": 0.93,
-        "pct_projetado": 0.88,
+        "pct_atual": 1.01,
+        "pct_projetado": 0.89,
         "ci95": {
           "lower": 0.29,
-          "upper": 1.47
+          "upper": 1.5
         },
         "p_eleito": 0,
         "sqcand": "150002549793"
@@ -3561,11 +3561,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2560,
         "votos_projetados": 22859,
-        "pct_atual": 0.45,
-        "pct_projetado": 0.53,
+        "pct_atual": 0.49,
+        "pct_projetado": 0.54,
         "ci95": {
           "lower": 0.07,
-          "upper": 0.99
+          "upper": 1
         },
         "p_eleito": 0,
         "sqcand": "150002544135"
@@ -3577,11 +3577,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1407,
         "votos_projetados": 13716,
-        "pct_atual": 0.25,
+        "pct_atual": 0.27,
         "pct_projetado": 0.32,
         "ci95": {
           "lower": 0,
-          "upper": 0.67
+          "upper": 0.68
         },
         "p_eleito": 0,
         "sqcand": "150002544140"
@@ -3593,7 +3593,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 877,
         "votos_projetados": 8229,
-        "pct_atual": 0.15,
+        "pct_atual": 0.17,
         "pct_projetado": 0.19,
         "ci95": {
           "lower": 0,
@@ -3609,8 +3609,8 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 515,
         "votos_projetados": 4938,
-        "pct_atual": 0.09,
-        "pct_projetado": 0.11,
+        "pct_atual": 0.1,
+        "pct_projetado": 0.12,
         "ci95": {
           "lower": 0,
           "upper": 0.33
@@ -3707,7 +3707,7 @@
   },
   "PE": {
     "uf": "PE",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -3719,11 +3719,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 353423,
         "votos_projetados": 3091433,
-        "pct_atual": 28.31,
-        "pct_projetado": 31.2,
+        "pct_atual": 30.65,
+        "pct_projetado": 32.14,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.11,
+          "upper": 35.17
         },
         "p_eleito": 0.994,
         "sqcand": "170002547773"
@@ -3735,11 +3735,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 364859,
         "votos_projetados": 2873447,
-        "pct_atual": 29.23,
-        "pct_projetado": 29,
+        "pct_atual": 31.64,
+        "pct_projetado": 29.88,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 26.91,
+          "upper": 32.84
         },
         "p_eleito": 0.892,
         "sqcand": "170002539456"
@@ -3751,11 +3751,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 269296,
         "votos_projetados": 2615828,
-        "pct_atual": 21.57,
-        "pct_projetado": 26.4,
+        "pct_atual": 23.35,
+        "pct_projetado": 27.2,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.31,
+          "upper": 30.08
         },
         "p_eleito": 0.114,
         "sqcand": "170002552097"
@@ -3768,11 +3768,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 108638,
         "votos_projetados": 936533,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.39,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.81,
+          "upper": 7.96
         },
         "p_eleito": 0,
         "sqcand": "170002530097"
@@ -3801,11 +3801,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 26340,
         "votos_projetados": 174143,
-        "pct_atual": 2.11,
-        "pct_projetado": 1.76,
+        "pct_atual": 2.28,
+        "pct_projetado": 1.81,
         "ci95": {
-          "lower": 0.92,
-          "upper": 2.59
+          "lower": 0.95,
+          "upper": 2.67
         },
         "p_eleito": 0,
         "sqcand": "170002552102"
@@ -3817,11 +3817,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 12750,
         "votos_projetados": 104485,
-        "pct_atual": 1.02,
-        "pct_projetado": 1.05,
+        "pct_atual": 1.11,
+        "pct_projetado": 1.09,
         "ci95": {
-          "lower": 0.41,
-          "upper": 1.7
+          "lower": 0.42,
+          "upper": 1.75
         },
         "p_eleito": 0,
         "sqcand": "170002537334"
@@ -3833,11 +3833,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 7893,
         "votos_projetados": 62691,
-        "pct_atual": 0.63,
-        "pct_projetado": 0.63,
+        "pct_atual": 0.68,
+        "pct_projetado": 0.65,
         "ci95": {
           "lower": 0.13,
-          "upper": 1.14
+          "upper": 1.17
         },
         "p_eleito": 0,
         "sqcand": "170002537335"
@@ -3849,11 +3849,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4355,
         "votos_projetados": 37615,
-        "pct_atual": 0.35,
-        "pct_projetado": 0.38,
+        "pct_atual": 0.38,
+        "pct_projetado": 0.39,
         "ci95": {
           "lower": 0,
-          "upper": 0.77
+          "upper": 0.79
         },
         "p_eleito": 0,
         "sqcand": "170002549655"
@@ -3865,11 +3865,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2644,
         "votos_projetados": 22569,
-        "pct_atual": 0.21,
+        "pct_atual": 0.23,
         "pct_projetado": 0.23,
         "ci95": {
           "lower": 0,
-          "upper": 0.53
+          "upper": 0.55
         },
         "p_eleito": 0,
         "sqcand": "170002537418"
@@ -3881,11 +3881,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1841,
         "votos_projetados": 13541,
-        "pct_atual": 0.15,
+        "pct_atual": 0.16,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.37
+          "upper": 0.38
         },
         "p_eleito": 0,
         "sqcand": "170002552943"
@@ -3897,11 +3897,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1048,
         "votos_projetados": 8125,
-        "pct_atual": 0.08,
+        "pct_atual": 0.09,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "p_eleito": 0,
         "sqcand": "170002540420"
@@ -4007,7 +4007,7 @@
   },
   "PI": {
     "uf": "PI",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4019,11 +4019,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 223969,
         "votos_projetados": 2095207,
-        "pct_atual": 46.86,
-        "pct_projetado": 57.5,
+        "pct_atual": 50.74,
+        "pct_projetado": 58.32,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 55.13,
+          "upper": 61.5
         },
         "p_eleito": 1,
         "sqcand": "180002533967"
@@ -4035,11 +4035,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 121566,
         "votos_projetados": 874521,
-        "pct_atual": 25.43,
-        "pct_projetado": 24,
+        "pct_atual": 27.54,
+        "pct_projetado": 24.34,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 21.59,
+          "upper": 27.09
         },
         "p_eleito": 1,
         "sqcand": "180002540449"
@@ -4051,11 +4051,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 45662,
         "votos_projetados": 400822,
-        "pct_atual": 9.55,
-        "pct_projetado": 11,
+        "pct_atual": 10.34,
+        "pct_projetado": 11.16,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.14,
+          "upper": 13.17
         },
         "p_eleito": 0,
         "sqcand": "180002533964"
@@ -4068,11 +4068,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 41591,
         "votos_projetados": 358541,
-        "pct_atual": 8.7,
-        "pct_projetado": 4,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.06,
         "ci95": {
-          "lower": 2.76,
-          "upper": 5.24
+          "lower": 2.79,
+          "upper": 5.32
         },
         "p_eleito": 0,
         "sqcand": "180002548568"
@@ -4101,11 +4101,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 3424,
         "votos_projetados": 30632,
-        "pct_atual": 0.72,
-        "pct_projetado": 0.84,
+        "pct_atual": 0.78,
+        "pct_projetado": 0.85,
         "ci95": {
           "lower": 0.26,
-          "upper": 1.42
+          "upper": 1.44
         },
         "p_eleito": 0,
         "sqcand": "180002540446"
@@ -4117,11 +4117,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2170,
         "votos_projetados": 18379,
-        "pct_atual": 0.45,
-        "pct_projetado": 0.5,
+        "pct_atual": 0.49,
+        "pct_projetado": 0.51,
         "ci95": {
-          "lower": 0.05,
-          "upper": 0.95
+          "lower": 0.06,
+          "upper": 0.97
         },
         "p_eleito": 0,
         "sqcand": "180002550979"
@@ -4133,11 +4133,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1173,
         "votos_projetados": 11028,
-        "pct_atual": 0.25,
-        "pct_projetado": 0.3,
+        "pct_atual": 0.27,
+        "pct_projetado": 0.31,
         "ci95": {
           "lower": 0,
-          "upper": 0.65
+          "upper": 0.66
         },
         "p_eleito": 0,
         "sqcand": "180002550977"
@@ -4149,11 +4149,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 746,
         "votos_projetados": 6617,
-        "pct_atual": 0.16,
+        "pct_atual": 0.17,
         "pct_projetado": 0.18,
         "ci95": {
           "lower": 0,
-          "upper": 0.45
+          "upper": 0.46
         },
         "p_eleito": 0,
         "sqcand": "180002541938"
@@ -4165,7 +4165,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 488,
         "votos_projetados": 3970,
-        "pct_atual": 0.1,
+        "pct_atual": 0.11,
         "pct_projetado": 0.11,
         "ci95": {
           "lower": 0,
@@ -4181,7 +4181,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 260,
         "votos_projetados": 2382,
-        "pct_atual": 0.05,
+        "pct_atual": 0.06,
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
@@ -4217,7 +4217,7 @@
         "pct_projetado": 0.02,
         "ci95": {
           "lower": 0,
-          "upper": 0.22
+          "upper": 0.23
         },
         "p_eleito": 0,
         "sqcand": "180002553753"
@@ -4233,7 +4233,7 @@
         "pct_projetado": 0.01,
         "ci95": {
           "lower": 0,
-          "upper": 0.21
+          "upper": 0.22
         },
         "p_eleito": 0,
         "sqcand": "180002544457"
@@ -4281,7 +4281,7 @@
         "pct_projetado": 0,
         "ci95": {
           "lower": 0,
-          "upper": 0.2
+          "upper": 0.21
         },
         "p_eleito": 0,
         "sqcand": "180002548155"
@@ -4297,7 +4297,7 @@
         "pct_projetado": 0,
         "ci95": {
           "lower": 0,
-          "upper": 0.2
+          "upper": 0.21
         },
         "p_eleito": 0,
         "sqcand": "180002549936"
@@ -4439,7 +4439,7 @@
   },
   "PR": {
     "uf": "PR",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 34.8,
@@ -4451,11 +4451,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 2841923,
         "votos_projetados": 7792475,
-        "pct_atual": 61.86,
-        "pct_projetado": 59.59,
+        "pct_atual": 66.97,
+        "pct_projetado": 62.16,
         "ci95": {
-          "lower": 58.04,
-          "upper": 61.13
+          "lower": 60.55,
+          "upper": 63.77
         },
         "p_eleito": 1,
         "sqcand": "160002547660"
@@ -4467,11 +4467,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 1001732,
         "votos_projetados": 3252511,
-        "pct_atual": 21.8,
-        "pct_projetado": 24.87,
+        "pct_atual": 23.61,
+        "pct_projetado": 25.95,
         "ci95": {
-          "lower": 23.51,
-          "upper": 26.23
+          "lower": 24.53,
+          "upper": 27.37
         },
         "p_eleito": 1,
         "sqcand": "160002547658"
@@ -4484,11 +4484,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 399796,
         "votos_projetados": 1148838,
-        "pct_atual": 8.7,
-        "pct_projetado": 11.4,
+        "pct_atual": 9.42,
+        "pct_projetado": 11.89,
         "ci95": {
-          "lower": 10.4,
-          "upper": 12.4
+          "lower": 10.85,
+          "upper": 12.94
         },
         "p_eleito": 0,
         "sqcand": "160002551043"
@@ -4563,7 +4563,7 @@
   },
   "RJ": {
     "uf": "RJ",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 30.7,
@@ -4575,11 +4575,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 1988999,
         "votos_projetados": 6683788,
-        "pct_atual": 33.54,
-        "pct_projetado": 38.5,
+        "pct_atual": 36.32,
+        "pct_projetado": 39.46,
         "ci95": {
-          "lower": 36.82,
-          "upper": 40.18
+          "lower": 37.73,
+          "upper": 41.18
         },
         "p_eleito": 1,
         "sqcand": "190002542888"
@@ -4591,11 +4591,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 1974799,
         "votos_projetados": 6145613,
-        "pct_atual": 33.3,
-        "pct_projetado": 35.4,
+        "pct_atual": 36.06,
+        "pct_projetado": 36.28,
         "ci95": {
-          "lower": 33.75,
-          "upper": 37.05
+          "lower": 34.59,
+          "upper": 37.97
         },
         "p_eleito": 1,
         "sqcand": "190002548141"
@@ -4607,11 +4607,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 812762,
         "votos_projetados": 2708236,
-        "pct_atual": 13.71,
-        "pct_projetado": 15.6,
+        "pct_atual": 14.84,
+        "pct_projetado": 15.99,
         "ci95": {
-          "lower": 14.35,
-          "upper": 16.85
+          "lower": 14.7,
+          "upper": 17.27
         },
         "p_eleito": 0,
         "sqcand": "190002535142"
@@ -4624,11 +4624,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 515976,
         "votos_projetados": 1680704,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.61,
         "ci95": {
-          "lower": 3.78,
-          "upper": 5.22
+          "lower": 3.88,
+          "upper": 5.35
         },
         "p_eleito": 0,
         "sqcand": "190002550184"
@@ -4657,11 +4657,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 72210,
         "votos_projetados": 252536,
-        "pct_atual": 1.22,
-        "pct_projetado": 1.45,
+        "pct_atual": 1.32,
+        "pct_projetado": 1.49,
         "ci95": {
-          "lower": 1.04,
-          "upper": 1.87
+          "lower": 1.07,
+          "upper": 1.91
         },
         "p_eleito": 0,
         "sqcand": "190002552083"
@@ -4673,11 +4673,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 49098,
         "votos_projetados": 151522,
-        "pct_atual": 0.83,
-        "pct_projetado": 0.87,
+        "pct_atual": 0.9,
+        "pct_projetado": 0.89,
         "ci95": {
-          "lower": 0.55,
-          "upper": 1.19
+          "lower": 0.57,
+          "upper": 1.22
         },
         "p_eleito": 0,
         "sqcand": "190002536164"
@@ -4689,11 +4689,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 26346,
         "votos_projetados": 90913,
-        "pct_atual": 0.44,
-        "pct_projetado": 0.52,
+        "pct_atual": 0.48,
+        "pct_projetado": 0.54,
         "ci95": {
-          "lower": 0.27,
-          "upper": 0.77
+          "lower": 0.28,
+          "upper": 0.79
         },
         "p_eleito": 0,
         "sqcand": "190002548589"
@@ -4705,11 +4705,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 15477,
         "votos_projetados": 54548,
-        "pct_atual": 0.26,
-        "pct_projetado": 0.31,
+        "pct_atual": 0.28,
+        "pct_projetado": 0.32,
         "ci95": {
           "lower": 0.12,
-          "upper": 0.51
+          "upper": 0.52
         },
         "p_eleito": 0,
         "sqcand": "190002548590"
@@ -4721,11 +4721,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 10314,
         "votos_projetados": 32729,
-        "pct_atual": 0.17,
+        "pct_atual": 0.19,
         "pct_projetado": 0.19,
         "ci95": {
           "lower": 0.04,
-          "upper": 0.34
+          "upper": 0.35
         },
         "p_eleito": 0,
         "sqcand": "190002539827"
@@ -4737,11 +4737,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5251,
         "votos_projetados": 19637,
-        "pct_atual": 0.09,
-        "pct_projetado": 0.11,
+        "pct_atual": 0.1,
+        "pct_projetado": 0.12,
         "ci95": {
           "lower": 0,
-          "upper": 0.26
+          "upper": 0.27
         },
         "p_eleito": 0,
         "sqcand": "190002552521"
@@ -4769,11 +4769,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1947,
         "votos_projetados": 7069,
-        "pct_atual": 0.03,
+        "pct_atual": 0.04,
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.19
+          "upper": 0.2
         },
         "p_eleito": 0,
         "sqcand": "190002550190"
@@ -4885,7 +4885,7 @@
   },
   "RN": {
     "uf": "RN",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -4897,11 +4897,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 129687,
         "votos_projetados": 1175933,
-        "pct_atual": 27.3,
-        "pct_projetado": 31.2,
+        "pct_atual": 29.56,
+        "pct_projetado": 32.13,
         "ci95": {
-          "lower": 28.26,
-          "upper": 34.14
+          "lower": 29.1,
+          "upper": 35.16
         },
         "p_eleito": 0.9895,
         "sqcand": "200002534447"
@@ -4913,11 +4913,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 125851,
         "votos_projetados": 1093015,
-        "pct_atual": 26.49,
-        "pct_projetado": 29,
+        "pct_atual": 28.68,
+        "pct_projetado": 29.87,
         "ci95": {
-          "lower": 26.12,
-          "upper": 31.88
+          "lower": 26.9,
+          "upper": 32.83
         },
         "p_eleito": 0.901,
         "sqcand": "200002533841"
@@ -4929,11 +4929,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 120447,
         "votos_projetados": 995020,
-        "pct_atual": 25.35,
-        "pct_projetado": 26.4,
+        "pct_atual": 27.45,
+        "pct_projetado": 27.19,
         "ci95": {
-          "lower": 23.6,
-          "upper": 29.2
+          "lower": 24.31,
+          "upper": 30.07
         },
         "p_eleito": 0.1095,
         "sqcand": "200002535511"
@@ -4946,11 +4946,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 41339,
         "votos_projetados": 356367,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.39,
         "ci95": {
-          "lower": 4.67,
-          "upper": 7.73
+          "lower": 4.81,
+          "upper": 7.96
         },
         "p_eleito": 0,
         "sqcand": "200002535507"
@@ -4979,11 +4979,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 8971,
         "votos_projetados": 65525,
-        "pct_atual": 1.89,
-        "pct_projetado": 1.74,
+        "pct_atual": 2.04,
+        "pct_projetado": 1.79,
         "ci95": {
-          "lower": 0.91,
-          "upper": 2.57
+          "lower": 0.94,
+          "upper": 2.65
         },
         "p_eleito": 0,
         "sqcand": "200002534448"
@@ -4995,11 +4995,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 5193,
         "votos_projetados": 39315,
-        "pct_atual": 1.09,
-        "pct_projetado": 1.04,
+        "pct_atual": 1.18,
+        "pct_projetado": 1.07,
         "ci95": {
-          "lower": 0.4,
-          "upper": 1.69
+          "lower": 0.41,
+          "upper": 1.74
         },
         "p_eleito": 0,
         "sqcand": "200002546792"
@@ -5011,11 +5011,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 3126,
         "votos_projetados": 23589,
-        "pct_atual": 0.66,
-        "pct_projetado": 0.63,
+        "pct_atual": 0.71,
+        "pct_projetado": 0.64,
         "ci95": {
           "lower": 0.13,
-          "upper": 1.13
+          "upper": 1.16
         },
         "p_eleito": 0,
         "sqcand": "200002546795"
@@ -5027,11 +5027,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1605,
         "votos_projetados": 14153,
-        "pct_atual": 0.34,
-        "pct_projetado": 0.38,
+        "pct_atual": 0.37,
+        "pct_projetado": 0.39,
         "ci95": {
           "lower": 0,
-          "upper": 0.76
+          "upper": 0.79
         },
         "p_eleito": 0,
         "sqcand": "200002550541"
@@ -5043,11 +5043,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1173,
         "votos_projetados": 8492,
-        "pct_atual": 0.25,
+        "pct_atual": 0.27,
         "pct_projetado": 0.23,
         "ci95": {
           "lower": 0,
-          "upper": 0.53
+          "upper": 0.54
         },
         "p_eleito": 0,
         "sqcand": "200002542484"
@@ -5059,11 +5059,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 642,
         "votos_projetados": 5095,
-        "pct_atual": 0.14,
+        "pct_atual": 0.15,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.37
+          "upper": 0.38
         },
         "p_eleito": 0,
         "sqcand": "200002542483"
@@ -5075,11 +5075,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 377,
         "votos_projetados": 3057,
-        "pct_atual": 0.08,
+        "pct_atual": 0.09,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.28
+          "upper": 0.29
         },
         "p_eleito": 0,
         "sqcand": "200002550225"
@@ -5095,7 +5095,7 @@
         "pct_projetado": 0.05,
         "ci95": {
           "lower": 0,
-          "upper": 0.25
+          "upper": 0.26
         },
         "p_eleito": 0,
         "sqcand": "200002549133"
@@ -5111,7 +5111,7 @@
         "pct_projetado": 0.03,
         "ci95": {
           "lower": 0,
-          "upper": 0.23
+          "upper": 0.24
         },
         "p_eleito": 0,
         "sqcand": "200002548115"
@@ -5229,7 +5229,7 @@
   },
   "RO": {
     "uf": "RO",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -5241,11 +5241,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 72853,
         "votos_projetados": 636366,
-        "pct_atual": 34.22,
-        "pct_projetado": 38.5,
+        "pct_atual": 37.05,
+        "pct_projetado": 39.53,
         "ci95": {
-          "lower": 35.41,
-          "upper": 41.59
+          "lower": 36.36,
+          "upper": 42.7
         },
         "p_eleito": 1,
         "sqcand": "220002539996"
@@ -5257,11 +5257,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 66483,
         "votos_projetados": 585126,
-        "pct_atual": 31.23,
-        "pct_projetado": 35.4,
+        "pct_atual": 33.81,
+        "pct_projetado": 36.35,
         "ci95": {
-          "lower": 32.36,
-          "upper": 38.44
+          "lower": 33.23,
+          "upper": 39.46
         },
         "p_eleito": 1,
         "sqcand": "220002551948"
@@ -5273,11 +5273,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 32160,
         "votos_projetados": 257852,
-        "pct_atual": 15.11,
-        "pct_projetado": 15.6,
+        "pct_atual": 16.35,
+        "pct_projetado": 16.02,
         "ci95": {
-          "lower": 13.3,
-          "upper": 17.9
+          "lower": 13.65,
+          "upper": 18.38
         },
         "p_eleito": 0,
         "sqcand": "220002539995"
@@ -5290,11 +5290,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 18527,
         "votos_projetados": 159715,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.62,
         "ci95": {
-          "lower": 3.18,
-          "upper": 5.82
+          "lower": 3.27,
+          "upper": 5.97
         },
         "p_eleito": 0,
         "sqcand": "220002547310"
@@ -5323,11 +5323,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 3163,
         "votos_projetados": 25809,
-        "pct_atual": 1.49,
-        "pct_projetado": 1.56,
+        "pct_atual": 1.61,
+        "pct_projetado": 1.6,
         "ci95": {
-          "lower": 0.77,
-          "upper": 2.35
+          "lower": 0.79,
+          "upper": 2.41
         },
         "p_eleito": 0,
         "sqcand": "220002541490"
@@ -5339,11 +5339,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1711,
         "votos_projetados": 15485,
-        "pct_atual": 0.8,
-        "pct_projetado": 0.94,
+        "pct_atual": 0.87,
+        "pct_projetado": 0.96,
         "ci95": {
           "lower": 0.33,
-          "upper": 1.55
+          "upper": 1.59
         },
         "p_eleito": 0,
         "sqcand": "220002547309"
@@ -5355,11 +5355,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1096,
         "votos_projetados": 9291,
-        "pct_atual": 0.51,
-        "pct_projetado": 0.56,
+        "pct_atual": 0.56,
+        "pct_projetado": 0.58,
         "ci95": {
           "lower": 0.09,
-          "upper": 1.04
+          "upper": 1.06
         },
         "p_eleito": 0,
         "sqcand": "220002551946"
@@ -5371,11 +5371,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 651,
         "votos_projetados": 5575,
-        "pct_atual": 0.31,
-        "pct_projetado": 0.34,
+        "pct_atual": 0.33,
+        "pct_projetado": 0.35,
         "ci95": {
           "lower": 0,
-          "upper": 0.71
+          "upper": 0.72
         },
         "p_eleito": 0,
         "sqcand": "220002541944"
@@ -5463,7 +5463,7 @@
   },
   "RR": {
     "uf": "RR",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -5475,11 +5475,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 37141,
         "votos_projetados": 306173,
-        "pct_atual": 53.18,
-        "pct_projetado": 57.5,
+        "pct_atual": 57.58,
+        "pct_projetado": 58.32,
         "ci95": {
-          "lower": 54.36,
-          "upper": 60.64
+          "lower": 55.14,
+          "upper": 61.51
         },
         "p_eleito": 1,
         "sqcand": "230002534804"
@@ -5491,11 +5491,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 13817,
         "votos_projetados": 127794,
-        "pct_atual": 19.79,
-        "pct_projetado": 24,
+        "pct_atual": 21.42,
+        "pct_projetado": 24.34,
         "ci95": {
-          "lower": 21.29,
-          "upper": 26.71
+          "lower": 21.59,
+          "upper": 27.09
         },
         "p_eleito": 1,
         "sqcand": "230002534806"
@@ -5507,11 +5507,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 6249,
         "votos_projetados": 58572,
-        "pct_atual": 8.95,
-        "pct_projetado": 11,
+        "pct_atual": 9.69,
+        "pct_projetado": 11.16,
         "ci95": {
-          "lower": 9.01,
-          "upper": 12.99
+          "lower": 9.14,
+          "upper": 13.17
         },
         "p_eleito": 0,
         "sqcand": "230002553010"
@@ -5524,11 +5524,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 6077,
         "votos_projetados": 52386,
-        "pct_atual": 8.7,
-        "pct_projetado": 4,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.06,
         "ci95": {
-          "lower": 2.76,
-          "upper": 5.24
+          "lower": 2.8,
+          "upper": 5.32
         },
         "p_eleito": 0,
         "sqcand": "230002553006"
@@ -5557,11 +5557,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 460,
         "votos_projetados": 4518,
-        "pct_atual": 0.66,
-        "pct_projetado": 0.85,
+        "pct_atual": 0.71,
+        "pct_projetado": 0.86,
         "ci95": {
           "lower": 0.27,
-          "upper": 1.43
+          "upper": 1.45
         },
         "p_eleito": 0,
         "sqcand": "230002553636"
@@ -5573,11 +5573,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 307,
         "votos_projetados": 2711,
-        "pct_atual": 0.44,
-        "pct_projetado": 0.51,
+        "pct_atual": 0.48,
+        "pct_projetado": 0.52,
         "ci95": {
           "lower": 0.06,
-          "upper": 0.96
+          "upper": 0.97
         },
         "p_eleito": 0,
         "sqcand": "230002549330"
@@ -5589,11 +5589,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 190,
         "votos_projetados": 1627,
-        "pct_atual": 0.27,
+        "pct_atual": 0.29,
         "pct_projetado": 0.31,
         "ci95": {
           "lower": 0,
-          "upper": 0.66
+          "upper": 0.67
         },
         "p_eleito": 0,
         "sqcand": "230002550794"
@@ -5605,11 +5605,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 116,
         "votos_projetados": 976,
-        "pct_atual": 0.17,
-        "pct_projetado": 0.18,
+        "pct_atual": 0.18,
+        "pct_projetado": 0.19,
         "ci95": {
           "lower": 0,
-          "upper": 0.45
+          "upper": 0.46
         },
         "p_eleito": 0,
         "sqcand": "230002552727"
@@ -5621,11 +5621,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 68,
         "votos_projetados": 586,
-        "pct_atual": 0.1,
+        "pct_atual": 0.11,
         "pct_projetado": 0.11,
         "ci95": {
           "lower": 0,
-          "upper": 0.32
+          "upper": 0.33
         },
         "p_eleito": 0,
         "sqcand": "230002549361"
@@ -5637,7 +5637,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 36,
         "votos_projetados": 351,
-        "pct_atual": 0.05,
+        "pct_atual": 0.06,
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
@@ -5673,7 +5673,7 @@
         "pct_projetado": 0.02,
         "ci95": {
           "lower": 0,
-          "upper": 0.22
+          "upper": 0.23
         },
         "p_eleito": 0,
         "sqcand": "230002550787"
@@ -5785,7 +5785,7 @@
   },
   "RS": {
     "uf": "RS",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 27.5,
@@ -5797,11 +5797,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 1165465,
         "votos_projetados": 3858147,
-        "pct_atual": 31.55,
-        "pct_projetado": 31.2,
+        "pct_atual": 34.16,
+        "pct_projetado": 32.14,
         "ci95": {
-          "lower": 29.47,
-          "upper": 32.93
+          "lower": 30.36,
+          "upper": 33.92
         },
         "p_eleito": 1,
         "sqcand": "210002547816"
@@ -5813,11 +5813,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 914538,
         "votos_projetados": 3586098,
-        "pct_atual": 24.76,
-        "pct_projetado": 29,
+        "pct_atual": 26.81,
+        "pct_projetado": 29.88,
         "ci95": {
-          "lower": 27.31,
-          "upper": 30.69
+          "lower": 28.13,
+          "upper": 31.62
         },
         "p_eleito": 0.9855,
         "sqcand": "210002533584"
@@ -5829,11 +5829,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 866803,
         "votos_projetados": 3264585,
-        "pct_atual": 23.47,
-        "pct_projetado": 26.4,
+        "pct_atual": 25.41,
+        "pct_projetado": 27.2,
         "ci95": {
-          "lower": 24.75,
-          "upper": 28.05
+          "lower": 25.5,
+          "upper": 28.89
         },
         "p_eleito": 0.0145,
         "sqcand": "210002543863"
@@ -5846,11 +5846,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 321421,
         "votos_projetados": 1168805,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.39,
         "ci95": {
-          "lower": 5.3,
-          "upper": 7.1
+          "lower": 5.46,
+          "upper": 7.31
         },
         "p_eleito": 0,
         "sqcand": "210002543865"
@@ -5879,11 +5879,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 56799,
         "votos_projetados": 217332,
-        "pct_atual": 1.54,
-        "pct_projetado": 1.76,
+        "pct_atual": 1.66,
+        "pct_projetado": 1.81,
         "ci95": {
-          "lower": 1.27,
-          "upper": 2.25
+          "lower": 1.31,
+          "upper": 2.32
         },
         "p_eleito": 0,
         "sqcand": "210002547819"
@@ -5895,11 +5895,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 36290,
         "votos_projetados": 130399,
-        "pct_atual": 0.98,
-        "pct_projetado": 1.05,
+        "pct_atual": 1.06,
+        "pct_projetado": 1.09,
         "ci95": {
-          "lower": 0.67,
-          "upper": 1.44
+          "lower": 0.69,
+          "upper": 1.48
         },
         "p_eleito": 0,
         "sqcand": "210002533581"
@@ -5911,11 +5911,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 21231,
         "votos_projetados": 78240,
-        "pct_atual": 0.57,
-        "pct_projetado": 0.63,
+        "pct_atual": 0.62,
+        "pct_projetado": 0.65,
         "ci95": {
-          "lower": 0.34,
-          "upper": 0.93
+          "lower": 0.35,
+          "upper": 0.96
         },
         "p_eleito": 0,
         "sqcand": "210002538465"
@@ -5927,11 +5927,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 14730,
         "votos_projetados": 46944,
-        "pct_atual": 0.4,
-        "pct_projetado": 0.38,
+        "pct_atual": 0.43,
+        "pct_projetado": 0.39,
         "ci95": {
           "lower": 0.15,
-          "upper": 0.61
+          "upper": 0.63
         },
         "p_eleito": 0,
         "sqcand": "210002533435"
@@ -5943,11 +5943,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 7378,
         "votos_projetados": 28166,
-        "pct_atual": 0.2,
+        "pct_atual": 0.22,
         "pct_projetado": 0.23,
         "ci95": {
           "lower": 0.05,
-          "upper": 0.41
+          "upper": 0.42
         },
         "p_eleito": 0,
         "sqcand": "210002533434"
@@ -5959,11 +5959,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 4007,
         "votos_projetados": 16900,
-        "pct_atual": 0.11,
+        "pct_atual": 0.12,
         "pct_projetado": 0.14,
         "ci95": {
           "lower": 0,
-          "upper": 0.29
+          "upper": 0.3
         },
         "p_eleito": 0,
         "sqcand": "210002544698"
@@ -5975,11 +5975,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2921,
         "votos_projetados": 10140,
-        "pct_atual": 0.08,
+        "pct_atual": 0.09,
         "pct_projetado": 0.08,
         "ci95": {
           "lower": 0,
-          "upper": 0.23
+          "upper": 0.24
         },
         "p_eleito": 0,
         "sqcand": "210002544699"
@@ -6085,7 +6085,7 @@
   },
   "SC": {
     "uf": "SC",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 24,
@@ -6097,11 +6097,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 601650,
         "votos_projetados": 2511273,
-        "pct_atual": 28.74,
-        "pct_projetado": 31.2,
+        "pct_atual": 31.11,
+        "pct_projetado": 32.21,
         "ci95": {
-          "lower": 29.3,
-          "upper": 33.1
+          "lower": 30.25,
+          "upper": 34.16
         },
         "p_eleito": 1,
         "sqcand": "240002541931"
@@ -6113,11 +6113,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 535238,
         "votos_projetados": 2334196,
-        "pct_atual": 25.56,
-        "pct_projetado": 29,
+        "pct_atual": 27.68,
+        "pct_projetado": 29.93,
         "ci95": {
-          "lower": 27.14,
-          "upper": 30.86
+          "lower": 28.02,
+          "upper": 31.85
         },
         "p_eleito": 0.9775,
         "sqcand": "240002533898"
@@ -6129,11 +6129,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 541027,
         "votos_projetados": 2124923,
-        "pct_atual": 25.84,
-        "pct_projetado": 26.4,
+        "pct_atual": 27.98,
+        "pct_projetado": 27.25,
         "ci95": {
-          "lower": 24.6,
-          "upper": 28.2
+          "lower": 25.39,
+          "upper": 29.11
         },
         "p_eleito": 0.0225,
         "sqcand": "240002541935"
@@ -6146,11 +6146,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 182197,
         "votos_projetados": 759156,
-        "pct_atual": 8.7,
-        "pct_projetado": 6.2,
+        "pct_atual": 9.42,
+        "pct_projetado": 6.4,
         "ci95": {
-          "lower": 5.21,
-          "upper": 7.19
+          "lower": 5.38,
+          "upper": 7.42
         },
         "p_eleito": 0,
         "sqcand": "240002548630"
@@ -6179,11 +6179,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 35632,
         "votos_projetados": 150813,
-        "pct_atual": 1.7,
-        "pct_projetado": 1.87,
+        "pct_atual": 1.84,
+        "pct_projetado": 1.93,
         "ci95": {
-          "lower": 1.32,
-          "upper": 2.43
+          "lower": 1.36,
+          "upper": 2.51
         },
         "p_eleito": 0,
         "sqcand": "240002535770"
@@ -6195,11 +6195,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 18757,
         "votos_projetados": 90488,
-        "pct_atual": 0.9,
-        "pct_projetado": 1.12,
+        "pct_atual": 0.97,
+        "pct_projetado": 1.16,
         "ci95": {
-          "lower": 0.69,
-          "upper": 1.56
+          "lower": 0.72,
+          "upper": 1.61
         },
         "p_eleito": 0,
         "sqcand": "240002537630"
@@ -6211,11 +6211,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 11497,
         "votos_projetados": 54293,
-        "pct_atual": 0.55,
-        "pct_projetado": 0.67,
+        "pct_atual": 0.59,
+        "pct_projetado": 0.7,
         "ci95": {
-          "lower": 0.34,
-          "upper": 1.01
+          "lower": 0.35,
+          "upper": 1.04
         },
         "p_eleito": 0,
         "sqcand": "240002544094"
@@ -6227,11 +6227,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 7855,
         "votos_projetados": 32575,
-        "pct_atual": 0.38,
-        "pct_projetado": 0.4,
+        "pct_atual": 0.41,
+        "pct_projetado": 0.42,
         "ci95": {
-          "lower": 0.14,
-          "upper": 0.66
+          "lower": 0.15,
+          "upper": 0.69
         },
         "p_eleito": 0,
         "sqcand": "240002551377"
@@ -6319,7 +6319,7 @@
   },
   "SE": {
     "uf": "SE",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -6331,11 +6331,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 102569,
         "votos_projetados": 914509,
-        "pct_atual": 33.52,
-        "pct_projetado": 38.5,
+        "pct_atual": 36.3,
+        "pct_projetado": 39.53,
         "ci95": {
-          "lower": 35.41,
-          "upper": 41.59
+          "lower": 36.36,
+          "upper": 42.7
         },
         "p_eleito": 1,
         "sqcand": "260002547285"
@@ -6347,11 +6347,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 95230,
         "votos_projetados": 840873,
-        "pct_atual": 31.12,
-        "pct_projetado": 35.4,
+        "pct_atual": 33.7,
+        "pct_projetado": 36.35,
         "ci95": {
-          "lower": 32.36,
-          "upper": 38.44
+          "lower": 33.23,
+          "upper": 39.46
         },
         "p_eleito": 1,
         "sqcand": "260002551366"
@@ -6363,11 +6363,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 47875,
         "votos_projetados": 370554,
-        "pct_atual": 15.65,
-        "pct_projetado": 15.6,
+        "pct_atual": 16.94,
+        "pct_projetado": 16.02,
         "ci95": {
-          "lower": 13.3,
-          "upper": 17.9
+          "lower": 13.65,
+          "upper": 18.38
         },
         "p_eleito": 0,
         "sqcand": "260002551362"
@@ -6380,11 +6380,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 26625,
         "votos_projetados": 229523,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.62,
         "ci95": {
-          "lower": 3.18,
-          "upper": 5.82
+          "lower": 3.27,
+          "upper": 5.97
         },
         "p_eleito": 0,
         "sqcand": "260002547290"
@@ -6413,11 +6413,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 4756,
         "votos_projetados": 37089,
-        "pct_atual": 1.55,
-        "pct_projetado": 1.56,
+        "pct_atual": 1.68,
+        "pct_projetado": 1.6,
         "ci95": {
-          "lower": 0.77,
-          "upper": 2.35
+          "lower": 0.79,
+          "upper": 2.41
         },
         "p_eleito": 0,
         "sqcand": "260002549130"
@@ -6429,11 +6429,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2919,
         "votos_projetados": 22254,
-        "pct_atual": 0.95,
-        "pct_projetado": 0.94,
+        "pct_atual": 1.03,
+        "pct_projetado": 0.96,
         "ci95": {
           "lower": 0.33,
-          "upper": 1.55
+          "upper": 1.59
         },
         "p_eleito": 0,
         "sqcand": "260002533084"
@@ -6445,11 +6445,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1670,
         "votos_projetados": 13352,
-        "pct_atual": 0.55,
-        "pct_projetado": 0.56,
+        "pct_atual": 0.59,
+        "pct_projetado": 0.58,
         "ci95": {
           "lower": 0.09,
-          "upper": 1.04
+          "upper": 1.06
         },
         "p_eleito": 0,
         "sqcand": "260002551550"
@@ -6461,11 +6461,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 950,
         "votos_projetados": 8011,
-        "pct_atual": 0.31,
-        "pct_projetado": 0.34,
+        "pct_atual": 0.34,
+        "pct_projetado": 0.35,
         "ci95": {
           "lower": 0,
-          "upper": 0.71
+          "upper": 0.72
         },
         "p_eleito": 0,
         "sqcand": "260002543591"
@@ -6553,7 +6553,7 @@
   },
   "SP": {
     "uf": "SP",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 35,
@@ -6565,11 +6565,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 6307188,
         "votos_projetados": 17644884,
-        "pct_atual": 35.34,
-        "pct_projetado": 38.5,
+        "pct_atual": 38.26,
+        "pct_projetado": 39.45,
         "ci95": {
-          "lower": 36.97,
-          "upper": 40.03
+          "lower": 37.89,
+          "upper": 41.01
         },
         "p_eleito": 1,
         "sqcand": "250002541308"
@@ -6581,11 +6581,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 5467441,
         "votos_projetados": 16224127,
-        "pct_atual": 30.63,
-        "pct_projetado": 35.4,
+        "pct_atual": 33.16,
+        "pct_projetado": 36.27,
         "ci95": {
-          "lower": 33.9,
-          "upper": 36.9
+          "lower": 34.74,
+          "upper": 37.81
         },
         "p_eleito": 1,
         "sqcand": "250002532794"
@@ -6597,11 +6597,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 2534565,
         "votos_projetados": 7149615,
-        "pct_atual": 14.2,
-        "pct_projetado": 15.6,
+        "pct_atual": 15.37,
+        "pct_projetado": 15.99,
         "ci95": {
-          "lower": 14.46,
-          "upper": 16.74
+          "lower": 14.82,
+          "upper": 17.15
         },
         "p_eleito": 0,
         "sqcand": "250002551502"
@@ -6614,11 +6614,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 1553205,
         "votos_projetados": 4437727,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.61,
         "ci95": {
-          "lower": 3.85,
-          "upper": 5.15
+          "lower": 3.95,
+          "upper": 5.28
         },
         "p_eleito": 0,
         "sqcand": "250002541312"
@@ -6647,11 +6647,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 250895,
         "votos_projetados": 662368,
-        "pct_atual": 1.41,
-        "pct_projetado": 1.45,
+        "pct_atual": 1.52,
+        "pct_projetado": 1.48,
         "ci95": {
-          "lower": 1.07,
-          "upper": 1.82
+          "lower": 1.1,
+          "upper": 1.86
         },
         "p_eleito": 0,
         "sqcand": "250002552369"
@@ -6663,11 +6663,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 146307,
         "votos_projetados": 397421,
-        "pct_atual": 0.82,
-        "pct_projetado": 0.87,
+        "pct_atual": 0.89,
+        "pct_projetado": 0.89,
         "ci95": {
-          "lower": 0.58,
-          "upper": 1.16
+          "lower": 0.59,
+          "upper": 1.19
         },
         "p_eleito": 0,
         "sqcand": "250002544514"
@@ -6679,11 +6679,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 100652,
         "votos_projetados": 238452,
-        "pct_atual": 0.56,
-        "pct_projetado": 0.52,
+        "pct_atual": 0.61,
+        "pct_projetado": 0.53,
         "ci95": {
-          "lower": 0.29,
-          "upper": 0.75
+          "lower": 0.3,
+          "upper": 0.76
         },
         "p_eleito": 0,
         "sqcand": "250002544516"
@@ -6695,11 +6695,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 51388,
         "votos_projetados": 143071,
-        "pct_atual": 0.29,
-        "pct_projetado": 0.31,
+        "pct_atual": 0.31,
+        "pct_projetado": 0.32,
         "ci95": {
           "lower": 0.14,
-          "upper": 0.49
+          "upper": 0.5
         },
         "p_eleito": 0,
         "sqcand": "250002552153"
@@ -6711,11 +6711,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 29679,
         "votos_projetados": 85843,
-        "pct_atual": 0.17,
+        "pct_atual": 0.18,
         "pct_projetado": 0.19,
         "ci95": {
           "lower": 0.04,
-          "upper": 0.34
+          "upper": 0.35
         },
         "p_eleito": 0,
         "sqcand": "250002551501"
@@ -6727,11 +6727,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 19527,
         "votos_projetados": 51506,
-        "pct_atual": 0.11,
-        "pct_projetado": 0.11,
+        "pct_atual": 0.12,
+        "pct_projetado": 0.12,
         "ci95": {
           "lower": 0,
-          "upper": 0.26
+          "upper": 0.27
         },
         "p_eleito": 0,
         "sqcand": "250002541365"
@@ -6743,7 +6743,7 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 11555,
         "votos_projetados": 30903,
-        "pct_atual": 0.06,
+        "pct_atual": 0.07,
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
@@ -6763,7 +6763,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.19
+          "upper": 0.2
         },
         "p_eleito": 0,
         "sqcand": "250002552955"
@@ -6779,7 +6779,7 @@
         "pct_projetado": 0.02,
         "ci95": {
           "lower": 0,
-          "upper": 0.17
+          "upper": 0.18
         },
         "p_eleito": 0,
         "sqcand": "250002553252"
@@ -6791,11 +6791,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 2527,
         "votos_projetados": 6675,
-        "pct_atual": 0.01,
+        "pct_atual": 0.02,
         "pct_projetado": 0.01,
         "ci95": {
           "lower": 0,
-          "upper": 0.16
+          "upper": 0.17
         },
         "p_eleito": 0,
         "sqcand": "250002554075"
@@ -6919,7 +6919,7 @@
   },
   "TO": {
     "uf": "TO",
-    "ts": "2026-09-27T08:01:20.613Z",
+    "ts": "2026-09-27T10:40:14.806Z",
     "cargo": 5,
     "turno": 1,
     "pct_apurado": 11.6,
@@ -6931,11 +6931,11 @@
         "cor": "var(--color-cand-1)",
         "votos_atuais": 67443,
         "votos_projetados": 607824,
-        "pct_atual": 33.1,
-        "pct_projetado": 38.5,
+        "pct_atual": 35.84,
+        "pct_projetado": 39.46,
         "ci95": {
-          "lower": 35.41,
-          "upper": 41.59
+          "lower": 36.29,
+          "upper": 42.62
         },
         "p_eleito": 1,
         "sqcand": "270002546333"
@@ -6947,11 +6947,11 @@
         "cor": "var(--color-cand-2)",
         "votos_atuais": 67595,
         "votos_projetados": 558883,
-        "pct_atual": 33.18,
-        "pct_projetado": 35.4,
+        "pct_atual": 35.92,
+        "pct_projetado": 36.28,
         "ci95": {
-          "lower": 32.36,
-          "upper": 38.44
+          "lower": 33.17,
+          "upper": 39.39
         },
         "p_eleito": 1,
         "sqcand": "270002544629"
@@ -6963,11 +6963,11 @@
         "cor": "var(--color-cand-3)",
         "votos_atuais": 29157,
         "votos_projetados": 246287,
-        "pct_atual": 14.31,
-        "pct_projetado": 15.6,
+        "pct_atual": 15.49,
+        "pct_projetado": 15.99,
         "ci95": {
-          "lower": 13.3,
-          "upper": 17.9
+          "lower": 13.63,
+          "upper": 18.35
         },
         "p_eleito": 0,
         "sqcand": "270002548231"
@@ -6980,11 +6980,11 @@
         "cor": "var(--color-cand-4)",
         "votos_atuais": 17730,
         "votos_projetados": 152843,
-        "pct_atual": 8.7,
-        "pct_projetado": 4.5,
+        "pct_atual": 9.42,
+        "pct_projetado": 4.61,
         "ci95": {
-          "lower": 3.18,
-          "upper": 5.82
+          "lower": 3.26,
+          "upper": 5.96
         },
         "p_eleito": 0,
         "sqcand": "270002548409"
@@ -7013,11 +7013,11 @@
         "cor": "var(--color-cand-6)",
         "votos_atuais": 2716,
         "votos_projetados": 22966,
-        "pct_atual": 1.33,
-        "pct_projetado": 1.45,
+        "pct_atual": 1.44,
+        "pct_projetado": 1.49,
         "ci95": {
-          "lower": 0.69,
-          "upper": 2.21
+          "lower": 0.71,
+          "upper": 2.27
         },
         "p_eleito": 0,
         "sqcand": "270002550610"
@@ -7029,11 +7029,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 1461,
         "votos_projetados": 13779,
-        "pct_atual": 0.72,
-        "pct_projetado": 0.87,
+        "pct_atual": 0.78,
+        "pct_projetado": 0.89,
         "ci95": {
-          "lower": 0.28,
-          "upper": 1.46
+          "lower": 0.29,
+          "upper": 1.5
         },
         "p_eleito": 0,
         "sqcand": "270002546039"
@@ -7045,11 +7045,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 836,
         "votos_projetados": 8268,
-        "pct_atual": 0.41,
-        "pct_projetado": 0.52,
+        "pct_atual": 0.44,
+        "pct_projetado": 0.54,
         "ci95": {
           "lower": 0.07,
-          "upper": 0.98
+          "upper": 1.01
         },
         "p_eleito": 0,
         "sqcand": "270002546038"
@@ -7061,11 +7061,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 578,
         "votos_projetados": 4961,
-        "pct_atual": 0.28,
-        "pct_projetado": 0.31,
+        "pct_atual": 0.31,
+        "pct_projetado": 0.32,
         "ci95": {
           "lower": 0,
-          "upper": 0.67
+          "upper": 0.69
         },
         "p_eleito": 0,
         "sqcand": "270002539142"
@@ -7077,11 +7077,11 @@
         "cor": "var(--color-cand-other)",
         "votos_atuais": 313,
         "votos_projetados": 2976,
-        "pct_atual": 0.15,
+        "pct_atual": 0.17,
         "pct_projetado": 0.19,
         "ci95": {
           "lower": 0,
-          "upper": 0.46
+          "upper": 0.48
         },
         "p_eleito": 0,
         "sqcand": "270002539141"
@@ -7094,7 +7094,7 @@
         "votos_atuais": 177,
         "votos_projetados": 1786,
         "pct_atual": 0.09,
-        "pct_projetado": 0.11,
+        "pct_projetado": 0.12,
         "ci95": {
           "lower": 0,
           "upper": 0.33
@@ -7113,7 +7113,7 @@
         "pct_projetado": 0.07,
         "ci95": {
           "lower": 0,
-          "upper": 0.27
+          "upper": 0.28
         },
         "p_eleito": 0,
         "sqcand": "270002551270"
@@ -7129,7 +7129,7 @@
         "pct_projetado": 0.04,
         "ci95": {
           "lower": 0,
-          "upper": 0.24
+          "upper": 0.25
         },
         "p_eleito": 0,
         "sqcand": "270002551273"

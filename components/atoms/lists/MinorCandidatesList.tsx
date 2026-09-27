@@ -35,8 +35,7 @@ import {
   candidateResultRowProps,
 } from "@/components/atoms/tables/CandidateResultRow";
 import type { EdgeCandidate } from "@/lib/edge-config/types";
-import { anuladasAoFim, sufixoAriaDestino } from "@/lib/utils/destino-voto";
-import { formatPercent } from "@/lib/utils/format";
+import { anuladasAoFim, ariaNumerosResultado, sufixoAriaDestino } from "@/lib/utils/destino-voto";
 
 export interface MinorCandidatesListProps {
   /** Candidatos a exibir — caller filtra (ex. rank 4+, rank 7+, pct < 1%). */
@@ -54,8 +53,8 @@ export function MinorCandidatesList({ candidatos, className }: MinorCandidatesLi
         const props = candidateResultRowProps(c, i + 1, true);
         const ariaLabel =
           `${props.nome}${sufixoAriaDestino(c.destino)} (${c.partido}): ` +
-          `${formatPercent(props.pctAtual, 1)} apurado, ` +
-          `${formatPercent(props.pctProjetado, 1)} projetado`;
+          // Emenda "opção A" — a anulada é lida com os votos, nunca com o %.
+          ariaNumerosResultado(c, props.pctAtual, props.pctProjetado);
 
         return (
           <li aria-label={ariaLabel} key={c.id}>

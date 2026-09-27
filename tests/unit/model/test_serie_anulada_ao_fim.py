@@ -177,12 +177,17 @@ def test_elenco_das_quatro_troca_de_composicao() -> None:
     assert [c["id"] for c in serie["candidatos"]] == [22, 33, 44, 55]
 
 
-def test_com_menos_de_quatro_a_anulada_fica_na_ultima_linha() -> None:
-    """A anulada não some: com vaga sobrando ela é a última linha, como na tabela."""
+def test_com_menos_de_quatro_a_anulada_nao_entra_nem_com_vaga_sobrando() -> None:
+    """Emenda de 2026-09-27 ao ADR-0053 (2ª parte, decisão do dono): a série não
+    carrega a linha da anulada — nem quando sobra vaga. Sub judice entra."""
     tres = [c for c in _cinco("anulado") if c["id"] in (11, 22, 33)]
     serie = montar_serie_por_candidato(_bruta("SP"), "SP", tres)
     assert serie is not None
-    assert [c["id"] for c in serie["candidatos"]] == [22, 33, 11]
+    assert [c["id"] for c in serie["candidatos"]] == [22, 33]
+    sj = [c for c in _cinco("sub_judice") if c["id"] in (11, 22, 33)]
+    serie = montar_serie_por_candidato(_bruta("SP"), "SP", sj)
+    assert serie is not None
+    assert [c["id"] for c in serie["candidatos"]] == [11, 22, 33]
 
 
 # ===========================================================================

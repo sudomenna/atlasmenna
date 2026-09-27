@@ -10,7 +10,7 @@ depends_on: [001-ingestao-tse, 003-home-nacional, 004-pagina-uf-presidencial, 00
 apis: []
 components: [CorridaTresCirculos, VotacaoEleitorado, Panel, DetailUnavailable]
 nfr: [RNF-002, RNF-007a, RNF-022, RNF-023, RNF-024, RNF-026]
-adrs: [0001, 0017, 0018, 0024]
+adrs: [0001, 0017, 0018, 0024, 0053]
 amends: [003-home-nacional, 004-pagina-uf-presidencial, 005-pagina-uf-governador, 006-grid-governadores, 016-senador, 021-votacao-eleitorado]
 ship_blocked_on: []
 ---
@@ -125,14 +125,34 @@ pela mesma regra de fatia zero do spec 021 (`VotacaoEleitorado.tsx:456-470`).
 do campo `cor` do payload (`tests/unit/components/cor-nunca-do-payload.test.ts`).
 "Outros" é neutro.
 
-### RF-203 — só voto válido entra numa fatia de candidatura
+🔴 **EMENDADO em 2026-09-27 (tarde), decisão do dono, opção A ([ADR-0053,
+emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)).**
+O percentual de cada fatia desta lista passa a ter como base os **votos em
+disputa** (RF-204 emendado), não `vvc`/`validos` sozinho, sempre que houver ao
+menos uma candidatura `dvt = "Anulado"` na abrangência. O critério de escolha
+das quatro maiores (por votos válidos apurados) e a ordem por desempate **não**
+mudam.
+
+### RF-203 — só voto válido ou sub judice entra numa fatia de candidatura
 
 **O sistema deve** contar numa fatia de candidatura (ou somar num partido)
 **somente** os votos de candidaturas com destinação `valido`. Os votos de
 candidaturas `anulado` e `sub_judice` pertencem à fatia "Anulados e sub
 judice" (círculos 2 e 3), nunca a uma fatia com nome de candidato.
 
-### RF-204 — círculo 1: só os votos válidos
+🔴 **EMENDADO em 2026-09-27 (tarde), decisão do dono ([ADR-0053,
+emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)).**
+Candidaturas com destinação `sub_judice` **também** contam numa fatia de
+candidatura (ou somam num partido) — deixam de ser tratadas só como parte da
+fatia agregada, porque seguem o TSE e continuam formalmente em disputa
+([ADR-0053](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md)).
+Só a candidatura `anulado` (destino definitivo) fica de fora das fatias de
+candidatura, indo inteira para a fatia própria "Anulados" (RF-205/206
+emendados). O parágrafo original acima — "os votos de `anulado` e
+`sub_judice` pertencem à fatia agregada" — vale apenas para `anulado` a partir
+desta emenda.
+
+### RF-204 — círculo 1: os votos em disputa
 
 **O sistema deve** usar `contagens.validos` como base e exibir as fatias do
 RF-202.
@@ -141,6 +161,20 @@ RF-202.
 sistema deve** exibir o texto "não fecha" no lugar do círculo, nunca um círculo
 esticado (constituição § 6; mesma regra de `fatiasCirculo1`,
 `VotacaoEleitorado.tsx:291-304`).
+
+🔴 **EMENDADO em 2026-09-27 (tarde), decisão do dono, opção A ([ADR-0053,
+emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)).**
+A base passa a ser os **votos em disputa** = `contagens.validos +
+contagens.sub_judice` (equivalente a `vvc − van`, a mesma base do RF-213 da
+[spec 002](../002-modelo-estatistico/spec.md)) — não mais só
+`contagens.validos`. A(s) candidatura(s) com destinação `sub_judice` entra(m)
+como fatia própria e nomeada, ao lado das quatro maiores válidas + "Outros"
+(RF-202/203 emendados). **Se** Σ (votos das candidaturas `valido` ou
+`sub_judice` contadas nas fatias) ≠ base, **então** "não fecha", mesma regra
+de antes. Quando não há candidatura `dvt = "Anulado"` na abrangência, a base
+resultante é numericamente idêntica a `contagens.validos + contagens.sub_judice`
+de sempre — nenhuma mudança visível nesse caso além do rótulo da fatia sub
+judice.
 
 ### RF-205 — círculo 2: sobre quem votou
 
@@ -155,10 +189,23 @@ círculo não fecha em `comparecimento`.
 **Se** a soma das fatias ≠ `comparecimento`, **então** "não fecha", como no
 RF-204.
 
+🔴 **EMENDADO em 2026-09-27 (tarde), decisão do dono ([ADR-0053,
+emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)).**
+A fatia agregada deixa de se chamar "Anulados e sub judice" e passa a se
+chamar apenas **"Anulados"** (`contagens.anulados`, isto é, `van`). O sub
+judice sai dela e passa a contar dentro das fatias de candidatura/"Outros"
+(RF-203 emendado) — sem essa remoção, o círculo contaria o sub judice duas
+vezes (uma na fatia de candidato, outra na fatia agregada). A base
+(`contagens.comparecimento`) e a regra de "não fecha" não mudam.
+
 ### RF-206 — círculo 3: sobre o eleitorado inteiro
 
 **O sistema deve** usar `contagens.aptos` como base e exibir as fatias do
 círculo 2 mais **Abstenção** e **Ainda não apurado** (`aptos − instalados`).
+
+🔴 **EMENDADO em 2026-09-27 (tarde).** Herda a emenda do RF-205: a fatia
+agregada aqui também se chama apenas "Anulados" (`van`), com o sub judice
+contando dentro das fatias de candidatura/"Outros".
 
 **Onde** "Ainda não apurado" é incluída por decisão do dono (26/09) —
 sem ela, a 25% apurado, 75% do círculo seria um vão sem nome. Mesma subtração
@@ -255,6 +302,18 @@ candidaturas valido)`, com arredondamento pelo maior resto para a soma fechar
 no total exato. `votos_projetados` vem da lista `candidatos` do mesmo payload
 (nacional ou UF), cruzada por `id` com `votacao.corrida` para a destinação.
 
+🔴 **EMENDADO em 2026-09-27 (tarde), decisão do dono, opção A ([ADR-0053,
+emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)).**
+O total passa a ser `votacao.projetada.validos + Σ votos_projetados das
+candidaturas sub judice` (antes: só `votacao.projetada.validos`), e cada fatia
+é essa nova soma × (`votos_projetados_i` ÷ Σ `votos_projetados` das
+candidaturas `valido` OU `sub_judice`) — a candidatura `anulado` fica de fora
+do numerador e do denominador, exatamente como já ficava fora das decisões de
+corrida (RF-213, spec 002). O arredondamento pelo maior resto continua
+garantindo que a soma feche no total exato. Quando não há candidatura
+`dvt = "Anulado"` na corrida, o total coincide com o de antes desta emenda
+(a soma de sub judice muda apenas onde ela existe).
+
 **Onde** a ordem, aqui, é por projeção (é o gráfico da projeção); desempate
 pelo número de urna crescente, como no RF-202.
 
@@ -335,6 +394,7 @@ no Senado essa base é o total de VOTOS — a tela deve dizer "dos votos", não
 4. **Antes da destinação, "aguardando"** — RF-207.
 5. ~~Senado em "aguardando"~~ → **Senado contado em votos, 2 por eleitor** (2026-09-27) — RF-210.
 6. **Círculo 3 com "Ainda não apurado"** — RF-206.
+7. **Percentuais publicados passam a excluir a candidatura anulada quando ela existe** (opção A, 2026-09-27 tarde, [ADR-0053 emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)) — RF-202/203/204/205/212 emendados; a candidatura sub judice passa a competir também nos círculos 1/2/3.
 
 ## Open questions
 

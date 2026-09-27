@@ -41,7 +41,7 @@ import {
   CorridaTresCirculos,
   circuloAptos,
   circuloComparecimento,
-  circuloValidos,
+  circuloDisputa,
   fatiasDaCorrida,
   ordenarCandidaturas,
 } from "@/components/blocks/CorridaTresCirculos";
@@ -252,10 +252,14 @@ describe("RF-195c — os arcos do 'Votação' FECHAM com 2 por eleitor", () => {
 // ---------------------------------------------------------------------------
 
 describe("RF-210 — os círculos da corrida FECHAM com 2 por eleitor", () => {
-  it.each(SENADO)("$uf: círculo 1 fecha em válidos com qualquer k (já é voto)", (cap) => {
+  // 🔴 ALTERADO na emenda "opção A" ao ADR-0053 (2026-09-27): o círculo 1 é
+  // sobre os votos EM DISPUTA (válidos + sub judice), e fecha na unidade nas
+  // capturas REAIS — Σ `vap` das "Anulado sub judice" = `vansj`.
+  it.each(SENADO)("$uf: círculo 1 fecha nos votos em disputa com qualquer k (já é voto)", (cap) => {
     const fatias = fatiasDaCorrida(ordenarCandidaturas(cap.corrida));
-    const f = circuloValidos(fatias, cap.contagens);
-    expect(soma(f ?? [])).toBe(cap.contagens.validos);
+    const f = circuloDisputa(fatias, cap.contagens);
+    expect(f).not.toBeNull();
+    expect(soma(f ?? [])).toBe(cap.contagens.validos + cap.contagens.sub_judice);
   });
 
   it.each(SENADO)("$uf: círculo 2 fecha em comparecimento×2 (= tv) com k=2", (cap) => {
@@ -301,7 +305,7 @@ describe("RF-210 — os círculos da corrida FECHAM com 2 por eleitor", () => {
     expect(q(doc1, "corrida-circulo-3-nao-fecha")).not.toBeNull();
   });
 
-  it("🔴 o círculo de projeção NÃO leva fator: total = `projetada.validos`", () => {
+  it("🔴 o círculo de projeção NÃO leva fator: total = `projetada.validos` + projeção das sub judice", () => {
     const cap = SENADO[2] as Captura;
     const votacao: EdgeVotacao = {
       contagens: cap.contagens,
@@ -318,8 +322,12 @@ describe("RF-210 — os círculos da corrida FECHAM com 2 por eleitor", () => {
       />,
     );
     const fig = q(doc, "corrida-projecao");
-    expect(fig?.getAttribute("data-total")).toBe(String(cap.projetada.validos));
-    expect(fig?.getAttribute("data-soma-abs")).toBe(String(cap.projetada.validos));
+    // Opção A: a sub judice compete e soma a projeção dela — também sem fator.
+    const sj = cap.corrida
+      .filter((x) => x.destino === "sub_judice" && x.votos > 0)
+      .reduce((s, x) => s + x.votos, 0);
+    expect(fig?.getAttribute("data-total")).toBe(String(cap.projetada.validos + sj));
+    expect(fig?.getAttribute("data-soma-abs")).toBe(String(cap.projetada.validos + sj));
   });
 });
 
@@ -344,7 +352,7 @@ describe("RF-210 / RF-196 — a base é nomeada em votos, e a metodologia diz po
     const c = parse(
       <CorridaTresCirculos modo="candidatura" votacao={votacao} votosPorEleitor={2} />,
     );
-    expect(q(c, "corrida-circulo-1-base")?.textContent).toBe("votos válidos");
+    expect(q(c, "corrida-circulo-1-base")?.textContent).toBe("votos em disputa");
     for (const n of [2, 3] as const) {
       expect(q(c, `corrida-circulo-${n}-base`)?.textContent).toContain("votos (2 por eleitor)");
     }

@@ -85,7 +85,7 @@ import { type MunicipioRow, MunicipioTable } from "@/components/blocks/Municipio
 import { MunicipioWaffleGrid } from "@/components/blocks/MunicipioWaffleGrid";
 import { useMunicipioSheetStore } from "@/components/shared/municipio-sheet-store";
 import type { EdgeCandidate, EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge-config/types";
-import { compete, haAnulada, NOTA_ANULADAS } from "@/lib/utils/destino-voto";
+import { compete, haAnulada, NOTA_ANULADAS_SEM_REGRA_1T } from "@/lib/utils/destino-voto";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import {
   type MunicipioVotoCandidato as FolhaRow,
@@ -122,6 +122,43 @@ export interface MunicipioExplorerProps {
 // mesmo dado divergem cedo ou tarde. `FolhaRow` é um alias de
 // `MunicipioVotoCandidato` — só o nome mudou de lugar, o cálculo é
 // byte-a-byte o mesmo.
+
+/** A barra decorativa de uma linha da folha — ver o comentário dentro. */
+function BarraFolha({ row }: { row: { pct: number; partido?: string | undefined } }) {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        gridColumn: "2 / -1",
+        height: 6,
+        borderRadius: "var(--radius-xs)",
+        background: "var(--surface-sunken)",
+        border: DATA_FILL_STROKE,
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          width: `${Math.max(0, Math.min(100, row.pct))}%`,
+          height: "100%",
+          // Barra da folha do município: preenchimento com extensão ⇒
+          // cor-base do partido. `row.cor` vinha da paleta por COLOCAÇÃO.
+          //
+          // 🔴 O 2º argumento (`rank`) saiu em 2026-09-20. Desde `19c2ae2`
+          // ele é IGNORADO por `candidateColor` — federação e sigla ausente
+          // resolvem para `--party-outros`, e não há mais fallback por
+          // colocação a alimentar. Passá-lo continuava anunciando na
+          // chamada uma influência que a função não tem: a próxima pessoa a
+          // ler esta linha concluiria que a cor daqui depende da posição na
+          // folha, que é exatamente o que a constituição § 2 proíbe. O
+          // `rank` da prop segue em uso — ele é o número "1, 2, 3…" impresso
+          // na primeira coluna da linha.
+          background: candidateColor(row.partido),
+        }}
+      />
+    </div>
+  );
+}
 
 /** Uma linha da folha — parcial apenas, rotulada como parcial. */
 function FolhaLinha({ row, rank }: { row: FolhaRow; rank: number }) {
@@ -165,10 +202,17 @@ function FolhaLinha({ row, rank }: { row: FolhaRow; rank: number }) {
         </span>
       </div>
       <div className="text-right">
-        <div style={{ font: "var(--type-figure-sm)", color: "var(--text-primary)" }}>
-          {formatPercent(row.pct, 1)}
-        </div>
-        <div style={{ font: "var(--type-data)", color: "var(--text-muted)" }}>
+        {/* Emenda "opção A" ao ADR-0053 — `pct === null` é a anulada: sem
+            percentual e sem barra, só os votos (que o dado sempre traz aqui). */}
+        {row.pct !== null ? (
+          <div style={{ font: "var(--type-figure-sm)", color: "var(--text-primary)" }}>
+            {formatPercent(row.pct, 1)}
+          </div>
+        ) : null}
+        <div
+          data-testid={row.pct === null ? "municipio-sheet-votos-anulada" : undefined}
+          style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
+        >
           {formatVotes(row.votos)} votos
         </div>
       </div>
@@ -189,37 +233,7 @@ function FolhaLinha({ row, rank }: { row: FolhaRow; rank: number }) {
           preenchimento. A altura subiu de 4 para 6 junto, que é a altura dos
           dois irmãos mais próximos: com `box-sizing: border-box`, 1px de borda
           em cima e embaixo de uma calha de 4px deixaria 2px de miolo. */}
-      <div
-        aria-hidden="true"
-        style={{
-          gridColumn: "2 / -1",
-          height: 6,
-          borderRadius: "var(--radius-xs)",
-          background: "var(--surface-sunken)",
-          border: DATA_FILL_STROKE,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            width: `${Math.max(0, Math.min(100, row.pct))}%`,
-            height: "100%",
-            // Barra da folha do município: preenchimento com extensão ⇒
-            // cor-base do partido. `row.cor` vinha da paleta por COLOCAÇÃO.
-            //
-            // 🔴 O 2º argumento (`rank`) saiu em 2026-09-20. Desde `19c2ae2`
-            // ele é IGNORADO por `candidateColor` — federação e sigla ausente
-            // resolvem para `--party-outros`, e não há mais fallback por
-            // colocação a alimentar. Passá-lo continuava anunciando na
-            // chamada uma influência que a função não tem: a próxima pessoa a
-            // ler esta linha concluiria que a cor daqui depende da posição na
-            // folha, que é exatamente o que a constituição § 2 proíbe. O
-            // `rank` da prop segue em uso — ele é o número "1, 2, 3…" impresso
-            // na primeira coluna da linha.
-            background: candidateColor(row.partido),
-          }}
-        />
-      </div>
+      {row.pct !== null ? <BarraFolha row={{ pct: row.pct, partido: row.partido }} /> : null}
     </div>
   );
 }
@@ -332,7 +346,7 @@ export function MunicipioExplorer({
                     color: "var(--text-muted)",
                   }}
                 >
-                  {NOTA_ANULADAS}
+                  {NOTA_ANULADAS_SEM_REGRA_1T}
                 </p>
               ) : null}
               <p

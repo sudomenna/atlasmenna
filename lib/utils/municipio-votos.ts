@@ -18,7 +18,7 @@
  */
 
 import type { EdgeDestinoVoto, EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge-config/types";
-import { anuladasAoFim } from "@/lib/utils/destino-voto";
+import { anuladasAoFim, compete } from "@/lib/utils/destino-voto";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { colorForParty } from "@/lib/utils/party-color";
 
@@ -79,8 +79,17 @@ export interface MunicipioVotoCandidato {
    * a folha JÁ PUBLICADA sem pedido explícito do dono, então não foi feito
    * aqui. Se um dia a resposta for "sim, muda", muda nos DOIS consumidores
    * ao mesmo tempo (é por isso que a conta está aqui, e não duplicada).
+   *
+   * 🔴 Emenda "opção A" ao ADR-0053 (dono, 2026-09-27): com candidatura
+   * anulada no município, o denominador é o dos **votos em disputa** — a soma
+   * só de quem COMPETE —, a mesma base que o produtor passa a usar para a UF.
+   * E a anulada recebe `null`: a tela não mostra o percentual dela (ela
+   * aparece só com os votos). `null` e não `0`/`NaN` de propósito — o tipo
+   * obriga cada consumidor a decidir o que fazer, em vez de um `0,0%` ou um
+   * "—" escaparem para a tela. Sem anulada, o total e os números são os de
+   * sempre.
    */
-  pct: number;
+  pct: number | null;
   /**
    * ADR-0053 / RF-213 — destinação do voto da candidatura NA UF
    * (`EdgeUfCandidate.destino`). Ausente ⇒ compete. Só etiqueta e ordem: o
@@ -129,7 +138,12 @@ export function votosPorCandidatoMunicipio(
 ): MunicipioVotoCandidato[] {
   const porId = new Map(candidatos.map((c) => [c.id, c] as const));
   const entradas = Object.entries(municipio.votos_reportados ?? {});
-  const total = entradas.reduce((acc, [, v]) => acc + (Number.isFinite(v) ? v : 0), 0);
+  // Emenda "opção A" — o denominador soma só quem COMPETE (ver a docstring de
+  // `pct`). `compete` com o destino DA UF; ausente ⇒ compete.
+  const total = entradas.reduce(
+    (acc, [rawId, v]) => acc + (compete(porId.get(Number(rawId))) && Number.isFinite(v) ? v : 0),
+    0,
+  );
 
   // ADR-0053 / RF-213 — anulada no fim, depois do ranking por votos.
   const ordenados = entradas
@@ -144,7 +158,7 @@ export function votosPorCandidatoMunicipio(
         // Ver a docstring do campo: a cor sai da SIGLA, nunca de `c.cor`.
         cor: colorForParty(c?.partido),
         votos: v,
-        pct: total > 0 ? (v / total) * 100 : 0,
+        pct: !compete(c) ? null : total > 0 ? (v / total) * 100 : 0,
         ...(c?.destino ? { destino: c.destino } : {}),
       };
     })

@@ -200,6 +200,13 @@ export interface EdgeParticipacao {
    * por isso mora aqui e não é reconstruído no front-end. Quando ausente,
    * a UI cai em `100 − Σtop3` **sem faixa de incerteza** e com nota
    * "IC indisponível".
+   *
+   * Com anulada no escopo (emenda de 2026-09-27 ao ADR-0053, ver
+   * {@link EdgeDestinoVoto}): a cauda é a que COMPETE (a anulada fica fora da
+   * soma e de `n_candidatos`) e `pct_atual`/`pct_projetado`/`lower`/`upper`
+   * são sobre os votos em disputa — IC com o MESMO fator do ponto. No bloco
+   * `national` de Governador/Senador, sempre `vvc`. `comparecimento` (abaixo)
+   * não muda, nem de cauda.
    */
   outros?: EdgeParticipacaoMetric & {
     base: "votaveis";
@@ -357,6 +364,38 @@ export interface EdgeVotacaoProjetada {
  * também sai sem `destino` (e com aviso no log). "Desconhecido ⇒ válido"
  * poria votos anulados dentro de uma fatia com nome de candidato — medido na
  * captura real do simulado, o MAIS votado era `"Anulado sub judice"`.
+ *
+ * ## A base dos percentuais — emenda de 2026-09-27 ao ADR-0053
+ *
+ * Quando a abrangência tem ao menos uma candidatura de destino `"anulado"`,
+ * TODO percentual publicado de candidatura que COMPETE (sem `destino`, ou
+ * `"sub_judice"`) é sobre os **votos em disputa** = `vvc − Σ anuladas` — a
+ * mesma base em que o modelo decide `p_fecha_1t`, `vai_a_2t`, líder e vagas.
+ * Por isso quem compete soma 100% entre si, e "> 50% publicado" é o lado dos
+ * 50% em que a decisão está.
+ *
+ * - **Escopo**: Presidente usa as anuladas NACIONAIS em toda abrangência
+ *   (nacional, UF, município, mesorregião); Governador/Senador, as da própria
+ *   UF, herdadas por município e mesorregião.
+ * - **Sem anulada no escopo** ⇒ todo percentual é sobre `vvc` (ADR-0018),
+ *   byte a byte igual a antes da emenda. Sub judice sozinha não muda nada.
+ * - **A candidatura `destino === "anulado"`** mantém os campos numéricos (o
+ *   tipo exige), com o percentual sobre `vvc` — todos os votos dados, o `pvap`
+ *   oficial. A tela NÃO o exibe como percentual, e ele NÃO soma com os de quem
+ *   compete (bases diferentes).
+ * - **Margens**: `EdgeUfRow.margem_*` e a agulha de `EdgePayloadUf` também
+ *   vão para os votos em disputa — a margem é a diferença exata dos dois
+ *   primeiros que competem como aparecem em `top_candidatos[].pct`, e
+ *   `chamada` (margem > 10) lê essa margem.
+ * - **Série** (`EdgeSerieCandidato`): a linha da anulada não entra.
+ * - **Fora da regra** (continuam como estavam): `comparecimento`
+ *   (`EdgeBaseComparecimento`), `votacao.*`, `p_*` e a agulha nacional,
+ *   `votos_*` (contagens) e o bloco `national` de Governador/Senador — ali o
+ *   número de urna é a união de 27 corridas e não há "votos em disputa" de
+ *   uma corrida nacional.
+ * - Quem deriva percentual de CONTAGENS (`EdgeUfMunicipio.votos_reportados`,
+ *   `lib/utils/municipio-votos.ts`) tem de tirar os votos das anuladas do
+ *   denominador para bater com o resto do payload.
  */
 export type EdgeDestinoVoto = "valido" | "anulado" | "sub_judice";
 
@@ -468,8 +507,9 @@ export interface EdgeCandidate {
    * totalização parcial), OU os arquivos divergiram — a tela nunca supõe
    * anulado e não distingue os três casos (quem precisa distinguir válido de
    * "ainda não publicado" é `votacao.corrida[]`, que continua emitindo
-   * `"valido"`). Os percentuais continuam sobre `vvc` (ADR-0018) em todos os
-   * casos. O tipo segue `EdgeDestinoVoto` para não quebrar consumidores; o
+   * `"valido"`). Base dos percentuais: ver {@link EdgeDestinoVoto} — com
+   * anulada no escopo, quem compete sai sobre os votos em disputa e a anulada
+   * fica sobre `vvc` (e não é exibida). O tipo segue `EdgeDestinoVoto` para não quebrar consumidores; o
    * produtor não grava `"valido"` aqui.
    */
   destino?: EdgeDestinoVoto;
@@ -500,13 +540,18 @@ export interface EdgeCandidate {
   cor?: string;
   votos_atuais: number;
   votos_projetados: number;
-  /** % do total apurado no momento (0–100). */
+  /**
+   * % do total apurado no momento (0–100). Base: `vvc`, ou — Presidente com
+   * anulada nacional — os votos em disputa para quem compete; a anulada fica
+   * em `vvc` (ver {@link EdgeDestinoVoto}). Governador/Senador: sempre `vvc`
+   * neste bloco (união de 27 corridas).
+   */
   pct_atual: number;
-  /** % projetado pelo modelo (0–100). */
+  /** % projetado pelo modelo (0–100). Mesma base de `pct_atual`. */
   pct_projetado: number;
-  /** CI95 inferior (0–100). */
+  /** CI95 inferior (0–100). Mesma base e MESMO fator do ponto. */
   pct_projetado_lower: number;
-  /** CI95 superior (0–100). */
+  /** CI95 superior (0–100). Mesma base e MESMO fator do ponto. */
   pct_projetado_upper: number;
   /** Probabilidade de vitória em [0, 1]. */
   p_vitoria: number;
@@ -725,13 +770,21 @@ export interface EdgeUfRow {
    *
    * Quem precisa da margem da base ativa usa `margemPorBase`
    * (`lib/utils/lider-por-base.ts`).
+   *
+   * Base (emenda de 2026-09-27 ao ADR-0053, ver {@link EdgeDestinoVoto}): com
+   * anulada no escopo da UF, a margem é sobre os votos em disputa — a
+   * diferença EXATA entre os dois primeiros que competem como aparecem em
+   * `top_candidatos[].pct`. Sem anulada, pp de `vvc`.
    */
   margem_atual: number;
-  /** Margem projetada (pp). */
+  /** Margem projetada (pp). Mesma base de `margem_atual`. */
   margem_projetada: number;
-  /** CI95 da margem projetada (pp). */
+  /** CI95 da margem projetada (pp). Mesma base, mesmo fator do ponto. */
   margem_projetada_ci: [number, number];
-  /** UF "chamada" para o líder? (design.md § "Chamada de UF") */
+  /**
+   * UF "chamada" para o líder? (design.md § "Chamada de UF") — `margem > 10`,
+   * com a margem na base acima (votos em disputa quando há anulada no escopo).
+   */
   chamada: boolean;
   /**
    * Swing em pp vs. 2022 (positivo = em favor do líder).
@@ -815,7 +868,13 @@ export interface EdgeUfRow {
   top_candidatos: Array<{
     /** Número na urna — inalterado. */
     id: number;
-    /** 0–100 — inalterado. */
+    /**
+     * 0–100. `pct_projetado` da UF: sobre `vvc`, ou — com anulada no escopo
+     * desta UF — sobre os votos em disputa, para quem compete; a anulada fica
+     * em `vvc` e não é exibida (ver {@link EdgeDestinoVoto}). A SELEÇÃO e a
+     * ordem desta lista (projeção + resgate do RF-190) são feitas em `vvc` e
+     * não mudam com a base: o fator é o mesmo para todas as que competem.
+     */
     pct: number;
     /**
      * Nome resolvido pela cadeia do RF-144 (EA20 `nmu` → EA20 `nm` → cadastro
@@ -839,8 +898,9 @@ export interface EdgeUfRow {
      * totalização parcial), OU os arquivos divergiram — a tela nunca supõe
      * anulado e não distingue os três casos (quem precisa distinguir válido de
      * "ainda não publicado" é `votacao.corrida[]`, que continua emitindo
-     * `"valido"`). Os percentuais continuam sobre `vvc` (ADR-0018) em todos os
-     * casos. O tipo segue `EdgeDestinoVoto` para não quebrar consumidores; o
+     * `"valido"`). Base dos percentuais: ver {@link EdgeDestinoVoto} — com
+     * anulada no escopo, quem compete sai sobre os votos em disputa e a anulada
+     * fica sobre `vvc` (e não é exibida). O tipo segue `EdgeDestinoVoto` para não quebrar consumidores; o
      * produtor não grava `"valido"` aqui.
      */
     destino?: EdgeDestinoVoto;
@@ -878,6 +938,9 @@ export interface EdgeUfRow {
      * em que "qual fração é deste candidato" não foi medido, só o total
      * nacional foi. **Ausente ⇒ "—", nunca `0`** — decisão do dono de 14/09
      * (não começou / não sabemos / apurando são três estados distintos).
+     *
+     * Mesma base de `pct` (votos em disputa com anulada no escopo; a anulada
+     * em `vvc`) — o "votos válidos" do rótulo é, com anulada, literal.
      */
     pct_atual?: number;
   }>;
@@ -921,6 +984,12 @@ export interface EdgeUfRow {
      * ADR-0018: nunca "válidos", que é `v.vv`). MESMO denominador de
      * `top_candidatos[].pct`, por isso as cinco linhas do balão são somáveis.
      *
+     * Com anulada no escopo da UF (emenda de 2026-09-27 ao ADR-0053, ver
+     * {@link EdgeDestinoVoto}): a cauda é a que COMPETE — a anulada sai da soma
+     * e de `n_candidatos` — e o número é sobre os votos em disputa, como o de
+     * quem compete em `top_candidatos[]`. Se só a anulada sobrava na cauda, o
+     * campo `outros` fica ausente.
+     *
      * 🔴 É uma SOMA candidato a candidato, **nunca `100 − Σ(top 4)`**. Os
      * pontos de uma UF não fecham em 100 exatamente (cada um é a média de um
      * bootstrap próprio); a subtração empurraria esse resíduo de fechamento
@@ -931,7 +1000,7 @@ export interface EdgeUfRow {
      */
     pct: number;
     /**
-     * Σ `pct_atual` da cauda, 0–100, mesma base.
+     * Σ `pct_atual` da cauda, 0–100, mesma base (e mesma cauda) de `pct`.
      *
      * **TUDO-OU-NADA**: presente só quando TODA candidatura da cauda foi
      * medida. Uma soma parcial diria "os demais somam 3,1%" quando 3,1% é o
@@ -1267,8 +1336,9 @@ export interface EdgeUfCandidate {
    * totalização parcial), OU os arquivos divergiram — a tela nunca supõe
    * anulado e não distingue os três casos (quem precisa distinguir válido de
    * "ainda não publicado" é `votacao.corrida[]`, que continua emitindo
-   * `"valido"`). Os percentuais continuam sobre `vvc` (ADR-0018) em todos os
-   * casos. O tipo segue `EdgeDestinoVoto` para não quebrar consumidores; o
+   * `"valido"`). Base dos percentuais: ver {@link EdgeDestinoVoto} — com
+   * anulada no escopo, quem compete sai sobre os votos em disputa e a anulada
+   * fica sobre `vvc` (e não é exibida). O tipo segue `EdgeDestinoVoto` para não quebrar consumidores; o
    * produtor não grava `"valido"` aqui.
    */
   destino?: EdgeDestinoVoto;
@@ -1278,8 +1348,15 @@ export interface EdgeUfCandidate {
   votos_atuais: number;
   /** Votos absolutos PROJETADOS (modelo) ao final da apuração da UF. */
   votos_projetados: number;
+  /**
+   * 0–100 sobre `vvc`, ou — com anulada no escopo desta UF (Presidente: as
+   * nacionais; Gov/Sen: as da UF) — sobre os votos em disputa, para quem
+   * compete. A anulada fica em `vvc` e não é exibida. Ver {@link EdgeDestinoVoto}.
+   */
   pct_atual: number;
+  /** 0–100. Mesma base de `pct_atual`. */
   pct_projetado: number;
+  /** IC95 de `pct_projetado`, mesma base e MESMO fator do ponto. */
   ci95: EdgeCi95;
   /**
    * Mesmo candidato na segunda base — % sobre quem compareceu NESTA UF
@@ -1402,7 +1479,12 @@ export interface EdgeUfMunicipio {
     partido: string;
     /** Votos absolutos do líder no município. */
     votos: number;
-    /** Margem em pp sobre o 2º (sempre ≥ 0). */
+    /**
+     * Margem em pp sobre o 2º (sempre ≥ 0). Denominador: o total de votos do
+     * município, ou — com anulada no escopo da UF e com voto no município —
+     * os votos EM DISPUTA (total − votos das anuladas). O líder e o 2º são
+     * sempre de quem compete. Ver {@link EdgeDestinoVoto}.
+     */
     margem_pp: number;
   };
   /**
@@ -1582,11 +1664,18 @@ export interface EdgeSerieCandidato {
    * ⚠️ Não confundir com `pct_apurado`, que em toda a pilha é o **progresso da
    * apuração**. Aqui a grandeza é a fatia da candidatura — mesma unidade,
    * significado oposto.
+   *
+   * Base: a do placar do mesmo escopo (ver {@link EdgeDestinoVoto}). Com
+   * anulada no escopo, cada ponto de quem compete é sobre os votos em disputa
+   * DAQUELE balde, com o conjunto de anuladas de agora aplicado à noite
+   * inteira; balde em que o apurado de uma anulada não foi medido vira `null`
+   * (base desconhecida), nunca um número em outra base. A anulada não entra
+   * no elenco, nem quando sobra vaga.
    */
   apurado: (number | null)[];
   /**
    * Fatia de votos **projetada** da candidatura em cada balde, 0–100, alinhada
-   * a `eixo` por índice. `null` = balde sem medição.
+   * a `eixo` por índice. `null` = balde sem medição. Mesma base de `apurado`.
    */
   projetado: (number | null)[];
 }
@@ -1661,9 +1750,13 @@ export interface EdgeMesorregiao {
   pct_apurado: number; // 0–100
   /** ID do candidato líder agregado na mesorregião. */
   lider_candidato_id: number;
-  /** % do líder sobre o total de votos válidos agregados. */
+  /**
+   * % do líder sobre o total de votos agregados — ou, com anulada no escopo
+   * da UF e com voto na mesorregião, sobre os votos EM DISPUTA (total − votos
+   * das anuladas). O líder é sempre de quem compete. Ver {@link EdgeDestinoVoto}.
+   */
   lider_pct: number; // 0–100
-  /** Margem em pp do líder sobre o 2º (≥ 0). */
+  /** Margem em pp do líder sobre o 2º (≥ 0). Mesmo denominador de `lider_pct`. */
   margem: number; // 0–100
   /**
    * Swing em pp do `lider_pct` vs 2022 (positivo = ganho do líder atual

@@ -40,6 +40,7 @@ last_updated: 2026-09-18
 | `<CandidateRow />` | ✅ | RF-033 | `components/atoms/tables/CandidateRow.tsx` | `tests/unit/components/CandidateRow.test.tsx` |
 | `<CandidateResultRow />` | ✅ | RF-033 ext (ADR-0029 § 7 — parcial/projeção lado a lado) | `components/atoms/tables/CandidateResultRow.tsx` | `tests/unit/components/CandidateResultRow.test.tsx` |
 | `<CandidateAvatar />` | ✅ | RF-151 | `components/atoms/data/CandidateAvatar.tsx` | `tests/unit/components/CandidateAvatar.test.tsx`. ⚠️ Spec 018 e `traceability.md` citam `<CandidatoAvatar>` (português) — nome divergente, mesmo componente |
+| `<DestinoEtiqueta />` | ✅ | (spec 022 RF-203..205 — rótulo interno de destino do voto: válido/anulado/sub judice) | `components/atoms/data/DestinoEtiqueta.tsx` | unit (`tests/unit/design-system/destino-etiqueta-contraste.test.tsx`) |
 | `<WinnerBanner />` | ✅ | RF-032 | `components/atoms/banners/WinnerBanner.tsx` | `tests/unit/components/WinnerBanner.test.tsx` |
 | `<DadoParadoBanner />` | ✅ | (ADR-0038 D4 — degradação graceful quando `dado_ts` excede limiar por cargo) | `components/atoms/banners/DadoParadoBanner.tsx` | `tests/unit/components/DadoParadoBanner.test.tsx` |
 | `<FasePreEleicaoBanner />` | ✅ S08 | RF-160 (spec 019) | `components/atoms/banners/FasePreEleicaoBanner.tsx` | `tests/unit/pages/fase-pre-eleicao.test.tsx`, bloco «RF-160» |
