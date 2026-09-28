@@ -138,6 +138,7 @@ import {
   type DetailUnavailableReason,
 } from "@/components/atoms/surfaces/DetailUnavailable";
 import { candidateColor } from "@/components/blocks/_candidateColor";
+import mapFrameStyles from "@/components/blocks/MapFrameMobile.module.css";
 import { CHIP_STYLE, NationalMapBlock } from "@/components/blocks/NationalMapBlock";
 import { UfLeaderMapLazy } from "@/components/blocks/UfMapsLazy";
 import { UfPicker, type UfPickerCargo } from "@/components/layout/UfPicker";
@@ -378,7 +379,17 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
   const homeHref = HOME_HREF[cargo];
 
   if (!payload) {
-    return <MapSkeleton height="100%" />;
+    // 2026-09-27 — envolto em `.canvasFill` (não solto): a partir desta
+    // mudança `.split .map` (`AppShellSplit.module.css`) não tem mais altura
+    // própria no celular (ela cresce com o cromo em fluxo abaixo do mapa,
+    // que aqui ainda não existe — sem payload não há cromo a montar). Sem o
+    // wrapper, `height="100%"` do esqueleto resolveria contra um pai
+    // `height: auto` e a caixa colapsaria pra 0 até o 1º payload chegar.
+    return (
+      <div className={mapFrameStyles.canvasFill}>
+        <MapSkeleton height="100%" />
+      </div>
+    );
   }
 
   // 🔴 RF-153/RF-157 — a moldura tem o payload (ela mesma o busca, ver o topo
@@ -419,18 +430,32 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
       // "quem lidera cada município" que antes vivia num Panel da própria
       // página de UF (`app/(gov)/uf/[sigla]/governador/page.tsx`) mudou
       // de endereço, não de conteúdo — ADR-0033 § 1.
+      //
+      // 🔴 2026-09-27 — o cabeçalho (h2 + `<UfPicker>`) já vivia EM FLUXO,
+      // acima do mapa (não sobreposto) — só o "← Brasil" flutuava por cima do
+      // canvas. Mas "em fluxo acima do mapa" ainda não é o pedido do dono
+      // para o celular (versão B do protótipo): lá o mapa vem PRIMEIRO,
+      // sem nada acima nem sobre ele, e o cabeçalho desce para depois. Por
+      // isso o cabeçalho GANHA uma segunda marcação (`.mobileChrome`, mesmo
+      // texto, sem `id` compartilhado — ver a nota de
+      // `MapFrameMobile.module.css` sobre por que a troca é de marcação e não
+      // só de CSS) — a cópia de desktop continua em `.desktopOverlay` (que
+      // aqui vira "acima do canvas em fluxo", não overlay de verdade, mas a
+      // MESMA classe de visibilidade por breakpoint). `aria-label` direto na
+      // `<section>` substitui o antigo `aria-labelledby`/`id` compartilhado:
+      // com duas cópias visuais do título, um `id` só nunca poderia estar nas
+      // duas ao mesmo tempo sem duplicar o atributo (inválido em HTML).
+      const heading = `${sigla} · quem lidera cada município`;
       return (
-        <section
-          aria-labelledby="persistent-map-heading"
-          className="absolute inset-0 flex flex-col"
-          style={{ gap: "var(--space-3)", padding: "var(--space-4)", overflow: "hidden" }}
-        >
+        <section aria-label={heading} className={mapFrameStyles.frameRootFlex}>
           <div
-            className="flex flex-wrap items-start justify-between"
+            className={[
+              mapFrameStyles.desktopOverlay,
+              "flex-wrap items-start justify-between",
+            ].join(" ")}
             style={{ gap: "var(--space-2)" }}
           >
             <h2
-              id="persistent-map-heading"
               style={{
                 margin: 0,
                 font: "var(--type-kicker)",
@@ -439,11 +464,11 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
                 color: "var(--text-secondary)",
               }}
             >
-              {`${sigla} · quem lidera cada município`}
+              {heading}
             </h2>
             <UfPicker cargo="gov" atual={sigla} />
           </div>
-          <div className="relative min-h-0 flex-1">
+          <div className={mapFrameStyles.canvasFlex}>
             {/* `detalhe`/`candidatos` (2026-09-18) — sem eles, o
                 `<ChoroplethMapUF>` colore normalmente mas o `<HoverCard>`
                 nunca aparece (as duas props são opcionais e checadas lá
@@ -477,13 +502,30 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
                 />
               </div>
             )}
+            {/* "← Brasil" sobreposto ao canvas — SÓ DESKTOP. No celular ele
+                desce para a barra, junto do "Escolher UF" (pedido do dono:
+                "o ← Brasil vai para a barra ao lado do Escolher UF"). */}
             <Link
               href={homeHref}
-              className="pointer-events-auto absolute"
+              className={[mapFrameStyles.desktopOverlayInline, "pointer-events-auto absolute"].join(
+                " ",
+              )}
               style={{ ...CHIP_STYLE, top: "var(--space-2)", left: "var(--space-2)" }}
             >
               ← Brasil
             </Link>
+          </div>
+          <div className={mapFrameStyles.mobileChrome}>
+            <div className={mapFrameStyles.bar}>
+              <Link href={homeHref} className={mapFrameStyles.btn}>
+                ← Brasil
+              </Link>
+              <div className={mapFrameStyles.barSpacer} />
+              <UfPicker cargo="gov" atual={sigla} />
+            </div>
+            <div className={mapFrameStyles.footer}>
+              <h2 className={mapFrameStyles.title}>{heading}</h2>
+            </div>
           </div>
         </section>
       );
@@ -604,18 +646,23 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
       //
       // ⚠️ `spec 016 § Escopo/Fora` ainda diz por escrito que Senador não tem
       // dado municipal. A spec precisa de emenda — está na lista desta rodada.
+      // 🔴 2026-09-27 — mesma troca de marcação do ramo gêmeo de Governador
+      // acima: cabeçalho ganha cópia em `.mobileChrome` (barra + rodapé), o
+      // "· 2 vagas" viaja com as DUAS cópias (é ressalva de decisão D1, não
+      // decoração — ver o comentário original abaixo), e o `id`/
+      // `aria-labelledby` compartilhado vira `aria-label` direto na
+      // `<section>` (ver a nota do ramo de Governador para o motivo).
+      const heading = `${sigla} · quem lidera cada município · 2 vagas`;
       return (
-        <section
-          aria-labelledby="persistent-map-heading"
-          className="absolute inset-0 flex flex-col"
-          style={{ gap: "var(--space-3)", padding: "var(--space-4)", overflow: "hidden" }}
-        >
+        <section aria-label={heading} className={mapFrameStyles.frameRootFlex}>
           <div
-            className="flex flex-wrap items-start justify-between"
+            className={[
+              mapFrameStyles.desktopOverlay,
+              "flex-wrap items-start justify-between",
+            ].join(" ")}
             style={{ gap: "var(--space-2)" }}
           >
             <h2
-              id="persistent-map-heading"
               style={{
                 margin: 0,
                 font: "var(--type-kicker)",
@@ -632,11 +679,11 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
                   arquivo); o nível UF tem cabeçalho próprio e, sem esta linha,
                   cumpriria a metade conveniente da decisão: a cor de vencedor
                   único numa corrida que elege dois, sem a ressalva. */}
-              {`${sigla} · quem lidera cada município · 2 vagas`}
+              {heading}
             </h2>
             <UfPicker cargo="sen" atual={sigla} />
           </div>
-          <div className="relative min-h-0 flex-1">
+          <div className={mapFrameStyles.canvasFlex}>
             {/* `detalhe`/`candidatos` (2026-09-18) — sem eles, o
                 `<ChoroplethMapUF>` colore normalmente mas o `<HoverCard>`
                 nunca aparece (as duas props são opcionais e checadas lá
@@ -672,11 +719,25 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
             )}
             <Link
               href={homeHref}
-              className="pointer-events-auto absolute"
+              className={[mapFrameStyles.desktopOverlayInline, "pointer-events-auto absolute"].join(
+                " ",
+              )}
               style={{ ...CHIP_STYLE, top: "var(--space-2)", left: "var(--space-2)" }}
             >
               ← Brasil
             </Link>
+          </div>
+          <div className={mapFrameStyles.mobileChrome}>
+            <div className={mapFrameStyles.bar}>
+              <Link href={homeHref} className={mapFrameStyles.btn}>
+                ← Brasil
+              </Link>
+              <div className={mapFrameStyles.barSpacer} />
+              <UfPicker cargo="sen" atual={sigla} />
+            </div>
+            <div className={mapFrameStyles.footer}>
+              <h2 className={mapFrameStyles.title}>{heading}</h2>
+            </div>
           </div>
         </section>
       );
@@ -740,73 +801,99 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
   if (sigla) {
     // Nível UF, Presidente — coroplético municipal preenche a moldura
     // inteira, com o mesmo chrome de overlay do nível Brasil.
+    //
+    // 🔴 2026-09-27 — era o único dos três cargos em que o cabeçalho inteiro
+    // (não só o "← Brasil") flutuava sobre o mapa. `.desktopOverlay` some no
+    // celular (`MapFrameMobile.module.css`); a cópia equivalente do celular
+    // mora em `.mobileChrome`, IRMÃO da `<section>` do canvas (Fragment) —
+    // mesmo padrão do nível Brasil (`NationalMapBlock.tsx`, `variant="frame"`).
     return (
-      <section
-        aria-label={`Mapa coroplético de ${sigla} por município`}
-        className="absolute inset-0"
-      >
-        {/* `detalhe`/`candidatos`: mesma nota da instância de "gov" acima. */}
-        <UfLeaderMapLazy
-          ufSigla={sigla}
-          choropleth={choropleth}
-          height="100%"
-          detalhe={municipiosDaUf}
-          candidatos={ufResumo?.candidatos}
-        />
-        {/* Chip "← Brasil" + "<SIGLA> · <N> mun." sobreposto ao coroplético
-            municipal — mesma composição visual do chip do nível Brasil
-            (`NationalMapBlock`, `variant="frame"`), texto conforme o
-            protótipo (`App.jsx:314`). */}
-        <div
-          className="pointer-events-none absolute flex flex-wrap items-start justify-between"
-          style={{
-            top: "var(--space-3)",
-            left: "var(--space-3)",
-            right: "var(--space-3)",
-            gap: "var(--space-2)",
-          }}
+      <>
+        <section
+          aria-label={`Mapa coroplético de ${sigla} por município`}
+          className={mapFrameStyles.canvasFill}
         >
+          {/* `detalhe`/`candidatos`: mesma nota da instância de "gov" acima. */}
+          <UfLeaderMapLazy
+            ufSigla={sigla}
+            choropleth={choropleth}
+            height="100%"
+            detalhe={municipiosDaUf}
+            candidatos={ufResumo?.candidatos}
+          />
+          {/* Chip "← Brasil" + "<SIGLA> · <N> mun." sobreposto ao coroplético
+              municipal — SÓ DESKTOP. Mesma composição visual do chip do nível
+              Brasil (`NationalMapBlock`, `variant="frame"`), texto conforme o
+              protótipo (`App.jsx:314`). */}
           <div
-            className="pointer-events-auto flex min-w-0 items-center"
-            style={{ gap: "var(--space-2)" }}
+            className={[
+              mapFrameStyles.desktopOverlay,
+              "pointer-events-none absolute flex-wrap items-start justify-between",
+            ].join(" ")}
+            style={{
+              top: "var(--space-3)",
+              left: "var(--space-3)",
+              right: "var(--space-3)",
+              gap: "var(--space-2)",
+            }}
           >
-            <Link href={homeHref} style={CHIP_STYLE}>
+            <div
+              className="pointer-events-auto flex min-w-0 items-center"
+              style={{ gap: "var(--space-2)" }}
+            >
+              <Link href={homeHref} style={CHIP_STYLE}>
+                ← Brasil
+              </Link>
+              <span style={{ ...CHIP_STYLE, margin: 0 }}>
+                {sigla}
+                {municipiosTotalFor(sigla) > 0 ? ` · ${municipiosTotalFor(sigla)} mun.` : ""}
+              </span>
+            </div>
+            {/* Canto superior direito — o seletor de UF do protótipo
+                (`App.jsx:316`). Dentro da MESMA faixa `flex-wrap` do chip da
+                esquerda, não numa caixa ancorada em `right`: a 375px as duas
+                caixas se sobreporiam, e é esse o defeito que a faixa única já
+                resolvia para o toggle do nível Brasil. */}
+            <div className="pointer-events-auto flex-none">
+              <UfPicker cargo="pres" atual={sigla} />
+            </div>
+          </div>
+          {municipioDetalhe?.status === "unavailable" && (
+            <div
+              style={{
+                position: "absolute",
+                left: "var(--space-3)",
+                right: "var(--space-3)",
+                bottom: "var(--space-3)",
+                background: "var(--surface-card)",
+                border: "1px solid var(--border-hairline)",
+                borderRadius: "var(--radius-sm)",
+              }}
+            >
+              <DetailUnavailable
+                label="A cor por município deste mapa"
+                reason={municipioDetalhe.reason}
+                style={{ borderTop: "none", padding: "var(--space-2) var(--space-3)" }}
+              />
+            </div>
+          )}
+        </section>
+        <div className={mapFrameStyles.mobileChrome}>
+          <div className={mapFrameStyles.bar}>
+            <Link href={homeHref} className={mapFrameStyles.btn}>
               ← Brasil
             </Link>
-            <span style={{ ...CHIP_STYLE, margin: 0 }}>
+            <div className={mapFrameStyles.barSpacer} />
+            <UfPicker cargo="pres" atual={sigla} />
+          </div>
+          <div className={mapFrameStyles.footer}>
+            <span className={mapFrameStyles.title}>
               {sigla}
               {municipiosTotalFor(sigla) > 0 ? ` · ${municipiosTotalFor(sigla)} mun.` : ""}
             </span>
           </div>
-          {/* Canto superior direito — o seletor de UF do protótipo
-              (`App.jsx:316`). Dentro da MESMA faixa `flex-wrap` do chip da
-              esquerda, não numa caixa ancorada em `right`: a 375px as duas
-              caixas se sobreporiam, e é esse o defeito que a faixa única já
-              resolvia para o toggle do nível Brasil. */}
-          <div className="pointer-events-auto flex-none">
-            <UfPicker cargo="pres" atual={sigla} />
-          </div>
         </div>
-        {municipioDetalhe?.status === "unavailable" && (
-          <div
-            style={{
-              position: "absolute",
-              left: "var(--space-3)",
-              right: "var(--space-3)",
-              bottom: "var(--space-3)",
-              background: "var(--surface-card)",
-              border: "1px solid var(--border-hairline)",
-              borderRadius: "var(--radius-sm)",
-            }}
-          >
-            <DetailUnavailable
-              label="A cor por município deste mapa"
-              reason={municipioDetalhe.reason}
-              style={{ borderTop: "none", padding: "var(--space-2) var(--space-3)" }}
-            />
-          </div>
-        )}
-      </section>
+      </>
     );
   }
 

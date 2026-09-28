@@ -454,6 +454,14 @@
       "date": "2026-09-27",
       "note": "Decisão do dono a partir do protótipo docs/design-system/prototipos/apuracao-2026-09-27/ (5 versões A-E, escolhida D). Emenda PARCIAL ao ADR-0034 D22: os dois primeiros <li> da lista já reordenada por ReordenaListaPorBase (ADR-0051) viram cartões lado a lado (foto 48px, PARTIDO-nº + NOME caixa alta, % 32px mono via textForParty, barra 12px com marca de projeção só na base Projeção, votos apurados, selo em pílula); os demais ficam num cartão único em linhas (foto 44px, % 20px, barra 8px). As duas <Figure> (Apurado/Margem) e a <VoteBar marker={50}> de D22 ficam como estão; D21/D23 intocados. Selo só nos dois primeiros da base ativa, sempre com a base ('· projeção'/'· na parcial'), nunca 'Eleito'/'Não eleito' soltos (constituição § 1). Presidente/Governador 1º turno: '2º turno · <base>', ou só no líder '(Venceria) Vence no 1º turno · <base>' se >50% dos válidos. Senador: VagaBadge existente. Presidente em /uf/[sigla]: SEM selo (2º turno é fato nacional). Turno 2: sem selo. Superfícies por token (--surface-card/--surface-page).",
       "path": "docs/architecture/adrs/0055-resultpanel-top2-cartoes-versao-d.md"
+    },
+    {
+      "id": "0056",
+      "title": "No celular, o cromo do mapa sai da sobreposição e vai para fluxo abaixo — barra \"Vista/Escolher UF\" + legenda resumida + \"Ver legenda\" em folha (versão B do protótipo) — emenda parcial ao ADR-0033 § 1",
+      "status": "accepted",
+      "date": "2026-09-27",
+      "note": "Decisão do dono a partir do protótipo docs/design-system/prototipos/mapa-celular-2026-09-27/ (versões A/B/C, escolhida B com \"Ver legenda\" emprestado de C). Emenda PARCIAL ao ADR-0033 § 1: a composição 'todo o cromo é overlay' da variante frame (NationalMapBlock.tsx:98-102) vale só no desktop (≥960px); no celular título, MapViewToggle, UfPicker, '← Brasil' e legenda saem da sobreposição para fluxo abaixo do mapa — barra de dois botões de 44px ('Vista: <atual> ▾', 'Escolher UF'), depois título, legenda resumida (bolinhas + 'mais forte = mais vantagem') e 'Ver legenda' abrindo <Sheet> com a legenda completa. Vistas sem legenda (swing, % apurado, Gov/Sen — ADR-0048) sem 'Ver legenda'. Pré-eleição: legenda de geografia também em fluxo abaixo. Moldura persistente (ADR-0033 § 1 restante), mapa primeiro no mobile (ADR-0029), dynamic import (ADR-0010) e orçamentos RNF-007a/b intocados; initialFramePadding (_NationalChoroplethMapImpl.tsx:764-777) fica candidato a remedição, não alterado por este ADR.",
+      "path": "docs/architecture/adrs/0056-mapa-celular-cromo-em-fluxo-versao-b.md"
     }
   ],
   "nfr": {
@@ -898,7 +906,11 @@
         "0033",
         "0034",
         "0038",
-        "0050"
+        "0050",
+        "0051",
+        "0053",
+        "0055",
+        "0056"
       ],
       "shipped_with_carry_overs": ""
     },
@@ -974,7 +986,10 @@
         "0032",
         "0033",
         "0034",
-        "0038"
+        "0038",
+        "0053",
+        "0055",
+        "0056"
       ],
       "shipped_with_carry_overs": ""
     },
@@ -1046,7 +1061,10 @@
         "0032",
         "0033",
         "0034",
-        "0038"
+        "0038",
+        "0053",
+        "0055",
+        "0056"
       ]
     },
     {
@@ -1105,7 +1123,8 @@
         "0034",
         "0038",
         "0048",
-        "0053"
+        "0053",
+        "0056"
       ]
     },
     {
@@ -1293,7 +1312,9 @@
         "0038",
         "0042",
         "0048",
-        "0053"
+        "0053",
+        "0055",
+        "0056"
       ],
       "opens_after": "2026-09-11"
     },

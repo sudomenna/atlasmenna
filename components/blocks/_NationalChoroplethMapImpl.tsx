@@ -267,6 +267,21 @@ export interface NationalChoroplethMapImplProps {
    * o valor que já estava cravado no código antes de virar prop.
    */
   cargo?: UfPickerCargo;
+  /**
+   * Teto de folga para `initialFramePadding` (2026-09-27, redesenho do mapa
+   * no celular). **Default = os 160/120/32/32 de sempre** (ver a constante
+   * `DEFAULT_FRAME_PADDING_CEILING` abaixo) — só quem sabe que NÃO há cromo
+   * sobreposto ao mapa (o wrapper, `NationalChoroplethMap.tsx`, quando
+   * `legendPlacement === "overlay"` e a media query de desktop NÃO casa)
+   * passa um teto menor. Sem esta prop, nenhum caller muda de comportamento —
+   * inclusive os testes de `NationalChoroplethMap.fitBounds*.test.tsx`, que
+   * montam este impl DIRETAMENTE e travam os valores 160/120/32/32.
+   *
+   * Lida de uma REF dentro de `mount()`, mesmo motivo de `navegarNoCliqueRef`:
+   * o `fitBounds` inicial roda uma vez, na montagem, e o valor tem de refletir
+   * a prop no INSTANTE do mount — não uma closure presa ao 1º render.
+   */
+  framePaddingCeiling?: { top: number; right: number; bottom: number; left: number };
 }
 
 interface TooltipState {
@@ -761,7 +776,20 @@ interface FramePadding {
  * zoom do dataset (ver `computeFrameCamera` abaixo, que é quem de fato
  * decide o padding usado).
  */
-function initialFramePadding(containerWidth: number, containerHeight: number): FramePadding {
+/**
+ * Teto de sempre — moldura cheia (cabeçalho de 3 linhas + legenda de 3
+ * candidatos), o valor medido e documentado acima. Default de
+ * `initialFramePadding`: qualquer caller que não conheça
+ * `framePaddingCeiling` (a maioria da suíte de testes, que monta este impl
+ * DIRETAMENTE) continua vendo exatamente estes números.
+ */
+const DEFAULT_FRAME_PADDING_CEILING: FramePadding = { top: 160, bottom: 120, left: 32, right: 32 };
+
+function initialFramePadding(
+  containerWidth: number,
+  containerHeight: number,
+  ceiling: FramePadding = DEFAULT_FRAME_PADDING_CEILING,
+): FramePadding {
   // Guarda defensiva: um container com 0×0 (ex. ainda não fez layout) não
   // deve produzir padding 0 — cairia na mesma degradação silenciosa que esta
   // função existe para evitar. 400 é o piso de altura já usado noutros
@@ -769,10 +797,10 @@ function initialFramePadding(containerWidth: number, containerHeight: number): F
   const w = containerWidth > 0 ? containerWidth : 400;
   const h = containerHeight > 0 ? containerHeight : 400;
   return {
-    top: Math.min(160, h * 0.35),
-    bottom: Math.min(120, h * 0.35),
-    left: Math.min(32, w * 0.15),
-    right: Math.min(32, w * 0.15),
+    top: Math.min(ceiling.top, h * 0.35),
+    bottom: Math.min(ceiling.bottom, h * 0.35),
+    left: Math.min(ceiling.left, w * 0.15),
+    right: Math.min(ceiling.right, w * 0.15),
   };
 }
 
@@ -803,8 +831,9 @@ function computeFrameCamera(
   bounds: maplibregl.LngLatBoundsLike,
   containerWidth: number,
   containerHeight: number,
+  ceiling?: FramePadding,
 ): { center: maplibregl.LngLatLike; zoom: number } {
-  const padding = initialFramePadding(containerWidth, containerHeight);
+  const padding = initialFramePadding(containerWidth, containerHeight, ceiling);
   let camera = map.cameraForBounds(bounds, { padding });
   for (
     let round = 0;
@@ -840,6 +869,7 @@ export function NationalChoroplethMapImpl({
   navegarNoClique = false,
   bloqueiaBalaoNoToque = false,
   cargo = "pres",
+  framePaddingCeiling,
 }: NationalChoroplethMapImplProps) {
   const router = useRouter();
   // Backward-compat: caller pré-S05 só passa `candidatoAId`; sintetizamos um
@@ -1073,7 +1103,15 @@ export function NationalChoroplethMapImpl({
       });
 
       mapRef.current = map;
-      map.jumpTo(computeFrameCamera(map, BRAZIL_BOUNDS, rect.width, rect.height));
+      map.jumpTo(
+        computeFrameCamera(
+          map,
+          BRAZIL_BOUNDS,
+          rect.width,
+          rect.height,
+          framePaddingCeilingRef.current,
+        ),
+      );
 
       hangTimer = window.setTimeout(() => {
         if (cancelled || map.isStyleLoaded()) return;
@@ -1275,6 +1313,11 @@ export function NationalChoroplethMapImpl({
   // (`case "margin"`); mesma razão de `preEleicaoRef` acima: o handler de
   // `load` roda uma vez e fecha sobre as refs.
   const cargoRef = useRef(cargo);
+  // 2026-09-27 — teto de padding do `fitBounds` inicial (ver a docstring da
+  // prop `framePaddingCeiling`). Só é lido DENTRO de `mount()`, que roda uma
+  // vez; a ref existe pela mesma razão das acima, não porque o valor mude
+  // depois da montagem na prática de hoje.
+  const framePaddingCeilingRef = useRef(framePaddingCeiling);
   useEffect(() => {
     viewRef.current = view;
     viewModeRef.current = viewMode;
@@ -1282,7 +1325,16 @@ export function NationalChoroplethMapImpl({
     candidatosByIdRef.current = candidatosById;
     preEleicaoRef.current = preEleicao;
     cargoRef.current = cargo;
-  }, [view, viewMode, effectiveRankByLider, candidatosById, preEleicao, cargo]);
+    framePaddingCeilingRef.current = framePaddingCeiling;
+  }, [
+    view,
+    viewMode,
+    effectiveRankByLider,
+    candidatosById,
+    preEleicao,
+    cargo,
+    framePaddingCeiling,
+  ]);
 
   // Recolor when view, rows, rankByLider, candidatos or cargo change (zero re-fetch)
   useEffect(() => {

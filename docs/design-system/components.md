@@ -85,7 +85,7 @@ Notas dos atoms não construídos:
 | `<NationalNeedle />` | ✅ | RF-021, RF-022, RF-023 | `components/blocks/NationalNeedle.tsx` | `tests/unit/components/NationalNeedle.test.tsx` |
 | `<HeadlineScore />` | ✅ | RF-022, RF-023, RF-030.5 | `components/blocks/HeadlineScore.tsx` | `tests/unit/components/HeadlineScore.test.tsx` |
 | `<ProjectionThermometers />` | ✅ S07 | RF-061, RF-062 | `components/blocks/ProjectionThermometers.tsx` | `tests/unit/components/ProjectionThermometers.test.tsx` (testa `base` prop Fase 5) |
-| `<NationalChoroplethMap />` | ✅ | RF-030.1-4 (Presidente), RF-006.3 (Governador), RF-104-106 (Senador — intensidade de cor, nome acessível) | `components/blocks/NationalChoroplethMap.tsx` | `tests/unit/components/NationalChoroplethMap.test.tsx` |
+| `<NationalChoroplethMap />` | ✅ | RF-030.1-4 (Presidente), RF-006.3 (Governador), RF-104-106 (Senador — intensidade de cor, nome acessível); layout do cromo em fluxo no celular (ADR-0056) | `components/blocks/NationalChoroplethMap.tsx` | `tests/unit/components/NationalChoroplethMap.test.tsx` |
 | `<_NationalChoroplethMapImpl />` | ✅ | RF-030.1..RF-030.4 (interno — só via `next/dynamic`, ADR-0010) | `components/blocks/_NationalChoroplethMapImpl.tsx` | coberto por `NationalChoroplethMap.test.tsx` |
 | `<StateGroupedTable />` | ✅ | RF-030.6 | `components/blocks/StateGroupedTable.tsx` | `tests/unit/components/StateGroupedTable.test.tsx` |
 | `<DecisiveUFsGrid />` | ⛔ órfão | ~~RF-024~~ | `components/blocks/DecisiveUFsGrid.tsx` | tests existem mas sem call site em produção |
@@ -113,7 +113,7 @@ Notas dos atoms não construídos:
 | `<ReordenaListaPorBase />` | ✅ S08 | RF-181 (reordenação no DOM conforme base ativa, ADR-0051) | `components/blocks/ReordenaListaPorBase.tsx` | `tests/unit/components/ReordenaListaPorBase.test.tsx` (10 casos: reordenação real no DOM, foco preservado, idempotência, fase pré intocada, ausência de regra `order` em globals.css) |
 | `<ChancesPanel />` | ✅ S07+ | RF-030.7, RF-107 (migrado de `TwoRoundIndicator`, ADR-0034 D21) | `components/blocks/ChancesPanel.tsx` | `tests/unit/components/ChancesPanel.test.tsx` (S07: refator para exibir composição de vagas projetadas por partido/federação em Senador nível nacional (54 vagas) e para Deputado também exibir `eleitos` por agremiação) |
 | `<DeputadoMetodologia />` | ✅ S07 | RF-127, RF-128 | `components/blocks/DeputadoMetodologia.tsx` | — (Server Component sem testes dedicados; integrado em rotas de Deputado Federal). ⚠️ Propósito: explicar por que o cargo 6 **não usa** `<ForecastTransparency>` (design.md § D9) — não há modelo, só aritmética do ADR-0027 sobre voto apurado. Cadência (RF-128) vem do payload, nunca literal. |
-| `<NationalMapBlock />` | ✅ S07+ | RF-030.1-4 (Presidente, refator layout ADR-0033), RF-006.3 (Governador, ADR-0048), RF-104-106 (Senador, ADR-0048) | `components/blocks/NationalMapBlock.tsx` | — (não tem componente separado de teste; coberto pelo smoke de home e governador/senador pages) |
+| `<NationalMapBlock />` | ✅ S07+ | RF-030.1-4 (Presidente, refator layout ADR-0033, cromo em fluxo mobile ADR-0056), RF-006.3 (Governador, ADR-0048, cromo em fluxo mobile ADR-0056), RF-104-106 (Senador, ADR-0048, cromo em fluxo mobile ADR-0056) | `components/blocks/NationalMapBlock.tsx` | — (não tem componente separado de teste; coberto pelo smoke de home e governador/senador pages) |
 | `<CandidatosGrid />` | ✅ | RF-146, RF-148, RF-149 | `components/blocks/CandidatosGrid.tsx` | `tests/unit/components/CandidatosGrid.test.tsx` |
 | `<CandidaturasFonte />` | ✅ | RF-150 | `components/blocks/CandidaturasFonte.tsx` | — (sem teste dedicado; coberto indiretamente por `tests/unit/pages/candidatos.test.tsx`) |
 | `<CandidaturasAguardando />` | ✅ S08 | RF-149 (compõe `<CandidatosGrid>` nos 4 estados de espera) | `components/blocks/CandidaturasAguardando.tsx` | `tests/unit/pages/aguardando-candidatos.test.tsx` |
@@ -141,7 +141,7 @@ Notas dos atoms não construídos:
 | `<CargoTabs />` | ✅ S07 | (navegação global de cargos do shell — substitui `<UFBreadcrumb>`, ADR-0034 D23, ADR-0025 § 2) | `components/layout/CargoTabs.tsx` | `tests/unit/components/CargoTabs.test.tsx` |
 | `<Footer />` | ✅ | RF-055 | `components/layout/Footer.tsx` | `tests/unit/components/Footer.test.tsx` |
 | `<AppShellSplit />` | ✅ S07 | (shell de duas colunas, ADR-0033) | `components/layout/AppShellSplit.tsx` | — (coberto por smoke de UF pages) |
-| `<PersistentMapFrame />` | ✅ S07 | RF-030.1-4 (moldura persistente, ADR-0033 § 1) | `components/layout/PersistentMapFrame.tsx` | — (coberto por smoke de UF pages) |
+| `<PersistentMapFrame />` | ✅ S07 | RF-030.1-4 (moldura persistente, ADR-0033 § 1); cromo em fluxo no celular em vez de overlay (ADR-0056) | `components/layout/PersistentMapFrame.tsx` | — (coberto por smoke de UF pages) |
 | `<UfPicker />` | ✅ S07 | (controle de UF no shell, ADR-0033) | `components/layout/UfPicker.tsx` | — (coberto por smoke de UF navigation) |
 | `<ThemeToggle />` | ✅ S07 | (tema claro/escuro no masthead; persistência em `localStorage`, nunca cookie — ADR-0025 § 5) | `components/atoms/controls/ThemeToggle.tsx` | `tests/unit/state/theme.test.ts`, `tests/unit/shell/static-shell.test.ts` |
 
@@ -215,7 +215,7 @@ Intoduzidos em 2026-09-07 para o redesign Atlas Menna (paleta por partido, tipog
 
 | Componente | Tipo | Status | Papel | Arquivo | Cliente? |
 |---|---|---|---|---|---|
-| `<MapLegend />` | atom | ✅ | Legenda de mapa: título, lista de cores com labels (partido, resultado, status). Posicionável (top-right, bottom-left, etc.). | `components/atoms/maps/MapLegend.tsx` | RSC |
+| `<MapLegend />` | atom | ✅ | Legenda de mapa: título, lista de cores com labels (partido, resultado, status). Posicionável (top-right, bottom-left, etc.); em celular moved para fluxo abaixo do mapa (ADR-0056). | `components/atoms/maps/MapLegend.tsx` | RSC |
 
 ### Atoms — Overlays
 

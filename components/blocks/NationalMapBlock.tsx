@@ -45,10 +45,32 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import { type MapView, MapViewToggle } from "@/components/atoms/controls/MapViewToggle";
-import { NationalChoroplethMap, SEN_WINNER_LABEL } from "@/components/blocks/NationalChoroplethMap";
+import { CandidateLegendGroup } from "@/components/atoms/maps/MapLegend";
+import { Sheet } from "@/components/atoms/overlays/Sheet";
+import mapFrameStyles from "@/components/blocks/MapFrameMobile.module.css";
+import {
+  buildCandidateLegendEntries,
+  buildCandidateLegendSummary,
+  GeografiaLegend,
+  NationalChoroplethMap,
+  SEN_WINNER_LABEL,
+  viewLabelForCargo,
+} from "@/components/blocks/NationalChoroplethMap";
 import { MARGEM_2A_VAGA_LABEL, type UfPickerCargo } from "@/components/layout/UfPicker";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { useViewMode } from "@/lib/state/view-mode-client";
+
+/**
+ * As 4 vistas do mapa, com o rótulo qualificado por cargo (RF-104/item d,
+ * mesma regra de `<MapViewToggle>` — `SEN_WINNER_LABEL`/`MARGEM_2A_VAGA_LABEL`
+ * só em Senador). Fonte do `<select>` nativo do celular (2026-09-27); o
+ * `<MapViewToggle>` do desktop continua com sua PRÓPRIA lista interna
+ * (`OPTIONS` em `MapViewToggle.tsx`) — duplicar aqui é o preço de serem dois
+ * COMPONENTES diferentes (tablist vs `<select>`), não dois lugares por
+ * acidente: `viewLabelForCargo` (import acima) é a fonte única do TEXTO de
+ * cada rótulo, as duas listas só escolhem QUAL view aparece em qual ordem.
+ */
+const MAP_VIEWS: readonly MapView[] = ["winner", "margin", "swing", "turnout"];
 
 /** Altura do mapa hero — `52vh` do protótipo, com piso e teto (ADR-0029 § 1). */
 const HERO_HEIGHT = "clamp(400px, 52vh, 520px)";
@@ -176,73 +198,209 @@ export function NationalMapBlock({
   action,
 }: NationalMapBlockProps) {
   const [view, setView] = useState<MapView>("winner");
+  const [legendSheetOpen, setLegendSheetOpen] = useState(false);
   const viewMode = useViewMode();
   const hero = variant === "hero";
 
   if (variant === "frame") {
+    // Fonte única: a mesma decisão de "quem entra" que a legenda overlay do
+    // desktop usa (`buildCandidateLegendEntries`) — o resumo do celular é a
+    // MESMA lista de candidatos, só desenhada como ponto em vez de rampa.
+    const legendSummary = preEleicao ? null : buildCandidateLegendSummary(candidatos, view, cargo);
+    const legendEntries = preEleicao ? null : buildCandidateLegendEntries(candidatos, view, cargo);
+    const currentViewLabel = viewLabelForCargo(view, cargo);
+
     return (
-      <section aria-label="Mapa coroplético do Brasil" className="absolute inset-0">
-        <NationalChoroplethMap
-          rows={rows}
-          candidatoAId={candidatoAId}
-          view={view}
-          rankByLider={rankByLider}
-          candidatos={candidatos}
-          viewMode={viewMode}
-          preEleicao={preEleicao}
-          cargo={cargo}
-          height="100%"
-          legendPlacement="overlay"
-          // `h-full` e NÃO `absolute inset-0`: a raiz do `<NationalChoroplethMap>`
-          // já traz `relative`, e duas utilitárias de `position` na mesma classe
-          // brigam pela cascata (venceu `relative`, a altura ficou 0 e o mapa
-          // sumiu — medido em 08/09). A `<section>` acima é quem posiciona.
-          className="h-full"
-        />
-        {/* Cromo sobreposto ao mapa: etiqueta de escopo à esquerda, seletor de
-            view à direita — a mesma disposição do `mapBlock` do kit. Uma ÚNICA
-            faixa em `flex-wrap`, e não duas caixas ancoradas em cantos
-            opostos: a 375px o `<MapViewToggle>` mede 364px e, ancorado no
-            canto direito, cobria a etiqueta inteira (medido em 08/09). Aqui
-            ele quebra para a linha de baixo quando não cabe ao lado dela. */}
-        <div
-          className="pointer-events-none absolute flex flex-wrap items-start justify-between"
-          style={{
-            top: "var(--space-3)",
-            left: "var(--space-3)",
-            right: "var(--space-3)",
-            gap: "var(--space-2)",
-          }}
-        >
-          {/* A etiqueta é também o `<h2>` da região: sem ela o bloco entraria
-              no outline do documento como uma seção sem título. */}
-          <div className="flex min-w-0 items-center" style={{ gap: "var(--space-2)" }}>
+      <>
+        {/* Canvas — o mapa em si. Só ELE preenche a moldura do
+            `<AppShellSplit>` (ADR-0033 § 1); o cromo do celular abaixo é
+            IRMÃO deste elemento, não filho — é o que permite `.split .map`
+            crescer com ele em vez de cortá-lo (`overflow: hidden` só existe
+            no desktop, ver `AppShellSplit.module.css`). */}
+        <section aria-label="Mapa coroplético do Brasil" className={mapFrameStyles.canvasFill}>
+          <NationalChoroplethMap
+            rows={rows}
+            candidatoAId={candidatoAId}
+            view={view}
+            rankByLider={rankByLider}
+            candidatos={candidatos}
+            viewMode={viewMode}
+            preEleicao={preEleicao}
+            cargo={cargo}
+            height="100%"
+            legendPlacement="overlay"
+            // `h-full` e NÃO `absolute inset-0`: a raiz do `<NationalChoroplethMap>`
+            // já traz `relative`, e duas utilitárias de `position` na mesma classe
+            // brigam pela cascata (venceu `relative`, a altura ficou 0 e o mapa
+            // sumiu — medido em 08/09). A `<section>` acima é quem posiciona.
+            className="h-full"
+          />
+          {/* Cromo sobreposto ao mapa — SÓ DESKTOP (2026-09-27,
+              `mapFrameStyles.desktopOverlay`; antes disso, sempre visível).
+              No celular esta faixa não existe: o mesmo conteúdo (título,
+              vista, "Escolher UF") desce para `.mobileChrome`, abaixo, em
+              fluxo — pedido do dono, versão B do protótipo
+              (docs/design-system/prototipos/mapa-celular-2026-09-27/). Uma
+              ÚNICA faixa em `flex-wrap`, e não duas caixas ancoradas em
+              cantos opostos: a 375px o `<MapViewToggle>` mede 364px e,
+              ancorado no canto direito, cobria a etiqueta inteira (medido em
+              08/09) — mas a 375px esta faixa nem aparece mais. */}
+          <div
+            className={[
+              mapFrameStyles.desktopOverlay,
+              "pointer-events-none absolute flex-wrap items-start justify-between",
+            ].join(" ")}
+            style={{
+              top: "var(--space-3)",
+              left: "var(--space-3)",
+              right: "var(--space-3)",
+              gap: "var(--space-2)",
+            }}
+          >
+            {/* A etiqueta é também o `<h2>` da região no DESKTOP: sem ela o
+                bloco entraria no outline do documento como uma seção sem
+                título. No celular o título equivalente mora em
+                `.mobileChrome` (abaixo) — nunca os dois ao mesmo tempo:
+                `display: none` tira o inativo da árvore de acessibilidade. */}
+            <div className="flex min-w-0 items-center" style={{ gap: "var(--space-2)" }}>
+              {backHref ? (
+                <Link href={backHref} className="pointer-events-auto" style={CHIP_STYLE}>
+                  ← Brasil
+                </Link>
+              ) : null}
+              <h2 style={{ ...CHIP_STYLE, margin: 0 }}>{scopeLabel}</h2>
+            </div>
+            <div
+              className="pointer-events-auto flex min-w-0 flex-wrap items-start justify-end"
+              style={{ gap: "var(--space-2)" }}
+            >
+              {/* RF-157 — o seletor de vista some em fase pré; o `<UfPicker>`
+                  (que chega por `action`) fica. Um alterna entre três leituras
+                  que não existem; o outro navega para 27 páginas que existem. */}
+              {preEleicao ? null : (
+                <MapViewToggle
+                  value={view}
+                  onChange={setView}
+                  marginLabel={cargo === "sen" ? MARGEM_2A_VAGA_LABEL : undefined}
+                  winnerLabel={cargo === "sen" ? SEN_WINNER_LABEL : undefined}
+                />
+              )}
+              {action}
+            </div>
+          </div>
+        </section>
+
+        {/* Cromo em FLUXO — SÓ CELULAR (2026-09-27, `mapFrameStyles.mobileChrome`).
+            Barra ("Vista ▾" + "Escolher UF"), depois título + legenda
+            resumida + "Ver legenda". Nada aqui cobre o mapa: esta `<div>` é
+            IRMÃ do `<section>` do canvas, empilhada abaixo dele — ver a
+            docstring de `mapFrameStyles.canvasFill`. */}
+        <div className={mapFrameStyles.mobileChrome}>
+          <div className={mapFrameStyles.bar}>
+            {/* Simetria com a cópia de desktop acima: hoje nenhum caller do
+                nível Brasil passa `backHref` (o único jeito de chegar aqui é
+                sem `sigla`, ver `PersistentMapFrame.tsx`), mas a fiação fica
+                pronta — mesmo espírito do `side={isDesktop}` "morto" em
+                `NationalChoroplethMap.tsx`. */}
             {backHref ? (
-              <Link href={backHref} className="pointer-events-auto" style={CHIP_STYLE}>
+              <Link href={backHref} className={mapFrameStyles.btn}>
                 ← Brasil
               </Link>
             ) : null}
-            <h2 style={{ ...CHIP_STYLE, margin: 0 }}>{scopeLabel}</h2>
-          </div>
-          <div
-            className="pointer-events-auto flex min-w-0 flex-wrap items-start justify-end"
-            style={{ gap: "var(--space-2)" }}
-          >
-            {/* RF-157 — o seletor de vista some em fase pré; o `<UfPicker>`
-                (que chega por `action`) fica. Um alterna entre três leituras
-                que não existem; o outro navega para 27 páginas que existem. */}
             {preEleicao ? null : (
-              <MapViewToggle
-                value={view}
-                onChange={setView}
-                marginLabel={cargo === "sen" ? MARGEM_2A_VAGA_LABEL : undefined}
-                winnerLabel={cargo === "sen" ? SEN_WINNER_LABEL : undefined}
-              />
+              // `<select>` nativo estilizado (não um dropdown próprio):
+              // zero JS/CSS de terceiro, o sistema operacional abre o
+              // seletor de sempre, acessível de fábrica com teclado e
+              // leitor de tela. `.selectKicker`/`.selectValue`/`.selectCaret`
+              // são só o texto visível por baixo do `<select>` transparente
+              // (`.selectNative`) — o nome acessível vem do `aria-label`
+              // abaixo, não deles (por isso `aria-hidden`).
+              <label className={mapFrameStyles.selectField}>
+                <span className={mapFrameStyles.selectKicker} aria-hidden="true">
+                  Vista
+                </span>
+                <span className={mapFrameStyles.selectValue} aria-hidden="true">
+                  {currentViewLabel}
+                </span>
+                {/* SVG, não o glifo "▾": o axe manda glifo não-BMP de um
+                    `<span>` de texto para o balde `incomplete` (messageKey
+                    `nonBmp`) e o portão e2e reprova — medido em 2026-09-27
+                    nas 3 rotas de nível Brasil a 375px. Contraste real do
+                    traço (`--text-secondary` sobre `--surface-card`) ≥ 6:1. */}
+                <svg
+                  className={mapFrameStyles.selectCaret}
+                  aria-hidden="true"
+                  focusable="false"
+                  width="10"
+                  height="6"
+                  viewBox="0 0 10 6"
+                >
+                  <path d="M0 0h10L5 6z" fill="currentColor" />
+                </svg>
+                <select
+                  className={mapFrameStyles.selectNative}
+                  aria-label="Vista do mapa"
+                  value={view}
+                  onChange={(e) => setView(e.target.value as MapView)}
+                >
+                  {MAP_VIEWS.map((v) => (
+                    <option key={v} value={v}>
+                      {viewLabelForCargo(v, cargo)}
+                    </option>
+                  ))}
+                </select>
+              </label>
             )}
+            <div className={mapFrameStyles.barSpacer} />
             {action}
           </div>
+          <div className={mapFrameStyles.footer}>
+            <h2 className={mapFrameStyles.title}>{scopeLabel}</h2>
+            {preEleicao ? (
+              <GeografiaLegend />
+            ) : legendSummary ? (
+              <>
+                <div className={mapFrameStyles.legendSummary}>
+                  {legendSummary.map((entry) => (
+                    <span
+                      key={entry.label}
+                      className={mapFrameStyles.legendDot}
+                      style={{ "--dot-color": entry.dotColor } as CSSProperties}
+                    >
+                      {entry.label}
+                    </span>
+                  ))}
+                  <span>· mais forte = mais vantagem</span>
+                </div>
+                <button
+                  type="button"
+                  className={mapFrameStyles.verLegenda}
+                  onClick={() => setLegendSheetOpen(true)}
+                >
+                  Ver legenda
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
-      </section>
+
+        {/* A folha "Ver legenda" só existe onde há o que legendar — mesma
+            condição de `legendSummary` acima (fonte única,
+            `buildCandidateLegendEntries`). Nas vistas sem legenda hoje
+            (swing/turnout, ou Gov/Sen) `legendEntries` é `null` e nem o link
+            nem a folha aparecem — o celular mostra exatamente o que o
+            desktop já mostra (nada). */}
+        {legendEntries ? (
+          <Sheet
+            open={legendSheetOpen}
+            onClose={() => setLegendSheetOpen(false)}
+            kicker={scopeLabel}
+            title={`Legenda · ${currentViewLabel}`}
+          >
+            <CandidateLegendGroup entries={legendEntries} />
+          </Sheet>
+        ) : null}
+      </>
     );
   }
 

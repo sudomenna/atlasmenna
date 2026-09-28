@@ -4,7 +4,7 @@ title: Moldura persistente para o mapa entre rotas de UF, não SPA do protótipo
 status: accepted
 date: 2026-09-08
 amends: 0029
-amended_by: ADR-0050 # parcial — premissa de clique da Decisão 1, só no desktop
+amended_by: [ADR-0050, ADR-0056] # 0050: premissa de clique da Decisão 1, só no desktop; 0056: variante `frame` sem cromo sobreposto, só no celular
 ---
 
 # ADR-0033 — Moldura persistente para o mapa entre rotas de UF, não SPA nem troca de página inteira
@@ -21,6 +21,15 @@ desmontando entre Brasil e UF do mesmo cargo — continua majoritariamente vigen
 técnica pela qual o ADR-0050 escolhe `router.push` (navegação soft dentro da mesma moldura) e não um
 `<a href>` cru. No mobile, o clique/toque continua abrindo a folha exatamente como esta Decisão 1
 descreve; nada mais nesta Decisão 1, nem as Decisões 2 e 3, é tocado por essa nota.
+
+**Nota 2026-09-27 (parcial, [ADR-0056](0056-mapa-celular-cromo-em-fluxo-versao-b.md)).** A
+composição da variante `frame` do `<NationalMapBlock>` — "o mapa é a coluna inteira e todo o cromo
+é overlay", reproduzida em `components/blocks/NationalMapBlock.tsx:98-102` como leitura desta
+Decisão 1 — passa a valer **só no desktop** (≥ 960px). No celular, o cromo (título, seletor de
+vista, `<UfPicker>`, "← Brasil", legenda) sai da sobreposição e vai para fluxo abaixo do mapa
+(barra "Vista/Escolher UF" + legenda resumida + "Ver legenda" em folha). O restante da Decisão 1 —
+moldura persistente em `layout.tsx`, mapa nunca desmontando entre Brasil e UF do mesmo cargo,
+resolução client-side de `sigla` — não é tocado.
 
 Decisão 3 **implementada em 2026-09-11**: `scripts/replay-sensitivity.ts` (novo) roda o
 replay 2022 sob `REGIONAL_DELAY` ∈ {0, 1, 2, 3} timesteps (parametrizado via

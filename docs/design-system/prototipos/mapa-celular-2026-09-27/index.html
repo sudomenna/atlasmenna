@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protótipos do mapa no celular</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Spectral:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper-0:#fbfbfc; --paper-1:#f3f4f6; --paper-2:#e9ebee; --paper-3:#dde0e4;
+  --ink-0:#14171b; --ink-1:#2a2f36; --ink-2:#5b636e; --rule:#c9cdd3; --accent-text:#8e5d18;
+  --sans:"Archivo",system-ui,sans-serif; --mono:"JetBrains Mono",monospace; --serif:"Spectral",Georgia,serif;
+  --tap:44px;
+}
+*{box-sizing:border-box} [hidden]{display:none!important}
+body{margin:0;background:#d9dce1;font-family:var(--sans);color:var(--ink-0)}
+.ctl{position:sticky;top:0;z-index:50;background:#14171b;color:#fbfbfc;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:13px}
+.ctl b{color:#c9cdd3;margin-right:6px;font-weight:600}
+.seg{display:inline-flex;border:1px solid #5b636e;border-radius:6px;overflow:hidden}
+.seg button{background:transparent;color:#fbfbfc;border:0;padding:6px 10px;font:inherit;cursor:pointer}
+.seg button[aria-pressed=true]{background:#fbfbfc;color:#14171b;font-weight:600}
+.stage{display:flex;justify-content:center;gap:24px;padding:24px 12px 60px;flex-wrap:wrap}
+.phone{width:375px;height:812px;background:var(--paper-1);box-shadow:0 0 0 1px #b9bec6,0 10px 40px rgba(0,0,0,.18);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.phone .scroll{flex:1;overflow-y:auto}
+.nota{max-width:780px;margin:0 auto 40px;padding:0 16px;font-size:14px;line-height:1.55;color:#2a2f36}
+.nota h2{font-family:var(--serif);font-size:20px;margin:18px 0 6px}
+
+/* ---- casca do site (fixa em todas as versões) ---- */
+.topbar{background:var(--paper-1);border-bottom:1px solid var(--ink-0);padding:8px 16px 10px}
+.brand{font:600 24px/1 var(--serif)} .sub{font:600 10px var(--sans);letter-spacing:.08em;color:var(--ink-2);margin-top:3px}
+.toggles{display:flex;gap:8px;margin-top:10px}
+.tg{flex:1;display:flex;border:1px solid var(--ink-0);border-radius:6px;overflow:hidden;height:40px}
+.tg span{flex:1;display:flex;align-items:center;justify-content:center;font:600 11px var(--sans);letter-spacing:.06em}
+.tg span.on{background:var(--ink-0);color:var(--paper-0)}
+.tabbar{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule);background:var(--paper-0);height:52px}
+.tabbar span{display:flex;align-items:center;justify-content:center;font:600 10px var(--sans);letter-spacing:.06em;color:var(--ink-2)}
+.tabbar span.on{color:var(--ink-0)}
+.painel-ini{padding:16px;border-top:3px double var(--ink-0);margin-top:0}
+.painel-ini .k{font:600 10px var(--sans);letter-spacing:.08em;color:var(--ink-2);text-transform:uppercase}
+.painel-ini .t{font:600 24px var(--serif);margin-top:4px}
+
+/* ---- peças do mapa ---- */
+.mapa{position:relative;background:var(--paper-1);display:flex;align-items:center;justify-content:center}
+.mapa img{display:block;height:100%;width:auto;max-width:100%;object-fit:contain;image-rendering:auto}
+.chip{display:inline-flex;align-items:center;height:32px;padding:0 10px;border:1px solid var(--rule);border-radius:6px;background:var(--paper-0);font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.titulo-mapa{font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin:0}
+.btn{height:var(--tap);min-width:var(--tap);padding:0 12px;border:1px solid var(--ink-0);border-radius:8px;background:var(--paper-0);font:600 14px var(--sans);color:var(--ink-0);display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;white-space:nowrap}
+.vistas{display:flex;overflow-x:auto;border:1px solid var(--ink-0);border-radius:8px;scrollbar-width:none}
+.vistas::-webkit-scrollbar{display:none}
+.vistas button{flex:none;height:var(--tap);padding:0 12px;border:0;border-right:1px solid var(--rule);background:var(--paper-0);font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:var(--ink-0)}
+.vistas button:last-child{border-right:0}
+.vistas button[aria-pressed=true]{background:var(--ink-0);color:var(--paper-0)}
+.leg{font-size:12px;color:var(--ink-2)}
+.leg .cands{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.leg .cand .nm{font:600 11px var(--mono);color:var(--ink-1);margin-bottom:4px}
+.leg .ramp{display:flex;gap:2px}
+.leg .ramp i{flex:1;height:10px;border:1px solid var(--ink-0);border-width:1px 0;}
+.leg .ramp i:first-child{border-left-width:1px} .leg .ramp i:last-child{border-right-width:1px}
+.leg .escala{display:flex;justify-content:space-between;font:500 10px var(--mono);margin-top:3px}
+.leg .rodape{margin-top:8px;display:flex;align-items:center;gap:6px;font:500 11px var(--mono)}
+.leg .sem{width:14px;height:10px;background:var(--paper-3);border:1px solid var(--rule)}
+.leg .falta{font:500 11px var(--sans);color:var(--ink-2)}
+.pontos{display:flex;flex-wrap:wrap;gap:4px 12px;font:600 11px var(--mono);color:var(--ink-1);align-items:center}
+.pontos i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+
+/* A — faixas acima e abaixo */
+.vA .faixa{padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.vA .vistas{margin:0 16px}
+.vA .mapa{height:330px}
+.vA .leg{padding:10px 16px 14px;border-top:1px solid var(--rule)}
+
+/* B — mapa no topo, barra de ferramentas abaixo */
+.vB .mapa{height:360px}
+.vB .barra{padding:10px 16px;display:flex;gap:8px;align-items:center;border-top:1px solid var(--rule)}
+.vB .sel{flex:1;justify-content:space-between;font-size:13px}
+.vB .sel small{font:600 10px var(--sans);letter-spacing:.06em;color:var(--ink-2);text-transform:uppercase;margin-right:4px}
+.vB .cab{padding:12px 16px 0;display:flex;justify-content:space-between;align-items:baseline}
+.vB .leg{padding:0 16px 14px}
+.vB .menu{position:absolute;left:16px;right:16px;background:var(--paper-0);border:1px solid var(--ink-0);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.15);z-index:5;overflow:hidden}
+.vB .menu button{display:block;width:100%;text-align:left;height:var(--tap);padding:0 14px;border:0;border-bottom:1px solid var(--paper-2);background:transparent;font:600 14px var(--sans);cursor:pointer}
+.vB .menu button[aria-pressed=true]{background:var(--paper-2)}
+
+/* C — uma linha de botões + legenda em folha */
+.vC .faixa{padding:10px 16px;display:flex;align-items:center;gap:8px}
+.vC .faixa .titulo-mapa{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.vC .mapa{height:390px}
+.vC .resumo{padding:8px 16px 12px;border-top:1px solid var(--rule)}
+.vC .resumo .linha{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.link{background:none;border:0;font:600 12px var(--sans);text-decoration:underline;color:var(--ink-0);cursor:pointer;min-height:var(--tap);padding:0}
+.folha{position:absolute;left:0;right:0;bottom:0;background:var(--paper-0);border-radius:16px 16px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.2);padding:10px 16px 24px;z-index:20}
+.folha .grab{width:40px;height:4px;border-radius:2px;background:var(--rule);margin:0 auto 10px}
+.folha h3{margin:0 0 10px;font:700 16px var(--sans);display:flex;justify-content:space-between;align-items:center}
+.folha .opc button{display:flex;justify-content:space-between;width:100%;height:var(--tap);align-items:center;border:0;border-bottom:1px solid var(--paper-2);background:transparent;font:600 14px var(--sans);cursor:pointer;padding:0}
+.folha .opc button span{font:400 12px var(--sans);color:var(--ink-2)}
+.scrim{position:absolute;inset:0;background:rgba(20,23,27,.35);z-index:19}
+</style>
+</head>
+<body>
+<div class="ctl">
+  <span><b>Versão</b><span class="seg" id="c-v"></span></span>
+  <span><b>Comparar</b><span class="seg" id="c-cmp"></span></span>
+</div>
+<div class="stage" id="stage"></div>
+<div class="nota">
+  <h2>Como ler</h2>
+  <p>Três jeitos de tirar os botões e a legenda de cima do mapa, na tela de Presidente · Brasil do celular (375px). O mapa é a imagem real do simulado e <b>não muda de cor</b> ao trocar de vista — só os controles e a legenda são o protótipo. Clique nos botões: a vista selecionada, o "Escolher UF" e a legenda funcionam.</p>
+  <p><b>O que continua igual nas três:</b> o título do mapa ("PRESIDENTE · BRASIL"), as quatro vistas, o "Escolher UF", a legenda por candidato (tom mais forte = vantagem maior), botões de 44px. Em "Swing" e "% apurado" o site hoje não mostra legenda — o protótipo só avisa isso.</p>
+  <p><b>Nos outros mapas</b> (Governador e Senador no Brasil) é o mesmo conjunto, sem a legenda de candidatos; nos mapas de estado, só o "← Brasil" e o "Escolher UF".</p>
+</div>
+<script>
+const ramps = {LULA:["#f7dcdc","#edabac","#d96871","#bb2c45","#8a0d2b"], FLAVIO:["#d1e8dd","#8cc8ad","#3f9b77","#007250","#004f36"], CAIADO:["#e3e0f4","#bab7e7","#8283d8","#4659c7","#273d97"]};
+const base = {LULA:"#c62e49", FLAVIO:"#2f8f6b", CAIADO:"#2247b8"};
+const VISTAS = {winner:"Por vencedor", margin:"Margem", swing:"Swing vs 2022", turnout:"% apurado"};
+const V = {A:"A · Faixas acima e abaixo", B:"B · Barra embaixo ✅ escolhida", C:"C · Linha única + folha"};
+const st = {v:"B", cmp:"so", vista:"winner", menu:false, folha:null, uf:false};
+
+function legendaCompleta(){
+  if (st.vista==="swing"||st.vista==="turnout") return `<div class="leg"><span class="falta">Esta vista não tem legenda hoje no site (a definir).</span></div>`;
+  return `<div class="leg"><div class="cands">${Object.keys(ramps).map(n=>`<div class="cand"><div class="nm">${n}</div><div class="ramp">${ramps[n].map(c=>`<i style="background:${c}"></i>`).join("")}</div><div class="escala"><span>0</span><span>+30</span></div></div>`).join("")}</div>
+    <div class="rodape"><span class="sem"></span>sem apuração <span style="margin-left:auto;font-family:var(--sans)">tom mais forte = vantagem maior (pp)</span></div></div>`;
+}
+function legendaResumo(){
+  if (st.vista==="swing"||st.vista==="turnout") return `<span class="falta">Sem legenda nesta vista (hoje).</span>`;
+  return `<div class="pontos">${Object.keys(base).map(n=>`<span><i style="background:${base[n]}"></i>${n}</span>`).join("")}<span style="font-family:var(--sans);font-weight:500;color:var(--ink-2)">· mais forte = mais vantagem</span></div>`;
+}
+const vistasSeg = () => `<div class="vistas" role="tablist" aria-label="Vista do mapa">${Object.entries(VISTAS).map(([k,l])=>`<button type="button" role="tab" aria-pressed="${st.vista===k}" onclick="st.vista='${k}';render()">${l}</button>`).join("")}</div>`;
+const casca = (miolo, extra="") => `<div class="phone"><div class="topbar"><div class="brand">AtlasMenna</div><div class="sub">ELEIÇÕES 2026 · 1º TURNO · NÃO OFICIAL</div>
+  <div class="toggles"><div class="tg"><span class="on">1º TURNO</span><span>2º TURNO</span></div><div class="tg"><span>PARCIAL</span><span class="on">PROJEÇÃO</span></div></div></div>
+  <div class="scroll">${miolo}<div class="painel-ini"><div class="k">Projeção · não oficial</div><div class="t">Presidente · Brasil</div></div></div>
+  <div class="tabbar"><span class="on">PRESIDENTE</span><span>GOVERNADOR</span><span>SENADOR</span><span>DEPUTADO</span></div>${extra}</div>`;
+const folhaUF = () => `<div class="scrim" onclick="st.folha=null;render()"></div><div class="folha"><div class="grab"></div><h3>Escolher UF <button class="btn" onclick="st.folha=null;render()">Fechar</button></h3>
+  <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">${"AC AL AM AP BA CE DF ES GO MA MG MS MT PA PB PE PI PR RJ RN RO RR RS SC SE SP TO".split(" ").map(u=>`<span class="btn" style="padding:0;font-size:12px">${u}</span>`).join("")}</div></div>`;
+
+function hoje(){
+  return casca(`<div style="padding:0"><img src="mapa-hoje.png" style="display:block;width:100%" alt=""></div>`);
+}
+
+function A(){
+  const m = `<div class="vA">
+    <div class="faixa"><h2 class="titulo-mapa">Presidente · Brasil</h2><button class="btn" onclick="st.folha='uf';render()">Escolher UF</button></div>
+    ${vistasSeg()}
+    <div class="mapa"><img src="brasil.png" alt=""></div>
+    ${legendaCompleta()}</div>`;
+  return casca(m, st.folha==="uf"?folhaUF():"");
+}
+function B(){
+  const m = `<div class="vB" style="position:relative">
+    <div class="mapa"><img src="brasil.png" alt=""></div>
+    <div class="barra"><button class="btn sel" onclick="st.menu=!st.menu;render()"><span><small>Vista</small>${VISTAS[st.vista]}</span><span aria-hidden="true">▾</span></button>
+      <button class="btn" onclick="st.folha='uf';render()">Escolher UF</button></div>
+    ${st.menu?`<div class="menu" style="top:420px">${Object.entries(VISTAS).map(([k,l])=>`<button aria-pressed="${st.vista===k}" onclick="st.vista='${k}';st.menu=false;render()">${l}</button>`).join("")}</div>`:""}
+    <div class="cab"><h2 class="titulo-mapa">Presidente · Brasil</h2></div>
+    <div style="padding:8px 16px 6px">${legendaResumo()}</div>
+    ${(st.vista==="swing"||st.vista==="turnout")?"":`<div style="padding:0 16px 8px"><button class="link" onclick="st.folha='leg';render()">Ver legenda</button></div>`}</div>`;
+  let extra = "";
+  if (st.folha==="uf") extra = folhaUF();
+  if (st.folha==="leg") extra = `<div class="scrim" onclick="st.folha=null;render()"></div><div class="folha"><div class="grab"></div><h3>Legenda · ${VISTAS[st.vista]} <button class="btn" onclick="st.folha=null;render()">Fechar</button></h3>${legendaCompleta()}</div>`;
+  return casca(m, extra);
+}
+function C(){
+  const m = `<div class="vC">
+    <div class="faixa"><h2 class="titulo-mapa">Presidente · Brasil</h2>
+      <button class="btn" onclick="st.folha='vista';render()" aria-label="Trocar vista do mapa">Vista ▾</button>
+      <button class="btn" onclick="st.folha='uf';render()">UF</button></div>
+    <div class="mapa"><img src="brasil.png" alt=""></div>
+    <div class="resumo"><div class="linha"><span style="font:600 11px var(--sans);letter-spacing:.06em;text-transform:uppercase">${VISTAS[st.vista]}</span>
+      <button class="link" onclick="st.folha='leg';render()">Ver legenda</button></div>${legendaResumo()}</div></div>`;
+  let extra = "";
+  if (st.folha==="uf") extra = folhaUF();
+  if (st.folha==="vista") extra = `<div class="scrim" onclick="st.folha=null;render()"></div><div class="folha"><div class="grab"></div><h3>Vista do mapa <button class="btn" onclick="st.folha=null;render()">Fechar</button></h3><div class="opc">${Object.entries(VISTAS).map(([k,l])=>`<button onclick="st.vista='${k}';st.folha=null;render()">${l}${st.vista===k?"<span>✓ atual</span>":""}</button>`).join("")}</div></div>`;
+  if (st.folha==="leg") extra = `<div class="scrim" onclick="st.folha=null;render()"></div><div class="folha"><div class="grab"></div><h3>Legenda · ${VISTAS[st.vista]} <button class="btn" onclick="st.folha=null;render()">Fechar</button></h3>${legendaCompleta()}</div>`;
+  return casca(m, extra);
+}
+function render(){
+  const f = {A,B,C}[st.v];
+  document.getElementById("stage").innerHTML = st.cmp==="lado" ? `<div><p style="text-align:center;font-weight:600">Hoje</p>${hoje()}</div><div><p style="text-align:center;font-weight:600">${V[st.v]}</p>${f()}</div>` : f();
+  seg("c-v", V, "v"); seg("c-cmp", {so:"Só a versão", lado:"Lado a lado com hoje"}, "cmp");
+}
+function seg(id, opts, key){
+  const el=document.getElementById(id);
+  el.innerHTML = Object.entries(opts).map(([k,l])=>`<button aria-pressed="${st[key]===k}" data-k="${k}">${l}</button>`).join("");
+  el.querySelectorAll("button").forEach(b=>b.onclick=()=>{st[key]=b.dataset.k; st.folha=null; st.menu=false; render();});
+}
+render();
+</script>
+</body>
+</html>

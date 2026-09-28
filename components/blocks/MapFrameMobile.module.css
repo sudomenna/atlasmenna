@@ -1,0 +1,315 @@
+/*
+ * components/blocks/MapFrameMobile.module.css
+ *
+ * Redesenho do mapa no CELULAR (2026-09-27), decisão do dono — versão B do
+ * protótipo (docs/design-system/prototipos/mapa-celular-2026-09-27/), com
+ * "Ver legenda" emprestado da versão C. Compartilhado por
+ * `NationalMapBlock.tsx` (nível Brasil) e `PersistentMapFrame.tsx` (nível
+ * UF) — os dois hospedam o mesmo par "canvas de altura própria + cromo",
+ * dentro da moldura persistente (`AppShellSplit.tsx`, ADR-0033 § 1).
+ *
+ * Breakpoint: 960px — o mesmo de `AppShellSplit.module.css` e de
+ * `NationalChoroplethMap.tsx` (`DESKTOP_QUERY`).
+ *
+ * ## Por que troca de posição em vez de troca de conteúdo
+ *
+ * No DESKTOP o cromo (título, vistas, "Escolher UF", legenda) fica SOBREPOSTO
+ * ao mapa (`position: absolute`, ADR-0033 § 1, inalterado por este arquivo).
+ * No CELULAR nada pode ficar por cima (pedido do dono) — o cromo passa a
+ * viver ABAIXO do mapa, em fluxo, e a caixa que o `AppShellSplit` reserva
+ * para o mapa (`.split .map`) precisa CRESCER para caber os dois. A troca é:
+ *
+ *   - `.canvasFill`/`.canvasFlex` — a área do mapa em si. No celular tem
+ *     altura PRÓPRIA e fixa (não depende do pai ter altura definida — é o
+ *     que libera `.split .map` a virar `height: auto` e crescer com o cromo
+ *     abaixo, ver `AppShellSplit.module.css`). No desktop volta a preencher o
+ *     espaço que tinha antes desta mudança.
+ *   - `.desktopOverlay`/`.desktopOverlayInline` — o cromo sobreposto de
+ *     sempre, só existe (via `display`) a partir de 960px.
+ *   - `.mobileChrome` — barra + título + legenda em fluxo, só existe abaixo
+ *     de 960px.
+ *
+ * O controle de "Vista" é a ÚNICA peça duplicada de propósito: no desktop é
+ * o `<MapViewToggle>` (tablist, `role="tab"`); no celular é um `<select>`
+ * nativo (ver `.selectField` abaixo) — são DOIS componentes, não um só
+ * reposicionado, então as duas marcações coexistem no DOM e o CSS decide qual
+ * fica visível. Título, "← Brasil" e "Escolher UF" também duplicam a
+ * marcação pela mesma razão prática (o agrupamento visual muda: no desktop
+ * título+UF ficam juntos numa faixa flutuante; no celular "← Brasil"+UF
+ * formam a barra e o título desce sozinho para o rodapé) — cada cópia
+ * inativa vira `display: none`, que a retira da árvore de acessibilidade
+ * (nunca duas cópias anunciadas ao mesmo tempo).
+ */
+
+/* ---------------------------------------------------------------------------
+ * Canvas — a área do mapa
+ * ------------------------------------------------------------------------ */
+
+/**
+ * Usada quando NADA precede o mapa em fluxo no desktop (nível Brasil de
+ * qualquer cargo; nível UF de Presidente) — o cromo desktop é overlay puro,
+ * então o canvas preenche o espaço inteiro que o `AppShellSplit` reserva.
+ */
+.canvasFill {
+  position: relative;
+  overflow: hidden;
+  height: 46vh;
+  min-height: 340px;
+}
+
+@media (min-width: 960px) {
+  .canvasFill {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    min-height: 0;
+  }
+}
+
+/**
+ * Usada quando uma faixa de cabeçalho PRECEDE o mapa em fluxo no desktop
+ * (nível UF de Governador/Senador — `h2` + `<UfPicker>` já ficam ACIMA do
+ * mapa, não sobrepostos a ele). O canvas divide o espaço com essa faixa via
+ * `flex: 1`, dentro de `.frameRootFlex` abaixo.
+ */
+.canvasFlex {
+  position: relative;
+  overflow: hidden;
+  height: 46vh;
+  min-height: 340px;
+}
+
+@media (min-width: 960px) {
+  .canvasFlex {
+    height: auto;
+    min-height: 0;
+    flex: 1;
+  }
+}
+
+/**
+ * O container de quem usa `.canvasFlex` — reproduz, só a partir de 960px, a
+ * coluna flex com padding/gap que a moldura já usava antes desta mudança
+ * (cabeçalho, depois mapa). No celular é só um bloco normal: o cabeçalho
+ * desktop (`.desktopOverlay`) não ocupa espaço, o canvas some primeiro, e o
+ * cromo do celular (`.mobileChrome`) vem depois — nessa ordem, no DOM.
+ */
+.frameRootFlex {
+  position: relative;
+}
+
+@media (min-width: 960px) {
+  .frameRootFlex {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    overflow: hidden;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Cromo — visibilidade por breakpoint
+ * ------------------------------------------------------------------------ */
+
+/** Cromo sobreposto/em fluxo do DESKTOP — layout de linha (flex). */
+.desktopOverlay {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .desktopOverlay {
+    display: flex;
+  }
+}
+
+/** Mesma visibilidade, para um elemento único que não é container de linha
+ * (ex.: o link solto "← Brasil" sobreposto ao canto do mapa). */
+.desktopOverlayInline {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .desktopOverlayInline {
+    display: inline-flex;
+  }
+}
+
+/** Cromo em fluxo do CELULAR — barra + rodapé, empilhados. */
+.mobileChrome {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 960px) {
+  .mobileChrome {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * A barra — "Vista ▾" + "Escolher UF" (+ "← Brasil" nos mapas de estado)
+ * ------------------------------------------------------------------------ */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border-hairline);
+  background: var(--surface-page);
+}
+
+.barSpacer {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 🔴 Com o campo "Vista" presente, o espaçador sai: os dois dividiam o
+   `flex: 1` e o campo ficava com ~117px em 375px, cortando "Por vencedor" em
+   "Por …" (conferido no navegador em 2026-09-27). O espaçador só serve para
+   empurrar os botões à direita nos mapas SEM vistas (nível UF). */
+.selectField + .barSpacer {
+  display: none;
+}
+
+/** Botão de 44px no estilo do protótipo — "← Brasil" no celular. */
+.btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font: var(--type-body-sm);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/**
+ * Campo "Vista: <atual> ▾" — um `<select>` NATIVO, invisível, por cima do
+ * texto que dá o rótulo (`.selectKicker`) e o valor atual (`.selectValue`).
+ * Zero JS/CSS de terceiro (RNF-007b): o sistema operacional abre o seletor de
+ * sempre (acessível de fábrica, funciona com teclado e leitor de tela), e o
+ * texto por baixo só existe para o visual — `aria-hidden`, porque o
+ * `<select>` já carrega `aria-label="Vista do mapa"` (`NationalMapBlock.tsx`).
+ */
+.selectField {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  overflow: hidden;
+}
+
+.selectKicker {
+  flex: none;
+  font: var(--type-kicker);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.selectValue {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: var(--type-body-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.selectCaret {
+  flex: none;
+  color: var(--text-secondary);
+}
+
+.selectNative {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------------
+ * O rodapé — título + legenda resumida + "Ver legenda"
+ * ------------------------------------------------------------------------ */
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.title {
+  margin: 0;
+  font: var(--type-kicker);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.legendSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-data);
+  color: var(--text-secondary);
+}
+
+/** Bolinha na cor BASE do candidato (`candidateMarkerColor` — já escurecida
+ * o bastante para 3:1 nos 4 partidos pálidos, ver `_candidateColor.ts`) +
+ * nome em cor de texto neutra (constituição § 2: o texto não é o dado
+ * colorido, só a bolinha é). */
+.legendDot {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.legendDot::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--dot-color, var(--text-muted));
+  box-shadow: 0 0 0 1px var(--border-hairline);
+}
+
+.verLegenda {
+  align-self: flex-start;
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: var(--type-body-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}

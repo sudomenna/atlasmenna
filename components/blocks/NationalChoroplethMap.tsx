@@ -86,6 +86,8 @@ import { type CSSProperties, useEffect, useState } from "react";
 import type { MapView } from "@/components/atoms/controls/MapViewToggle";
 import { type CandidateLegendEntry, CandidateLegendGroup } from "@/components/atoms/maps/MapLegend";
 import { MapSkeleton } from "@/components/atoms/maps/MapSkeleton";
+import { candidateMarkerColor } from "@/components/blocks/_candidateColor";
+import mapFrameStyles from "@/components/blocks/MapFrameMobile.module.css";
 import { StateResultSheet } from "@/components/blocks/StateResultSheet";
 import {
   ariaRessalvaVagas,
@@ -97,6 +99,15 @@ import type { ViewMode } from "@/lib/state/view-mode";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { intensityForParty, type PartyIntensity } from "@/lib/utils/party-color";
 import { useHasFinePointer } from "@/lib/utils/use-has-fine-pointer";
+
+/**
+ * Teto de padding do `fitBounds` inicial quando o mapa `frame` está SEM
+ * cromo sobreposto (celular, 2026-09-27 — versão B do protótipo). 16–24px de
+ * respiro visual, nada de reservar espaço para cabeçalho/legenda: eles
+ * moraram embaixo do mapa, em fluxo, desde esta mudança. Ver
+ * `_NationalChoroplethMapImpl.tsx`, prop `framePaddingCeiling`.
+ */
+const MOBILE_FRAME_PADDING_CEILING = { top: 24, bottom: 24, left: 16, right: 16 };
 
 /**
  * Breakpoint desktop — mesmo valor de `ADR-0029` (mobile <960px).
@@ -264,8 +275,14 @@ export const SEN_WINNER_LABEL = "Por líder";
  *
  * Só "margin" e "winner" mudam em Senador — "swing" e "turnout" não têm
  * leitura de vaga (não descrevem "quem lidera", ver `resolveColor`).
+ *
+ * Exportada desde 2026-09-27: `NationalMapBlock.tsx` (cromo do celular)
+ * precisa do MESMO rótulo para o título "Legenda · <vista>" da folha "Ver
+ * legenda" — uma segunda cópia deste `if` teria sido exatamente o defeito
+ * que este comentário já nomeia acima ("ter duas fontes para o mesmo rótulo
+ * foi o que atrasou a correção de RF-104").
  */
-function viewLabelForCargo(view: MapView, cargo: UfPickerCargo): string {
+export function viewLabelForCargo(view: MapView, cargo: UfPickerCargo): string {
   if (cargo === "sen") {
     if (view === "margin") return MARGEM_2A_VAGA_LABEL;
     if (view === "winner") return SEN_WINNER_LABEL;
@@ -350,21 +367,76 @@ const LEGEND_OVERLAY_BOX: CSSProperties = {
  * bloco nacional é união de 27 UFs (RF-145 cobre os dois cargos 3 e 5
  * explicitamente).
  */
-function buildCandidateLegendEntries(
+/**
+ * Os candidatos rank 1..3 elegíveis para legenda — ponto único que
+ * {@link buildCandidateLegendEntries} (rampa completa, overlay do desktop) e
+ * {@link buildCandidateLegendSummary} (bolinha + nome, resumo do celular)
+ * compartilham. Exportada só a decisão "quem entra"; as duas formas de
+ * desenhar cada candidato continuam em funções separadas, cada uma com sua
+ * própria API pública.
+ */
+function porRankCandidates(
   candidatos: EdgeCandidate[] | undefined,
   view: MapView,
   cargo: UfPickerCargo,
-): CandidateLegendEntry[] | null {
+): EdgeCandidate[] | null {
   if (view !== "winner" && view !== "margin") return null;
   if (cargo === "gov" || cargo === "sen") return null;
   if (!candidatos || candidatos.length === 0) return null;
   const porRank = [1, 2, 3]
     .map((rank) => candidatos.find((c) => c.rank === rank))
     .filter((c): c is EdgeCandidate => c != null);
-  if (porRank.length === 0) return null;
+  return porRank.length > 0 ? porRank : null;
+}
+
+/**
+ * Exportada desde 2026-09-27: `NationalMapBlock.tsx` monta a MESMA rampa
+ * completa dentro da folha "Ver legenda" do celular (`<CandidateLegendGroup>`,
+ * `MapLegend.tsx`) — uma segunda implementação deste filtro divergiria da
+ * legenda overlay do desktop na primeira mudança de regra de cargo.
+ */
+export function buildCandidateLegendEntries(
+  candidatos: EdgeCandidate[] | undefined,
+  view: MapView,
+  cargo: UfPickerCargo,
+): CandidateLegendEntry[] | null {
+  const porRank = porRankCandidates(candidatos, view, cargo);
+  if (!porRank) return null;
   return porRank.map((c) => ({
     label: nomeExibicao(c.nome, c.sqcand),
     colors: LEGEND_LEVELS.map((level) => intensityForParty(c.partido, level)),
+  }));
+}
+
+/** Uma entrada da legenda RESUMIDA do celular — bolinha + nome, sem a rampa. */
+export interface CandidateLegendSummaryEntry {
+  label: string;
+  /** Cor do PONTO (não da barra) — `candidateMarkerColor`, já escurecida o
+   * bastante para 3:1 nos 4 partidos pálidos (PSOL/PSB/Outros/NOVO), ver
+   * `_candidateColor.ts`. Nunca a cor de preenchimento do mapa: aquela
+   * exige o contorno `DATA_FILL_STROKE` porque tem EXTENSÃO; um ponto de
+   * 10px não tem extensão a contornar. */
+  dotColor: string;
+}
+
+/**
+ * A linha "● Lula ● Flávio ● Caiado · mais forte = mais vantagem" do rodapé
+ * do mapa no celular (versão B do protótipo, 2026-09-27) — MESMO filtro de
+ * {@link buildCandidateLegendEntries} (rank 1..3, `winner`/`margin`, fora de
+ * Gov/Sen), forma diferente: um ponto por candidato, não uma rampa de 5
+ * degraus (a rampa completa mora na folha "Ver legenda", ver
+ * `NationalMapBlock.tsx`).
+ */
+export function buildCandidateLegendSummary(
+  candidatos: EdgeCandidate[] | undefined,
+  view: MapView,
+  cargo: UfPickerCargo,
+): CandidateLegendSummaryEntry[] | null {
+  const porRank = porRankCandidates(candidatos, view, cargo);
+  if (!porRank) return null;
+  return porRank.map((c) => ({
+    label: nomeExibicao(c.nome, c.sqcand),
+    dotColor: candidateMarkerColor(c.partido),
   }));
 }
 
@@ -378,8 +450,11 @@ function buildCandidateLegendEntries(
  *
  * `role="img"` + `aria-label` pelo mesmo motivo do `<MapLegend>`: um quadrado
  * colorido não diz nada a leitor de tela (RNF-022/023).
+ *
+ * Exportada desde 2026-09-27: o rodapé do celular (`NationalMapBlock.tsx`)
+ * mostra a MESMA legenda em fluxo, fora do overlay do desktop.
  */
-function GeografiaLegend({ className }: { className?: string }) {
+export function GeografiaLegend({ className }: { className?: string }) {
   const texto =
     "As 27 unidades federativas. Nenhuma tem voto contado: a votação ainda não começou.";
   return (
@@ -431,6 +506,13 @@ export function NationalChoroplethMap({
   const legendEntries = preEleicao ? null : buildCandidateLegendEntries(candidatos, view, cargo);
   const [selectedSigla, setSelectedSigla] = useState<string | null>(null);
   const isDesktop = useIsDesktop();
+  // 2026-09-27 — mapa `frame` (moldura persistente) SEM cromo sobreposto no
+  // celular: o `fitBounds` inicial não precisa mais reservar folga para um
+  // cabeçalho/legenda que não existem mais ali (ver `NationalMapBlock.tsx`,
+  // o cromo virou fluxo abaixo do mapa). Só se aplica a `legendPlacement ===
+  // "overlay"` — a única forma que já significava "cromo por cima do mapa";
+  // `"below"` nunca teve essa folga extra.
+  const chromeless = legendPlacement === "overlay" && !isDesktop;
   // 2026-09-20 — fonte do clique-navega E da guarda do balão no toque. Ver a
   // docstring do topo do arquivo e `lib/utils/use-has-fine-pointer.ts`.
   const temPonteiroFino = useHasFinePointer();
@@ -488,10 +570,17 @@ export function NationalChoroplethMap({
         bloqueiaBalaoNoToque={!temPonteiroFino}
         onSelectUf={setSelectedSigla}
         cargo={cargo}
+        framePaddingCeiling={chromeless ? MOBILE_FRAME_PADDING_CEILING : undefined}
       />
       {preEleicao ? (
         legendPlacement === "overlay" ? (
-          <div style={{ ...LEGEND_OVERLAY_BOX, width: 220 }}>
+          // 2026-09-27 — só DESKTOP: no celular esta legenda mudou de lugar
+          // (fluxo, abaixo do mapa — ver `NationalMapBlock.tsx`), nunca por
+          // cima dele.
+          <div
+            className={mapFrameStyles.desktopOverlay}
+            style={{ ...LEGEND_OVERLAY_BOX, width: 220 }}
+          >
             <GeografiaLegend />
           </div>
         ) : (
@@ -500,7 +589,9 @@ export function NationalChoroplethMap({
       ) : null}
       {legendEntries ? (
         legendPlacement === "overlay" ? (
-          <div style={LEGEND_OVERLAY_BOX}>
+          // 2026-09-27 — idem: a versão do celular é o resumo + "Ver legenda"
+          // de `NationalMapBlock.tsx`, não esta caixa flutuante.
+          <div className={mapFrameStyles.desktopOverlay} style={LEGEND_OVERLAY_BOX}>
             <CandidateLegendGroup entries={legendEntries} />
           </div>
         ) : (

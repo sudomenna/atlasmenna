@@ -52,13 +52,30 @@
 
 /* O mapa vem ANTES dos painéis no visual do mobile, mas depois deles no DOM:
  * `<main>` é o conteúdo da página e deve preceder um bloco de apoio na ordem
- * de leitura e de tabulação. `order` resolve o visual sem reordenar o DOM. */
+ * de leitura e de tabulação. `order` resolve o visual sem reordenar o DOM.
+ *
+ * 🔴 2026-09-27 (redesenho do mapa no celular) — SEM altura fixa nem
+ * `overflow: hidden` aqui embaixo de 960px. Até esta mudança a caixa tinha
+ * `height: 52vh; min-height: 400px; overflow: hidden`, e todo cromo (título,
+ * vistas, "Escolher UF", legenda) vivia SOBREPOSTO ao mapa, dentro dessa
+ * altura fixa. A versão B do protótipo
+ * (docs/design-system/prototipos/mapa-celular-2026-09-27/) tira o cromo de
+ * cima do mapa e põe ABAIXO dele, em fluxo (`NationalMapBlock.tsx`,
+ * `PersistentMapFrame.tsx`, classe `.mobileChrome` de
+ * `MapFrameMobile.module.css`) — e uma caixa de altura fixa com
+ * `overflow: hidden` cortaria exatamente esse cromo nas bordas.
+ *
+ * A altura VISÍVEL do mapa em si não mudou de mecanismo: quem a define agora
+ * é o `.canvasFill`/`.canvasFlex` de `MapFrameMobile.module.css` (46vh, piso
+ * de 340px), um filho desta caixa — `.map` (aqui) vira `height: auto` e
+ * cresce para caber o canvas MAIS o cromo empilhado abaixo dele. Sem isto, o
+ * cromo transbordaria por baixo da caixa e o próximo item do `flex-column`
+ * (`.panels`, que no celular vem DEPOIS visualmente por causa do `order`
+ * acima) desenharia por cima dele.
+ */
 .split .map {
   order: -1;
   position: relative;
-  overflow: hidden;
-  height: 52vh;
-  min-height: 400px;
   border-bottom: 1px solid var(--border-strong);
 }
 
@@ -159,6 +176,13 @@
     order: 0;
     height: auto;
     min-height: 0;
+    /* 2026-09-27 — só a partir daqui: no celular o cromo mora ABAIXO do mapa,
+     * em fluxo (ver a nota na regra mobile-first acima), e recortá-lo
+     * destruiria exatamente o que essa mudança expõe. No desktop o cromo
+     * volta a ser overlay (`MapFrameMobile.module.css`, `.desktopOverlay`),
+     * dentro desta MESMA caixa — o corte nunca alcança conteúdo que devesse
+     * ficar visível. */
+    overflow: hidden;
     border-bottom: 0;
   }
 }
