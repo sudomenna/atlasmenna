@@ -60,11 +60,13 @@ import { Figure } from "@/components/atoms/data/Figure";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { GovernorCard } from "@/components/blocks/GovernorCard";
+import { RegiaoConsolidada } from "@/components/blocks/RegiaoConsolidada";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { cargoInfo } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
+import { agruparPorRegiao } from "@/lib/config/regioes";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload } from "@/lib/edge-config/types";
@@ -422,7 +424,14 @@ export default async function SenadoPage() {
       {/* Seção 3 — as corridas, estado a estado. A margem de cada linha é a
           da 2ª vaga (RF-104): `top_candidatos[1].pct − top_candidatos[2].pct`.
           É lista, não mapa: este cargo não tem dado municipal (ADR-0026). */}
-      <Panel kicker="Corridas estaduais" title="Estado a estado" titleId="corridas-heading">
+      {/* Constituição § 1 — o consolidado regional (ADR-0057) é número do
+          modelo: o kicker diz "não oficial" fora da fase pré (RF-161). O
+          `titleId` fica: é o alvo do `aria-describedby` do mapa do Senado. */}
+      <Panel
+        kicker={pre ? "Corridas estaduais" : "Corridas estaduais · não oficial"}
+        title="Estado a estado"
+        titleId="corridas-heading"
+      >
         {/* 🔴 RF-162 — em fase pré esta lista é 27 links e nenhum nome. Cada
             linha de hoje imprime os dois primeiros colocados de um estado e a
             margem para a 2ª vaga: nome de candidato e medição, os dois. E os
@@ -459,24 +468,55 @@ export default async function SenadoPage() {
               Os quatro mais votados de cada estado e a soma dos demais, em percentual dos votos
               válidos. São duas vagas por estado: ficam com elas as duas primeiras posições.
             </p>
+            {/* 🔴 ADR-0057 (2026-09-28, decisão do dono) — agrupado por
+                REGIÃO, com o consolidado por partido no topo de cada uma, em
+                "% dos votos" (cada eleitor vota duas vezes). A lista externa
+                mantém o rótulo de sempre e passa a ser a lista das cinco
+                regiões; cada região traz a própria lista de estados, e cada
+                cartão continua sendo o link para `/uf/[sigla]/senador`. */}
             <ul
               aria-label="Corridas estaduais de senador"
               className="grid grid-cols-1 gap-3"
               style={{ listStyle: "none", margin: 0, padding: 0 }}
             >
-              {payload.por_uf.map((uf) => (
-                <li key={uf.sigla}>
-                  <a
-                    href={`/uf/${uf.sigla}/senador`}
-                    data-testid="corrida-uf"
-                    data-uf={uf.sigla}
-                    className="block"
-                    style={{ color: "inherit", textDecoration: "none" }}
-                  >
-                    <GovernorCard uf={uf} candidatos={payload.national.candidatos} cargo="sen" />
-                  </a>
-                </li>
-              ))}
+              {agruparPorRegiao(payload.por_uf).map((grupo) =>
+                grupo.rows.length > 0 ? (
+                  <li key={grupo.regiao.id}>
+                    <RegiaoConsolidada
+                      regiao={grupo.regiao}
+                      ufs={grupo.rows}
+                      chave="partido"
+                      senado
+                      nivel={3}
+                    >
+                      <ul
+                        aria-label={`Estados do ${grupo.regiao.nome}`}
+                        className="grid grid-cols-1 gap-3"
+                        style={{ listStyle: "none", margin: 0, padding: 0 }}
+                      >
+                        {grupo.rows.map((uf) => (
+                          <li key={uf.sigla}>
+                            <a
+                              href={`/uf/${uf.sigla}/senador`}
+                              data-testid="corrida-uf"
+                              data-uf={uf.sigla}
+                              className="block"
+                              style={{ color: "inherit", textDecoration: "none" }}
+                            >
+                              <GovernorCard
+                                uf={uf}
+                                candidatos={payload.national.candidatos}
+                                cargo="sen"
+                                nivelTitulo={4}
+                              />
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </RegiaoConsolidada>
+                  </li>
+                ) : null,
+              )}
             </ul>
             {/* ADR-0053 / RF-213 — só quando alguma UF tem anulada no corte. */}
             {payload.por_uf.some((uf) => haAnulada(uf.top_candidatos)) ? (

@@ -350,7 +350,9 @@ describe("/senador (T-09)", () => {
     expect(sp[2]).toMatch(/^3° ?Célia Mota ?MDB.*29%$/);
     // O cabeçalho do cartão: nome do estado e o apurado, como em /governador.
     const cartao = doc.querySelector("[data-uf='SP'] article");
-    expect(cartao?.querySelector("h3")?.textContent).toContain("São Paulo");
+    // h4 desde 2026-09-28 (ADR-0057): o cartão vive dentro da região (h3),
+    // que vive no painel "Estado a estado" (h2).
+    expect(cartao?.querySelector("h4")?.textContent).toContain("São Paulo");
     expect(cartao?.textContent).toContain("62% apur");
     // O cartão continua sendo o link para a tela do estado.
     expect(doc.querySelector("a[data-uf='SP']")?.getAttribute("href")).toBe("/uf/SP/senador");

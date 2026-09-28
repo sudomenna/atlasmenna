@@ -462,6 +462,14 @@
       "date": "2026-09-27",
       "note": "Decisão do dono a partir do protótipo docs/design-system/prototipos/mapa-celular-2026-09-27/ (versões A/B/C, escolhida B com \"Ver legenda\" emprestado de C). Emenda PARCIAL ao ADR-0033 § 1: a composição 'todo o cromo é overlay' da variante frame (NationalMapBlock.tsx:98-102) vale só no desktop (≥960px); no celular título, MapViewToggle, UfPicker, '← Brasil' e legenda saem da sobreposição para fluxo abaixo do mapa — barra de dois botões de 44px ('Vista: <atual> ▾', 'Escolher UF'), depois título, legenda resumida (bolinhas + 'mais forte = mais vantagem') e 'Ver legenda' abrindo <Sheet> com a legenda completa. Vistas sem legenda (swing, % apurado, Gov/Sen — ADR-0048) sem 'Ver legenda'. Pré-eleição: legenda de geografia também em fluxo abaixo. Moldura persistente (ADR-0033 § 1 restante), mapa primeiro no mobile (ADR-0029), dynamic import (ADR-0010) e orçamentos RNF-007a/b intocados; initialFramePadding (_NationalChoroplethMapImpl.tsx:764-777) fica candidato a remedição, não alterado por este ADR.",
       "path": "docs/architecture/adrs/0056-mapa-celular-cromo-em-fluxo-versao-b.md"
+    },
+    {
+      "id": "0057",
+      "title": "Capas de Governador, Senador e a home de Presidente agrupam por região IBGE, com consolidado regional recolhível no topo — campo novo votos_disputa_projetados no payload de UF",
+      "status": "accepted",
+      "date": "2026-09-28",
+      "note": "Decisão do dono a partir do protótipo docs/design-system/prototipos/capas-regioes-2026-09-28/ (versões A/B/C, escolhida C com 6 partidos+Outros em vez de 4, e regiões abertas por padrão). Mapa estático lib/config/regioes.ts (UF → região IBGE, ordem Norte-Nordeste-CO-Sudeste-Sul), só nas capas nacionais /governador, /senador e a home de Presidente / (telas de UF inalteradas). Consolidado regional recolhível no topo de cada região (colapso visual sem tirar do DOM — ADR-0017/ADR-0034 D21): por PARTIDO em Governador/Senador, por CANDIDATO em Presidente. Base = votos em disputa (válidos + sub judice, anulado fora — ADR-0053), igual à dos cards de UF; Senado em votos (2 por eleitor). Parcial = soma de votos_atuais por partido/candidato da região; Projeção = soma por UF de top_candidatos[].pct × EdgeUfRow.votos_disputa_projetados (campo novo, opcional, emitido por api/model/project.py nos cargos 1/3/5 na mesma base de top_candidatos[].pct); ausente ⇒ Projeção regional mostra '—', nunca estimativa (ADR-0051, 'ausência ≠ zero'). 'Outros' da região junta partidos além dos 6 maiores + a cauda 'Outros' de cada UF (payload só detalha 4 por UF). Ordem neutra: votos desc, empate por sigla/nome alfabética pt-BR. Em /governador os filtros de status escondem cards mas o consolidado sempre soma todos os estados da região. Na home a seção entra ALÉM do 'Placar por estado' (StateGroupedTable, ADR-0033), antes dele; cards de Presidente sem selo de turno (ADR-0055). Alternativas rejeitadas: estimar total projetado por UF como contado÷%apurado (enviesa com apuração desigual) e ler os 27 payloads de UF por render (27 leituras).",
+      "path": "docs/architecture/adrs/0057-consolidado-regional-capas-governador-senador-presidente.md"
     }
   ],
   "nfr": {
@@ -874,7 +882,9 @@
         "NationalWinnerBanner",
         "TurnoOneRecap",
         "ResultPanel",
-        "CandidateListCollapse"
+        "CandidateListCollapse",
+        "RegiaoConsolidada",
+        "RegiaoRecolhivel"
       ],
       "nfr": [
         "RNF-001",
@@ -910,7 +920,8 @@
         "0051",
         "0053",
         "0055",
-        "0056"
+        "0056",
+        "0057"
       ],
       "shipped_with_carry_overs": ""
     },
@@ -1105,7 +1116,9 @@
         "TrilhaKicker",
         "RaceHeader",
         "GovernadoresPlacarTurno",
-        "GovernadoresPorPartido"
+        "GovernadoresPorPartido",
+        "RegiaoConsolidada",
+        "RegiaoRecolhivel"
       ],
       "nfr": ["RNF-001", "RNF-002", "RNF-003", "RNF-022", "RNF-023", "RNF-024"],
       "adrs": [
@@ -1124,7 +1137,8 @@
         "0038",
         "0048",
         "0053",
-        "0056"
+        "0056",
+        "0057"
       ]
     },
     {
@@ -1296,7 +1310,9 @@
         "ChancesPanel",
         "CargoTabs",
         "RaceHeader",
-        "ForecastTransparency"
+        "ForecastTransparency",
+        "RegiaoConsolidada",
+        "RegiaoRecolhivel"
       ],
       "nfr": ["RNF-001", "RNF-002", "RNF-003", "RNF-006", "RNF-022", "RNF-023", "RNF-024"],
       "adrs": [
@@ -1314,7 +1330,8 @@
         "0048",
         "0053",
         "0055",
-        "0056"
+        "0056",
+        "0057"
       ],
       "opens_after": "2026-09-11"
     },

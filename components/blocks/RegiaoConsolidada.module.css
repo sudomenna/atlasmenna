@@ -1,0 +1,189 @@
+/*
+ * components/blocks/RegiaoConsolidada.module.css
+ *
+ * Região recolhível das capas (ADR-0057, versão C do protótipo
+ * `docs/design-system/prototipos/capas-regioes-2026-09-28/`, CSS `.vC`,
+ * `.empilhada`, `.leg`, `.base-nota`).
+ *
+ * O que varia por dado — largura e cor de cada segmento, cor de cada amostra e
+ * de cada percentual — vai no `style` do elemento; todo o resto mora aqui,
+ * para o HTML das três capas não carregar a mesma declaração 5 × 2 vezes.
+ *
+ * Contorno das superfícies coloridas: `1px solid var(--text-secondary)`, o
+ * mesmo valor de `DATA_FILL_STROKE` (`components/blocks/_candidateColor.ts`)
+ * — CSS não importa constante de TS; o teste do bloco confere que batem.
+ *
+ * Modo `pure` de CSS Modules: toda regra carrega ao menos uma classe local.
+ */
+
+.regiao {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* `position: relative` — é a caixa sobre a qual o `::after` do botão se
+ * estende, para o cabeçalho inteiro (líder, barra, legenda) ser clicável sem
+ * que eles morem dentro do `<button>`. */
+.cabecalho {
+  position: relative;
+  padding: var(--space-3);
+}
+
+.titulo {
+  margin: 0;
+}
+
+.botao {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.botao::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.botao:focus-visible {
+  outline: none;
+}
+
+.botao:focus-visible::after {
+  outline: 2px solid var(--text-primary);
+  outline-offset: -2px;
+  border-radius: 10px;
+}
+
+.nome {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.seta {
+  flex: none;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ---- o resumo da região (uma vez por base) --------------------------
+ * Estrutura fixa, alcançada por posição (uma classe só — em produção cada
+ * classe de módulo custa ~35 bytes por uso):
+ *
+ *   <div .resumo data-view-only>
+ *     <p>Na região: <b>líder X%</b> · <span>andamento</span></p>
+ *     <div aria-hidden> <i style="--w;--cor"/> … </div>      ← barra empilhada
+ *     <ul> <li style="--cor;--tx"><i/>SIGLA <span>X%</span></li> … </ul>
+ *     <p>nota (indisponível) | base</p>
+ *   </div>
+ *
+ * Sem `display` aqui: `[data-view-only]` usa `display: revert` para mostrar
+ * a base ativa, e um `display` do módulo seria sobrescrito de qualquer forma. */
+
+.resumo > p {
+  margin: var(--space-1) 0 0;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.resumo > p:first-child {
+  margin: var(--space-1) 0 var(--space-2);
+  font: var(--type-body-sm);
+  color: var(--text-secondary);
+}
+
+.resumo > p:first-child > b {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* barra empilhada — PREENCHIMENTO: cor base + contorno (= DATA_FILL_STROKE) */
+.resumo > div {
+  display: flex;
+  height: 16px;
+  border: 1px solid var(--text-secondary);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.resumo > div > i {
+  flex: none;
+  width: var(--w);
+  height: 100%;
+  background: var(--cor);
+}
+
+/* Filete de papel entre segmentos vizinhos: dois partidos de cor próxima
+ * não se fundem num bloco só. */
+.resumo > div > i + i {
+  border-left: 1px solid var(--color-bg);
+}
+
+.resumo > ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.resumo > ul > li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* amostra — PREENCHIMENTO: cor base + contorno (= DATA_FILL_STROKE) */
+.resumo > ul > li > i {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--text-secondary);
+  border-radius: 2px;
+  background: var(--cor);
+}
+
+/* percentual — TEXTO: `textForParty` (≥ 4,5:1) */
+.resumo > ul > li > span {
+  color: var(--tx);
+}
+
+.corpo {
+  padding: 0 var(--space-3) var(--space-3);
+}
+
+/* Fechar = recolher a ALTURA, nunca `display: none` (ADR-0017 / ADR-0034
+ * D21): os cartões seguem no DOM, na árvore de acessibilidade e na busca da
+ * página. `:not(:focus-within)` — com o foco de teclado num cartão (são
+ * links), o corpo reabre, para o Tab nunca andar por links invisíveis. */
+.corpo[data-fechado="true"]:not(:focus-within) {
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}

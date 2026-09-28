@@ -102,7 +102,9 @@ Notas dos atoms não construídos:
 | `<TurnoOneRecap />` | ✅ S06 | (ADR-0016 — sem RF formal) | `components/blocks/TurnoOneRecap.tsx` | `tests/unit/components/TurnoOneRecap.test.tsx` |
 | `<TwoRoundIndicator />` | ⛔ órfão | ~~RF-030.7~~ | `components/blocks/TwoRoundIndicator.tsx` | tests existem mas sem call site em produção (RF-030.7 migrou para `<ChancesPanel />`) |
 | `<CandidateRanking />` | ✅ S05 | RF-030 ext, RF-031..044 ext (rank 3–6) | `components/blocks/CandidateRanking.tsx` | `tests/unit/components/CandidateRanking.test.tsx` |
-| `<GovernorCard />` | ✅ S06 | RF-006.3, RF-006.8 (selo com desfecho); também em `/senador` com `cargo="sen"`, sem selo (spec 016, nota 27/09) | `components/blocks/GovernorCard.tsx` | `tests/unit/components/GovernorCard.test.tsx` |
+| `<GovernorCard />` | ✅ S06 | RF-006.3, RF-006.8 (selo com desfecho); também em `/senador` com `cargo="sen"`, sem selo (spec 016, nota 27/09); e na home `/` como consolidado regional de Presidente com `cargo="pres"` (ADR-0057, S09, variante sem selo) | `components/blocks/GovernorCard.tsx` | `tests/unit/components/GovernorCard.test.tsx` |
+| `<RegiaoConsolidada />` | ✅ S09 | (ADR-0057 — consolidado visual de região IBGE: cabeçalho com nome, "N estados", líder regional, %, barra empilhada 100% e legenda) | `components/blocks/RegiaoConsolidada.tsx` | `tests/integration/capas-regioes.test.tsx` |
+| `<RegiaoRecolhivel />` | ✅ S09 | (ADR-0057 — wrapper que colapsa/expande os cards de estado de uma região com `aria-expanded` no botão; reutiliza padrão de ADR-0017/ADR-0034 D21) | `components/blocks/RegiaoRecolhivel.tsx` | `tests/integration/capas-regioes.test.tsx` |
 | `<HexCartogramBrasil />` | ✅ S06 — sem uso em `/governador` | RF-006.3 (histórico pré-ADR-0048) | `components/blocks/HexCartogramBrasil.tsx` | `tests/unit/components/HexCartogramBrasil.test.tsx` (verde, preservado por decisão explícita do dono) |
 | `<RaceStatsCards />` | ✅ S06 | RF-006.1 | `components/blocks/RaceStatsCards.tsx` | `tests/unit/components/RaceStatsCards.test.tsx` |
 | `<BreakingNewsTicker />` | ✅ S06 | RF-006.4 | `components/blocks/BreakingNewsTicker.tsx` | `tests/unit/components/BreakingNewsTicker.test.tsx` |
@@ -152,6 +154,7 @@ Notas dos atoms não construídos:
 | `<SWRProvider />` / `useProjection()` | ✅ | RF-027 | `components/shared/swr-provider.tsx` | — (sem teste dedicado) |
 | `useMunicipioSheetStore` | ✅ S07 | (estado da folha de município entre o mapa e a página) | `components/shared/municipio-sheet-store.ts` | `tests/unit/components/MunicipioExplorer.test.tsx` |
 | `selosDaBase()` | ✅ S08 | (ADR-0055 — calcula rótulo do selo conforme cargo, turno, rota e base ativa) | `lib/utils/selo-resultado.ts` | `tests/unit/utils/selo-resultado.test.ts` |
+| `consolidarRegiao()` | ✅ S09 | (ADR-0057 — agrega votos de uma região IBGE por partido/candidato; retorna top-6 + "Outros" com base em votos em disputa) | `lib/utils/consolidado-regiao.ts` | `tests/unit/utils/consolidado-regiao.test.ts` |
 | `<HoverTooltip />` | 🕐 planejada | RF-045, RF-048 | *previsto*: `components/shared/HoverTooltip.tsx` | — |
 | `<BottomSheet />` | 🕐 planejada | RF-049, RF-050 | *previsto*: `components/shared/BottomSheet.tsx` | — |
 

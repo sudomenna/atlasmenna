@@ -296,7 +296,12 @@ describe("opção A — as outras superfícies", () => {
     const davi = itens.find((li) => li.textContent?.includes("Davi"));
     expect(davi?.textContent).not.toMatch(/%/);
     expect(q(davi as Element, "governor-card-votos-anulada")?.textContent).toBe("15 mil votos");
-    expect(davi?.querySelector(".relative.h-2")).toBeNull();
+    // Sem trilho de barra. Desde 2026-09-28 o trilho é o `<i>` da linha
+    // (`GovernorCard.module.css`); o seletor antigo `.relative.h-2` passaria
+    // a achar nada em TODA linha e o teste deixaria de discriminar.
+    expect(davi?.querySelector("i")).toBeNull();
+    const ana = itens.find((li) => li.textContent?.includes("Ana"));
+    expect(ana?.querySelector("i[style*='--w']")).not.toBeNull();
     expect(doc.querySelector("article")?.getAttribute("aria-label")).toContain(
       "líder: Ana (PT) com 52,9%",
     );

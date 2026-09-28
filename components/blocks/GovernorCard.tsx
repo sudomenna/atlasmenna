@@ -28,6 +28,8 @@
  *   - Barras decorativas com aria-hidden — info textual está nos rótulos.
  */
 
+import type { CSSProperties } from "react";
+
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { candidateColor } from "@/components/blocks/_candidateColor";
 import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
@@ -36,6 +38,8 @@ import { anuladasAoFim, compete, exibePercentual, votosDaAnulada } from "@/lib/u
 import { formatPercentTrim } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
+
+import styles from "./GovernorCard.module.css";
 
 /**
  * Nome longo da UF para o header. Sigla curta vai à direita.
@@ -93,8 +97,20 @@ export interface GovernorCardProps {
    * estado: "● ELEITO" só no líder negaria a segunda vaga, e "VAI A 2T" é
    * falso por construção. O `aria-label` nomeia os dois primeiros pelo mesmo
    * motivo (duas vagas, não um líder).
+   *
+   * 🔴 2026-09-28 (ADR-0057 item 6) — `"pres"`: o cartão por estado da seção
+   * regional da home de Presidente. **Sem selo** de turno (ADR-0055: o 2º
+   * turno de Presidente é fato NACIONAL — "VAI A 2T" ou "● ELEITO" num estado
+   * afirmaria o que só o total do país decide), e o `aria-label` nomeia o
+   * líder do estado sem status nenhum.
    */
-  cargo?: "gov" | "sen";
+  cargo?: "gov" | "sen" | "pres";
+  /**
+   * Nível do título do cartão. Default 3 (a capa de sempre). Dentro de uma
+   * região (`<RegiaoConsolidada>`, cujo título já é h3 em `/senador` e na
+   * home) o cartão desce para 4, para não achatar o outline da página.
+   */
+  nivelTitulo?: 3 | 4;
 }
 
 /** Vagas por UF no Senado em 2026 (renovação de 2/3) — só para a variante `"sen"`. */
@@ -102,8 +118,13 @@ const VAGAS_SENADO = 2;
 
 interface StatusChip {
   label: string;
-  bg: string;
-  fg: string;
+  /**
+   * Variante do selo em `GovernorCard.module.css` (`b[data-s]`): `e` eleito,
+   * `t` 2º turno, `a` em apuração. As cores (fundo `-strong` + tinta pareada
+   * por tema, nunca branco fixo — o axe mediu 1,62:1 e 1,85:1 no tema escuro
+   * com branco cravado, 2026-09-10) moram lá desde 2026-09-28.
+   */
+  s: "e" | "t" | "a";
   ariaText: string;
 }
 
@@ -122,32 +143,11 @@ interface StatusChip {
 function chipFor(uf: Pick<EdgeUfRow, "vai_a_2t" | "bucket">): StatusChip {
   switch (classificarProjecao(uf)) {
     case "eleito_1t":
-      return {
-        label: "● ELEITO",
-        // -strong como fundo, com a TINTA PAREADA por tema — nunca branco
-        // fixo. `-strong` inverte de claridade entre claro e escuro (escuro
-        // no claro, claro no escuro), então branco cravado passa num tema e
-        // desaba no outro: o axe mediu 1,62:1 em 2026-09-10, tema escuro.
-        bg: "var(--color-success-strong, #166534)",
-        fg: "var(--chip-success-ink, #ffffff)",
-        ariaText: "eleito",
-      };
+      return { label: "● ELEITO", s: "e", ariaText: "eleito" };
     case "segundo_turno":
-      return {
-        label: "VAI A 2T",
-        // Idem acima: tinta pareada, não branco fixo. Medido a 1,85:1 no
-        // tema escuro antes da correção.
-        bg: "var(--color-warning-strong, #b45309)",
-        fg: "var(--chip-warning-ink, #ffffff)",
-        ariaText: "vai ao segundo turno",
-      };
+      return { label: "VAI A 2T", s: "t", ariaText: "vai ao segundo turno" };
     default:
-      return {
-        label: "EM APURAÇÃO",
-        bg: "var(--color-bg-muted)",
-        fg: "var(--color-text-muted)",
-        ariaText: "em apuração",
-      };
+      return { label: "EM APURAÇÃO", s: "a", ariaText: "em apuração" };
   }
 }
 
@@ -165,9 +165,16 @@ interface Row {
   votos?: number;
 }
 
-export function GovernorCard({ uf, candidatos, cargo = "gov" }: GovernorCardProps) {
+export function GovernorCard({
+  uf,
+  candidatos,
+  cargo = "gov",
+  nivelTitulo = 3,
+}: GovernorCardProps) {
   const senado = cargo === "sen";
-  const chip = senado ? null : chipFor(uf);
+  const presidente = cargo === "pres";
+  const chip = senado || presidente ? null : chipFor(uf);
+  const Titulo = `h${nivelTitulo}` as "h3" | "h4";
   const nomeUf = UF_NAMES[uf.sigla] ?? uf.sigla;
   const candIndex = new Map(candidatos.map((c) => [c.id, c] as const));
 
@@ -278,133 +285,77 @@ export function GovernorCard({ uf, candidatos, cargo = "gov" }: GovernorCardProp
   const apurado = `${formatPercentTrim(uf.pct_apurado)} apurado`;
   const ariaLabel = senado
     ? `${nomeUf}${destaque.length > 0 ? `, mais votados: ${destaque.map(descreve).join(" e ")}` : ""}, ${apurado}`
-    : `${nomeUf}, ${chip?.ariaText}${liderRow ? `, líder: ${descreve(liderRow)}` : ""}, ${apurado}`;
+    : presidente
+      ? `${nomeUf}${liderRow ? `, na frente no estado: ${descreve(liderRow)}` : ""}, ${apurado}`
+      : `${nomeUf}, ${chip?.ariaText}${liderRow ? `, líder: ${descreve(liderRow)}` : ""}, ${apurado}`;
 
+  // 🔴 2026-09-28 — markup ENXUTO. Até esta data cada cartão carregava ~4,3 KB
+  // de `style={}` e classes utilitárias repetidos em toda linha, e a home
+  // passou a montar 27 cartões (ADR-0057 item 6). O desenho inteiro está em
+  // `GovernorCard.module.css`, com UMA classe na raiz e os filhos alcançados
+  // por estrutura; no HTML fica só o que é DADO da linha — `--w` (largura da
+  // barra) e `--cor` (cor do partido), no `style` do trilho. A estrutura da
+  // linha é contrato daquele arquivo: mudar a ordem dos filhos do `<li>` muda
+  // o desenho.
   return (
-    <article
-      aria-label={ariaLabel}
-      className="rounded-md border p-3"
-      style={{
-        borderColor: "var(--color-border)",
-        backgroundColor: "var(--color-bg)",
-      }}
-    >
+    <article aria-label={ariaLabel} className={styles.c}>
       {/* 🔴 2026-09-28 (decisão do dono) — o cartão completo (4 primeiros +
-          "Outros") vale em TODA largura. Até esta data, abaixo de 640px de
-          viewport o cartão caía para uma linha só (sigla · líder · selo), e
-          `/governador` e `/senador` no celular mostravam 27 linhas sem
-          números. A coluna de painéis do celular mede 343–396px úteis — a
-          mesma faixa da coluna do desktop (~352px), onde o cartão completo
-          sempre coube. */}
-      <div>
-        {/* Header */}
-        <header className="mb-2 flex items-baseline justify-between gap-2">
-          <h3
-            className="text-sm font-semibold leading-tight"
-            style={{ color: "var(--color-text)", fontFamily: "var(--font-serif)" }}
-          >
-            {nomeUf}
-            <span className="ml-1" style={{ color: "var(--color-text-muted)" }}>
-              · {uf.sigla}
-            </span>
-          </h3>
-          <span className="text-xs tabular-nums" style={{ color: "var(--color-text-muted)" }}>
-            {formatPercentTrim(uf.pct_apurado)} apur
-          </span>
-        </header>
-
-        {/* Rows */}
-        <ul className="flex flex-col gap-1">
-          {rows.map((r, idx) => {
-            const isLider = r.id !== null && r.id === liderRow?.id;
-            const pctWidth = Math.max(0, Math.min(100, r.pct));
-            return (
-              <li key={r.id ?? `outros-${idx}`} className="flex items-center gap-2 text-xs">
-                <span
-                  className="w-4 tabular-nums"
-                  style={{ color: "var(--color-text-muted)" }}
-                  aria-hidden
-                >
-                  {r.id === null ? "" : compete(r) ? `${idx + 1}°` : "—"}
+          "Outros") vale em TODA largura; a linha única do celular saiu. */}
+      <header>
+        <Titulo>
+          {nomeUf}
+          <span>· {uf.sigla}</span>
+        </Titulo>
+        <span>{formatPercentTrim(uf.pct_apurado)} apur</span>
+      </header>
+      <ul>
+        {rows.map((r, idx) => {
+          const isLider = r.id !== null && r.id === liderRow?.id;
+          const pctWidth = Math.max(0, Math.min(100, r.pct));
+          return (
+            <li key={r.id ?? `outros-${idx}`}>
+              <span aria-hidden="true">
+                {r.id === null ? "" : compete(r) ? `${idx + 1}°` : "—"}
+              </span>
+              {/* Quebra, não corta (2026-09-28): selo e etiqueta descem
+                  INTEIROS para a linha de baixo quando não cabem. */}
+              <span>
+                {r.nome}
+                {/* Desenhado ⇒ abreviado (2026-09-19). */}
+                {r.partido ? <span>{siglaExibicao(r.partido)}</span> : null}
+                {r.destino ? <DestinoEtiqueta destino={r.destino} /> : null}
+                {isLider && chip ? <b data-s={chip.s}>{chip.label}</b> : null}
+              </span>
+              {r.id !== null && !exibePercentual(r) ? (
+                // Emenda "opção A" ao ADR-0053 — a anulada não tem barra nem
+                // percentual (o % dela é sobre outra base). Os votos ocupam as
+                // DUAS colunas (barra + número), para a linha continuar
+                // alinhada; sem voto no dado, o espaço fica vazio.
+                <span data-testid="governor-card-votos-anulada">
+                  {votosDaAnulada(r.votos, true)}
                 </span>
-                {/* 🔴 Quebra, não corta (2026-09-28). Com `truncate`, no cartão de
-                    326px do celular o selo virava "VA" e a etiqueta "SUB JUDI"
-                    — o recorte comia justamente a informação de status. Agora
-                    o nome quebra entre palavras e selo/etiqueta descem INTEIROS
-                    (`whitespace-nowrap`) para a linha de baixo quando não
-                    cabem. */}
-                <span
-                  className="min-w-0 flex-1"
-                  style={{ color: "var(--color-text)", overflowWrap: "break-word" }}
-                >
-                  {r.nome}
-                  {r.partido && (
-                    <span className="ml-1" style={{ color: "var(--color-text-muted)" }}>
-                      {/* Desenhado ⇒ abreviado (2026-09-19): sem a abreviação
-                          a linha quebra mais cedo. */}
-                      {siglaExibicao(r.partido)}
-                    </span>
-                  )}
-                  {r.destino ? (
-                    <span className="ml-1 inline-block whitespace-nowrap">
-                      <DestinoEtiqueta destino={r.destino} />
-                    </span>
-                  ) : null}
-                  {isLider && chip && (
-                    <span
-                      className="ml-2 inline-block whitespace-nowrap"
-                      style={{
-                        backgroundColor: chip.bg,
-                        color: chip.fg,
-                        padding: "1px 6px",
-                        borderRadius: 4,
-                        fontSize: "0.65rem",
-                        fontWeight: 600,
-                        letterSpacing: "0.02em",
-                      }}
-                    >
-                      {chip.label}
-                    </span>
-                  )}
-                </span>
-                {r.id !== null && !exibePercentual(r) ? (
-                  // Emenda "opção A" ao ADR-0053 — a anulada não tem barra nem
-                  // percentual (o % dela é sobre outra base). Os votos ocupam
-                  // as DUAS colunas (barra + número, 4rem + 0,5rem + 2,5rem),
-                  // para a linha continuar alinhada com as de cima; sem voto
-                  // no dado, o espaço fica vazio.
-                  <span
-                    data-testid="governor-card-votos-anulada"
-                    className="text-right tabular-nums whitespace-nowrap"
-                    style={{ width: "7rem", color: "var(--color-text)" }}
+              ) : (
+                <>
+                  <i
+                    aria-hidden="true"
+                    style={
+                      { "--w": `${round2(pctWidth)}%`, "--cor": r.corResolvida } as CSSProperties
+                    }
                   >
-                    {votosDaAnulada(r.votos, true)}
-                  </span>
-                ) : (
-                  <>
-                    <span
-                      className="relative h-2 w-16 rounded-sm"
-                      style={{ backgroundColor: "var(--color-bg-muted)" }}
-                      aria-hidden
-                    >
-                      <span
-                        className="absolute left-0 top-0 h-full rounded-sm"
-                        style={{ width: `${pctWidth}%`, backgroundColor: r.corResolvida }}
-                      />
-                    </span>
-                    <span
-                      className="w-10 text-right tabular-nums"
-                      style={{ color: "var(--color-text)" }}
-                    >
-                      {formatPercentTrim(r.pct)}
-                    </span>
-                  </>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      </div>
+                    <i />
+                  </i>
+                  <span>{formatPercentTrim(r.pct)}</span>
+                </>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </article>
   );
+}
+
+/** Largura da barra com 2 casas — sub-pixel a mais não muda desenho, só bytes. */
+function round2(v: number): number {
+  return Math.round(v * 100) / 100;
 }

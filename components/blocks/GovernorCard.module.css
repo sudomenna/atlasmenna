@@ -1,0 +1,173 @@
+/*
+ * components/blocks/GovernorCard.module.css
+ *
+ * O cartão de UF das capas (`/governador`, `/senador`, home de Presidente).
+ *
+ * 🔴 Por que existe (2026-09-28): o cartão carregava ~4,3 KB de `style={}`
+ * repetido POR CARTÃO — e a home passou a montar 27 deles (ADR-0057 item 6).
+ * Tudo o que é igual em todo cartão mora aqui; no HTML só fica o que é do
+ * DADO de cada linha: a largura da barra (`--w`) e a cor do partido (`--cor`),
+ * as duas num único `style` do trilho.
+ *
+ * ⚠️ UMA classe local só, na raiz. Em produção o Turbopack nomeia a classe
+ * como `GovernorCard-module__XXXXXX__nome` (~30 bytes); uma classe por
+ * elemento devolveria boa parte do que o `style` custava. Por isso os filhos
+ * são alcançados por ESTRUTURA — e a estrutura da linha é fixa:
+ *
+ *   <li>
+ *     <span aria-hidden>1°</span>                     ← posição
+ *     <span>NOME<span>SIGLA</span><DestinoEtiqueta/><b>selo</b></span>
+ *     <i style="--w;--cor"><i></i></i>                 ← trilho + barra
+ *     <span>32,7%</span>                               ← percentual
+ *   </li>
+ *
+ * A linha da ANULADA não tem trilho: o 3º filho é um `<span>` com os votos
+ * (emenda "opção A" ao ADR-0053), e é por isso que `span:nth-child(3)` e
+ * `span:nth-child(4)` são regras diferentes.
+ *
+ * Tokens idênticos aos do `style` que substituem — contraste inalterado.
+ * Modo `pure` de CSS Modules: toda regra carrega a classe local.
+ */
+
+.c {
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+}
+
+.c > header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.c > header > span {
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted);
+}
+
+.c > header > :first-child {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--color-text);
+}
+
+.c > header > :first-child > span {
+  margin-left: 0.25rem;
+  color: var(--color-text-muted);
+}
+
+.c ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.c li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-xs);
+  line-height: var(--text-xs--line-height);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+
+/* posição */
+.c li > span:first-child {
+  flex: none;
+  width: 1rem;
+  color: var(--color-text-muted);
+}
+
+/* nome — quebra entre palavras, nunca corta (2026-09-28: `truncate` comia o
+ * selo e a etiqueta no cartão de 326px). */
+.c li > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+/* sigla: inline, colada ao nome (sem espaço no texto, como sempre foi — a
+ * quebra de linha continua caindo ENTRE palavras do nome, não antes dela). */
+.c li > span:nth-child(2) > span {
+  margin-left: 0.25rem;
+  color: var(--color-text-muted);
+}
+
+/* etiqueta de destino (`<DestinoEtiqueta>`, `inline-flex` + `nowrap` no
+ * próprio componente): desce INTEIRA para a linha de baixo quando não cabe. */
+.c li [data-destino] {
+  margin-left: 0.25rem;
+}
+
+/* selo de status — `data-s`: e = eleito, t = 2º turno, a = em apuração.
+ * `-strong` como fundo com a TINTA PAREADA por tema, nunca branco fixo (o
+ * axe mediu 1,62:1 e 1,85:1 no tema escuro com branco cravado, 2026-09-10). */
+.c b {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  background-color: var(--color-bg-muted);
+  color: var(--color-text-muted);
+}
+
+.c b[data-s="e"] {
+  background-color: var(--color-success-strong, #166534);
+  color: var(--chip-success-ink, #ffffff);
+}
+
+.c b[data-s="t"] {
+  background-color: var(--color-warning-strong, #b45309);
+  color: var(--chip-warning-ink, #ffffff);
+}
+
+/* trilho (decorativo: `aria-hidden` no JSX) */
+.c li > i {
+  position: relative;
+  flex: none;
+  width: 4rem;
+  height: 0.5rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg-muted);
+}
+
+.c li > i > i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: var(--w, 0%);
+  border-radius: var(--radius-sm);
+  background-color: var(--cor, var(--color-cand-other));
+}
+
+/* votos da anulada — ocupa as duas colunas (barra + número). */
+.c li > span:nth-child(3) {
+  flex: none;
+  width: 7rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* percentual */
+.c li > span:nth-child(4) {
+  flex: none;
+  width: 2.5rem;
+  text-align: right;
+}

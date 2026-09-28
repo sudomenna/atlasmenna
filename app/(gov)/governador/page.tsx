@@ -119,10 +119,12 @@ import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { GovernadoresPlacarTurno } from "@/components/blocks/GovernadoresPlacarTurno";
 import { GovernadoresPorPartido } from "@/components/blocks/GovernadoresPorPartido";
 import { GovernorCard } from "@/components/blocks/GovernorCard";
+import { RegiaoConsolidada } from "@/components/blocks/RegiaoConsolidada";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { isPreEleicao } from "@/lib/config/fase";
+import { agruparPorRegiao } from "@/lib/config/regioes";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
@@ -539,7 +541,10 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
           apuração que não começou. O teste do RF-162 é NEGATIVO — "nenhum nome
           de candidatura no documento" —, porque "os 27 links estão lá" passaria
           com uma grade de rostos logo abaixo. */}
-      <Panel kicker="Corridas estaduais">
+      {/* Constituição § 1 — com o consolidado regional (ADR-0057) esta seção
+          passa a carregar número do modelo, e o kicker diz "não oficial". Em
+          fase pré ela é 27 links e o kicker fica o de sempre (RF-161). */}
+      <Panel kicker={pre ? "Corridas estaduais" : "Corridas estaduais · não oficial"}>
         {pre ? (
           <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
             <p
@@ -594,49 +599,87 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
               </ul>
             </nav>
 
-            {/* Grid 27 cards — 3 cols sm, 4 cols xl */}
-            {ufsFiltradas.length > 0 ? (
-              <section
-                aria-label="Corridas estaduais de governador"
-                className="flex flex-col"
-                style={{ gap: "var(--space-3)" }}
-              >
-                <p style={{ margin: 0, font: "var(--type-data)", color: "var(--text-muted)" }}>
-                  {ufsFiltradas.length} {ufsFiltradas.length === 1 ? "corrida" : "corridas"} —{" "}
-                  {FILTER_LABELS[status].toLowerCase()}.
-                </p>
-                {/* UMA coluna, sem breakpoints. Os `sm:`/`lg:`/`xl:` que havia
-                  aqui medem a VIEWPORT, e desde o ADR-0033 § 1 esta grade não
-                  vive mais na viewport: ela está dentro da coluna de painéis
-                  do `<AppShellSplit>`, que mede `--container-sidebar` (400px)
-                  fixos no desktop e no máximo `--container-mobile` (430px) no
-                  mobile. Numa janela de 1280px o `xl:grid-cols-4` disparava e
-                  dava ~79px por card — menos que a soma das partes fixas de um
-                  `<GovernorCard>` (16px de rank + 64px de barra + 40px de
-                  percentual + 24px de padding + gaps), deixando largura
-                  NEGATIVA para o nome do candidato. Medido em 1280×900. */}
-                <div className="grid grid-cols-1 gap-3">
-                  {ufsFiltradas.map((uf) => (
-                    <GovernorCard key={uf.sigla} uf={uf} candidatos={national.candidatos} />
-                  ))}
-                </div>
-                {/* ADR-0053 / RF-213 — uma frase para a grade inteira, só se
-                    algum cartão exibido tiver candidatura anulada. */}
-                {ufsFiltradas.some((uf) => haAnulada(uf.top_candidatos)) ? (
-                  <p
-                    data-testid="governadores-nota-anuladas"
-                    style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-muted)" }}
-                  >
-                    {NOTA_ANULADAS}
-                  </p>
-                ) : null}
-              </section>
-            ) : (
+            {ufsFiltradas.length === 0 ? (
               <p style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}>
                 Nenhuma UF se encaixa no filtro <strong>{FILTER_LABELS[status]}</strong> no momento.{" "}
                 <a href="/governador">Ver todas</a>.
               </p>
-            )}
+            ) : null}
+
+            {/* 🔴 ADR-0057 (2026-09-28, decisão do dono) — os 27 cartões saem
+                AGRUPADOS POR REGIÃO (ordem de `lib/config/regioes.ts`; dentro
+                da região, alfabética por sigla, como antes), com o
+                consolidado da região no topo de cada grupo.
+
+                O filtro de status age SÓ nos cartões (ADR-0057 item 5): o
+                consolidado soma sempre `grupo.rows` — todos os estados da
+                região —, e os cartões são `grupo.rows` filtrado. Região sem
+                nenhum cartão no filtro NÃO some: fica, com o consolidado
+                visível, RECOLHIDA, e o corpo diz que nenhum estado dela entra
+                no filtro. Assim as cinco regiões estão sempre na tela e o
+                consolidado nunca depende do filtro. */}
+            <section
+              aria-label="Corridas estaduais de governador"
+              className="flex flex-col"
+              style={{ gap: "var(--space-3)" }}
+            >
+              {ufsFiltradas.length > 0 ? (
+                <p style={{ margin: 0, font: "var(--type-data)", color: "var(--text-muted)" }}>
+                  {ufsFiltradas.length} {ufsFiltradas.length === 1 ? "corrida" : "corridas"} —{" "}
+                  {FILTER_LABELS[status].toLowerCase()}.
+                </p>
+              ) : null}
+              {agruparPorRegiao(por_uf).map((grupo) => {
+                const cartoes = grupo.rows.filter((uf) => passesFilter(uf, status));
+                return (
+                  <RegiaoConsolidada
+                    key={grupo.regiao.id}
+                    regiao={grupo.regiao}
+                    ufs={grupo.rows}
+                    chave="partido"
+                    nivel={2}
+                    abertaInicial={cartoes.length > 0}
+                  >
+                    {/* UMA coluna, sem breakpoints. Os `sm:`/`lg:`/`xl:` que
+                        havia aqui medem a VIEWPORT, e desde o ADR-0033 § 1
+                        esta grade não vive mais na viewport: ela está dentro
+                        da coluna de painéis do `<AppShellSplit>` (400px no
+                        desktop, ≤ 430px no mobile). Numa janela de 1280px o
+                        `xl:grid-cols-4` dava ~79px por card — largura
+                        NEGATIVA para o nome do candidato. Medido em 1280×900. */}
+                    {cartoes.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-3">
+                        {cartoes.map((uf) => (
+                          <GovernorCard key={uf.sigla} uf={uf} candidatos={national.candidatos} />
+                        ))}
+                      </div>
+                    ) : (
+                      <p
+                        data-testid="regiao-filtro-vazio"
+                        style={{
+                          margin: 0,
+                          font: "var(--type-body-sm)",
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        Nenhum estado do {grupo.regiao.nome} no filtro{" "}
+                        {FILTER_LABELS[status].toLowerCase()}.
+                      </p>
+                    )}
+                  </RegiaoConsolidada>
+                );
+              })}
+              {/* ADR-0053 / RF-213 — uma frase para a grade inteira, só se
+                  algum cartão exibido tiver candidatura anulada. */}
+              {ufsFiltradas.some((uf) => haAnulada(uf.top_candidatos)) ? (
+                <p
+                  data-testid="governadores-nota-anuladas"
+                  style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-muted)" }}
+                >
+                  {NOTA_ANULADAS}
+                </p>
+              ) : null}
+            </section>
           </div>
         )}
       </Panel>

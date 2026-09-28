@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protótipos — capas por região</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Spectral:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper-0:#fbfbfc; --paper-1:#f3f4f6; --paper-2:#e9ebee; --paper-3:#dde0e4;
+  --ink-0:#14171b; --ink-1:#2a2f36; --ink-2:#5b636e; --rule:#c9cdd3;
+  --sans:"Archivo",system-ui,sans-serif; --mono:"JetBrains Mono",monospace; --serif:"Spectral",Georgia,serif;
+  --tap:44px; --stroke:1px solid #5b636e;
+}
+*{box-sizing:border-box} [hidden]{display:none!important}
+body{margin:0;background:#d9dce1;font-family:var(--sans);color:var(--ink-0)}
+.ctl{position:sticky;top:0;z-index:50;background:#14171b;color:#fbfbfc;padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:13px}
+.ctl b{color:#c9cdd3;margin-right:6px;font-weight:600}
+.seg{display:inline-flex;border:1px solid #5b636e;border-radius:6px;overflow:hidden}
+.seg button{background:transparent;color:#fbfbfc;border:0;padding:6px 10px;font:inherit;cursor:pointer}
+.seg button[aria-pressed=true]{background:#fbfbfc;color:#14171b;font-weight:600}
+.stage{display:flex;justify-content:center;padding:24px 12px 60px}
+.frame{background:var(--paper-1);box-shadow:0 0 0 1px #b9bec6,0 10px 40px rgba(0,0,0,.18);padding:16px}
+.nota{max-width:760px;margin:0 auto 40px;padding:0 16px;font-size:14px;line-height:1.55;color:#2a2f36}
+.nota h2{font-family:var(--serif);font-size:20px;margin:18px 0 6px}
+
+.kicker{font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.pag-titulo{font:600 24px var(--serif);margin:4px 0 12px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---- cartão de estado (igual ao <GovernorCard> de hoje) ---- */
+.uf{background:var(--paper-0);border:1px solid var(--rule);border-radius:6px;padding:12px}
+.uf header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.uf h4{margin:0;font:600 14px var(--serif)} .uf h4 span{color:var(--ink-2)}
+.uf .apur{font:400 12px var(--sans);color:var(--ink-2)}
+.uf ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.uf li{display:flex;align-items:center;gap:8px;font-size:12px}
+.uf .o{width:16px;color:var(--ink-2)} .uf .n{flex:1;min-width:0} .uf .p{color:var(--ink-2);margin-left:4px}
+.uf .trilho{width:64px;height:8px;background:var(--paper-2);border-radius:2px;position:relative;flex:none}
+.uf .trilho i{position:absolute;inset:0 auto 0 0;border-radius:2px}
+.uf .v{width:40px;text-align:right}
+.chip{display:inline-block;white-space:nowrap;margin-left:6px;padding:1px 6px;border-radius:4px;font:600 10px var(--sans);letter-spacing:.02em;color:#fff}
+.etq{display:inline-block;white-space:nowrap;margin-left:4px;border:1px solid var(--ink-0);border-radius:3px;padding:0 4px;font:600 9px var(--sans);letter-spacing:.06em;text-transform:uppercase}
+.ufs{display:grid;gap:10px}
+
+/* ---- consolidado: peças comuns ---- */
+.empilhada{display:flex;height:16px;border-radius:4px;overflow:hidden;border:var(--stroke)}
+.empilhada i{height:100%;border-right:1px solid var(--paper-0)} .empilhada i:last-child{border-right:0}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font:600 12px var(--mono)}
+.leg span{display:inline-flex;align-items:center;gap:5px}
+.leg i{width:10px;height:10px;border-radius:2px;border:var(--stroke)}
+.base-nota{font:400 11px var(--sans);color:var(--ink-2);margin-top:6px}
+
+/* A — faixa de região */
+.vA .regiao{margin-bottom:22px}
+.vA .rcab{border-top:3px double var(--ink-0);padding-top:10px;margin-bottom:10px}
+.vA .rcab h3{margin:0;font:600 20px var(--serif);display:flex;justify-content:space-between;align-items:baseline}
+.vA .rcab h3 small{font:500 12px var(--mono);color:var(--ink-2)}
+.vA .rcab .sub{font:400 12px var(--sans);color:var(--ink-2);margin:2px 0 8px}
+
+/* B — cartão da região no formato do cartão de estado */
+.vB .chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none}
+.vB .chips a{flex:none;height:36px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--ink-0);border-radius:999px;font:600 12px var(--sans);color:var(--ink-0);text-decoration:none;background:var(--paper-0)}
+.vB .regiao{margin-bottom:22px;scroll-margin-top:60px}
+.vB .rtit{font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 6px}
+.vB .rcard{background:var(--ink-0);color:var(--paper-0);border-radius:8px;padding:14px;margin-bottom:10px}
+.vB .rcard header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.vB .rcard h3{margin:0;font:600 18px var(--serif)}
+.vB .rcard .apur{font:500 12px var(--mono);color:#c9cdd3}
+.vB .rcard ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.vB .rcard li{display:flex;align-items:center;gap:8px;font-size:13px}
+.vB .rcard .o{width:18px;color:#9aa0a8} .vB .rcard .n{flex:1;font-weight:700}
+.vB .rcard .trilho{width:90px;height:10px;background:#2a2f36;border-radius:2px;position:relative}
+.vB .rcard .trilho i{position:absolute;inset:0 auto 0 0;border-radius:2px;outline:1px solid #8c949e;outline-offset:-1px}
+.vB .rcard .v{width:48px;text-align:right;font:600 14px var(--mono)}
+.vB .rcard .base-nota{color:#9aa0a8}
+
+/* C — região recolhível */
+.vC .regiao{background:var(--paper-0);border:1px solid var(--rule);border-radius:10px;margin-bottom:12px;overflow:hidden}
+.vC .rbtn{display:block;width:100%;text-align:left;background:none;border:0;padding:14px;cursor:pointer;font:inherit;color:inherit;min-height:var(--tap)}
+.vC .rbtn .l1{display:flex;justify-content:space-between;align-items:baseline}
+.vC .rbtn h3{margin:0;font:600 18px var(--serif)}
+.vC .rbtn .seta{font:600 12px var(--sans);color:var(--ink-2)}
+.vC .rbtn .lider{margin:6px 0 8px;font:500 13px var(--sans);color:var(--ink-1)}
+.vC .rbtn .lider b{font:700 15px var(--mono)}
+.vC .corpo{padding:0 14px 14px}
+.vC .corpo.fechado{height:0;padding:0;overflow:hidden}
+</style>
+</head>
+<body>
+<div class="ctl">
+  <span><b>Versão</b><span class="seg" id="c-v"></span></span>
+  <span><b>Capa</b><span class="seg" id="c-cargo"></span></span>
+  <span><b>Chave</b><span class="seg" id="c-base"></span></span>
+  <span><b>Largura</b><span class="seg" id="c-larg"></span></span>
+</div>
+<div class="stage"><div class="frame" id="frame"></div></div>
+<div class="nota">
+  <h2>Como ler</h2>
+  <p>As 27 disputas agrupadas por região, com o <b>consolidado da região no topo</b>: os votos dos candidatos de todos os estados da região somados <b>por partido</b> (cada estado tem candidatos diferentes) e divididos pelo total da região. Aparecem os 6 partidos com mais votos e "Outros".</p>
+  <p><b>Parcial</b> soma os votos já contados. <b>Projeção</b> soma os votos projetados de cada estado — no site de verdade isso vai usar um número novo que o programa da projeção passará a enviar; aqui, no simulado, ele é estimado a partir do apurado. Os cartões dos estados são os de hoje (sempre com a projeção). Candidatura anulada fica fora da soma; a sub judice entra (é a mesma base dos cartões). No Senado os percentuais são "dos votos" (cada eleitor vota duas vezes).</p>
+</div>
+<script>
+const B = __BUNDLE__;
+const REG = [["Norte",["AC","AM","AP","PA","RO","RR","TO"]],["Nordeste",["AL","BA","CE","MA","PB","PE","PI","RN","SE"]],["Centro-Oeste",["DF","GO","MS","MT"]],["Sudeste",["ES","MG","RJ","SP"]],["Sul",["PR","RS","SC"]]];
+const NOME = {AC:"Acre",AL:"Alagoas",AP:"Amapá",AM:"Amazonas",BA:"Bahia",CE:"Ceará",DF:"Distrito Federal",ES:"Espírito Santo",GO:"Goiás",MA:"Maranhão",MT:"Mato Grosso",MS:"Mato Grosso do Sul",MG:"Minas Gerais",PA:"Pará",PB:"Paraíba",PR:"Paraná",PE:"Pernambuco",PI:"Piauí",RJ:"Rio de Janeiro",RN:"Rio Grande do Norte",RS:"Rio Grande do Sul",RO:"Rondônia",RR:"Roraima",SC:"Santa Catarina",SP:"São Paulo",SE:"Sergipe",TO:"Tocantins"};
+const ABREV = {REPUBLICANOS:"REP","UNIÃO":"UNIÃO",SOLIDARIEDADE:"SD",CIDADANIA:"CID",DEMOCRATA:"DEM"};
+const st = {v:"C", cargo:"gov", base:"proj", larg:375, abertas:{}};
+const slug = p => (p||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const cor = p => B.cores[slug(p)] || B.cores.outros;
+const pct = v => v==null?"—":(Math.round(v*10)/10).toLocaleString("pt-BR",{maximumFractionDigits:1})+"%";
+const sig = p => ABREV[p]||p;
+
+function consolidado(ufs){
+  const soma = {}; let total = 0, contado = 0, projetadoTotal = 0;
+  for (const u of ufs){
+    const comp = u.top.filter(c=>c.destino!=="anulado");
+    const Tc = comp.reduce((a,c)=>a+(c.votos_atuais||0),0) + (u.outros?.votos_atuais||0);
+    const Tp = u.pct_apurado>0 ? Tc/(u.pct_apurado/100) : 0;   // no simulado; no site = campo novo do produtor
+    contado += Tc; projetadoTotal += Tp;
+    for (const c of comp){
+      const v = st.base==="proj" ? (c.pct/100)*Tp : (c.votos_atuais||0);
+      soma[c.partido] = (soma[c.partido]||0) + v; total += v;
+    }
+    if (u.outros){ const v = st.base==="proj" ? (u.outros.pct/100)*Tp : (u.outros.votos_atuais||0); soma.__outros = (soma.__outros||0)+v; total += v; }
+  }
+  const outrosTail = soma.__outros||0; delete soma.__outros;
+  const ord = Object.entries(soma).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0],"pt-BR"));
+  const top = ord.slice(0,6).map(([p,v])=>({p, pct: v/total*100}));
+  const resto = ord.slice(6).reduce((a,[,v])=>a+v,0) + outrosTail;
+  return {top, outros: resto/total*100, apurado: projetadoTotal? contado/projetadoTotal*100 : 0, nPartidos: ord.length};
+}
+
+function chip(u){
+  if (st.cargo==="sen") return "";
+  if (u.vai_a_2t===true) return `<span class="chip" style="background:#b45309">VAI A 2T</span>`;
+  if (u.vai_a_2t===false && u.bucket!=="indefinido") return `<span class="chip" style="background:#166534">● ELEITO</span>`;
+  return `<span class="chip" style="background:var(--paper-2);color:var(--ink-2)">EM APURAÇÃO</span>`;
+}
+function cartaoUF(u){
+  const top = [...u.top].sort((a,b)=>(a.destino==="anulado")-(b.destino==="anulado"));
+  let i=0;
+  const lin = top.slice(0,4).map((c,k)=>{ const an=c.destino==="anulado"; if(!an) i++; const co=cor(c.partido);
+    return `<li><span class="o">${an?"—":i+"°"}</span><span class="n">${c.nome}<span class="p">${sig(c.partido)}</span>${c.destino==="sub_judice"?'<span class="etq">Sub judice</span>':an?'<span class="etq">Anulado</span>':""}${k===0?chip(u):""}</span>
+      ${an?`<span class="v" style="width:112px">${(c.votos_atuais||0).toLocaleString("pt-BR")} votos</span>`:`<span class="trilho"><i style="width:${Math.min(100,c.pct)}%;background:${co.base}"></i></span><span class="v num">${pct(c.pct)}</span>`}</li>`;}).join("");
+  const out = u.outros?`<li><span class="o"></span><span class="n">Outros</span><span class="trilho"><i style="width:${Math.min(100,u.outros.pct)}%;background:${B.cores.outros.base}"></i></span><span class="v num">${pct(u.outros.pct)}</span></li>`:"";
+  return `<article class="uf"><header><h4>${NOME[u.sigla]} <span>· ${u.sigla}</span></h4><span class="apur">${pct(u.pct_apurado)} apur</span></header><ul>${lin}${out}</ul></article>`;
+}
+const baseTxt = () => (st.base==="proj"?"Projeção":"Parcial") + " · " + (st.cargo==="sen"?"% dos votos":"% dos votos válidos em disputa");
+const empilhada = c => `<div class="empilhada" aria-hidden="true">${c.top.map(t=>`<i style="width:${t.pct}%;background:${cor(t.p).base}"></i>`).join("")}<i style="width:${c.outros}%;background:${B.cores.outros.base}"></i></div>`;
+const legenda = c => `<div class="leg">${c.top.map(t=>`<span><i style="background:${cor(t.p).base}"></i>${sig(t.p)} <span style="color:${cor(t.p).text}">${pct(t.pct)}</span></span>`).join("")}<span><i style="background:${B.cores.outros.base}"></i>Outros ${pct(c.outros)}</span></div>`;
+
+function render(){
+  const ufs = B.dados[st.cargo];
+  const porSig = Object.fromEntries(ufs.map(u=>[u.sigla,u]));
+  const fr = document.getElementById("frame"); fr.style.width = st.larg+"px";
+  let h = `<div class="kicker">Corridas estaduais · não oficial</div><div class="pag-titulo">${st.cargo==="sen"?"Senado 2026 — estado a estado":"Governadores 2026 — estado a estado"}</div>`;
+  if (st.v==="B") h += `<nav class="chips" aria-label="Ir para a região">${REG.map(([r])=>`<a href="#reg-${slug(r)}">${r}</a>`).join("")}</nav>`;
+  for (const [r, sigs] of REG){
+    const lista = sigs.map(s=>porSig[s]).filter(Boolean);
+    const c = consolidado(lista);
+    const cards = `<div class="ufs">${lista.map(cartaoUF).join("")}</div>`;
+    if (st.v==="A"){
+      h += `<section class="regiao"><div class="rcab"><h3>${r} <small>${lista.length} estados · ${pct(c.apurado)} apurado</small></h3>
+        <div class="sub">Consolidado da região · ${baseTxt()}</div>${empilhada(c)}${legenda(c)}</div>${cards}</section>`;
+    }
+    if (st.v==="B"){
+      h += `<section class="regiao" id="reg-${slug(r)}"><div class="rtit">${r}</div><div class="rcard"><header><h3>${r} · ${lista.length} estados</h3><span class="apur">${pct(c.apurado)} apur</span></header>
+        <ul>${c.top.map((t,i)=>`<li><span class="o">${i+1}°</span><span class="n">${sig(t.p)}</span><span class="trilho"><i style="width:${Math.min(100,t.pct)}%;background:${cor(t.p).base}"></i></span><span class="v">${pct(t.pct)}</span></li>`).join("")}
+        <li><span class="o"></span><span class="n" style="font-weight:500">Outros</span><span class="trilho"><i style="width:${c.outros}%;background:${B.cores.outros.base}"></i></span><span class="v">${pct(c.outros)}</span></li></ul>
+        <div class="base-nota">Soma dos votos por partido na região · ${baseTxt()}</div></div>${cards}</section>`;
+    }
+    if (st.v==="C"){
+      const aberta = st.abertas[r] ?? true;
+      const l = c.top[0];
+      h += `<section class="regiao"><button class="rbtn" aria-expanded="${aberta}" onclick="st.abertas['${r}']=!${aberta};render()">
+        <div class="l1"><h3>${r}</h3><span class="seta">${lista.length} estados · ${aberta?"fechar ▴":"abrir ▾"}</span></div>
+        <div class="lider">Na região: <b style="color:${cor(l.p).text}">${sig(l.p)} ${pct(l.pct)}</b> · ${pct(c.apurado)} apurado</div>
+        ${empilhada(c)}${legenda(c)}<div class="base-nota">${baseTxt()}</div></button>
+        <div class="corpo ${aberta?"":"fechado"}">${cards}</div></section>`;
+    }
+  }
+  fr.innerHTML = `<div class="v${st.v}">${h}</div>`;
+  seg("c-v",{A:"A · Faixa de região",B:"B · Cartão da região",C:"C · Região recolhível ✅ escolhida"},"v");
+  seg("c-cargo",{gov:"Governador",sen:"Senador"},"cargo");
+  seg("c-base",{parcial:"Parcial",proj:"Projeção"},"base");
+  seg("c-larg",{375:"Celular 375",352:"Coluna 352"},"larg");
+}
+function seg(id,opts,key){ const el=document.getElementById(id); el.innerHTML=Object.entries(opts).map(([k,l])=>`<button aria-pressed="${String(st[key])===k}" data-k="${k}">${l}</button>`).join(""); el.querySelectorAll("button").forEach(b=>b.onclick=()=>{st[key]= key==="larg"?Number(b.dataset.k):b.dataset.k; render();}); }
+render();
+</script>
+</body>
+</html>

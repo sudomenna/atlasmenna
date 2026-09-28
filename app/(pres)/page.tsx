@@ -167,10 +167,12 @@ import { CandidaturasAguardando } from "@/components/blocks/CandidaturasAguardan
 import { ChancesPanel } from "@/components/blocks/ChancesPanel";
 import { CorridaTresCirculos } from "@/components/blocks/CorridaTresCirculos";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
+import { GovernorCard } from "@/components/blocks/GovernorCard";
 import { HeadlineScore } from "@/components/blocks/HeadlineScore";
 import { InsightCard } from "@/components/blocks/InsightCard";
 import { NationalNeedle } from "@/components/blocks/NationalNeedle";
 import { NationalWinnerBanner } from "@/components/blocks/NationalWinnerBanner";
+import { RegiaoConsolidada } from "@/components/blocks/RegiaoConsolidada";
 import { RemainingPanel } from "@/components/blocks/RemainingPanel";
 import { ResultPanel } from "@/components/blocks/ResultPanel";
 import { StateGroupedTable } from "@/components/blocks/StateGroupedTable";
@@ -181,6 +183,7 @@ import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { avaliarFrescorDado } from "@/lib/config/dado-freshness";
 import { isPreEleicao } from "@/lib/config/fase";
+import { agruparPorRegiao } from "@/lib/config/regioes";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readArchivedProjection, readNationalProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload } from "@/lib/edge-config/types";
@@ -1129,6 +1132,72 @@ export default async function HomePage() {
           ts={ts}
           turno={turno}
         />
+      )}
+
+      {/* 🔴 ADR-0057 item 6 (2026-09-28, decisão do dono) — os 27 estados
+          agrupados por REGIÃO, com o consolidado da região no topo. Entra
+          ALÉM do "Placar por estado" e logo antes dele.
+
+          Presidente é uma corrida só: o consolidado soma POR CANDIDATO (o
+          número de urna é o mesmo nas 27 UFs), não por partido. Os cartões
+          são o `<GovernorCard cargo="pres">` — sem selo de turno (ADR-0055:
+          o 2º turno de Presidente é fato nacional) — e cada um é o link para
+          a tela do estado.
+
+          `!pre` pela mesma razão do Placar logo abaixo (RF-154/RF-161): em
+          fase pré não há voto a consolidar nem a mostrar por estado. O
+          `titleId` é próprio — o `state-grouped-table-heading` do Placar é o
+          alvo do `aria-describedby` do mapa e não pode duplicar. */}
+      {!pre && (
+        <Panel
+          kicker="Estado a estado · não oficial"
+          title="Por região"
+          titleId="regioes-presidente-heading"
+        >
+          <ul
+            aria-label="Corridas estaduais de presidente, por região"
+            className="grid grid-cols-1 gap-3"
+            style={{ listStyle: "none", margin: 0, padding: 0 }}
+          >
+            {agruparPorRegiao(por_uf).map((grupo) =>
+              grupo.rows.length > 0 ? (
+                <li key={grupo.regiao.id}>
+                  <RegiaoConsolidada
+                    regiao={grupo.regiao}
+                    ufs={grupo.rows}
+                    chave="candidato"
+                    nivel={3}
+                  >
+                    <ul
+                      aria-label={`Estados do ${grupo.regiao.nome}`}
+                      className="grid grid-cols-1 gap-3"
+                      style={{ listStyle: "none", margin: 0, padding: 0 }}
+                    >
+                      {grupo.rows.map((uf) => (
+                        <li key={uf.sigla}>
+                          <a
+                            href={`/uf/${uf.sigla}`}
+                            data-testid="corrida-uf-pres"
+                            data-uf={uf.sigla}
+                            className="block"
+                            style={{ color: "inherit", textDecoration: "none" }}
+                          >
+                            <GovernorCard
+                              uf={uf}
+                              candidatos={national.candidatos}
+                              cargo="pres"
+                              nivelTitulo={4}
+                            />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </RegiaoConsolidada>
+                </li>
+              ) : null,
+            )}
+          </ul>
+        </Panel>
       )}
 
       {/* Seção 7 — placar por estado. NÃO existe no protótipo; é acréscimo
