@@ -559,6 +559,7 @@ ramifica o rótulo por valor. `n_zonas_imputadas` é opcional: ausente ≡ 0.
 
 ### Campos em transição
 
+- **`EdgeUfRow.votos_disputa_projetados?: number`** — emitido a partir de S09/ADR-0057, cargos 1 (Presidente), 3 (Governador) e 5 (Senador). Total de votos em disputa projetado para a UF (válidos + sub judice, anulado fora — mesma base que já alimenta `top_candidatos[].pct`); usado exclusivamente no cálculo de consolidado regional de votos. **Ausência do campo (payload anterior a 2026-09-28) faz a Projeção regional mostrar "—", nunca uma estimativa** — princípio de ADR-0051 ("não sabemos" ≠ "zero") aplicado a dados ausentes. Opcional.
 - **`EdgeUfRow.swing_vs_2022: number | null`** — o tipo aceita `null` desde
   S07/Fase 2 (consumidores devem exibir "—"), mas o orchestrator ainda emite
   `0.0` fixo. Vira o **swing descritivo** (E1: apurado de agora − 2022, um fato

@@ -22,6 +22,10 @@ os cenários de `_CENARIOS_GOLDEN`. Ele é a definição de "o payload de antes"
 Regenerar (`python -m tests.unit.model.test_emenda_adr0053_base_em_disputa`)
 só quando uma mudança INTENCIONAL alterar o payload do caso sem anulada — e
 nunca para fazer este teste passar depois de mexer na renormalização.
+
+Regenerado em 2026-09-28 só para acrescentar `por_uf[].votos_disputa_projetados`
+(capas por região). Conferido: removido esse campo, o golden novo é IDÊNTICO ao
+anterior, cenário a cenário.
 """
 
 from __future__ import annotations

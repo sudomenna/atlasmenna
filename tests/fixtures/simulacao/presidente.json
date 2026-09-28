@@ -409,7 +409,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 407242
     },
     {
       "sigla": "AL",
@@ -466,7 +467,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 1724217
     },
     {
       "sigla": "AM",
@@ -523,7 +525,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 1899595
     },
     {
       "sigla": "AP",
@@ -580,7 +583,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 399154
     },
     {
       "sigla": "BA",
@@ -637,7 +641,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 7779692
     },
     {
       "sigla": "CE",
@@ -694,7 +699,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 5014599
     },
     {
       "sigla": "DF",
@@ -751,7 +757,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 1627957
     },
     {
       "sigla": "ES",
@@ -808,7 +815,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 2051489
     },
     {
       "sigla": "GO",
@@ -865,7 +873,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 3400293
     },
     {
       "sigla": "MA",
@@ -922,7 +931,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 3492818
     },
     {
       "sigla": "MG",
@@ -979,7 +989,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 11098851
     },
     {
       "sigla": "MS",
@@ -1036,7 +1047,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 1391891
     },
     {
       "sigla": "MT",
@@ -1093,7 +1105,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 1702136
     },
     {
       "sigla": "PA",
@@ -1150,7 +1163,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 4322501
     },
     {
       "sigla": "PB",
@@ -1207,7 +1221,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 2236729
     },
     {
       "sigla": "PE",
@@ -1264,7 +1279,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 5035606
     },
     {
       "sigla": "PI",
@@ -1321,7 +1337,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 1888244
     },
     {
       "sigla": "PR",
@@ -1378,7 +1395,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 6065221
     },
     {
       "sigla": "RJ",
@@ -1435,7 +1453,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 8734414
     },
     {
       "sigla": "RN",
@@ -1492,7 +1511,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 1853957
     },
     {
       "sigla": "RO",
@@ -1549,7 +1569,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 834250
     },
     {
       "sigla": "RR",
@@ -1606,7 +1627,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 275581
     },
     {
       "sigla": "RS",
@@ -1663,7 +1685,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 6130787
     },
     {
       "sigla": "SC",
@@ -1720,7 +1743,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 4000201
     },
     {
       "sigla": "SE",
@@ -1777,7 +1801,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 1199263
     },
     {
       "sigla": "SP",
@@ -1834,7 +1859,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 23696806
     },
     {
       "sigla": "TO",
@@ -1891,7 +1917,8 @@
         "n_candidatos": 7
       },
       "vai_a_2t": null,
-      "bucket": "indefinido"
+      "bucket": "indefinido",
+      "votos_disputa_projetados": 795972
     }
   ],
   "insights": [

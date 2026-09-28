@@ -233,7 +233,8 @@
         "pct_atual": 12.9975,
         "votos_atuais": 156886,
         "n_candidatos": 2
-      }
+      },
+      "votos_disputa_projetados": 1207047
     },
     "payload_uf_rj": {
       "uf": "RJ",
@@ -792,7 +793,8 @@
             "pct_atual": 12.9975,
             "votos_atuais": 156886,
             "n_candidatos": 2
-          }
+          },
+          "votos_disputa_projetados": 1207047
         },
         {
           "sigla": "SP",
@@ -849,7 +851,8 @@
             "pct_atual": 12.9975,
             "votos_atuais": 156886,
             "n_candidatos": 2
-          }
+          },
+          "votos_disputa_projetados": 1207047
         }
       ],
       "serie_por_candidato": {
@@ -1747,7 +1750,8 @@
             "pct_atual": 12.9975,
             "votos_atuais": 156886,
             "n_candidatos": 2
-          }
+          },
+          "votos_disputa_projetados": 1207047
         },
         {
           "sigla": "SP",
@@ -1804,7 +1808,8 @@
             "pct_atual": 12.9975,
             "votos_atuais": 156886,
             "n_candidatos": 2
-          }
+          },
+          "votos_disputa_projetados": 1207047
         }
       ],
       "serie_por_candidato": {
@@ -2683,7 +2688,8 @@
             "pct_atual": 12.9975,
             "votos_atuais": 156886,
             "n_candidatos": 2
-          }
+          },
+          "votos_disputa_projetados": 1207047
         },
         {
           "sigla": "SP",
@@ -2740,7 +2746,8 @@
             "pct_atual": 12.9975,
             "votos_atuais": 156886,
             "n_candidatos": 2
-          }
+          },
+          "votos_disputa_projetados": 1207047
         }
       ],
       "serie_por_candidato": {

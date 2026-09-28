@@ -2955,6 +2955,24 @@ function linhaUf(
     outros: outrosDaCauda(competidores(cauda.map(pub), destinoPublicado)),
     vai_a_2t: vaiA2t,
     bucket,
+    // Capas por região (ADR-0057, 2026-09-28) — o total PROJETADO de votos em
+    // disputa da UF: Σ `votos_projetados` de quem COMPETE (`disputa`, a mesma
+    // lista que decide líder e margem — a anulada publicada fica fora, a sub
+    // judice dentro). É o fim de noite desta corrida: `projetada.validos` de
+    // {@link fimDeNoiteDaCorrida} + os projetados da sub judice, e — como o
+    // gerador é uniforme — igual a "votos em disputa contados ÷ % apurado".
+    //
+    // ⚠️ Aqui `pct × total` NÃO devolve exatamente o `votos_projetados` de
+    // cada candidatura, ao contrário do produtor: o `pct` do gerador é o share
+    // do perfil, e os votos saem por destinação (ver a nota "O que NÃO mudou"
+    // em {@link resolverCorridaUf}). A soma e a unidade são as mesmas.
+    //
+    // Ausente com a UF a 0% apurado: sem apuração não há projeção (a mesma
+    // ideia de `projetarVotacaoDaCorrida`, aqui por UF — no produtor, Gov/Sen
+    // sem zona apurada nem têm linha). No Senado, VOTOS (2 por eleitor).
+    ...(ctx.pctApurado > 0
+      ? { votos_disputa_projetados: disputa.reduce((a, r) => a + r.votosProjetados, 0) }
+      : {}),
   };
 }
 

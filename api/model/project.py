@@ -4769,6 +4769,64 @@ def _competidores(
     return ordered
 
 
+#: Cargos cuja linha `por_uf[]` do payload NACIONAL carrega
+#: `votos_disputa_projetados` (capas agrupadas por região, decisão do dono de
+#: 2026-09-28). Deputado (6) tem payload próprio (`EdgePayloadDeputado`) e não
+#: passa por `build_edge_payload`.
+CARGOS_COM_VOTOS_DISPUTA_UF = frozenset({1, 3, 5})
+
+
+def votos_disputa_projetados(
+    base_votaveis_projetada: float | None,
+    linhas: Iterable[Mapping[str, Any]],
+    anulados: frozenset[int] | set[int],
+    base: BaseDaDisputa | None,
+    *,
+    campo_id: str = "candidato_id",
+) -> int | None:
+    """Total PROJETADO de votos em disputa de UMA UF, na base dos `pct` publicados.
+
+    Capas por região (2026-09-28): a Projeção regional é `Σ pct/100 × total` UF
+    a UF, e o payload nacional só trazia o `pct`. Este é o `total`.
+
+    **A conta é o denominador do próprio `pct`.** `pct_projetado` de cada
+    candidatura é `point_v × 100` sobre `base_votaveis_projetada` da UF, e
+    `votos_projetados = round(point_v × base_votaveis_projetada)`
+    (`api/model/extrapolation.py`, `_estimate_for` e `impute_uf_from_national`).
+    Com anulada no escopo, quem compete é publicado × `base.projetado` (=
+    `100 / (100 − Σ pct_anuladas)`, emenda de 2026-09-27 ao ADR-0053); o
+    denominador publicado passa a ser `base_votaveis_projetada / base.projetado`
+    — a base SEM os votos projetados da anulada. Por construção,
+    `pct_publicado/100 × total == votos_projetados` a menos do arredondamento
+    de 5 casas do `pct` e do `round` final.
+
+    Por que NÃO `Σ votos_projetados` de quem compete: coincide quando os pontos
+    da UF fecham em 100, mas é a soma das partes, não o denominador. Se o
+    fechamento escorregar (clip, estrato vazio), `pct × Σ` deixa de devolver
+    os votos da candidatura — e é exatamente essa multiplicação que a tela faz.
+
+    Senado: `base_votaveis_projetada` é `Σ vvc × k`, em VOTOS (2 por eleitor),
+    a mesma unidade do `pct` ("% dos votos"). Nunca pessoas.
+
+    `None` (chave AUSENTE — "não sabemos" ≠ zero, decisão do dono de 14/09):
+      - sem base conhecida (caller legado, replay, fixture) ou base `<= 0`
+        (sem votos projetados não há projeção a publicar);
+      - todas as candidaturas presentes são anuladas (`base is None` com
+        anulada presente): não há votos em disputa e os `pct` seguiram em
+        `vvc` — nenhum total é coerente com os dois ao mesmo tempo.
+    """
+    if base_votaveis_projetada is None:
+        return None
+    b = float(base_votaveis_projetada)
+    if not math.isfinite(b) or b <= 0:
+        return None
+    if base is not None:
+        return int(round(b / base.projetado))
+    if anulados and any(int(r[campo_id]) in anulados for r in linhas):
+        return None
+    return int(round(b))
+
+
 def build_votacao_uf_payloads(
     agregados: list[LatestSnapshot],
     cargo: int,
@@ -6332,6 +6390,7 @@ def build_edge_payload(
     swing_by_uf: dict[str, float | None] | None = None,
     votacao: dict[str, Any] | None = None,
     anulados: AnuladosNaDecisao | None = None,
+    base_votaveis_by_uf: Mapping[str, int] | None = None,
 ) -> dict[str, Any]:
     """Monta o shape canônico `EdgePayload` (lib/edge-config/types.ts).
 
@@ -6361,6 +6420,13 @@ def build_edge_payload(
     projeção crua das quatro fatias. Ausente ⇒ a chave não aparece no
     payload, e o painel "Votação" cai em `<DetailUnavailable>` (RF-198) —
     nunca em zeros.
+
+    Capas por região (2026-09-28) acrescentam `base_votaveis_by_uf` (opcional,
+    `{uf: UfCandidatosEstimate["base_votaveis_projetada"]}` de
+    `compute_uf_projections`): com ele, cada `por_uf[]` dos cargos 1/3/5 ganha
+    `votos_disputa_projetados` — o total projetado de votos em disputa na MESMA
+    base dos `top_candidatos[].pct`/`outros.pct` (ver `votos_disputa_projetados`).
+    Ausente ⇒ a chave não aparece, e a Projeção regional mostra "—".
 
     Spec 016 (Senador) acrescenta três parâmetros opcionais:
       - `partido_by_cand` (RF-107) — `{cand: sigla}` lido do próprio EA20
@@ -7170,6 +7236,17 @@ def build_edge_payload(
         # campos condicionais de `top_candidatos[]` logo acima.
         if outros_top is not None:
             linha_uf["outros"] = outros_top
+        # Capas por região (2026-09-28) — o denominador dos `pct` acima, em
+        # votos. MESMO `fora_da_uf`/`base_uf` que levaram `top_candidatos[].pct`
+        # e `outros.pct` à base em disputa: é isso que faz `pct/100 × total`
+        # devolver os `votos_projetados` da candidatura. Chave AUSENTE (nunca
+        # `0`) quando não há base — mesma regra de `outros`.
+        if base_votaveis_by_uf is not None and int(cargo) in CARGOS_COM_VOTOS_DISPUTA_UF:
+            total_disputa = votos_disputa_projetados(
+                base_votaveis_by_uf.get(sigla), ordered, fora_da_uf, base_uf
+            )
+            if total_disputa is not None:
+                linha_uf["votos_disputa_projetados"] = total_disputa
         por_uf.append(linha_uf)
 
     # S05/F4c (ADR-0014) — em 2T, métricas multi-candidato degeneram:
@@ -8443,6 +8520,12 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                     agregados, req.cargo, participacao_nacional
                 ),
                 anulados=anulados,
+                # Capas por região (2026-09-28) — o denominador dos `pct` por
+                # UF, para `por_uf[].votos_disputa_projetados`.
+                base_votaveis_by_uf={
+                    uf: int(est["base_votaveis_projetada"])
+                    for uf, est in cand_by_uf.items()
+                },
             )
             # S04/F2 — payloads UF ricos (candidatos com votos, municípios,
             # séries temporais). Envia junto do nacional; endpoint Node

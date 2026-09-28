@@ -1053,6 +1053,30 @@ export interface EdgeUfRow {
    * `chamada === true`, senão `"indefinido"`.
    */
   bucket: "decidido_1t" | "vai_2t" | "indefinido" | "chamada";
+  /**
+   * Total PROJETADO de votos em disputa da UF (ADR-0057 item 4, decisão do
+   * dono de 2026-09-28) — na MESMA base dos `pct` de `top_candidatos[]` e de
+   * `outros.pct`: válidos + sub judice, anulado fora (ADR-0053); no Senado,
+   * votos (cada eleitor vota duas vezes). Cargos 1, 3 e 5.
+   *
+   * É o denominador que faz o consolidado REGIONAL da Projeção
+   * (`lib/utils/consolidado-regiao.ts`): `pct / 100 × votos_disputa_projetados`
+   * é o voto projetado de cada candidatura, somável entre UFs.
+   *
+   * **Ausente ⇒ sem projeção regional** ("—"), nunca uma estimativa — payload
+   * gravado antes de 2026-09-28 não o tem. Opcional pelo mesmo motivo de
+   * `dado_ts` (ADR-0035 D2: campo novo entra opcional).
+   *
+   * Produtor (`api/model/project.py`, `votos_disputa_projetados`): inteiro
+   * `>= 0`, = `base_votaveis_projetada` da UF (o `Σ B_v` da regra de três, o
+   * próprio denominador do `pct`) ÷ o fator da base em disputa — e não
+   * `Σ votos_projetados`, que só coincide quando os pontos fecham em 100. Com
+   * isso `pct / 100 × total ≈ EdgeUfCandidate.votos_projetados` a menos do
+   * arredondamento. Também ausente (nunca `0` — não sabemos ≠ zero, decisão do
+   * dono de 14/09) em UF sem base, sob `model_fallback_tier` e em UF com todas
+   * as candidaturas anuladas.
+   */
+  votos_disputa_projetados?: number;
 }
 
 // ---------------------------------------------------------------------------
