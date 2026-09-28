@@ -191,13 +191,19 @@ describe("<GovernorCard />", () => {
     expect(label).toContain("eleito");
   });
 
-  it("(h) renderiza fallback mobile single-line via classes responsivas", () => {
+  it("🔴 (h) o cartão completo vale em TODA largura — sem a linha única do celular (dono, 2026-09-28)", () => {
+    // Até 2026-09-28 havia um bloco `sm:hidden` (sigla · líder · selo) e o
+    // cartão completo vinha em `hidden sm:block`: abaixo de 640px o celular
+    // via 27 linhas sem números. Mutação alvo: voltar qualquer uma das duas.
     const uf = mkUf({ sigla: "SP", bucket: "chamada" });
     const doc = parse(<GovernorCard uf={uf} candidatos={candidatos} />);
-    // O wrapper mobile usa `sm:hidden`; o desktop `hidden sm:block`.
     const html = doc.body.innerHTML;
-    expect(html).toContain("sm:hidden");
-    expect(html).toContain("sm:block");
+    expect(html).not.toMatch(/\bsm:hidden\b/);
+    expect(html).not.toMatch(/\bhidden sm:block\b/);
+    // As linhas de candidato estão lá, sem classe que as esconda.
+    const lis = [...doc.querySelectorAll("article ul > li")];
+    expect(lis.length).toBeGreaterThan(0);
+    expect(lis.every((li) => !li.closest(".hidden"))).toBe(true);
   });
 
   it("(i) nome longo da UF aparece (não só sigla) no desktop", () => {

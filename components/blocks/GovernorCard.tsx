@@ -14,7 +14,8 @@
  * acompanhou na mesma data (`TOP_CANDIDATOS_POR_UF = 4`, `api/model/project.py`)
  * e passou a emitir o irmão {@link EdgeUfRow.outros} com a cauda já somada.
  *
- * Server Component puro. Mobile (< 640px) degrada para single-line.
+ * Server Component puro. Desde 2026-09-28 o cartão completo vale em toda
+ * largura (a linha única do celular saiu, decisão do dono).
  *
  * Cobertura
  *   - Spec 005 (página `/governador`) — RFs governador grid.
@@ -84,15 +85,14 @@ export interface GovernorCardProps {
    * `uf.top_candidatos[]`, que o orchestrator resolve pelo par `(uf, numero)`.
    */
   candidatos: EdgeCandidate[];
-  mode?: "compact" | "expanded";
   /**
    * 🔴 2026-09-27 (decisão do dono) — a capa `/senador` passou a usar ESTE
    * cartão, no mesmo formato de `/governador`: 4 posições + "Outros", em % dos
    * votos válidos. Em `"sen"` o selo de status some — ele diz "eleito no 1º
    * turno / vai a 2º turno", e o Senado é turno único com DUAS vagas por
    * estado: "● ELEITO" só no líder negaria a segunda vaga, e "VAI A 2T" é
-   * falso por construção. A linha única do celular mostra os dois primeiros
-   * pelo mesmo motivo (duas vagas, não um líder).
+   * falso por construção. O `aria-label` nomeia os dois primeiros pelo mesmo
+   * motivo (duas vagas, não um líder).
    */
   cargo?: "gov" | "sen";
 }
@@ -165,12 +165,7 @@ interface Row {
   votos?: number;
 }
 
-export function GovernorCard({
-  uf,
-  candidatos,
-  mode = "expanded",
-  cargo = "gov",
-}: GovernorCardProps) {
+export function GovernorCard({ uf, candidatos, cargo = "gov" }: GovernorCardProps) {
   const senado = cargo === "sen";
   const chip = senado ? null : chipFor(uf);
   const nomeUf = UF_NAMES[uf.sigla] ?? uf.sigla;
@@ -285,10 +280,6 @@ export function GovernorCard({
     ? `${nomeUf}${destaque.length > 0 ? `, mais votados: ${destaque.map(descreve).join(" e ")}` : ""}, ${apurado}`
     : `${nomeUf}, ${chip?.ariaText}${liderRow ? `, líder: ${descreve(liderRow)}` : ""}, ${apurado}`;
 
-  // Mobile fallback: single-line. Detectado via CSS, não JS — usamos
-  // `sm:hidden` / `hidden sm:block` para alternar.
-  const compact = mode === "compact";
-
   return (
     <article
       aria-label={ariaLabel}
@@ -298,44 +289,14 @@ export function GovernorCard({
         backgroundColor: "var(--color-bg)",
       }}
     >
-      {/* Mobile compact single-line (always visible < 640px) */}
-      <div className="sm:hidden text-sm" style={{ color: "var(--color-text)" }}>
-        <span className="font-semibold">{uf.sigla}</span>
-        {destaque.length > 0 && (
-          <>
-            <span className="mx-1" style={{ color: "var(--color-text-muted)" }}>
-              ·
-            </span>
-            <span>
-              {/* Linha única de mobile — o lugar mais estreito do cartão.
-                  Desenhado ⇒ abreviado (2026-09-19). */}
-              {destaque.map((r) => `${r.nome} (${siglaExibicao(r.partido)})`).join(" · ")}
-            </span>
-          </>
-        )}
-        {chip ? (
-          <>
-            <span className="mx-1" style={{ color: "var(--color-text-muted)" }}>
-              ·
-            </span>
-            <span
-              style={{
-                backgroundColor: chip.bg,
-                color: chip.fg,
-                padding: "1px 6px",
-                borderRadius: 4,
-                fontSize: "0.7rem",
-                fontWeight: 600,
-              }}
-            >
-              {chip.label}
-            </span>
-          </>
-        ) : null}
-      </div>
-
-      {/* Desktop / expanded (>= 640px) */}
-      <div className={compact ? "hidden" : "hidden sm:block"}>
+      {/* 🔴 2026-09-28 (decisão do dono) — o cartão completo (4 primeiros +
+          "Outros") vale em TODA largura. Até esta data, abaixo de 640px de
+          viewport o cartão caía para uma linha só (sigla · líder · selo), e
+          `/governador` e `/senador` no celular mostravam 27 linhas sem
+          números. A coluna de painéis do celular mede 343–396px úteis — a
+          mesma faixa da coluna do desktop (~352px), onde o cartão completo
+          sempre coube. */}
+      <div>
         {/* Header */}
         <header className="mb-2 flex items-baseline justify-between gap-2">
           <h3
@@ -366,23 +327,32 @@ export function GovernorCard({
                 >
                   {r.id === null ? "" : compete(r) ? `${idx + 1}°` : "—"}
                 </span>
-                <span className="flex-1 truncate" style={{ color: "var(--color-text)" }}>
+                {/* 🔴 Quebra, não corta (2026-09-28). Com `truncate`, no cartão de
+                    326px do celular o selo virava "VA" e a etiqueta "SUB JUDI"
+                    — o recorte comia justamente a informação de status. Agora
+                    o nome quebra entre palavras e selo/etiqueta descem INTEIROS
+                    (`whitespace-nowrap`) para a linha de baixo quando não
+                    cabem. */}
+                <span
+                  className="min-w-0 flex-1"
+                  style={{ color: "var(--color-text)", overflowWrap: "break-word" }}
+                >
                   {r.nome}
                   {r.partido && (
                     <span className="ml-1" style={{ color: "var(--color-text-muted)" }}>
-                      {/* Desenhado ⇒ abreviado (2026-09-19). A linha tem
-                          `truncate`: sem a abreviação é o NOME que some. */}
+                      {/* Desenhado ⇒ abreviado (2026-09-19): sem a abreviação
+                          a linha quebra mais cedo. */}
                       {siglaExibicao(r.partido)}
                     </span>
                   )}
                   {r.destino ? (
-                    <span className="ml-1">
+                    <span className="ml-1 inline-block whitespace-nowrap">
                       <DestinoEtiqueta destino={r.destino} />
                     </span>
                   ) : null}
                   {isLider && chip && (
                     <span
-                      className="ml-2"
+                      className="ml-2 inline-block whitespace-nowrap"
                       style={{
                         backgroundColor: chip.bg,
                         color: chip.fg,
