@@ -102,6 +102,19 @@ export interface Bloqueante {
   motivo: MotivoBloqueio;
 }
 
+/**
+ * Para as linhas de log das visões presas pelo portão (B6, 29/09): as
+ * primeiras chaves de quem prende a visão — "senado:5322, PL, … e mais 3".
+ */
+export function resumoDosBloqueantes(
+  bloqueantes: readonly Pick<Bloqueante, "chave" | "nome" | "corrida">[],
+  max = 5,
+): string {
+  const ids = bloqueantes.map((b) => b.chave ?? b.nome ?? b.corrida);
+  const mais = ids.length > max ? ` e mais ${ids.length - max}` : "";
+  return `${ids.slice(0, max).join(", ")}${mais}`;
+}
+
 export interface ResultadoPortao {
   ok: boolean;
   bloqueantes: Bloqueante[];

@@ -12,9 +12,16 @@
  *     isso é verdade por construção (`categoriaExibivel`);
  *   - as classificações no ar, com fonte, data e origem → os MESMOS arquivos
  *     que as telas leem (`lerEtiquetas`: Blob ou cópia do build). A página
- *     mostra as individuais e os padrões; a lista COMPLETA, com cada
+ *     mostra o RESUMO — quantas por categoria × origem e por cargo, tamanho
+ *     do catálogo, nunca do dado —; a lista COMPLETA, linha a linha, com cada
  *     classificação por regra derivada e a medida dela, é o CSV público
- *     `./classificacoes.csv` (mesma fonte, `lib/etiquetas/lista-publica.ts`);
+ *     `./classificacoes.csv` (mesma fonte, `lib/etiquetas/lista-publica.ts`).
+ *     Até 29/09 a página listava as individuais e os padrões linha a linha:
+ *     ~2,5 KB por linha, 2,6 MB e 1.039 paradas de Tab no pior caso medido, e
+ *     a tabela estourava a coluna de 375 px (auditoria de a11y/perf, A3);
+ *   - o que prende as visões do Senado de 2027 antes da apuração (os
+ *     senadores com mandato até 2031 sem classificação) → a foto do Senado e
+ *     o mesmo resolvedor das telas (B6, 29/09);
  *   - "algumas telas mostram etiquetas" só é dito com alguma chave ligada
  *     (`algumaVisaoLigada`) — com tudo desligado, a página diz que nenhuma
  *     tela mostra ainda;
@@ -25,6 +32,7 @@
  *     recentes e aponta para o arquivo inteiro, público.
  *
  * Server Component, zero JavaScript, sem `searchParams` (estática com ISR).
+ * Nenhum link abre aba nova.
  */
 
 import type { Metadata } from "next";
@@ -41,16 +49,25 @@ import {
   CATEGORIAS,
   type CategoriaId,
   CRITERIOS,
+  categoriaExibivel,
   categoria as defCategoria,
   PORTAO_MARGEM_PP,
   QUALIFICADOR_VISIVEL,
   rotuloDoValor,
 } from "@/lib/etiquetas/catalogo";
 import type { EntradaHistorico } from "@/lib/etiquetas/formato";
-import { lerHistoricoEtiquetas } from "@/lib/etiquetas/leitor";
-import { lerClassificacoesPublicadas, nomesDasLinhas } from "@/lib/etiquetas/lista-publica";
-import { contagemDerivada, type LinhaPublicada } from "@/lib/etiquetas/metodologia";
+import { type Etiquetas, lerHistoricoEtiquetas } from "@/lib/etiquetas/leitor";
+import { lerClassificacoesPublicadas } from "@/lib/etiquetas/lista-publica";
+import {
+  type AlvoPublicado,
+  contagemDerivada,
+  type OrigemPublicada,
+  pendenciasSenado2031,
+  resumoDasClassificacoes,
+} from "@/lib/etiquetas/metodologia";
 import { dataDaFoto, MANDATO_2031 } from "@/lib/senado/mandato-2031";
+
+import styles from "./page.module.css";
 
 export const revalidate = 60;
 
@@ -63,6 +80,9 @@ export const metadata: Metadata = {
 
 /** Quantas entradas do registro a página mostra (as mais recentes). */
 export const ENTRADAS_DO_REGISTRO_NA_PAGINA = 50;
+
+/** Quantos nomes a página lista por visão presa pelo portão (o resto vira "e mais N"). */
+export const PENDENCIAS_POR_VISAO_NA_PAGINA = 10;
 
 /** O repositório público — o mesmo que `/sobre-o-modelo` já cita para os ADRs. */
 const REPOSITORIO = "https://github.com/sudomenna/salacofre";
@@ -121,22 +141,6 @@ const S = {
     color: "var(--text-secondary)",
     margin: "0 0 var(--space-2)",
   },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-    font: "var(--type-body-sm)",
-    color: "var(--text-primary)",
-  },
-  th: {
-    textAlign: "left",
-    padding: "var(--space-1) var(--space-2) var(--space-1) 0",
-    verticalAlign: "bottom",
-  },
-  td: {
-    padding: "var(--space-1) var(--space-2) var(--space-1) 0",
-    borderTop: "1px solid var(--border-hairline)",
-    verticalAlign: "top",
-  },
 } satisfies Record<string, CSSProperties>;
 
 function dataBr(iso: string | null | undefined): string {
@@ -152,11 +156,72 @@ const ROTULO_ALVO: Record<number | string, string> = {
   senado2031: "Senadores com mandato até 2031",
 };
 
-const ROTULO_ORIGEM: Record<LinhaPublicada["origem"], string> = {
-  individual: "classificação individual",
-  partido: "padrão do partido ou da federação",
-  derivado: "regra derivada",
-};
+/** Cabeçalho das colunas do resumo, na ordem da seção 3. */
+const COLUNAS_ORIGEM: ReadonlyArray<[OrigemPublicada, string]> = [
+  ["individual", "Individuais"],
+  ["derivado", "Regra derivada"],
+  ["partido", "Padrão do partido"],
+];
+
+/** O alvo de cada contagem do resumo "por cargo", na ordem da página. */
+const ROTULO_ALVO_RESUMO: ReadonlyArray<[AlvoPublicado, string]> = [
+  ["governador", "Governador"],
+  ["senador", "Senador"],
+  ["senado2031", "senadores com mandato até 2031"],
+  ["deputado", "Deputado Federal"],
+  ["padrao", "padrões de partido ou federação"],
+];
+
+const numero = (n: number) => n.toLocaleString("pt-BR");
+
+/** As visões do Senado de 2027 cujo portão tem parte conhecida antes da apuração. */
+const VISOES_SENADO_2031 = [
+  { visao: "v1", categoria: "relacao_governo", rotulo: "Senado de 2027 por bloco" },
+  {
+    visao: "v2",
+    categoria: "impeachment_stf",
+    rotulo: "Impeachment de ministros do STF no Senado de 2027",
+  },
+] as const;
+
+interface PendenciaNaPagina {
+  rotulo: string;
+  nomes: string[];
+  total: number;
+  fotoIndisponivel: boolean;
+}
+
+/**
+ * Das visões do Senado LIGADAS e com critério, quem com mandato até 2031 ainda
+ * não tem classificação (B6, 29/09). Limitado a
+ * {@link PENDENCIAS_POR_VISAO_NA_PAGINA} nomes por visão.
+ */
+function pendenciasDasVisoesDoSenado(etiquetas: Etiquetas): PendenciaNaPagina[] {
+  const out: PendenciaNaPagina[] = [];
+  for (const v of VISOES_SENADO_2031) {
+    if (!etiquetas.viewLigada(v.visao) || !categoriaExibivel(v.categoria)) continue;
+    if (!MANDATO_2031.ok || !etiquetas.senado2031.disponivel) {
+      out.push({ rotulo: v.rotulo, nomes: [], total: 0, fotoIndisponivel: true });
+      continue;
+    }
+    const senadores = new Map(MANDATO_2031.mandato.senadores.map((x) => [x.codigo, x]));
+    const faltam = pendenciasSenado2031(
+      [...senadores.keys()],
+      (cod) => etiquetas.senador2031(cod, 1)[v.categoria]?.estado === "classificado",
+    );
+    if (faltam.length === 0) continue;
+    out.push({
+      rotulo: v.rotulo,
+      nomes: faltam.slice(0, PENDENCIAS_POR_VISAO_NA_PAGINA).map((f) => {
+        const x = senadores.get(f.codigo);
+        return x ? `${x.nome_parlamentar} (${x.partido}, ${x.uf})` : f.chave;
+      }),
+      total: faltam.length,
+      fotoIndisponivel: false,
+    });
+  }
+  return out;
+}
 
 function Secao({
   id,
@@ -178,31 +243,6 @@ function Secao({
       {children}
     </section>
   );
-}
-
-function quem(l: LinhaPublicada, nomes: Map<string, string>): string {
-  if (l.alvo === "padrao") {
-    const [tipo, sigla] = l.chave.split(/:(.*)/s);
-    return `${tipo === "federacao" ? "Padrão da federação" : "Padrão do partido"} ${sigla ?? ""}`;
-  }
-  const nome = nomes.get(l.chave) ?? `candidatura ${l.chave}`;
-  const alvo =
-    l.alvo === "governador"
-      ? "Governador"
-      : l.alvo === "senador"
-        ? "Senador"
-        : l.alvo === "deputado"
-          ? "Deputado Federal"
-          : "senador(a) até 2031";
-  return `${nome} (${[alvo, l.uf, l.partido].filter(Boolean).join(", ")})`;
-}
-
-function textoDaEtiqueta(l: LinhaPublicada): string {
-  const q = QUALIFICADOR_VISIVEL[l.categoria];
-  const base = q
-    ? `${q}: ${l.rotulo.toLocaleLowerCase("pt-BR")}`
-    : `${defCategoria(l.categoria).rotulo}: ${l.rotulo}`;
-  return l.turno ? `${base} (${l.turno}º turno)` : base;
 }
 
 function descreverEntrada(e: EntradaHistorico): string {
@@ -228,7 +268,8 @@ export default async function SobreAsEtiquetasPage() {
   } = await lerClassificacoesPublicadas();
   const nacional = etiquetas.nacional;
   const algumaLigada = algumaVisaoLigada(etiquetas.publicar);
-  const nomes = await nomesDasLinhas(exibiveis);
+  const resumo = resumoDasClassificacoes(exibiveis, derivadas);
+  const pendencias = pendenciasDasVisoesDoSenado(etiquetas);
   const derivados = contagemDerivada(nacional, ufs);
   const historico = await lerHistoricoEtiquetas();
   const recentes = [...historico.arquivo.entradas]
@@ -348,6 +389,25 @@ export default async function SobreAsEtiquetasPage() {
             Candidatura anulada fica de fora. Se falta um, a visão não aparece — ela não é mostrada
             pela metade.
           </p>
+          {pendencias.length > 0 ? (
+            <div data-testid="etiquetas-pendencias">
+              <p style={S.body}>
+                <strong>O que falta agora.</strong> Visões ligadas que não aparecem porque alguém
+                com mandato até 2031 ainda não tem classificação (os candidatos com chance só se
+                conhecem com a apuração):
+              </p>
+              <ul className={styles.lista}>
+                {pendencias.map((p) => (
+                  <li key={p.rotulo} data-testid="etiquetas-pendencia">
+                    <strong>{p.rotulo}</strong>:{" "}
+                    {p.fotoIndisponivel
+                      ? "a foto do Senado não está disponível, e sem ela a visão não aparece."
+                      : `${p.nomes.join("; ")}${p.total > p.nomes.length ? ` e mais ${numero(p.total - p.nomes.length)}` : ""}.`}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </Secao>
 
         <Secao id="sec-metodo" n={5} titulo="O alinhamento e a trajetória, medidos">
@@ -366,10 +426,8 @@ export default async function SobreAsEtiquetasPage() {
               <>
                 {" "}
                 —{" "}
-                <a href={d.alinhamento_camara.fonte_url} rel="noopener noreferrer" target="_blank">
-                  {d.alinhamento_camara.fonte_descricao}
-                </a>
-                , aprovado em {dataBr(d.alinhamento_camara.revisado_em)}.{" "}
+                <a href={d.alinhamento_camara.fonte_url}>{d.alinhamento_camara.fonte_descricao}</a>,
+                aprovado em {dataBr(d.alinhamento_camara.revisado_em)}.{" "}
                 {derivados.camara.relacao_governo} candidaturas a Deputado Federal classificadas
                 pela regra.
               </>
@@ -381,10 +439,8 @@ export default async function SobreAsEtiquetasPage() {
             {d.alinhamento_senado ? (
               <>
                 Senado: dados até {dataBr(d.alinhamento_senado.data)} —{" "}
-                <a href={d.alinhamento_senado.fonte_url} rel="noopener noreferrer" target="_blank">
-                  {d.alinhamento_senado.fonte_descricao}
-                </a>
-                , aprovado em {dataBr(d.alinhamento_senado.revisado_em)}.{" "}
+                <a href={d.alinhamento_senado.fonte_url}>{d.alinhamento_senado.fonte_descricao}</a>,
+                aprovado em {dataBr(d.alinhamento_senado.revisado_em)}.{" "}
                 {derivados.senado.relacao_governo} senadores e candidaturas ao Senado classificados
                 pela regra.
               </>
@@ -414,59 +470,54 @@ export default async function SobreAsEtiquetasPage() {
         <Secao id="sec-publicadas" n={6} titulo="Todas as classificações no ar">
           <p style={S.body} data-testid="etiquetas-lista-completa">
             A lista completa — cada classificação no ar, uma por linha, inclusive as por regra
-            derivada ({derivadas.length.toLocaleString("pt-BR")} agora), com origem, fonte, data da
-            fonte, data da revisão e, na relação com o governo medida, os votos e a taxa — está em{" "}
+            derivada ({numero(derivadas.length)} agora), com origem, fonte, data da fonte, data da
+            revisão e, na relação com o governo medida, os votos e a taxa — está em{" "}
             <a href={CSV_DAS_CLASSIFICACOES}>classificacoes.csv</a> (planilha, atualizada junto com
-            esta página). Abaixo, as classificações individuais e os padrões de partido.
+            esta página). Abaixo, quantas estão no ar, por categoria e origem e por cargo.
           </p>
-          {exibiveis.length === 0 && derivadas.length === 0 ? (
+          {resumo.total === 0 ? (
             <p style={S.body} data-testid="etiquetas-nenhuma-publicada">
               Nenhuma classificação está no ar agora.
             </p>
-          ) : exibiveis.length === 0 ? (
-            <p style={S.body} data-testid="etiquetas-so-derivadas">
-              Nenhuma classificação individual ou padrão de partido está no ar agora — só as por
-              regra derivada, na lista completa.
-            </p>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={S.table} data-testid="etiquetas-publicadas">
-                <caption className="sr-only">
-                  Classificações editoriais no ar, com origem, fonte e datas
+            <>
+              <table className={styles.resumo} data-testid="etiquetas-resumo">
+                <caption className={styles.legendaTabela}>
+                  {`${numero(resumo.total)} classificações no ar, por categoria e origem`}
                 </caption>
                 <thead>
                   <tr>
-                    <th scope="col" style={S.th}>
-                      Quem
-                    </th>
-                    <th scope="col" style={S.th}>
-                      Etiqueta
-                    </th>
-                    <th scope="col" style={S.th}>
-                      Origem
-                    </th>
-                    <th scope="col" style={S.th}>
-                      Fonte
-                    </th>
+                    <th scope="col">Categoria</th>
+                    {COLUNAS_ORIGEM.map(([o, rotulo]) => (
+                      <th key={o} scope="col" className={styles.num}>
+                        {rotulo}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {exibiveis.map((l) => (
-                    <tr key={`${l.chave}|${l.categoria}|${l.turno ?? ""}`}>
-                      <td style={S.td}>{quem(l, nomes)}</td>
-                      <td style={S.td}>{textoDaEtiqueta(l)}</td>
-                      <td style={S.td}>{ROTULO_ORIGEM[l.origem]}</td>
-                      <td style={S.td}>
-                        <a href={l.fonte_url} rel="noopener noreferrer" target="_blank">
-                          {l.fonte_descricao}
-                        </a>
-                        , {dataBr(l.data)} · revisada em {dataBr(l.revisado_em)}
-                      </td>
+                  {resumo.porCategoria.map((c) => (
+                    <tr key={c.categoria}>
+                      <th scope="row">
+                        {QUALIFICADOR_VISIVEL[c.categoria] ?? defCategoria(c.categoria).rotulo}
+                      </th>
+                      {COLUNAS_ORIGEM.map(([o]) => (
+                        <td key={o} className={styles.num}>
+                          {numero(c[o])}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
+              <p style={S.small} data-testid="etiquetas-resumo-cargo">
+                Por cargo:{" "}
+                {ROTULO_ALVO_RESUMO.filter(([a]) => resumo.porAlvo[a] > 0)
+                  .map(([a, rotulo]) => `${rotulo}, ${numero(resumo.porAlvo[a])}`)
+                  .join(" · ")}
+                .
+              </p>
+            </>
           )}
           {Object.keys(aguardandoCriterio).length > 0 ? (
             <p style={S.small} data-testid="etiquetas-aguardando-criterio">
@@ -486,11 +537,7 @@ export default async function SobreAsEtiquetasPage() {
             {historico.arquivo.entradas.length > recentes.length
               ? `Abaixo, as ${recentes.length} mais recentes de ${historico.arquivo.entradas.length}; o registro inteiro está em `
               : "O registro inteiro também está em "}
-            <a
-              href={historico.url ?? HISTORICO_NO_REPOSITORIO}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
+            <a href={historico.url ?? HISTORICO_NO_REPOSITORIO}>
               {historico.url ? "arquivo público" : "no repositório público do projeto"}
             </a>
             .
@@ -511,10 +558,7 @@ export default async function SobreAsEtiquetasPage() {
                   {e.fonte_url ? (
                     <>
                       {" "}
-                      (
-                      <a href={e.fonte_url} rel="noopener noreferrer" target="_blank">
-                        fonte
-                      </a>
+                      (<a href={e.fonte_url}>fonte</a>
                       {e.data ? `, ${dataBr(e.data)}` : ""})
                     </>
                   ) : null}
@@ -551,10 +595,8 @@ export default async function SobreAsEtiquetasPage() {
         <Secao id="sec-correcao" n={9} titulo="Como pedir uma correção">
           <p style={S.body} data-testid="etiquetas-canal-correcao">
             Se uma classificação estiver errada, diga qual, por quê e com que fonte{" "}
-            <a href={CANAL_DE_CORRECAO} rel="noopener noreferrer" target="_blank">
-              abrindo uma issue no repositório público do projeto
-            </a>{" "}
-            (é preciso uma conta gratuita no GitHub; o pedido e a resposta ficam públicos). Uma
+            <a href={CANAL_DE_CORRECAO}>abrindo uma issue no repositório público do projeto</a> (é
+            preciso uma conta gratuita no GitHub; o pedido e a resposta ficam públicos). Uma
             correção aceita vai ao ar em minutos, sem esperar nova versão do site, e entra no
             registro acima com a data. Pedidos sobre a projeção seguem pelo mesmo canal — ver{" "}
             <Link href="/sobre-o-modelo">Sobre o modelo</Link>.

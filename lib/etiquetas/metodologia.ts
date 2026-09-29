@@ -15,8 +15,12 @@
  * (`linhasPublicadas`); `derivado` sai da regra medida, candidatura a
  * candidatura, SÓ onde ela está em vigor — a precedência é a do resolvedor
  * (`linhasDerivadasPublicadas`): quem tem linha individual na categoria não
- * aparece aqui por ela. A página mostra as duas primeiras; a lista completa
- * (com as derivadas e a medida) é o CSV público `/sobre-as-etiquetas/classificacoes.csv`.
+ * aparece aqui por ela. A lista completa, linha a linha (com as derivadas e a
+ * medida), é o CSV público `/sobre-as-etiquetas/classificacoes.csv`; a página
+ * mostra só o RESUMO ({@link resumoDasClassificacoes}) — até 29/09 ela
+ * mostrava as individuais e os padrões linha a linha, e a tabela crescia sem
+ * teto (~2,5 KB por linha: 1.018 linhas = 2,6 MB e 1.039 paradas de Tab no
+ * pior caso medido; auditoria de a11y/perf, A3).
  */
 
 import {
@@ -349,4 +353,78 @@ export function contagemDerivada(
     for (const l of Object.values(u.trajetoria)) camara.trajetoria_cargo += l?.length ?? 0;
   }
   return { senado, camara };
+}
+
+// ---------------------------------------------------------------------------
+// Resumo da página (A3, 29/09) — limitado pelo catálogo, nunca pelo dado
+// ---------------------------------------------------------------------------
+
+export type OrigemPublicada = LinhaPublicada["origem"];
+
+export interface ResumoDasClassificacoes {
+  /** Uma linha por categoria com alguma classificação no ar, na ordem do catálogo. */
+  porCategoria: Array<{ categoria: CategoriaId } & Record<OrigemPublicada, number>>;
+  /** Quantas por alvo (os padrões de partido/federação contam como alvo próprio). */
+  porAlvo: Record<AlvoPublicado, number>;
+  total: number;
+}
+
+/**
+ * Quantas classificações estão no ar, por categoria × origem e por alvo. O
+ * tamanho é o do CATÁLOGO (≤ 6 categorias × 3 origens, 5 alvos), qualquer que
+ * seja o número de linhas — é o que deixa `/sobre-as-etiquetas` com peso fixo.
+ */
+export function resumoDasClassificacoes(
+  ...listas: ReadonlyArray<readonly LinhaPublicada[]>
+): ResumoDasClassificacoes {
+  const porCat = new Map<CategoriaId, Record<OrigemPublicada, number>>();
+  const porAlvo: Record<AlvoPublicado, number> = {
+    padrao: 0,
+    governador: 0,
+    senador: 0,
+    senado2031: 0,
+    deputado: 0,
+  };
+  let total = 0;
+  for (const lista of listas) {
+    for (const l of lista) {
+      const c = porCat.get(l.categoria) ?? { individual: 0, partido: 0, derivado: 0 };
+      c[l.origem]++;
+      porCat.set(l.categoria, c);
+      porAlvo[l.alvo]++;
+      total++;
+    }
+  }
+  const porCategoria = ORDEM_CATEGORIAS.filter((c) => porCat.has(c)).map((categoria) => ({
+    categoria,
+    ...(porCat.get(categoria) as Record<OrigemPublicada, number>),
+  }));
+  return { porCategoria, porAlvo, total };
+}
+
+// ---------------------------------------------------------------------------
+// O que prende as visões do Senado de 2027 (B6, 29/09)
+// ---------------------------------------------------------------------------
+
+export interface PendenciaSenado2031 {
+  /** `senado:COD`. */
+  chave: string;
+  codigo: string;
+}
+
+/**
+ * Os senadores com mandato até 2031 SEM classificação na categoria — a parte
+ * do portão das visões do Senado (V1, V2) que se conhece ANTES da apuração
+ * (a outra parte, os candidatos com chance, depende do resultado). Foi o que
+ * escondeu o V1 no ensaio de 29/09: um senador sem partido (RJ) não herda
+ * padrão nenhum, e sem linha individual a visão inteira fica fora do ar.
+ * Ordem = a da foto do Senado; nunca a da classificação.
+ */
+export function pendenciasSenado2031(
+  codigos: readonly string[],
+  classificado: (codigo: string) => boolean,
+): PendenciaSenado2031[] {
+  return codigos
+    .filter((c) => !classificado(c))
+    .map((codigo) => ({ chave: `senado:${codigo}`, codigo }));
 }

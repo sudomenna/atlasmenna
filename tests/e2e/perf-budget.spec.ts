@@ -1,7 +1,12 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { expect, type Page, type Request, test } from "@playwright/test";
-import { esperarMapaMontado, esperarRedeOciosa, instalarProjecaoLocal } from "./_apoio-local";
+import {
+  cascaVaziaNoDocumento,
+  esperarMapaMontado,
+  esperarRedeOciosa,
+  instalarProjecaoLocal,
+} from "./_apoio-local";
 
 /**
  * RNF-007 — orçamento de bundle JS (docs/nfr/performance.md).
@@ -56,15 +61,23 @@ const BUDGET_RNF_007C_BYTES = 500 * KIB;
 
 const ARTIFACT_PATH = path.join(process.cwd(), "test-results", "perf-budget.json");
 
-// Nota sobre `/uf/SP` neste servidor: `pnpm start` roda com NODE_ENV=production, e
-// `app/uf/[sigla]/page.tsx` só sintetiza dados de dev-fallback fora de produção — sem
-// EDGE_CONFIG/payload real publicado (esperado antes da eleição), a rota renderiza o
-// estado "Aguardando dados" (constituição § 3) e a árvore com os mapas (UfMapsLazy)
-// nunca monta. Medimos a rota do jeito que ela está: RNF-007a/007c continuam válidos
-// para o shell "Aguardando dados"; RNF-007b sai como 0 bytes/0 requests nesse estado —
-// não é uma medição real do chunk de mapa de UF, é reflexo de não haver dado ainda.
-// Revalidar depois que houver Edge Config populado (ou um fixture local) para medir o
-// chunk de mapa de UF de verdade.
+// 🔴 2026-09-29 — SEM `.env.local`, METADE DAS ROTAS ABAIXO ERA MEDIDA VAZIA.
+//
+// A nota que ficava aqui dizia que `/uf/SP` renderizava "Aguardando dados" por
+// falta de Edge Config e que isso seria revalidado quando houvesse fixture. A
+// fixture veio em 26/09 (Global Config falso), mas SÓ para o `next start`: o
+// `.next` saía de um `pnpm build`, que numa worktree, no CI ou num clone novo
+// não tem `EDGE_CONFIG` (não há `.env.local`), e o Next pré-montava `/`,
+// `/senador`, `/deputado-federal` e `/uf/SP/*` (`revalidate = 60`) como páginas
+// estáticas com a casca "Esta página ainda não recebeu dados". O `next start`
+// servia essa casca; a regeneração falhava com "Page changed from static to
+// dynamic at runtime" (o SDK busca com `cache: "no-store"`). Os números
+// "medidos contra este mesmo servidor (dado fixo)" das notas abaixo valem só
+// para `/governador`, que já era dinâmica por ler `searchParams`.
+//
+// Agora: `pnpm build:e2e && pnpm start:e2e` (o `start:e2e` recusa um `.next`
+// de `pnpm build` comum), e o teste de peso do documento reprova se achar a
+// casca (`cascaVaziaNoDocumento`, `_apoio-local.ts`). Ver o runbook.
 // As quatro rotas que carregam o gráfico da noite (spec 020) entraram em
 // 2026-09-18, 3ª sessão, por exigência do RF-172(b). Mediam-se duas.
 //
@@ -152,6 +165,35 @@ const ROTAS_COM_MAPA = new Set<string>(["/", "/uf/SP", "/uf/SP/governador", "/uf
  * use a medição de rede, que é a que o portão faz.
  */
 const BUDGET_DOCUMENT_BYTES = 300 * KIB;
+
+/**
+ * Rotas que JÁ estouravam o teto do documento quando o portão passou a medir a
+ * página com dado (2026-09-29, `pnpm build:e2e`) — falhas conhecidas, não
+ * afrouxamento. O teto acima NÃO mudou.
+ *
+ * `test.fail` em vez de `test.fixme`: a medição continua rodando e o número
+ * continua na anotação; se a rota voltar a caber, o Playwright acusa "passou
+ * sem esperar" e a entrada tem de sair daqui. Decidir entre apertar a página e
+ * rever o teto é do dono (registrado no relatório de 29/09).
+ */
+const FALHAS_CONHECIDAS_DOCUMENTO: Partial<
+  Record<(typeof ROUTES)[number], { medidoBytes: number; em: string; motivo: string }>
+> = {
+  "/": {
+    medidoBytes: 668_014,
+    em: "2026-09-29",
+    motivo:
+      "2,2× o teto com a fixture do simulado e as etiquetas desligadas; pré-existente à " +
+      "spec 025 (667.947 B no build de antes dela, mesma fixture)",
+  },
+  "/uf/SP/senador": {
+    medidoBytes: 309_446,
+    em: "2026-09-29",
+    motivo:
+      "0,7% acima do teto com a fixture do simulado e as etiquetas desligadas; " +
+      "pré-existente à spec 025 (309.364 B no build de antes dela)",
+  },
+};
 
 interface ScriptSample {
   url: string;
@@ -423,12 +465,27 @@ test.describe("perf budget (RNF-007a/b/c)", () => {
 
   // Zero JS não é zero custo. Ver a nota em `BUDGET_DOCUMENT_BYTES`.
   for (const route of ROUTES) {
-    test(`peso do DOCUMENTO HTML — ${route}`, async ({ page }) => {
+    test(`peso do DOCUMENTO HTML — ${route}`, async ({ page, baseURL }) => {
+      const conhecida = FALHAS_CONHECIDAS_DOCUMENTO[route];
+      test.fail(
+        conhecida !== undefined,
+        conhecida
+          ? `falha conhecida (${conhecida.em}): documento medido em ${conhecida.medidoBytes} B — ${conhecida.motivo}`
+          : "",
+      );
       const response = await page.goto(route, { waitUntil: "load" });
       expect(response, `sem resposta para ${route}`).not.toBeNull();
 
       const corpo = await (response as NonNullable<typeof response>).body();
       const bytes = corpo.length;
+
+      // Um peso medido na casca de espera não é medição (ver a nota de 29/09
+      // no topo de ROUTES). Asserção dura, antes do teto: se isto falhar, o
+      // número abaixo é de outra página.
+      expect(
+        cascaVaziaNoDocumento(corpo.toString("utf8"), baseURL),
+        `${route} veio com a casca "sem dados" — o .next não saiu do \`pnpm build:e2e\`?`,
+      ).toEqual([]);
 
       test.info().annotations.push({
         type: "document-size",

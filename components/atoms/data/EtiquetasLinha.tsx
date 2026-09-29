@@ -36,7 +36,12 @@ export function EtiquetasLinha({ resolucoes, categorias }: EtiquetasLinhaProps) 
   }
   if (visiveis.length === 0) return null;
   return (
-    <span className={styles.linha} data-testid="etiquetas-linha">
+    <span
+      className={styles.linha}
+      // Sem a chave em produção (nem como `undefined`: o payload RSC a escreve
+      // como `"data-testid":"$undefined"` em cada cartão).
+      {...(process.env.NODE_ENV === "production" ? {} : { "data-testid": "etiquetas-linha" })}
+    >
       {visiveis.map((e) => (
         <EtiquetaEditorial key={e.categoria} categoria={e.categoria} valor={e.valor} />
       ))}

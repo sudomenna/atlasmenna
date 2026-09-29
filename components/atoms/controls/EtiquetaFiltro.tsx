@@ -6,18 +6,28 @@
  *
  * ## Esconde corridas inteiras, NUNCA reordena
  *
- * O componente só escreve `data-filtro` no PRÓPRIO invólucro. Quem esconde é a
- * cascata de `EtiquetaFiltro.module.css`: com `data-filtro="categoria:valor"`,
- * todo elemento da mesma página com `data-etq` que NÃO contém esse token some
- * (`display: none`), inteiro. A ordem do DOM não é tocada — nem aqui, nem no
- * servidor (constituição § 2 (e)). Cada cartão de corrida carrega em
- * `data-etq` os tokens dos candidatos COM CHANCE (`lib/etiquetas/telas.ts`).
+ * O componente só escreve no PRÓPRIO invólucro: o atributo `data-filtro` e,
+ * com um filtro escolhido, UMA regra de CSS num `<style>` filho
+ * ({@link regraDoFiltro}). Quem esconde é essa regra: todo elemento da mesma
+ * `<main>` com `data-etq` que NÃO contém o token some (`display: none`),
+ * inteiro. A ordem do DOM não é tocada — nem aqui, nem no servidor
+ * (constituição § 2 (e)). Cada cartão de corrida carrega em `data-etq` os
+ * tokens dos candidatos COM CHANCE (`lib/etiquetas/telas.ts`).
+ *
+ * ## Por que a regra nasce aqui e não na folha de estilo (29/09)
+ *
+ * Até 29/09 havia UMA regra por token do catálogo no CSS module — 20 regras
+ * com `:has()`, 6,9 KB crus, numa folha que bloqueia a renderização de TODA
+ * rota, com o filtro desligado inclusive (auditoria de a11y/perf, B1). A regra
+ * agora é montada para o token escolhido, só quando alguém escolhe: zero byte
+ * de CSS de filtro no carregamento, e um valor novo no catálogo não pode mais
+ * ficar "sem regra" (o filtro que não filtra).
  *
  * ## Sem JavaScript, tudo aparece
  *
  * O `<select>` sai no HTML do servidor, mas sem JS ninguém escreve
- * `data-filtro` — e sem `data-filtro` nenhuma regra casa. A página fica
- * exatamente como sem o filtro. Navegador sem `:has()` idem.
+ * `data-filtro` nem a regra — a página fica exatamente como sem o filtro.
+ * Navegador sem `:has()` idem.
  *
  * ## O que ele NÃO faz
  *
@@ -37,6 +47,29 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { GrupoFiltro } from "@/lib/etiquetas/telas";
 
 import styles from "./EtiquetaFiltro.module.css";
+
+/**
+ * Forma de um token do catálogo (`categoria:valor`, `lib/etiquetas/telas.ts`).
+ * Os ids do catálogo são `[a-z0-9_]`; qualquer outra coisa não vira CSS.
+ */
+const TOKEN_VALIDO = /^[a-z_]+:[a-z0-9_]+$/;
+
+/**
+ * A ÚNICA regra do filtro, para o token escolhido — ou `null` para token fora
+ * da forma do catálogo (nada é interpolado em CSS sem passar por aqui).
+ *
+ * Só `display: none`: esconde a corrida inteira (`[data-etq]` sem o token) e,
+ * com `esconderRegiao`, a região (`[data-regiao]`) sem nenhuma corrida com ele.
+ * Escopo: a `<main>` que contém ESTE filtro (`[data-filtro]` só existe aqui).
+ */
+export function regraDoFiltro(tokenEscolhido: string, esconderRegiao: boolean): string | null {
+  if (!TOKEN_VALIDO.test(tokenEscolhido)) return null;
+  const t = tokenEscolhido;
+  const escopo = `main:has([data-filtro="${t}"])`;
+  const seletores = [`${escopo} [data-etq]:not([data-etq~="${t}"])`];
+  if (esconderRegiao) seletores.push(`${escopo} [data-regiao]:not(:has([data-etq~="${t}"]))`);
+  return `${seletores.join(",")}{display:none}`;
+}
 
 export interface EtiquetaFiltroProps {
   /** As opções, já só as que aparecem na página (`opcoesDoFiltro`). */
@@ -58,6 +91,7 @@ export function EtiquetaFiltro({ grupos, esconderRegiaoVazia = false }: Etiqueta
     }
     return null;
   })();
+  const regra = filtro ? regraDoFiltro(filtro, esconderRegiaoVazia) : null;
 
   useEffect(() => {
     if (!filtro) {
@@ -82,6 +116,7 @@ export function EtiquetaFiltro({ grupos, esconderRegiaoVazia = false }: Etiqueta
       data-regioes={esconderRegiaoVazia ? "esconder" : undefined}
       data-testid="etiqueta-filtro"
     >
+      {regra ? <style data-testid="etiqueta-filtro-regra">{regra}</style> : null}
       <label htmlFor={id} className={styles.rotulo}>
         Filtrar corridas por etiqueta editorial
       </label>
@@ -102,6 +137,8 @@ export function EtiquetaFiltro({ grupos, esconderRegiaoVazia = false }: Etiqueta
           </optgroup>
         ))}
       </select>
+      {/* Sempre na árvore de acessibilidade: região viva que só nasce junto com
+          o primeiro texto não é anunciada de forma confiável (M3, 29/09). */}
       <p className={styles.contagem} aria-live="polite" role="status">
         {filtro && contagem !== null && rotulo
           ? `${contagem} ${contagem === 1 ? "corrida" : "corridas"} com ${rotulo}. As demais estão escondidas, na mesma ordem.`

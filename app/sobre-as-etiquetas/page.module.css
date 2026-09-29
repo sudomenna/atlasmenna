@@ -1,0 +1,70 @@
+/* =============================================================================
+ * app/sobre-as-etiquetas/page.module.css — o resumo das classificações no ar
+ * e a lista do que prende as visões (spec 025, RF-252; auditoria de a11y/perf
+ * de 29/09, A3/B6).
+ *
+ * A tabela tem o tamanho do CATÁLOGO (≤ 6 linhas × 3 colunas de número) e
+ * cabe na coluna de 335 px do celular sem rolagem: a primeira coluna quebra
+ * em linhas, as de número não quebram. Classe, não `style` por célula.
+ * ========================================================================== */
+
+.resumo {
+  width: 100%;
+  margin: 0 0 var(--space-3);
+  border-collapse: collapse;
+  font: var(--type-body-sm);
+  color: var(--text-primary);
+}
+
+.legendaTabela {
+  caption-side: top;
+  padding-bottom: var(--space-2);
+  text-align: left;
+  font: var(--type-body-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.resumo th,
+.resumo td {
+  padding: var(--space-1) var(--space-2) var(--space-1) 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.resumo thead th {
+  vertical-align: bottom;
+  font-weight: 600;
+}
+
+.resumo tbody tr {
+  border-top: 1px solid var(--border-hairline);
+}
+
+.resumo tbody th {
+  font-weight: 400;
+}
+
+/* Número alinhado à direita, em algarismos de largura fixa. Especificidade de
+ * `.resumo td` para vencer o `text-align: left` das células. */
+.resumo th.num,
+.resumo td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.resumo td.num {
+  white-space: nowrap;
+}
+
+.resumo th:last-child,
+.resumo td:last-child {
+  padding-right: 0;
+}
+
+.lista {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+  font: var(--type-body-sm);
+  color: var(--text-primary);
+}

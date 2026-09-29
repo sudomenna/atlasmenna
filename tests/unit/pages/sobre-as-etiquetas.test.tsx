@@ -85,15 +85,21 @@ describe("RF-252 — /sobre-as-etiquetas", () => {
     );
   });
 
-  it("nada revisado na cópia do build de hoje ⇒ 'nenhuma classificação no ar', sem tabela vazia", async () => {
+  it("resumo OU 'nenhuma classificação no ar' — nunca tabela vazia, nunca as duas coisas", async () => {
     const { doc } = await render();
-    // Três estados, exatamente um: tabela, "só derivadas" ou "nenhuma".
-    const estados = [
-      "etiquetas-publicadas",
-      "etiquetas-so-derivadas",
-      "etiquetas-nenhuma-publicada",
-    ].filter((id) => doc.querySelector(`[data-testid='${id}']`));
+    const estados = ["etiquetas-resumo", "etiquetas-nenhuma-publicada"].filter((id) =>
+      doc.querySelector(`[data-testid='${id}']`),
+    );
     expect(estados).toHaveLength(1);
+    const resumo = doc.querySelector("[data-testid='etiquetas-resumo']");
+    if (resumo) expect(resumo.querySelectorAll("tbody tr").length).toBeGreaterThan(0);
+  });
+
+  it("🔴 A3/M2: nenhum link abre aba nova, nenhuma célula com `style`", async () => {
+    const { doc } = await render();
+    // O rodapé do site (link do TSE) é de todas as páginas e fica fora daqui.
+    expect(doc.querySelectorAll("article a[target='_blank']")).toHaveLength(0);
+    expect(doc.querySelectorAll("td[style], th[style]")).toHaveLength(0);
   });
 
   it("🔴 § 8 — a lista COMPLETA (com as derivadas) é linkada: o CSV público", async () => {

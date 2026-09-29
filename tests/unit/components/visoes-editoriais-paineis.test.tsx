@@ -21,6 +21,7 @@ import { Camara2027Panel } from "@/components/blocks/Camara2027Panel";
 import { TEXTO_AVISO_ETIQUETAS } from "@/components/blocks/EtiquetasAviso";
 import { SenadoDe2027Panel } from "@/components/blocks/SenadoDe2027Panel";
 import type { EdgeBancadaNacional } from "@/lib/edge-config/types";
+import { resumoDosBloqueantes } from "@/lib/etiquetas/portao";
 import { mandatoDeTeste, payloadTresUfs } from "@/tests/fixtures/senado/payload-senado";
 
 import {
@@ -64,6 +65,8 @@ describe("RF-242 — V1 no painel do Senado de 2027", () => {
       ),
     ).toBe("");
     expect(aviso.mock.calls.flat().join(" ")).toContain("v1 escondida pelo portão");
+    // B6: a linha diz QUEM prende (as primeiras chaves), não só quantos.
+    expect(aviso.mock.calls.flat().join(" ")).toMatch(/sem classificação — \S+/);
     aviso.mockRestore();
   });
 
@@ -146,10 +149,94 @@ describe("RF-243 — V2, impeachment", () => {
     expect(d.querySelector("[data-testid='impeachment-placar']")?.textContent).toContain(
       "Posição pública sobre impeachment de ministros do STF: a favor",
     );
-    expect(d.querySelector("a[href='https://exemplo.org/s/9001']")?.textContent).toBe(
-      "Declaração pública 9001",
+    // A fonte: a linha leva o link "fonte N", e a descrição sai UMA vez, na
+    // lista numerada — ligada ao link por `aria-describedby` (A2, 29/09).
+    const linkDaLinha = [...d.querySelectorAll("a[href='https://exemplo.org/s/9001']")].find((a) =>
+      a.closest("tbody"),
     );
+    expect(linkDaLinha?.textContent).toMatch(/^fonte \d+$/);
+    const descrita = d.getElementById(linkDaLinha?.getAttribute("aria-describedby") ?? "");
+    expect(descrita?.textContent).toBe("Declaração pública 9001");
+    expect(descrita?.closest("[data-testid='impeachment-fontes']")).not.toBeNull();
     expect(html).toContain("art. 52");
+  });
+
+  it("🔴 B4/M2: nome da cadeira é <th scope=row>, lista recolhida em <details>, nenhuma aba nova", () => {
+    exibivelMock.forcar = true;
+    const html = renderToStaticMarkup(
+      <SenadoDe2027Panel
+        payload={payload}
+        mandato={mandatoDeTeste()}
+        etiquetas={comImpeachment()}
+      />,
+    );
+    const d = doc(html);
+    const linhas = [...d.querySelectorAll("[data-testid='impeachment-lista'] tbody tr")];
+    expect(linhas).toHaveLength(81);
+    for (const tr of linhas) {
+      const primeira = tr.firstElementChild;
+      expect(primeira?.tagName).toBe("TH");
+      expect(primeira?.getAttribute("scope")).toBe("row");
+    }
+    // A lista inteira mora num <details> FECHADO (links lá dentro não recebem
+    // foco), com o placar no <summary>.
+    const detalhes = d.querySelector("[data-testid='impeachment-detalhes']");
+    expect(detalhes?.tagName).toBe("DETAILS");
+    expect(detalhes?.hasAttribute("open")).toBe(false);
+    expect(detalhes?.querySelector("[data-testid='impeachment-lista']")).not.toBeNull();
+    expect(detalhes?.querySelector("summary")?.textContent).toMatch(/81 cadeiras.*a favor: \d+/);
+    expect(d.querySelectorAll("a[target='_blank']")).toHaveLength(0);
+  });
+
+  it("🔴 A2: peso — sem `style` inline nas linhas, e a descrição repetida sai UMA vez", () => {
+    exibivelMock.forcar = true;
+    const DESCRICAO = "Levantamento de TESTE com a mesma fonte para todas as cadeiras".repeat(4);
+    const e = etiquetasDeTeste({
+      universo,
+      relacaoPorPartido: relacaoFixa,
+      ligadas: ["v2"],
+      linhas: {
+        "senado-2031.csv": CODIGOS_2031.map((c) => ({
+          chave: `senado:${c}`,
+          categoria: "impeachment_stf",
+          valor: "contra",
+          fonte_url: "https://exemplo.org/levantamento",
+          fonte_descricao: DESCRICAO,
+        })),
+        "senador.csv": universo.map((u) => ({
+          chave: u.sqcand,
+          categoria: "impeachment_stf",
+          valor: "sem_posicao_publica",
+          fonte_url: "https://exemplo.org/levantamento",
+          fonte_descricao: DESCRICAO,
+        })),
+      },
+    });
+    const html = renderToStaticMarkup(
+      <SenadoDe2027Panel payload={payload} mandato={mandatoDeTeste()} etiquetas={e} />,
+    );
+    const d = doc(html);
+    const lista = d.querySelector("[data-testid='impeachment-lista'] tbody");
+    expect(lista?.querySelectorAll("[style]")).toHaveLength(0);
+    expect(html.split(DESCRICAO).length - 1).toBe(1);
+    // Teto por linha, medido no markup do servidor: 192 B em 29/09 com esta
+    // fixture (antes: ~1 KB por linha com a descrição e os estilos inline).
+    const porLinha = (lista?.innerHTML.length ?? 0) / 81;
+    expect(porLinha).toBeLessThan(230);
+  });
+});
+
+describe("B6 — resumoDosBloqueantes", () => {
+  it("as primeiras chaves, a agremiação pelo nome, e o resto como 'e mais N'", () => {
+    const bs = [
+      { corrida: "senado2031", chave: "senado:5322" },
+      { corrida: "camara2027", chave: null, nome: "PL" },
+      ...Array.from({ length: 6 }, (_, i) => ({ corrida: "SP", chave: `25000000000${i}` })),
+    ];
+    expect(resumoDosBloqueantes(bs)).toBe(
+      "senado:5322, PL, 250000000000, 250000000001, 250000000002 e mais 3",
+    );
+    expect(resumoDosBloqueantes(bs.slice(0, 1))).toBe("senado:5322");
   });
 });
 
@@ -203,5 +290,15 @@ describe("RF-244 — Câmara 2027", () => {
         l.getAttribute("data-bloco"),
       ),
     ).toEqual(["oposicao", "independente"]);
+    // A2/M2 (29/09): fonte numerada, descrição uma vez, nenhuma aba nova, nenhum style inline.
+    const links = [...d.querySelectorAll("[data-testid='camara-2027-agremiacoes'] a")];
+    expect(links.length).toBe(2);
+    for (const a of links) {
+      expect(a.textContent).toMatch(/^fonte \d+$/);
+      const alvo = d.getElementById(a.getAttribute("aria-describedby") ?? "");
+      expect(alvo?.closest("[data-testid='camara-2027-fontes']")).not.toBeNull();
+    }
+    expect(d.querySelectorAll("a[target='_blank']")).toHaveLength(0);
+    expect(d.querySelectorAll("[data-testid='camara-2027-agremiacoes'] [style]")).toHaveLength(0);
   });
 });

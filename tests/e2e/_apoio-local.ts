@@ -141,6 +141,35 @@ export function alvoEhLocal(baseURL: string | undefined): boolean {
 }
 
 /**
+ * Textos que só saem quando o SSR NÃO leu payload nenhum — a casca de espera.
+ *
+ * 🔴 **Existe por causa de 29/09.** Até essa data o `.next` dos portões saía de
+ * um `pnpm build`, que numa worktree, no CI ou num clone novo (sem
+ * `.env.local`) não tem `EDGE_CONFIG`: o Next pré-montava `/`, `/senador`,
+ * `/deputado-federal` e `/uf/SP/*` com esta casca, e o `next start` a servia
+ * mesmo com o Global Config falso de pé. Os portões de peso e de
+ * acessibilidade mediram a casca, verdes, sem que nada acusasse. O conserto é o
+ * `pnpm build:e2e`; esta lista é o alarme para quando alguém voltar a medir
+ * sem ele.
+ */
+export const MARCAS_DE_CASCA_VAZIA = [
+  "Esta página ainda não recebeu dados",
+  "— Aguardando dados",
+  "Aguardando dados…",
+] as const;
+
+/**
+ * Contra o servidor LOCAL (dado fixo do simulado, sempre com payload), devolve
+ * as marcas de casca vazia encontradas no documento — lista vazia é o normal.
+ * Contra o site publicado devolve `[]` sempre: lá a espera é um estado
+ * legítimo (antes da apuração), não um defeito do portão.
+ */
+export function cascaVaziaNoDocumento(html: string, baseURL: string | undefined): string[] {
+  if (!alvoEhLocal(baseURL)) return [];
+  return MARCAS_DE_CASCA_VAZIA.filter((m) => html.includes(m));
+}
+
+/**
  * Responde `/api/projection*` a partir das fixtures do simulado.
  *
  * O contrato foi levantado observando o que as 8 rotas do portão de a11y

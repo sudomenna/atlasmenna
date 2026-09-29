@@ -159,6 +159,12 @@ com a posição, a fonte e a data; senão, nada.
 **Aceitação**:
 - Given o catálogo de hoje (sem critério de impeachment), then nada, mesmo ligada.
 - Given critério e cobertura, then 81 linhas, cabeçalho qualificado, link de fonte por linha.
+- *(Emenda de 29/09, auditoria de a11y/perf, A2/M2/B4.)* Given a visão aberta,
+  then a lista das 81 mora num `<details>` recolhido com o placar no `<summary>`;
+  o nome de cada cadeira é `<th scope="row">`; cada linha leva o link "fonte N"
+  com a descrição ligada por `aria-describedby`, e a descrição de cada fonte sai
+  UMA vez, numa lista numerada (fontes iguais dividem o número); nenhum link abre
+  aba nova; nenhum `style` inline nas linhas.
 
 **RF-244 — Câmara 2027 por bloco**
 
@@ -250,8 +256,16 @@ ou sem `:has()`, SHALL deixar tudo visível. A página `/senador` continua está
 - Given um candidato com chance sem classificação numa categoria, when a capa
   monta o filtro, then aquela categoria não vira opção nem token; given todas
   fechadas, then não há `<select>`.
-- Given o CSS do filtro, then há uma regra por token do catálogo, e toda regra é
-  só `display: none`.
+- Given qualquer token do catálogo escolhido, then o filtro monta UMA regra para
+  ele (`regraDoFiltro`, num `<style>` dentro do próprio invólucro), e a regra é só
+  `display: none`; token fora da forma do catálogo não vira CSS; a folha de estilo
+  do módulo não tem regra de filtro nenhuma. *(Emenda de 29/09, auditoria de
+  a11y/perf, B1: antes havia uma regra por token no CSS module — 20 regras com
+  `:has()`, 6,9 KB crus bloqueando a renderização de toda rota, com o filtro
+  desligado inclusive.)*
+- Given a região viva da contagem vazia, then ela continua na árvore de
+  acessibilidade (escondida só da vista), para o primeiro anúncio sair.
+  *(Emenda de 29/09, M3.)*
 - Given uma escolha no `<select>`, then a ordem dos nós da página não muda.
 
 **RF-248 — Aviso em toda superfície com etiqueta**
@@ -282,13 +296,20 @@ padrão do partido); o portão de cobertura; o método do alinhamento (65/35/30,
 da Câmara 03/09/2026, corte do Senado lido de `alinhamento-senado.json` quando
 existir) e da trajetória, com a data de aprovação de cada arquivo derivado; a
 data da foto do Senado; a lista de TODAS as classificações no ar com fonte, data,
-revisão e origem (as de categoria sem critério contadas à parte) — na página, as
-individuais e os padrões em tabela; a lista COMPLETA, com cada classificação por
-regra derivada e a medida dela (votos e taxa na relação com o governo), no CSV
-público `/sobre-as-etiquetas/classificacoes.csv`, gerado dos mesmos arquivos
-(emenda de 29/09 — antes a página dizia que as derivadas "não estão linha a
-linha", e o § 8 exige todas); o registro de alterações (as 50 mais recentes +
-link para o arquivo inteiro); limitações; e o canal de correção (as issues do
+revisão e origem (as de categoria sem critério contadas à parte) — na página, o
+RESUMO: quantas por categoria × origem e por cargo, com tamanho limitado pelo
+catálogo e não pelo dado; a lista COMPLETA, linha a linha, com cada
+classificação individual, cada padrão de partido e cada classificação por regra
+derivada e a medida dela (votos e taxa na relação com o governo), no CSV público
+`/sobre-as-etiquetas/classificacoes.csv`, gerado dos mesmos arquivos (emenda de
+29/09 — antes a página dizia que as derivadas "não estão linha a linha", e o § 8
+exige todas; *segunda emenda de 29/09, auditoria de a11y/perf, A3: a tabela das
+individuais e dos padrões saiu da página — ~2,5 KB por linha, 2,6 MB e 1.039
+paradas de Tab no pior caso medido, e estourava a coluna de 375 px*); na seção
+do portão, com o V1 ou o V2 ligado, os senadores com mandato até 2031 ainda sem
+classificação que prendem a visão, no máximo 10 nomes por visão (*B6, 29/09*); o
+registro de alterações (as 50 mais recentes + link para o arquivo inteiro);
+limitações; e o canal de correção (as issues do
 repositório público — nenhum e-mail inventado, nenhuma promessa de contato
 futuro). `/sobre-o-modelo` SHALL ganhar UM parágrafo com link, na seção de
 limitações, sem `<h2>` novo. A frase "algumas telas mostram etiquetas" (nas

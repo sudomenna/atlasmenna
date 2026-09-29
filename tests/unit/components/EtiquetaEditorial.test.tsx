@@ -7,7 +7,7 @@
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { EtiquetaEditorial } from "@/components/atoms/data/EtiquetaEditorial";
 import { EtiquetasLinha } from "@/components/atoms/data/EtiquetasLinha";
@@ -148,6 +148,38 @@ describe("RF-236 — <EtiquetasLinha />", () => {
       ),
     ).toBe("");
     expect(renderToStaticMarkup(<EtiquetasLinha resolucoes={null} />)).toBe("");
+  });
+});
+
+describe("A2 (29/09) — sem atributo de teste no build de produção", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("🔴 NODE_ENV=production: o chip e a linha saem sem data-etiqueta/data-valor/data-testid", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const chip = renderToStaticMarkup(
+      <EtiquetaEditorial categoria="relacao_governo" valor="base_governo" />,
+    );
+    expect(chip).not.toContain("data-");
+    // O que o leitor de tela e o olho recebem não muda.
+    expect(chip).toContain('<span class="sr-only">, relação com o governo Lula: </span>');
+    expect(chip).toContain(">Base do governo</span>");
+    const linha = renderToStaticMarkup(
+      <EtiquetasLinha
+        resolucoes={{ relacao_governo: classificado("relacao_governo", "base_governo", "x") }}
+      />,
+    );
+    expect(linha).not.toContain("data-");
+    // O peso que sobra por chip: a moldura, o texto do leitor de tela e o rótulo.
+    expect(chip.length).toBeLessThan(140); // 112 medidos em 29/09; com os atributos, ~200
+  });
+
+  it("fora de produção (vitest, next dev) os atributos continuam lá", () => {
+    const chip = renderToStaticMarkup(
+      <EtiquetaEditorial categoria="relacao_governo" valor="base_governo" />,
+    );
+    expect(chip).toContain('data-testid="etiqueta-editorial"');
   });
 });
 

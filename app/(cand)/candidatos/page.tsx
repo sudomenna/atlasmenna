@@ -568,6 +568,21 @@ export default async function CandidatosPage({ searchParams }: PageProps) {
   const filtros = lerFiltros(params);
   const info = cargoInfo(filtros.cargo);
 
+  // Spec 025 (RF-245) — cargos com etiqueta no catálogo. Presidente não tem.
+  const cargoEtiquetado =
+    filtros.cargo === 3 || filtros.cargo === 5 || filtros.cargo === 6 ? filtros.cargo : null;
+
+  // As etiquetas começam a ser lidas JUNTO com as candidaturas, não depois
+  // (auditoria de a11y/perf de 29/09, B2): até então a grade esperava as duas
+  // leituras em série — inclusive com a chave `chips` desligada, quando o
+  // resultado é descartado. A UF do Deputado é a pedida: `readCandidatosUf`
+  // só aceita a fatia daquela UF (`isCandidatosUfSlice`). Nunca rejeita:
+  // falha vira "sem etiqueta", nunca 500 (constituição § 7).
+  const etiquetasPromessa =
+    !filtros.invalido && cargoEtiquetado
+      ? lerEtiquetas({ uf: cargoEtiquetado === 6 ? filtros.uf : null }).catch(() => null)
+      : null;
+
   // Filtro inválido não vai ao Blob: pedir `candidatos/uf/ZZ/pres.json` seria
   // uma ida à origem para confirmar o que já se sabe. Degrada fechado.
   const resultado = filtros.invalido
@@ -590,14 +605,13 @@ export default async function CandidatosPage({ searchParams }: PageProps) {
 
   // Spec 025 (RF-245) — etiquetas editoriais das candidaturas EXIBIDAS, por
   // `sqcand`. Governador e Senador vêm do arquivo nacional; Deputado Federal,
-  // do arquivo da UF. Presidente não tem etiqueta no catálogo. Vazio com a
-  // chave `chips` desligada. Não mexe na ordem (número na urna) nem no corte.
-  const cargoEtiquetado =
-    filtros.cargo === 3 || filtros.cargo === 5 || filtros.cargo === 6 ? filtros.cargo : null;
+  // do arquivo da UF. Vazio com a chave `chips` desligada. Não mexe na ordem
+  // (número na urna) nem no corte.
+  const etiquetas = slice && etiquetasPromessa ? await etiquetasPromessa : null;
   const etiquetasDaGrade =
-    slice && cargoEtiquetado
+    etiquetas && cargoEtiquetado
       ? etiquetasDaLista(
-          await lerEtiquetas({ uf: cargoEtiquetado === 6 ? (slice.uf ?? filtros.uf) : null }),
+          etiquetas,
           exibidos,
           cargoEtiquetado,
           1,

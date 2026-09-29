@@ -1,0 +1,41 @@
+/* =============================================================================
+ * components/blocks/Camara2027Panel.module.css — Câmara de 2027 por bloco
+ * (spec 025, RF-244). Classes em vez de `style` inline por PESO (auditoria de
+ * a11y/perf de 29/09, A2): o Next escreve cada `style` duas vezes — no HTML e
+ * no payload RSC. Só semânticos neutros do site.
+ * ========================================================================== */
+
+.coluna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.texto {
+  max-width: 65ch;
+  margin: 0;
+  font: var(--type-body-sm);
+  color: var(--text-secondary);
+}
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.lista strong {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.fontes {
+  margin: 0;
+  padding-left: var(--space-5);
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}

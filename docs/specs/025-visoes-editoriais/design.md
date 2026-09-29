@@ -120,15 +120,20 @@ governo Lula 30 — faltam 11 para 41"); nota do empate em texto.
 - `etiquetasDaLista`: toda candidatura (páginas de UF, `/candidatos`); `sqcand`
   numérico ou texto.
 
-**Filtro** (`EtiquetaFiltro`, cliente): `data-filtro` no invólucro; CSS module com
-uma regra por token (20) dentro de `biome-ignore-start/end` (o Biome deste repo não
-habilita o parser de CSS Modules e lê `:global` como pseudo-classe desconhecida):
+**Filtro** (`EtiquetaFiltro`, cliente): `data-filtro` no invólucro e, com um
+token escolhido, UMA regra num `<style>` filho do próprio invólucro
+(`regraDoFiltro`; token validado pela forma do catálogo antes de virar CSS):
 
 ```css
-:global(main):has(.filtro[data-filtro="T"]) :global([data-etq]:not([data-etq~="T"])),
-:global(main):has(.filtro[data-filtro="T"][data-regioes="esconder"])
-  :global([data-regiao]:not(:has([data-etq~="T"]))) { display: none; }
+main:has([data-filtro="T"]) [data-etq]:not([data-etq~="T"]),
+main:has([data-filtro="T"]) [data-regiao]:not(:has([data-etq~="T"])) {display:none}
 ```
+
+(a segunda linha só com `esconderRegiaoVazia`). *Emenda de 29/09 (auditoria de
+a11y/perf, B1)*: até então o CSS module tinha uma regra por token (20, com
+`:has()`, 6,9 KB crus) — folha que bloqueia a renderização de toda rota, com o
+filtro desligado inclusive. A região viva da contagem, vazia, fica fora da
+VISTA e dentro da árvore de acessibilidade (M3).
 
 Contagem: o efeito conta `[data-etq]` da mesma `<main>` com o token; `aria-live`.
 
@@ -166,10 +171,22 @@ e se o Blob cair nessa janela a visão volta.
 
 Estática (ISR 60 s). Lê: nacional + 27 UFs (Blob ou build), histórico, cadastro de
 identidade só das UFs/cargos com linha individual (nome de urna), foto do Senado.
-Nove seções com `<h2>`; tabela das classificações no ar (padrão do partido /
-individual; derivadas resumidas por contagem); registro com as 50 mais recentes e
-link para o arquivo inteiro (Blob público, ou o repositório). Canal de correção: o
-repositório público (o mesmo que `/sobre-o-modelo` já cita).
+Nove seções com `<h2>`; resumo das classificações no ar (`resumoDasClassificacoes`:
+categoria × origem e por cargo — tamanho do catálogo, nunca do dado) e o link do
+CSV com a lista inteira; na seção do portão, os senadores até 2031 sem
+classificação que prendem o V1/V2 ligados (`pendenciasSenado2031`, até 10 por
+visão); registro com as 50 mais recentes e link para o arquivo inteiro (Blob
+público, ou o repositório). Canal de correção: o repositório público (o mesmo que
+`/sobre-o-modelo` já cita). Nenhum link abre aba nova. *Emenda de 29/09
+(auditoria de a11y/perf, A3/B6)*: até então a página listava as individuais e os
+padrões linha a linha — ~2,5 KB por linha, 2,6 MB com 1.018 linhas.
+
+**Peso das visões (29/09, A2).** V2 e Câmara 2027 usam classes
+(`SenadoDe2027Panel.module.css`, `Camara2027Panel.module.css`) em vez de `style`
+inline (o Next escreve cada `style` no HTML e de novo no payload RSC); a lista
+das 81 do V2 fica num `<details>` recolhido; as fontes saem numeradas uma vez
+(`lib/etiquetas/fontes.ts`); o chip (`EtiquetaEditorial`, `EtiquetasLinha`) não
+leva `data-etiqueta`/`data-valor`/`data-testid` no build de produção.
 
 ## 8. Onde cada coisa entrou nas páginas
 

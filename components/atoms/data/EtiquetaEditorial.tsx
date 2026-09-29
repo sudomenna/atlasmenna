@@ -24,6 +24,12 @@
  *   (`QUALIFICADOR_VISIVEL`, hoje o impeachment de ministros do STF) mostra a
  *   frase inteira, visível — "Posição pública sobre impeachment de ministros
  *   do STF: a favor".
+ * - **Sem atributo de teste em produção** (auditoria de a11y/perf de 29/09,
+ *   A2): `data-etiqueta`, `data-valor` e `data-testid` custavam ~180 B por
+ *   chip, escritos duas vezes (HTML e payload RSC) — 250 chips numa capa. O
+ *   filtro não os lê (ele lê o `data-etq` do CARTÃO); só o vitest lê, e ele
+ *   roda com `NODE_ENV=test`. O Next troca `process.env.NODE_ENV` por literal
+ *   no build, então o ramo some do pacote de produção.
  */
 
 import {
@@ -35,6 +41,19 @@ import {
 } from "@/lib/etiquetas/catalogo";
 
 import styles from "./EtiquetaEditorial.module.css";
+
+/** `data-*` só fora do build de produção — ver o cabeçalho. */
+export function atributosDeTesteDaEtiqueta(
+  categoria: string,
+  valor: string | null | undefined,
+): Record<string, string | undefined> {
+  if (process.env.NODE_ENV === "production") return {};
+  return {
+    "data-etiqueta": categoria,
+    "data-valor": valor ?? undefined,
+    "data-testid": "etiqueta-editorial",
+  };
+}
 
 export interface EtiquetaEditorialProps {
   categoria: string;
@@ -49,12 +68,7 @@ export function EtiquetaEditorial({ categoria, valor }: EtiquetaEditorialProps) 
     // A frase inteira é visível — o qualificador não é detalhe de leitor de
     // tela, é o que dá sentido ao valor.
     return (
-      <span
-        className={styles.etiqueta}
-        data-etiqueta={categoria}
-        data-valor={valor ?? undefined}
-        data-testid="etiqueta-editorial"
-      >
+      <span className={styles.etiqueta} {...atributosDeTesteDaEtiqueta(categoria, valor)}>
         <span className="sr-only">, </span>
         {`${qualificador}: ${rotulo.toLocaleLowerCase("pt-BR")}`}
       </span>
@@ -62,12 +76,7 @@ export function EtiquetaEditorial({ categoria, valor }: EtiquetaEditorialProps) 
   }
   const acessivel = isCategoriaId(categoria) ? defCategoria(categoria).rotuloAcessivel : null;
   return (
-    <span
-      className={styles.etiqueta}
-      data-etiqueta={categoria}
-      data-valor={valor ?? undefined}
-      data-testid="etiqueta-editorial"
-    >
+    <span className={styles.etiqueta} {...atributosDeTesteDaEtiqueta(categoria, valor)}>
       <span className="sr-only">{acessivel ? `, ${acessivel}: ` : ", "}</span>
       {rotulo}
     </span>

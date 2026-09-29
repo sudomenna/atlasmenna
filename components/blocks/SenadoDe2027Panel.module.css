@@ -1,0 +1,176 @@
+/* =============================================================================
+ * components/blocks/SenadoDe2027Panel.module.css — V1 e V2 do Senado de 2027
+ * (spec 025, RF-242/RF-243).
+ *
+ * Existe por PESO (auditoria de a11y/perf de 29/09, A2): com as visões
+ * ligadas, `/senador` mediu 714 KB de documento, e a lista das 81 cadeiras do
+ * V2 era a maior parte — cada linha carregava ~500 B de `style` inline, que o
+ * Next escreve DUAS vezes (no HTML e no payload RSC). Classe é escrita uma vez
+ * por linha, e o CSS uma vez por rota.
+ *
+ * Cores só por semânticos neutros do site (a tinta e o papel do bloco são os
+ * mesmos de `HemicicloPorBloco`: `--text-primary` / `--surface-card`).
+ * ========================================================================== */
+
+.coluna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.texto {
+  max-width: 65ch;
+  margin: 0;
+  font: var(--type-body-sm);
+  color: var(--text-secondary);
+}
+
+.placar {
+  margin: 0;
+  font: var(--type-body);
+  color: var(--text-primary);
+}
+
+.nota {
+  max-width: 65ch;
+  margin: 0;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* --- barra do placar ------------------------------------------------------ */
+
+.barra {
+  position: relative;
+  padding-top: 18px;
+}
+
+.limiar {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font: var(--type-label);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.trilho {
+  display: flex;
+  height: 16px;
+}
+
+.segmento {
+  box-sizing: border-box;
+  border: 1px solid var(--text-primary);
+}
+
+.a_favor {
+  background: var(--text-primary);
+}
+
+.sem_posicao_publica {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--text-primary) 0 2px,
+    var(--surface-card) 2px 5px
+  );
+}
+
+.aguardando {
+  border-style: dashed;
+  background: var(--surface-sunken);
+}
+
+.contra {
+  background: var(--surface-card);
+}
+
+.marca {
+  position: absolute;
+  top: 14px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--text-primary);
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* --- as 81 cadeiras, recolhidas ------------------------------------------- */
+
+.detalhes {
+  border-top: 1px solid var(--border-hairline);
+  padding-top: var(--space-2);
+}
+
+.resumo {
+  cursor: pointer;
+  min-height: var(--tap-min);
+  display: list-item;
+  padding: var(--space-2) 0;
+  font: var(--type-body-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rolagem {
+  overflow-x: auto;
+  margin-top: var(--space-2);
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--type-body-sm);
+  color: var(--text-primary);
+}
+
+.tabela th,
+.tabela td {
+  padding: var(--space-1) var(--space-2) var(--space-1) 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.tabela tbody tr {
+  border-top: 1px solid var(--border-hairline);
+}
+
+/* O nome da cadeira é o cabeçalho da linha (`<th scope="row">`), mas lê como
+ * texto corrido — sem o negrito padrão de `th`. */
+.tabela tbody th {
+  font-weight: 400;
+}
+
+/* Sem classe dentro das linhas, de propósito: são 81, e uma classe de CSS
+ * module (`SenadoDe2027Panel-module__<hash>__…`, ~45 caracteres) por elemento
+ * pesava ~4 KB por coluna no HTML e de novo no payload RSC. O `<span>` é o
+ * partido e a UF; o `<small>` é a linha de apoio (mandato; fonte e data). */
+.tabela tbody span {
+  color: var(--text-secondary);
+}
+
+.tabela small {
+  display: block;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.fontes {
+  margin: var(--space-3) 0 0;
+  padding-left: var(--space-5);
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}

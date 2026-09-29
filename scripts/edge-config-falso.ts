@@ -57,9 +57,39 @@
  * o bloco `votacao` inteiro das UFs. Serve para medir o "antes" dos blocos
  * sobre o mesmo dado fixo. Não é modo de uso corrente.
  *
+ * ─── O BUILD também precisa dele (2026-09-29) ─────────────────────────────
+ *
+ * Até 29/09 só o `next start` subia com este servidor; o `.next` saía de um
+ * `pnpm build` — que numa worktree, no CI ou num clone novo (sem `.env.local`)
+ * não tem `EDGE_CONFIG`, e no checkout principal pega o de PRODUÇÃO do
+ * `.env.local`. Sem ele, o Next pré-montava as rotas que leem o
+ * Global Config (`/`, `/senador`, `/deputado-federal`, `/uf/SP/*` —
+ * `revalidate = 60`) como ESTÁTICAS, com a casca "Esta página ainda não
+ * recebeu dados", e o `next start` servia essa casca. A regeneração nunca
+ * consertava: o SDK busca com `cache: "no-store"`
+ * (`@vercel/edge-config/dist/index.next-js.js`, `createClient`), o Next lê
+ * isso como uso dinâmico e aborta com "Page changed from static to dynamic at
+ * runtime". Os portões de peso e de acessibilidade mediram a casca vazia.
+ *
+ * O conserto é montar o `.next` com este servidor de pé: `pnpm build:e2e`
+ * (`--marcar-build`). Com o `EDGE_CONFIG` presente no build, o Next marca
+ * essas rotas como dinâmicas (ƒ) — que é o que o README do SDK diz para
+ * qualquer leitura com o padrão `no-store` e o que o `pnpm build` com o
+ * `.env.local` já produzia —, e cada requisição lê o dado fixo daqui. ISR
+ * "de verdade" contra um Global Config por HTTP não existe: só o caminho
+ * local do SDK (o arquivo em `/opt/edge-config` das funções da Vercel) evita
+ * o `fetch`.
+ *
+ * `--marcar-build` grava, depois de um `next build` que terminou bem,
+ * {@link MARCA_BUILD_E2E} no `.next` com o `BUILD_ID`. `--exigir-build-e2e`
+ * (o `start:e2e`) recusa subir se a marca faltar ou for de outro build: um
+ * `pnpm build` comum depois do `build:e2e` troca o `BUILD_ID`, e o portão
+ * voltaria a medir a casca sem ninguém ver.
+ *
  * ─── Uso ───────────────────────────────────────────────────────────────────
  *
- *   tsx scripts/edge-config-falso.ts [--sem-blocos-novos] [-- <comando…>]
+ *   tsx scripts/edge-config-falso.ts [--sem-blocos-novos] [--marcar-build]
+ *                                    [--exigir-build-e2e] [-- <comando…>]
  *
  * A porta vem do próprio `EDGE_CONFIG` (fonte única). Com `-- <comando>`, o
  * comando sobe como filho herdando o ambiente, e o servidor morre junto com
@@ -221,6 +251,75 @@ export function responder(
   return { status: 404, headers: json, corpo: JSON.stringify({ error: "not_found" }) };
 }
 
+/** Arquivo, dentro do `.next`, que diz "este build saiu do `build:e2e`". */
+export const MARCA_BUILD_E2E = "e2e-edge-config.json";
+
+export interface MarcaBuildE2e {
+  build_id: string;
+  /** Só o host:porta — nunca o token da connection string. */
+  edge_config: string;
+  gravada_em: string;
+}
+
+function lerBuildId(distDir: string): string | null {
+  try {
+    return fs.readFileSync(path.join(distDir, "BUILD_ID"), "utf8").trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Grava a marca depois de um `next build` que terminou bem. Lança se não há `BUILD_ID`. */
+export function gravarMarcaBuild(distDir: string, edgeConfig: string): MarcaBuildE2e {
+  const buildId = lerBuildId(distDir);
+  if (!buildId) throw new Error(`sem ${distDir}/BUILD_ID — o next build não produziu um build`);
+  const url = new URL(edgeConfig);
+  const marca: MarcaBuildE2e = {
+    build_id: buildId,
+    edge_config: `${url.protocol}//${url.host}`,
+    gravada_em: new Date().toISOString(),
+  };
+  fs.writeFileSync(path.join(distDir, MARCA_BUILD_E2E), `${JSON.stringify(marca, null, 2)}\n`);
+  return marca;
+}
+
+export type ConferenciaBuild = { ok: true; marca: MarcaBuildE2e } | { ok: false; motivo: string };
+
+/**
+ * O `.next` saiu do `build:e2e`? Pura quanto ao ambiente (lê só `distDir`),
+ * para o teste unitário cobrir os três jeitos de errar.
+ */
+export function conferirBuildE2e(distDir: string): ConferenciaBuild {
+  const buildId = lerBuildId(distDir);
+  if (!buildId) {
+    return { ok: false, motivo: `não há build em ${distDir} — rode \`pnpm build:e2e\` antes.` };
+  }
+  let marca: Partial<MarcaBuildE2e> | null = null;
+  try {
+    marca = JSON.parse(fs.readFileSync(path.join(distDir, MARCA_BUILD_E2E), "utf8"));
+  } catch {
+    marca = null;
+  }
+  if (!marca || typeof marca.build_id !== "string") {
+    return {
+      ok: false,
+      motivo:
+        `o ${distDir} saiu de \`pnpm build\`, não de \`pnpm build:e2e\`: as rotas que leem o ` +
+        'Global Config foram montadas sem dado e o portão mediria a casca "Esta página ainda ' +
+        'não recebeu dados". Rode `pnpm build:e2e`.',
+    };
+  }
+  if (marca.build_id !== buildId) {
+    return {
+      ok: false,
+      motivo:
+        `a marca do build:e2e é do build ${marca.build_id}, mas o ${distDir} é do build ` +
+        `${buildId} (houve um \`pnpm build\` depois). Rode \`pnpm build:e2e\` de novo.`,
+    };
+  }
+  return { ok: true, marca: marca as MarcaBuildE2e };
+}
+
 export function criarServidor(chaves: ReadonlyMap<string, unknown>, id: string): Server {
   return createServer((req: IncomingMessage, res: ServerResponse) => {
     const r = responder(chaves, id, req.method ?? "GET", req.url ?? "/", req.headers.authorization);
@@ -237,8 +336,16 @@ async function main(argv: string[]): Promise<void> {
   const flags = separador === -1 ? argv : argv.slice(0, separador);
   const comando = separador === -1 ? [] : argv.slice(separador + 1);
   const semBlocosNovos = flags.includes("--sem-blocos-novos");
+  const marcarBuild = flags.includes("--marcar-build");
+  const exigirBuildE2e = flags.includes("--exigir-build-e2e");
+  const distDir = path.join(process.cwd(), ".next");
 
   const { porta, id } = lerConexao(process.env.EDGE_CONFIG);
+  if (exigirBuildE2e) {
+    const conf = conferirBuildE2e(distDir);
+    if (!conf.ok) throw new Error(conf.motivo);
+    process.stderr.write(`[edge-config-falso] build:e2e ${conf.marca.build_id} conferido\n`);
+  }
   const chaves = montarChaves({ semBlocosNovos });
   const servidor = criarServidor(chaves, id);
   await new Promise<void>((ok) => servidor.listen(porta, "127.0.0.1", () => ok()));
@@ -256,7 +363,14 @@ async function main(argv: string[]): Promise<void> {
   process.on("SIGTERM", repassar("SIGTERM"));
   filho.on("exit", (codigo, sinal) => {
     servidor.close();
-    process.exit(codigo ?? (sinal ? 1 : 0));
+    const final = codigo ?? (sinal ? 1 : 0);
+    if (final === 0 && marcarBuild) {
+      const marca = gravarMarcaBuild(distDir, process.env.EDGE_CONFIG as string);
+      process.stderr.write(
+        `[edge-config-falso] build ${marca.build_id} marcado como build:e2e (${MARCA_BUILD_E2E})\n`,
+      );
+    }
+    process.exit(final);
   });
 }
 

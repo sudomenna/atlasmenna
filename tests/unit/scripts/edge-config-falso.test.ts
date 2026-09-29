@@ -7,14 +7,24 @@
  *   - chave desconhecida vira 404, nunca um payload default;
  *   - o 404 de chave carrega o digest (o SDK lê como "ausente", não "falha");
  *   - ele recusa subir apontado para qualquer host que não seja 127.0.0.1;
- *   - a Medição A tira os blocos novos da RESPOSTA sem tocar o resto.
+ *   - a Medição A tira os blocos novos da RESPOSTA sem tocar o resto;
+ *   - (29/09) o `start:e2e` recusa um `.next` que não saiu do `build:e2e` — sem
+ *     isso, o portão mediu por dias a casca "Esta página ainda não recebeu
+ *     dados" das rotas que leem o Global Config.
  */
+
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
 import { currentProjectionKey, ufProjectionKey } from "@/lib/edge-config/keys";
 import {
+  conferirBuildE2e,
+  gravarMarcaBuild,
   lerConexao,
+  MARCA_BUILD_E2E,
   montarChaves,
   responder,
   semBlocosNovosNacional,
@@ -128,5 +138,65 @@ describe("lerConexao — só 127.0.0.1", () => {
     expect(() => lerConexao(`http://localhost:3101/${ID}?token=e2e`)).toThrow(/127\.0\.0\.1/);
     expect(() => lerConexao(undefined)).toThrow(/ausente/);
     expect(() => lerConexao("http://127.0.0.1:3101/sem-id?token=e2e")).toThrow(/ecfg_/);
+  });
+});
+
+describe("build:e2e — a marca que o start:e2e exige (29/09)", () => {
+  function distTemporario(buildId?: string): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "e2e-marca-"));
+    if (buildId) fs.writeFileSync(path.join(dir, "BUILD_ID"), buildId);
+    return dir;
+  }
+
+  it("🔴 .next de um `pnpm build` comum (sem marca) ⇒ recusa, e diz por quê", () => {
+    const r = conferirBuildE2e(distTemporario("abc123"));
+    expect(r.ok).toBe(false);
+    expect(r.ok ? "" : r.motivo).toMatch(/build:e2e/);
+    expect(r.ok ? "" : r.motivo).toMatch(/ainda não recebeu dados/);
+  });
+
+  it("sem build nenhum ⇒ recusa", () => {
+    expect(conferirBuildE2e(distTemporario()).ok).toBe(false);
+  });
+
+  it("marca gravada pelo build:e2e ⇒ aceita, e a marca não leva o token", () => {
+    const dir = distTemporario("abc123");
+    const marca = gravarMarcaBuild(dir, "http://127.0.0.1:3101/ecfg_e2efalso?token=segredo");
+    expect(marca.build_id).toBe("abc123");
+    expect(fs.readFileSync(path.join(dir, MARCA_BUILD_E2E), "utf8")).not.toContain("segredo");
+    const r = conferirBuildE2e(dir);
+    expect(r.ok).toBe(true);
+  });
+
+  it("🔴 `pnpm build` depois do build:e2e (BUILD_ID trocou) ⇒ recusa", () => {
+    const dir = distTemporario("abc123");
+    gravarMarcaBuild(dir, "http://127.0.0.1:3101/ecfg_e2efalso?token=e2e");
+    fs.writeFileSync(path.join(dir, "BUILD_ID"), "outro999");
+    const r = conferirBuildE2e(dir);
+    expect(r.ok).toBe(false);
+    expect(r.ok ? "" : r.motivo).toContain("outro999");
+  });
+
+  it("build:e2e e start:e2e raspam as MESMAS variáveis e apontam para o MESMO falso", () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    const build = pkg.scripts["build:e2e"] ?? "";
+    const start = pkg.scripts["start:e2e"] ?? "";
+    const ambiente = (cmd: string) => cmd.slice(0, cmd.indexOf(" tsx "));
+    // A ÚNICA diferença: o build recolhe os dados das rotas de ingestão, e o
+    // `neon()` lança com URL vazia — então ele leva um banco MORTO (porta 9 de
+    // 127.0.0.1, sem ninguém escutando), nunca o do `.env.local`.
+    const BANCO_MORTO = 'DATABASE_URL="postgresql://ninguem:nada@127.0.0.1:9/inexistente"';
+    expect(ambiente(build)).toContain(BANCO_MORTO);
+    expect(ambiente(build).replace(BANCO_MORTO, 'DATABASE_URL=""')).toBe(ambiente(start));
+    // O mínimo que nunca pode faltar: as chaves de escrita.
+    for (const v of ["BLOB_READ_WRITE_TOKEN", "EDGE_CONFIG_TOKEN", "CRON_SECRET", "POSTGRES_URL"]) {
+      expect(ambiente(build)).toContain(`${v}=""`);
+    }
+    expect(ambiente(start)).toContain('DATABASE_URL=""');
+    expect(ambiente(build)).toContain('EDGE_CONFIG="http://127.0.0.1:3101/');
+    expect(build).toContain("--marcar-build -- next build");
+    expect(start).toContain("--exigir-build-e2e -- next start -p 3100");
   });
 });

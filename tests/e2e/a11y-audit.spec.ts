@@ -1,6 +1,12 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
-import { esperarMapaMontado, esperarRedeOciosa, instalarProjecaoLocal } from "./_apoio-local";
+import {
+  cascaVaziaNoDocumento,
+  esperarMapaMontado,
+  esperarRedeOciosa,
+  instalarProjecaoLocal,
+} from "./_apoio-local";
+import { isencaoPorSimbolo, TEXTO_DO_LADRILHO_DOS_PALANQUES } from "./_isencoes-axe";
 
 // `/uf/SP/senador` entra por exigência do RF-176(e): é a ÚNICA rota com
 // `vagas=2` e, por isso, a única que renderiza o destaque por espessura e a
@@ -15,8 +21,15 @@ import { esperarMapaMontado, esperarRedeOciosa, instalarProjecaoLocal } from "./
 //
 // ✅ **Contra um build de produção LOCAL — passou a funcionar em 2026-09-21.**
 //
-//     pnpm build && pnpm start:e2e     # 🔴 start:e2e, nunca start nem dev
-//     pnpm test:e2e                    # noutro terminal
+//     pnpm build:e2e && pnpm start:e2e   # 🔴 os dois :e2e, nunca build/start/dev
+//     pnpm test:e2e                      # noutro terminal
+//
+// 🔴 29/09: com `pnpm build` (sem `:e2e`) numa worktree, no CI ou num clone
+// novo (sem `.env.local`), o `.next` saía sem Global Config nenhum e `/`,
+// `/senador`, `/deputado-federal` e `/uf/SP/*` eram servidas como
+// a casca "Esta página ainda não recebeu dados" — este portão auditou essa
+// casca, verde. Agora o `start:e2e` recusa esse `.next`, e cada teste abaixo
+// reprova se achar a casca (`cascaVaziaNoDocumento`).
 //
 // `start:e2e` é `next start -p 3100` com as 13 variáveis de ESCRITA declaradas
 // vazias — o Next carrega o `.env.local` sozinho, e o `DATABASE_URL` de lá é
@@ -113,6 +126,12 @@ for (const route of ROUTES) {
         // dá tempo do detalhe municipal chegar e pintar
         await page.waitForTimeout(1500);
 
+        // Auditar a casca de espera não é auditar a página (ver o cabeçalho).
+        expect(
+          cascaVaziaNoDocumento(await page.content(), baseURL),
+          `${route} veio com a casca "sem dados" — o .next não saiu do \`pnpm build:e2e\`?`,
+        ).toEqual([]);
+
         const results = await new AxeBuilder({ page })
           .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
           .analyze();
@@ -181,13 +200,41 @@ for (const route of ROUTES) {
         // `top-bar-brand` já isento. O que NÃO está isento é o avatar mudar de
         // cor: aí o número acima muda, e nenhum teste deste arquivo veria. Quem
         // guarda isso é `party-text-contrast.test.ts`, no vitest.
+        //
+        // 🔴 A QUARTA isenção — o texto do mapa dos palanques (V3, spec 025),
+        // medida em 29/09 com as visões LIGADAS numa cópia de teste: 54 `<text>`
+        // de `/governador` no celular caíram em `incomplete`. São `<text>` SVG
+        // como os da primeira isenção, mas o seletor que o axe gera para eles
+        // começa pelo ladrilho — `g[data-uf="SP"]… > .PalanquesMapa-module__…__sigla`
+        // —, e o `^text` acima não os pegava. O fundo deles é a hachura do
+        // ladrilho, que o axe não resolve.
+        //
+        // A isenção é EXATA (só as duas classes de texto do ladrilho) e só
+        // existe porque o contraste delas é medido no vitest: a tinta sobre o
+        // halo de papel (`paint-order: stroke`) e o texto do ladrilho quieto
+        // sobre o cartão, nos dois temas, E que o CSS aplica mesmo esse halo —
+        // `tests/unit/design-system/palanques-mapa-contraste.test.tsx`.
+        //
+        // E, na mesma medição, o sinal "≠" da legenda do mesmo mapa: o axe
+        // declara `nonBmp` ("o conteúdo é só símbolo, não texto") e não mede.
+        // Isento SÓ com esse motivo e SÓ nessa classe (`isencaoPorSimbolo`); a
+        // cor dele é a da lista da legenda (`--text-primary` sobre o cartão),
+        // presa no mesmo teste do vitest.
         const contrasteIndeciso = results.incomplete.filter((v) => v.id === "color-contrast");
         const indecididosInesperados = contrasteIndeciso.flatMap((v) =>
           v.nodes
+            .filter(
+              (n) =>
+                !isencaoPorSimbolo(
+                  String(n.target[0] ?? ""),
+                  n.any.map((c) => String((c.data as { messageKey?: string })?.messageKey ?? "")),
+                ),
+            )
             .map((n) => String(n.target[0] ?? ""))
             .filter(
               (alvo) =>
                 !/^text[[.]/.test(alvo) &&
+                !TEXTO_DO_LADRILHO_DOS_PALANQUES.test(alvo) &&
                 !alvo.includes("top-bar-brand") &&
                 !alvo.includes("candidate-avatar-fallback"),
             ),

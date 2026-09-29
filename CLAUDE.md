@@ -363,6 +363,7 @@ pnpm lint                      # biome check .
 pnpm test                      # vitest
 pnpm test:py                   # ⚠️ QUEBRADO — ver "Python" logo abaixo
 pnpm test:e2e                  # playwright — exige servidor de pé, ver abaixo
+pnpm build:e2e                 # build para os portões e2e (Global Config falso de pé)
 pnpm start:e2e                 # servidor para os portões e2e (chaves de escrita raspadas)
 ANALYZE=true pnpm build        # bundle analyzer (RNF-007a/b/c)
 ```
@@ -381,13 +382,15 @@ página e acessibilidade só existiam por medição manual. São dois comandos, 
 terminais separados:
 
 ```bash
-pnpm build && pnpm start:e2e   # 🔴 start:e2e, NUNCA start nem dev
-pnpm test:e2e                  # 98 passed / 14 skipped em 47,8s (21/09)
+pnpm build:e2e && pnpm start:e2e   # 🔴 os DOIS :e2e — NUNCA build, start nem dev
+pnpm test:e2e                      # contagem da última execução no runbook
 ```
 
 `pnpm start` não serve: o Next carrega o `.env.local` sozinho e o `DATABASE_URL`
-de lá é **produção**. O `start:e2e` declara vazias as 13 variáveis de escrita.
-Confira no log: `[db] DATABASE_URL ausente`.
+de lá é **produção**. O `start:e2e` declara vazias as 13 variáveis de escrita
+(o `build:e2e` também, menos o `DATABASE_URL`, que vira um banco MORTO em
+`127.0.0.1:9` — o `neon()` lança com URL vazia no build). Confira no log:
+`[db] DATABASE_URL ausente`.
 
 🔴 **Desde 26/09 os portões leem DADO FIXO, não produção.** Até então o
 `start:e2e` deixava o `EDGE_CONFIG` (leitura) do `.env.local` e os portões
@@ -395,7 +398,20 @@ mediam o que estivesse publicado. Agora ele sobe `scripts/edge-config-falso.ts`
 (127.0.0.1:3101, serve `tests/fixtures/simulacao/`) e o `next start` na
 **porta 3100**. Fixture só entra nas páginas sob `NODE_ENV=development`
 (conserto de 13/09) — por isso o servidor falso, e não `EDGE_CONFIG=""`, que
-faria as telas mostrarem "Aguardando dados". Detalhe no runbook. Detalhe e ressalvas no
+faria as telas mostrarem "Aguardando dados".
+
+🔴 **E desde 29/09 o BUILD também precisa dele — `pnpm build:e2e`, não `pnpm build`.**
+Um `pnpm build` **sem `.env.local`** (worktree, CI, clone novo — onde os agentes
+rodam) não tem `EDGE_CONFIG`: o Next pré-montava `/`, `/senador`,
+`/deputado-federal` e `/uf/SP/*` com a casca "Esta página ainda não recebeu
+dados", e os portões de peso e de acessibilidade mediram essa casca, verdes (foi
+assim na auditoria de 29/09). No checkout principal o `pnpm build` pegava o
+`EDGE_CONFIG` de **produção** do `.env.local` — as rotas saíam dinâmicas e o
+`start:e2e` servia o dado fixo: certo por acaso, com o build carregando as
+variáveis de produção. O `build:e2e` monta com o falso de pé e marca o `.next`;
+o `start:e2e` **recusa** subir sem essa marca (ou com a de outro build), e os
+dois portões reprovam se acharem a casca. Com o `EDGE_CONFIG` no build as rotas
+saem dinâmicas (ƒ) — o SDK busca com `no-store`. Detalhe e ressalvas no
 [runbook § portões e2e](./docs/operations/runbook.md).
 
 **🔴 Modo simulado — use `pnpm sim:full`, NUNCA `pnpm sim` sozinho.**

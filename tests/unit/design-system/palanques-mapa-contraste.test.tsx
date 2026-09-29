@@ -201,3 +201,51 @@ describe("mapa dos palanques — neutro e legível nos dois temas", () => {
     });
   }
 });
+
+/**
+ * M1 (auditoria de a11y/perf de 29/09): o portão e2e de acessibilidade ISENTA
+ * o texto do ladrilho (`.sigla`, `.codigo`) do `incomplete` do axe, que não
+ * resolve o fundo de `<text>` sobre hachura. A isenção só é honesta se o
+ * contraste medido acima é o que a tela aplica: o texto é pintado com a TINTA
+ * sobre um HALO de papel (`paint-order: stroke`), e o do ladrilho quieto, sem
+ * halo, fica sobre o cartão (o polígono quieto não tem preenchimento). Estes
+ * testes prendem essas três coisas ao CSS de verdade.
+ */
+describe("M1 — o texto do ladrilho é tinta sobre halo de papel (o que o contraste mede)", () => {
+  function regra(seletor: string): string {
+    const blocos = [...CODIGO.matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+    const achado = blocos.find(([, sel]) =>
+      (sel ?? "")
+        .split(",")
+        .map((x) => x.trim())
+        .includes(seletor),
+    );
+    if (!achado) throw new Error(`regra de ${seletor} não encontrada`);
+    return achado[2] ?? "";
+  }
+  const decl = (corpo: string, prop: string) =>
+    new RegExp(`(?:^|;|\\s)${prop}:\\s*([^;]+);`).exec(corpo)?.[1]?.trim();
+
+  it("`.sigla` e `.codigo`: fill = tinta, halo = papel, halo ATRÁS dos glifos, ≥ 2px", () => {
+    for (const sel of [".sigla", ".codigo"]) {
+      const corpo = regra(sel);
+      expect(decl(corpo, "fill"), sel).toBe("var(--pal-tinta)");
+      expect(decl(corpo, "stroke"), sel).toBe("var(--pal-papel)");
+      expect(decl(corpo, "paint-order"), sel).toBe("stroke");
+      expect(Number.parseFloat(decl(corpo, "stroke-width") ?? "0"), sel).toBeGreaterThanOrEqual(2);
+    }
+  });
+
+  it("o código da legenda ('=', '≠') herda a tinta da lista: `--text-primary`, sem cor própria", () => {
+    expect(decl(regra(".legendaLista"), "color")).toBe("var(--text-primary)");
+    expect(decl(regra(".codigoLegenda"), "color")).toBeUndefined();
+  });
+
+  it("ladrilho quieto: texto `--pal-quieto` sem halo, sobre polígono SEM preenchimento (o cartão)", () => {
+    const texto = regra('.ladrilho[data-palanque="nenhum"] .sigla');
+    expect(decl(texto, "fill")).toBe("var(--pal-quieto)");
+    expect(decl(texto, "stroke")).toBe("none");
+    const poligono = regra('.ladrilho[data-palanque="nenhum"] polygon');
+    expect(decl(poligono, "fill")).toBe("none");
+  });
+});

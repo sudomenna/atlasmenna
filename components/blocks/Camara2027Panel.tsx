@@ -16,6 +16,14 @@
  *
  * Três portas (chave `camara2027`, critério publicado, portão: toda
  * agremiação com cadeira classificada). Fechado ⇒ nada.
+ *
+ * ## Peso (auditoria de a11y/perf de 29/09, A2)
+ *
+ * Estilos por classe (`Camara2027Panel.module.css`), não `style` inline — o
+ * Next escreve cada `style` duas vezes (HTML e payload RSC). A descrição da
+ * fonte sai UMA vez, numerada (`numerarFontes`): os padrões de partido
+ * costumam vir do mesmo levantamento, e a frase inteira se repetia em cada
+ * agremiação. Nenhum link abre aba nova.
  */
 
 import { Panel } from "@/components/atoms/surfaces/Panel";
@@ -23,10 +31,17 @@ import { EtiquetasAviso } from "@/components/blocks/EtiquetasAviso";
 import { HemicicloPorBloco } from "@/components/blocks/HemicicloPorBloco";
 import type { EdgeBancadaNacional } from "@/lib/edge-config/types";
 import { ROTULO_BLOCO_HEMICICLO } from "@/lib/etiquetas/catalogo";
+import { numerarFontes } from "@/lib/etiquetas/fontes";
 import type { Etiquetas } from "@/lib/etiquetas/leitor";
+import { resumoDosBloqueantes } from "@/lib/etiquetas/portao";
 import { visaoCamara2027 } from "@/lib/etiquetas/visoes";
 import { ordenarBancada } from "@/lib/utils/bancada";
 import { ARCOS_CAMARA } from "@/lib/utils/hemiciclo";
+
+import styles from "./Camara2027Panel.module.css";
+
+/** Prefixo dos ids das fontes numeradas (uma instância por página). */
+const ID_FONTE = "camara-2027-fonte";
 
 /** Etiqueta das linhas de log quando a visão fica escondida pelo portão. */
 export const LOG_TAG_CAMARA_2027 = "[etiquetas-camara-2027]";
@@ -46,13 +61,14 @@ export function Camara2027Panel({ bancada, etiquetas }: Camara2027PanelProps) {
   if (!r.ok) {
     if (r.motivo === "portao") {
       console.warn(
-        `${LOG_TAG_CAMARA_2027} escondida pelo portão: ${r.bloqueantes.length} agremiação(ões) sem classificação`,
+        `${LOG_TAG_CAMARA_2027} escondida pelo portão: ${r.bloqueantes.length} agremiação(ões) sem classificação — ${resumoDosBloqueantes(r.bloqueantes)}`,
       );
     }
     return null;
   }
   const v = r.visao;
   const comCadeira = ordenarBancada(v.agremiacoes.filter((a) => a.cadeiras > 0));
+  const fontes = numerarFontes(comCadeira.map((a) => a.etiqueta));
 
   return (
     <Panel
@@ -60,11 +76,8 @@ export function Camara2027Panel({ bancada, etiquetas }: Camara2027PanelProps) {
       title="Câmara de 2027: quem terá maioria"
       titleId="camara-2027-heading"
     >
-      <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
-        <p
-          className="max-w-prose"
-          style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-        >
+      <div className={styles.coluna}>
+        <p className={styles.texto}>
           As mesmas {v.total} cadeiras do plenário acima, agora pela relação com o governo Lula. Até
           o resultado final, cada cadeira leva a classificação da agremiação que a conquistou — o
           padrão do partido ou da federação, não a de cada deputado. Em 2027 o governo pode ser
@@ -78,33 +91,43 @@ export function Camara2027Panel({ bancada, etiquetas }: Camara2027PanelProps) {
           titulo={`A Câmara a partir de 2027 por relação com o governo Lula: ${v.total} cadeiras`}
           rotuloAguardando="Cadeiras ainda sem dono"
         />
-        <ul
-          data-testid="camara-2027-agremiacoes"
-          style={{
-            listStyle: "none",
-            margin: 0,
-            padding: 0,
-            font: "var(--type-body-sm)",
-            fontSize: "var(--text-xs)",
-            color: "var(--text-muted)",
-          }}
-        >
-          {comCadeira.map((a) => (
-            <li key={a.cod} data-sigla={a.sigla} data-bloco={a.bloco}>
-              <strong style={{ color: "var(--text-secondary)", fontWeight: 600 }}>{a.sigla}</strong>{" "}
-              ({a.cadeiras}): {ROTULO_BLOCO_HEMICICLO[a.bloco]}
-              {a.etiqueta ? (
-                <>
-                  {" — "}
-                  <a href={a.etiqueta.fonte_url} rel="noopener noreferrer" target="_blank">
-                    {a.etiqueta.fonte_descricao}
-                  </a>
-                  , {dataBr(a.etiqueta.data)}
-                </>
-              ) : null}
-            </li>
-          ))}
+        <ul data-testid="camara-2027-agremiacoes" className={styles.lista}>
+          {comCadeira.map((a) => {
+            const n = fontes.numero(a.etiqueta);
+            return (
+              <li key={a.cod} data-bloco={a.bloco}>
+                <strong>{a.sigla}</strong> ({a.cadeiras}): {ROTULO_BLOCO_HEMICICLO[a.bloco]}
+                {a.etiqueta ? (
+                  <>
+                    {" — "}
+                    <a href={a.etiqueta.fonte_url} aria-describedby={`${ID_FONTE}-${n}`}>
+                      fonte {n}
+                    </a>
+                    , {dataBr(a.etiqueta.data)}
+                  </>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
+        {fontes.lista.length > 0 ? (
+          <>
+            <p className={styles.lista} id={`${ID_FONTE}s`}>
+              Fontes
+            </p>
+            <ol
+              className={styles.fontes}
+              aria-labelledby={`${ID_FONTE}s`}
+              data-testid="camara-2027-fontes"
+            >
+              {fontes.lista.map((f) => (
+                <li key={f.n} id={`${ID_FONTE}-${f.n}`}>
+                  <a href={f.fonte_url}>{f.fonte_descricao}</a>
+                </li>
+              ))}
+            </ol>
+          </>
+        ) : null}
         <EtiquetasAviso />
       </div>
     </Panel>

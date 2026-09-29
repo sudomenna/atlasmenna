@@ -74,7 +74,7 @@ rodar contra um build local. Até 20/09 os dois só existiam por medição manua
 contra o site publicado.
 
 ```bash
-pnpm build
+pnpm build:e2e      # 🔴 este, NUNCA `pnpm build` — monta com o Global Config falso de pé
 pnpm start:e2e      # 🔴 este, NUNCA `pnpm start` nem `pnpm dev` — sobe na porta 3100
 
 # noutro terminal
@@ -140,6 +140,70 @@ EDGE_CONFIG="http://127.0.0.1:3101/ecfg_e2efalso?token=e2e" \
 ```
 [edge-config-falso] 85 chaves em http://127.0.0.1:3101/ecfg_e2efalso
 ```
+
+### O build também lê o falso — `pnpm build:e2e` (29/09)
+
+🔴 **Sem `.env.local`, os portões mediam páginas VAZIAS (achado de 29/09).** O
+`start:e2e` já lia o Global Config falso, mas o `.next` saía de um `pnpm build`
+— e numa worktree, no CI ou num clone novo não há `.env.local`, logo não há
+`EDGE_CONFIG` no build. O Next pré-montava as rotas que leem o Global Config com
+`revalidate = 60` — `/`, `/senador`, `/deputado-federal`, `/uf/[sigla]/*` —
+como páginas ESTÁTICAS com a casca "Esta página ainda não recebeu dados", e o
+`next start` servia essa casca. A regeneração não consertava: o SDK busca com
+`cache: "no-store"`, o Next lê isso como uso dinâmico e aborta com "Page changed
+from static to dynamic at runtime" (no log do servidor, uma vez por rota).
+`/governador` escapava porque já era dinâmica (lê `searchParams`). No checkout
+principal o `pnpm build` lia o `EDGE_CONFIG` de **produção** do `.env.local`, as
+rotas saíam dinâmicas e o portão acertava — por acaso, e com o build carregando
+as variáveis de produção.
+
+O que existe agora:
+
+```
+pnpm build:e2e   = (as mesmas 13, com o banco MORTO) EDGE_CONFIG=…3101… \
+                   tsx scripts/edge-config-falso.ts --marcar-build -- next build
+pnpm start:e2e   = (13 variáveis vazias)             EDGE_CONFIG=…3101… \
+                   tsx scripts/edge-config-falso.ts --exigir-build-e2e -- next start -p 3100
+```
+
+- **O banco morto.** O build avalia os módulos das rotas de ingestão, e o
+  `neon()` lança com `DATABASE_URL` vazio ("No database connection string",
+  `Failed to collect page data for /api/ingest/[cargo]`). O `build:e2e` leva
+  `postgresql://ninguem:nada@127.0.0.1:9/inexistente` — porta 9 da própria
+  máquina, sem ninguém escutando: o módulo carrega, qualquer consulta falharia.
+  Nunca o `DATABASE_URL` do `.env.local` (produção). O `start:e2e` segue com ele
+  vazio. Um teste unitário confere que essa é a ÚNICA diferença entre os dois
+  ambientes (`tests/unit/scripts/edge-config-falso.test.ts`).
+
+- Com o falso de pé no build, o Next marca essas rotas como **dinâmicas (ƒ)**:
+  cada requisição lê o dado fixo. É o que o README do SDK diz de qualquer
+  leitura com o padrão `no-store`, e o mesmo que o `pnpm build` com o
+  `.env.local` já produzia (a tabela de rotas mostra `ƒ /senador`). ISR contra
+  um Global Config por HTTP não existe; só o caminho local do SDK (o arquivo
+  `/opt/edge-config` das funções da Vercel) evita o `fetch`.
+- O build loga `global-config read failed … Dynamic server usage` uma vez por
+  rota: é o reader engolindo o sinal com que o Next descobre que a rota é
+  dinâmica. Ruído de build, não falha — a tabela de rotas é a prova.
+- `--marcar-build` grava `.next/e2e-edge-config.json` com o `BUILD_ID` depois de
+  um build que terminou bem. `--exigir-build-e2e` recusa subir sem a marca ou
+  com a de outro build (um `pnpm build` comum depois troca o `BUILD_ID`), e
+  diz por quê. Confira no log do `start:e2e`:
+  `[edge-config-falso] build:e2e <BUILD_ID> conferido`.
+- Os dois portões reprovam se o documento trouxer a casca de espera
+  (`cascaVaziaNoDocumento`, `tests/e2e/_apoio-local.ts`) — alarme para quem
+  voltar a medir sem o `build:e2e`.
+- Porta 3101 ocupada (um `start:e2e` de pé) derruba o `build:e2e` com
+  `EADDRINUSE`: pare o servidor antes de remontar.
+
+**Primeira execução com dado de verdade (29/09):** suíte inteira em **118
+passed / 18 skipped** (1,0 min), das quais 2 são **falhas conhecidas
+declaradas** do peso do documento (`test.fail` em `FALHAS_CONHECIDAS_DOCUMENTO`,
+`tests/e2e/perf-budget.spec.ts`), ambas anteriores à spec 025 e com as etiquetas
+desligadas: `/` com 668.014 B (2,2× o teto de 300 KiB) e `/uf/SP/senador` com
+309.446 B (0,7% acima). O teto NÃO mudou; se uma delas voltar a caber, o
+Playwright acusa "passou sem esperar" e a entrada sai da lista. As demais rotas
+medidas com dado: `/senador` 275.789 B, `/deputado-federal` 271.572 B, `/uf/SP`
+287.704 B, `/uf/SP/governador` 268.785 B, `/sobre-as-etiquetas` 82.604 B.
 
 ⚠️ **O relógio.** As fixtures só têm turno 1. Depois de 25/10 o calendário
 passa a pedir `-t2`, o servidor falso responde 404 (visível no log) e as
