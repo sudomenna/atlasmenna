@@ -145,10 +145,16 @@ publica a lista sem fotos, sem erro nenhum na tela.
       ```bash
       cd ~/Projetos/AtlasMenna && set -a; . ./.env.local; set +a; TSE_COD_ELEICAO_FEDERAL=ele2026/<número> pnpm list-targets --env production --cargo 1
       ```
-      **Você deve ver** `Total de alvos: 6138` (6.110 zonas + 27 estados + 1 nacional; medido em
-      27/09), sem mensagem de erro. Este passo prova que o número tem o formato certo e que a
-      lista de zonas está completa — ele **não** lê a Vercel; quem confere a Vercel é o 2.2.
+      **Você deve ver** `Total de alvos: 6133` (6.105 zonas + 27 estados + 1 nacional), sem
+      mensagem de erro. Este passo prova que o número tem o formato certo e que a lista de zonas
+      está completa — ele **não** lê a Vercel; quem confere a Vercel é o 2.2.
       (Até 27/09 este passo estava escrito sem o `.env.local` e sem o número, e quebrava.)
+      ⚠️ **6.133 vale depois da correção ESTRUTURAL de zonas de 29/09** (`--so-estrutural
+      --remover-fantasmas`: insere Macapá 14 e Noronha 4 em `zonas` e remove 7 pares que o TSE não
+      lista — 6.138 + 2 − 7; [runbook § Zonas faltantes](./runbook.md)). Antes dela o número era
+      **6.138**; se aparecer 6.138, a correção **não foi gravada** — pare e chame o Claude, não
+      "conserte" o número neste passo. Os **pesos** (`--pesos-oficiais`, arquivo do TSE) não mudam
+      este número: mexem só em `eleitorado`.
 
 ---
 

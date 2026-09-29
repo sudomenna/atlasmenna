@@ -768,149 +768,224 @@ de fonte de 2024.
 **Problema**: `zonas` (pares município × zona) decide QUAIS arquivos EA20 pedimos ao TSE, para
 todos os cargos (`lib/tse/targets.ts`). Medido em 29/09 contra o EA12 do simulado
 (`tests/fixtures/tse/2026-sim/mun-e021270-cm.json`, gerado 14/09 22:57:56, 6.105 pares sem o
-exterior), só `SELECT` em produção: o EA12 lista **2 pares que `zonas` não tem** — o arquivo
-deles nunca é pedido, então os votos somem em silêncio em todos os cargos e o total da UF
-nunca fecha com o agregado do TSE (mesma classe de falha do DF em 27/09).
+exterior), só `SELECT` em produção, há dois defeitos de **estrutura** e um de **peso**:
 
-| Par | Município | te (EA20 oficial) | Peso na UF |
-|---|---|---|---|
-| AP 06050×0014 | Macapá | 122.461 | **19,50 %** do eleitorado do AP |
-| PE 30015×0004 | Fernando de Noronha | 4.954 | 0,07 % do eleitorado de PE |
+1. o EA12 lista **2 pares que `zonas` não tem** (AP 06050×0014 Macapá, PE 30015×0004 Fernando de
+   Noronha) — o arquivo deles nunca é pedido, então os votos somem em silêncio em todos os cargos
+   (mesma classe de falha do DF em 27/09);
+2. **7 pares em `zonas` que o EA12 não lista** — cada ciclo pede 7 URLs por cargo que dão 404 (a
+   constituição § 1 registra que 404 em rajada pode bloquear o IP);
+3. os pesos de `eleitorado` são do CSV de **2024** (Macapá: zona 2 pesa 176.626, zona 10 pesa
+   134.192 — eleitores da zona 14 nova ainda estão nelas).
 
-O `te` acima não veio de arquivo de zona (esses dois arquivos nunca foram baixados): é o
-**resíduo exato** `te` do EA20 de UF − Σ `te` dos EA20 de zona de todos os outros pares oficiais
-da UF, todos já em `snapshots` (AP: 628.071 − 505.610; PE: 7.395.633 − 7.390.679). A mesma conta
-fecha com diferença **0** nas outras 25 UFs — é o que dá confiança ao número. O `te` do agregado é
-idêntico nas eleições 21270 e 21272 (medido nas 27 UFs), então vale para todos os cargos.
+### 🔴 Decisão do dono (29/09, noite): só a ESTRUTURA agora; peso só do arquivo oficial
 
-**Fonte do peso** (`eleitorado.eleitores_aptos`): o `e.te` do EA20 oficial de zona do par —
-`<uf><mun5>-z<zona4>-c0001-e021270-u.json`, a fatia do município (Passo 0 do protocolo do
-simulado). Duas fontes, nesta ordem: **(1) arquivo-zona** baixado à parte para
-`tests/fixtures/tse/2026-sim/zonas-faltantes/` (oficial; se existir, tem de fechar com o resíduo);
-**(2) derivado** — o resíduo acima, só com `--aceitar-te-derivado`.
+O plano anterior gravava como peso o `e.te` dos EA20 do **simulado** (derivado do agregado). **Não
+serve**: o eleitorado do simulado NÃO é o real. TRE-AP publicou **577.534** eleitores para o AP em
+2026 (2024: 571.248, +1,1 %); o agregado do simulado diz **628.071** (+8,7 %). Sinais na mesma
+direção: municípios do AP com +26 % a +106 % contra 2024 (Serra do Navio +106 %, Amapá +83 %,
+Cutias +65 %) ao lado de outros a −2 %, e o Recife com +20,55 %. **Nenhum `te` de simulado pode virar
+peso** — e o script agora RECUSA (ver abaixo). Decisão:
 
-### 🔴 O que a soma dos pesos revelou — leia antes de gravar o AP
+1. **Agora**: gravar só a estrutura — inserir os 2 pares em `zonas` (sem linha em `eleitorado`) e
+   remover os 7 fantasmas de `zonas` e o peso órfão de `eleitorado` (`--so-estrutural
+   --remover-fantasmas`).
+2. **Depois**: pesos de `eleitorado` a partir do arquivo oficial do TSE, dataset "Eleitorado - 2026"
+   (<https://dadosabertos.tse.jus.br/dataset/eleitorado-2026>, `perfil_eleitorado_2026.zip`), com
+   `--pesos-oficiais`.
 
-Os pesos que **já** estão em `eleitorado` vêm do CSV municipal de **2024**, não do cadastro de
-2026. Onde o TSE redistribuiu zonas, o peso antigo de uma zona ainda inclui eleitores que hoje
-pertencem à zona nova. Em Macapá: zona 2 pesa 176.626 (te 2026: 112.346) e zona 10 pesa 134.192
-(te 2026: 84.450) — a diferença de 114.022 é ~93 % da zona 14 (122.461). Consequência:
-**inserir só a zona 14 conta esses eleitores duas vezes**. Σ pesos do AP iria de 571.248 (−9,05 %
-do agregado) para 693.709 (**+10,45 %**): mais longe do agregado do que antes (Macapá passaria de
-54 % para 62,5 % do eleitorado do AP; o real é 50,8 %). Por isso o script **bloqueia** a escrita de
-uma UF cuja inserção *piora* a distância (`PIORA`); PE melhora (−242.762 → −237.808) e é liberada.
-
-Tamanho do problema (Σ |peso − te 2026| por par, sobre o agregado, medido em 29/09): **3,79 %**
-do eleitorado nacional está com o peso de outro par; AP 26,1 %, AC 18,1 %, RR 10,9 %, RJ 5,7 %,
-PE 5,5 %; 263 pares com desvio > 10 % e > 1.000 eleitores. O conserto completo — regravar
-`eleitorado` a partir do `te` de zona já em `snapshots` — **não é feito por este script** (ele
-nunca altera linha existente) e é decisão do dono: mexe no peso de todos os cargos daquelas UFs.
+**O que isso significa para o modelo até os pesos chegarem**: `_resolve_zone_weight`
+(`api/model/project.py`) pesa a zona pela **Σ dos pares dela em `eleitorado`**. Como AP 06050×0014
+sai sem peso e a zona 14 só existe em Macapá, a zona (AP, 14) tem peso **0 e os votos dela são
+DESCARTADOS** pelo modelo — como no caso do DF antes de 27/09. PE 30015×0004 divide a zona 4 com o
+Recife, que já tem peso (109.229, de 2024): a zona segue pesada, sem a fatia de Noronha (pouca
+coisa). Em compensação o ingest passa a **pedir** os dois arquivos: os votos ficam registrados em
+`snapshots` e o peso é o que falta. O script imprime esse aviso na simulação.
 
 ### Script
 
-`data-pipeline/zonas-faltantes-import.ts` (`pnpm db:zonas:faltantes`), lógica pura em
-`zonas-faltantes-nucleo.ts`, testes em `tests/unit/data-pipeline/zonas-faltantes-import.test.ts`.
-**Não faz rede**: o EA12 e os EA20 de zona são arquivos locais. A simulação **lê** o banco (precisa
-de `DATABASE_URL`, só `SELECT`, numa transação `READ ONLY` que o servidor faz cumprir).
+`data-pipeline/zonas-faltantes-import.ts` (`pnpm db:zonas:faltantes`); lógica pura em
+`zonas-faltantes-nucleo.ts`; modo de pesos oficiais em `zonas-pesos-oficiais.ts`; testes em
+`tests/unit/data-pipeline/zonas-faltantes-import.test.ts`. **Não faz rede**: o EA12 e o arquivo
+oficial são arquivos locais. A simulação **lê** o banco (precisa de `DATABASE_URL`, só `SELECT`,
+numa transação `READ ONLY` que o servidor faz cumprir).
 
 | Flag | Efeito |
 |---|---|
-| *(nenhuma)* | Simulação: diff nacional, `te` de cada par, linhas que inseriria, Σ pesos × agregado. Não grava. |
-| `--escrever` | Uma transação: relê, refaz o plano, aborta se houver bloqueio, insere **só** os pares faltantes (`INSERT … ON CONFLICT DO NOTHING`), confere `count(zonas)` e `Σ eleitorado` da UF dentro da transação e só então `COMMIT`. Nunca `UPDATE`/`DELETE`. |
-| `--uf AP,PE` | Restringe a UFs (padrão: todas com par faltante). |
-| `--aceitar-te-derivado` | Aceita o resíduo como `te` quando não há arquivo-zona. |
-| `--exigir-soma-exata` | Bloqueia qualquer UF cuja Σ pesos não feche exatamente com o agregado (hoje: as duas). |
-| `--zonas-dir <dir>` / `--ea12 <caminho>` / `--eleicao <cod>` | Padrões: `tests/fixtures/tse/2026-sim/zonas-faltantes` · `…/mun-e021270-cm.json` · `21270`. `--ea12` só aceita **caminho local**. |
+| *(nenhuma)* | Simulação: relatório completo, linhas que inseriria/atualizaria/removeria (antigo → novo), SQL de desfazer e **pré-voo** do SQL de escrita. Não grava (nem o backup). |
+| `--escrever` | Uma transação: relê, refaz o plano, aborta se houver bloqueio, grava o backup, escreve e confere **dentro** da transação; só então `COMMIT`. |
+| `--so-estrutural` | Insere os pares que o EA12 lista e `zonas` não tem **só em `zonas`**. Não lê `te` nem o agregado do simulado e nunca grava peso; dispensa `--aceitar-te-derivado` (que aqui é **recusado**, como `--recalcular-pesos-uf`). |
+| `--remover-fantasmas` | `DELETE` em `zonas` e `eleitorado` dos 7 pares de `FANTASMAS_AUTORIZADOS` (lista fechada no código). Recusa o par que o EA12 lista **ou** que tem **qualquer** snapshot. |
+| `--pesos-oficiais <zip\|csv> --uf AP[,PE…]` | **Modo de depois.** Lê o arquivo oficial (latin1, `;`), soma `QT_ELEITORES_PERFIL` por (`CD_MUNICIPIO`, `NR_ZONA`) e grava `eleitorado.eleitores_aptos` (ano 2026) de todo par das UFs que está em `zonas` (INSERT do que não tem peso, UPDATE do que difere). `--uf` é obrigatório (nunca "todas"). Não combina com `--so-estrutural`, `--remover-fantasmas` nem com os modos legados. |
+| `--total-uf AP=577534[,PE=…]` | Só com `--pesos-oficiais`: total **publicado** pela UF, conferido contra a soma do arquivo (bloqueia se diferir). |
+| `--col-uf` `--col-municipio` `--col-zona` `--col-qt` | Nomes das colunas do arquivo oficial (padrão `SG_UF`, `CD_MUNICIPIO`, `NR_ZONA`, `QT_ELEITORES_PERFIL`). ⚠️ **Não há amostra do arquivo no repositório** (só o de locais de votação de 2024, outro leiaute): a leitura **valida o cabeçalho** e, se um nome não existir, falha listando as colunas que encontrou. |
+| `--uf AP,PE` | No estrutural: restringe inserção e remoção a UFs (padrão: todas). |
+| `--zonas-dir` / `--ea12` / `--eleicao` | Padrões: `tests/fixtures/tse/2026-sim/zonas-faltantes` · `…/mun-e021270-cm.json` · `21270`. `--ea12` e `--pesos-oficiais` só aceitam **caminho local**. |
+| `--aceitar-te-derivado` · `--recalcular-pesos-uf` · `--exigir-soma-exata` | **Modos legados** (peso a partir de `te` de EA20). Com EA12 do simulado (`f='s'`) qualquer peso vindo daí é **BLOQUEIO** ("viriam do te do SIMULADO"): só passam com um EA12 que não seja do simulado (ex.: o da eleição real, quando existir). |
 
-**Bloqueios** (qualquer um impede `--escrever`): `te` sem resolver ou que não fecha com o
-agregado; `te` derivado sem `--aceitar-te-derivado`; município ausente de `municipios` (a FK de
-`zonas` rejeitaria — hoje ambos existem); peso já existente **diferente** do calculado; inserção
-que **piora** Σ pesos × agregado.
+**Pré-voo (só na simulação)**: para cada SQL de escrita do plano o script pede ao servidor
+`EXPLAIN <sql>` com os parâmetros reais. O servidor planeja e **não executa** (permitido na
+transação `READ ONLY`): prova que colunas, tipos e casts existem no esquema real antes do
+`--escrever`. Não prova FK nem conflito de chave (só a execução mostra; o `ROLLBACK` cobre). Se o
+pré-voo falha, a simulação sai com erro.
+
+**Bloqueios** (qualquer um impede `--escrever`) — estrutural: município ausente de `municipios` (a
+FK de `zonas` rejeitaria); fantasma que o EA12 lista ou que tem snapshot. Pesos oficiais: par em
+`zonas` **sem contagem** no arquivo; par do arquivo **fora de `zonas`** (rode o estrutural antes);
+linha de peso de par fora de `zonas` (o órfão); contagem oficial 0; Σ final da UF ≠ total do
+arquivo; total publicado ≠ soma do arquivo.
+
+**Conferências dentro da transação** (qualquer falha → `ROLLBACK`, nada fica): linhas afetadas por
+cada `UPDATE`/`DELETE` (`RETURNING`) == previsto; o `UPDATE` só casa a linha se o peso ainda for o
+lido (escrita concorrente = contagem menor = aborta); `count(zonas)`, `count(eleitorado)` e
+`Σ eleitorado` de cada UF tocada == previsto (nos pesos oficiais, Σ == **total do arquivo**); e por
+fim `zonas` e `eleitorado` **inteiros** idênticos ao estado esperado (nada além do plano mudou).
+Reexecutar depois do `COMMIT` não faz nada.
+
+**Backup**: antes da primeira escrita, as linhas que `UPDATE`/`DELETE` vão perder são gravadas em
+`build/zonas-backup-<AAAAMMDDTHHMMSSZ>.json` (pasta ignorada pelo git; nunca sobrescreve). O JSON traz
+o estado anterior de cada linha e o `desfazerSql`. O arquivo é gravado **antes**: só houve mudança
+se a execução imprimiu `COMMIT`.
 
 ### Comandos
 
 Os comandos carregam o `.env.local` **dentro de um subshell** `( … )` — o `DATABASE_URL` de lá é
-**produção** e não deve ficar no shell.
+**produção** e não deve ficar no shell. O pnpm repassa as flags com ou sem o `--` (testado; o
+script ignora o `--`).
+
+**Agora — estrutura:**
 
 ```bash
-# 0. (opcional, oficial) baixar os 2 EA20 de zona. Endereços = construtor de lib/tse/targets.ts
-#    (buildEA20UrlZona) sobre os pares que o EA12 lista — 2 GETs, não tente variações se der 404
-#    (constituição § 1); nesse caso use --aceitar-te-derivado no passo 2.
-UA='SalaCofre/1.0 (+https://salacofre.vercel.app; contato: contato@salacofre.com.br)'   # lib/tse/client.ts:82
-B=https://resultados-sim.tse.jus.br/simulado/simulado2026/ele2026/21270/dados
-D=tests/fixtures/tse/2026-sim/zonas-faltantes
-mkdir -p "$D"
-curl -fsS -A "$UA" -o "$D/ap06050-z0014-c0001-e021270-u.json" "$B/ap/ap06050-z0014-c0001-e021270-u.json"
-sleep 2
-curl -fsS -A "$UA" -o "$D/pe30015-z0004-c0001-e021270-u.json" "$B/pe/pe30015-z0004-c0001-e021270-u.json"
+# 1. Simulação — só SELECT (+ EXPLAIN das escritas), não grava. Ler a saída inteira (seções 1 a 9).
+( set -a; . ./.env.local; set +a; PGOPTIONS='-c default_transaction_read_only=on' \
+  pnpm db:zonas:faltantes --so-estrutural --remover-fantasmas )
 
-# 1. Simulação — só SELECT, não grava. Conferir a saída inteira (seções 1 a 6).
-( set -a; . ./.env.local; set +a; pnpm db:zonas:faltantes )
-
-# 2. Escrita — só depois de ler a simulação. Estado medido em 29/09:
-#    PE liberado; AP BLOQUEADO (PIORA) até o dono decidir os pesos vizinhos (seção acima).
-( set -a; . ./.env.local; set +a; pnpm db:zonas:faltantes --escrever --uf PE --aceitar-te-derivado )
-#    (com os arquivos do passo 0 no lugar, tire --aceitar-te-derivado)
+# 2. Escrita — SÓ depois de o dono ver a simulação acima. Mesmos flags + --escrever.
+( set -a; . ./.env.local; set +a; \
+  pnpm db:zonas:faltantes --escrever --so-estrutural --remover-fantasmas )
 ```
 
-O pnpm repassa as flags com ou sem o `--` (testado; o script ignora o `--`).
-Se a escrita abortar, **nada** foi gravado (ROLLBACK) e a mensagem lista os bloqueios.
+Se a escrita abortar, **nada** foi gravado (`ROLLBACK`) e a mensagem diz o motivo. Um arquivo em
+`build/zonas-backup-*.json` pode existir mesmo assim (foi gravado antes) — não significa mudança.
 
-### Conferência pós-escrita (só `SELECT`)
+**O que a simulação de 29/09 (medida em produção, só leitura) mostra para o comando acima:**
+
+| | Antes | Depois |
+|---|---|---|
+| `zonas` (pares) | 6.110 | **6.105** (= os 6.105 do EA12) |
+| `eleitorado` (linhas, ano 2026) | 6.104 | **6.103** (só o órfão PE 25313×0001 sai) |
+| AP: pares em `zonas` · linhas de peso | 17 · 17 | 18 · 17 (**Macapá 14 sem peso**) |
+| PE: pares em `zonas` · linhas de peso | 208 · 208 | 208 · 207 (−Recife 1, +Noronha 4 sem peso) |
+| PI · SP: pares em `zonas` | 235 · 780 | 230 · 779 |
+| Σ `eleitores_aptos` nacional | 158.100.251 | 157.984.390 (−115.861, o órfão) |
+| Linhas | — | `zonas` +2 −7 · `eleitorado` −1 |
+
+**Conferência pós-escrita** (só `SELECT`):
 
 ```sql
 SELECT uf, cod_municipio_tse, cod_zona, fonte FROM zonas
  WHERE (uf, cod_municipio_tse, cod_zona) IN (('AP',6050,14),('PE',30015,4));
--- PE só: 1 linha ('PE',30015,4,'ea12')
+-- 2 linhas, fonte 'ea12'
 
-SELECT uf, cod_municipio_tse, cod_zona, eleitores_aptos FROM eleitorado
- WHERE ano = 2026 AND (uf, cod_municipio_tse, cod_zona) IN (('AP',6050,14),('PE',30015,4));
--- PE só: ('PE',30015,4,4954)
+SELECT uf, cod_municipio_tse, cod_zona FROM zonas
+ WHERE (uf, cod_municipio_tse, cod_zona) IN
+   (('PE',25313,1),('PI',10170,92),('PI',11118,75),('PI',11452,83),('PI',11495,31),('PI',11614,55),('SP',71072,398));
+-- 0 linhas
 
 SELECT uf, count(*) AS pares, sum(eleitores_aptos) AS soma FROM eleitorado
  WHERE ano = 2026 AND uf IN ('AP','PE') GROUP BY uf;
--- antes: AP 17 | 571.248 · PE 208 | 7.152.871      depois (PE só): PE 209 | 7.157.825
+-- antes: AP 17 | 571.248 · PE 208 | 7.152.871      depois: AP 17 | 571.248 · PE 207 | 7.037.010
 
-SELECT count(*) FROM zonas;   -- antes 6.110 · depois de PE 6.111 · depois de AP+PE 6.112
+SELECT (SELECT count(*) FROM zonas) AS zonas, (SELECT count(*) FROM eleitorado WHERE ano = 2026) AS pesos;
+-- antes 6.110 | 6.104 · depois 6.105 | 6.103
 ```
 
-**`list-targets` tem de mostrar os pares novos** (a ingestão lê `zonas` a cada ciclo; o cache de
+**`list-targets` tem de refletir a mudança** (a ingestão lê `zonas` a cada ciclo; o cache de
 `listIngestTargets` é de 5 min):
 
 ```bash
 ( set -a; . ./.env.local; set +a; TSE_COD_ELEICAO_FEDERAL=ele2026/21270 pnpm list-targets --env production --cargo 1 )
-# antes (medido 29/09): Total de alvos: 6138 · zona: 6110 · PE | 208 · AP | 17
-# depois de PE:         Total de alvos: 6139 · zona: 6111 · PE | 209
-# depois de AP+PE:      Total de alvos: 6140 · zona: 6112 · PE | 209 · AP | 18
+# antes (medido 29/09):  Total de alvos: 6138 · zona: 6110 · uf: 27 · br: 1 · PE | 208 · AP | 17 · PI | 235 · SP | 780
+# depois (esperado):     Total de alvos: 6133 · zona: 6105 · uf: 27 · br: 1 · PE | 208 · AP | 18 · PI | 230 · SP | 779
 ```
 
-⚠️ `docs/operations/vespera-03-10.md` passo 2.4 espera `Total de alvos: 6138`: depois desta
-correção o número esperado passa a ser 6.139 ou 6.140 (conforme o que for gravado). Atualizar o
-passo junto com a escrita, senão a véspera reprova em falso.
+⚠️ `docs/operations/vespera-03-10.md` passo 2.4 espera `Total de alvos: 6133` (o mesmo número vale
+para estrutural e para o conserto completo). Se a estrutura **não** for gravada, o número esperado
+continua 6.138 — o passo 2.4 diz isso, para a véspera não reprovar em falso nem aprovar o número
+errado.
 
-**Desfazer** (só com ordem do dono; as linhas são aditivas e identificáveis):
+**Depois — pesos oficiais** (quando o dono baixar o arquivo; a estrutura acima tem de estar gravada,
+senão o Macapá 14 do arquivo está "fora de `zonas`" e o script bloqueia):
+
+```bash
+# 0. O dono baixa o zip pela página do dataset (1 download; o WAF do dadosabertos recusa `curl` e
+#    User-Agent com contato — ver TSE_ETL_USER_AGENT em data-pipeline/_tse-common.ts).
+# 1. Simulação: só SELECT + EXPLAIN. Conferir o total, o "arquivo × publicado" e a seção 4.
+( set -a; . ./.env.local; set +a; PGOPTIONS='-c default_transaction_read_only=on' \
+  pnpm db:zonas:faltantes --pesos-oficiais ~/Downloads/perfil_eleitorado_2026.zip \
+    --uf AP --total-uf AP=577534 )
+
+# 2. Escrita — só depois de o dono ver a simulação. Mesmos flags + --escrever.
+( set -a; . ./.env.local; set +a; \
+  pnpm db:zonas:faltantes --escrever --pesos-oficiais ~/Downloads/perfil_eleitorado_2026.zip \
+    --uf AP --total-uf AP=577534 )
+```
+
+O que conferir na simulação: (a) `total do arquivo=577.534 · publicado=577.534 · arquivo × publicado:
+IGUAL` e `Σ depois … FECHA com o arquivo`; (b) a seção 4 (variação por município) sem salto absurdo;
+(c) seção 5 com **0** pares sem contagem, **0** fora de `zonas` e **0** órfãos. Serve para qualquer UF
+(`--uf AC,AL,…`, cada uma com o seu `--total-uf` se houver total publicado). ⚠️ **O DF** teve o peso
+carregado em 27/09 do `te` do simulado (`eleitorado-df-import`): confira-o com `--uf DF` — a
+simulação mostra a diferença sem gravar nada.
+
+### Desfazer (só com ordem do dono)
+
+O `desfazerSql` do backup é gerado das linhas **lidas antes da escrita** (uma transação, na ordem:
+recolocar o que saiu → devolver os pesos → apagar o que entrou). Cole-o no `psql`/console do Neon:
+
+```bash
+jq -r '.desfazerSql[]' build/zonas-backup-<timestamp>.json
+```
+
+Para o comando estrutural de 29/09 o SQL é este (valores lidos de produção na simulação; vale
+enquanto essas linhas não tiverem sido alteradas por outra via):
 
 ```sql
 BEGIN;
-DELETE FROM eleitorado WHERE ano = 2026 AND (uf, cod_municipio_tse, cod_zona) IN (('PE',30015,4));
-DELETE FROM zonas      WHERE (uf, cod_municipio_tse, cod_zona) IN (('PE',30015,4));
-COMMIT;   -- acrescente ('AP',6050,14) às duas listas se o AP também tiver sido gravado
+INSERT INTO zonas (uf, cod_municipio_tse, cod_zona, nome, fonte) VALUES
+  ('PE', 25313, 1, NULL, 'csv'),
+  ('PI', 10170, 92, NULL, 'historico'),
+  ('PI', 11118, 75, NULL, 'historico'),
+  ('PI', 11452, 83, NULL, 'historico'),
+  ('PI', 11495, 31, NULL, 'historico'),
+  ('PI', 11614, 55, NULL, 'historico'),
+  ('SP', 71072, 398, NULL, 'historico');
+INSERT INTO eleitorado (ano, uf, cod_municipio_tse, cod_zona, eleitores_aptos, comparecimento_pct_historico) VALUES
+  (2026, 'PE', 25313, 1, 115861, NULL);
+DELETE FROM zonas WHERE (uf, cod_municipio_tse, cod_zona) IN (('AP', 6050, 14), ('PE', 30015, 4));
+COMMIT;
 ```
 
-### O que este script NÃO resolve (achados da mesma medição)
+Desfazer devolve os 7 fantasmas (e com eles os 404 por ciclo). Snapshots já gravados para AP
+06050×0014 / PE 30015×0004 **não** são apagados (append-only, constituição § 10). O desfazer do
+`--pesos-oficiais` é gerado da mesma forma (UPDATE devolvendo os pesos antigos + DELETE do que foi
+inserido) e fica no backup dele.
 
-- **Pesos vizinhos** (seção 🔴 acima): AP, PE/Recife, AC, RR… — decisão do dono.
-- **7 pares em `zonas` que o EA12 não lista** — PE 25313×0001 (Recife zona 1, peso órfão de
-  115.861 em `eleitorado`), PI 10170×0092, 11118×0075, 11452×0083, 11495×0031, 11614×0055 e
-  SP 71072×0398 (os seis últimos `fonte='historico'`, sem peso). Nenhum tem snapshot em cargo 1;
-  o TSE não deve publicar o arquivo deles, então cada ciclo pede 7 URLs por cargo que
-  provavelmente dão 404 (a constituição § 1 registra que 404 em rajada pode bloquear o IP).
-  Remover é `DELETE` em `zonas` — não feito aqui.
-- **Exterior** (`zz`) — ADR-0045, fora do escopo.
+⚠️ **Não rode `eleitorado-import.ts` / `pnpm db:migrate:0006` / `zonas-import.ts` depois destas
+correções sem refazê-las**: o importador de `eleitorado` faz `DELETE FROM eleitorado WHERE ano = 2026`
+e regrava o CSV de 2024 (desfaz os pesos oficiais), e o de `zonas` reescreve a tabela inteira.
+
+### O que este script NÃO resolve
+
+- **Pesos de 2024 nas demais UFs** (PE/Recife, AC, RR, RJ…) e o do DF (do `te` do simulado): só o
+  `--pesos-oficiais`, UF a UF, com o arquivo oficial. Enquanto isso o peso é o de 2024 (real, defasado).
+- **Exterior** (`zz`) — ADR-0045, fora do escopo (o arquivo oficial traz `ZZ`; é ignorado).
 - **EA12 da eleição real**: não há como obtê-lo antes de 03/10 (os códigos só saem então; ver
   `vespera-03-10.md` parte 2). Quando existir, rode a simulação de novo com `--ea12 <arquivo
   baixado> --eleicao <cod federal>`; e o EA12 da 21272 (estadual) **não foi consultado** — o
-  `te` de UF idêntico nas duas eleições é a evidência indireta de que os pares coincidem.
+  `te` de UF idêntico nas duas eleições é a evidência indireta de que os pares coincidem. A lista
+  de fantasmas é **fechada no código**: com outro EA12, pares que "sobram" só são apontados, nunca
+  removidos, até alguém autorizar a lista nova.
 
 ## Modelo — profiling baseline (T13 spec 002 · RNF-006)
 
