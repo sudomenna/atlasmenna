@@ -91,6 +91,11 @@ do projeto têm URL pública determinística (`allowOverwrite: true`, `addRandom
   precisa alcançá-la.
 - **Candidatura sem posição** (destino `Anulado`, `Anulado sub judice` ou `Válido (legenda)`, ADR-0064)
   forma o último grupo da lista e está sempre na página; a faixa 3, ao chegar, entra **antes** dele.
+  > **Emenda 2026-09-29 (implementação).** O contrato congelado da spec 026 (design § 3.1) e as
+  > frentes P e U ordenam essas linhas **pelos votos apurados, entre as demais**, com `rank` e o texto
+  > do destino na própria linha (nunca marca de eleição). Vale o contrato; voltar ao "último grupo"
+  > é uma troca de chave de ordenação (`_chave_rank` em `api/model/deputado_payload.py`) se o dono
+  > preferir.
 - A lista une o que já tem e o que chegou **por `sqcand`**: nunca duplica uma candidatura.
 - **Escopo da emenda ao ADR-0017:** só esta lista. `<details>` segue proibido em qualquer parte.
 

@@ -193,6 +193,11 @@ intercambiáveis); a legenda da tela diz qual base é.
 - **`pct_validos = null` também para "Válido (legenda)"**: o plano dizia "nulo se anulado ou sub judice";
   estendi ao terceiro destino porque o voto é válido mas não é nominal, e mostrar um percentual ao
   lado do nome sugeriria uma votação nominal que sustenta eleição. O dono pode reverter.
+  > **Emenda 2026-09-29 (implementação).** O contrato congelado da spec 026 (design § 3.1 e fixtures
+  > de contrato) e as frentes P e U foram construídos com `pct_validos` **numérico** para "Válido
+  > (legenda)" — o voto é válido e o percentual é verdadeiro; a linha leva o texto do destino ("voto
+  > vai para a legenda") ao lado, que desfaz a leitura de voto nominal. Vale o contrato; a troca para
+  > `null` é uma linha (`_DESTINOS_SEM_PCT` em `api/model/deputado_payload.py`) se o dono preferir.
 
 ## Cross-refs
 
