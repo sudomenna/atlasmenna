@@ -1,0 +1,106 @@
+/* =============================================================================
+ * components/atoms/badges/MarcaDeputado.module.css — spec 026 (RF-262, RF-266,
+ * RF-267), design 026 § 4.
+ *
+ * As três marcas de eleição de Deputado Federal. **Texto primeiro** — a palavra
+ * distingue as três ("eleito na parcial", "eleito na projeção · não oficial",
+ * "Eleito (TSE)"); a moldura só reforça, e cor nunca é o único sinal (WCAG SC
+ * 1.4.1, RNF-022/RNF-035).
+ *
+ *   - parcial ... moldura contínua neutra sobre o fundo afundado;
+ *   - projeção .. VAZADA: borda tracejada em ocre, fundo transparente. O ocre
+ *                 é o par editorial "Parcial em tinta × Projeção em ocre"
+ *                 (`components/atoms/controls/Button.tsx`, variante `accent`)
+ *                 — nunca cor de partido;
+ *   - TSE ....... CHEIA: fundo em tinta, texto invertido — o dado oficial.
+ *
+ * Contraste (tokens de `app/globals.css`):
+ *   - `--accent-text` (#8e5d18) sobre cartão branco ≈ 5,6:1; no escuro
+ *     `--accent-text` (#e8b45c) sobre o fundo escuro passa de 8:1;
+ *   - borda `--accent-strong` (#9e6a1c) ≈ 4,6:1 no claro, (#c98a2b) ≈ 6:1 no
+ *     escuro — acima dos 3:1 de componente não textual (SC 1.4.11);
+ *   - TSE: `--text-inverse` sobre `--surface-inverse` é o par de maior
+ *     contraste do sistema, nos dois temas.
+ *
+ * Sem `display: none` em lugar nenhum: a marca é texto dentro da linha, e a
+ * linha pode estar recortada (ADR-0065) — o conteúdo tem de continuar na
+ * árvore de acessibilidade.
+ * ========================================================================== */
+
+.marca {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.35em;
+  max-width: 100%;
+  padding: 1px var(--space-1);
+  border-radius: var(--radius-xs);
+  font: var(--type-label);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.parcial {
+  border: 1px solid var(--border-strong);
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+}
+
+.projecao {
+  border: 1px dashed var(--accent-strong);
+  background: transparent;
+  color: var(--accent-text);
+}
+
+.tse {
+  border: 1px solid var(--surface-inverse);
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+  font-weight: 600;
+}
+
+/* A via e o "apertada" são o complemento — mesmo elemento, peso menor. */
+.detalhe {
+  font-weight: 400;
+}
+
+/* A citação do `st` do TSE fica FORA da caixa cheia: é a palavra do TSE,
+ * ao lado da nossa marca, e não parte dela. */
+.citacao {
+  font: var(--type-label);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.destino {
+  font: var(--type-label);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Legenda única do painel (spec 026 § Telas, item 5). */
+.legenda {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Bloco, não flex: a marca é o começo da frase e o texto corre ao lado dela
+ * (com flex, cada nó de texto virava um item e a frase quebrava em pedaços). */
+.legenda > li {
+  display: block;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.legenda > li > .marca,
+.legenda > li > .destino {
+  margin-inline-end: var(--space-1);
+}

@@ -94,7 +94,9 @@ import { Figure } from "@/components/atoms/data/Figure";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import { Camara2027Panel } from "@/components/blocks/Camara2027Panel";
 import { CamaraHemiciclo } from "@/components/blocks/CamaraHemiciclo";
+import { DeputadoMaisVotados } from "@/components/blocks/DeputadoMaisVotados";
 import { DeputadoMetodologia } from "@/components/blocks/DeputadoMetodologia";
+import { DeputadoPuxadores } from "@/components/blocks/DeputadoPuxadores";
 import {
   SEM_DADO,
   UfBandeirasGrid,
@@ -103,16 +105,25 @@ import {
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
+import { aplicarInterruptorNoNacional } from "@/lib/blob/deputado-uf";
 import { cargoInfo } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
-import { resultadoEleitoral, simulacaoDeputadoNacional } from "@/lib/dev/simulacao";
+import {
+  resultadoEleitoral,
+  simulacaoDeputadoNacional,
+  simulacaoLigada,
+} from "@/lib/dev/simulacao";
+import type { InterruptorProjecaoLido } from "@/lib/edge-config/reader";
 import { readDeputadoProjection } from "@/lib/edge-config/reader";
 import type { EdgeAgremiacaoBancada, EdgePayloadDeputado } from "@/lib/edge-config/types";
 import { lerEtiquetas } from "@/lib/etiquetas/leitor";
 import { ordenarBancada } from "@/lib/utils/bancada";
+import { seloEstadoProjecao } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { colorForParty, textForParty } from "@/lib/utils/party-color";
 import depFixture from "@/tests/fixtures/edge-config/dep-current.json" with { type: "json" };
+
+import { lerInterruptorDaTela } from "../_interruptor";
 
 /** Código TSE deste cargo. Tudo o que descreve o cargo sai da tabela canônica. */
 const CARGO_DEPUTADO = 6 as const;
@@ -169,10 +180,18 @@ export const metadata: Metadata = {
  * `lugares_a_preencher` é "o TSE ainda não publicou", nunca zero, e um
  * "0 de 0" diria que o estado não elege ninguém.
  */
-function resumosPorUf(payload: EdgePayloadDeputado): Record<string, UfResumoCorrida> {
+function resumosPorUf(
+  payload: EdgePayloadDeputado,
+  interruptor: InterruptorProjecaoLido,
+): Record<string, UfResumoCorrida> {
   const saida: Record<string, UfResumoCorrida> = {};
   for (const uf of payload.por_uf) {
+    // Spec 026 (design § 8.4) — o selo do estado da projeção da UF, só com o
+    // interruptor LIGADO: desligado, a projeção não existe na capa, nem como
+    // selo (RF-265). O texto traz "não oficial" junto (RF-266).
+    const selo = interruptor.ligada ? seloEstadoProjecao(uf.projecao) : null;
     saida[uf.sigla] = {
+      ...(selo ? { selo } : {}),
       detalhe:
         (uf.lider ? `maior bancada: ${uf.lider.sigla} (${uf.lider.cadeiras})` : SEM_DADO.detalhe) +
         (uf.empates_indeterminados > 0
@@ -331,16 +350,26 @@ export default async function DeputadoFederalPage() {
   // "aguardando" continua sendo exercitado.
   // 🔴 Simulação ligada ⇒ ela é a fonte de verdade e o Global Config nem é
   // lido. Ver a nota gêmea em `app/(gov)/governador/page.tsx`.
-  const payload = await resultadoEleitoral(
-    () => simulacaoDeputadoNacional(),
-    async () =>
-      (await readDeputadoProjection()) ??
-      (process.env.NODE_ENV === "development"
-        ? (depFixture as unknown as EdgePayloadDeputado)
-        : null),
-  );
+  //
+  // Spec 026 (RF-265) — o interruptor da projeção vai em paralelo, e é
+  // aplicado ao payload antes de qualquer bloco o ver
+  // (`aplicarInterruptorNoNacional`). A capa lê SÓ o Global Config: os mais
+  // votados e os puxadores do país vêm prontos no payload (RF-271) — nenhum
+  // Blob de UF é lido aqui.
+  const [payloadLido, interruptor] = await Promise.all([
+    resultadoEleitoral(
+      () => simulacaoDeputadoNacional(),
+      async () =>
+        (await readDeputadoProjection()) ??
+        (process.env.NODE_ENV === "development"
+          ? (depFixture as unknown as EdgePayloadDeputado)
+          : null),
+    ),
+    lerInterruptorDaTela(simulacaoLigada()),
+  ]);
 
-  if (!payload) return <AguardandoNacional />;
+  if (!payloadLido) return <AguardandoNacional />;
+  const payload = aplicarInterruptorNoNacional(payloadLido, interruptor);
 
   const bancada = payload.bancada;
   const agremiacoes = ordenarBancada(bancada.por_agremiacao);
@@ -730,8 +759,18 @@ export default async function DeputadoFederalPage() {
           um estado ausente da grade se lê como estado que não elege ninguém.
           Sem dado, o item diz "aguardando apuração" e "vagas não publicadas" —
           nunca um zero (RF-124). */}
+      {/* Spec 026 RF-271 / RF-273 — os mais votados e os puxadores do país,
+          do payload nacional (autossuficiente). Payload anterior à spec 026
+          não tem os campos, e os blocos não aparecem. */}
+      <DeputadoMaisVotados
+        escopo="pais"
+        linhas={payload.mais_votados}
+        titleId="mais-votados-pais-heading"
+      />
+      <DeputadoPuxadores puxadores={payload.puxadores} titleId="puxadores-heading" />
+
       <Panel kicker="Corridas estaduais" title="Estado a estado" titleId="corridas-heading">
-        <UfBandeirasGrid cargo={CARGO_DEPUTADO} resumos={resumosPorUf(payload)} />
+        <UfBandeirasGrid cargo={CARGO_DEPUTADO} resumos={resumosPorUf(payload, interruptor)} />
       </Panel>
 
       {/* Seção 4 — constituição § 8 + design 017 § D9. */}
@@ -742,6 +781,9 @@ export default async function DeputadoFederalPage() {
         // faixa, e o texto do bloco precisa acompanhar sozinho (ADR-0036 fez
         // a frase anterior virar falsa na tela).
         temIntervalo={payload.bancada.por_agremiacao.some((a) => a.cadeiras_ci95 !== undefined)}
+        interruptorLigado={interruptor.ligada}
+        interruptorOrigem={interruptor.origem}
+        pctMinimo={interruptor.pct_minimo}
       />
 
       <Footer />

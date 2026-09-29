@@ -56,6 +56,13 @@ const readUfProjectionMock = vi.fn();
 const readDeputadoProjectionMock = vi.fn();
 
 vi.mock("@/lib/edge-config/reader", () => ({
+  // Spec 026 (RF-265) — as telas de Deputado leem o interruptor da projeção a
+  // cada render. Ausente = desligado (falha fechada), o estado de antes da virada.
+  readInterruptorProjecao: vi.fn(async () => ({
+    ligada: false,
+    pct_minimo: 25,
+    origem: "ausente",
+  })),
   readNationalProjection: () => readNationalProjectionMock(),
   readArchivedProjection: () => Promise.resolve(null),
   readUfProjection: (sigla: string, opts?: unknown) => readUfProjectionMock(sigla, opts),

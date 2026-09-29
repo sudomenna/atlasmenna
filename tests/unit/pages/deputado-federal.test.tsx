@@ -27,9 +27,61 @@ import DeputadoFederalPage from "@/app/(dep)/deputado-federal/page";
 import UFDeputadoFederalPage from "@/app/(dep)/uf/[sigla]/deputado-federal/page";
 import type { DeputadoUfDetail, DeputadoUfDetailResult } from "@/lib/blob/deputado-uf";
 import type { EdgeAgremiacaoBancada, EdgePayloadDeputado } from "@/lib/edge-config/types";
+import depUfV1 from "@/tests/fixtures/blob/dep-uf.json" with { type: "json" };
+import contratoNacional from "@/tests/fixtures/contrato/deputado-nacional-v2.json" with {
+  type: "json",
+};
+import contratoUf from "@/tests/fixtures/contrato/deputado-uf-v2.json" with { type: "json" };
+
+/** Spec 026 — o objeto v2 da UF, da fixture de contrato (formato de produção). */
+function v2(uf: "AC" | "AP" | "RR" | "SP"): DeputadoUfDetail {
+  return structuredClone(
+    (contratoUf as unknown as Record<string, DeputadoUfDetail>)[uf],
+  ) as DeputadoUfDetail;
+}
+
+/** O objeto v1 de sempre (`tests/fixtures/blob/dep-uf.json`, intocado — RF-276). */
+function v1(uf: string): DeputadoUfDetail {
+  return structuredClone(
+    (depUfV1 as unknown as Record<string, DeputadoUfDetail>)[uf],
+  ) as DeputadoUfDetail;
+}
+
+/**
+ * RF-266 — toda ocorrência de "projeção"/"projetad" FORA da metodologia tem de
+ * estar no mesmo elemento que "não oficial". Devolve as que não estão (vazio =
+ * cumpre) e quantas ocorrências havia ao todo (para o controle positivo).
+ */
+function projecaoForaDaMetodologia(doc: Document): { soltas: string[]; total: number } {
+  const metodologia = doc.querySelector("[data-testid='dep-metodologia']");
+  const soltas: string[] = [];
+  let total = 0;
+  const walker = doc.createTreeWalker(doc.body, 4 /* NodeFilter.SHOW_TEXT */);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const t = n.textContent ?? "";
+    if (!/proje(ção|tad)/i.test(t)) continue;
+    if (metodologia?.contains(n)) continue;
+    total++;
+    const dono = n.parentElement?.closest("p, li, span, h1, h2, h3, h4, div") ?? n.parentElement;
+    if (!(dono?.textContent ?? "").includes("não oficial")) soltas.push(t.trim().slice(0, 80));
+  }
+  return { soltas, total };
+}
+
+function paramsDe(sigla: string) {
+  return { params: Promise.resolve({ sigla }) };
+}
+
+/** "eleito" que não é uma das três marcas nem a citação literal do TSE (RF-266). */
+const ELEITO_SOLTO =
+  /(?<!\p{L})eleito(?!\p{L})(?!\s+(na parcial|na projeção|\(TSE\)|por QP|por média))/giu;
 
 const readDeputadoProjectionMock = vi.fn();
 const readDeputadoUfDetailMock = vi.fn();
+/** Spec 026 (RF-265) — o interruptor lido no render. Padrão: ausente = desligado. */
+const readInterruptorProjecaoMock = vi.fn();
+const DESLIGADO = { ligada: false, pct_minimo: 25, origem: "ausente" } as const;
+const LIGADO = { ligada: true, pct_minimo: 25, origem: "chave" } as const;
 
 /**
  * RF-149 (spec 018) — o estado "aguardando dados" desta rota passou a ler a
@@ -49,6 +101,7 @@ vi.mock("@/lib/blob/candidatos", () => ({
 
 vi.mock("@/lib/edge-config/reader", () => ({
   readDeputadoProjection: () => readDeputadoProjectionMock(),
+  readInterruptorProjecao: () => readInterruptorProjecaoMock(),
   readProjection: vi.fn(async () => null),
   readNationalProjection: vi.fn(async () => null),
   readArchivedProjection: vi.fn(async () => null),
@@ -234,6 +287,8 @@ function indisponivel(reason: "not_found" | "fetch_error"): DeputadoUfDetailResu
 beforeEach(() => {
   readDeputadoProjectionMock.mockReset();
   readDeputadoUfDetailMock.mockReset();
+  readInterruptorProjecaoMock.mockReset();
+  readInterruptorProjecaoMock.mockResolvedValue(DESLIGADO);
 });
 
 // ---------------------------------------------------------------------------
@@ -285,8 +340,12 @@ describe("/deputado-federal (T-11)", () => {
 
     expect(metodologia).not.toMatch(/boletim que o TSE publica por estado/);
     expect(metodologia).not.toMatch(/zonas eleitorais/);
-    // Mas continua dizendo o que sempre foi verdade: não é projeção.
+    // Spec 026 (reescrita): continua dizendo que a CONTA não é projeção — e,
+    // sem payload, também não relata estado de projeção nenhum: nem trava, nem
+    // interruptor, nem "o que está movendo" (não há o que relatar).
     expect(metodologia).toMatch(/não são uma projeção/);
+    expect(metodologia).not.toMatch(/desligada|interruptor|trava|25%|o que está movendo/i);
+    expect(doc.querySelector("[data-testid='dep-metodologia-projecao']")).toBeNull();
   });
 
   it("(c0) a11y: a contagem e a faixa têm rótulo próprio — não se distinguem só por posição", async () => {
@@ -648,29 +707,35 @@ describe("/deputado-federal (T-11)", () => {
     }
   });
 
-  it("(m5) D9: a tela NÃO chama isto de projeção, e diz o que é", async () => {
-    // § D9 é literal: "a tela não pode chamar isso de projeção". O número é a
-    // aritmética do ADR-0027 sobre o voto já contado. Asserção negativa sobre
-    // o corpo inteiro — inclusive kickers e títulos de painel.
-    readDeputadoProjectionMock.mockResolvedValue(nacional());
-    const doc = await render(DeputadoFederalPage());
+  it("(m5) spec 026: 'projeção' só junto de 'não oficial'; a bancada nunca é chamada de projeção", async () => {
+    // Reescrito pela spec 026 (o D9 do design 017 caiu, ADR-0063). A palavra
+    // passa a ser permitida FORA da metodologia só no mesmo elemento que "não
+    // oficial" (RF-266), e só com o interruptor LIGADO; o número da bancada
+    // continua sendo a parcial e continua nunca sendo chamado de projeção.
+    const payload = contratoNacional as unknown as EdgePayloadDeputado;
 
-    // A única ocorrência legítima da palavra é a frase que a NEGA, dentro do
-    // bloco de metodologia. Ela sai do texto antes da asserção negativa —
-    // senão o teste proibiria justamente a correção que ele existe para
-    // garantir.
-    const metodologia = doc.querySelector("[data-testid='dep-metodologia']")?.textContent ?? "";
-    const resto = (doc.body.textContent ?? "").replace(metodologia, "");
+    // Interruptor desligado: nenhuma ocorrência fora da metodologia.
+    readDeputadoProjectionMock.mockResolvedValue(payload);
+    const desligado = await render(DeputadoFederalPage());
+    expect(projecaoForaDaMetodologia(desligado).total).toBe(0);
+    expect(desligado.body.textContent).not.toMatch(/forecast/i);
 
-    expect(resto).not.toMatch(/proje(ção|tad)/i);
-    expect(resto).not.toMatch(/forecast/i);
-    // Nenhum kicker ou título de painel pode chamar isto de projeção.
-    const rotulos = [...doc.querySelectorAll("h1, h2, h3, [class]")]
+    // Ligado: o selo por UF aparece (controle positivo) — e toda ocorrência
+    // está com "não oficial".
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const ligado = await render(DeputadoFederalPage());
+    const { soltas, total } = projecaoForaDaMetodologia(ligado);
+    expect(total).toBeGreaterThan(0);
+    expect(soltas).toEqual([]);
+
+    // O painel da bancada (a parcial) nunca se chama projeção — kicker e título.
+    const bancada = ligado.querySelector("[aria-labelledby='bancada-heading']");
+    const rotulos = [...(bancada?.querySelectorAll("h2, [data-testid='panel-kicker']") ?? [])]
       .map((el) => el.textContent ?? "")
-      .filter((t) => t.length < 80)
       .join(" | ");
     expect(rotulos).not.toMatch(/proje(ção|tad)/i);
 
+    const metodologia = ligado.querySelector("[data-testid='dep-metodologia']")?.textContent ?? "";
     expect(metodologia).toMatch(/não são uma projeção/i);
     expect(metodologia).toMatch(/já apurados/i);
   });
@@ -826,46 +891,71 @@ describe("/uf/[sigla]/deputado-federal (T-12)", () => {
     }
   });
 
-  it("(r) com o Blob: agremiações, eleitos e o partido de cada um dentro da federação", async () => {
+  it("(r) com o Blob: agremiações, eleitos na parcial e o partido de cada um dentro da federação", async () => {
+    // Spec 026: o markup da lista mudou (três faixas, tuplas), a exigência não.
     readDeputadoProjectionMock.mockResolvedValue(nacional());
     readDeputadoUfDetailMock.mockResolvedValue(ok(detalhe()));
     const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
 
     expect(doc.querySelectorAll("[data-testid='uf-agremiacao']").length).toBe(2);
-    expect(doc.querySelectorAll("[data-testid='uf-eleito']").length).toBe(3);
-    const texto = doc.querySelector("[data-testid='uf-agremiacoes']")?.textContent ?? "";
+    // Objeto v1: os eleitos são a parcial — marcados "eleito na parcial".
+    expect(
+      doc.querySelectorAll("[data-testid='uf-agremiacao'] li[data-rank] [data-marca='parcial']")
+        .length,
+    ).toBe(3);
+    const federacao = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='13']");
+    const texto = federacao?.textContent ?? "";
     expect(texto).toContain("Ana Lima");
     // RF-122: dentro da federação, o eleito continua sendo de um partido.
-    expect(texto).toContain("(PT)");
-    expect(texto).toContain("(PCdoB)");
-  });
-
-  it("(s) RF-127: cadeira decidida em sobra é legível como indefinida, não com firmeza falsa", async () => {
-    readDeputadoProjectionMock.mockResolvedValue(nacional());
-    readDeputadoUfDetailMock.mockResolvedValue(ok(detalhe()));
-    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
-
-    const marcados = doc.querySelectorAll("[data-testid='uf-eleito'][data-indefinido='true']");
-    expect(marcados.length).toBe(1);
-    expect(marcados[0]?.textContent).toContain("Bruno Reis");
-    // E a marcação é TEXTO, não só um atributo ou uma cor (WCAG 1.4.1).
-    expect(doc.querySelector("[data-testid='uf-eleito-indefinido']")?.textContent).toMatch(
-      /ainda indefinido/i,
+    const partidos = [...(federacao?.querySelectorAll("li[data-rank] small") ?? [])].map(
+      (el) => el.textContent,
     );
+    expect(partidos).toEqual(expect.arrayContaining(["PT", "PCdoB"]));
   });
 
-  it("(t) suplentes NÃO vão à tela — a spec 017 os põe fora desta janela", async () => {
-    // Asserção negativa: o objeto do Blob os carrega (design 017 § D6), então
-    // um `.map` distraído sobre `agremiacoes[].suplentes` os imprimiria sem
-    // que nada quebrasse.
+  it("(s) RF-127: cadeira decidida em sobra é legível como apertada, não com firmeza falsa", async () => {
     readDeputadoProjectionMock.mockResolvedValue(nacional());
     readDeputadoUfDetailMock.mockResolvedValue(ok(detalhe()));
     const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
-    const texto = doc.body.textContent ?? "";
 
-    expect(texto).not.toContain("Célia Mota");
-    expect(texto).not.toContain("Eva Prado");
-    expect(texto).not.toMatch(/suplente/i);
+    const linhas = [...doc.querySelectorAll("li[data-rank]")];
+    const bruno = linhas.find((l) => l.textContent?.includes("Bruno Reis"));
+    // A marcação é TEXTO, não só um atributo ou uma cor (WCAG 1.4.1).
+    expect(bruno?.querySelector("[data-marca='parcial']")?.textContent).toMatch(/sobra apertada/);
+    const apertadas = linhas.filter((l) => l.textContent?.includes("sobra apertada"));
+    expect(apertadas).toHaveLength(1);
+  });
+
+  it("(t) spec 026: a lista inteira vai à tela, na ordem do voto, em três faixas; 'suplente' só com o TSE", async () => {
+    // Reescrito pela spec 026: a suplência nominal saiu de "Fora". Quem não se
+    // elegeu aparece — como a linha seguinte, sem rótulo: a palavra
+    // "suplente" é do TSE e só teria lugar com a totalização final.
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(detalhe()));
+    const v1doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const textoV1 = v1doc.body.textContent ?? "";
+    expect(textoV1).toContain("Célia Mota");
+    expect(textoV1).toContain("Eva Prado");
+    expect(textoV1).not.toMatch(/suplente/i);
+
+    // v2 de SP: PL com 71 candidatos — 60 no documento, na ordem do rank, 20
+    // visíveis e 40 recortadas; o resto só no clique.
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("SP")));
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const pl = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='22']");
+    const linhas = [...(pl?.querySelectorAll("li[data-rank]") ?? [])];
+    expect(linhas.map((l) => Number(l.getAttribute("data-rank")))).toEqual(
+      Array.from({ length: 60 }, (_, i) => i + 1),
+    );
+    expect(linhas.filter((l) => !l.hasAttribute("data-f"))).toHaveLength(20);
+    const votos = linhas.map((l) =>
+      Number((l.children[2]?.firstChild?.textContent ?? "").replace(/\./g, "")),
+    );
+    expect(votos).toEqual([...votos].sort((a, b) => b - a));
+    expect(pl?.querySelector("[data-testid='dep-mostrar-todos']")?.textContent).toBe(
+      "Mostrar todos os 71 candidatos de PL",
+    );
+    expect(doc.body.textContent).not.toMatch(/suplente/i);
   });
 
   it("(t2) ADR-0024: a cor na UF também vem de `sigla_lider` desta UF", async () => {
@@ -924,17 +1014,23 @@ describe("/uf/[sigla]/deputado-federal (T-12)", () => {
     }
   });
 
-  it("(t5) D9: a tela de UF também não chama isto de projeção", async () => {
+  it("(t5) spec 026: na UF, 'projeção' só junto de 'não oficial' — e só com o interruptor ligado", async () => {
+    // Reescrito pela spec 026 (ver (m5)). RR é `liberada` na fixture.
     readDeputadoProjectionMock.mockResolvedValue(nacional());
-    readDeputadoUfDetailMock.mockResolvedValue(ok(detalhe()));
-    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("RR")));
 
-    const metodologia = doc.querySelector("[data-testid='dep-metodologia']")?.textContent ?? "";
-    const resto = (doc.body.textContent ?? "").replace(metodologia, "");
+    const desligado = await render(UFDeputadoFederalPage(paramsDe("RR")));
+    expect(projecaoForaDaMetodologia(desligado).total).toBe(0);
+    expect(desligado.body.textContent).not.toMatch(/\bModelo\b/);
 
-    expect(resto).not.toMatch(/proje(ção|tad)/i);
-    expect(resto).not.toMatch(/forecast/i);
-    expect(resto).not.toMatch(/\bModelo\b/);
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const ligado = await render(UFDeputadoFederalPage(paramsDe("RR")));
+    const { soltas, total } = projecaoForaDaMetodologia(ligado);
+    expect(total).toBeGreaterThan(0);
+    expect(soltas).toEqual([]);
+    expect(ligado.body.textContent).not.toMatch(/forecast/i);
+
+    const metodologia = ligado.querySelector("[data-testid='dep-metodologia']")?.textContent ?? "";
     expect(metodologia).toMatch(/não são uma projeção/i);
   });
 
@@ -1287,5 +1383,276 @@ describe("spec 021 RF-192 emendado (2026-09-26, noite) — Deputado", () => {
     const painel = doc.querySelector('[aria-labelledby="votacao-uf-heading"]');
     expect(painel?.querySelector('[data-testid="detail-unavailable"]')).not.toBeNull();
     expect(doc.querySelector("[data-testid='uf-agremiacoes']")).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spec 026 — listas, marcas, projeção com trava, extras e correções
+// ---------------------------------------------------------------------------
+
+describe("spec 026 — /uf/[sigla]/deputado-federal", () => {
+  function paineis(doc: Document): (string | null)[] {
+    return [...doc.querySelectorAll('[data-testid="panel"]')].map((p) =>
+      p.getAttribute("aria-labelledby"),
+    );
+  }
+
+  it("§ Telas — a ordem dos blocos (objeto v2 de SP)", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("SP")));
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    expect(paineis(doc)).toEqual([
+      "resumo-heading",
+      "votacao-uf-heading",
+      "mais-votados-uf-heading",
+      "bancada-uf-heading",
+      "regras-heading",
+      "conferencia-heading",
+      "metodologia-heading",
+    ]);
+    // Um título por agremiação (ADR-0065: navegar por cabeçalhos).
+    expect(doc.querySelectorAll("[data-testid='uf-agremiacao'] h3").length).toBe(
+      v2("SP").agremiacoes.length,
+    );
+    expect(doc.querySelectorAll("h1").length).toBe(1);
+  });
+
+  it("RF-276 — o v1 de sempre (dep-uf.json) renderiza: lista de eleitos + suplentes, sem os blocos v2", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v1("SP")));
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+
+    const pl = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='22']");
+    // 14 eleitos + 5 suplentes, eleitos primeiro.
+    expect(pl?.querySelectorAll("li[data-rank]").length).toBe(19);
+    expect(pl?.querySelectorAll("li[data-rank] [data-marca='parcial']").length).toBe(14);
+    for (const l of pl?.querySelectorAll("li[data-rank]") ?? [])
+      expect(l.textContent).not.toMatch(/\d%/);
+    for (const id of ["mais-votados-uf-heading", "regras-heading"]) {
+      expect(paineis(doc)).not.toContain(id);
+    }
+    expect(doc.querySelector("[data-testid='uf-corte-cabecalho']")).toBeNull();
+    expect(doc.querySelector("[data-testid='dep-corte']")).toBeNull();
+    expect(doc.querySelector("[data-testid='dep-puxadores-agremiacao']")).toBeNull();
+    expect(doc.querySelector("[data-testid='uf-projecao-estado']")).toBeNull();
+    expect(doc.querySelector("[data-marca='projecao']")).toBeNull();
+    // Conferência do v1: nunca o "batem" antigo.
+    expect(doc.querySelector("[data-testid='uf-conferencia']")?.textContent).not.toContain(
+      "batem com os que o TSE publica",
+    );
+  });
+
+  it("🔴 M30 — RR liberada + interruptor DESLIGADO: nenhuma marca, número, selo ou bloco de projeção", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("RR")));
+    const doc = await render(UFDeputadoFederalPage(paramsDe("RR")));
+    expect(doc.querySelector("[data-marca='projecao']")).toBeNull();
+    expect(doc.querySelector("[data-testid='uf-cadeiras-projetadas']")).toBeNull();
+    expect(doc.querySelector("[data-testid='uf-projecao-estado']")).toBeNull();
+    expect(doc.querySelector("[data-testid='dep-movendo']")).toBeNull();
+    expect(doc.querySelector("[data-testid='dep-metodologia']")?.textContent).toContain(
+      "a projeção está desligada no site",
+    );
+    // A parcial fica.
+    expect(
+      doc.querySelectorAll("[data-testid='uf-agremiacao'] li[data-rank] [data-marca='parcial']")
+        .length,
+    ).toBe(8);
+  });
+
+  it("RR liberada + interruptor LIGADO: marcas, cadeiras projetadas e o 'o que está movendo'", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("RR")));
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const doc = await render(UFDeputadoFederalPage(paramsDe("RR")));
+    expect(
+      doc.querySelectorAll("[data-testid='uf-agremiacao'] li[data-rank] [data-marca='projecao']")
+        .length,
+    ).toBe(8);
+    const mdb = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='15']");
+    expect(mdb?.querySelector("[data-testid='uf-cadeiras-projetadas']")?.textContent).toBe(
+      "2 cadeiras na projeção · não oficial",
+    );
+    const pl = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='22']");
+    expect(pl?.querySelector("[data-testid='uf-cadeiras-projetadas']")?.textContent).toBe(
+      "4 cadeiras na projeção · não oficial (faixa provável: 2 a 4)",
+    );
+    expect(doc.querySelector("[data-testid='uf-projecao-estado']")?.textContent).toContain(
+      "Projeção liberada · não oficial",
+    );
+    const movendo = doc.querySelector("[data-testid='dep-movendo']")?.textContent ?? "";
+    expect(movendo).toContain("MDB, 1 cadeira na parcial e 2 na projeção");
+  });
+
+  it("🔴 M28 — RR: a ordem das linhas é a mesma com o interruptor ligado e desligado", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("RR")));
+    const ordem = (d: Document) =>
+      [...d.querySelectorAll("[data-testid='uf-agremiacao']")].map((a) =>
+        [...a.querySelectorAll("li[data-rank] b")].map((b) => b.textContent).join(","),
+      );
+    const desligado = ordem(await render(UFDeputadoFederalPage(paramsDe("RR"))));
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const ligado = ordem(await render(UFDeputadoFederalPage(paramsDe("RR"))));
+    expect(ligado).toEqual(desligado);
+  });
+
+  it("interruptor ilegível (`falha`): desligada, e a metodologia diz que não foi possível ler", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("RR")));
+    readInterruptorProjecaoMock.mockResolvedValue({
+      ligada: false,
+      pct_minimo: 25,
+      origem: "falha",
+    });
+    const doc = await render(UFDeputadoFederalPage(paramsDe("RR")));
+    expect(doc.querySelector("[data-marca='projecao']")).toBeNull();
+    expect(doc.querySelector("[data-testid='dep-metodologia']")?.textContent).toContain(
+      "não foi possível ler o interruptor da projeção",
+    );
+  });
+
+  it("SP aguardando (18,7%) + ligado: a linha do resumo diz o que falta, com 'não oficial'", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("SP")));
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const linha = doc.querySelector("[data-testid='uf-projecao-estado']")?.textContent ?? "";
+    expect(linha).toContain("não oficial");
+    expect(linha).toContain("aparece a partir de 25% do eleitorado apurado (agora 18,7%)");
+    expect(doc.querySelector("[data-marca='projecao']")).toBeNull();
+  });
+
+  it("RF-267 — AC com totalização final: só 'Eleito (TSE)' e nenhuma marca da nossa conta", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("AC")));
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const doc = await render(UFDeputadoFederalPage(paramsDe("AC")));
+    expect(
+      doc.querySelectorAll("[data-testid='uf-agremiacao'] li[data-rank] [data-marca='tse']").length,
+    ).toBe(8);
+    expect(doc.querySelector("[data-marca='parcial']")).toBeNull();
+    expect(doc.querySelector("[data-marca='projecao']")).toBeNull();
+    // O corte é da parcial — com o TSE final, não há linha de corte.
+    expect(doc.querySelector("[data-testid='uf-corte-cabecalho']")).toBeNull();
+  });
+
+  it("🔴 M31 — nenhum 'eleito' solto na página inteira, nas 4 UFs, ligado e desligado", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    for (const uf of ["AC", "AP", "RR", "SP"] as const) {
+      for (const inter of [DESLIGADO, LIGADO]) {
+        readDeputadoUfDetailMock.mockResolvedValue(ok(v2(uf)));
+        readInterruptorProjecaoMock.mockResolvedValue(inter);
+        const doc = await render(UFDeputadoFederalPage(paramsDe(uf)));
+        expect(
+          (doc.body.textContent ?? "").match(ELEITO_SOLTO),
+          `${uf}/${inter.origem}`,
+        ).toBeNull();
+      }
+    }
+  });
+
+  it("RF-270 — mais votados de SP, do próprio objeto da UF", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("SP")));
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const itens = [...doc.querySelectorAll("[data-testid='dep-mais-votados-uf'] > li")];
+    expect(itens).toHaveLength(10);
+    expect(itens[0]?.textContent).toContain("Araújo SP-22-01");
+  });
+
+  it("🔴 M36 — RF-272: o corte do PL (depois do 25º, na faixa recortada) está repetido no cabeçalho", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("SP")));
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const pl = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='22']");
+    expect(pl?.querySelector("[data-testid='dep-corte']")?.hasAttribute("data-f")).toBe(true);
+    expect(pl?.querySelector("[data-testid='uf-corte-cabecalho']")?.textContent).toBe(
+      "Corte: 599 votos entre o último eleito na parcial e o primeiro de fora.",
+    );
+  });
+
+  it("RF-273 / RF-274 — puxadores do PL de SP e as regras com os números de SP", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("SP")));
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const pux = doc.querySelector("[data-testid='dep-puxadores-agremiacao']")?.textContent ?? "";
+    expect(pux).toContain("Araújo SP-22-01 fez 3 quocientes eleitorais de SP sozinho");
+    expect(doc.querySelector("[data-testid='dep-regras-qe']")?.textContent).toBe("62.284 votos");
+    expect(doc.querySelector("[data-testid='dep-regras-piso-candidato']")?.textContent).toBe(
+      "6.229 votos",
+    );
+  });
+
+  it("🔴 M35 — RF-269: SP sem dado do TSE — a Conferência não afirma que bate", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("SP")));
+    const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
+    const t = doc.querySelector("[data-testid='uf-conferencia']")?.textContent ?? "";
+    expect(t.replace("não dizemos que os números batem", "")).not.toMatch(/bat(em|e)\b/);
+    expect(t).not.toContain("Conferimos");
+  });
+
+  it("RF-269 — AP: a Conferência dá o eleitorado 19,5% abaixo do TSE, com os dois números", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("AP")));
+    const doc = await render(UFDeputadoFederalPage(paramsDe("AP")));
+    const item = doc.querySelector("[data-o-que='eleitorado']")?.textContent ?? "";
+    expect(item).toContain("505.610");
+    expect(item).toContain("628.071");
+    expect(item).toContain("19,5% abaixo");
+  });
+
+  it("RF-261 — chapa inteira sub judice (AGIR do AP): votos, destino escrito, nenhum %", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readDeputadoUfDetailMock.mockResolvedValue(ok(v2("AP")));
+    const doc = await render(UFDeputadoFederalPage(paramsDe("AP")));
+    const agir = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='36']");
+    const linhas = [...(agir?.querySelectorAll("li[data-rank]") ?? [])];
+    expect(linhas).toHaveLength(5);
+    for (const l of linhas) {
+      expect(l.textContent).toContain("sub judice — fora da conta");
+      expect(l.textContent).not.toMatch(/\d%/);
+    }
+  });
+});
+
+describe("spec 026 — /deputado-federal (capa)", () => {
+  const payloadV2 = () => structuredClone(contratoNacional) as unknown as EdgePayloadDeputado;
+
+  it("🔴 M34 — RF-271: a capa NUNCA lê o Blob de UF, e mostra os mais votados e os puxadores do país", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(payloadV2());
+    const doc = await render(DeputadoFederalPage());
+    expect(readDeputadoUfDetailMock).not.toHaveBeenCalled();
+    const mv = [...doc.querySelectorAll("[data-testid='dep-mais-votados-pais'] > li")];
+    expect(mv).toHaveLength(10);
+    expect(mv[0]?.textContent).toContain("dos válidos de SP");
+    expect(doc.querySelectorAll("[data-testid='dep-puxadores-pais'] > li").length).toBe(3);
+  });
+
+  it("selo da projeção por UF: só com o interruptor ligado, e sempre com 'não oficial'", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(payloadV2());
+    const desligado = await render(DeputadoFederalPage());
+    expect(desligado.querySelector("[data-testid='corrida-projecao']")).toBeNull();
+
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const ligado = await render(DeputadoFederalPage());
+    const selo = (uf: string) =>
+      ligado.querySelector(`[data-uf='${uf}'] [data-testid='corrida-projecao']`)?.textContent;
+    expect(selo("RR")).toBe("projeção liberada · não oficial");
+    expect(selo("SP")).toBe("projeção · não oficial: aguarda 25%");
+    expect(selo("AP")).toBe("projeção · não oficial: indisponível");
+    // UF sem estado publicado (fora do payload) não ganha selo.
+    expect(selo("MG")).toBeUndefined();
+  });
+
+  it("payload anterior à spec 026 (sem os campos): os blocos novos não aparecem e nada quebra", async () => {
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const doc = await render(DeputadoFederalPage());
+    expect(doc.querySelector("[data-testid='dep-mais-votados-pais']")).toBeNull();
+    expect(doc.querySelector("[data-testid='dep-puxadores-pais']")).toBeNull();
+    expect(doc.querySelector("[data-testid='corrida-projecao']")).toBeNull();
   });
 });

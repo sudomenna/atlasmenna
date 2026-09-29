@@ -123,23 +123,23 @@ proporcional) e **ADR-0065** (listas em três faixas); números a preencher.
 
 ## U — telas
 
-- [ ] U1. `lib/utils/deputado-marcas.ts` (`marcasDaLinha`, bitmask, precedência do TSE, rótulos)
+- [x] U1. `lib/utils/deputado-marcas.ts` (`marcasDaLinha`, bitmask, precedência do TSE, rótulos)
       (RF-262, RF-266, RF-267).
-- [ ] U2. `components/atoms/badges/MarcaDeputado.tsx` — texto primeiro; projeção vazada, TSE cheia
+- [x] U2. `components/atoms/badges/MarcaDeputado.tsx` — texto primeiro; projeção vazada, TSE cheia
       (RF-262, RF-266, RF-267).
-- [ ] U3. `components/blocks/DeputadoListaAgremiacao.tsx` + CSS Module — três faixas, tuplas
+- [x] U3. `components/blocks/DeputadoListaAgremiacao.tsx` + CSS Module — três faixas, tuplas
       compactas, `aria-expanded`/`aria-busy`/região viva/foco/erro, linha de corte,
       `content-visibility` (RF-260, RF-261, RF-272).
-- [ ] U4. `DeputadoMaisVotados`, `DeputadoPuxadores`, `DeputadoRegras`, `DeputadoConferencia`
+- [x] U4. `DeputadoMaisVotados`, `DeputadoPuxadores`, `DeputadoRegras`, `DeputadoConferencia`
       (RF-269, RF-270, RF-271, RF-273, RF-274).
-- [ ] U5. `/uf/[sigla]/deputado-federal` na ordem da spec § Telas; linha de estado da projeção no
+- [x] U5. `/uf/[sigla]/deputado-federal` na ordem da spec § Telas; linha de estado da projeção no
       resumo; `readInterruptorProjecao` em paralelo com as duas leituras de hoje (RF-264, RF-265).
-- [ ] U6. `DeputadoMetodologia` estendido como bloco "o que está movendo" (RF-266).
-- [ ] U7. Capa `/deputado-federal`: mais votados do país, puxadores, selo por UF; teste de 0 leituras
+- [x] U6. `DeputadoMetodologia` estendido como bloco "o que está movendo" (RF-266).
+- [x] U7. Capa `/deputado-federal`: mais votados do país, puxadores, selo por UF; teste de 0 leituras
       de Blob (RF-271, RF-273).
-- [ ] U8. `/sobre-o-modelo` seção 5: parágrafos da projeção de deputado; oito `<h2>` (RF-266).
-- [ ] U9. Reescrever (m5), (t5), (t), (c3) em `tests/unit/pages/deputado-federal.test.tsx`; (m6) fica.
-- [ ] U10. v1 renderiza (`tests/fixtures/blob/dep-uf.json`) (RF-276).
+- [x] U8. `/sobre-o-modelo` seção 5: parágrafos da projeção de deputado; oito `<h2>` (RF-266).
+- [x] U9. Reescrever (m5), (t5), (t), (c3) em `tests/unit/pages/deputado-federal.test.tsx`; (m6) fica.
+- [x] U10. v1 renderiza (`tests/fixtures/blob/dep-uf.json`) (RF-276).
 - [ ] U11. e2e: `/uf/SP/deputado-federal` em `tests/e2e/perf-budget.spec.ts` com teto próprio de
       480 KiB e em `tests/e2e/a11y-audit.spec.ts`, lista aberta e fechada, 375 px (RF-277).
 

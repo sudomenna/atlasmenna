@@ -17,12 +17,27 @@
  * um estado de detalhe indisponível **e mantém o resumo** (constituição § 7).
  * Se o resumo dependesse do Blob, uma falha de CDN apagaria a página inteira.
  *
+ * ## Spec 026 (2026-09-29) — listas, marcas, projeção com trava, extras
+ *
+ * A ordem dos blocos é a da spec 026 § Telas: banner; resumo (com a linha do
+ * estado da projeção); Votação; Mais votados em {UF}; Cadeiras e candidatos
+ * por agremiação (cabeçalho, corte, puxadores, lista em três faixas, legenda
+ * única das marcas); Regras com os números de {UF}; Conferência;
+ * metodologia estendida como o bloco § 8; rodapé.
+ *
+ * O interruptor da projeção é lido AQUI, a cada render, em paralelo com as
+ * duas leituras de sempre, e aplicado ao objeto do Blob ANTES de qualquer
+ * componente o ver (`aplicarInterruptorProjecao`) — desligar apaga a projeção
+ * na próxima requisição, sem esperar a volta de 30 min do cargo (ADR-0063 D4).
+ * As marcas saem de `lib/utils/deputado-marcas.ts`, que exige as DUAS leituras
+ * (estado `liberada` E interruptor ligado).
+ *
  * ## O que esta tela NÃO mostra
  *
- *   - **Suplentes.** O objeto do Blob os carrega (design 017 § D6), e a spec
- *     017 põe a suplência nominal explicitamente fora desta janela. Exibi-los
- *     somaria ~55 nomes a um estado como SP sem responder à pergunta da noite,
- *     que é quem se elegeu.
+ *   - ~~Suplentes~~ — superado pela spec 026: a lista inteira de cada
+ *     agremiação vai à tela, em três faixas (ADR-0065), na ordem do voto
+ *     apurado. A palavra "suplente" só aparece com a totalização final do TSE
+ *     — antes dela, quem não se elegeu na parcial é só a linha seguinte.
  *   - **Mapa e municípios.** ⚠️ Corrigido em 2026-09-13: esta linha dizia que
  *     "o cargo 6 é ingerido por UF (ADR-0026 item 1): não há dado municipal
  *     para desenhar". O ADR-0036 inverteu o fato — o cargo 6 lê o par
@@ -49,20 +64,30 @@
 
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-
+import { LegendaMarcas } from "@/components/atoms/badges/MarcaDeputado";
 import { DadoParadoBanner } from "@/components/atoms/banners/DadoParadoBanner";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import { CandidaturasAguardando } from "@/components/blocks/CandidaturasAguardando";
+import { DeputadoConferencia } from "@/components/blocks/DeputadoConferencia";
+import {
+  type CorteCompacto,
+  DeputadoListaAgremiacao,
+} from "@/components/blocks/DeputadoListaAgremiacao";
+import { DeputadoMaisVotados } from "@/components/blocks/DeputadoMaisVotados";
 import { DeputadoMetodologia } from "@/components/blocks/DeputadoMetodologia";
+import { LinhaPuxadores } from "@/components/blocks/DeputadoPuxadores";
+import { DeputadoRegras } from "@/components/blocks/DeputadoRegras";
 import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import { Footer } from "@/components/layout/Footer";
 import {
+  aplicarInterruptorProjecao,
   type DeputadoUfAgremiacao,
   type DeputadoUfDetail,
   type DeputadoUfDetailResult,
+  maisVotadosDaUf,
   ordenarAgremiacoes,
-  ordenarCandidatos,
   readDeputadoUfDetail,
+  sanearDeputadoUfDetail,
 } from "@/lib/blob/deputado-uf";
 import { cargoInfo } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
@@ -74,12 +99,25 @@ import {
 } from "@/lib/dev/simulacao";
 import { readDeputadoProjection } from "@/lib/edge-config/reader";
 import type { EdgeDeputadoUfRow } from "@/lib/edge-config/types";
+import {
+  bitsDasMarcas,
+  type ContextoMarcas,
+  type ExibicaoLinha,
+  fraseCorteCabecalho,
+  fraseEstadoProjecao,
+  linhasCompactasDoV1,
+  marcasDaLinha,
+  paraLinhaCompacta,
+  projecaoVisivel,
+} from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatTimeHMS, formatVotes } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { colorForParty } from "@/lib/utils/party-color";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import depUfFixture from "@/tests/fixtures/blob/dep-uf.json" with { type: "json" };
 import depFixture from "@/tests/fixtures/edge-config/dep-current.json" with { type: "json" };
+
+import { lerInterruptorDaTela } from "../../../_interruptor";
 
 const CARGO_DEPUTADO = 6 as const;
 const DEPUTADO = cargoInfo(CARGO_DEPUTADO);
@@ -197,38 +235,37 @@ function listarComponentes(componentes: readonly string[]): string {
   return `${componentes.slice(0, -1).join(", ")} e ${componentes[componentes.length - 1]}`;
 }
 
-/**
- * Nome legível do que divergiu.
- *
- * `divergencias[].o_que` é a saída de `conferir_contra_tse`. Desde 2026-09-12 é
- * um **conjunto fechado e documentado** — `"quociente_eleitoral" | "cadeiras"`
- * (`CHAVES_DE_DIVERGENCIA` em `api/model/deputado_payload.py`, design 017 § D6)
- * —, e o código da agremiação vai em `detalhe`, não embutido na chave: a tela
- * não decifra strings do modelo.
- *
- * Imprimir a chave crua entregaria ao leitor um identificador de código, num
- * bloco cuja razão de existir é transparência (constituição § 8): dizer "houve
- * divergência" em jargão é meio caminho para não dizer nada.
- *
- * Chave **fora** do conjunto volta quase inalterada (só o sublinhado vira
- * espaço), de propósito: se o conjunto crescer e ninguém atualizar este mapa, a
- * divergência tem de aparecer feia em vez de sumir. Divergência perdida é pior
- * que divergência sem rótulo bonito.
+/*
+ * Os rótulos das divergências (`ROTULO_DIVERGENCIA`) moraram aqui até a spec
+ * 026 e foram para `components/blocks/DeputadoConferencia.tsx`, junto com as
+ * três chaves novas (`eleitos`, `eleitorado`, `votos_validos`). A regra de
+ * "chave desconhecida aparece crua, nunca some" foi junto.
  */
-const ROTULO_DIVERGENCIA: Record<string, string> = {
-  quociente_eleitoral: "Quociente eleitoral",
-  cadeiras: "Cadeiras da agremiação",
-};
-
-function rotuloDivergencia(oQue: string): string {
-  return ROTULO_DIVERGENCIA[oQue] ?? oQue.replace(/_/g, " ");
-}
 
 function intervaloDeCadeiras(agr: DeputadoUfAgremiacao): string | null {
   const ci = agr.cadeiras_ci95;
   if (!ci) return null;
   const [lo, hi] = ci;
   return lo === hi ? `${lo}` : `${lo} a ${hi}`;
+}
+
+/** RF-127 emendado (ADR-0063 D8) — a faixa da projeção, quando medida. */
+function intervaloProjetado(agr: DeputadoUfAgremiacao): string | null {
+  const ci = agr.cadeiras_projetadas_ci95;
+  if (!ci) return null;
+  const [lo, hi] = ci;
+  return lo === hi ? null : `${lo} a ${hi}`;
+}
+
+/** O `corte` do contrato, compacto para o componente cliente. Nunca com totalização final. */
+function corteCompacto(agr: DeputadoUfAgremiacao, totalizacaoFinal: boolean): CorteCompacto | null {
+  if (!agr.corte || totalizacaoFinal) return null;
+  return {
+    ultimoEleito: agr.corte.ultimo_eleito,
+    primeiroFora: agr.corte.primeiro_fora,
+    diferenca: agr.corte.diferenca,
+    abaixoPiso10: agr.corte.primeiro_fora_abaixo_piso_10 === true,
+  };
 }
 
 /**
@@ -275,9 +312,14 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
   // `status: "ok"` de bancada vazia ganhava da simulação — uma resposta vazia é
   // uma resposta.
   const emSimulacao = simulacaoLigada();
-  const [nacionalLido, detalheLido] = emSimulacao
-    ? [null, SEM_DETALHE_REMOTO]
-    : await Promise.all([readDeputadoProjection(), readDeputadoUfDetail(sigla)]);
+  // Spec 026 (RF-265): o interruptor da projeção vai JUNTO, em paralelo — e
+  // no modo simulado vem do arquivo da simulação, nunca do Edge Config.
+  const [[nacionalLido, detalheLido], interruptor] = await Promise.all([
+    emSimulacao
+      ? Promise.resolve([null, SEM_DETALHE_REMOTO] as const)
+      : Promise.all([readDeputadoProjection(), readDeputadoUfDetail(sigla)]),
+    lerInterruptorDaTela(emSimulacao),
+  ]);
 
   const isDev = process.env.NODE_ENV === "development";
   const nacional =
@@ -305,7 +347,18 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
 
   const row: EdgeDeputadoUfRow | null =
     nacional?.por_uf.find((u) => u.sigla === sigla.toUpperCase()) ?? null;
-  const detail = detalhe.status === "ok" ? detalhe.detail : null;
+  // O interruptor é aplicado ao OBJETO antes de qualquer componente vê-lo:
+  // desligado, a cópia sai sem nenhum campo de projeção (ADR-0063 D4). O
+  // detalhe da simulação/fixture passa pelo mesmo leitor tolerante do Blob.
+  const detail =
+    detalhe.status === "ok"
+      ? aplicarInterruptorProjecao(
+          detalhe.url.startsWith("fixture://")
+            ? sanearDeputadoUfDetail(detalhe.detail)
+            : detalhe.detail,
+          interruptor,
+        )
+      : null;
 
   // Nem resumo nem detalhe: não há o que dizer sobre este estado ainda.
   if (!row && !detail) {
@@ -355,6 +408,45 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
   const vagasNaoPreenchidas = row?.vagas_nao_preenchidas ?? detail?.vagas_nao_preenchidas ?? 0;
   const agremiacoes = detail ? ordenarAgremiacoes(detail.agremiacoes) : [];
   const cadencia = nacional?.atualizacao_min ?? 0;
+
+  // ── Spec 026 — marcas, projeção, listas ──
+  //
+  // `visivel` são as DUAS leituras juntas: o estado que o modelo publicou para
+  // a UF e o interruptor lido agora (RF-265). Depois de
+  // `aplicarInterruptorProjecao` o estado já diz "indisponivel" com o
+  // interruptor desligado; a segunda leitura aqui é a rede de segurança, não
+  // a única porta.
+  const v2 = detail?.contrato === 2;
+  const visivel = projecaoVisivel(detail?.projecao, interruptor.ligada);
+  const ctx: ContextoMarcas = {
+    totalizacaoFinal: detail?.totalizacao_final === true,
+    projecaoVisivel: visivel,
+  };
+  const temDestino = agremiacoes.some((a) => a.candidatos?.some((c) => c.destino !== undefined));
+  const linhasDaUf = agremiacoes.flatMap((a) => a.candidatos ?? []);
+  const nomePorSqcand = new Map(
+    linhasDaUf.map((c) => [c.sqcand, nomeExibicao(c.nome, String(c.sqcand))] as const),
+  );
+  const marcasPorSqcand = new Map(
+    linhasDaUf.map((c) => [c.sqcand, bitsDasMarcas(marcasDaLinha(c, ctx))] as const),
+  );
+  const maisVotados = detail
+    ? maisVotadosDaUf(detail).map((d) => ({ ...d, marcas: marcasPorSqcand.get(d.sqcand) ?? 0 }))
+    : [];
+  const movendo = visivel
+    ? agremiacoes
+        .filter((a) => a.cadeiras_projetadas !== undefined && a.cadeiras_projetadas !== a.cadeiras)
+        .map((a) => ({
+          sigla: a.sigla,
+          parcial: a.cadeiras,
+          projetada: a.cadeiras_projetadas ?? 0,
+        }))
+    : [];
+  // A linha do estado da projeção no resumo: só com o interruptor LIGADO. Com
+  // ele desligado a projeção não existe na tela fora da metodologia (RF-265),
+  // nem como aviso de estado.
+  const fraseProjecao =
+    detail && interruptor.ligada ? fraseEstadoProjecao(detail.projecao, detail.pct_apurado) : null;
 
   // ── Os relógios desta tela — ADR-0038 D1 ──
   //
@@ -475,6 +567,19 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
             </p>
           ) : null}
 
+          {/* Spec 026 § Telas item 2 — o estado da projeção desta UF. A frase
+              inteira num elemento só, com "não oficial" dentro (RF-266). */}
+          {fraseProjecao ? (
+            <p
+              className="max-w-prose"
+              data-testid="uf-projecao-estado"
+              data-estado={detail?.projecao?.estado}
+              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+            >
+              {fraseProjecao}
+            </p>
+          ) : null}
+
           {/* Um relógio por frase, e a frase diz de qual fonte ele é. O ramo
               do resumo é o normal; o do detalhe só existe quando o Global
               Config não respondeu e a tela está inteiramente sobre o Blob —
@@ -518,15 +623,32 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
         titleId="votacao-uf-heading"
       />
 
+      {/* Spec 026 RF-270 — os 10 mais votados da UF, do próprio objeto da UF
+          (nunca da lista 61+). Objeto v1 ⇒ nenhum (o bloco não aparece). */}
+      <DeputadoMaisVotados
+        escopo="uf"
+        uf={sigla}
+        linhas={maisVotados.length > 0 ? maisVotados : undefined}
+        titleId="mais-votados-uf-heading"
+      />
+
       {/* Seção 2 — a bancada do estado. RF-122, RF-125.1, RF-127, RF-130.
           O bloco NUNCA sai do DOM (ADR-0017): sem o Blob ele diz por quê. */}
       <Panel
         kicker="Bancada do estado"
-        title="Cadeiras por agremiação"
+        title="Cadeiras e candidatos por agremiação"
         titleId="bancada-uf-heading"
       >
         {detail ? (
           <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
+            {/* Uma legenda só para o painel inteiro (spec 026 § Telas item 5). */}
+            <LegendaMarcas
+              uf={sigla}
+              projecaoVisivel={visivel}
+              totalizacaoFinal={ctx.totalizacaoFinal}
+              temDestino={temDestino}
+              semPercentual={!v2}
+            />
             <ul
               data-testid="uf-agremiacoes"
               style={{ listStyle: "none", margin: 0, padding: 0, display: "grid" }}
@@ -534,13 +656,29 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
               {agremiacoes.map((agr) => {
                 const componentes = listarComponentes(agr.componentes);
                 const intervalo = intervaloDeCadeiras(agr);
-                const eleitos = ordenarCandidatos(agr.eleitos);
+                const federacao = agr.tipo === "federacao";
+                const exibicao: ExibicaoLinha = {
+                  nome: nomeExibicao,
+                  partido: siglaExibicao,
+                  mostrarPartido: federacao,
+                };
+                // v2: `candidatos` na ordem do rank; v1: eleitos + suplentes (RF-276).
+                const linhas = agr.candidatos
+                  ? agr.candidatos.map((l) => paraLinhaCompacta(l, ctx, exibicao))
+                  : linhasCompactasDoV1(agr, exibicao);
+                const corte = corteCompacto(agr, ctx.totalizacaoFinal);
+                const projetadas = visivel ? agr.cadeiras_projetadas : undefined;
+                const faixaProjetada = projetadas !== undefined ? intervaloProjetado(agr) : null;
+                const headingId = `agremiacao-${agr.cod}-heading`;
                 return (
                   <li
                     key={agr.cod}
                     data-testid="uf-agremiacao"
                     data-cod={agr.cod}
+                    aria-labelledby={headingId}
+                    className="flex flex-col"
                     style={{
+                      gap: "var(--space-2)",
                       padding: "var(--space-4) 0",
                       borderBottom: "1px solid var(--border-hairline)",
                     }}
@@ -556,12 +694,15 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
                           nacional para o porquê de não ser filho. */}
                       <span style={{ font: "var(--type-figure-sm)" }}>
                         <span data-testid="uf-cadeiras">{agr.cadeiras}</span>
-                        <span className="sr-only"> cadeiras conquistadas</span>
+                        <span className="sr-only"> cadeiras na parcial</span>
                       </span>
                       <span className="min-w-0 flex flex-col" style={{ gap: "var(--space-1)" }}>
-                        <span
+                        {/* ADR-0065 (negativas): um título por agremiação, para
+                            quem navega por cabeçalhos pular listas de 60. */}
+                        <h3
+                          id={headingId}
                           className="inline-flex items-center"
-                          style={{ gap: "var(--space-2)" }}
+                          style={{ gap: "var(--space-2)", margin: 0, font: "var(--type-body-sm)" }}
                         >
                           <span
                             aria-hidden="true"
@@ -573,24 +714,10 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
                               flex: "none",
                             }}
                           />
-                          {/* 🔴 Sigla INTEIRA aqui, e ABREVIADA na lista de
-                              pessoas logo abaixo (`cand.partido`) — não é
-                              incoerência, é a mesma regra aplicada a dois
-                              elementos diferentes (2026-09-19).
-
-                              Este é o cabeçalho de uma BANCADA por agremiação:
-                              a linha inteira é dele, ninguém disputa largura,
-                              e é o elemento idêntico ao que o dono isentou na
-                              home de Deputados. Abreviá-lo faria a MESMA peça
-                              de interface aparecer de dois jeitos em duas
-                              rotas do mesmo cargo.
-
-                              ⚠️ Ponto para o dono confirmar: ele isentou "a
-                              home de Deputados", e este cabeçalho está fora
-                              dela. A leitura adotada é que a isenção é do
-                              CONTEXTO (sigla que rotula bancada), não da URL. */}
-                          <span style={{ font: "var(--type-body-sm)" }}>{agr.sigla}</span>
-                        </span>
+                          {/* Sigla INTEIRA no cabeçalho da bancada (2026-09-19);
+                              ABREVIADA nas linhas de pessoas logo abaixo. */}
+                          {agr.sigla}
+                        </h3>
                         <span
                           style={{
                             font: "var(--type-body-sm)",
@@ -600,7 +727,7 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
                           }}
                         >
                           {/* RF-122 */}
-                          {agr.tipo === "federacao" && componentes.length > 0 ? (
+                          {federacao && componentes.length > 0 ? (
                             <span data-testid="uf-federacao">
                               {agr.nome} — federação de {componentes}.{" "}
                             </span>
@@ -616,14 +743,26 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
                             {agr.quociente_partidario}.
                           </span>
                         </span>
+                        {/* RF-263 — cadeiras projetadas: só com a projeção
+                            VISÍVEL, e a frase inteira num elemento com "não
+                            oficial" (RF-266). A parcial, ao lado, não muda. */}
+                        {projetadas !== undefined ? (
+                          <span
+                            data-testid="uf-cadeiras-projetadas"
+                            style={{ font: "var(--type-data)", color: "var(--accent-text)" }}
+                          >
+                            {projetadas} {projetadas === 1 ? "cadeira" : "cadeiras"} na projeção ·
+                            não oficial
+                            {faixaProjetada ? ` (faixa provável: ${faixaProjetada})` : ""}
+                          </span>
+                        ) : null}
                       </span>
-                      {/* Ver a nota gêmea na tela nacional. */}
                       <span
                         className="text-right"
                         style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
                       >
                         <span className="sr-only">
-                          {intervalo ? "faixa provável: " : "faixa não disponível "}
+                          {intervalo ? "faixa provável na parcial: " : "faixa não disponível "}
                         </span>
                         <span data-testid="uf-intervalo">
                           {intervalo ? `${intervalo} cadeiras` : "—"}
@@ -631,69 +770,48 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
                       </span>
                     </div>
 
-                    {eleitos.length > 0 ? (
-                      <ol
-                        data-testid="uf-eleitos"
+                    {/* RF-272 — o corte repetido no cabeçalho: ele não some
+                        quando a linha de corte está na faixa recortada. */}
+                    {corte ? (
+                      <p
+                        data-testid="uf-corte-cabecalho"
                         style={{
-                          listStyle: "none",
-                          margin: "var(--space-3) 0 0",
-                          padding: "0 0 0 3rem",
-                          display: "grid",
-                          gap: "var(--space-1)",
+                          margin: 0,
+                          font: "var(--type-body-sm)",
+                          fontSize: "var(--text-xs)",
+                          color: "var(--text-secondary)",
                         }}
                       >
-                        {eleitos.map((cand) => (
-                          <li
-                            key={cand.sqcand}
-                            data-testid="uf-eleito"
-                            data-indefinido={cand.indefinido ? "true" : undefined}
-                            className="grid items-baseline"
-                            style={{
-                              gridTemplateColumns: "minmax(0, 1fr) auto",
-                              columnGap: "var(--space-3)",
-                              font: "var(--type-body-sm)",
-                              fontSize: "var(--text-xs)",
-                            }}
-                          >
-                            <span className="min-w-0">
-                              {/* `sqcand` aqui é `number` (`DeputadoUfCandidato`),
-                                  e a chave editorial é string — daí o `String()`.
-                                  Nenhum dos dois nomes da lista é de deputado, mas
-                                  a regra objetiva de prefixo é a que importa neste
-                                  cargo: são 20 mil candidaturas. */}
-                              {nomeExibicao(cand.nome, String(cand.sqcand))}{" "}
-                              {/* 🔴 Desenhado ⇒ abreviado (2026-09-19). Esta é
-                                  a página de UF de Deputado (`/uf/SP/deputado-federal`),
-                                  que lista PESSOAS eleitas numa coluna estreita.
-                                  A exceção do dono — "home de Deputados não
-                                  abrevia" — é da rota `/deputado-federal`, onde
-                                  a sigla rotula uma BANCADA e tem espaço. Rota
-                                  diferente, contexto diferente. */}
-                              <span style={{ color: "var(--text-muted)" }}>
-                                ({siglaExibicao(cand.partido)})
-                              </span>
-                              {/* RF-127 — firmeza falsa é o defeito a evitar.
-                                  A marcação é TEXTO, não só cor (WCAG 1.4.1). */}
-                              {cand.indefinido ? (
-                                <span
-                                  data-testid="uf-eleito-indefinido"
-                                  style={{ color: "var(--text-muted)" }}
-                                >
-                                  {" "}
-                                  — ainda indefinido: esta cadeira saiu de uma rodada de sobra e
-                                  pode mudar de mão
-                                </span>
-                              ) : null}
-                            </span>
-                            <span
-                              className="text-right"
-                              style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
-                            >
-                              {formatVotes(cand.votos)}
-                            </span>
-                          </li>
-                        ))}
-                      </ol>
+                        {fraseCorteCabecalho({
+                          diferenca: agr.corte?.diferenca ?? 0,
+                          primeiro_fora_abaixo_piso_10: corte.abaixoPiso10,
+                        })}
+                      </p>
+                    ) : null}
+
+                    {/* RF-273 */}
+                    <LinhaPuxadores
+                      uf={sigla}
+                      puxadores={agr.puxadores}
+                      nomePorSqcand={nomePorSqcand}
+                    />
+
+                    {/* RF-260/RF-261 — a lista em três faixas (cliente, tuplas). */}
+                    {linhas.length > 0 ? (
+                      <DeputadoListaAgremiacao
+                        uf={sigla}
+                        cod={agr.cod}
+                        sigla={agr.sigla}
+                        linhas={linhas}
+                        totalCandidatos={agr.total_candidatos}
+                        haListaRestante={(detail.lista?.restantes ?? 0) > 0}
+                        corte={corte}
+                        totalizacaoFinal={ctx.totalizacaoFinal}
+                        projecaoVisivel={visivel}
+                        mostrarPartido={federacao}
+                        tsDetalhe={detail.ts}
+                        semPercentual={!agr.candidatos}
+                      />
                     ) : null}
                   </li>
                 );
@@ -735,59 +853,26 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
         )}
       </Panel>
 
-      {/* Seção 3 — conferência contra o TSE. Constituição § 8: divergência
-          aparece; esconder a conferência seria o oposto de transparência. */}
-      {detail ? (
-        <Panel
-          kicker="Conferência"
-          title="Os nossos números e os do TSE"
-          titleId="conferencia-heading"
-        >
-          <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
-            <p
-              className="max-w-prose"
-              data-testid="uf-conferencia"
-              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-            >
-              {detail.divergencias.length === 0
-                ? "O quociente eleitoral e a contagem de vagas por agremiação que calculamos batem com os que o TSE publica neste boletim."
-                : detail.divergencias.length === 1
-                  ? "Há uma divergência entre o que calculamos e o que o TSE publica neste boletim."
-                  : `Há ${detail.divergencias.length} divergências entre o que calculamos e o que o TSE publica neste boletim.`}{" "}
-              {detail.totalizacao_final
-                ? "Este boletim já é a totalização final do estado."
-                : "Este boletim ainda não é a totalização final do estado — até lá, pequenas diferenças são esperadas e não indicam erro."}
-            </p>
+      {/* Spec 026 RF-274 — regras com os números da UF. Só em objeto v2: o v1
+          não tem `regras`, e o RF-276 manda o bloco não aparecer (em vez de
+          dizer "aguardando" sobre um dado que o objeto nunca carregaria). */}
+      {detail && v2 ? (
+        <DeputadoRegras uf={sigla} regras={detail.regras} titleId="regras-heading" />
+      ) : null}
 
-            {detail.divergencias.length > 0 ? (
-              <ul
-                data-testid="uf-divergencias"
-                style={{
-                  listStyle: "none",
-                  margin: 0,
-                  padding: 0,
-                  display: "grid",
-                  gap: "var(--space-2)",
-                }}
-              >
-                {detail.divergencias.map((d) => (
-                  <li
-                    key={`${d.o_que}:${d.nosso}:${d.tse}`}
-                    style={{
-                      font: "var(--type-body-sm)",
-                      fontSize: "var(--text-xs)",
-                      color: "var(--text-muted)",
-                      textWrap: "pretty",
-                    }}
-                  >
-                    <strong>{rotuloDivergencia(d.o_que)}</strong>: nosso {formatVotes(d.nosso)}, TSE{" "}
-                    {formatVotes(d.tse)}. {d.detalhe}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        </Panel>
+      {/* Seção 3 — conferência contra o TSE (RF-269). Constituição § 8:
+          divergência aparece; e a frase "batem" só existe quando a comparação
+          FOI feita — o componente decide pelo `comparou`, nunca pela lista
+          vazia de divergências (o defeito de 29/09). */}
+      {detail ? (
+        <DeputadoConferencia
+          conferencia={detail.conferencia}
+          divergenciasV1={detail.divergencias}
+          totalizacaoFinal={detail.totalizacao_final}
+          siglaPorCod={new Map(detail.agremiacoes.map((a) => [a.cod, a.sigla] as const))}
+          nomePorSqcand={nomePorSqcand}
+          titleId="conferencia-heading"
+        />
       ) : null}
 
       {/* Seção 4 — constituição § 8 + design 017 § D9. Ver a nota em
@@ -800,11 +885,16 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
           ter chegado enquanto o Blob falhou (RF-129), e nesse estado não se
           sabe dizer de onde o voto veio. */}
       <DeputadoMetodologia
-        pctApurado={pctApurado}
+        pctApurado={detail?.pct_apurado ?? pctApurado}
         cadenciaMinutos={cadencia}
         temDado={detail !== null}
         temIntervalo={agremiacoes.some((a) => a.cadeiras_ci95 !== undefined)}
         variant="uf"
+        uf={sigla}
+        projecao={detail?.projecao ?? null}
+        interruptorLigado={interruptor.ligada}
+        interruptorOrigem={interruptor.origem}
+        movendo={movendo}
       />
 
       <Footer />

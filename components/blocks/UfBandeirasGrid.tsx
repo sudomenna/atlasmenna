@@ -56,6 +56,13 @@ export interface UfResumoCorrida {
   detalhe: string;
   /** Coluna da direita: "70 de 70", "vagas não publicadas", … */
   vagas: string;
+  /**
+   * Spec 026 (design § 8.4) — o selo do estado da projeção de Deputado nesta
+   * UF ("projeção liberada · não oficial", …). Texto pronto, com "não oficial"
+   * dentro (RF-266); ausente ⇒ nenhuma linha. Quem decide se há selo é a
+   * página (interruptor desligado ⇒ nenhum).
+   */
+  selo?: string;
 }
 
 export interface UfBandeirasGridProps {
@@ -157,6 +164,19 @@ export function UfBandeirasGrid({ cargo, resumos, className }: UfBandeirasGridPr
                   >
                     {resumo.vagas}
                   </span>
+
+                  {resumo.selo ? (
+                    <span
+                      data-testid="corrida-projecao"
+                      style={{
+                        font: "var(--type-body-sm)",
+                        fontSize: "var(--text-xs)",
+                        color: "var(--accent-text)",
+                      }}
+                    >
+                      {resumo.selo}
+                    </span>
+                  ) : null}
                 </span>
               </a>
             </li>

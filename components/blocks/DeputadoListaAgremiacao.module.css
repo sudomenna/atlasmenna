@@ -1,0 +1,145 @@
+/* =============================================================================
+ * components/blocks/DeputadoListaAgremiacao.module.css — spec 026 (RF-260,
+ * RF-261, RF-272), ADR-0065, design 026 § 8.2.
+ *
+ * ## Peso: UMA classe por lista, nenhuma por linha
+ *
+ * Em SP a página leva ~1.000 linhas (ADR-0065 D5, teto de 480 KiB de
+ * documento). Classe de CSS Module sai com nome longo (arquivo + hash + nome),
+ * e cinco classes por linha seriam ~200 KiB só de atributo. Por isso as linhas
+ * não têm classe: o estilo desce da `<ol>` por seletor de filho, e a linha
+ * carrega só `data-rank` (a posição, usada para o foco e para os testes) e
+ * `data-f` quando é da faixa 2/3.
+ *
+ * ## O recorte (ADR-0034 D21, ADR-0065 D1)
+ *
+ * Fechada, cada linha com `data-f` vira uma caixa de altura zero com
+ * `overflow: hidden` — o mesmo mecanismo de `.sr-only`: o conteúdo continua
+ * no DOM, na árvore de acessibilidade e na busca da página. NUNCA
+ * `display: none`, `hidden` ou `<details>` (ADR-0017). E sem `gap` na lista: a
+ * faixa de altura zero ainda levaria o espaçamento (vão medido de 12 px no
+ * placar em 19/09) — o espaço entre linhas é `padding` da linha, que zera
+ * junto.
+ * ========================================================================== */
+
+/* `content-visibility` por agremiação (RNF-002/RNF-003): o navegador pula o
+ * layout e a pintura das agremiações fora da tela. O `auto` guarda a altura
+ * medida depois da primeira pintura, para a rolagem não saltar. O conteúdo
+ * continua acessível e buscável.
+ *
+ * 🔴 Só o eixo de BLOCO (`contain-intrinsic-block-size`). A forma curta
+ * `contain-intrinsic-size: auto 42rem` vale para os DOIS eixos: fora da tela a
+ * agremiação passava a ter 42rem (672 px) de largura intrínseca, a `<ul>` em
+ * grade da página crescia até ela, e a 375 px a coluna de votos saía cortada
+ * (visto no navegador em 29/09). */
+.agremiacao {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 42rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.legendaColunas {
+  margin: 0;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista > li {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  column-gap: var(--space-3);
+  align-items: baseline;
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--border-hairline);
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+}
+
+/* Posição na agremiação. */
+.lista > li > span:first-child {
+  font: var(--type-data);
+  color: var(--text-muted);
+}
+
+/* Nome, número/partido e marcas. */
+.lista > li > span:nth-child(2) {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-2);
+  row-gap: 2px;
+}
+
+.lista > li > span:nth-child(2) > b {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.lista > li > span:nth-child(2) > small {
+  color: var(--text-muted);
+}
+
+/* Votos e % dos válidos (ou o destino do voto). */
+.lista > li > span:nth-child(3) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  font: var(--type-data);
+}
+
+.lista > li > span:nth-child(3) > small {
+  color: var(--text-muted);
+}
+
+/* A linha de corte (RF-272): texto, com filete tracejado — a cor não é o sinal. */
+.lista > li[data-corte] {
+  display: block;
+  padding: var(--space-1) 0 var(--space-1) 2.25rem;
+  border-top: 1px dashed var(--border-strong);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* O foco programático na primeira linha nova (RF-260) precisa ser visível
+ * mesmo quando o navegador não aplica `:focus-visible` a foco por script —
+ * mesmo anel do `:focus-visible` global (`app/globals.css`). */
+.lista > li:focus {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+/* O recorte das faixas 2 e 3 com a lista fechada. */
+.lista[data-collapsed="true"] > li[data-f] {
+  height: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.status {
+  margin: 0;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+/* Sem `:empty { display: none }`: a região viva precisa existir na árvore de
+ * acessibilidade ANTES de o texto mudar, senão o anúncio se perde. Vazia, ela
+ * não tem altura. */

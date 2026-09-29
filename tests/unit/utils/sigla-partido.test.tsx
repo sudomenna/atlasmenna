@@ -207,7 +207,10 @@ describe("a home de Deputados não abrevia", () => {
   // vira uma regra por cargo e apaga a correção da tela apertada.
   it("(r) a página de UF de Deputado ABREVIA — a isenção é da home, não do cargo", () => {
     const fonte = codigoSemComentarios("app/(dep)/uf/[sigla]/deputado-federal/page.tsx");
-    expect(fonte).toContain("siglaExibicao(cand.partido)");
+    // Spec 026: as linhas viraram tuplas montadas por `paraLinhaCompacta`, e a
+    // abreviação entra como a função de exibição do partido — a MESMA que o
+    // cliente aplica às posições 61+ (`DeputadoListaAgremiacao`).
+    expect(fonte).toMatch(/partido:\s*siglaExibicao\b/);
   });
 });
 

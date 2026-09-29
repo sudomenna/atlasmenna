@@ -588,12 +588,26 @@ export default async function SobreOModeloPage() {
           <h2 id="sec-cadeiras" style={S.h2}>
             Uma faixa diferente: as cadeiras da Câmara
           </h2>
+          {/* Spec 026 (RF-266, ADR-0063; emenda da spec 011) — a frase "nada é
+              esticado para o fim da noite" deixou de ser verdade para a tela
+              inteira: ao lado da parcial passou a existir a projeção de
+              deputado. A parcial continua sendo o número central e continua
+              sem esticar nada; a projeção é a regra de três da seção 2 aplicada
+              a cada candidato e legenda. ⚠️ O teste (l) de
+              `tests/unit/pages/sobre-o-modelo.test.tsx` barra verbo de
+              previsão seguido de "resultado/número/bancada/total final" nesta
+              seção — a projeção é descrita pelo voto que falta contar, não por
+              um "resultado final" prometido. */}
           <p style={S.body}>
-            A eleição para deputado federal não passa pela regra de três das seções anteriores. O
-            número que aparece ali é a distribuição de cadeiras do Código Eleitoral aplicada aos
-            votos que já chegaram — <strong>nada é esticado para o fim da noite</strong>. A faixa
-            que acompanha cada bancada responde, por isso, a uma pergunta diferente da faixa das
-            outras corridas, e vale dizer qual.
+            A eleição para deputado federal tem duas contas, e a tela mostra as duas com nomes
+            diferentes. A primeira é a <strong>parcial</strong>: a distribuição de cadeiras do
+            Código Eleitoral aplicada aos votos que já chegaram — nela,{" "}
+            <strong>nada é esticado para o fim da noite</strong>. A segunda é a{" "}
+            <strong>projeção de deputado, que é não oficial</strong>: a regra de três zona a zona da
+            seção 2, aplicada ao voto de cada candidato e de cada legenda, com as zonas ainda sem
+            boletim recebendo o voto das zonas apuradas de tamanho parecido; sobre esse voto
+            esticado, a mesma distribuição de cadeiras. A faixa que acompanha cada bancada responde
+            a uma pergunta diferente da faixa das outras corridas, e vale dizer qual.
           </p>
           <p style={S.body}>
             Ela mede o quanto a bancada depende de <em>quais</em> zonas eleitorais chegaram
@@ -611,7 +625,9 @@ export default async function SobreOModeloPage() {
             estado que ainda não abriu metade das suas urnas não tem essa metade dentro da faixa.
             Quem avisa que ainda há cadeira em disputa é outra marcação, ao lado do número: a
             cadeira <em>indefinida</em> — aquela que foi ganha na rodada de sobras por uma margem
-            menor do que o volume de votos que falta contar.
+            menor do que o volume de votos que falta contar. A faixa da projeção, quando existir,
+            também não mede o erro da imputação — o voto que atribuímos às zonas que ainda não
+            reportaram.
           </p>
           <p style={S.body}>
             A faixa sai visivelmente mais larga em uns estados do que em outros, e isso está certo.
@@ -619,6 +635,15 @@ export default async function SobreOModeloPage() {
             versões da noite muito mais distintas entre si do que embaralhar 394 — no estado
             pequeno, cada zona que falta pesa muito mais no total. Faixa larga ali é a medida
             correta do que se sabe, não defeito de cálculo.
+          </p>
+
+          <p style={S.body} data-testid="sobre-o-modelo-trava-deputado">
+            A projeção de um estado tem uma <strong>trava</strong>: ela só aparece com 25% do
+            eleitorado apurado, ao menos duas zonas com boletim, as cadeiras do estado publicadas
+            pelo TSE e o eleitorado das zonas que lemos fechando com o do TSE. Antes disso, a tela
+            diz o que falta. Um interruptor a desliga no site inteiro sem publicar versão nova — se
+            algo parecer errado durante a apuração, ela some. E a ordem das listas de candidatos
+            nunca segue a projeção: é sempre a do voto apurado.
           </p>
 
           <div style={S.callout}>
@@ -718,6 +743,22 @@ export default async function SobreOModeloPage() {
                   ADR-0037
                 </a>
                 .
+              </div>
+            </div>
+
+            {/* Spec 026 (emenda da spec 011, ADR-0063 "Consequências —
+                Negativas"): o risco central da projeção de deputado, dito
+                como limitação e não escondido no rótulo. */}
+            <div style={S.limitationItem}>
+              <span style={S.limitationNumber}>06</span>
+              <div style={S.limitationBody}>
+                <strong>Voto de reduto mal imputado.</strong> A projeção de deputado atribui às
+                zonas que ainda não reportaram o voto das zonas apuradas de tamanho parecido — ela
+                enxerga o tamanho da zona, não o lugar. A 25% apurado, um candidato forte numa
+                região que ainda não apurou aparece subestimado, e um forte onde a apuração começou
+                aparece superestimado. O intervalo não enxerga esse erro. É por isso que a projeção
+                é sempre rotulada não oficial, que marca como "apertada" a vaga que ainda pode mudar
+                de mão e que existe um interruptor para desligá-la.
               </div>
             </div>
           </div>

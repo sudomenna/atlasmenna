@@ -49,6 +49,13 @@ vi.mock("@/lib/blob/candidatos", () => ({
 }));
 
 vi.mock("@/lib/edge-config/reader", () => ({
+  // Spec 026 (RF-265) — as telas de Deputado leem o interruptor da projeção a
+  // cada render. Ausente = desligado (falha fechada), o estado de antes da virada.
+  readInterruptorProjecao: vi.fn(async () => ({
+    ligada: false,
+    pct_minimo: 25,
+    origem: "ausente",
+  })),
   readProjection: async (opts: { cargo?: string; turno?: number }) => {
     estado.chamadas.push(`${opts.cargo}:${opts.turno}`);
     if (opts.cargo === "gov" && opts.turno === 1) return estado.gov;

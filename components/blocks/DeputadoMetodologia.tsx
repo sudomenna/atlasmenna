@@ -42,11 +42,45 @@
  * cadência declarada — e o bloco **cala** sobre ela em vez de inventar um
  * número.
  *
+ * ## 2026-09-29 — a projeção de deputado existe (spec 026, ADR-0063)
+ *
+ * O D9 do design 017 caiu: ao lado da parcial passa a existir a projeção, com
+ * trava de 25% e interruptor. Este bloco vira o bloco do § 8 da constituição
+ * para o cargo 6 — **método, valores da trava, estado do interruptor e
+ * limitações** — e, com a projeção liberada na UF, o "o que está movendo a
+ * projeção", que diz a fração de eleitorado estimada e as agremiações cuja
+ * cadeira projetada difere da parcial, e nada mais (RF-266).
+ *
+ * A frase "não são uma projeção" **fica**, agora sobre a PARCIAL — que continua
+ * não sendo projeção. E o ramo sem dado (`temDado = false`) fica **byte a
+ * byte** como era: sem payload não há estado de projeção a relatar, e
+ * `tests/unit/pages/fase-pre-eleicao.test.tsx` conta as palavras desse ramo.
+ *
  * Server Component puro: zero estado, zero evento, zero JS novo no bundle.
  */
 
 import { Panel } from "@/components/atoms/surfaces/Panel";
-import { formatPercent } from "@/lib/utils/format";
+import {
+  projecaoVisivel as ehProjecaoVisivel,
+  fraseEstadoProjecao,
+  type ProjecaoUfParaTexto,
+  ZONAS_MINIMAS_PROJECAO,
+} from "@/lib/utils/deputado-marcas";
+import { formatPercent, formatPercentTrim } from "@/lib/utils/format";
+
+/** Uma agremiação cuja cadeira projetada difere da parcial — o "o que está movendo". */
+export interface AgremiacaoMovendo {
+  sigla: string;
+  parcial: number;
+  projetada: number;
+}
+
+/**
+ * O piso da trava quando o payload não o traz (tela nacional sem nenhuma UF
+ * com estado publicado). É o piso do ADR-0063 D4 — a chave do interruptor só
+ * pode SUBIR este número, nunca baixar.
+ */
+const PCT_MINIMO_PADRAO = 25;
 
 export interface DeputadoMetodologiaProps {
   /** Percentual apurado da abrangência (0–100). */
@@ -94,8 +128,31 @@ export interface DeputadoMetodologiaProps {
    * número que ninguém mediu, na única frase deste bloco que tem número.
    */
   temDado?: boolean;
-  /** `"uf"` só troca o título; o texto é o mesmo, porque o método é o mesmo. */
+  /** `"uf"` troca o título e liga o bloco por UF; o método é o mesmo. */
   variant?: "national" | "uf";
+  /**
+   * Spec 026 — o interruptor lido NO RENDER (`readInterruptorProjecao`).
+   * Ausente ⇒ desligado (falha fechada, RF-265).
+   */
+  interruptorLigado?: boolean;
+  /**
+   * De onde veio o "desligado" (`InterruptorProjecaoLido.origem`): `chave` /
+   * `ausente` ⇒ desligada pela operação; `invalida` / `falha` ⇒ não foi possível
+   * ler o interruptor, e ela fica desligada por segurança (ADR-0063 D4 pede as
+   * duas frases distintas). Ausente ⇒ tratado como `ausente`.
+   */
+  interruptorOrigem?: "chave" | "ausente" | "invalida" | "falha";
+  /** UF: o `projecao` do objeto da UF (design § 2.7). Ausente no objeto v1. */
+  projecao?: ProjecaoUfParaTexto | null;
+  /** UF: sigla do estado, para as frases da trava. */
+  uf?: string;
+  /**
+   * UF, com a projeção visível: as agremiações cuja cadeira projetada difere
+   * da parcial, na ordem das agremiações da página. `[]` ⇒ "nenhuma difere".
+   */
+  movendo?: readonly AgremiacaoMovendo[];
+  /** Nacional: o `pct_minimo` publicado (o de qualquer UF — é o mesmo). Ausente ⇒ 25. */
+  pctMinimo?: number;
 }
 
 export function DeputadoMetodologia({
@@ -104,27 +161,32 @@ export function DeputadoMetodologia({
   temIntervalo = false,
   temDado = true,
   variant = "national",
+  interruptorLigado = false,
+  interruptorOrigem = "ausente",
+  projecao = null,
+  uf,
+  movendo,
+  pctMinimo,
 }: DeputadoMetodologiaProps) {
+  const visivel = variant === "uf" && ehProjecaoVisivel(projecao, interruptorLigado);
+  const piso = projecao?.pct_minimo ?? pctMinimo ?? PCT_MINIMO_PADRAO;
   return (
     <Panel
       kicker="Metodologia"
       title={variant === "uf" ? "Como esta conta é feita" : "Como esta contagem é feita"}
       titleId="metodologia-heading"
     >
-      <p
-        className="max-w-prose"
+      <div
         data-testid="dep-metodologia"
-        style={{
-          margin: 0,
-          font: "var(--type-body-sm)",
-          color: "var(--text-secondary)",
-          textWrap: "pretty",
-        }}
+        className="flex flex-col"
+        style={{ gap: "var(--space-3)" }}
       >
-        Estes números <strong>não são uma projeção</strong>. São a distribuição de cadeiras pelas
-        regras do Código Eleitoral aplicada aos votos <strong>já apurados</strong> — a resposta para
-        "como ficaria a bancada se a contagem parasse agora".{" "}
-        {/* 🔴 2026-09-14 — a frase "Com 0% apurado, ela ainda muda" SAIU do
+        <p className="max-w-prose" style={PARAGRAFO}>
+          {temDado ? "Os números da parcial" : "Estes números"}{" "}
+          <strong>não são uma projeção</strong>. São a distribuição de cadeiras pelas regras do
+          Código Eleitoral aplicada aos votos <strong>já apurados</strong> — a resposta para "como
+          ficaria a bancada se a contagem parasse agora".{" "}
+          {/* 🔴 2026-09-14 — a frase "Com 0% apurado, ela ainda muda" SAIU do
             estado sem dado. Ela é a única deste bloco que carrega um NÚMERO, e
             sem payload esse número não foi medido: não sabemos se a apuração
             está em zero ou se a leitura do Global Config falhou com a contagem
@@ -135,29 +197,124 @@ export function DeputadoMetodologia({
             projeção" e "votos já apurados" descrevem o MÉTODO desta tela, que
             é verdadeiro em qualquer dia do calendário; o percentual descrevia
             um ESTADO, e o estado é o que não medimos. */}
-        {temDado ? <>Com {formatPercent(pctApurado)} apurado, ela ainda muda. </> : null}
-        {!temDado ? null : temIntervalo ? (
-          <>
-            O intervalo ao lado de cada bancada mede o quanto o número balança entre as zonas
-            eleitorais <strong>já apuradas</strong>: sorteamos mil combinações delas e refazemos a
-            conta em cada uma. Ele não adivinha o voto que ainda falta chegar — isso é o que as
-            cadeiras marcadas como indefinidas apontam.
-          </>
-        ) : (
-          <>
-            Neste momento lemos o boletim que o TSE publica por estado, e não os de cada zona
-            eleitoral — e sem as zonas não há como medir o quanto o número balança, por isso não há
-            intervalo ao lado das bancadas.
-          </>
-        )}
-        {cadenciaMinutos > 0 ? (
-          <>
-            {" "}
-            Os números são atualizados a cada {cadenciaMinutos}{" "}
-            {cadenciaMinutos === 1 ? "minuto" : "minutos"}.
-          </>
+          {temDado ? <>Com {formatPercent(pctApurado)} apurado, ela ainda muda. </> : null}
+          {!temDado ? null : temIntervalo ? (
+            <>
+              O intervalo ao lado de cada bancada mede o quanto o número balança entre as zonas
+              eleitorais <strong>já apuradas</strong>: sorteamos mil combinações delas e refazemos a
+              conta em cada uma. Ele não adivinha o voto que ainda falta chegar — isso é o que as
+              cadeiras marcadas como indefinidas ("sobra apertada") apontam.
+            </>
+          ) : (
+            <>
+              Neste momento lemos o boletim que o TSE publica por estado, e não os de cada zona
+              eleitoral — e sem as zonas não há como medir o quanto o número balança, por isso não
+              há intervalo ao lado das bancadas.
+            </>
+          )}
+          {cadenciaMinutos > 0 ? (
+            <>
+              {" "}
+              Os números são atualizados a cada {cadenciaMinutos}{" "}
+              {cadenciaMinutos === 1 ? "minuto" : "minutos"}.
+            </>
+          ) : null}
+        </p>
+
+        {/* Spec 026 — só com dado: sem payload não há trava nem interruptor a
+          relatar, e o ramo sem dado é contado palavra a palavra em
+          `fase-pre-eleicao.test.tsx`. */}
+        {temDado ? (
+          <p className="max-w-prose" style={PARAGRAFO} data-testid="dep-metodologia-projecao">
+            <strong>A projeção, que é não oficial, é outra conta.</strong> Estimamos o voto final de
+            cada candidato e de cada legenda zona a zona: a zona que já tem boletim é esticada até o
+            tamanho do seu eleitorado; a zona sem boletim recebe o voto das zonas apuradas de
+            tamanho parecido. Sobre esse voto estimado aplicamos a mesma distribuição de cadeiras da
+            parcial. Ela só aparece num estado com {formatPercentTrim(piso)} do eleitorado apurado,
+            ao menos {ZONAS_MINIMAS_PROJECAO} zonas com boletim, as cadeiras do estado publicadas
+            pelo TSE e o eleitorado das zonas que lemos fechando com o do TSE. A ordem das listas
+            nunca muda por causa dela: é sempre a do voto apurado.{" "}
+            {interruptorLigado
+              ? "A projeção está ligada no site; em cada estado, só aparece quando essas condições se cumprem."
+              : interruptorOrigem === "invalida" || interruptorOrigem === "falha"
+                ? "Neste momento não foi possível ler o interruptor da projeção, e por segurança ela fica desligada: nenhuma marca nem número dela aparece."
+                : "Neste momento a projeção está desligada no site: nenhuma marca nem número dela aparece, qualquer que seja a apuração."}
+            {variant === "uf" && interruptorLigado && projecao && uf ? (
+              <>
+                {" "}
+                Em {uf}: {formatPercent(pctApurado)} do eleitorado apurado e{" "}
+                {projecao.zonas_apuradas} de {projecao.zonas_total} zonas com boletim.{" "}
+                {fraseEstadoProjecao(projecao, pctApurado)}
+              </>
+            ) : null}
+            {variant === "national" ? (
+              <>
+                {" "}
+                Ela existe por estado: não somamos projeções numa bancada nacional, porque juntar
+                estados com a projeção liberada e estados que ainda aguardam daria um número sem
+                nome.
+              </>
+            ) : null}
+          </p>
         ) : null}
-      </p>
+
+        {/* RF-266 / constituição § 8 — "o que está movendo", só com a projeção
+          VISÍVEL (estado liberada E interruptor ligado). Diz a fração de
+          eleitorado estimada e as agremiações cuja cadeira projetada difere
+          da parcial — e nada mais. */}
+        {visivel && projecao ? (
+          <section aria-labelledby="dep-movendo-heading" data-testid="dep-movendo">
+            <h3
+              id="dep-movendo-heading"
+              style={{ margin: "0 0 var(--space-1)", font: "var(--type-label)", fontWeight: 600 }}
+            >
+              O que está movendo a projeção · não oficial
+            </h3>
+            <p className="max-w-prose" style={PARAGRAFO}>
+              {formatPercent(Math.max(0, 100 - pctApurado))} do eleitorado de {uf ?? "este estado"}{" "}
+              ainda não foi apurado, e o voto dele entra por estimativa
+              {projecao.zonas_total > projecao.zonas_apuradas
+                ? ` — imputado nas ${projecao.zonas_total - projecao.zonas_apuradas} zonas sem boletim`
+                : ""}
+              .{" "}
+              {movendo && movendo.length > 0 ? (
+                <>
+                  Onde a projeção difere da parcial:{" "}
+                  {movendo
+                    .map(
+                      (m) =>
+                        `${m.sigla}, ${m.parcial} ${m.parcial === 1 ? "cadeira" : "cadeiras"} na parcial e ${m.projetada} na projeção`,
+                    )
+                    .join("; ")}
+                  .
+                </>
+              ) : (
+                "A projeção dá a cada agremiação as mesmas cadeiras da parcial."
+              )}
+            </p>
+          </section>
+        ) : null}
+
+        {temDado ? (
+          <p className="max-w-prose" style={PARAGRAFO} data-testid="dep-metodologia-limites">
+            <strong>O limite que mais pesa é o voto de reduto.</strong> A estimativa só enxerga o
+            tamanho da zona, não o lugar: um candidato forte numa região que ainda não apurou fica
+            subestimado. É por isso que a projeção é não oficial e marca como "apertada" a vaga que
+            ainda pode mudar de mão. O método completo está em{" "}
+            <a href="/sobre-o-modelo#sec-cadeiras" style={{ color: "inherit" }}>
+              Sobre o modelo
+            </a>
+            .
+          </p>
+        ) : null}
+      </div>
     </Panel>
   );
 }
+
+const PARAGRAFO: React.CSSProperties = {
+  margin: 0,
+  font: "var(--type-body-sm)",
+  color: "var(--text-secondary)",
+  textWrap: "pretty",
+};
