@@ -27,7 +27,7 @@ Documentação Spec-Driven Development (SDD) do SalaCofre — plataforma web pú
 
 ---
 
-## Specs (20)
+## Specs (23)
 
 | # | Spec | Status | Prioridade | Telas |
 |---|---|---|---|---|
@@ -53,6 +53,9 @@ Documentação Spec-Driven Development (SDD) do SalaCofre — plataforma web pú
 | 020 | [Evolução da apuração](./specs/020-evolucao-da-apuracao/) | draft | M | T-01, T-03, T-04, T-10 |
 | 021 | [Votação — o eleitorado inteiro](./specs/021-votacao-eleitorado/) | draft | M | T-01, T-03, T-10, T-12 |
 | 022 | [A corrida em três círculos](./specs/022-corrida-em-tres-circulos/) | implementing | M | T-01, T-03, T-10 |
+| 023 | [Senado de 2027](./specs/023-senado-2027/) | implementing | M | T-09 |
+| 024 | [Etiquetas editoriais](./specs/024-etiquetas-editoriais/) | implementing | M | — |
+| 025 | [Visões editoriais](./specs/025-visoes-editoriais/) | implementing | S | T-02, T-09, T-10, T-13 |
 
 Cada spec contém `spec.md` (requirements em EARS) e `design.md` (decisões técnicas). `tasks.md` será adicionado no início da implementação de cada uma.
 

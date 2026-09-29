@@ -1468,7 +1468,8 @@
         "RF-149",
         "RF-150",
         "RF-151",
-        "RF-152"
+        "RF-152",
+        "RF-214"
       ],
       "depends_on": [
         "001-ingestao-tse",
@@ -1487,7 +1488,7 @@
         "Footer"
       ],
       "nfr": ["RNF-002", "RNF-003", "RNF-007a", "RNF-019", "RNF-022", "RNF-023", "RNF-024"],
-      "adrs": ["0039", "0040", "0041", "0042"],
+      "adrs": ["0039", "0040", "0041", "0042", "0058"],
       "amends": ["016-senador", "017-deputado-federal"],
       "ship_blocked_on": [],
       "notes": "Escrita em 2026-09-13 após medição de arquivo real do TSE (20.939 candidaturas, 7.698 publicáveis nos 4 cargos do produto). Tabelas `candidatos` (22 colunas) e `partidos` (30 linhas) implementadas em migration 0008. Importador `data-pipeline/candidatos-import.ts` com script `pnpm candidatos:import`. Rota `/candidatos` (RSC, sem JS novo). Enriquecimento de `EdgeUfRow.top_candidatos` com nome, partido e sqcand (emenda aos contratos de specs 016/017). Quatro ADRs decidem (0039–0042): fonte (Portal de Dados Abertos TSE), publicabilidade fail-closed, foto binária 1 ano cache, chave de identidade (cargo,uf,numero) + sqcand. Nota 2026-09-13: divergência corrigida em design.md — tabela é `candidatos` não `candidaturas`, `numero` é integer não text (medido: 8.323 registros, 0 com zero à esquerda). Pendências abertas: User-Agent completo antes de 15/09 (contato verificável), medição de Global Config ao entrar nome/partido/sqcand, vice e suplente (escopo não decidido), cadência de checagem contra CDN não verificada contra limite."
@@ -1704,6 +1705,151 @@
       "ship_blocked_on": [],
       "notes": "A corrida destaca os votos válidos: (1) a fatia de cada candidato/partido; (2) os demais (anulados, sub judice, brancos, nulos); (3) abstinência e não apurado. Distinção crítica do spec 021: aqui a fonte é o agregado TSE por abrangência (mesmo instante, mesmos RFs), não os votos por zona (que podem estar um ciclo atrás). Implementação completa em 2026-09-26/2026-09-27: 46+ testes TS + 39+ testes Py + 18 simulado. Quatro decisões do dono (26/09): por candidatura + por partido; levar destinação até a tela; destravar círculos 2 e 3 das UFs; antes da destinação, 'aguardando'. Quinta decisão (27/09): Senado em 'votos, 2 por eleitor' (RF-210).",
       "path": "docs/specs/022-corrida-em-tres-circulos/"
+    },
+    {
+      "id": "023-senado-2027",
+      "title": "Senado de 2027 — as 81 cadeiras, com os 27 mandatos até 2031",
+      "status": "implementing",
+      "priority": "M",
+      "personas": ["P1", "P2", "P3"],
+      "screens": ["T-09"],
+      "requirements": ["RF-215", "RF-216", "RF-217", "RF-218", "RF-219"],
+      "depends_on": ["016-senador", "019-fase-pre-eleicao"],
+      "apis": [],
+      "components": ["Hemiciclo", "CamaraHemiciclo", "SenadoHemiciclo", "VoteBar", "Panel"],
+      "nfr": ["RNF-002", "RNF-007a", "RNF-022", "RNF-023", "RNF-024", "RNF-035"],
+      "adrs": ["0001", "0024", "0043", "0049", "0053", "0061", "0062"],
+      "amends": ["016-senador"],
+      "ship_blocked_on": [],
+      "path": "docs/specs/023-senado-2027/"
+    },
+    {
+      "id": "024-etiquetas-editoriais",
+      "title": "Etiquetas editoriais — catálogo, compilador, leitor, átomos, publicação",
+      "status": "implementing",
+      "priority": "M",
+      "personas": ["P2"],
+      "screens": [],
+      "requirements": [
+        "RF-220",
+        "RF-221",
+        "RF-222",
+        "RF-223",
+        "RF-224",
+        "RF-225",
+        "RF-226",
+        "RF-227",
+        "RF-228",
+        "RF-229",
+        "RF-230",
+        "RF-231",
+        "RF-232",
+        "RF-233",
+        "RF-234",
+        "RF-235",
+        "RF-236",
+        "RF-237",
+        "RF-238",
+        "RF-239"
+      ],
+      "depends_on": ["016-senador", "017-deputado-federal", "018-identidade-candidatura"],
+      "apis": [],
+      "components": ["EtiquetaEditorial", "EtiquetasLinha", "EtiquetasAviso"],
+      "nfr": ["RNF-012", "RNF-019", "RNF-022", "RNF-023", "RNF-024"],
+      "adrs": [
+        "0001",
+        "0024",
+        "0032",
+        "0039",
+        "0040",
+        "0051",
+        "0053",
+        "0058",
+        "0059",
+        "0060",
+        "0062"
+      ],
+      "ship_blocked_on": [
+        "emenda da constituição 1.6 aprovada (ADR-0059)",
+        "página /sobre-as-etiquetas"
+      ],
+      "path": "docs/specs/024-etiquetas-editoriais/"
+    },
+    {
+      "id": "025-visoes-editoriais",
+      "title": "Visões editoriais — hemiciclo por bloco, Senado e Câmara de 2027, impeachment, palanques, renovação, filtro e etiquetas",
+      "status": "implementing",
+      "priority": "S",
+      "personas": ["P1", "P2", "P3"],
+      "screens": ["T-02", "T-09", "T-10", "T-13"],
+      "requirements": [
+        "RF-240",
+        "RF-241",
+        "RF-242",
+        "RF-243",
+        "RF-244",
+        "RF-245",
+        "RF-246",
+        "RF-247",
+        "RF-248",
+        "RF-249",
+        "RF-250",
+        "RF-251",
+        "RF-252",
+        "RF-253"
+      ],
+      "depends_on": [
+        "023-senado-2027",
+        "024-etiquetas-editoriais",
+        "006-grid-governadores",
+        "017-deputado-federal",
+        "004-pagina-uf-presidencial",
+        "005-pagina-uf-governador",
+        "011-sobre-o-modelo",
+        "016-senador",
+        "018-identidade-candidatura"
+      ],
+      "apis": [],
+      "components": [
+        "HemicicloPorBloco",
+        "SenadoDe2027Panel",
+        "Camara2027Panel",
+        "RenovacaoPanel",
+        "EtiquetaFiltro",
+        "PalanquesMapa",
+        "EtiquetaEditorial",
+        "EtiquetasLinha",
+        "EtiquetasAviso",
+        "GovernorCard",
+        "ResultPanel",
+        "CandidateResultRow",
+        "CandidatosGrid"
+      ],
+      "nfr": [
+        "RNF-002",
+        "RNF-007a",
+        "RNF-012",
+        "RNF-022",
+        "RNF-023",
+        "RNF-024",
+        "RNF-025",
+        "RNF-035"
+      ],
+      "adrs": ["0024", "0049", "0051", "0053", "0055", "0057", "0059", "0060", "0061", "0062"],
+      "amends": [
+        "006-grid-governadores",
+        "017-deputado-federal",
+        "004-pagina-uf-presidencial",
+        "005-pagina-uf-governador",
+        "011-sobre-o-modelo",
+        "024-etiquetas-editoriais"
+      ],
+      "ship_blocked_on": [
+        "critérios do dono para campo ideológico, palanque presidencial, centrão e impeachment",
+        "canal de correção de redação",
+        "revisão final da constituição 1.6 pelo dono"
+      ],
+      "path": "docs/specs/025-visoes-editoriais/"
     }
   ],
   "orquestracao_paralela": "docs/_meta/orquestracao-paralela.md",

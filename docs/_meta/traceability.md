@@ -386,8 +386,8 @@ Spec 016 (Senador) — `draft`, implementada em S07. Spec 017 (Deputado Federal)
 
 ## RFs adicionados pelas specs
 
-Além dos 66 RFs do PRD (RF-001..RF-060 + RF-030.1..RF-030.6), as specs adicionaram 88 RFs próprios.
-Vide frontmatters de cada spec (`requirements:` no YAML). Soma global: 154 RFs únicos.
+Além dos 66 RFs do PRD (RF-001..RF-060 + RF-030.1..RF-030.6), as specs adicionaram 128 RFs próprios (specs 018, 020, 021, 023, 024, 025 contribuem RF-214..253).
+Vide frontmatters de cada spec (`requirements:` no YAML). Soma global: 194 RFs únicos.
 
 | RF-177 | Balão do mapa com 4 candidaturas + agregado "Outros", **reordenado pela base ativa** | M | [003](../specs/003-home-nacional/) | `<NationalChoroplethMap />`, `<HoverCard />`, `lib/utils/lider-por-base.ts` | unit (`NationalChoroplethMap.hoverOutros.test.tsx`, casos a–e: 5 linhas + 4 colunas, agregação + ausência, cruzamento pct↔pct_atual, "Outros" sem camada de vencedor) + unit (`NationalChoroplethMap.hoverOrdemPorBase.test.tsx`, 4 casos: ordem por projeção, ordem INVERTE por parcial, `pct_atual` ausente degrada sem fabricar zero, ✓ segue a identidade do líder projetado) |
 | RF-178 | Orientação vertical adaptativa do balão do mapa | M | [003](../specs/003-home-nacional/) | `<HoverCard />`, `lib/utils/hover-card-placement.ts` | unit (`NationalChoroplethMap.hoverFlipVertical.test.tsx`, 5 casos: metade cima/baixo × dois eixos independentes, regra de altura não largura) |
@@ -421,6 +421,46 @@ Vide frontmatters de cada spec (`requirements:` no YAML). Soma global: 154 RFs �
 | RF-211 | Os três círculos da corrida (spec 022 RF-204..206) são da visão "Parcial" (seletor do shell, ADR-0029 § 2, `data-view-only="parcial"`) | M | [022](../specs/022-corrida-em-tres-circulos/) | `<CorridaTresCirculos />`, `app/globals.css` | unit (`tests/unit/components/CorridaTresCirculos.test.tsx`) |
 | RF-212 | Semicírculo de projeção da corrida na visão "Projeção": votos válidos projetados das quatro candidaturas + "Outros"; total = `votacao.projetada.validos` (mesmo do arco 3 "Votação"); ordem por projeção, desempate por número de urna | M | [022](../specs/022-corrida-em-tres-circulos/), [021](../specs/021-votacao-eleitorado/) | `<CorridaTresCirculos />`, `api/model/project.py` (cálculo `Σ projeção ÷ Σ projeção válido`, arredondamento maior resto) | unit (`tests/unit/components/CorridaTresCirculos.test.tsx`, bloco "RF-212 — círculo de projeção"), pytest (fixture simulado) |
 | RF-213 | Candidatura com `dvt = "Anulado"` sai de decisões de corrida (`lider`, `cand_a`/`cand_b`, `p_vitoria`, `cenarios_2t`, `chamada`, `vai_a_2t`, Senado `p_eleito`); base de maioria absoluta 1º turno passa a `vvc − van` sem ela; `dvt = "Anulado sub judice"` mantém comportamento vigente; ausência ou divergência de `dvt` = sem exclusão + aviso; exibição (listas, termômetros) inalterada | M | [002](../specs/002-modelo-estatistico/), [006](../specs/006-grid-governadores/), [016](../specs/016-senador/) | `api/model/project.py` (`destino_do_dvt`, `_resample_excluindo_anulados`, `_renormalizar_frações`), `lib/utils/destino-voto.ts` | unit (`tests/unit/model/test_destino_do_voto_decisao.py`, casos: anulado sai, sub judice fica, ausência sem exclusão), unit (`tests/unit/model/test_destino_do_voto_exibicao.py`, casos: percentual em `vvc` inteiro, divergência em log), unit (`tests/unit/components/anulada-consistencia.test.tsx`, balanceamento lider/decisão), unit (`tests/unit/components/anulada-listas.test.tsx`, ordem sem excluído), unit (`tests/unit/pages/anulada-paginas.test.tsx`, end-to-end), pytest (`tests/unit/model/test_serie_anulada_ao_fim.py`), sem teste: replay 2022 gate OT-4 (sem `dvt`, bit-a-bit idêntico) |
+| RF-214 | Trajetória na Câmara de cada candidatura a Deputado Federal | M | [018](../specs/018-identidade-candidatura/) | `lib/data/etiquetas/trajetoria-camara.ts`, exportadores offline | — (Fase 2, ADR-0058) |
+| RF-215 | Foto datada dos 27 mandatos até 2031 | M | [023](../specs/023-senado-2027/) | `editorial/senado/mandato-2031.json`, `lib/senado/` | unit, `pnpm senado:snapshot` |
+| RF-216 | Hemiciclo de 81 cadeiras por partido em `/senador` | M | [023](../specs/023-senado-2027/) | `<SenadoHemiciclo />`, `<Hemiciclo />` | unit |
+| RF-217 | As 54 vagas saem da mesma conta do produtor | M | [023](../specs/023-senado-2027/) | `lib/senado/vagas-derivadas.ts` | unit |
+| RF-218 | Texto, legenda e acessibilidade do hemiciclo | M | [023](../specs/023-senado-2027/) | `<SenadoHemiciclo />`, `tests/unit/components/senado-hemiciclo-peso.test.tsx` | unit |
+| RF-219 | A barra das 54 usa a paleta de partido | M | [023](../specs/023-senado-2027/) | `<VoteBar />` (reutilizado) | unit |
+| RF-220 | Compilador de catálogo e critérios | M | [024](../specs/024-etiquetas-editoriais/) | `scripts/compilar-catálogo.ts`, `lib/etiquetas/compilador.ts` | unit |
+| RF-221 | Portão de cobertura das etiquetas | M | [024](../specs/024-etiquetas-editoriais/) | `tests/unit/design-system/etiquetas-cobertura.test.ts` | unit |
+| RF-222 | Armazenamento no Blob: cópia do catálogo compilado | M | [024](../specs/024-etiquetas-editoriais/) | `lib/blob/etiquetas-write.ts` | unit |
+| RF-223 | Leitor desde o Blob; fallback para o build | M | [024](../specs/024-etiquetas-editoriais/) | `lib/blob/etiquetas-read.ts`, `lib/etiquetas/leitor.ts` | unit |
+| RF-224 | Portão de contraste da tinta e da borda | M | [024](../specs/024-etiquetas-editoriais/) | `tests/unit/design-system/etiqueta-editorial-contraste.test.tsx` | unit |
+| RF-225 | Átomo `<EtiquetaEditorial />` — exibição condicional | M | [024](../specs/024-etiquetas-editoriais/) | `components/atoms/data/EtiquetaEditorial.tsx` | unit |
+| RF-226 | Átomo `<EtiquetasLinha />` — layout e quebra de linha | M | [024](../specs/024-etiquetas-editoriais/) | `components/atoms/data/EtiquetasLinha.tsx` | unit |
+| RF-227 | Átomo `<EtiquetasAviso />` — aviso em superfícies | M | [024](../specs/024-etiquetas-editoriais/) | `components/blocks/EtiquetasAviso.tsx` | unit |
+| RF-228 | Publicador: chave `publicar.json`, entrada em tabela de histórico | M | [024](../specs/024-etiquetas-editoriais/) | `lib/etiquetas/publicador.ts`, `lib/blob/etiquetas-publicador.ts` | unit |
+| RF-229 | Vigia do compilador: detect mudanças de critério | M | [024](../specs/024-etiquetas-editoriais/) | `scripts/vigiar-criterios.ts` | integration |
+| RF-230 | Rotação automática: critério novo sai de "a classificar" | M | [024](../specs/024-etiquetas-editoriais/) | `scripts/rotacionar-criticios.ts` | integration |
+| RF-231 | Tabela de histórico: 50 mais recentes + arquivo completo | M | [024](../specs/024-etiquetas-editoriais/) | `lib/blob/etiquetas-historico.ts` | unit |
+| RF-232 | Critério visualizado só se publicado (RNF-025) | M | [024](../specs/024-etiquetas-editoriais/) | portão em `lib/etiquetas/leitor.ts` | unit |
+| RF-233 | Sem classificação: não exibir etiqueta, marcar "a classificar" em histórico | M | [024](../specs/024-etiquetas-editoriais/) | `lib/etiquetas/` (regra de falta) | unit |
+| RF-234 | Agregação de etiquetas por fonte (individual / regra / padrão) | M | [024](../specs/024-etiquetas-editoriais/) | `lib/etiquetas/agregador.ts` | unit |
+| RF-235 | Estilo CSS da etiqueta: tinta + borda + fundo transparente | M | [024](../specs/024-etiquetas-editoriais/) | `components/atoms/data/EtiquetaEditorial.module.css` | unit (contraste) |
+| RF-236 | Validação: exatamente uma etiqueta por categoria por candidatura | M | [024](../specs/024-etiquetas-editoriais/) | validação em compilador | unit |
+| RF-237 | Exportação em three formatos: JSON, CSV, Parquet | M | [024](../specs/024-etiquetas-editoriais/) | `scripts/exportar-etiquetas.ts` | integration |
+| RF-238 | Integração de Etiquetas e Visões no catálogo | M | [024](../specs/024-etiquetas-editoriais/) | `lib/data/etiquetas/catalogo.ts` | unit |
+| RF-239 | Reedição e desfazimento de classificações | M | [024](../specs/024-etiquetas-editoriais/) | `lib/etiquetas/reeditor.ts` | integration |
+| RF-240 | Visão por bloco: ordem fixa, sem cor, "governo Lula" escrito | M | [025](../specs/025-visoes-editoriais/) | `<HemicicloPorBloco />` | unit |
+| RF-241 | Marcas de limiar: do total, entre a cadeira k−1 e a k, empate dito | M | [025](../specs/025-visoes-editoriais/) | `<HemicicloPorBloco />`, `lib/utils/marcas-limiar.ts` | unit |
+| RF-242 | V1, "Senado de 2027: quem terá maioria" | M | [025](../specs/025-visoes-editoriais/) | `<SenadoDe2027Panel />` | unit |
+| RF-243 | V2, impeachment de ministros do STF no Senado de 2027 | M | [025](../specs/025-visoes-editoriais/) | `<ImpeachmentPanel />` | unit |
+| RF-244 | Câmara 2027 por bloco | M | [025](../specs/025-visoes-editoriais/) | `<Camara2027Panel />` | unit |
+| RF-245 | Chips nas listas, sem mexer na ordem | M | [025](../specs/025-visoes-editoriais/) | `<EtiquetasLinha />` em `<CandidatosGrid />`, `<ResultPanel />`, etc. | unit |
+| RF-246 | Impeachment sempre qualificado | M | [025](../specs/025-visoes-editoriais/) | `<EtiquetaEditorial />` com regra de qualificação | unit |
+| RF-247 | Filtro por etiqueta | M | [025](../specs/025-visoes-editoriais/) | `<EtiquetaFiltro />`, `app/globals.css` CSS rule | unit |
+| RF-248 | Aviso em toda superfície com etiqueta | M | [025](../specs/025-visoes-editoriais/) | `<EtiquetasAviso />` | unit |
+| RF-249 | V4, renovação do Senado | M | [025](../specs/025-visoes-editoriais/) | `<RenovacaoPanel />` | unit |
+| RF-250 | Critério publicado é porta de exibição | M | [025](../specs/025-visoes-editoriais/) | portão em `lib/etiquetas/leitor.ts` (reutilizado de RF-232) | unit |
+| RF-251 | V3, mapa dos palanques na capa de Governador | M | [025](../specs/025-visoes-editoriais/) | `<PalanquesMapa />` | unit |
+| RF-252 | Página de metodologia e o link em `/sobre-o-modelo` | M | [025](../specs/025-visoes-editoriais/) | `app/sobre-as-etiquetas/page.tsx`, link em `/sobre-o-modelo` | integration |
+| RF-253 | Chaves por visão da cópia do build = `publicar.json` versionado | M | [025](../specs/025-visoes-editoriais/) | `lib/etiquetas/publicador.ts` (emenda RF-228/231) | unit |
 
 ---
 
