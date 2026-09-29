@@ -1356,7 +1356,15 @@
         "RaceHeader",
         "ForecastTransparency",
         "RegiaoConsolidada",
-        "RegiaoRecolhivel"
+        "RegiaoRecolhivel",
+        "NationalChoroplethMap",
+        "ChoroplethMapUF",
+        "StateResultSheet",
+        "UfHoverLink",
+        "MunicipioTable",
+        "MunicipioExplorer",
+        "GovernorCard",
+        "HoverCard"
       ],
       "nfr": ["RNF-001", "RNF-002", "RNF-003", "RNF-006", "RNF-022", "RNF-023", "RNF-024"],
       "adrs": [
@@ -1372,6 +1380,8 @@
         "0038",
         "0042",
         "0048",
+        "0050",
+        "0051",
         "0053",
         "0055",
         "0056",
