@@ -6,7 +6,8 @@
  *
  * Quatro abas, decisão D5 do usuário (2026-09-07):
  *   Presidente `/` · Governador `/governador` · Senador `/senador` ·
- *   Deputado Federal `/deputado-federal`.
+ *   Deputados `/deputado-federal` (até 29/09, "Deputado Federal"; a spec 027
+ *   pôs as assembleias sob a mesma aba, com seletor dentro da página).
  *
  * **As quatro navegam desde 2026-09-12.** Senador saiu do modo desabilitado em
  * 2026-09-11 (spec 016) e Deputado Federal em 2026-09-12 (spec 017), quando as
@@ -115,21 +116,24 @@ const ITEMS = [
   {
     value: "dep",
     href: "/deputado-federal",
-    // "Deputado Federal" não cabe numa coluna de 1/4 de 430px: quebrava em
-    // duas linhas e esticava a barra inteira (o defeito que o ADR-0029 § 3
-    // atribuía à posição da navegação, mas que sobrevive à mudança de
-    // posição). O kit resolve com o rótulo curto — `TabBar.jsx` do protótipo
-    // usa "Deputado". Aqui o visível é "Deputado" e o " Federal" continua no
-    // DOM em `sr-only`, então o NOME ACESSÍVEL segue sendo "Deputado Federal"
-    // — o rótulo visível é prefixo do acessível, que é o que a WCAG 2.5.3
-    // (Label in Name) exige.
+    // Spec 027 (RF-283, decisão do dono de 29/09): a aba passou a cobrir DUAS
+    // casas — a Câmara dos Deputados e a assembleia de cada estado (no DF, a
+    // Câmara Legislativa) —, e a escolha entre elas é o seletor "Federal ·
+    // Estadual" dentro da página (`<SeletorDeputado>`). Continuam quatro abas.
     //
-    // NÃO mexer no rótulo ao ligar a aba: o `<CurrentFlag />` entra DEPOIS do
-    // `sr-only` do " Federal", para que o nome acessível continue começando
-    // por "Deputado Federal".
+    // O rótulo é "Deputados", e só isso: visível e nome acessível iguais. Até
+    // 29/09 o visível era "Deputado" com um " Federal" em `sr-only` — o nome
+    // acessível dizia um cargo só, e hoje seria falso. A WCAG 2.5.3 (Label in
+    // Name) pede que o nome acessível COMECE pelo texto visível; igual cumpre.
+    // "Deputados" cabe numa coluna de 1/4 a 320 px, como "Governador".
+    //
+    // O `<CurrentFlag />` fica DEPOIS do rótulo, para que o nome acessível
+    // continue começando por "Deputados". A aba se marca como atual pelo
+    // `data-trilha="dep"` — que as páginas estaduais e distritais emitem
+    // também, sem regra nova no CSS.
     label: (
       <>
-        Deputado<span className="sr-only"> Federal</span>
+        Deputados
         <CurrentFlag />
       </>
     ),

@@ -171,3 +171,45 @@ describe("/sobre-o-modelo — a faixa de cadeiras (RF-127 / ADR-0036 / ADR-0037)
     expect(texto).toContain("não quer dizer que a bancada está perto do número final");
   });
 });
+
+/**
+ * Spec 027 (emenda da spec 011) — as assembleias legislativas na seção 5, SEM
+ * `<h2>` novo (a página tem oito; o teste de integração conta).
+ *
+ * Mutação aplicada à mão (29/09): tirar o parágrafo derruba o primeiro caso;
+ * escrever nele que "a projeção das assembleias está ligada" derruba o segundo.
+ */
+describe("/sobre-o-modelo — as assembleias na seção de cadeiras (spec 027)", () => {
+  function paragrafoAssembleias(): string {
+    const markup = html();
+    const inicio = markup.indexOf('data-testid="sobre-o-modelo-assembleias"');
+    expect(inicio).toBeGreaterThan(-1);
+    // Dentro da seção 5: depois do título dela, antes do fim dela.
+    const secao = markup.indexOf('id="sec-cadeiras"');
+    expect(inicio).toBeGreaterThan(secao);
+    expect(inicio).toBeLessThan(markup.indexOf("</section>", secao));
+    const fim = markup.indexOf("</p>", inicio);
+    return markup
+      .slice(inicio, fim)
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ");
+  }
+
+  it("diz a regra (CE 106–109), uma casa por estado, o tamanho (CF art. 27) e a Câmara Legislativa do DF", () => {
+    const p = paragrafoAssembleias();
+    expect(p).toContain("assembleias legislativas");
+    expect(p).toContain("artigos 106 a 109");
+    expect(p).toContain("artigo 27");
+    expect(p).toContain("Câmara Legislativa");
+    expect(p).toContain("27 casas");
+    // Os números de conferência do art. 27: SP 94, os menores e o DF 24.
+    expect(p).toContain("94 estaduais");
+    expect(p).toContain("têm 24");
+  });
+
+  it("não fala de projeção das assembleias — ela depende de interruptor que o dono liga depois", () => {
+    const p = paragrafoAssembleias().toLowerCase();
+    expect(p).not.toMatch(/proje[çc]/);
+    expect(p).not.toMatch(/ligad/);
+  });
+});

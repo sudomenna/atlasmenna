@@ -24,6 +24,7 @@ import type {
   DeputadoPuxador as DeputadoPuxadorAgremiacao,
   EdgeDeputadoPuxador,
 } from "@/lib/blob/deputado-uf";
+import { type CargoDeputado, rotuloCargo } from "@/lib/utils/casa-legislativa";
 import { formatVotes } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -44,16 +45,22 @@ export function frasePuxador(p: { quocientes: number; excedente: number }, uf: s
 }
 
 export interface DeputadoPuxadoresProps {
+  /**
+   * O cargo da capa (6 · 7 · 8) — dá o rótulo do kicker (spec 027).
+   * Obrigatório, sem default: um default de federal rotularia os puxadores das
+   * assembleias como "Deputado Federal · Brasil".
+   */
+  cargo: CargoDeputado;
   /** Ausente (payload anterior à spec 026) ⇒ o painel não aparece. `[]` ⇒ aparece e diz "nenhum ainda". */
   puxadores: readonly EdgeDeputadoPuxador[] | undefined;
   titleId: string;
 }
 
 /** O painel da capa: os maiores excedentes do país. */
-export function DeputadoPuxadores({ puxadores, titleId }: DeputadoPuxadoresProps) {
+export function DeputadoPuxadores({ cargo, puxadores, titleId }: DeputadoPuxadoresProps) {
   if (!puxadores) return null;
   return (
-    <Panel kicker="Deputado Federal · Brasil" title="Puxadores de voto" titleId={titleId}>
+    <Panel kicker={`${rotuloCargo(cargo)} · Brasil`} title="Puxadores de voto" titleId={titleId}>
       <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>
         <p className={styles.legendaColunas}>
           Candidatos com votos para mais de uma cadeira: pelo menos duas vezes o quociente eleitoral

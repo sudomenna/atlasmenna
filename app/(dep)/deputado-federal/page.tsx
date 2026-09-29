@@ -97,28 +97,24 @@ import { CamaraHemiciclo } from "@/components/blocks/CamaraHemiciclo";
 import { DeputadoMaisVotados } from "@/components/blocks/DeputadoMaisVotados";
 import { DeputadoMetodologia } from "@/components/blocks/DeputadoMetodologia";
 import { DeputadoPuxadores } from "@/components/blocks/DeputadoPuxadores";
-import {
-  SEM_DADO,
-  UfBandeirasGrid,
-  type UfResumoCorrida,
-} from "@/components/blocks/UfBandeirasGrid";
+import { UfBandeirasGrid } from "@/components/blocks/UfBandeirasGrid";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
+import { SeletorDeputado } from "@/components/layout/SeletorDeputado";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { aplicarInterruptorNoNacional } from "@/lib/blob/deputado-uf";
 import { cargoInfo } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
+import { resumosPorUf } from "@/lib/deputado/resumos-por-uf";
 import {
   resultadoEleitoral,
   simulacaoDeputadoNacional,
   simulacaoLigada,
 } from "@/lib/dev/simulacao";
-import type { InterruptorProjecaoLido } from "@/lib/edge-config/reader";
 import { readDeputadoProjection } from "@/lib/edge-config/reader";
 import type { EdgeAgremiacaoBancada, EdgePayloadDeputado } from "@/lib/edge-config/types";
 import { lerEtiquetas } from "@/lib/etiquetas/leitor";
 import { ordenarBancada } from "@/lib/utils/bancada";
-import { seloEstadoProjecao } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { colorForParty, textForParty } from "@/lib/utils/party-color";
 import depFixture from "@/tests/fixtures/edge-config/dep-current.json" with { type: "json" };
@@ -167,47 +163,12 @@ export const metadata: Metadata = {
  * e ninguém notaria até a noite da apuração.
  */
 
-/**
- * Sigla da UF → o resumo em texto da corrida dela, para a grade de bandeiras.
- *
- * É **exatamente** a prosa que a lista anterior de "Estado a estado" imprimia,
- * movida de dentro do JSX para cá quando a lista virou grade. Nada foi
- * acrescentado e nada foi cortado: a grade acrescenta a bandeira, não troca
- * dado por ícone (ADR-0017).
- *
- * UF ausente do payload não entra no mapa, e a grade cai em `SEM_DADO`:
- * "aguardando apuração" / "vagas não publicadas". RF-124 — `null` em
- * `lugares_a_preencher` é "o TSE ainda não publicou", nunca zero, e um
- * "0 de 0" diria que o estado não elege ninguém.
+/*
+ * `resumosPorUf` (o texto de cada UF na grade "Estado a estado") nasceu aqui e
+ * vive em `lib/deputado/resumos-por-uf.ts` desde a spec 027: a capa das
+ * assembleias monta a mesma grade a partir de dois payloads, e duas cópias da
+ * regra divergiriam.
  */
-function resumosPorUf(
-  payload: EdgePayloadDeputado,
-  interruptor: InterruptorProjecaoLido,
-): Record<string, UfResumoCorrida> {
-  const saida: Record<string, UfResumoCorrida> = {};
-  for (const uf of payload.por_uf) {
-    // Spec 026 (design § 8.4) — o selo do estado da projeção da UF, só com o
-    // interruptor LIGADO: desligado, a projeção não existe na capa, nem como
-    // selo (RF-265). O texto traz "não oficial" junto (RF-266).
-    const selo = interruptor.ligada ? seloEstadoProjecao(uf.projecao) : null;
-    saida[uf.sigla] = {
-      ...(selo ? { selo } : {}),
-      detalhe:
-        (uf.lider ? `maior bancada: ${uf.lider.sigla} (${uf.lider.cadeiras})` : SEM_DADO.detalhe) +
-        (uf.empates_indeterminados > 0
-          ? ` · ${uf.empates_indeterminados} em empate sem desempate previsto`
-          : "") +
-        (uf.vagas_nao_preenchidas > 0
-          ? ` · ${uf.vagas_nao_preenchidas} vaga sem candidato elegível`
-          : ""),
-      vagas:
-        uf.lugares_a_preencher == null
-          ? SEM_DADO.vagas
-          : `${uf.cadeiras_definidas} de ${uf.lugares_a_preencher}`,
-    };
-  }
-  return saida;
-}
 
 /**
  * "PT, PCdoB e PV" — RF-122: a federação tem identidade própria, **e** os
@@ -402,6 +363,9 @@ export default async function DeputadoFederalPage() {
           por mais de 90 min. Quando esta trilha ganhar um poller de 30 min,
           basta ele registrar-se na store — este JSX não muda. */}
       <DadoParadoBanner frescor={frescorDado} />
+
+      {/* Spec 027 RF-283 — Federal · Estadual, antes do `<h1>`. */}
+      <SeletorDeputado atual={CARGO_DEPUTADO} />
 
       {/* Seção 1 — o enquadramento da corrida. O `<h1>` é o título deste
           painel (ADR-0029 § 5). */}
@@ -763,11 +727,16 @@ export default async function DeputadoFederalPage() {
           do payload nacional (autossuficiente). Payload anterior à spec 026
           não tem os campos, e os blocos não aparecem. */}
       <DeputadoMaisVotados
+        cargo={CARGO_DEPUTADO}
         escopo="pais"
         linhas={payload.mais_votados}
         titleId="mais-votados-pais-heading"
       />
-      <DeputadoPuxadores puxadores={payload.puxadores} titleId="puxadores-heading" />
+      <DeputadoPuxadores
+        cargo={CARGO_DEPUTADO}
+        puxadores={payload.puxadores}
+        titleId="puxadores-heading"
+      />
 
       <Panel kicker="Corridas estaduais" title="Estado a estado" titleId="corridas-heading">
         <UfBandeirasGrid cargo={CARGO_DEPUTADO} resumos={resumosPorUf(payload, interruptor)} />
@@ -885,6 +854,10 @@ function AguardandoNacional() {
           recusar no mesmo dia. Sobra o segmentado "Parcial / Projeção",
           apagado por RF-161 — que não afirma calendário nenhum. */}
       <SeloFasePreStyle variante="sem_dados" />
+
+      {/* Spec 027 RF-283 — depois da faixa (que precisa ser o primeiro filho,
+          RF-160), antes do `<h1>`. Navegação existe também sem dado. */}
+      <SeletorDeputado atual={CARGO_DEPUTADO} />
 
       <Panel
         // RF-159, mesma correção em outra superfície: "apuração ao vivo" era

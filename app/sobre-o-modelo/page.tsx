@@ -655,6 +655,26 @@ export default async function SobreOModeloPage() {
               momento em que menos se sabe. Preferimos não mostrar faixa a mostrar uma que mente.
             </p>
           </div>
+
+          {/* Spec 027 (emenda da spec 011) — as assembleias. SEM `<h2>`
+              novo: a página tem oito, e o teste de integração conta
+              (`tests/integration/sobre-o-modelo-page.test.tsx`). O parágrafo
+              diz a regra e o tamanho das casas; não diz que haverá projeção
+              para elas — isso depende de interruptor próprio, que o dono liga
+              depois do ensaio. Os números de conferência (94 em SP, 24 nas
+              menores e no DF) saem do art. 27 da CF aplicado às bancadas
+              federais de 2026; na tela, o tamanho de cada casa vem do dado
+              publicado pelo TSE, como o da Câmara (RF-124). */}
+          <p style={S.body} data-testid="sobre-o-modelo-assembleias">
+            A mesma conta de cadeiras vale para as <strong>assembleias legislativas</strong>. Cada
+            estado elege a sua, e o Distrito Federal elege a Câmara Legislativa: são 27 casas
+            separadas, cada uma com a sua própria disputa, e a regra que transforma voto em cadeira
+            é a mesma da Câmara dos Deputados (Código Eleitoral, artigos 106 a 109). O tamanho de
+            cada casa vem da Constituição (artigo 27): o triplo da bancada do estado na Câmara dos
+            Deputados até chegar a 36 cadeiras e, daí em diante, uma a mais para cada deputado
+            federal acima de 12. São Paulo, com 70 deputados federais, tem 94 estaduais; os estados
+            com 8 federais — e o Distrito Federal — têm 24.
+          </p>
         </section>
 
         {/* 6. Limitações */}

@@ -13,8 +13,9 @@
  *     O modo desabilitado (`aria-disabled` + razão legível, nunca um `<a>` que
  *     leva a 404) continua no `<TabBar>` e coberto lá — aqui o que se trava é
  *     que nenhuma aba voltou para ele em silêncio;
- *   - o rótulo de Deputado: visível "Deputado", nome acessível "Deputado
- *     Federal" (WCAG 2.5.3, Label in Name). Ligar a aba não podia mexer nisso;
+ *   - o rótulo de Deputado: "Deputados" desde a spec 027 (29/09), com o
+ *     nome acessível começando pelo visível (WCAG 2.5.3, Label in Name). Até
+ *     ali era visível "Deputado" e acessível "Deputado Federal";
  *   - o shell inteiro é RSC: nenhum arquivo da cadeia
  *     `layout → TopBar → CargoTabs → TabBar` declara `"use client"` nem usa
  *     hook. Isso é orçamento, não estilo: o shell renderiza acima da dobra em
@@ -93,22 +94,27 @@ describe("<CargoTabs /> — abas de cargo do shell global", () => {
     expect(doc.querySelector("[data-value='dep']")?.tagName).toBe("A");
   });
 
-  it("(d) o rótulo visível de Deputado é prefixo do nome acessível (WCAG 2.5.3)", () => {
-    // "Deputado Federal" não cabe numa coluna de 1/4 de 430px, então o visível
-    // é "Deputado" e o " Federal" fica em `sr-only`. A regra Label in Name
-    // exige que o rótulo visível seja PREFIXO do nome acessível — trocar a
-    // ordem (ou perder o `sr-only`) quebra o comando de voz "clicar Deputado
-    // Federal". Ligar a aba em 2026-09-12 não podia mexer nisso.
+  it('(d) RF-283 — a aba de deputado é "Deputados", e o nome acessível começa pelo visível (WCAG 2.5.3)', () => {
+    // Spec 027 (decisão do dono de 29/09): a aba cobre a Câmara dos Deputados
+    // E as assembleias — a escolha é o seletor dentro da página. O nome
+    // acessível antigo ("Deputado Federal", com " Federal" em `sr-only`)
+    // passaria a anunciar um cargo só. A regra Label in Name exige que o
+    // nome acessível COMECE pelo texto visível: o comando de voz "clicar
+    // Deputados" tem de achar a aba.
     const doc = parse(<CargoTabs />);
     const dep = doc.querySelector("[data-value='dep'] > span");
     const nomeAcessivel = (dep?.textContent ?? "").replace(/\s*\(página atual\)\s*/, "").trim();
 
-    expect(nomeAcessivel).toBe("Deputado Federal");
-    expect(nomeAcessivel.startsWith("Deputado")).toBe(true);
-    // O " Federal" não pode ser visível: se virar texto normal, a coluna
-    // quebra em duas linhas a 430px (o defeito do ADR-0029 § 3).
-    const escondido = [...(dep?.querySelectorAll(".sr-only") ?? [])].map((el) => el.textContent);
-    expect(escondido).toContain(" Federal");
+    // O visível é o texto SEM nenhum `sr-only` (o " (página atual)" e
+    // qualquer sufixo escondido).
+    const clone = dep?.cloneNode(true) as Element | undefined;
+    for (const el of clone?.querySelectorAll(".sr-only") ?? []) el.remove();
+    const visivel = (clone?.textContent ?? "").trim();
+
+    expect(visivel).toBe("Deputados");
+    expect(nomeAcessivel.startsWith(visivel)).toBe(true);
+    // Nada de um cargo só no nome acessível — era o " Federal" escondido.
+    expect(nomeAcessivel).not.toMatch(/Federal/);
   });
 
   it("(e) o rótulo visível continua sendo o nome do cargo", () => {
@@ -119,7 +125,7 @@ describe("<CargoTabs /> — abas de cargo do shell global", () => {
     expect(label("pres")).toContain("Presidente");
     expect(label("gov")).toContain("Governador");
     expect(label("sen")).toContain("Senador");
-    expect(label("dep")).toContain("Deputado Federal");
+    expect(label("dep")).toContain("Deputados");
   });
 
   it("(f) o ativo NÃO é decidido no servidor — é o CSS que lê main[data-trilha]", () => {
@@ -133,8 +139,9 @@ describe("<CargoTabs /> — abas de cargo do shell global", () => {
 
     // O portador do estado é um texto por aba navegável, que o
     // `CargoTabs.module.css` revela só sob `body:has(main[data-trilha=…])`.
-    // Um por aba navegável. O `<span class="sr-only"> Federal</span>` da aba
-    // de Deputado também casa com o seletor, por isso o filtro pelo texto.
+    // Um por aba navegável. O filtro pelo texto fica: qualquer outro `sr-only`
+    // dentro de uma aba (a de Deputado teve um " Federal" até 29/09) também
+    // casaria com o seletor.
     const flags = [...doc.querySelectorAll("a .sr-only")].filter((el) =>
       /página atual/.test(el.textContent ?? ""),
     );

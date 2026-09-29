@@ -74,6 +74,19 @@ export interface UfBandeirasGridProps {
    * elege ninguém (RF-124).
    */
   resumos?: Readonly<Record<string, UfResumoCorrida>>;
+  /**
+   * Spec 027 — as siglas a mostrar, quando a grade não é das 27 (ex.: as 26
+   * assembleias sem o DF). A ordem continua a alfabética por NOME, não a desta
+   * lista. Ausente ⇒ as 27, como sempre.
+   */
+  ufs?: readonly string[];
+  /**
+   * Spec 027 — destino por sigla, por cima do padrão `/uf/<UF>/<slug do
+   * cargo>`. É o que deixa a grade das 27 casas mandar o DF para
+   * `/uf/DF/deputado-distrital` enquanto as outras 26 vão para o estadual.
+   * Sigla ausente daqui ⇒ o destino padrão.
+   */
+  hrefPorUf?: Readonly<Record<string, string>>;
   className?: string;
 }
 
@@ -87,8 +100,15 @@ export const SEM_DADO: UfResumoCorrida = {
   vagas: "vagas não publicadas",
 };
 
-export function UfBandeirasGrid({ cargo, resumos, className }: UfBandeirasGridProps) {
-  const ufs = ufsPorNome();
+export function UfBandeirasGrid({
+  cargo,
+  resumos,
+  ufs: siglas,
+  hrefPorUf,
+  className,
+}: UfBandeirasGridProps) {
+  const filtro = siglas ? new Set(siglas.map((s) => s.toUpperCase())) : null;
+  const ufs = ufsPorNome().filter((uf) => filtro === null || filtro.has(uf.sigla));
   const info = cargoInfo(cargo);
 
   return (
@@ -116,7 +136,7 @@ export function UfBandeirasGrid({ cargo, resumos, className }: UfBandeirasGridPr
                 aria-label={`${uf.nome} (${uf.sigla})`}
                 data-testid="corrida-uf"
                 data-uf={uf.sigla}
-                href={`/uf/${uf.sigla}/${info.slug}`}
+                href={hrefPorUf?.[uf.sigla] ?? `/uf/${uf.sigla}/${info.slug}`}
                 className="flex items-center"
                 style={{
                   gap: "var(--space-3)",

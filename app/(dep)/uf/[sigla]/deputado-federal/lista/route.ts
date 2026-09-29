@@ -50,87 +50,25 @@
  *
  * Não passa por aqui: pelo ADR-0065 D1 a faixa 3 nunca carrega marca nem dado
  * de projeção (candidatura com marca fica no objeto da UF).
+ *
+ * ## Spec 027 — a casca
+ *
+ * O corpo (validação da sigla, leitura, respostas e cabeçalhos de cache) mora
+ * em `app/(dep)/_rota-lista-deputado.ts`, comum aos três cargos
+ * proporcionais. Aqui ficam só `runtime` e `dynamic` — o Next os lê do arquivo
+ * de rota — e o cargo, escrito uma vez.
  */
 
-import { NextResponse } from "next/server";
-
-import {
-  type DeputadoUfListaResult,
-  readDeputadoUfLista,
-  sanearDeputadoUfLista,
-} from "@/lib/blob/deputado-uf";
-import { simulacaoDeputadoUfLista, simulacaoLigada } from "@/lib/dev/simulacao";
+import { responderListaDeputado } from "../../../../_rota-lista-deputado";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-/** As 27 UFs — a mesma lista canônica das páginas de UF. */
-const UFS_BRASIL: ReadonlySet<string> = new Set([
-  "AC",
-  "AL",
-  "AM",
-  "AP",
-  "BA",
-  "CE",
-  "DF",
-  "ES",
-  "GO",
-  "MA",
-  "MG",
-  "MS",
-  "MT",
-  "PA",
-  "PB",
-  "PE",
-  "PI",
-  "PR",
-  "RJ",
-  "RN",
-  "RO",
-  "RR",
-  "RS",
-  "SC",
-  "SE",
-  "SP",
-  "TO",
-]);
-
-const CACHE_OK = "public, s-maxage=60, stale-while-revalidate=300";
-const CACHE_ERRO = "no-store";
 
 interface Contexto {
   params: Promise<{ sigla: string }>;
 }
 
-/**
- * A lista, da fonte certa. Com a simulação ligada, a leitura remota NÃO roda
- * (a regra de `lib/dev/simulacao.ts`: uma resposta do Blob de produção
- * ganharia da fixture).
- */
-async function lerLista(sigla: string): Promise<DeputadoUfListaResult> {
-  if (!simulacaoLigada()) return readDeputadoUfLista(sigla);
-  const daSimulacao = simulacaoDeputadoUfLista(sigla);
-  return daSimulacao
-    ? { status: "ok", lista: sanearDeputadoUfLista(daSimulacao), url: "fixture://simulacao" }
-    : { status: "unavailable", reason: "not_found", url: null };
-}
-
-function erro(status: 404 | 502, corpo: Record<string, unknown>): Response {
-  return NextResponse.json(corpo, { status, headers: { "Cache-Control": CACHE_ERRO } });
-}
-
 export async function GET(_req: Request, { params }: Contexto): Promise<Response> {
-  const { sigla: bruta } = await params;
-  const sigla = bruta.toUpperCase();
-  if (!UFS_BRASIL.has(sigla)) return erro(404, { error: "uf_desconhecida", sigla: bruta });
-
-  const lista = await lerLista(sigla);
-
-  if (lista.status === "ok") {
-    return NextResponse.json(lista.lista, { headers: { "Cache-Control": CACHE_OK } });
-  }
-  if (lista.reason === "not_found" || lista.reason === "not_configured") {
-    return erro(404, { error: "lista_inexistente", uf: sigla, motivo: lista.reason });
-  }
-  return erro(502, { error: "blob_indisponivel", uf: sigla, motivo: lista.reason });
+  const { sigla } = await params;
+  return responderListaDeputado(6, sigla);
 }

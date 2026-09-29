@@ -2,8 +2,13 @@
  * components/blocks/DeputadoMaisVotados.tsx — spec 026 (RF-270, RF-271),
  * design 026 § 3.2–3.3 e § 8.4.
  *
- * Os 10 candidatos a Deputado Federal com mais votos apurados — de uma UF
+ * Os 10 candidatos a deputado com mais votos apurados — de uma UF
  * (`escopo="uf"`, página do estado) ou do país (`escopo="pais"`, capa).
+ *
+ * - **O cargo é prop obrigatória** (spec 027): o kicker diz "Deputado Federal",
+ *   "Deputado Estadual" ou "Deputado Distrital" pelo `cargo` recebido. Sem
+ *   default, de propósito — um default de federal poria "Deputado Federal ·
+ *   SP" no topo da lista da Assembleia de São Paulo, e ninguém notaria.
  *
  * - **A ordem é a do produtor** (`(−votos, sqcand)` na UF, `(−votos, uf,
  *   sqcand)` no país) — o componente não reordena (constituição § 2, § 6).
@@ -22,6 +27,7 @@
 import { DestinoDeputadoTexto, MarcaDeputado } from "@/components/atoms/badges/MarcaDeputado";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { EdgeDeputadoDestaque } from "@/lib/blob/deputado-uf";
+import { type CargoDeputado, rotuloCargo } from "@/lib/utils/casa-legislativa";
 import { marcasDosBits } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -36,6 +42,8 @@ export interface LinhaMaisVotados extends EdgeDeputadoDestaque {
 }
 
 export interface DeputadoMaisVotadosProps {
+  /** O cargo da tela (6 · 7 · 8) — dá o rótulo do kicker. Obrigatório, sem default. */
+  cargo: CargoDeputado;
   escopo: "uf" | "pais";
   /** Obrigatório com `escopo="uf"`: dá nome ao painel e à base do %. */
   uf?: string;
@@ -44,14 +52,21 @@ export interface DeputadoMaisVotadosProps {
   titleId: string;
 }
 
-export function DeputadoMaisVotados({ escopo, uf, linhas, titleId }: DeputadoMaisVotadosProps) {
+export function DeputadoMaisVotados({
+  cargo,
+  escopo,
+  uf,
+  linhas,
+  titleId,
+}: DeputadoMaisVotadosProps) {
   if (!linhas || linhas.length === 0) return null;
   const noPais = escopo === "pais";
   const titulo = noPais ? "Mais votados do país" : `Mais votados em ${uf ?? ""}`;
+  const rotulo = rotuloCargo(cargo);
 
   return (
     <Panel
-      kicker={noPais ? "Deputado Federal · Brasil" : `Deputado Federal · ${uf ?? ""}`}
+      kicker={noPais ? `${rotulo} · Brasil` : `${rotulo} · ${uf ?? ""}`}
       title={titulo}
       titleId={titleId}
     >

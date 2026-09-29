@@ -320,7 +320,13 @@ function maisVotadosUf(uf: keyof typeof UFS, interruptor = true): LinhaMaisVotad
 describe("DeputadoMaisVotados", () => {
   it("RF-270 — UF: 10 linhas na ordem do produtor, com marcas e % dos válidos da UF", () => {
     const d = doc(
-      <DeputadoMaisVotados escopo="uf" uf="RR" linhas={maisVotadosUf("RR")} titleId="mv" />,
+      <DeputadoMaisVotados
+        cargo={6}
+        escopo="uf"
+        uf="RR"
+        linhas={maisVotadosUf("RR")}
+        titleId="mv"
+      />,
     );
     const ls = [...d.querySelectorAll("[data-testid='dep-mais-votados-uf'] > li")];
     expect(ls).toHaveLength(10);
@@ -333,7 +339,13 @@ describe("DeputadoMaisVotados", () => {
 
   it("RF-270 — sub judice entre os 10: aparece, com o destino escrito, sem % e sem marca", () => {
     const d = doc(
-      <DeputadoMaisVotados escopo="uf" uf="RR" linhas={maisVotadosUf("RR")} titleId="mv" />,
+      <DeputadoMaisVotados
+        cargo={6}
+        escopo="uf"
+        uf="RR"
+        linhas={maisVotadosUf("RR")}
+        titleId="mv"
+      />,
     );
     const sj = [...d.querySelectorAll("li")].find((l) => l.textContent?.includes("RR-13-01"));
     expect(sj?.textContent).toContain("sub judice — fora da conta");
@@ -343,7 +355,7 @@ describe("DeputadoMaisVotados", () => {
 
   it("RF-271 — país: cada linha diz a UF e que o % é 'dos válidos de {UF}'", () => {
     const d = doc(
-      <DeputadoMaisVotados escopo="pais" linhas={NACIONAL.mais_votados} titleId="mvp" />,
+      <DeputadoMaisVotados cargo={6} escopo="pais" linhas={NACIONAL.mais_votados} titleId="mvp" />,
     );
     const ls = [...d.querySelectorAll("[data-testid='dep-mais-votados-pais'] > li")];
     expect(ls).toHaveLength(NACIONAL.mais_votados.length);
@@ -362,7 +374,7 @@ describe("DeputadoMaisVotados", () => {
   it("sem linhas (v1 / payload antigo): o bloco não aparece", () => {
     expect(
       renderToStaticMarkup(
-        <DeputadoMaisVotados escopo="uf" uf="SP" linhas={undefined} titleId="x" />,
+        <DeputadoMaisVotados cargo={6} escopo="uf" uf="SP" linhas={undefined} titleId="x" />,
       ),
     ).toBe("");
   });
@@ -374,7 +386,7 @@ describe("DeputadoMaisVotados", () => {
 
 describe("DeputadoPuxadores / LinhaPuxadores (RF-273)", () => {
   it("país: quocientes, excedente e 'não elege nome nenhum' em cada linha", () => {
-    const d = doc(<DeputadoPuxadores puxadores={NACIONAL.puxadores} titleId="px" />);
+    const d = doc(<DeputadoPuxadores cargo={6} puxadores={NACIONAL.puxadores} titleId="px" />);
     const ls = [...d.querySelectorAll("[data-testid='dep-puxadores-pais'] > li")];
     expect(ls).toHaveLength(NACIONAL.puxadores.length);
     expect(ls[0]?.textContent).toContain("fez 3 quocientes eleitorais de SP sozinho");
@@ -386,10 +398,12 @@ describe("DeputadoPuxadores / LinhaPuxadores (RF-273)", () => {
   });
 
   it("vazio ⇒ diz que ninguém chegou lá; ausente ⇒ o painel não existe", () => {
-    expect(texto(<DeputadoPuxadores puxadores={[]} titleId="px" />)).toContain(
+    expect(texto(<DeputadoPuxadores cargo={6} puxadores={[]} titleId="px" />)).toContain(
       "Nenhum candidato chegou a duas vezes o quociente",
     );
-    expect(renderToStaticMarkup(<DeputadoPuxadores puxadores={undefined} titleId="px" />)).toBe("");
+    expect(
+      renderToStaticMarkup(<DeputadoPuxadores cargo={6} puxadores={undefined} titleId="px" />),
+    ).toBe("");
   });
 
   it("na agremiação: nome pelo sqcand, números do payload", () => {

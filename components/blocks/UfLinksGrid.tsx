@@ -46,6 +46,18 @@ export interface UfLinksGridProps {
   cargo: CargoTse;
   /** UF corrente, quando houver. Ganha `aria-current="page"`. */
   atual?: string | null;
+  /**
+   * Spec 027 — as siglas a mostrar, quando a corrida não é das 27 (ex.: as 26
+   * assembleias sem o DF). A ordem continua a alfabética por NOME. Ausente ⇒
+   * as 27, como sempre.
+   */
+  ufs?: readonly string[];
+  /**
+   * Spec 027 — destino por sigla, por cima de {@link ufHrefPorCargo} (ex.: o
+   * DF para `/uf/DF/deputado-distrital` na grade das assembleias). Sigla
+   * ausente daqui ⇒ o destino padrão.
+   */
+  hrefPorUf?: Readonly<Record<string, string>>;
   className?: string;
 }
 
@@ -61,8 +73,9 @@ export function ufHrefPorCargo(cargo: CargoTse, sigla: string): string {
   return cargo === 1 ? `/uf/${sigla}` : `/uf/${sigla}/${cargoInfo(cargo).slug}`;
 }
 
-export function UfLinksGrid({ cargo, atual, className }: UfLinksGridProps) {
-  const ufs = ufsPorNome();
+export function UfLinksGrid({ cargo, atual, ufs: siglas, hrefPorUf, className }: UfLinksGridProps) {
+  const filtro = siglas ? new Set(siglas.map((s) => s.toUpperCase())) : null;
+  const ufs = ufsPorNome().filter((uf) => filtro === null || filtro.has(uf.sigla));
   const atualUpper = atual?.toUpperCase() ?? null;
   const info = cargoInfo(cargo);
 
@@ -90,7 +103,7 @@ export function UfLinksGrid({ cargo, atual, className }: UfLinksGridProps) {
                 aria-current={eAtual ? "page" : undefined}
                 data-sigla={uf.sigla}
                 data-testid="uf-links-grid-item"
-                href={ufHrefPorCargo(cargo, uf.sigla)}
+                href={hrefPorUf?.[uf.sigla] ?? ufHrefPorCargo(cargo, uf.sigla)}
                 style={{
                   display: "flex",
                   alignItems: "center",

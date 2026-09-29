@@ -206,7 +206,10 @@ describe("a home de Deputados não abrevia", () => {
   // o dono isentou a home, não o cargo. Sem este caso, "Deputado não abrevia"
   // vira uma regra por cargo e apaga a correção da tela apertada.
   it("(r) a página de UF de Deputado ABREVIA — a isenção é da home, não do cargo", () => {
-    const fonte = codigoSemComentarios("app/(dep)/uf/[sigla]/deputado-federal/page.tsx");
+    // Spec 027: o corpo da página de UF saiu do arquivo de rota e virou o
+    // módulo comum dos três cargos proporcionais; a casca de rota não monta
+    // linha nenhuma.
+    const fonte = codigoSemComentarios("app/(dep)/_pagina-uf-deputado.tsx");
     // Spec 026: as linhas viraram tuplas montadas por `paraLinhaCompacta`, e a
     // abreviação entra como a função de exibição do partido — a MESMA que o
     // cliente aplica às posições 61+ (`DeputadoListaAgremiacao`).
