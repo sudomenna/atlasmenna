@@ -22,6 +22,15 @@ implementação e a lacuna de RF fica aberta para o próximo despacho, que emend
 017-deputado-federal/spec.md` para lhe dar um RF próprio. ✅ **Lacuna fechada em 2026-09-19**:
 RF-131, seção `### Telas` da spec 017.
 
+> **Nota 2026-09-29 — Emenda parcial.** O [ADR-0061](0061-hemiciclo-generalizado-arcos-por-casa-e-visao-por-bloco.md)
+> generaliza a geometria para duas casas (`ARCOS_CAMARA = 12`, inalterado, e `ARCOS_SENADO = 5`) e
+> cria a **visão por bloco**, com marcas de limiar e ordem por relação com o governo **só nela**. Os
+> itens 1–5 e 7 da Decisão seguem intactos. O item 6 ("sem marcador em 257", sem eixo ideológico)
+> segue valendo **integralmente para a visão por partido** (`CamaraHemiciclo`); a frase "o produto
+> não classifica partido" que o sustentava é reescrita pelo
+> [ADR-0059](0059-classificacao-editorial-de-candidatos-governanca.md) — a classificação passa a
+> existir, só na camada de etiquetas, e a ordem das cunhas continua por tamanho.
+
 > ⚠️ **Emenda de 2026-09-19 — a premissa do item 1 da Decisão morreu; a decisão, não.**
 >
 > Este ADR argumentava que `total_cadeiras` precisava ser lido em runtime porque "a

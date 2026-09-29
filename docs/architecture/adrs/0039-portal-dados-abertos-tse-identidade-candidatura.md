@@ -11,6 +11,19 @@ date: 2026-09-13
 
 Aceito.
 
+> **Nota 2026-09-29 — Emenda**: este ADR continua vigente e seu recorte de
+> PII permanece a regra geral. O [ADR-0058](0058-trajetoria-camara-nome-nascimento-em-memoria.md)
+> abre uma exceção estrita e transitória a esse recorte, para um único
+> propósito: casar candidatos a Deputado Federal com o histórico da Câmara
+> dos Deputados por nome civil + data de nascimento (RF-214, spec 018).
+> `DT_NASCIMENTO` e `NM_SOCIAL_CANDIDATO` passam a ser lidos em memória por
+> uma única função (`trajetoriaDaLinha`), nunca persistidos, nunca logados,
+> nunca escritos em arquivo exportado — ver o ADR-0058 para o mecanismo
+> completo e a justificativa. A entrega foi dividida: o cálculo puro e a
+> exportação offline (`editorial/derivados/trajetoria-camara.json`, sem banco)
+> entram antes de 04/10; a integração ao import de candidatos e as colunas no
+> banco ficam estacionadas até depois de 25/10.
+
 ## Contexto
 
 Hoje `api/model/project.py:2810` e `:3275` escrevem `f"Candidato {id}"` como identidade de
