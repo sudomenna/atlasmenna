@@ -941,6 +941,12 @@ def conferir_contra_tse(
 
 EstadoConferencia = Literal["confere", "diverge", "sem_dado_tse"]
 
+#: O que a conferência pode ter comparado num ciclo (design 026 § 2.8) —
+#: conjunto FECHADO, na ordem em que as comparações são feitas. A frase da
+#: tela sai de `ConferenciaTse.comparou`: "batem com o TSE" só existe com
+#: `"algoritmo"` ali dentro.
+COMPARACOES = ("eleitorado", "algoritmo", "eleitos", "votos_validos")
+
 
 @dataclass(frozen=True)
 class ConferenciaTse:
@@ -971,6 +977,10 @@ class ConferenciaTse:
     #: A leitura do agregado — de onde sai `status_tse` (marca oficial por
     #: candidato). `None` quando não houve arquivo.
     entrada: EntradaProporcional | None = None
+    #: O que foi DE FATO comparado neste ciclo, subconjunto ordenado de
+    #: `COMPARACOES` (spec 026 design § 2.8). Toda divergência pertence a uma
+    #: comparação daqui; `confere` exige `"algoritmo"`.
+    comparou: tuple[str, ...] = ()
 
 
 def _boletim_dado_ts(payload: Any) -> str | None:
@@ -992,25 +1002,37 @@ def _boletim_dado_ts(payload: Any) -> str | None:
 _MARCAS_ELEITO = frozenset({"eleito", "eleito_qp", "eleito_media"})
 
 
-def _divergencias_de_eleitos(
+def _divergencia_de_eleitos(
     resultado: ResultadoCadeiras, entrada: EntradaProporcional
-) -> list[Divergencia]:
-    """Candidaturas que só um dos dois lados elegeu (só com `tf == "s"`)."""
+) -> Divergencia | None:
+    """O conjunto de eleitos, por PESSOA, contra o do TSE (só com `tf == "s"`).
+
+    Uma divergência só, com as duas contagens (spec 026 design § 2.8):
+    `nosso` = quantos a nossa conta elegeu e o TSE não; `tse` = o inverso;
+    `detalhe` lista os `sqcand` dos dois lados. Até 2026-09-29 (P1) saía uma
+    linha `eleito[<sqcand>]` por candidatura — a tela recebia N linhas para uma
+    só pergunta ("quem só um dos lados elegeu?"), e o contrato v2 fechou na
+    forma agregada. `None` quando os conjuntos coincidem.
+    """
     oficiais = {sq for sq, marca in entrada.status_tse.items() if marca in _MARCAS_ELEITO}
     nossos = {c.cod for eleitos in resultado.eleitos.values() for c in eleitos}
-    saida: list[Divergencia] = []
-    for sq in sorted(oficiais ^ nossos):
-        ident = entrada.identidade_candidatos.get(sq)
-        rotulo = f"{ident.nome} ({ident.partido})" if ident is not None else ""
-        saida.append(
-            Divergencia(
-                o_que=f"eleito[{sq}]",
-                nosso=1 if sq in nossos else 0,
-                tse=1 if sq in oficiais else 0,
-                detalhe=rotulo,
-            )
-        )
-    return saida
+    so_nossos = sorted(nossos - oficiais)
+    so_tse = sorted(oficiais - nossos)
+    if not so_nossos and not so_tse:
+        return None
+
+    def _lista(sqs: list[int]) -> str:
+        return ", ".join(str(sq) for sq in sqs) if sqs else "nenhum"
+
+    return Divergencia(
+        o_que="eleitos",
+        nosso=len(so_nossos),
+        tse=len(so_tse),
+        detalhe=(
+            f"eleitos só no nosso cálculo: {_lista(so_nossos)}; "
+            f"só no do TSE: {_lista(so_tse)}"
+        ),
+    )
 
 
 def conferir_agregado_da_uf(
@@ -1018,6 +1040,8 @@ def conferir_agregado_da_uf(
     cargo: int = CARGO_DEPUTADO_FEDERAL,
     *,
     eleitorado_lido: int | None = None,
+    validos_lidos: int | None = None,
+    resultado_parcial: ResultadoCadeiras | None = None,
 ) -> ConferenciaTse:
     """A conferência de verdade contra o arquivo agregado da UF (RF-269).
 
@@ -1043,11 +1067,23 @@ def conferir_agregado_da_uf(
     `and == "n"` (apuração não iniciada) não confere a conta: o `vag` desse
     arquivo é da rodada ANTERIOR (medido no simulado) e o `qe` é `"0"`.
 
-    `estado`: `diverge` se qualquer das duas acusar; `confere` se a conta foi
-    conferida e nada acusou; `sem_dado_tse` se não houve o que conferir
-    (`motivo`). Parcial também é conferível — o TSE recalcula `qe`/`vag` a cada
-    totalização —, mas só com `tf == "s"` divergir é erro. Quem decide alarmar
-    é o chamador (este módulo não loga nem alerta).
+    **Com totalização final** (`tf == "s"` no agregado), duas comparações a
+    mais (spec 026 design § 2.8):
+
+      - `eleitos` — o conjunto de eleitos, por pessoa (`cand.st`/`cand.e`),
+        contra o `resultado_parcial`: as cadeiras que PUBLICAMOS (a soma das
+        zonas), que é o que a marca "eleito na parcial" da tela diz. Sem
+        `resultado_parcial` (chamador antigo), compara com a nossa conta
+        sobre o próprio agregado — o comportamento de P1.
+      - `votos_validos` — `validos_lidos` (Σ `v.vv` das zonas que somamos,
+        medido por quem chama) contra o `v.vv` do agregado.
+
+    `comparou` diz quais comparações foram feitas, na ordem de `COMPARACOES`.
+    `estado`: `diverge` se qualquer uma acusar; `confere` se a conta
+    (`"algoritmo"`) foi conferida e nada acusou; `sem_dado_tse` se não houve
+    conta a conferir (`motivo`). Parcial também é conferível — o TSE
+    recalcula `qe`/`vag` a cada totalização —, mas só com `tf == "s"` divergir
+    é erro. Quem decide alarmar é o chamador (este módulo não loga nem alerta).
     """
     if payload is None:
         return ConferenciaTse("sem_dado_tse", None, False, motivo="sem_agregado")
@@ -1058,25 +1094,29 @@ def conferir_agregado_da_uf(
     tf = entrada.totalizacao_final
 
     divergencias: list[Divergencia] = []
+    comparou: list[str] = []
 
     e_raiz = raiz.get("e") if isinstance(raiz.get("e"), dict) else {}
     eleitorado_tse = _int_ou_none(e_raiz.get("te"))
-    if eleitorado_lido is not None and eleitorado_tse and eleitorado_lido != eleitorado_tse:
-        cobertura = 100.0 * eleitorado_lido / eleitorado_tse
-        divergencias.append(
-            Divergencia(
-                o_que="eleitorado",
-                nosso=eleitorado_lido,
-                tse=eleitorado_tse,
-                detalhe=(
-                    f"as zonas lidas somam {cobertura:.1f}% do eleitorado da UF "
-                    "publicado pelo TSE — as cadeiras que publicamos não contam "
-                    "os votos da parte que falta"
-                ),
+    if eleitorado_lido is not None and eleitorado_tse:
+        comparou.append("eleitorado")
+        if eleitorado_lido != eleitorado_tse:
+            cobertura = 100.0 * eleitorado_lido / eleitorado_tse
+            divergencias.append(
+                Divergencia(
+                    o_que="eleitorado",
+                    nosso=eleitorado_lido,
+                    tse=eleitorado_tse,
+                    detalhe=(
+                        f"as zonas lidas somam {cobertura:.1f}% do eleitorado da UF "
+                        "publicado pelo TSE — as cadeiras que publicamos não contam "
+                        "os votos da parte que falta"
+                    ),
+                )
             )
-        )
 
     motivo = _motivo_sem_conferencia(raiz, entrada)
+    resultado_agregado: ResultadoCadeiras | None = None
     # `lugares_a_preencher` não é `None` aqui (é um dos motivos); repetido
     # só para o verificador de tipos.
     if motivo is None and entrada.lugares_a_preencher is not None:
@@ -1084,13 +1124,36 @@ def conferir_agregado_da_uf(
         if resultado.quociente_eleitoral < 1:
             motivo = "sem_voto_valido"
         else:
+            resultado_agregado = resultado
+            comparou.append("algoritmo")
             divergencias.extend(conferir_contra_tse(resultado, entrada))
-            if tf and entrada.status_tse:
-                divergencias.extend(_divergencias_de_eleitos(resultado, entrada))
+
+    if tf and entrada.status_tse:
+        base = resultado_parcial if resultado_parcial is not None else resultado_agregado
+        if base is not None:
+            comparou.append("eleitos")
+            eleitos = _divergencia_de_eleitos(base, entrada)
+            if eleitos is not None:
+                divergencias.append(eleitos)
+
+    if tf and validos_lidos is not None and entrada.votos_validos_tse is not None:
+        comparou.append("votos_validos")
+        if validos_lidos != entrada.votos_validos_tse:
+            divergencias.append(
+                Divergencia(
+                    o_que="votos_validos",
+                    nosso=validos_lidos,
+                    tse=entrada.votos_validos_tse,
+                    detalhe=(
+                        "votos válidos somados das zonas que lemos × votos válidos "
+                        "do boletim final do TSE"
+                    ),
+                )
+            )
 
     if divergencias:
         estado: EstadoConferencia = "diverge"
-    elif motivo is None:
+    elif "algoritmo" in comparou:
         estado = "confere"
     else:
         estado = "sem_dado_tse"
@@ -1101,6 +1164,7 @@ def conferir_agregado_da_uf(
         divergencias=tuple(divergencias),
         motivo=motivo,
         entrada=entrada,
+        comparou=tuple(comparou),
     )
 
 

@@ -862,13 +862,13 @@ def test_conferencia_com_totalizacao_final_compara_o_conjunto_de_eleitos() -> No
     c = conferir_agregado_da_uf(env)
 
     assert c.estado == "diverge"
-    assert [(d.o_que, d.nosso, d.tse) for d in c.divergencias] == [
-        ("eleito[7]", 1, 0),
-        ("eleito[8]", 0, 1),
-    ]
+    # Spec 026 design § 2.8 (contrato v2, 29/09): UMA divergência `eleitos`
+    # com as duas contagens — até P1 eram N linhas `eleito[<sqcand>]`.
+    assert [(d.o_que, d.nosso, d.tse) for d in c.divergencias] == [("eleitos", 1, 1)]
+    assert c.comparou == ("algoritmo", "eleitos")
     linha = normalizar_divergencia(c.divergencias[0])
     assert linha["o_que"] == "eleitos"
-    assert linha["detalhe"].startswith("candidatura 7 — C7 (PC)")
+    assert linha["detalhe"] == "eleitos só no nosso cálculo: 7; só no do TSE: 8"
 
 
 def test_conferencia_nao_compara_a_via_qp_ou_media() -> None:
@@ -1023,6 +1023,7 @@ def test_detalhe_da_uf_publica_conferencia_e_marca_tse() -> None:
         "estado": "confere",
         "boletim_dado_ts": "2026-10-04T23:15:30+00:00",
         "totalizacao_final": True,
+        "comparou": ["algoritmo", "eleitos"],
         "divergencias": [],
     }
     por_cod = {a["cod"]: a for a in detalhe["agremiacoes"]}
@@ -1090,11 +1091,37 @@ def _rodar_ciclo_com_alertas(ciclo, monkeypatch, linhas, **kw):
     return publicados[0], alertas
 
 
+def _fatia_do_agregado(num: int, den: int) -> dict[str, Any]:
+    """O agregado sintético de `_agregado_conferivel` escalado por `num/den`,
+    como o arquivo de UMA zona: sem `qe`/`vag` (grandezas da UF) e com cada
+    voto (`vap`, `tvtl`, `tvtn`, `v.vv`) multiplicado exatamente."""
+    env = _agregado_conferivel(qe=None, vag=None)
+    for agr in env["carg"][0]["agr"]:
+        for par in agr["par"]:
+            for campo in ("tvtl", "tvtn"):
+                if campo in par:
+                    par[campo] = str(int(par[campo]) * num // den)
+            for cand in par["cand"]:
+                cand["vap"] = str(int(cand["vap"]) * num // den)
+                cand.pop("st", None)
+                cand["e"] = "n"
+    env["v"] = {"vv": str(10_000 * num // den)}
+    env.pop("dg", None)
+    env.pop("hg", None)
+    return env
+
+
 def _zonas_de_sp() -> list[dict[str, Any]]:
-    """Duas zonas que somam o eleitorado do agregado sintético (50.000)."""
+    """Duas zonas que SÃO o agregado sintético repartido (40% e 60%): somam o
+    eleitorado (50.000), os votos e — portanto — as mesmas cadeiras e os
+    mesmos eleitos. Até a spec 026 P3 as zonas vinham de outra eleição
+    (`_envelope_de_zona`, 10 vagas): enquanto a Conferência só olhava o
+    agregado não importava; desde que ela compara o conjunto de eleitos com a
+    PARCIAL publicada (design 026 § 2.8), zonas de outra eleição acusariam
+    uma divergência de pessoas que o cenário não tem."""
     return [
-        _linha_zona(1, _envelope_de_zona("10"), te=20_000, esi=20_000),
-        _linha_zona(2, _envelope_de_zona("20"), te=30_000, esi=30_000),
+        _linha_zona(1, _fatia_do_agregado(2, 5), te=20_000, esi=20_000),
+        _linha_zona(2, _fatia_do_agregado(3, 5), te=30_000, esi=30_000),
     ]
 
 
@@ -1145,6 +1172,8 @@ def test_ciclo_por_zona_confere(ciclo_deputado, monkeypatch: pytest.MonkeyPatch)
         "estado": "confere",
         "boletim_dado_ts": "2026-10-04T23:15:30+00:00",
         "totalizacao_final": True,
+        # Spec 026 design § 2.8 — o que foi DE FATO comparado.
+        "comparou": ["eleitorado", "algoritmo", "eleitos", "votos_validos"],
         "divergencias": [],
     }
     assert detalhes["SP"]["divergencias"] == []
@@ -1161,9 +1190,13 @@ def test_ciclo_por_zona_com_zona_faltando_diverge_e_alarma_no_final(
     )
     conf = detalhes["SP"]["conferencia"]
     assert conf["estado"] == "diverge"
+    # Com totalização final, os votos válidos somados das zonas também são
+    # comparados (design 026 § 2.8) — o AP real de 28/09: 358.054 × 445.241.
     assert [(d["o_que"], d["nosso"], d["tse"]) for d in conf["divergencias"]] == [
-        ("eleitorado", 20_000, 50_000)
+        ("eleitorado", 20_000, 50_000),
+        ("votos_validos", 4_000, 10_000),
     ]
+    assert [d["diferenca_pct"] for d in conf["divergencias"]] == [-60.0, -60.0]
     assert _alertas_de_conferencia(alertas)
 
 

@@ -68,6 +68,7 @@ import urllib.error
 import urllib.request
 import uuid
 from collections.abc import Iterable, Mapping
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from types import MappingProxyType
 from typing import Any, NamedTuple, TypedDict
@@ -111,6 +112,18 @@ from api.model.deputado_payload import (
     conferir_total_de_cadeiras,
     construir_payload_deputado,
     normalizar_divergencia,
+)
+from api.model.deputado_projecao import (
+    EstadoProjecao,
+    Interruptor,
+    ProjecaoUf,
+    ZonaProjecao,
+    avaliar_trava,
+    com_erro,
+    contar_zonas,
+    diferenca_parcial_projecao,
+    interruptor_do_corpo,
+    projetar_uf,
 )
 from api.model.extrapolation import (
     CandidatoEstimate,
@@ -237,6 +250,14 @@ class ProjectRequest(BaseModel):
     )
     turno: int = Field(ge=1, le=2)
     trigger_ts: str = Field(min_length=1, max_length=64)
+    # Spec 026 RF-265 (design § 2.11) — o interruptor da projeção de Deputado,
+    # lido pelo ciclo TS na chave `interruptor-projecao-dep` do Global Config e
+    # repassado aqui: `{"ligada": bool, "pct_minimo"?: int}`. Ausente ⇒
+    # DESLIGADO (falha fechada). Tipado `Any` DE PROPÓSITO, e normalizado por
+    # `deputado_projecao.interruptor_do_corpo`: um `Field(ge=25, le=100)`
+    # aqui transformaria uma chave malformada em 400 no corpo INTEIRO, e o
+    # ciclo deixaria de publicar até a parcial. Só o cargo 6 o lê.
+    projecao_dep: Any = None
 
 
 class ProjectResponse(BaseModel):
@@ -7579,6 +7600,33 @@ def _relogio_do_ciclo(
     return nacional, por_uf
 
 
+#: Aviso de tamanho do corpo do POST de escrita (design 026 § 2.1): o limite
+#: de corpo da função Vercel é 4,5 MB; o writer TS avisa no mesmo número.
+AVISO_CORPO_EDGE_WRITE_BYTES = 3_500_000
+
+
+def corpo_edge_write(
+    payload: dict[str, Any],
+    payloads_uf: dict[str, dict[str, Any]] | None = None,
+) -> bytes:
+    """O corpo do POST `/api/internal/edge-write`, exatamente como sai.
+
+    JSON **compacto e em UTF-8** (`ensure_ascii=False`, sem espaços) desde a
+    spec 026 (29/09). Com o `json.dumps` padrão cada letra acentuada saía
+    escapada em `\\uXXXX` (6 bytes, contra 2 em UTF-8) e cada `: `/`, ` com
+    espaço: medido com o tamanho de 2022 e o nome de urna no pior caso (30
+    letras acentuadas), o corpo das 27 UFs com o contrato v2 dava 4,28 MB —
+    acima do aviso de 3,5 MB e a 5% do teto de 4,5 MB da função. Compacto,
+    2,51 MB. O JSON é o mesmo para quem o lê (`req.json()` no endpoint).
+    """
+    body_dict: dict[str, Any] = {"payload": payload}
+    if payloads_uf:
+        body_dict["payloads_uf"] = payloads_uf
+    return json.dumps(
+        body_dict, default=str, ensure_ascii=False, separators=(",", ":")
+    ).encode("utf-8")
+
+
 def post_edge_write(
     payload: dict[str, Any],
     payloads_uf: dict[str, dict[str, Any]] | None = None,
@@ -7623,10 +7671,14 @@ def post_edge_write(
     base = _resolve_internal_base_url()
     url = f"{base}/api/internal/edge-write"
 
-    body_dict: dict[str, Any] = {"payload": payload}
-    if payloads_uf:
-        body_dict["payloads_uf"] = payloads_uf
-    body = json.dumps(body_dict, default=str).encode("utf-8")
+    body = corpo_edge_write(payload, payloads_uf)
+    if len(body) > AVISO_CORPO_EDGE_WRITE_BYTES:
+        _log(
+            "warn",
+            "corpo do edge-write acima do aviso — o teto da função é 4,5 MB",
+            bytes=len(body),
+            aviso=AVISO_CORPO_EDGE_WRITE_BYTES,
+        )
     headers = {
         "Content-Type": "application/json",
         "x-model-secret": secret,
@@ -7869,6 +7921,138 @@ def _seed_agremiacoes(seed_base: int, uf: str) -> int:
     return (seed_base ^ eixo) & 0xFFFFFFFF
 
 
+def zonas_da_projecao(
+    pares: list[tuple[LatestSnapshot, EntradaProporcional]],
+) -> list[ZonaProjecao]:
+    """Os pares (município, zona) de uma UF como a projeção os lê (spec 026).
+
+    A MESMA leitura de envelope de que a soma (a parcial) saiu, mais `te`/
+    `esi`/`vv` pelo ponto único de leitura do eleitorado das linhas
+    (`_extract_zone_participacao`, o mesmo de `eleitorado_das_linhas`). Par sem
+    `e` legível entra com `te = 0` — conta em `zonas_total`, nunca é apurado
+    nem imputado, e a condição de cobertura da trava acusa a falta.
+    """
+    saida: list[ZonaProjecao] = []
+    for linha, entrada in pares:
+        participacao = _extract_zone_participacao(linha.get("payload"))
+        saida.append(
+            ZonaProjecao(
+                cod_zona=int(linha["cod_zona"]),
+                te=participacao["eleitores_aptos"] if participacao else 0,
+                esi=participacao["eleitores_instalados"] if participacao else 0,
+                vv=participacao["validos"] if participacao else 0,
+                entrada=entrada,
+            )
+        )
+    return saida
+
+
+def estratos_da_projecao(uf: str, zonas: list[ZonaProjecao]) -> dict[int, int] | None:
+    """Tercis de eleitorado por ZONA real — `_compute_estratos_por_uf`, reusada.
+
+    O eleitorado de cada zona é Σ `e.te` dos seus pares lidos no ciclo (o
+    mesmo universo que a projeção imputa). Abaixo de 12 zonas, `None`: um
+    estrato só (ADR-0023; RR, AC, AP e ZT ficam de fora, como o ADR-0063 diz).
+    """
+    por_zona: dict[tuple[str, int], int] = {}
+    for z in zonas:
+        if z.te > 0 and z.cod_zona != 0:
+            chave = (uf, z.cod_zona)
+            por_zona[chave] = por_zona.get(chave, 0) + z.te
+    estrato_by_cod_zona, _pesos = _compute_estratos_por_uf(uf, por_zona)
+    return estrato_by_cod_zona
+
+
+def _projecao_da_uf(
+    *,
+    sigla: str,
+    interruptor: Interruptor,
+    entrada: EntradaProporcional,
+    zonas: list[ZonaProjecao],
+    resultado: Any,
+    pct_apurado: float,
+    te_agregado: int | None,
+) -> tuple[EstadoProjecao, ProjecaoUf | None, dict[str, Any]]:
+    """Trava + projeção de UMA UF, e a entrada dela no log `dep_projecao`.
+
+    Sem faixa (`cadeiras_projetadas_ci95`) por ora: o bootstrap dela custa o
+    mesmo que o da parcial (~10,5 s nas 27 UFs, M4, medido em 29/09), e os
+    dois juntos deixariam o ciclo perto do `maxDuration` de 60 s da função na
+    Vercel. Decisão do orquestrador em 29/09 — o campo é opcional no contrato
+    (design 026 § 2.3) e fica ausente; é pendência registrada.
+
+    Nunca lança: qualquer exceção no cálculo vira `indisponivel/erro` (a 7ª
+    condição do design 026 § 2.7) com log `error`, e a parcial da UF sai
+    normal (constituição § 7).
+    """
+    t0 = time.perf_counter_ns()
+    zonas_apuradas, zonas_total = contar_zonas(zonas)
+    com_eleitorado = [z.te for z in zonas if z.te > 0]
+    estado = avaliar_trava(
+        interruptor=interruptor,
+        tem_coligacao=entrada.tem_coligacao,
+        lugares_a_preencher=entrada.lugares_a_preencher,
+        pct_apurado=pct_apurado,
+        zonas_apuradas=zonas_apuradas,
+        zonas_total=zonas_total,
+        te_zonas=sum(com_eleitorado) if com_eleitorado else None,
+        te_agregado=te_agregado,
+    )
+    projecao: ProjecaoUf | None = None
+    extra: dict[str, Any] = {}
+    if not interruptor.ligada:
+        # Publicado: `indisponivel/interruptor`, sem nenhum campo de projeção
+        # (e sem calcular). No LOG, o que a trava diria com o interruptor
+        # ligado — é o número que o dono olha para decidir se liga.
+        hipotese = avaliar_trava(
+            interruptor=replace(interruptor, ligada=True),
+            tem_coligacao=entrada.tem_coligacao,
+            lugares_a_preencher=entrada.lugares_a_preencher,
+            pct_apurado=pct_apurado,
+            zonas_apuradas=zonas_apuradas,
+            zonas_total=zonas_total,
+            te_zonas=sum(com_eleitorado) if com_eleitorado else None,
+            te_agregado=te_agregado,
+        )
+        extra["se_ligada"] = {"estado": hipotese.estado, "motivo": hipotese.motivo}
+    if estado.liberada:
+        try:
+            estratos = estratos_da_projecao(sigla, zonas)
+            projecao = projetar_uf(zonas, entrada, estrato_por_zona=estratos)
+            if projecao is None:
+                estado = com_erro(estado)
+                extra["erro"] = "projecao_sem_resultado"
+            else:
+                extra["fracao_imputada"] = round(float(projecao.fracao_imputada), 5)
+                extra["n_estratos"] = projecao.n_estratos
+                if projecao.fallback_uf:
+                    extra["fallback_uf"] = True
+                if resultado is not None:
+                    extra.update(diferenca_parcial_projecao(resultado, projecao.resultado))
+        except Exception as exc:  # noqa: BLE001 — a projeção nunca derruba a parcial
+            projecao = None
+            estado = com_erro(estado)
+            extra = {"erro": str(exc)}
+            _log(
+                "error",
+                "projeção de deputado falhou — UF publicada sem projeção",
+                uf=sigla,
+                error=str(exc),
+                traceback=traceback.format_exc(),
+            )
+    entrada_log: dict[str, Any] = {
+        "uf": sigla,
+        "estado": estado.estado,
+        "motivo": estado.motivo,
+        "pct_apurado": round(float(pct_apurado), 5),
+        "zonas_apuradas": zonas_apuradas,
+        "zonas_total": zonas_total,
+        "ms": (time.perf_counter_ns() - t0) // 1_000_000,
+        **extra,
+    }
+    return estado, projecao, entrada_log
+
+
 def _do_project_proporcional(
     req: ProjectRequest, t0: int
 ) -> tuple[int, dict[str, Any]]:
@@ -7895,10 +8079,15 @@ def _do_project_proporcional(
         `pct_projetado`/`p_vitoria`, grandezas que não existem aqui. A
         persistência append-only da corrida (constituição § 10) é a de
         `snapshots`, que a ingestão já faz — nada se perde.
-      - **Não projeta voto.** As cadeiras saem do voto **apurado** até o
-        instante do ciclo (D9). O intervalo de RF-127 mede a variância do
-        recorte geográfico já apurado, não o voto que falta — as duas coisas
-        estão separadas de propósito, ver `api/model/cadeiras_bootstrap.py`.
+      - **Não troca a parcial pela projeção.** As cadeiras publicadas
+        (`cadeiras`, a bancada nacional) saem do voto **apurado** até o
+        instante do ciclo. Desde 2026-09-29 (ADR-0063, spec 026) existe
+        também a PROJEÇÃO — votos projetados para o total da UF e as cadeiras
+        sobre eles (`deputado_projecao.py`) —, em campos próprios, só com a
+        trava de 25% liberada e o interruptor ligado. O intervalo de RF-127
+        da parcial continua medindo a variância do recorte geográfico já
+        apurado (`api/model/cadeiras_bootstrap.py`); as cadeiras projetadas
+        ainda saem sem faixa (custo de ciclo, ver `_projecao_da_uf`).
 
     ## As duas saídas por UF, e por que vêm da mesma leitura
 
@@ -8033,6 +8222,22 @@ def _do_project_proporcional(
     seed_base = derive_seed(req.cargo, req.turno, req.trigger_ts)
     contribuicoes_ci: list[tuple[IntervaloCadeiras | None, dict[str, int]]] = []
 
+    # Spec 026 RF-265 — o interruptor da projeção, recebido no corpo do POST
+    # (o ciclo TS lê a chave `interruptor-projecao-dep` do Global Config).
+    # Normalizado com falha fechada: ausente ou malformado ⇒ desligado.
+    interruptor = interruptor_do_corpo(req.projecao_dep)
+    if interruptor.origem == "invalido" or interruptor.aviso is not None:
+        _log(
+            "warn",
+            "interruptor da projeção de deputado malformado — "
+            + ("desligado" if not interruptor.ligada else "pct_minimo ignorado"),
+            cargo=req.cargo,
+            turno=req.turno,
+            origem=interruptor.origem,
+            aviso=interruptor.aviso,
+        )
+    log_projecao_ufs: list[dict[str, Any]] = []
+
     for sigla in sorted(por_uf):
         linhas = por_uf[sigla]
         # UMA leitura de envelope por linha (par município×zona). Dela saem as
@@ -8096,17 +8301,6 @@ def _do_project_proporcional(
             )
         )
         n_com_eleitorado, eleitorado_lido, _esi = eleitorado_das_linhas(linhas)
-        conferencia = conferir_agregado_da_uf(
-            payload_conferencia,
-            cargo=req.cargo,
-            # Cobertura: Σ `e.te` das linhas SOMADAS contra o `e.te` do
-            # agregado. `None` sem nenhuma linha com `e` (fixture podada).
-            eleitorado_lido=eleitorado_lido if n_com_eleitorado > 0 else None,
-        )
-        divergencias_por_uf[sigla] = [
-            normalizar_divergencia(d) for d in conferencia.divergencias
-        ]
-        _registrar_conferencia(conferencia, cargo=req.cargo, turno=req.turno, uf=sigla)
         if len(linhas) > 1:
             _log(
                 "info",
@@ -8164,36 +8358,56 @@ def _do_project_proporcional(
                     turno=req.turno,
                     uf=sigla,
                 )
-                ufs.append(
-                    UfProporcional(
-                        uf=sigla,
-                        pct_apurado=pct_apurado,
-                        entrada=entrada,
-                        resultado=None,
-                        conferencia=conferencia,
-                    )
+            else:
+                resultado = calculado
+                n_calculadas += 1
+                # RF-127 — o intervalo. `None` quando a UF tem menos de duas
+                # zonas com voto (começo da noite, ou o interruptor de
+                # emergência que devolve o cargo a uma sentinela por UF):
+                # `cadeiras_ci95` é opcional no contrato (D5/D6) exatamente
+                # para poder faltar.
+                intervalo = intervalo_de_cadeiras(
+                    zonas=zonas,
+                    entrada_uf=entrada,
+                    cadeiras_ponto=resultado.cadeiras,
+                    lugares_a_preencher=entrada.lugares_a_preencher,
+                    seed=_seed_agremiacoes(seed_base, sigla),
                 )
-                continue
-            resultado = calculado
-            n_calculadas += 1
-            # RF-127 — o intervalo. `None` quando a UF tem menos de duas zonas
-            # com voto (começo da noite, ou o interruptor de emergência que
-            # devolve o cargo a uma sentinela por UF): `cadeiras_ci95` é
-            # opcional no contrato (D5/D6) exatamente para poder faltar.
-            intervalo = intervalo_de_cadeiras(
-                zonas=zonas,
-                entrada_uf=entrada,
-                cadeiras_ponto=resultado.cadeiras,
-                lugares_a_preencher=entrada.lugares_a_preencher,
-                seed=_seed_agremiacoes(seed_base, sigla),
-            )
-            contribuicoes_ci.append((intervalo, resultado.cadeiras))
-            # A conferência contra o TSE saiu daqui em 2026-09-29 (spec 026
-            # RF-269): `conferir_contra_tse(resultado, entrada)` sobre a
-            # entrada SOMADA das zonas devolvia sempre `[]` —
-            # `combinar_entradas` zera `qe`/`vag` —, e a tela afirmava
-            # "batem" sem ter comparado nada. Ela roda agora sobre o agregado
-            # da UF, acima (`conferir_agregado_da_uf`).
+                contribuicoes_ci.append((intervalo, resultado.cadeiras))
+
+        # Spec 026 RF-269 — a conferência DE VERDADE, sobre o agregado da UF,
+        # depois da parcial: com totalização final ela compara o conjunto de
+        # eleitos POR PESSOA contra as cadeiras que publicamos (a marca
+        # "eleito na parcial" da tela), e os votos válidos somados das zonas
+        # contra o `v.vv` do agregado (design 026 § 2.8). Até 2026-09-29
+        # `conferir_contra_tse(resultado, entrada)` rodava aqui sobre a
+        # entrada SOMADA — `combinar_entradas` zera `qe`/`vag` — e devolvia
+        # sempre `[]`, e a tela afirmava "batem" sem ter comparado nada.
+        conferencia = conferir_agregado_da_uf(
+            payload_conferencia,
+            cargo=req.cargo,
+            # Cobertura: Σ `e.te` das linhas SOMADAS contra o `e.te` do
+            # agregado. `None` sem nenhuma linha com `e` (fixture podada).
+            eleitorado_lido=eleitorado_lido if n_com_eleitorado > 0 else None,
+            validos_lidos=entrada.votos_validos_tse,
+            resultado_parcial=resultado,
+        )
+        divergencias_por_uf[sigla] = [
+            normalizar_divergencia(d) for d in conferencia.divergencias
+        ]
+        _registrar_conferencia(conferencia, cargo=req.cargo, turno=req.turno, uf=sigla)
+
+        # Spec 026 RF-263/RF-264 — a trava e, se liberada, a projeção.
+        estado_projecao, projecao, log_projecao = _projecao_da_uf(
+            sigla=sigla,
+            interruptor=interruptor,
+            entrada=entrada,
+            zonas=zonas_da_projecao(pares),
+            resultado=resultado,
+            pct_apurado=pct_apurado,
+            te_agregado=agregado_da_uf[1]["eleitores_aptos"] if agregado_da_uf else None,
+        )
+        log_projecao_ufs.append(log_projecao)
 
         ufs.append(
             UfProporcional(
@@ -8203,8 +8417,28 @@ def _do_project_proporcional(
                 resultado=resultado,
                 cadeiras_ci95=intervalo.por_agremiacao if intervalo is not None else None,
                 conferencia=conferencia,
+                projecao_estado=estado_projecao,
+                projecao=projecao,
             )
         )
+
+    # Spec 026 design § 5.9 — UMA linha estruturada por ciclo. Com os
+    # snapshots (append-only, § 10) e o código, ela reconstrói qualquer
+    # projeção publicada: o estado do interruptor que o ciclo RECEBEU está
+    # aqui, e é o único insumo da projeção que não vive no banco.
+    _log(
+        "info",
+        "dep_projecao",
+        cargo=req.cargo,
+        turno=req.turno,
+        trigger_ts=req.trigger_ts,
+        interruptor={
+            "ligada": interruptor.ligada,
+            "pct_minimo": interruptor.pct_minimo,
+            "origem": interruptor.origem,
+        },
+        ufs=log_projecao_ufs,
+    )
 
     # pct_apurado nacional ponderado pelo eleitorado, iterando pela UNIÃO das
     # UFs conhecidas e das presentes — uma UF que ainda não apurou nada precisa

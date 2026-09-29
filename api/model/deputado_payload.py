@@ -45,8 +45,10 @@ Ele **não** substitui `cadeiras_indefinidas`. São duas perguntas:
   - a **marcação** responde "esta cadeira específica pode trocar de dono com o
     voto que **ainda falta** contar?" — e é determinística, em `Fraction`.
 
-O intervalo não sabe nada do voto por vir (não há projeção de voto no cargo 6 —
-D9), e a marcação não sabe nada de variância geográfica. Fundir as duas
+O intervalo não sabe nada do voto por vir, e a marcação não sabe nada de
+variância geográfica. (Desde 2026-09-29 existe a PROJEÇÃO do voto por vir —
+ADR-0063, `deputado_projecao.py` —, que supera o D9; ela sai em campos
+próprios do contrato v2 e não altera nenhuma das duas metades da parcial.) Fundir as duas
 apagaria uma das perguntas; derivar a marcação do intervalo a apagaria
 justamente quando o intervalo é omitido (UF com menos de duas zonas apuradas,
 ou o interruptor de emergência `TSE_DEPUTADO_GRANULARIDADE=uf`), que é quando o
@@ -55,7 +57,7 @@ dado está pior e o leitor mais precisa do aviso.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from fractions import Fraction
 from typing import Any
 
@@ -66,12 +68,16 @@ from api.model.cargos import (
 )
 from api.model.dado_ts import RelogioDoDado
 from api.model.deputado import (
+    DESTINO_ANULADO,
+    DESTINO_SUB_JUDICE,
+    DESTINO_VALIDO_LEGENDA,
     ConferenciaTse,
     Divergencia,
     EntradaProporcional,
     IdentidadeAgremiacao,
     IdentidadeCandidato,
 )
+from api.model.deputado_projecao import EstadoProjecao, ProjecaoUf
 
 
 def _pct(parte: int, total: int) -> float:
@@ -93,14 +99,74 @@ def _pct(parte: int, total: int) -> float:
 #:
 #: Acrescentar um valor aqui é mudança de contrato: combine com o lado TS antes.
 #:
-#: Spec 026 RF-269 (2026-09-29) acrescentou dois, ambos da conferência contra o
-#: agregado da UF (`deputado.conferir_agregado_da_uf`):
-#:   - `"eleitos"` — uma linha por candidatura que só um dos lados elegeu
-#:     (`nosso`/`tse` ∈ {0, 1}; o `sqcand` vai em `detalhe`), só com
+#: Spec 026 RF-269 (2026-09-29) acrescentou três, todos da conferência contra
+#: o agregado da UF (`deputado.conferir_agregado_da_uf`, design 026 § 2.8):
+#:   - `"eleitos"` — UMA linha: quantos a nossa parcial elegeu e o TSE não
+#:     (`nosso`) e o inverso (`tse`), com os `sqcand` em `detalhe`; só com
 #:     totalização final;
 #:   - `"eleitorado"` — Σ `e.te` das zonas que somamos × `e.te` do agregado:
-#:     parte do estado fora da nossa soma (o caso real do AP, zona 0014).
-CHAVES_DE_DIVERGENCIA = ("quociente_eleitoral", "cadeiras", "eleitos", "eleitorado")
+#:     parte do estado fora da nossa soma (o caso real do AP, zona 0014);
+#:   - `"votos_validos"` — Σ `v.vv` das zonas × `v.vv` do agregado final.
+CHAVES_DE_DIVERGENCIA = (
+    "quociente_eleitoral",
+    "cadeiras",
+    "eleitos",
+    "eleitorado",
+    "votos_validos",
+)
+
+#: Chaves de divergência que carregam a MAGNITUDE (`diferenca_pct`, design 026
+#: § 2.8): as duas que comparam tamanhos, não contas.
+_CHAVES_COM_MAGNITUDE = frozenset({"eleitorado", "votos_validos"})
+
+#: Versão do contrato do objeto da UF (design 026 § 2.4). Ausente ⇒ v1.
+CONTRATO_V2 = 2
+
+#: Quantas posições por agremiação vão no objeto da UF (ADR-0065: 20 visíveis
+#: + 21–60 recortadas). Da 61ª em diante, só quem tem marca de eleito — o
+#: resto vai para `lista_restante` (Blob `deputado/uf-lista/<UF>.json`).
+POSICOES_NO_BLOB = 60
+
+#: Mais votados da UF e do país (RF-270, RF-271).
+MAX_MAIS_VOTADOS = 10
+
+#: Puxadores do país no payload nacional (RF-273).
+MAX_PUXADORES_NACIONAL = 30
+
+#: `destino` interno (`deputado.destino_proporcional`) → valor publicado
+#: (design 026 § 2.2). Tabela FECHADA: `"valido"`, `None` (dvt ainda não
+#: publicado) e `"desconhecido"` não publicam `destino` — o último sai sem
+#: percentual e fica fora da conta (ver `_linhas_da_agremiacao`).
+_DESTINO_PUBLICADO: dict[str, str] = {
+    DESTINO_VALIDO_LEGENDA: "valido_legenda",
+    DESTINO_ANULADO: "anulado",
+    DESTINO_SUB_JUDICE: "sub_judice",
+}
+
+#: Destinos cuja linha publica `pct_validos: null` (design 026 § 2.2 e o
+#: contrato `tests/unit/contrato/deputado-v2-fixtures.test.ts`: "`null`
+#: exatamente para anulado e sub judice"). ⚠️ O ADR-0064 (decisão 5 e pontos
+#: em aberto) estende o `null` a `valido_legenda`; o contrato congelado em
+#: 29/09 não — segue o contrato, e a divergência está no relatório da frente P.
+_DESTINOS_SEM_PCT = frozenset({"anulado", "sub_judice"})
+
+#: Ordem do `destino` no desempate do `rank` (design 026 § 3.1): válido <
+#: `Válido (legenda)` < sub judice < anulado. `None` = válido/sem `dvt`; o
+#: `"desconhecido"` (fora do cálculo, sem destino publicado) vai por último.
+_ORDEM_DESTINO: dict[str | None, int] = {
+    None: 0,
+    "valido_legenda": 1,
+    "sub_judice": 2,
+    "anulado": 3,
+}
+_ORDEM_DESTINO_DESCONHECIDO = 4
+
+#: Marcas oficiais que contam como "eleito" (a mesma regra da Conferência).
+_TSE_ELEITO = frozenset({"eleito", "eleito_qp", "eleito_media"})
+
+#: Art. 110 — candidatura sem data de nascimento conhecida vai para o fim do
+#: empate (`cadeiras._ordenar_candidatos`).
+_SEM_NASCIMENTO = 99_999_999
 
 #: Quantos suplentes por agremiação entram no payload de UF (D6). A lista
 #: completa de não eleitos de uma federação grande passa de 100 nomes numa UF
@@ -120,6 +186,10 @@ def normalizar_divergencia(divergencia: Divergencia) -> dict[str, Any]:
     Chave desconhecida (alguém acrescentou uma comparação em `deputado.py` e
     esqueceu deste mapa) passa adiante como está, e não some: a divergência
     perdida seria pior que uma chave que a tela não sabe rotular.
+
+    `eleitorado` e `votos_validos` levam `diferenca_pct` — `100·(nosso − tse)
+    / tse`, 5 casas, com sinal (design 026 § 2.8): é o número que a tela
+    escreve ("19,5% abaixo do boletim do TSE").
     """
     o_que = divergencia.o_que
     detalhe = divergencia.detalhe
@@ -127,31 +197,34 @@ def normalizar_divergencia(divergencia: Divergencia) -> dict[str, Any]:
         cod = o_que[len("cadeiras[") : -1]
         o_que = "cadeiras"
         detalhe = f"agremiação {cod} — {detalhe}" if detalhe else f"agremiação {cod}"
-    elif o_que.startswith("eleito["):
-        sq = o_que[len("eleito[") : -1]
-        o_que = "eleitos"
-        detalhe = f"candidatura {sq} — {detalhe}" if detalhe else f"candidatura {sq}"
-    return {
+    linha: dict[str, Any] = {
         "o_que": o_que,
         "nosso": divergencia.nosso,
         "tse": divergencia.tse,
         "detalhe": detalhe,
     }
+    if o_que in _CHAVES_COM_MAGNITUDE and divergencia.tse:
+        linha["diferenca_pct"] = round(
+            100.0 * (divergencia.nosso - divergencia.tse) / divergencia.tse, 5
+        )
+    return linha
 
 
 def conferencia_payload(conferencia: ConferenciaTse) -> dict[str, Any]:
-    """`DeputadoUfDetail.conferencia` (spec 026 RF-269) — aditivo ao D6.
+    """`DeputadoUfDetail.conferencia` (spec 026 RF-269, design § 2.8).
 
-    `{estado, boletim_dado_ts, totalizacao_final, divergencias}`. O `motivo` do
-    `sem_dado_tse` fica no log: o contrato tem três estados, e a tela diz "o
-    TSE ainda não publicou o que conferir" sem precisar do porquê interno.
-    `divergencias` sai normalizado (`CHAVES_DE_DIVERGENCIA`), igual ao campo
-    antigo.
+    `{estado, boletim_dado_ts, totalizacao_final, comparou, divergencias}`. O
+    `motivo` do `sem_dado_tse` fica no log: o contrato tem três estados, e a
+    tela diz "o TSE ainda não publicou o que conferir" sem precisar do porquê
+    interno. `comparou` é o que foi DE FATO comparado — a frase "batem com o
+    TSE" só existe com `"algoritmo"` ali. `divergencias` sai normalizado
+    (`CHAVES_DE_DIVERGENCIA`), igual ao campo v1 do topo.
     """
     return {
         "estado": conferencia.estado,
         "boletim_dado_ts": conferencia.boletim_dado_ts,
         "totalizacao_final": conferencia.totalizacao_final,
+        "comparou": list(conferencia.comparou),
         "divergencias": [normalizar_divergencia(d) for d in conferencia.divergencias],
     }
 
@@ -180,6 +253,17 @@ class UfProporcional:
     #: (`deputado.conferir_agregado_da_uf`). `None` omite a chave
     #: `conferencia` do detalhe (chamador antigo); o ciclo sempre a passa.
     conferencia: ConferenciaTse | None = None
+    #: Spec 026 RF-264 — o estado da trava da projeção desta UF
+    #: (`deputado_projecao.avaliar_trava`). `None` omite a chave `projecao`
+    #: (chamador antigo); o ciclo sempre a passa, e então o objeto é v2.
+    projecao_estado: EstadoProjecao | None = None
+    #: Spec 026 RF-263 — a projeção, SÓ com `projecao_estado` liberada. Com
+    #: qualquer outro estado este campo é ignorado: nenhuma marca, número ou
+    #: faixa de projeção sai (RF-264).
+    projecao: ProjecaoUf | None = None
+    #: RF-127 emendado (ADR-0063 decisão 8) — `{cod: (baixo, alto)}` das
+    #: cadeiras PROJETADAS. `None` quando não medida; nunca `[n, n]`.
+    cadeiras_projetadas_ci95: dict[str, tuple[int, int]] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -351,6 +435,250 @@ def _marcar_indefinidas(
 
 
 # ---------------------------------------------------------------------------
+# Spec 026 — a lista inteira de cada agremiação (contrato v2, design § 2.2–3.5)
+# ---------------------------------------------------------------------------
+
+
+def _ceil_div(num: int, den: int) -> int:
+    """`⌈num/den⌉` em inteiros (design 026 § 2.6): `−(−a // b)`."""
+    return -(-num // den)
+
+
+def regras_da_uf(quociente_eleitoral: int, votos_validos: int, lugares: int) -> dict[str, Any]:
+    """`DeputadoRegras` (design 026 § 2.6, RF-274) — os pisos em VOTOS.
+
+    `distribuir_cadeiras` compara `votos ≥ Fraction(QE, 10)` (e `QE/5`,
+    `4·QE/5`); o menor inteiro que satisfaz `v ≥ QE/10` é exatamente
+    `⌈QE/10⌉`. O número publicado é, portanto, o que vale na conta — nunca um
+    `round()` de float, que erraria para baixo em metade dos QEs.
+    """
+    return {
+        "quociente_eleitoral": quociente_eleitoral,
+        "votos_validos": votos_validos,
+        "lugares_a_preencher": lugares,
+        "piso_candidato": _ceil_div(quociente_eleitoral, 10),
+        "piso_agremiacao_sobras": _ceil_div(4 * quociente_eleitoral, 5),
+        "piso_candidato_sobras": _ceil_div(quociente_eleitoral, 5),
+    }
+
+
+@dataclass
+class _Linha:
+    """Uma candidatura antes de virar `DeputadoUfLinha` (design 026 § 2.2)."""
+
+    sqcand: int
+    votos: int
+    #: Voto nominal elegível (é `Candidato` no cálculo).
+    valido: bool
+    #: `destino` publicado (`valido_legenda`/`anulado`/`sub_judice`) ou `None`.
+    destino: str | None
+    #: Destino interno fora da tabela publicada (`"desconhecido"`): fora do
+    #: cálculo, sem `destino` publicado e sem percentual.
+    desconhecido: bool
+    nascimento: int | None
+    rank: int = 0
+    parcial: str | None = None
+    indefinido: bool = False
+    projecao: str | None = None
+    projecao_apertada: bool = False
+    tse: str | None = None
+
+    @property
+    def marcada(self) -> bool:
+        """Tem marca de eleito — na parcial, na projeção ou pelo TSE."""
+        return self.parcial is not None or self.projecao is not None or self.tse in _TSE_ELEITO
+
+
+def _ordem_destino(linha: _Linha) -> int:
+    if linha.desconhecido:
+        return _ORDEM_DESTINO_DESCONHECIDO
+    return _ORDEM_DESTINO.get(linha.destino, _ORDEM_DESTINO_DESCONHECIDO)
+
+
+def _chave_rank(linha: _Linha) -> tuple[int, int, int, int]:
+    """`(−votos, destino, art. 110, sqcand)` — design 026 § 3.1.
+
+    Entre as linhas válidas é exatamente a fila de `cadeiras._ordenar_candidatos`
+    (`−votos`, mais idoso, código), então os eleitos na parcial são sempre os
+    primeiros ranks válidos, na ordem em que ocuparam a vaga. A projeção NUNCA
+    entra aqui (constituição § 2; ADR-0063 decisão 5).
+    """
+    nasc = linha.nascimento if linha.nascimento is not None else _SEM_NASCIMENTO
+    return (-linha.votos, _ordem_destino(linha), nasc, linha.sqcand)
+
+
+def _marcas_de_eleito(
+    entrada: EntradaProporcional,
+    resultado: ResultadoCadeiras,
+    cod: str,
+    apertadas: set[int],
+) -> dict[int, tuple[str, bool]]:
+    """`{sqcand: (via, apertada)}` dos eleitos de uma agremiação numa conta.
+
+    A via é a NOSSA (design 026 § 2.2): as primeiras `min(QP, elegíveis ≥ 10%
+    do QE)` vagas, na ordem de ocupação, são `"qp"` (`_cadeiras_de_fase_1`) e
+    as demais `"sobra"`. `apertada` só existe em vaga de sobra — é o que
+    `_marcar_indefinidas` marca. Nunca comparada ao rótulo `st` do TSE.
+    """
+    eleitos = resultado.eleitos.get(cod, [])
+    fase_1 = _cadeiras_de_fase_1(entrada, resultado).get(cod, 0)
+    saida: dict[int, tuple[str, bool]] = {}
+    for i, cand in enumerate(eleitos):
+        via = "qp" if i < fase_1 else "sobra"
+        saida[cand.cod] = (via, via == "sobra" and cand.cod in apertadas)
+    return saida
+
+
+def _linhas_da_agremiacao(
+    entrada: EntradaProporcional,
+    agremiacao: Agremiacao,
+    fora_por_agremiacao: dict[str, list[int]],
+) -> list[_Linha]:
+    """Todas as candidaturas da agremiação — as do cálculo e as que ficaram fora.
+
+    Válida é quem é `Candidato` na soma (voto `votos_nominais`). As demais vêm
+    de `identidade_candidatos` com o voto COMPUTADO de `votos_fora_do_calculo`
+    (ADR-0064: aparecem na lista, com o voto, e nunca são eleitas). A
+    pertença ao cálculo decide a validade, não a identidade: uma candidatura
+    reclassificada no meio da noite aparece como a conta a trata.
+    """
+    linhas: list[_Linha] = []
+    validos: set[int] = set()
+    for cand in agremiacao.candidatos:
+        validos.add(cand.cod)
+        linhas.append(
+            _Linha(
+                sqcand=cand.cod,
+                votos=cand.votos_nominais,
+                valido=True,
+                destino=None,
+                desconhecido=False,
+                nascimento=cand.nascimento,
+            )
+        )
+    for sq in fora_por_agremiacao.get(agremiacao.cod, []):
+        if sq in validos:
+            continue
+        ident = entrada.identidade_candidatos.get(sq)
+        destino_interno = ident.destino if ident is not None else None
+        publicado = _DESTINO_PUBLICADO.get(destino_interno) if destino_interno else None
+        linhas.append(
+            _Linha(
+                sqcand=sq,
+                votos=entrada.votos_fora_do_calculo.get(sq, 0),
+                valido=False,
+                destino=publicado,
+                desconhecido=publicado is None,
+                nascimento=None,
+            )
+        )
+    linhas.sort(key=_chave_rank)
+    for i, linha in enumerate(linhas):
+        linha.rank = i + 1
+    return linhas
+
+
+def _fora_por_agremiacao(entrada: EntradaProporcional) -> dict[str, list[int]]:
+    """`{cod: [sqcand, ...]}` das candidaturas FORA do cálculo, ordem de `sqcand`."""
+    saida: dict[str, list[int]] = {}
+    for sq in sorted(entrada.votos_fora_do_calculo):
+        ident = entrada.identidade_candidatos.get(sq)
+        if ident is None:
+            continue
+        saida.setdefault(ident.agremiacao, []).append(sq)
+    return saida
+
+
+def _numero(ident: IdentidadeCandidato) -> int | None:
+    """`cand.n` → número de urna (exibição). `None` quando ausente ou não numérico."""
+    if ident.numero is None:
+        return None
+    texto = ident.numero.strip()
+    return int(texto) if texto.isdigit() else None
+
+
+def _linha_payload(
+    entrada: EntradaProporcional, linha: _Linha, votos_validos_uf: int
+) -> dict[str, Any]:
+    """`DeputadoUfLinha` (design 026 § 2.2). Opcionais OMITIDOS, nunca `null`
+    (exceto `pct_validos`, em que `null` é o dado)."""
+    ident = _identidade_cand(entrada, linha.sqcand)
+    saida: dict[str, Any] = {
+        "sqcand": linha.sqcand,
+        "nome": ident.nome,
+        "partido": ident.partido,
+    }
+    numero = _numero(ident)
+    if numero is not None:
+        saida["numero"] = numero
+    saida["votos"] = linha.votos
+    saida["rank"] = linha.rank
+    sem_pct = linha.desconhecido or linha.destino in _DESTINOS_SEM_PCT
+    saida["pct_validos"] = None if sem_pct else _pct(linha.votos, votos_validos_uf)
+    if linha.parcial is not None:
+        saida["parcial"] = linha.parcial
+        if linha.indefinido:
+            saida["indefinido"] = True
+    if linha.projecao is not None:
+        saida["projecao"] = linha.projecao
+        if linha.projecao_apertada:
+            saida["projecao_apertada"] = True
+    if linha.tse is not None:
+        saida["tse"] = linha.tse
+    if linha.destino is not None:
+        saida["destino"] = linha.destino
+    return saida
+
+
+def _corte(linhas: list[_Linha], quociente_eleitoral: int) -> dict[str, Any] | None:
+    """Linha de corte NA PARCIAL (design 026 § 3.4, RF-272).
+
+    `ultimo_eleito` = maior rank com `parcial`; `primeiro_fora` = menor rank
+    válido sem `parcial`. Como os eleitos são os primeiros ranks válidos,
+    `diferenca ≥ 0`. `primeiro_fora_abaixo_piso_10` só aparece verdadeiro:
+    `10·votos < QE` — ele só entraria por sobra aberta.
+    """
+    eleitos = [linha for linha in linhas if linha.parcial is not None]
+    fora = next(
+        (linha for linha in linhas if linha.valido and linha.parcial is None), None
+    )
+    if not eleitos or fora is None:
+        return None
+    ultimo = eleitos[-1]
+    corte: dict[str, Any] = {
+        "ultimo_eleito": ultimo.sqcand,
+        "primeiro_fora": fora.sqcand,
+        "diferenca": ultimo.votos - fora.votos,
+    }
+    if 10 * fora.votos < quociente_eleitoral:
+        corte["primeiro_fora_abaixo_piso_10"] = True
+    return corte
+
+
+def _puxadores(linhas: list[_Linha], quociente_eleitoral: int) -> list[dict[str, Any]]:
+    """Puxadores da agremiação (design 026 § 3.5, RF-273), por rank.
+
+    Linha válida com `excedente = ⌊votos/QE⌋ − 1 ≥ 1` — votos ≥ 2·QE (spec
+    026, open question 1: "puxador" é quem de fato leva voto a mais para a
+    legenda; o dono pode trocar para 1·QE). Anulado e sub judice nunca, por
+    maior que seja o voto computado: esse voto não conta para ninguém.
+    """
+    if quociente_eleitoral < 1:
+        return []
+    saida: list[dict[str, Any]] = []
+    for linha in linhas:
+        if not linha.valido:
+            continue
+        quocientes = linha.votos // quociente_eleitoral
+        excedente = quocientes - 1
+        if excedente >= 1:
+            saida.append(
+                {"sqcand": linha.sqcand, "quocientes": quocientes, "excedente": excedente}
+            )
+    return saida
+
+
+# ---------------------------------------------------------------------------
 # D6 — payload por UF (Vercel Blob)
 # ---------------------------------------------------------------------------
 
@@ -419,12 +747,37 @@ def construir_detalhe_uf(
     UF. `None` — o default — publica `dado_ts`/`pares_atrasados` como `null`,
     que é o estado "hora do dado indisponível neste ciclo"; nunca cai para
     `ts_iso`, que é a hora do cálculo e responde a outra pergunta.
+
+    ## Contrato v2 (spec 026, design § 2.2–2.8) — aditivo
+
+    Com `dados.projecao_estado` presente (o ciclo sempre o passa), o objeto
+    sai com `contrato: 2` e, por agremiação, `candidatos` (ranks 1..60 ∪ toda
+    candidatura com marca ∪ o primeiro de fora da linha de corte),
+    `total_candidatos`, `corte`, `puxadores` e — só com a projeção liberada —
+    `cadeiras_projetadas`, `votos_projetados` e a faixa; por UF, `regras`,
+    `projecao`, `mais_votados` e `lista`. As posições > 60 sem marca saem em
+    `lista_restante` (TRANSPORTE: o writer TS as tira do objeto e grava
+    `deputado/uf-lista/<UF>.json`, design § 2.5). `eleitos`, `suplentes`,
+    `divergencias` e `indefinido` continuam com a semântica v1 (§ 2.12).
     """
     entrada = dados.entrada
     resultado = dados.resultado
+    conferencia = dados.conferencia
+    v2 = dados.projecao_estado is not None
+
+    # A totalização da UF é final quando as zonas somadas OU o agregado do TSE
+    # dizem que é: `tf == "s"` no agregado é a palavra do TSE sobre a UF
+    # inteira, e a marca oficial (RF-267) sai dele. Com ela, nenhuma cadeira é
+    # "apertada" (RF-262) — não há voto por vir.
+    tf_uf = entrada.totalizacao_final or (
+        conferencia is not None and conferencia.totalizacao_final
+    )
+    entrada_tf = (
+        entrada if tf_uf == entrada.totalizacao_final else replace(entrada, totalizacao_final=tf_uf)
+    )
 
     indefinidas = (
-        _marcar_indefinidas(entrada, resultado, dados.pct_apurado)
+        _marcar_indefinidas(entrada_tf, resultado, dados.pct_apurado)
         if resultado is not None
         else set()
     )
@@ -433,10 +786,31 @@ def construir_detalhe_uf(
     # RF-267 — a marca oficial sai do AGREGADO da UF, nunca da soma das zonas
     # (`combinar_entradas` a zera, como zera `qe`/`vag`).
     status_tse = (
-        dados.conferencia.entrada.status_tse
-        if dados.conferencia is not None and dados.conferencia.entrada is not None
+        conferencia.entrada.status_tse
+        if conferencia is not None and conferencia.entrada is not None
         else None
     )
+
+    # Spec 026 RF-263/264 — a projeção só existe com a trava liberada. Fora
+    # disso, NENHUM campo de projeção sai, mesmo que o chamador tenha passado
+    # um `ProjecaoUf` (invariante "marcas só com liberada").
+    projecao = (
+        dados.projecao
+        if dados.projecao_estado is not None and dados.projecao_estado.liberada
+        else None
+    )
+    apertadas_projecao = (
+        _marcar_indefinidas(
+            replace(projecao.entrada, totalizacao_final=tf_uf),
+            projecao.resultado,
+            dados.pct_apurado,
+        )
+        if projecao is not None
+        else set()
+    )
+    fora_por_agremiacao = _fora_por_agremiacao(entrada) if v2 else {}
+    todas_as_linhas: list[tuple[str, _Linha]] = []
+    lista_restante: list[dict[str, Any]] = []
 
     agremiacoes: list[dict[str, Any]] = []
     for agremiacao in entrada.agremiacoes:
@@ -491,12 +865,45 @@ def construir_detalhe_uf(
         faixa = (dados.cadeiras_ci95 or {}).get(cod)
         if faixa is not None:
             linha["cadeiras_ci95"] = [faixa[0], faixa[1]]
+
+        if v2:
+            restante = _agremiacao_v2(
+                linha=linha,
+                entrada=entrada,
+                agremiacao=agremiacao,
+                resultado=resultado,
+                indefinidas=indefinidas,
+                status_tse=status_tse if tf_uf else None,
+                projecao=projecao,
+                apertadas_projecao=apertadas_projecao,
+                cadeiras_projetadas_ci95=dados.cadeiras_projetadas_ci95,
+                fora_por_agremiacao=fora_por_agremiacao,
+                votos_validos_uf=votos_validos_uf,
+                todas_as_linhas=todas_as_linhas,
+            )
+            if restante:
+                lista_restante.append({"cod": cod, "candidatos": restante})
         agremiacoes.append(linha)
 
     # Determinismo (constituição § 6): cadeiras desc, votos desc, sigla asc e,
     # por último, o código — dois partidos com a mesma sigla não existem, mas a
     # ordenação não pode depender disso.
     agremiacoes.sort(key=lambda a: (-a["cadeiras"], -a["votos_validos"], a["sigla"], a["cod"]))
+    # `lista_restante` na ORDEM das agremiações do objeto (design § 2.5).
+    ordem_agr = {a["cod"]: i for i, a in enumerate(agremiacoes)}
+    lista_restante.sort(key=lambda bloco: ordem_agr[bloco["cod"]])
+
+    # `quociente_eleitoral_tse` (v1): o `carg.qe` do agregado quando a conta
+    # dele foi conferida (design § 2.8). No modo por zona a soma não tem `qe`
+    # (`combinar_entradas` o zera) — era sempre `null`, e a Conferência dizia
+    # "batem" do mesmo jeito. Sem conferência (chamador antigo), o de antes.
+    quociente_tse = entrada.quociente_eleitoral_tse
+    if conferencia is not None:
+        quociente_tse = (
+            conferencia.entrada.quociente_eleitoral_tse
+            if conferencia.entrada is not None and "algoritmo" in conferencia.comparou
+            else None
+        )
 
     detalhe: dict[str, Any] = {
         # `ts` = hora do cálculo; `dado_ts` = hora do boletim mais recente
@@ -507,12 +914,13 @@ def construir_detalhe_uf(
         "pares_atrasados": relogio.pares_atrasados if relogio is not None else None,
         "cargo": cargo,
         "turno": turno,
+        **({"contrato": CONTRATO_V2} if v2 else {}),
         "uf": dados.uf,
         "pct_apurado": round(float(dados.pct_apurado), 5),
         "lugares_a_preencher": entrada.lugares_a_preencher,
         "quociente_eleitoral": resultado.quociente_eleitoral if resultado is not None else None,
-        "quociente_eleitoral_tse": entrada.quociente_eleitoral_tse,
-        "totalizacao_final": entrada.totalizacao_final,
+        "quociente_eleitoral_tse": quociente_tse,
+        "totalizacao_final": tf_uf,
         "divergencias": divergencias,
         "agremiacoes": agremiacoes,
         "vagas_nao_preenchidas": (
@@ -524,12 +932,114 @@ def construir_detalhe_uf(
     }
     if votacao is not None:
         detalhe["votacao"] = votacao
+    if v2 and resultado is not None and entrada.lugares_a_preencher is not None:
+        detalhe["regras"] = regras_da_uf(
+            resultado.quociente_eleitoral,
+            sum(a["votos_validos"] for a in agremiacoes),
+            entrada.lugares_a_preencher,
+        )
+    if dados.projecao_estado is not None:
+        detalhe["projecao"] = dados.projecao_estado.payload()
     # Spec 026 RF-269 — aditivo. `divergencias` (acima) continua existindo
     # para o leitor v1; o ciclo passa a enchê-lo com as MESMAS divergências
     # desta conferência (`project.py::_do_project_proporcional`).
-    if dados.conferencia is not None:
-        detalhe["conferencia"] = conferencia_payload(dados.conferencia)
+    if conferencia is not None:
+        detalhe["conferencia"] = conferencia_payload(conferencia)
+    if v2:
+        detalhe["mais_votados"] = _mais_votados_da_uf(todas_as_linhas)
+        restantes = sum(len(bloco["candidatos"]) for bloco in lista_restante)
+        if restantes > 0:
+            detalhe["lista"] = {"restantes": restantes}
+            # TRANSPORTE (design § 2.1/2.5): sai do objeto no writer TS.
+            detalhe["lista_restante"] = lista_restante
     return detalhe
+
+
+def _agremiacao_v2(
+    *,
+    linha: dict[str, Any],
+    entrada: EntradaProporcional,
+    agremiacao: Agremiacao,
+    resultado: ResultadoCadeiras | None,
+    indefinidas: set[int],
+    status_tse: dict[int, str] | None,
+    projecao: ProjecaoUf | None,
+    apertadas_projecao: set[int],
+    cadeiras_projetadas_ci95: dict[str, tuple[int, int]] | None,
+    fora_por_agremiacao: dict[str, list[int]],
+    votos_validos_uf: int,
+    todas_as_linhas: list[tuple[str, _Linha]],
+) -> list[dict[str, Any]]:
+    """Os campos v2 de UMA agremiação, escritos em `linha`; devolve as linhas > 60.
+
+    As linhas vão para `todas_as_linhas` (para os mais votados da UF e do
+    país) já com as marcas.
+    """
+    cod = agremiacao.cod
+    linhas = _linhas_da_agremiacao(entrada, agremiacao, fora_por_agremiacao)
+
+    parcial = (
+        _marcas_de_eleito(entrada, resultado, cod, indefinidas) if resultado is not None else {}
+    )
+    proj = (
+        _marcas_de_eleito(projecao.entrada, projecao.resultado, cod, apertadas_projecao)
+        if projecao is not None
+        else {}
+    )
+    for item in linhas:
+        if item.sqcand in parcial:
+            item.parcial, item.indefinido = parcial[item.sqcand]
+        if item.sqcand in proj:
+            item.projecao, item.projecao_apertada = proj[item.sqcand]
+        if status_tse is not None:
+            item.tse = status_tse.get(item.sqcand)
+        todas_as_linhas.append((cod, item))
+
+    qe = resultado.quociente_eleitoral if resultado is not None else 0
+    corte = _corte(linhas, qe) if resultado is not None else None
+    primeiro_fora = corte["primeiro_fora"] if corte is not None else None
+
+    no_blob = [
+        item
+        for item in linhas
+        if item.rank <= POSICOES_NO_BLOB or item.marcada or item.sqcand == primeiro_fora
+    ]
+    restante = [
+        item
+        for item in linhas
+        if not (item.rank <= POSICOES_NO_BLOB or item.marcada or item.sqcand == primeiro_fora)
+    ]
+
+    linha["candidatos"] = [_linha_payload(entrada, item, votos_validos_uf) for item in no_blob]
+    linha["total_candidatos"] = len(linhas)
+    if projecao is not None:
+        linha["cadeiras_projetadas"] = len(projecao.resultado.eleitos.get(cod, []))
+        faixa = (cadeiras_projetadas_ci95 or {}).get(cod)
+        if faixa is not None:
+            linha["cadeiras_projetadas_ci95"] = [faixa[0], faixa[1]]
+        agr_proj = next(a for a in projecao.entrada.agremiacoes if a.cod == cod)
+        linha["votos_projetados"] = agr_proj.votos_totais
+    if corte is not None:
+        linha["corte"] = corte
+    puxadores = _puxadores(linhas, qe)
+    if puxadores:
+        linha["puxadores"] = puxadores
+    return [_linha_payload(entrada, item, votos_validos_uf) for item in restante]
+
+
+def _mais_votados_da_uf(todas_as_linhas: list[tuple[str, _Linha]]) -> list[dict[str, Any]]:
+    """Top 10 da UF por voto apurado, como REFERÊNCIA (design 026 § 2.4, § 3.2).
+
+    Todas as linhas (objeto ∪ lista 61+), `(−votos, sqcand)`. Inclui anulado
+    e sub judice (spec 026, open question 2): esconder o mais votado do estado
+    porque o registro está em juízo seria esconder o fato. Resolve sempre no
+    objeto da UF — quem está entre os 10 mais votados do estado tem rank ≤ 10
+    na própria agremiação.
+    """
+    ordenadas = sorted(todas_as_linhas, key=lambda par: (-par[1].votos, par[1].sqcand))
+    return [
+        {"cod": cod, "sqcand": item.sqcand} for cod, item in ordenadas[:MAX_MAIS_VOTADOS]
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -547,7 +1057,7 @@ def _linha_uf(detalhe: dict[str, Any], dados: UfProporcional) -> dict[str, Any]:
         topo = agremiacoes[0]
         lider = {"cod": topo["cod"], "sigla": topo["sigla"], "cadeiras": topo["cadeiras"]}
 
-    return {
+    linha: dict[str, Any] = {
         "sigla": dados.uf,
         "pct_apurado": detalhe["pct_apurado"],
         "lugares_a_preencher": detalhe["lugares_a_preencher"],
@@ -557,6 +1067,82 @@ def _linha_uf(detalhe: dict[str, Any], dados: UfProporcional) -> dict[str, Any]:
         "empates_indeterminados": len(detalhe["empates_indeterminados"]),
         "lider": lider,
     }
+    # Spec 026 design § 2.7 — o MESMO objeto do Blob da UF, byte a byte: a
+    # capa mostra o selo sem ler Blob (RF-271).
+    if "projecao" in detalhe:
+        linha["projecao"] = detalhe["projecao"]
+    return linha
+
+
+def _linhas_do_detalhe(detalhe: dict[str, Any]) -> list[tuple[dict[str, Any], dict[str, Any]]]:
+    """`(agremiação, linha)` de TODAS as candidaturas de um objeto de UF v2 —
+    as do objeto e as de `lista_restante`."""
+    por_cod = {a["cod"]: a for a in detalhe["agremiacoes"]}
+    saida = [(a, c) for a in detalhe["agremiacoes"] for c in a.get("candidatos", [])]
+    for bloco in detalhe.get("lista_restante", []):
+        agr = por_cod[bloco["cod"]]
+        saida.extend((agr, c) for c in bloco["candidatos"])
+    return saida
+
+
+def _destaque(uf: str, agr: dict[str, Any], c: dict[str, Any]) -> dict[str, Any]:
+    """`EdgeDeputadoDestaque` (design 026 § 2.9) — autossuficiente: a capa
+    escreve a linha sem ler Blob nenhum. `pct_validos` é o da UF DO
+    CANDIDATO, o único denominador com sentido."""
+    saida: dict[str, Any] = {
+        "uf": uf,
+        "sqcand": c["sqcand"],
+        "nome": c["nome"],
+        "partido": c["partido"],
+        "cod": agr["cod"],
+        "sigla": agr["sigla"],
+    }
+    if "numero" in c:
+        saida["numero"] = c["numero"]
+    saida["votos"] = c["votos"]
+    saida["pct_validos"] = c["pct_validos"]
+    if "destino" in c:
+        saida["destino"] = c["destino"]
+    return saida
+
+
+def _destaques_nacionais(
+    detalhes_ordenados: list[tuple[UfProporcional, dict[str, Any]]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]] | None:
+    """`(mais_votados, puxadores)` do país (RF-271, RF-273), ou `None` sem v2.
+
+    Mais votados: todas as linhas das UFs, `(−votos, uf, sqcand)`, 10
+    primeiras (design § 3.3). Puxadores: a união dos puxadores das UFs,
+    `(−excedente, −votos, uf, sqcand)`, até 30 (design § 3.5).
+    """
+    todas: list[tuple[str, dict[str, Any], dict[str, Any]]] = []
+    puxadores: list[dict[str, Any]] = []
+    algum_v2 = False
+    for dados, detalhe in detalhes_ordenados:
+        if detalhe.get("contrato") != CONTRATO_V2:
+            continue
+        algum_v2 = True
+        linhas = _linhas_do_detalhe(detalhe)
+        por_sq = {c["sqcand"]: (agr, c) for agr, c in linhas}
+        todas.extend((dados.uf, agr, c) for agr, c in linhas)
+        qe = detalhe["quociente_eleitoral"]
+        for agr in detalhe["agremiacoes"]:
+            for p in agr.get("puxadores", []):
+                agr_c, c = por_sq[p["sqcand"]]
+                puxadores.append(
+                    {
+                        **_destaque(dados.uf, agr_c, c),
+                        "quociente_eleitoral": qe,
+                        "quocientes": p["quocientes"],
+                        "excedente": p["excedente"],
+                    }
+                )
+    if not algum_v2:
+        return None
+    todas.sort(key=lambda t: (-t[2]["votos"], t[0], t[2]["sqcand"]))
+    mais_votados = [_destaque(uf, agr, c) for uf, agr, c in todas[:MAX_MAIS_VOTADOS]]
+    puxadores.sort(key=lambda p: (-p["excedente"], -p["votos"], p["uf"], p["sqcand"]))
+    return mais_votados, puxadores[:MAX_PUXADORES_NACIONAL]
 
 
 def conferir_total_de_cadeiras(
@@ -842,6 +1428,7 @@ def construir_payload_deputado(
     bancada = _bancada_nacional(
         pares, ufs_conhecidas, cadeiras_ci95_nacional, cargo=cargo
     )
+    destaques = _destaques_nacionais(pares)
 
     payload = {
         # Os dois relógios, lado a lado (ADR-0038 D1): `ts` é quando o modelo
@@ -862,6 +1449,12 @@ def construir_payload_deputado(
         "bancada": bancada,
         # Spec 021 (RF-199/RF-195) — chave OMITIDA quando ausente; ver docstring.
         **({"votacao": votacao} if votacao is not None else {}),
+        # Spec 026 RF-271/RF-273 — do próprio ciclo, nunca do Blob.
+        **(
+            {"mais_votados": destaques[0], "puxadores": destaques[1]}
+            if destaques is not None
+            else {}
+        ),
         "por_uf": [_linha_uf(detalhe, dados) for dados, detalhe in pares],
         # ADR-0005 — insights são template determinístico, nunca LLM. Vazio até
         # os templates da corrida proporcional existirem; lista vazia é a

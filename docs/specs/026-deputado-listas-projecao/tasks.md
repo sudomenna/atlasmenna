@@ -86,25 +86,28 @@ proporcional) e **ADR-0065** (listas em três faixas); números a preencher.
 
 ### P2 — projeção (qui 01/10, 13h)
 
-- [ ] P2.1. `api/model/deputado_projecao.py`, puro: zona apurada, fator `te/esi`, razão das somas
+- [x] P2.1. `api/model/deputado_projecao.py`, puro: zona apurada, fator `te/esi`, razão das somas
       por chave, tercis (≥ 12 zonas), imputação do estado inteiro, arredondamento por maiores restos,
       `distribuir_cadeiras`, apertada (design § 5) (RF-263).
-- [ ] P2.2. Trava na ordem fixa do design § 2.7, com os sete motivos (RF-264).
-- [ ] P2.3. Log `dep_projecao`, uma linha por ciclo (design § 5.9) (RF-263, § 6 da constituição).
-- [ ] P2.4. `ProjectRequest.projecao_dep` opcional; ausente ⇒ desligado (RF-265).
+- [x] P2.2. Trava na ordem fixa do design § 2.7, com os sete motivos (RF-264).
+- [x] P2.3. Log `dep_projecao`, uma linha por ciclo (design § 5.9) (RF-263, § 6 da constituição).
+- [x] P2.4. `ProjectRequest.projecao_dep` opcional; ausente ⇒ desligado (RF-265).
 - [ ] P2.5. Faixa `cadeiras_projetadas_ci95` se couber no ciclo (opcional) (RF-127 emendado).
+      **Adiada (orquestrador, 29/09):** o bootstrap custou ~10,5 s nas 27 UFs (M4) — o mesmo do
+      da parcial —, e os dois juntos (~21 s locais) deixariam o ciclo perto do `maxDuration` de
+      60 s na Vercel. O campo fica ausente (opcional no contrato); pendência para depois de 04/10.
 
 ### P3 — payload v2 (qui 01/10, 20h)
 
-- [ ] P3.1. `deputado_payload.py`: `DeputadoUfLinha` com `rank` (design § 3.1), `numero`,
+- [x] P3.1. `deputado_payload.py`: `DeputadoUfLinha` com `rank` (design § 3.1), `numero`,
       `pct_validos`, `parcial`/`indefinido`, `projecao`/`projecao_apertada`, `tse`, `destino`;
       `candidatos` (1..60 ∪ marcados ∪ `primeiro_fora`), `total_candidatos`, `lista_restante`
       (RF-260, RF-261, RF-262).
-- [ ] P3.2. `corte`, `puxadores`, `regras`, `mais_votados` (UF, por referência), `lista.restantes`,
+- [x] P3.2. `corte`, `puxadores`, `regras`, `mais_votados` (UF, por referência), `lista.restantes`,
       `projecao`, `conferencia`, `contrato: 2` (RF-270, RF-272, RF-273, RF-274).
-- [ ] P3.3. Nacional: `mais_votados`, `puxadores` (até 30), `por_uf[].projecao` (RF-271, RF-273).
-- [ ] P3.4. `eleitos`/`suplentes`/`divergencias` v1 mantidos com a semântica v1 (design § 2.12).
-- [ ] P3.5. Teste: o payload produzido a partir dos EA20 reais passa pelas mesmas invariantes de
+- [x] P3.3. Nacional: `mais_votados`, `puxadores` (até 30), `por_uf[].projecao` (RF-271, RF-273).
+- [x] P3.4. `eleitos`/`suplentes`/`divergencias` v1 mantidos com a semântica v1 (design § 2.12).
+- [x] P3.5. Teste: o payload produzido a partir dos EA20 reais passa pelas mesmas invariantes de
       `tests/unit/contrato/deputado-v2-fixtures.test.ts` (reescritas em pytest ou por exportação de
       JSON para o vitest).
 
