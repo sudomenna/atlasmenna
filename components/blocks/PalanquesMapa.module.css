@@ -1,0 +1,201 @@
+/* =============================================================================
+ * components/blocks/PalanquesMapa.module.css
+ *
+ * Mapa dos palanques (V3, spec 025). Tokens LOCAIS `--pal-*`, no molde do
+ * `--etq-*` de `components/atoms/data/EtiquetaEditorial.module.css`: apelidos
+ * de semânticos do site, nunca hex próprio — os semânticos já trocam com
+ * `data-theme="dark"` e já têm contraste medido nos dois temas.
+ *
+ * **Sem área de cor, por medição (a mesma da etiqueta).** Qualquer cinza de
+ * preenchimento fica a ΔE76 < 10 de alguma cor da paleta de partido
+ * (`--party-none`: 2,6; níveis 1 claros de DC/PP/Democrata: 8,5), e um ladrilho
+ * cinza que lembra "partido X, disputa apertada" é justamente a confusão que a
+ * constituição § 2 proíbe. Então o palanque NÃO é uma cor: é um padrão de
+ * hachura em tinta neutra sobre o papel, MAIS um código de texto no ladrilho —
+ * a hachura é redundante, nunca a única pista (constituição § 4):
+ *
+ *     Palanque de Lula ............ hachura "/"        código LU
+ *     Palanque de Flávio Bolsonaro  hachura "\"        código FB
+ *     Palanque duplo .............. as duas (grade)    código L+F
+ *     Sem palanque declarado ...... pontos             código S/D
+ *     (sem leitura) ............... nada, contorno pontilhado fino, código —
+ *
+ * O voto casado / dividido é o CONTORNO: contínuo e grosso = casado, tracejado e
+ * grosso = dividido, fino = não se aplica — mais o sinal "=" / "≠" no texto do
+ * ladrilho. Contorno e hachura não disputam o mesmo canal.
+ *
+ * Tinta = `--text-primary`, contorno = `--border-strong`, papel = `--surface-card`,
+ * texto do estado sem leitura = `--text-secondary`, contorno dele =
+ * `--border-hairline` (só decorativo: a informação dele é o texto "—").
+ * Contraste e neutralidade medidos, tema a tema, em
+ * `tests/unit/design-system/palanques-mapa-contraste.test.tsx`.
+ *
+ * ⚠️ Nenhum elemento com `data-view-only` recebe `display` aqui:
+ * `[data-view-only]` (app/globals.css) usa `display: revert` para mostrar a base
+ * ativa, e uma regra de módulo com a mesma especificidade brigaria com ela. O
+ * layout mora nos filhos.
+ * ========================================================================== */
+
+.raiz {
+  --pal-tinta: var(--text-primary);
+  --pal-borda: var(--border-strong);
+  --pal-papel: var(--surface-card);
+  --pal-quieto: var(--text-secondary);
+  --pal-tenue: var(--border-hairline);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.figura {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+}
+
+.legendaTexto {
+  margin: 0;
+  font: var(--type-body-sm);
+  color: var(--text-secondary);
+}
+
+/* `width: 100%` + `height: auto` + `max-width`: o SVG encolhe com o contêiner e
+ * nunca o estica — a 375px cabe sem rolagem lateral. */
+.mapa {
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  height: auto;
+  margin-inline: auto;
+}
+
+/* --- hachuras (dentro de <pattern>) -------------------------------------- */
+
+.papel {
+  fill: var(--pal-papel);
+}
+
+.traco {
+  fill: none;
+  stroke: var(--pal-tinta);
+  stroke-width: 1;
+}
+
+.ponto {
+  fill: var(--pal-tinta);
+}
+
+/* --- ladrilho ------------------------------------------------------------- */
+
+/* Contorno fino: "não se aplica". */
+.ladrilho polygon {
+  stroke: var(--pal-borda);
+  stroke-width: 1;
+}
+
+.ladrilho[data-casamento="casado"] polygon {
+  stroke-width: 2.5;
+}
+
+.ladrilho[data-casamento="dividido"] polygon {
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
+}
+
+/* Sem leitura / sem classificação: quieto, sem hachura, contorno pontilhado. */
+.ladrilho[data-palanque="nenhum"] polygon {
+  fill: none;
+  stroke: var(--pal-tenue);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+/* Texto com halo de papel: a tinta é medida contra o papel, nunca contra a
+ * hachura por baixo. `paint-order: stroke` desenha o halo ATRÁS dos glifos. */
+.sigla,
+.codigo {
+  fill: var(--pal-tinta);
+  stroke: var(--pal-papel);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
+  text-anchor: middle;
+}
+
+.sigla {
+  font: 700 14px var(--font-sans);
+}
+
+.codigo {
+  font: 600 11px var(--font-mono);
+}
+
+.ladrilho[data-palanque="nenhum"] .sigla,
+.ladrilho[data-palanque="nenhum"] .codigo {
+  fill: var(--pal-quieto);
+  stroke: none;
+}
+
+/* --- resumo e legenda ------------------------------------------------------ */
+
+.resumo {
+  margin: 0;
+  font: var(--type-body-sm);
+  color: var(--text-primary);
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  min-width: 0;
+}
+
+.legendaLista {
+  flex: 1 1 15rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font: var(--type-body-sm);
+  color: var(--text-primary);
+}
+
+.legendaLista li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.amostra {
+  flex: none;
+}
+
+.amostra rect {
+  stroke: var(--pal-borda);
+  stroke-width: 1;
+}
+
+.amostraCasado rect {
+  stroke-width: 2.5;
+}
+
+.amostraDividido rect {
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
+}
+
+.codigoLegenda {
+  flex: none;
+  min-width: 2.25em;
+  font: var(--type-data);
+  font-weight: 600;
+}
