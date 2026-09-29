@@ -1,0 +1,90 @@
+{
+  "ListaParlamentarEmExercicio": {
+    "Metadados": { "Versao": "29/09/2026 01:46:55" },
+    "Parlamentares": {
+      "Parlamentar": [
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "9101",
+            "NomeParlamentar": "Ana Alfa",
+            "NomeCompletoParlamentar": "Ana Alfa Souza",
+            "SexoParlamentar": "Feminino",
+            "FormaTratamento": "Senadora ",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "SP",
+            "EmailParlamentar": "sen.9101@exemplo.invalid"
+          },
+          "Mandato": {
+            "CodigoMandato": "1",
+            "UfParlamentar": "SP",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "9102",
+            "NomeParlamentar": "Beto Bravo",
+            "NomeCompletoParlamentar": "Roberto Bravo Lima",
+            "SexoParlamentar": "Feminino",
+            "FormaTratamento": "Senadora ",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "RJ",
+            "EmailParlamentar": "sen.9102@exemplo.invalid"
+          },
+          "Mandato": {
+            "CodigoMandato": "1",
+            "UfParlamentar": "RJ",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "9103",
+            "NomeParlamentar": "Carla Charlie",
+            "NomeCompletoParlamentar": "Carla Charlie Rocha",
+            "SexoParlamentar": "Feminino",
+            "FormaTratamento": "Senadora ",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "MG",
+            "EmailParlamentar": "sen.9103@exemplo.invalid"
+          },
+          "Mandato": {
+            "CodigoMandato": "1",
+            "UfParlamentar": "MG",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "votacoes": [
+    {
+      "codigoVotacaoSve": 11001,
+      "sequencialVotacao": 1001,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Governo", "voto": "SIM" },
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Oposição", "voto": "NÃO" },
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    },
+    {
+      "codigoVotacaoSve": 11002,
+      "sequencialVotacao": 1002,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Governo", "voto": "NÃO" },
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Oposição", "voto": "SIM" },
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    },
+    {
+      "codigoVotacaoSve": 11003,
+      "sequencialVotacao": 1003,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Governo", "voto": "SIM" },
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Oposição", "voto": "SIM" },
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    },
+    {
+      "codigoVotacaoSve": 11004,
+      "sequencialVotacao": 1004,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Governo", "voto": "NÃO" },
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Oposição", "voto": "LIVRE" },
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    },
+    {
+      "codigoVotacaoSve": 11005,
+      "sequencialVotacao": 1005,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Governo", "voto": "LIVRE" },
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Oposição", "voto": "NÃO" },
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    },
+    {
+      "codigoVotacaoSve": 11006,
+      "sequencialVotacao": 1006,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Governo", "voto": "SIM" },
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Oposição", "voto": "OBSTRUÇÃO" },
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    },
+    {
+      "codigoVotacaoSve": 11008,
+      "sequencialVotacao": 1008,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Governo", "voto": "SIM" },
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Oposição", "voto": "NÃO" },
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    },
+    {
+      "codigoVotacaoSve": 11009,
+      "sequencialVotacao": 1009,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Governo", "voto": "SIM" },
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Oposição", "voto": "NÃO" },
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    },
+    {
+      "codigoVotacaoSve": 11010,
+      "sequencialVotacao": 1010,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    },
+    {
+      "codigoVotacaoSve": 11011,
+      "sequencialVotacao": 1011,
+      "descricaoVotacao": "Votação nominal (sintética).",
+      "dataInicioVotacao": "2025-03-11T18:19:28",
+      "tipoSessao": "Deliberativa Ordinária",
+      "qtdVotosSim": 0,
+      "qtdVotosNao": 0,
+      "qtdVotosAbstencao": 0,
+      "qtdObstrucoes": 0,
+      "orientacoesLideranca": [
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Governo", "voto": "SIM" },
+        { "dataHora": "2025-03-11T18:22:34", "partido": "Oposição", "voto": "NÃO" },
+        { "dataHora": "2025-03-11T18:22:00", "partido": "PT", "voto": "SIM" }
+      ],
+      "votosParlamentar": [
+        { "nomeParlamentar": "Alfa", "partido": "PT", "voto": "SIM", "uf": "SP" }
+      ],
+      "votosLideranca": null
+    }
+  ]
+}

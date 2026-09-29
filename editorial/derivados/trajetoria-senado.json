@@ -1,0 +1,1286 @@
+{
+  "gerado_em": "2026-09-29T05:35:47.588Z",
+  "fonte": {
+    "descricao": "Senado Federal — Dados Abertos (senadores em exercício e das legislaturas 50 a 57), casados com as candidaturas do cadastro do TSE",
+    "url": "https://legis.senado.leg.br/dadosabertos/"
+  },
+  "universo": 319,
+  "por_sqcand": {
+    "10002533895": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "10002535804": {
+      "t": "em_exercicio",
+      "senado_codigos": [4560]
+    },
+    "10002536441": {
+      "t": "mandato_anterior",
+      "senado_codigos": [4990]
+    },
+    "10002536710": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "10002544110": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "10002544274": {
+      "t": "mandato_anterior",
+      "senado_codigos": [5902]
+    },
+    "10002548046": {
+      "t": "mandato_anterior",
+      "senado_codigos": [4558]
+    },
+    "10002548050": {
+      "t": "em_exercicio",
+      "senado_codigos": [285]
+    },
+    "20002540197": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "20002548147": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "20002552524": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "20002553272": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "20002553711": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "20002553726": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "20002553727": {
+      "t": "em_exercicio",
+      "senado_codigos": [70]
+    },
+    "30002530069": {
+      "t": "em_exercicio",
+      "senado_codigos": [5926]
+    },
+    "30002530071": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "30002549909": {
+      "t": "em_exercicio",
+      "senado_codigos": [5012]
+    },
+    "30002549911": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "30002550229": {
+      "t": "mandato_anterior",
+      "senado_codigos": [3394]
+    },
+    "30002551381": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "30002551382": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "30002551576": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "30002553708": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "40002531447": {
+      "t": "em_exercicio",
+      "senado_codigos": [4994]
+    },
+    "40002535270": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "40002535391": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "40002537344": {
+      "t": "em_exercicio",
+      "senado_codigos": [5502]
+    },
+    "40002541744": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "40002542686": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "40002550806": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "40002551281": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "40002551283": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "50002533123": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "50002533124": {
+      "t": "em_exercicio",
+      "senado_codigos": [5967]
+    },
+    "50002534769": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "50002534774": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "50002536317": {
+      "t": "em_exercicio",
+      "senado_codigos": [581]
+    },
+    "50002536321": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "50002536577": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "50002536625": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "50002550314": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "50002553643": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "60002533959": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "60002539687": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "60002540753": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "60002540754": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "60002542476": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "60002542479": {
+      "t": "em_exercicio",
+      "senado_codigos": [5973]
+    },
+    "60002550748": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "60002551397": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002536445": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002537112": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002548624": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002551323": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002551426": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002552490": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002552492": {
+      "t": "em_exercicio",
+      "senado_codigos": [5979]
+    },
+    "70002552582": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002552934": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002552936": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002553296": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002553751": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "70002553859": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "80002530022": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "80002538202": {
+      "t": "em_exercicio",
+      "senado_codigos": [5942]
+    },
+    "80002542401": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "80002549404": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "80002550187": {
+      "t": "em_exercicio",
+      "senado_codigos": [5953]
+    },
+    "80002551368": {
+      "t": "mandato_anterior",
+      "senado_codigos": [2331]
+    },
+    "80002551370": {
+      "t": "mandato_anterior",
+      "senado_codigos": [3868]
+    },
+    "80002552373": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "80002552692": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "80002553265": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "80002553269": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002540997": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002540998": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002541454": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002541455": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002543215": {
+      "t": "em_exercicio",
+      "senado_codigos": [5899]
+    },
+    "90002543556": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002543560": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002545243": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002545244": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002546974": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "90002551198": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "100002536212": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "100002537338": {
+      "t": "em_exercicio",
+      "senado_codigos": [5411]
+    },
+    "100002537364": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "100002541459": {
+      "t": "em_exercicio",
+      "senado_codigos": [5718]
+    },
+    "100002542867": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "100002548011": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "100002548853": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "100002549014": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "100002549583": {
+      "t": "mandato_anterior",
+      "senado_codigos": [3359]
+    },
+    "100002550418": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "100002553336": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "110002540403": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "110002544986": {
+      "t": "em_exercicio",
+      "senado_codigos": [6295]
+    },
+    "110002544988": {
+      "t": "mandato_anterior",
+      "senado_codigos": [5010]
+    },
+    "110002548042": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "110002551966": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "110002551967": {
+      "t": "mandato_anterior",
+      "senado_codigos": [6304]
+    },
+    "110002552693": {
+      "t": "mandato_anterior",
+      "senado_codigos": [5112]
+    },
+    "110002552698": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "110002553701": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "110002553706": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "120002532721": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "120002534952": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "120002535764": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "120002535769": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "120002547434": {
+      "t": "em_exercicio",
+      "senado_codigos": [5988]
+    },
+    "120002547435": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "120002551909": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "120002552115": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "120002552183": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "120002552196": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002545590": {
+      "t": "em_exercicio",
+      "senado_codigos": [5990]
+    },
+    "130002547882": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002547884": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002548381": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002550557": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002550560": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002551265": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002551284": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002551786": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002551929": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002551930": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002552186": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002552299": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002552302": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002552311": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002553354": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002553856": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "130002554332": {
+      "t": "mandato_anterior",
+      "senado_codigos": [391]
+    },
+    "140002538404": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002542691": {
+      "t": "em_exercicio",
+      "senado_codigos": [3806]
+    },
+    "140002544855": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002545671": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002545674": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002548150": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002548387": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002550779": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002550780": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002553743": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002553852": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002553952": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "140002554209": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "150002538459": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "150002544135": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "150002544140": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "150002544905": {
+      "t": "em_exercicio",
+      "senado_codigos": [5748]
+    },
+    "150002544909": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "150002548968": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "150002548971": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "150002549791": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "150002549793": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "150002552607": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "160002547656": {
+      "t": "mandato_anterior",
+      "senado_codigos": [5006]
+    },
+    "160002547658": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "160002547660": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "160002547661": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "160002547963": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "160002549555": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "160002551043": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "160002551121": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "160002552563": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002530097": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002537334": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002537335": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002537418": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002539456": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002540420": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002547771": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002547773": {
+      "t": "em_exercicio",
+      "senado_codigos": [5008]
+    },
+    "170002549655": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002552097": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002552102": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "170002552943": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002533964": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002533967": {
+      "t": "em_exercicio",
+      "senado_codigos": [742]
+    },
+    "180002537340": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002540446": {
+      "t": "em_exercicio",
+      "senado_codigos": [739]
+    },
+    "180002540449": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002541938": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002544457": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002544459": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002547860": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002547863": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002548155": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002548157": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002548568": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002549933": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002549936": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002550977": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002550979": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002552962": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002552964": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "180002553753": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002535142": {
+      "t": "em_exercicio",
+      "senado_codigos": [5936]
+    },
+    "190002536164": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002539827": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002542888": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002543961": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002545553": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002548141": {
+      "t": "mandato_anterior",
+      "senado_codigos": [7]
+    },
+    "190002548145": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002548589": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002548590": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002550182": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002550184": {
+      "t": "mandato_anterior",
+      "senado_codigos": [3366]
+    },
+    "190002550190": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002550192": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002552083": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002552521": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "190002554290": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002533841": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002533843": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002534447": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002534448": {
+      "t": "em_exercicio",
+      "senado_codigos": [5959]
+    },
+    "200002535507": {
+      "t": "em_exercicio",
+      "senado_codigos": [5783]
+    },
+    "200002535511": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002542483": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002542484": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002546792": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002546795": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002548115": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002549133": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002550225": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "200002550541": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002533434": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002533435": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002533581": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002533584": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002538465": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002538467": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002543863": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002543865": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002544698": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002544699": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002547816": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002547819": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "210002552599": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "220002539771": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "220002539995": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "220002539996": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "220002541490": {
+      "t": "mandato_anterior",
+      "senado_codigos": [4981]
+    },
+    "220002541944": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "220002547309": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "220002547310": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "220002550928": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "220002551946": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "220002551948": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002533586": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002534804": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002534806": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002549330": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002549360": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002549361": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002549845": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002550787": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002550794": {
+      "t": "em_exercicio",
+      "senado_codigos": [470]
+    },
+    "230002552727": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002553006": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002553010": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "230002553636": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002533898": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002535770": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002537630": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002537632": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002539636": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002541931": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002541935": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002544094": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002548630": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002548632": {
+      "t": "em_exercicio",
+      "senado_codigos": [22]
+    },
+    "240002550218": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002551377": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "240002553005": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002532794": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002541308": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002541312": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002541362": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002541365": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002544514": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002544516": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002544673": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002551501": {
+      "t": "mandato_anterior",
+      "senado_codigos": [59]
+    },
+    "250002551502": {
+      "t": "mandato_anterior",
+      "senado_codigos": [5527]
+    },
+    "250002552153": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002552369": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002552955": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002553252": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002553928": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "250002554075": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "260002533084": {
+      "t": "em_exercicio",
+      "senado_codigos": [5982]
+    },
+    "260002543589": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "260002543591": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "260002545677": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "260002547285": {
+      "t": "em_exercicio",
+      "senado_codigos": [5352]
+    },
+    "260002547290": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "260002549127": {
+      "t": "mandato_anterior",
+      "senado_codigos": [4721]
+    },
+    "260002549130": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "260002551362": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "260002551366": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "260002551550": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002539141": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002539142": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002544629": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002546038": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002546039": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002546333": {
+      "t": "em_exercicio",
+      "senado_codigos": [3777]
+    },
+    "270002548231": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002548344": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002548409": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002550610": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002551270": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002551273": {
+      "t": "estreante",
+      "senado_codigos": []
+    },
+    "270002552968": {
+      "t": "estreante",
+      "senado_codigos": []
+    }
+  }
+}

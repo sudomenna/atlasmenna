@@ -1,0 +1,750 @@
+[
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 6001,
+    "dataSessao": "2025-03-11",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1001,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Abstenção"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "P-NRV"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "AP"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 6002,
+    "dataSessao": "2025-03-12",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1002,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 6003,
+    "dataSessao": "2025-04-01",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1003,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 6004,
+    "dataSessao": "2025-04-02",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1004,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 6005,
+    "dataSessao": "2025-04-03",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1005,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 6006,
+    "dataSessao": "2025-04-04",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1006,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "P-NRV"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "LS"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 7007,
+    "dataSessao": "2025-04-05",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": null,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 6008,
+    "dataSessao": "2025-04-06",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1008,
+    "votacaoSecreta": "S",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Votou"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Votou"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Votou"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Votou"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Votou"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Votou"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "CN",
+    "codigoSessaoVotacao": 6009,
+    "dataSessao": "2025-04-07",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1009,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 6010,
+    "dataSessao": "2025-04-08",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1010,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  },
+  {
+    "ano": 2025,
+    "casaSessao": "SF",
+    "codigoSessaoVotacao": 6011,
+    "dataSessao": "2025-04-09",
+    "descricaoVotacao": "Votação nominal (sintética).",
+    "identificacao": "PL 1/2025",
+    "informeLegislativo": { "siglaColegiado": "PLEN", "texto": "texto longo descartado" },
+    "resultadoVotacao": "A",
+    "sequencialVotacao": 1011,
+    "votacaoSecreta": "N",
+    "votos": [
+      {
+        "codigoParlamentar": 9001,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Alfa",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9002,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Bravo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PL",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9003,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Charlie",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9004,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Delta",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "MDB",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Sim"
+      },
+      {
+        "codigoParlamentar": 9005,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Echo",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PT",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Não"
+      },
+      {
+        "codigoParlamentar": 9006,
+        "descricaoVotoParlamentar": null,
+        "nomeParlamentar": "Foxtrot",
+        "sexoParlamentar": "M",
+        "siglaPartidoParlamentar": "PSD",
+        "siglaUFParlamentar": "SP",
+        "siglaVotoParlamentar": "Presidente (art. 51 RISF)"
+      }
+    ]
+  }
+]

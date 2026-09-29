@@ -221,7 +221,9 @@ function arquivosDeCodigo(dir: string): string[] {
 describe("fios do ADR-0058 (entrega dividida + exceção estrita de PII)", () => {
   // MUTAÇÃO ALVO: um segundo ponto de leitura (ex.: o import voltando a ler a
   // data de nascimento, como no worktree de 26/09).
-  it("só trajetoria-camara-calculo.ts lê as colunas DT_NASCIMENTO e NM_SOCIAL_CANDIDATO", () => {
+  // Lista fechada: os dois pontos únicos de leitura em memória (Câmara, ADR-0058;
+  // Senado, ADR-0062). Um terceiro leitor tem de entrar aqui de propósito.
+  it("só os dois cálculos de trajetória leem DT_NASCIMENTO e NM_SOCIAL_CANDIDATO", () => {
     const leitores: string[] = [];
     for (const dir of ["app", "api", "components", "data-pipeline", "lib", "scripts"]) {
       for (const f of arquivosDeCodigo(dir)) {
@@ -231,7 +233,10 @@ describe("fios do ADR-0058 (entrega dividida + exceção estrita de PII)", () =>
         }
       }
     }
-    expect(leitores).toEqual(["data-pipeline/trajetoria-camara-calculo.ts"]);
+    expect(leitores.sort()).toEqual([
+      "data-pipeline/trajetoria-camara-calculo.ts",
+      "data-pipeline/trajetoria-senado.ts",
+    ]);
   });
 
   // A perna estacionada (0011 + import + backfill) fica fora da `main` até

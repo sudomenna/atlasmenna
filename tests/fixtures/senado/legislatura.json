@@ -1,0 +1,100 @@
+{
+  "ListaParlamentarLegislatura": {
+    "Metadados": { "Versao": "29/09/2026 02:04:38" },
+    "Parlamentares": {
+      "Parlamentar": [
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "9101",
+            "NomeParlamentar": "Ana Alfa",
+            "NomeCompletoParlamentar": "Ana Alfa Souza"
+          },
+          "Mandatos": {
+            "Mandato": [
+              {
+                "CodigoMandato": "1",
+                "UfParlamentar": "SP",
+                "PrimeiraLegislaturaDoMandato": {
+                  "NumeroLegislatura": "56",
+                  "DataInicio": "2019-02-01",
+                  "DataFim": "2023-01-31"
+                },
+                "SegundaLegislaturaDoMandato": {
+                  "NumeroLegislatura": "57",
+                  "DataInicio": "2023-02-01",
+                  "DataFim": "2027-01-31"
+                },
+                "DescricaoParticipacao": "Titular"
+              }
+            ]
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "9107",
+            "NomeParlamentar": "Gil Golf",
+            "NomeCompletoParlamentar": "Gilberto Golf Moreira"
+          },
+          "Mandatos": {
+            "Mandato": {
+              "CodigoMandato": "1",
+              "UfParlamentar": "PR",
+              "PrimeiraLegislaturaDoMandato": {
+                "NumeroLegislatura": "54",
+                "DataInicio": "2011-02-01",
+                "DataFim": "2015-01-31"
+              },
+              "SegundaLegislaturaDoMandato": {
+                "NumeroLegislatura": "55",
+                "DataInicio": "2015-02-01",
+                "DataFim": "2019-01-31"
+              },
+              "DescricaoParticipacao": "Titular"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "9108",
+            "NomeParlamentar": "Helena Hotel",
+            "NomeCompletoParlamentar": "Helena Hotel Cunha"
+          },
+          "Mandatos": {
+            "Mandato": [
+              {
+                "CodigoMandato": "1",
+                "UfParlamentar": "PR",
+                "PrimeiraLegislaturaDoMandato": {
+                  "NumeroLegislatura": "54",
+                  "DataInicio": "2011-02-01",
+                  "DataFim": "2015-01-31"
+                },
+                "SegundaLegislaturaDoMandato": {
+                  "NumeroLegislatura": "55",
+                  "DataInicio": "2015-02-01",
+                  "DataFim": "2019-01-31"
+                },
+                "DescricaoParticipacao": "1º Suplente"
+              },
+              {
+                "CodigoMandato": "1",
+                "UfParlamentar": "PR",
+                "PrimeiraLegislaturaDoMandato": {
+                  "NumeroLegislatura": "55",
+                  "DataInicio": "2015-02-01",
+                  "DataFim": "2019-01-31"
+                },
+                "SegundaLegislaturaDoMandato": {
+                  "NumeroLegislatura": "56",
+                  "DataInicio": "2019-02-01",
+                  "DataFim": "2023-01-31"
+                },
+                "DescricaoParticipacao": "1º Suplente"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

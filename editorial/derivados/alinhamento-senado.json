@@ -1,0 +1,394 @@
+{
+  "corte": "2026-07-15",
+  "fonte": {
+    "descricao": "Senado Federal — Dados Abertos (votações nominais do plenário com orientação do Governo)",
+    "url": "https://legis.senado.leg.br/dadosabertos/"
+  },
+  "universo": {
+    "votacoes": 127,
+    "disputadas": 38,
+    "excluidas_sem_sequencial": 10
+  },
+  "por_senador": {
+    "22": {
+      "votos_disputadas": 36,
+      "taxa_disputadas": 5.6
+    },
+    "35": {
+      "votos_disputadas": 23,
+      "taxa_disputadas": 95.7
+    },
+    "70": {
+      "votos_disputadas": 26,
+      "taxa_disputadas": 84.6
+    },
+    "285": {
+      "votos_disputadas": 27,
+      "taxa_disputadas": 14.8
+    },
+    "345": {
+      "votos_disputadas": 35,
+      "taxa_disputadas": 62.9
+    },
+    "453": {
+      "votos_disputadas": 3,
+      "taxa_disputadas": 100
+    },
+    "470": {
+      "votos_disputadas": 30,
+      "taxa_disputadas": 73.3
+    },
+    "475": {
+      "votos_disputadas": 31,
+      "taxa_disputadas": 96.8
+    },
+    "581": {
+      "votos_disputadas": 36,
+      "taxa_disputadas": 100
+    },
+    "631": {
+      "votos_disputadas": 23,
+      "taxa_disputadas": 0
+    },
+    "739": {
+      "votos_disputadas": 33,
+      "taxa_disputadas": 9.1
+    },
+    "742": {
+      "votos_disputadas": 36,
+      "taxa_disputadas": 86.1
+    },
+    "825": {
+      "votos_disputadas": 35,
+      "taxa_disputadas": 97.1
+    },
+    "1173": {
+      "votos_disputadas": 28,
+      "taxa_disputadas": 0
+    },
+    "1186": {
+      "votos_disputadas": 26,
+      "taxa_disputadas": 3.8
+    },
+    "3777": {
+      "votos_disputadas": 27,
+      "taxa_disputadas": 11.1
+    },
+    "3806": {
+      "votos_disputadas": 27,
+      "taxa_disputadas": 29.6
+    },
+    "3830": {
+      "votos_disputadas": 31,
+      "taxa_disputadas": 71
+    },
+    "4531": {
+      "votos_disputadas": 29,
+      "taxa_disputadas": 62.1
+    },
+    "4560": {
+      "votos_disputadas": 30,
+      "taxa_disputadas": 83.3
+    },
+    "4639": {
+      "votos_disputadas": 38,
+      "taxa_disputadas": 100
+    },
+    "4642": {
+      "votos_disputadas": 37,
+      "taxa_disputadas": 43.2
+    },
+    "4694": {
+      "votos_disputadas": 36,
+      "taxa_disputadas": 2.8
+    },
+    "4770": {
+      "votos_disputadas": 32,
+      "taxa_disputadas": 12.5
+    },
+    "4811": {
+      "votos_disputadas": 36,
+      "taxa_disputadas": 38.9
+    },
+    "4979": {
+      "votos_disputadas": 1,
+      "taxa_disputadas": 0
+    },
+    "4994": {
+      "votos_disputadas": 27,
+      "taxa_disputadas": 92.6
+    },
+    "5008": {
+      "votos_disputadas": 33,
+      "taxa_disputadas": 100
+    },
+    "5012": {
+      "votos_disputadas": 38,
+      "taxa_disputadas": 100
+    },
+    "5070": {
+      "votos_disputadas": 34,
+      "taxa_disputadas": 0
+    },
+    "5322": {
+      "votos_disputadas": 29,
+      "taxa_disputadas": 27.6
+    },
+    "5352": {
+      "votos_disputadas": 36,
+      "taxa_disputadas": 97.2
+    },
+    "5376": {
+      "votos_disputadas": 18,
+      "taxa_disputadas": 83.3
+    },
+    "5385": {
+      "votos_disputadas": 18,
+      "taxa_disputadas": 44.4
+    },
+    "5386": {
+      "votos_disputadas": 38,
+      "taxa_disputadas": 68.4
+    },
+    "5411": {
+      "votos_disputadas": 31,
+      "taxa_disputadas": 77.4
+    },
+    "5422": {
+      "votos_disputadas": 30,
+      "taxa_disputadas": 0
+    },
+    "5502": {
+      "votos_disputadas": 37,
+      "taxa_disputadas": 18.9
+    },
+    "5523": {
+      "votos_disputadas": 37,
+      "taxa_disputadas": 97.3
+    },
+    "5525": {
+      "votos_disputadas": 29,
+      "taxa_disputadas": 93.1
+    },
+    "5672": {
+      "votos_disputadas": 36,
+      "taxa_disputadas": 27.8
+    },
+    "5718": {
+      "votos_disputadas": 23,
+      "taxa_disputadas": 100
+    },
+    "5732": {
+      "votos_disputadas": 6,
+      "taxa_disputadas": 33.3
+    },
+    "5736": {
+      "votos_disputadas": 33,
+      "taxa_disputadas": 3
+    },
+    "5748": {
+      "votos_disputadas": 30,
+      "taxa_disputadas": 96.7
+    },
+    "5783": {
+      "votos_disputadas": 37,
+      "taxa_disputadas": 94.6
+    },
+    "5793": {
+      "votos_disputadas": 30,
+      "taxa_disputadas": 13.3
+    },
+    "5894": {
+      "votos_disputadas": 33,
+      "taxa_disputadas": 0
+    },
+    "5895": {
+      "votos_disputadas": 37,
+      "taxa_disputadas": 81.1
+    },
+    "5899": {
+      "votos_disputadas": 27,
+      "taxa_disputadas": 44.4
+    },
+    "5905": {
+      "votos_disputadas": 23,
+      "taxa_disputadas": 34.8
+    },
+    "5906": {
+      "votos_disputadas": 6,
+      "taxa_disputadas": 33.3
+    },
+    "5917": {
+      "votos_disputadas": 27,
+      "taxa_disputadas": 85.2
+    },
+    "5924": {
+      "votos_disputadas": 33,
+      "taxa_disputadas": 27.3
+    },
+    "5926": {
+      "votos_disputadas": 32,
+      "taxa_disputadas": 21.9
+    },
+    "5936": {
+      "votos_disputadas": 30,
+      "taxa_disputadas": 0
+    },
+    "5942": {
+      "votos_disputadas": 26,
+      "taxa_disputadas": 3.8
+    },
+    "5953": {
+      "votos_disputadas": 37,
+      "taxa_disputadas": 100
+    },
+    "5959": {
+      "votos_disputadas": 33,
+      "taxa_disputadas": 27.3
+    },
+    "5967": {
+      "votos_disputadas": 31,
+      "taxa_disputadas": 80.6
+    },
+    "5973": {
+      "votos_disputadas": 23,
+      "taxa_disputadas": 69.6
+    },
+    "5976": {
+      "votos_disputadas": 38,
+      "taxa_disputadas": 2.6
+    },
+    "5979": {
+      "votos_disputadas": 34,
+      "taxa_disputadas": 97.1
+    },
+    "5982": {
+      "votos_disputadas": 32,
+      "taxa_disputadas": 81.3
+    },
+    "5985": {
+      "votos_disputadas": 28,
+      "taxa_disputadas": 67.9
+    },
+    "5988": {
+      "votos_disputadas": 33,
+      "taxa_disputadas": 45.5
+    },
+    "5990": {
+      "votos_disputadas": 30,
+      "taxa_disputadas": 40
+    },
+    "5991": {
+      "votos_disputadas": 2,
+      "taxa_disputadas": 50
+    },
+    "5998": {
+      "votos_disputadas": 23,
+      "taxa_disputadas": 65.2
+    },
+    "6008": {
+      "votos_disputadas": 17,
+      "taxa_disputadas": 94.1
+    },
+    "6009": {
+      "votos_disputadas": 27,
+      "taxa_disputadas": 0
+    },
+    "6010": {
+      "votos_disputadas": 28,
+      "taxa_disputadas": 71.4
+    },
+    "6011": {
+      "votos_disputadas": 4,
+      "taxa_disputadas": 0
+    },
+    "6015": {
+      "votos_disputadas": 7,
+      "taxa_disputadas": 0
+    },
+    "6027": {
+      "votos_disputadas": 33,
+      "taxa_disputadas": 18.2
+    },
+    "6295": {
+      "votos_disputadas": 2,
+      "taxa_disputadas": 100
+    },
+    "6304": {
+      "votos_disputadas": 22,
+      "taxa_disputadas": 50
+    },
+    "6305": {
+      "votos_disputadas": 4,
+      "taxa_disputadas": 25
+    },
+    "6331": {
+      "votos_disputadas": 37,
+      "taxa_disputadas": 10.8
+    },
+    "6335": {
+      "votos_disputadas": 37,
+      "taxa_disputadas": 5.4
+    },
+    "6337": {
+      "votos_disputadas": 38,
+      "taxa_disputadas": 7.9
+    },
+    "6338": {
+      "votos_disputadas": 32,
+      "taxa_disputadas": 100
+    },
+    "6340": {
+      "votos_disputadas": 34,
+      "taxa_disputadas": 0
+    },
+    "6341": {
+      "votos_disputadas": 36,
+      "taxa_disputadas": 5.6
+    },
+    "6342": {
+      "votos_disputadas": 35,
+      "taxa_disputadas": 0
+    },
+    "6345": {
+      "votos_disputadas": 32,
+      "taxa_disputadas": 75
+    },
+    "6350": {
+      "votos_disputadas": 26,
+      "taxa_disputadas": 100
+    },
+    "6351": {
+      "votos_disputadas": 7,
+      "taxa_disputadas": 100
+    },
+    "6358": {
+      "votos_disputadas": 29,
+      "taxa_disputadas": 96.6
+    },
+    "6362": {
+      "votos_disputadas": 5,
+      "taxa_disputadas": 0
+    },
+    "6363": {
+      "votos_disputadas": 1,
+      "taxa_disputadas": 0
+    },
+    "6366": {
+      "votos_disputadas": 1,
+      "taxa_disputadas": 100
+    },
+    "6369": {
+      "votos_disputadas": 34,
+      "taxa_disputadas": 97.1
+    },
+    "6372": {
+      "votos_disputadas": 1,
+      "taxa_disputadas": 0
+    },
+    "6374": {
+      "votos_disputadas": 1,
+      "taxa_disputadas": 0
+    }
+  }
+}

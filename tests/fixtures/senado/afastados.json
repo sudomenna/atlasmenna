@@ -1,0 +1,91 @@
+{
+  "AfastamentoAtual": {
+    "Metadados": { "Versao": "29/09/2026 01:18:42" },
+    "Parlamentares": {
+      "Parlamentar": [
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "9104",
+            "NomeParlamentar": "Davi Delta",
+            "NomeCompletoParlamentar": "Davi Delta Nunes",
+            "SexoParlamentar": "Feminino",
+            "FormaTratamento": "Senadora ",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "BA",
+            "EmailParlamentar": "sen.9104@exemplo.invalid"
+          },
+          "Mandato": {
+            "CodigoMandato": "1",
+            "UfParlamentar": "BA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "9105",
+            "NomeParlamentar": "Eva Echo",
+            "NomeCompletoParlamentar": "Eva Echo Prado",
+            "SexoParlamentar": "Feminino",
+            "FormaTratamento": "Senadora ",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "BA",
+            "EmailParlamentar": "sen.9105@exemplo.invalid"
+          },
+          "Mandato": {
+            "CodigoMandato": "1",
+            "UfParlamentar": "BA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente",
+            "Titular": { "DescricaoParticipacao": "Titular", "CodigoParlamentar": "9104" }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "9106",
+            "NomeParlamentar": "Fábio Foxtrot",
+            "NomeCompletoParlamentar": "Fábio Foxtrot Dias",
+            "SexoParlamentar": "Feminino",
+            "FormaTratamento": "Senadora ",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "CE",
+            "EmailParlamentar": "sen.9106@exemplo.invalid"
+          },
+          "Mandato": {
+            "CodigoMandato": "1",
+            "UfParlamentar": "CE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        }
+      ]
+    }
+  }
+}

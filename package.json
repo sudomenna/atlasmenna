@@ -42,6 +42,8 @@
     "sim": "tsx data-pipeline/simulacao-gerar.ts",
     "sim:full": "pnpm sim && .venv-model/bin/python3.14 scripts/gerar-serie-fixtures.py && biome format --write tests/fixtures/simulacao",
     "list-targets": "tsx scripts/list-targets.ts",
+    "alinhamento:senado": "tsx data-pipeline/alinhamento-senado-cli.ts",
+    "trajetoria:senado": "tsx data-pipeline/trajetoria-senado-cli.ts",
     "tse:watch": "tsx scripts/tse-watch.ts",
     "tse:mock": "tsx scripts/tse-mock-server.ts",
     "replay-2022": "tsx scripts/replay-2022.ts",

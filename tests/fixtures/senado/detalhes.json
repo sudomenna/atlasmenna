@@ -1,0 +1,205 @@
+{
+  "9101": {
+    "DetalheParlamentar": {
+      "Metadados": { "Versao": "29/09/2026 00:15:12" },
+      "Parlamentar": {
+        "IdentificacaoParlamentar": {
+          "CodigoParlamentar": "9101",
+          "NomeParlamentar": "Ana Alfa",
+          "NomeCompletoParlamentar": "Ana Alfa Souza",
+          "SexoParlamentar": "Feminino",
+          "FormaTratamento": "Senadora ",
+          "SiglaPartidoParlamentar": "PT",
+          "UfParlamentar": "SP",
+          "EmailParlamentar": "sen.9101@exemplo.invalid"
+        },
+        "DadosBasicosParlamentar": {
+          "DataNascimento": "1961-03-14",
+          "Naturalidade": "Cidade",
+          "EnderecoParlamentar": "Anexo 2"
+        },
+        "Telefones": { "Telefone": [{ "NumeroTelefone": "33000000" }] }
+      }
+    }
+  },
+  "9102": {
+    "DetalheParlamentar": {
+      "Metadados": { "Versao": "29/09/2026 00:15:12" },
+      "Parlamentar": {
+        "IdentificacaoParlamentar": {
+          "CodigoParlamentar": "9102",
+          "NomeParlamentar": "Beto Bravo",
+          "NomeCompletoParlamentar": "Roberto Bravo Lima",
+          "SexoParlamentar": "Feminino",
+          "FormaTratamento": "Senadora ",
+          "SiglaPartidoParlamentar": "PT",
+          "UfParlamentar": "SP",
+          "EmailParlamentar": "sen.9102@exemplo.invalid"
+        },
+        "DadosBasicosParlamentar": {
+          "DataNascimento": "1975-11-02",
+          "Naturalidade": "Cidade",
+          "EnderecoParlamentar": "Anexo 2"
+        },
+        "Telefones": { "Telefone": [{ "NumeroTelefone": "33000000" }] }
+      }
+    }
+  },
+  "9103": {
+    "DetalheParlamentar": {
+      "Metadados": { "Versao": "29/09/2026 00:15:12" },
+      "Parlamentar": {
+        "IdentificacaoParlamentar": {
+          "CodigoParlamentar": "9103",
+          "NomeParlamentar": "Carla Charlie",
+          "NomeCompletoParlamentar": "Carla Charlie Rocha",
+          "SexoParlamentar": "Feminino",
+          "FormaTratamento": "Senadora ",
+          "SiglaPartidoParlamentar": "PT",
+          "UfParlamentar": "SP",
+          "EmailParlamentar": "sen.9103@exemplo.invalid"
+        },
+        "DadosBasicosParlamentar": {
+          "DataNascimento": "1968-07-21",
+          "Naturalidade": "Cidade",
+          "EnderecoParlamentar": "Anexo 2"
+        },
+        "Telefones": { "Telefone": [{ "NumeroTelefone": "33000000" }] }
+      }
+    }
+  },
+  "9104": {
+    "DetalheParlamentar": {
+      "Metadados": { "Versao": "29/09/2026 00:15:12" },
+      "Parlamentar": {
+        "IdentificacaoParlamentar": {
+          "CodigoParlamentar": "9104",
+          "NomeParlamentar": "Davi Delta",
+          "NomeCompletoParlamentar": "Davi Delta Nunes",
+          "SexoParlamentar": "Feminino",
+          "FormaTratamento": "Senadora ",
+          "SiglaPartidoParlamentar": "PT",
+          "UfParlamentar": "SP",
+          "EmailParlamentar": "sen.9104@exemplo.invalid"
+        },
+        "DadosBasicosParlamentar": {
+          "DataNascimento": "1959-01-30",
+          "Naturalidade": "Cidade",
+          "EnderecoParlamentar": "Anexo 2"
+        },
+        "Telefones": { "Telefone": [{ "NumeroTelefone": "33000000" }] }
+      }
+    }
+  },
+  "9105": {
+    "DetalheParlamentar": {
+      "Metadados": { "Versao": "29/09/2026 00:15:12" },
+      "Parlamentar": {
+        "IdentificacaoParlamentar": {
+          "CodigoParlamentar": "9105",
+          "NomeParlamentar": "Eva Echo",
+          "NomeCompletoParlamentar": "Eva Echo Prado",
+          "SexoParlamentar": "Feminino",
+          "FormaTratamento": "Senadora ",
+          "SiglaPartidoParlamentar": "PT",
+          "UfParlamentar": "SP",
+          "EmailParlamentar": "sen.9105@exemplo.invalid"
+        },
+        "DadosBasicosParlamentar": {
+          "DataNascimento": "1972-09-09",
+          "Naturalidade": "Cidade",
+          "EnderecoParlamentar": "Anexo 2"
+        },
+        "Telefones": { "Telefone": [{ "NumeroTelefone": "33000000" }] }
+      }
+    }
+  },
+  "9106": {
+    "DetalheParlamentar": {
+      "Metadados": { "Versao": "29/09/2026 00:15:12" },
+      "Parlamentar": {
+        "IdentificacaoParlamentar": {
+          "CodigoParlamentar": "9106",
+          "NomeParlamentar": "Fábio Foxtrot",
+          "NomeCompletoParlamentar": "Fábio Foxtrot Dias",
+          "SexoParlamentar": "Feminino",
+          "FormaTratamento": "Senadora ",
+          "SiglaPartidoParlamentar": "PT",
+          "UfParlamentar": "SP",
+          "EmailParlamentar": "sen.9106@exemplo.invalid"
+        },
+        "DadosBasicosParlamentar": {
+          "DataNascimento": "1980-12-05",
+          "Naturalidade": "Cidade",
+          "EnderecoParlamentar": "Anexo 2"
+        },
+        "Telefones": { "Telefone": [{ "NumeroTelefone": "33000000" }] }
+      }
+    }
+  },
+  "9107": {
+    "DetalheParlamentar": {
+      "Metadados": { "Versao": "29/09/2026 00:15:12" },
+      "Parlamentar": {
+        "IdentificacaoParlamentar": {
+          "CodigoParlamentar": "9107",
+          "NomeParlamentar": "Gil Golf",
+          "NomeCompletoParlamentar": "Gilberto Golf Moreira",
+          "SexoParlamentar": "Feminino",
+          "FormaTratamento": "Senadora ",
+          "SiglaPartidoParlamentar": "PT",
+          "UfParlamentar": "SP",
+          "EmailParlamentar": "sen.9107@exemplo.invalid"
+        },
+        "DadosBasicosParlamentar": {
+          "DataNascimento": "1950-05-17",
+          "Naturalidade": "Cidade",
+          "EnderecoParlamentar": "Anexo 2"
+        },
+        "Telefones": { "Telefone": [{ "NumeroTelefone": "33000000" }] }
+      }
+    }
+  },
+  "9108": {
+    "DetalheParlamentar": {
+      "Metadados": { "Versao": "29/09/2026 00:15:12" },
+      "Parlamentar": {
+        "IdentificacaoParlamentar": {
+          "CodigoParlamentar": "9108",
+          "NomeParlamentar": "Helena Hotel",
+          "NomeCompletoParlamentar": "Helena Hotel Cunha",
+          "SexoParlamentar": "Feminino",
+          "FormaTratamento": "Senadora ",
+          "SiglaPartidoParlamentar": "PT",
+          "UfParlamentar": "SP",
+          "EmailParlamentar": "sen.9108@exemplo.invalid"
+        },
+        "DadosBasicosParlamentar": {
+          "DataNascimento": "1966-04-04",
+          "Naturalidade": "Cidade",
+          "EnderecoParlamentar": "Anexo 2"
+        },
+        "Telefones": { "Telefone": [{ "NumeroTelefone": "33000000" }] }
+      }
+    }
+  },
+  "9109": {
+    "DetalheParlamentar": {
+      "Metadados": { "Versao": "29/09/2026 00:15:12" },
+      "Parlamentar": {
+        "IdentificacaoParlamentar": {
+          "CodigoParlamentar": "9109",
+          "NomeParlamentar": "Sem Data",
+          "NomeCompletoParlamentar": "Sem Data Silva",
+          "SexoParlamentar": "Feminino",
+          "FormaTratamento": "Senadora ",
+          "SiglaPartidoParlamentar": "PT",
+          "UfParlamentar": "SP",
+          "EmailParlamentar": "sen.9109@exemplo.invalid"
+        },
+        "DadosBasicosParlamentar": { "Naturalidade": "Cidade" },
+        "Telefones": { "Telefone": [{ "NumeroTelefone": "33000000" }] }
+      }
+    }
+  }
+}
