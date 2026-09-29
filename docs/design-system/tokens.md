@@ -728,6 +728,47 @@ puro) e `--color-cand-4-strong` (matiz 108°, verde-oliva) têm ΔE76 9.6 —
 mesmo nível já aceito hoje entre `--color-success` e `--color-cand-4`
 (ΔE76 9.6, ver "Tokens de participação" acima).
 
+## Tokens editoriais neutros (spec 024/025 — ADR-0059, ADR-0060)
+
+**Etiquetas editoriais** (spec 024, RF-235) e **mapa dos palanques** (spec 025 V3, RF-251)
+não usam cor de partido. A constituição § 2 proíbe qualquer área de cor que fico a ΔE76 < 10
+de uma cor da paleta de partido — confusão entre "candidato com chance" e "categoria editorial"
+é justamente a armadilha. Ambas usam **apelidos de tokens semânticos do site**, que já trocam
+de tema e já têm contraste medido nos dois temas:
+
+### Etiqueta Editorial (`--etq-*`)
+
+Moram em `components/atoms/data/EtiquetaEditorial.module.css`. Sem fundo:
+
+| Token | Semântico | Valores | Contraste | Uso |
+|---|---|---|---|---|
+| `--etq-tinta` | `--text-primary` | Ink-0: #14171b | 16.34:1 (paper-1), 17.38 (paper-0) | Texto da etiqueta |
+| `--etq-borda` | `--border-strong` | Ink-0: #14171b | idem | Borda tracejada 1px |
+| `--etq-fundo` | — | `transparent` | — | Sem área de cor |
+
+Estrutura: `<span>` inline com `border: 1px dashed`, `border-radius: 2px`, `text-transform: none` (caixa baixa), padding 1px × 4px, line-height 1.3. Dentro de um `<span>` do nome no cartão (spec 025 RF-245) ou da linha de UF (RF-246), nunca bloco. Nunca muda ordem. ΔE76 contra `--party-outros` (2,6) e menores cinzas da paleta é garantido pelo teste `tests/unit/design-system/etiqueta-editorial-contraste.test.tsx`.
+
+### Palanques Mapa (`--pal-*`)
+
+Moram em `components/blocks/PalanquesMapa.module.css`. Sem fundo; hachura (padrão SVG) + código de texto (2 caracteres):
+
+| Token | Semântico | Valores | Contraste | Uso |
+|---|---|---|---|---|
+| `--pal-tinta` | `--text-primary` | Ink-0: #14171b | 16.34:1 sobre paper-1 | Hachura (stroke de `<pattern>`), texto do código |
+| `--pal-borda` | `--border-strong` | Ink-0: #14171b | idem | Contorno do ladrilho (stroke width 1..2.5) |
+| `--pal-papel` | `--surface-card` | #f3f4f6 | — | Paint-order de halo atrás do código |
+| `--pal-quieto` | `--text-secondary` | Ink-1: #2a2f36 | 12.25:1 sobre paper-1 | Código e sigla quando sem leitura (palanque="nenhum") |
+| `--pal-tenue` | `--border-hairline` | ??? (em desenvolvimento) | — | Contorno pontilhado de estado sem classificação |
+
+Regra: texto **nunca é cor-only**; a hachura é sempre redundante (padrão em SVG), e o contorno casado/dividido é linha contínua vs tracejada + código "=" / "≠" (spec 025 RF-251 design). ΔE76 contra toda cor de partido nos dois temas, testado em `tests/unit/design-system/palanques-mapa-contraste.test.tsx`.
+
+### Restrições da constituição 1.6
+
+- § 2(d): paleta neutra com piso de ΔE76 ≥ 10 contra cores de partido — aqui garantido por teste.
+- § 2(e): etiqueta nunca muda a ordem de candidatos — spec 025 RF-245 refuta com auxiliar de ordem invariante.
+- § 4: código/redundância — regra deste catálogo, nunca só cor.
+- § 8: link para `/sobre-as-etiquetas` em toda superfície com etiqueta — `<EtiquetasAviso />` (spec 025 RF-248).
+
 ## Cross-refs
 
 - Constituição § 2 (neutralidade): [../constitution.md](../constitution.md#2-neutralidade-política)

@@ -62,6 +62,9 @@ last_updated: 2026-09-18
 | `<DotPlotRange />` | 🕐 planejada | RF-025 | *previsto*: `components/atoms/charts/DotPlotRange.tsx` | — |
 | `<ModelComposition />` | 🕐 planejada | RF-043 | *previsto*: `components/atoms/charts/ModelComposition.tsx` | — |
 | `<ChoroplethMap />` | ⛔ substituída | RF-034, RF-036, RF-038 | — | — |
+| `<EtiquetaEditorial />` | ✅ S09 | RF-235, RF-236, RF-245, RF-246 | `components/atoms/data/EtiquetaEditorial.tsx` | `tests/unit/design-system/etiqueta-editorial-contraste.test.tsx` |
+| `<EtiquetasLinha />` | ✅ S09 | RF-235, RF-236, RF-245, RF-246 | `components/atoms/data/EtiquetasLinha.tsx` | (coberto pela linha que a exporta) |
+| `<EtiquetaFiltro />` | ✅ S09 | RF-247 | `components/atoms/controls/EtiquetaFiltro.tsx` | `tests/unit/design-system/etiqueta-filtro-*.test.tsx` (comportamento do `<select>` nativo) |
 
 Notas dos atoms não construídos:
 
@@ -125,6 +128,14 @@ Notas dos atoms não construídos:
 | `<CamaraHemiciclo />` | ✅ S07 | RF-131 | `components/blocks/CamaraHemiciclo.tsx` | `tests/unit/components/CamaraHemiciclo.test.tsx`, `tests/unit/components/camara-hemiciclo-peso.test.tsx` (ADR-0049: 513 cadeiras com arcos fixos, 12 linhas; estado indefinida com anel colorido; ordem por tamanho de bancada) |
 | `<VotacaoEleitorado />` | ✅ S08 | RF-192, RF-193, RF-193b, RF-194, RF-195, RF-196, RF-197, RF-198, RF-199 (spec 021) | `components/blocks/VotacaoEleitorado.tsx` | `tests/unit/components/VotacaoEleitorado.test.tsx` (17 casos: três círculos independentes, fechamento por base, percentuais, transição entre estados, projeção no círculo 3) |
 | `<CorridaTresCirculos />` | ✅ S08 | RF-200, RF-201, RF-202, RF-203, RF-204, RF-205, RF-206, RF-207, RF-208, RF-209, RF-210 (spec 022) | `components/blocks/CorridaTresCirculos.tsx` | `tests/unit/components/CorridaTresCirculos.test.tsx` (46 casos: estados, desempate, fechamento, rótulos), `tests/unit/model/test_corrida.py` (39 casos: mapeamento de dvt, agregação por partido, pendência), `tests/unit/data-pipeline/simulacao-gerar.test.ts` (18 casos novos de corrida), `tests/unit/edge-config/votacao-corrida-bytes.test.ts` (5 casos de orçamento) |
+| `<Hemiciclo />` | ✅ S09 | RF-216, RF-240, RF-241 (spec 023/025 — render genérico do hemiciclo por arcos, usado por `<CamaraHemiciclo>`, `<SenadoHemiciclo>` e `<HemicicloPorBloco>`) | `components/blocks/Hemiciclo.tsx` | `tests/unit/components/senado-hemiciclo-peso.test.tsx`, `tests/unit/components/hemiciclo-geometria.test.tsx` (ADR-0061 — marcas de limiar com desempate, contagem) |
+| `<SenadoHemiciclo />` | ✅ S09 | RF-216, RF-217, RF-218 (spec 023 — hemiciclo de 81 cadeiras do Senado com quatro estados por cadeira; generalização da geometria de `CamaraHemiciclo`) | `components/blocks/SenadoHemiciclo.tsx` | coberto por `tests/unit/components/senado-hemiciclo-peso.test.tsx` |
+| `<HemicicloPorBloco />` | ✅ S09 | RF-240, RF-241 (spec 025 V1/V2/Câmara 2027 — visão por bloco de governo Lula com marcas de limiar qualificadas, textura neutra, sem cor de partido) | `components/blocks/HemicicloPorBloco.tsx` | `tests/unit/components/hemiciclo-por-bloco.test.tsx` (textura, ordem fixa de blocos, placar qualificado dos limiares, ΔE neutro) |
+| `<SenadoDe2027Panel />` | ✅ S09 | RF-242, RF-243 (spec 025 V1/V2 — composição do Senado por bloco de governo para 2027, com placar de impeachment qualificado em V2) | `components/blocks/SenadoDe2027Panel.tsx` | (integrado; sem teste dedicado — coberto pelos testes de visão editorial em desenvolvimento) |
+| `<Camara2027Panel />` | ✅ S09 | RF-244 (spec 025 — composição da Câmara por bloco de governo para 2027, por agremiação) | `components/blocks/Camara2027Panel.tsx` | (integrado; sem teste dedicado) |
+| `<RenovacaoPanel />` | ✅ S09 | RF-249 (spec 025 V4 — renovação do Senado: quantas vagas mudaram de mãos, quantas trocaram de partido, lista de quem perdeu) | `components/blocks/RenovacaoPanel.tsx` | (integrado; sem teste dedicado) |
+| `<PalanquesMapa />` | ✅ S09 | RF-251 (spec 025 V3 — mapa dos palanques presidenciais por estado com hachura, código e contorno casado/dividido) | `components/blocks/PalanquesMapa.tsx` | `tests/unit/design-system/palanques-mapa-contraste.test.tsx` (ΔE neutro, hachura visível, legibilidade do código) |
+| `<EtiquetasAviso />` | ✅ S09 | RF-237, RF-248 (spec 024/025 — banner de aviso e link para `/sobre-as-etiquetas`; aparece uma vez por superfície com etiqueta) | `components/blocks/EtiquetasAviso.tsx` | (integrado; sem teste dedicado — coberto pelo portão de cobertura de etiquetas em desenvolvimento) |
 | `<UFForecastTable />` | 🕐 planejada | RF-025 (deferido desde S05) | *previsto*: `components/blocks/UFForecastTable.tsx` | — |
 | `<MaintenancePageMessage />` | 🕐 planejada | RF-058 | *previsto*: `components/blocks/MaintenancePageMessage.tsx` | — |
 | `<TurnoTransitionBanner />` | 🕐 planejada | RF-058.1 | *previsto*: `components/blocks/TurnoTransitionBanner.tsx` | — |

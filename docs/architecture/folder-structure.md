@@ -22,6 +22,7 @@ salacofre/
 │   ├── uf/[sigla]/governador/page.tsx
 │   ├── uf/[sigla]/municipio/[ibge]/page.tsx
 │   ├── sobre-o-modelo/page.mdx
+│   ├── sobre-as-etiquetas/page.tsx             # spec 025: metodologia das etiquetas editoriais
 │   ├── _status/page.tsx                   # interno, auth
 │   ├── manutencao/page.tsx
 │   ├── opengraph-image.tsx                # OG dinâmica
@@ -47,6 +48,12 @@ salacofre/
 │   │   └── InsightCard.tsx
 │   ├── layout/{Header,Footer,LiveBadge,Tabs}.tsx
 │   └── shared/{HoverTooltip,BottomSheet}.tsx
+├── editorial/
+│   ├── etiquetas/                             # spec 024: CSVs editadas à mão (candidatos, partidos, senadores)
+│   ├── senado/                                # spec 023: foto do Senado 2027 (27 mandatos até 2031) por UF
+│   ├── derivados/                             # spec 024: trajetória e alinhamento por cargo, compilados
+│   ├── README.md                              # guia leigo para preencher CSVs
+│   └── etiquetas/publicar.json                # spec 025: chaves de visão editorial (v1..v4, camara2027)
 ├── lib/
 │   ├── tse/{client,ea20-parser,cdn-urls,ea-config}.ts
 │   ├── model/{swing,bootstrap,project,types}.ts (+ project.py)
@@ -56,12 +63,22 @@ salacofre/
 │   ├── state/hover-store.ts
 │   ├── geo/{municipios.pmtiles,ufs.pmtiles,index.ts}
 │   ├── insights/{templates.json,generate.ts}
+│   ├── etiquetas/{catalogo,leitor,portao}.ts       # spec 024: definição, leitura, cobertura de etiquetas editoriais
+│   ├── data/
+│   │   └── etiquetas/{compilado,publicado,publicar}.ts  # spec 024: tipos e funções para dados compilados/publicados
+│   ├── senado/{foto-2027,composicao-vagas}.ts      # spec 023: foto dos 27 mandatos, derivação das 54 vagas
 │   └── utils/{format,colors,a11y}.ts
 ├── middleware.ts                          # rate limit + BotID
 ├── data-pipeline/
 │   ├── historical-import.ts               # importa TSE 2022
 │   ├── eleitorado-import.ts
 │   ├── ibge-import.ts                     # municípios shapefile → PMTiles
+│   ├── etiquetas-compilar.ts              # spec 024: valida e compila CSVs → JSON
+│   ├── etiquetas-publicar.ts              # spec 024: publica etiquetas compiladas no Blob
+│   ├── trajetoria-camara.ts               # spec 024: extrai trajetória de candidatos ao Deputado (reeleição, volta, estreante)
+│   ├── trajetoria-senado.ts               # spec 024: extrai trajetória de candidatos ao Senador
+│   ├── alinhamento-senado.ts              # spec 024: calcula alinhamento (base/oposição) pela votação do Senado (quando existir)
+│   ├── senado-mandatos-snapshot.ts        # spec 023: consulta API do Senado Federal e grava foto dos 27 mandatos até 2031
 │   └── README.md
 ├── scripts/
 │   ├── replay-2022.ts
