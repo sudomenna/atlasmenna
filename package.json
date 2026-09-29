@@ -33,6 +33,9 @@
     "candidatos:fotos": "tsx data-pipeline/candidatos-fotos-import.ts",
     "trajetoria:exportar": "node --experimental-strip-types data-pipeline/trajetoria-exportar.ts",
     "alinhamento:importar": "node --experimental-strip-types data-pipeline/alinhamento-importar.ts --corte 2026-09-03",
+    "etiquetas:compilar": "tsx data-pipeline/etiquetas-compilar.ts && biome format --write lib/data/etiquetas",
+    "etiquetas:conferir": "tsx data-pipeline/etiquetas-compilar.ts --conferir",
+    "etiquetas:publicar": "tsx data-pipeline/etiquetas-publicar.ts",
     "edge-config:smoke": "tsx scripts/edge-config-smoke.ts",
     "edge-config:prune": "tsx scripts/edge-config-prune.ts",
     "projection:seed": "tsx data-pipeline/projection-seed.ts",
@@ -49,6 +52,7 @@
     "verify-fatia-premise": "tsx scripts/verify-fatia-premise.ts",
     "vigia:ciclo": "tsx scripts/vigia-ciclo.ts",
     "vigia:armado": "tsx scripts/vigia-armado.ts",
+    "etiquetas:vigia": "tsx scripts/etiquetas-vigia.ts",
     "alerta:teste": "tsx scripts/alerta-teste.ts"
   },
   "packageManager": "pnpm@10.33.0",

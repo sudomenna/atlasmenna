@@ -1,0 +1,2776 @@
+{
+  "formato": "etiquetas/v1",
+  "meta": {
+    "versao": 1790660101,
+    "gerado_em": "2026-09-29T05:35:01.510Z",
+    "conteudo_sha256": "cd35fee4c57b05d9a9c95abb155849021d2e7d526f19dcb2279d353efb3a9a62",
+    "git_sha": null
+  },
+  "publicar": {
+    "chips": false,
+    "filtro": false,
+    "v1": false,
+    "v2": false,
+    "v3": false,
+    "v4": false,
+    "camara2027": false
+  },
+  "derivados": {
+    "trajetoria_camara": {
+      "fonte_url": "https://dadosabertos.camara.leg.br/",
+      "fonte_descricao": "Câmara dos Deputados — histórico de mandatos, cruzado com a candidatura no TSE",
+      "data": "2026-09-29"
+    },
+    "alinhamento_camara": {
+      "fonte_url": "https://dadosabertos.camara.leg.br",
+      "fonte_descricao": "Câmara dos Deputados — Dados Abertos (votações nominais do plenário com orientação do governo)",
+      "data": "2026-09-03"
+    },
+    "trajetoria_senado": null,
+    "alinhamento_senado": null
+  },
+  "partidos": {
+    "AGIR": null,
+    "AVANTE": null,
+    "CIDADANIA": "PSDB/CIDADANIA",
+    "DC": null,
+    "DEMOCRATA": null,
+    "MDB": null,
+    "MISSAO": null,
+    "MOBILIZA": null,
+    "NOVO": null,
+    "PCB": null,
+    "PCDOB": "PT/PC DO B/PV",
+    "PCO": null,
+    "PDT": null,
+    "PL": null,
+    "PODE": null,
+    "PP": "UNIAO/PP",
+    "PRD": "PRD/SOLIDARIEDADE",
+    "PRTB": null,
+    "PSB": null,
+    "PSD": null,
+    "PSDB": "PSDB/CIDADANIA",
+    "PSOL": "PSOL/REDE",
+    "PSTU": null,
+    "PT": "PT/PC DO B/PV",
+    "PV": "PT/PC DO B/PV",
+    "REDE": "PSOL/REDE",
+    "REPUBLICANOS": null,
+    "SOLIDARIEDADE": "PRD/SOLIDARIEDADE",
+    "UNIAO": "UNIAO/PP",
+    "UP": null
+  },
+  "padroes": {},
+  "candidatos": {
+    "10002532492": {
+      "uf": "AC",
+      "cargo": 3,
+      "partido": "REPUBLICANOS"
+    },
+    "10002533539": {
+      "uf": "AC",
+      "cargo": 3,
+      "partido": "AGIR"
+    },
+    "10002533895": {
+      "uf": "AC",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "10002535804": {
+      "uf": "AC",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "10002536441": {
+      "uf": "AC",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "10002536710": {
+      "uf": "AC",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "10002544015": {
+      "uf": "AC",
+      "cargo": 3,
+      "partido": "PSDB"
+    },
+    "10002544107": {
+      "uf": "AC",
+      "cargo": 3,
+      "partido": "PP"
+    },
+    "10002544110": {
+      "uf": "AC",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "10002544274": {
+      "uf": "AC",
+      "cargo": 5,
+      "partido": "SOLIDARIEDADE"
+    },
+    "10002548046": {
+      "uf": "AC",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "10002548050": {
+      "uf": "AC",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "10002549500": {
+      "uf": "AC",
+      "cargo": 3,
+      "partido": "PCB"
+    },
+    "10002550719": {
+      "uf": "AC",
+      "cargo": 3,
+      "partido": "PSB"
+    },
+    "20002539642": {
+      "uf": "AL",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "20002540197": {
+      "uf": "AL",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "20002548147": {
+      "uf": "AL",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "20002552502": {
+      "uf": "AL",
+      "cargo": 3,
+      "partido": "DEMOCRATA"
+    },
+    "20002552524": {
+      "uf": "AL",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "20002553272": {
+      "uf": "AL",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "20002553350": {
+      "uf": "AL",
+      "cargo": 3,
+      "partido": "PSDB"
+    },
+    "20002553711": {
+      "uf": "AL",
+      "cargo": 5,
+      "partido": "PSDB"
+    },
+    "20002553726": {
+      "uf": "AL",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "20002553727": {
+      "uf": "AL",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "20002553745": {
+      "uf": "AL",
+      "cargo": 3,
+      "partido": "MDB"
+    },
+    "30002530014": {
+      "uf": "AP",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "30002530069": {
+      "uf": "AP",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "30002530071": {
+      "uf": "AP",
+      "cargo": 5,
+      "partido": "PODE"
+    },
+    "30002536311": {
+      "uf": "AP",
+      "cargo": 3,
+      "partido": "UNIAO"
+    },
+    "30002536313": {
+      "uf": "AP",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "30002549909": {
+      "uf": "AP",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "30002549911": {
+      "uf": "AP",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "30002550229": {
+      "uf": "AP",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "30002551381": {
+      "uf": "AP",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "30002551382": {
+      "uf": "AP",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "30002551388": {
+      "uf": "AP",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "30002551576": {
+      "uf": "AP",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "30002552017": {
+      "uf": "AP",
+      "cargo": 3,
+      "partido": "DC"
+    },
+    "30002553708": {
+      "uf": "AP",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "40002531447": {
+      "uf": "AM",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "40002532272": {
+      "uf": "AM",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "40002535267": {
+      "uf": "AM",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "40002535270": {
+      "uf": "AM",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "40002535391": {
+      "uf": "AM",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "40002536086": {
+      "uf": "AM",
+      "cargo": 3,
+      "partido": "AVANTE"
+    },
+    "40002537344": {
+      "uf": "AM",
+      "cargo": 5,
+      "partido": "PSDB"
+    },
+    "40002541626": {
+      "uf": "AM",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "40002541741": {
+      "uf": "AM",
+      "cargo": 3,
+      "partido": "UNIAO"
+    },
+    "40002541744": {
+      "uf": "AM",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "40002542686": {
+      "uf": "AM",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "40002550776": {
+      "uf": "AM",
+      "cargo": 3,
+      "partido": "REDE"
+    },
+    "40002550806": {
+      "uf": "AM",
+      "cargo": 5,
+      "partido": "MOBILIZA"
+    },
+    "40002551281": {
+      "uf": "AM",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "40002551283": {
+      "uf": "AM",
+      "cargo": 5,
+      "partido": "REDE"
+    },
+    "40002551740": {
+      "uf": "AM",
+      "cargo": 3,
+      "partido": "MOBILIZA"
+    },
+    "50002532269": {
+      "uf": "BA",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "50002533123": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "50002533124": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "50002533190": {
+      "uf": "BA",
+      "cargo": 3,
+      "partido": "UNIAO"
+    },
+    "50002534769": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "50002534774": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "REDE"
+    },
+    "50002535253": {
+      "uf": "BA",
+      "cargo": 3,
+      "partido": "DC"
+    },
+    "50002536314": {
+      "uf": "BA",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "50002536317": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "50002536321": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "50002536577": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "50002536579": {
+      "uf": "BA",
+      "cargo": 3,
+      "partido": "DC"
+    },
+    "50002536625": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "MOBILIZA"
+    },
+    "50002544692": {
+      "uf": "BA",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "50002550314": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "50002552489": {
+      "uf": "BA",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "50002553643": {
+      "uf": "BA",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "60002531351": {
+      "uf": "CE",
+      "cargo": 3,
+      "partido": "PSDB"
+    },
+    "60002533729": {
+      "uf": "CE",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "60002533959": {
+      "uf": "CE",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "60002539687": {
+      "uf": "CE",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "60002540336": {
+      "uf": "CE",
+      "cargo": 3,
+      "partido": "NOVO"
+    },
+    "60002540417": {
+      "uf": "CE",
+      "cargo": 3,
+      "partido": "MISSAO"
+    },
+    "60002540753": {
+      "uf": "CE",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "60002540754": {
+      "uf": "CE",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "60002542476": {
+      "uf": "CE",
+      "cargo": 5,
+      "partido": "REDE"
+    },
+    "60002542479": {
+      "uf": "CE",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "60002543969": {
+      "uf": "CE",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "60002549967": {
+      "uf": "CE",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "60002550748": {
+      "uf": "CE",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "60002551397": {
+      "uf": "CE",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "60002552320": {
+      "uf": "CE",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "60002552498": {
+      "uf": "CE",
+      "cargo": 3,
+      "partido": "DEMOCRATA"
+    },
+    "60002553922": {
+      "uf": "CE",
+      "cargo": 3,
+      "partido": "NOVO"
+    },
+    "70002535930": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "70002536445": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "70002537111": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "70002537112": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "70002547775": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "NOVO"
+    },
+    "70002548624": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "70002551298": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "AGIR"
+    },
+    "70002551323": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "AGIR"
+    },
+    "70002551426": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "70002551557": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "PSB"
+    },
+    "70002552341": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "70002552490": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "70002552492": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "PDT"
+    },
+    "70002552496": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "70002552582": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "AVANTE"
+    },
+    "70002552586": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "70002552934": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "70002552936": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "70002552965": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "PSDB"
+    },
+    "70002553055": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "PP"
+    },
+    "70002553296": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "PSDB"
+    },
+    "70002553751": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "70002553859": {
+      "uf": "DF",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "70002553982": {
+      "uf": "DF",
+      "cargo": 3,
+      "partido": "PRTB"
+    },
+    "80002530022": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "80002538202": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "AVANTE"
+    },
+    "80002541012": {
+      "uf": "ES",
+      "cargo": 3,
+      "partido": "MISSAO"
+    },
+    "80002542401": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "80002549404": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "80002550187": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "80002550832": {
+      "uf": "ES",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "80002551368": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "80002551370": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "80002551833": {
+      "uf": "ES",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "80002552172": {
+      "uf": "ES",
+      "cargo": 3,
+      "partido": "MDB"
+    },
+    "80002552373": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "PRTB"
+    },
+    "80002552682": {
+      "uf": "ES",
+      "cargo": 3,
+      "partido": "REPUBLICANOS"
+    },
+    "80002552692": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "80002553265": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "80002553269": {
+      "uf": "ES",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "90002540993": {
+      "uf": "GO",
+      "cargo": 3,
+      "partido": "MDB"
+    },
+    "90002540997": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "90002540998": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "PRD"
+    },
+    "90002541454": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "90002541455": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "90002543215": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "90002543463": {
+      "uf": "GO",
+      "cargo": 3,
+      "partido": "PSDB"
+    },
+    "90002543556": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "90002543560": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "90002545243": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "PSDB"
+    },
+    "90002545244": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "CIDADANIA"
+    },
+    "90002545476": {
+      "uf": "GO",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "90002546974": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "90002550707": {
+      "uf": "GO",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "90002551198": {
+      "uf": "GO",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "90002551791": {
+      "uf": "GO",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "90002553733": {
+      "uf": "GO",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "100002534190": {
+      "uf": "MA",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "100002536212": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "100002537338": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "PDT"
+    },
+    "100002537364": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "100002541459": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "100002542556": {
+      "uf": "MA",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "100002542867": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "100002543869": {
+      "uf": "MA",
+      "cargo": 3,
+      "partido": "MDB"
+    },
+    "100002544073": {
+      "uf": "MA",
+      "cargo": 3,
+      "partido": "PCB"
+    },
+    "100002544076": {
+      "uf": "MA",
+      "cargo": 3,
+      "partido": "MISSAO"
+    },
+    "100002545679": {
+      "uf": "MA",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "100002548011": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "100002548853": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "100002549014": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "PCB"
+    },
+    "100002549583": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "100002550418": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "MOBILIZA"
+    },
+    "100002551399": {
+      "uf": "MA",
+      "cargo": 3,
+      "partido": "PRTB"
+    },
+    "100002552700": {
+      "uf": "MA",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "100002553336": {
+      "uf": "MA",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "110002540403": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "AVANTE"
+    },
+    "110002543953": {
+      "uf": "MT",
+      "cargo": 3,
+      "partido": "MISSAO"
+    },
+    "110002544985": {
+      "uf": "MT",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "110002544986": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "110002544988": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "110002548042": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "110002551480": {
+      "uf": "MT",
+      "cargo": 3,
+      "partido": "REPUBLICANOS"
+    },
+    "110002551737": {
+      "uf": "MT",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "110002551966": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "110002551967": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "110002552693": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "110002552698": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "110002553058": {
+      "uf": "MT",
+      "cargo": 3,
+      "partido": "MOBILIZA"
+    },
+    "110002553701": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "AGIR"
+    },
+    "110002553706": {
+      "uf": "MT",
+      "cargo": 5,
+      "partido": "AGIR"
+    },
+    "110002553937": {
+      "uf": "MT",
+      "cargo": 3,
+      "partido": "AGIR"
+    },
+    "110002554073": {
+      "uf": "MT",
+      "cargo": 3,
+      "partido": "AGIR"
+    },
+    "120002532257": {
+      "uf": "MS",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "120002532721": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "120002534952": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "AGIR"
+    },
+    "120002535764": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "120002535769": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "120002536582": {
+      "uf": "MS",
+      "cargo": 3,
+      "partido": "PP"
+    },
+    "120002539834": {
+      "uf": "MS",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "120002547434": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "120002547435": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "120002549681": {
+      "uf": "MS",
+      "cargo": 3,
+      "partido": "DC"
+    },
+    "120002550198": {
+      "uf": "MS",
+      "cargo": 3,
+      "partido": "AGIR"
+    },
+    "120002551909": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "120002552115": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "120002552155": {
+      "uf": "MS",
+      "cargo": 3,
+      "partido": "PRD"
+    },
+    "120002552183": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "PRD"
+    },
+    "120002552191": {
+      "uf": "MS",
+      "cargo": 3,
+      "partido": "NOVO"
+    },
+    "120002552196": {
+      "uf": "MS",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "120002552201": {
+      "uf": "MS",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "130002539775": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "PDT"
+    },
+    "130002541911": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "130002544122": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "PCB"
+    },
+    "130002544411": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "MISSAO"
+    },
+    "130002545590": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "130002546802": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "130002547874": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "130002547882": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "130002547884": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "130002548381": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "130002549557": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "MDB"
+    },
+    "130002550464": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "130002550557": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "130002550560": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "130002550834": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "130002551265": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "130002551284": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "130002551786": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "130002551929": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "130002551930": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "130002552186": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "AVANTE"
+    },
+    "130002552296": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "REPUBLICANOS"
+    },
+    "130002552299": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "130002552302": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "130002552308": {
+      "uf": "MG",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "130002552311": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "130002553354": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PSDB"
+    },
+    "130002553856": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PDT"
+    },
+    "130002554332": {
+      "uf": "MG",
+      "cargo": 5,
+      "partido": "PSDB"
+    },
+    "140002538404": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "PDT"
+    },
+    "140002538631": {
+      "uf": "PA",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "140002542386": {
+      "uf": "PA",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "140002542691": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "PODE"
+    },
+    "140002544855": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "140002545671": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "140002545674": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "140002548150": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "140002548387": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "140002549930": {
+      "uf": "PA",
+      "cargo": 3,
+      "partido": "PODE"
+    },
+    "140002550779": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "140002550780": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "140002551357": {
+      "uf": "PA",
+      "cargo": 3,
+      "partido": "DEMOCRATA"
+    },
+    "140002551598": {
+      "uf": "PA",
+      "cargo": 3,
+      "partido": "MDB"
+    },
+    "140002551943": {
+      "uf": "PA",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "140002553743": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "140002553852": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "MOBILIZA"
+    },
+    "140002553952": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "SOLIDARIEDADE"
+    },
+    "140002554108": {
+      "uf": "PA",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "140002554209": {
+      "uf": "PA",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "140002554434": {
+      "uf": "PA",
+      "cargo": 3,
+      "partido": "DEMOCRATA"
+    },
+    "150002538459": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "150002538692": {
+      "uf": "PB",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "150002540204": {
+      "uf": "PB",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "150002544133": {
+      "uf": "PB",
+      "cargo": 3,
+      "partido": "MDB"
+    },
+    "150002544135": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "150002544140": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "150002544905": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "150002544909": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "150002548968": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "150002548971": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "150002549791": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "150002549793": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "150002551789": {
+      "uf": "PB",
+      "cargo": 3,
+      "partido": "PP"
+    },
+    "150002551911": {
+      "uf": "PB",
+      "cargo": 3,
+      "partido": "DC"
+    },
+    "150002552603": {
+      "uf": "PB",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "150002552607": {
+      "uf": "PB",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "160002540833": {
+      "uf": "PR",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "160002547594": {
+      "uf": "PR",
+      "cargo": 3,
+      "partido": "MOBILIZA"
+    },
+    "160002547656": {
+      "uf": "PR",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "160002547658": {
+      "uf": "PR",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "160002547660": {
+      "uf": "PR",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "160002547661": {
+      "uf": "PR",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "160002547666": {
+      "uf": "PR",
+      "cargo": 3,
+      "partido": "PDT"
+    },
+    "160002547963": {
+      "uf": "PR",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "160002548010": {
+      "uf": "PR",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "160002549553": {
+      "uf": "PR",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "160002549555": {
+      "uf": "PR",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "160002550997": {
+      "uf": "PR",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "160002551043": {
+      "uf": "PR",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "160002551121": {
+      "uf": "PR",
+      "cargo": 5,
+      "partido": "MISSAO"
+    },
+    "160002551353": {
+      "uf": "PR",
+      "cargo": 3,
+      "partido": "MISSAO"
+    },
+    "160002552560": {
+      "uf": "PR",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "160002552563": {
+      "uf": "PR",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "170002530097": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "170002536575": {
+      "uf": "PE",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "170002537227": {
+      "uf": "PE",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "170002537230": {
+      "uf": "PE",
+      "cargo": 3,
+      "partido": "PSB"
+    },
+    "170002537320": {
+      "uf": "PE",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "170002537334": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "170002537335": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "170002537418": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "170002538097": {
+      "uf": "PE",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "170002539456": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "170002540337": {
+      "uf": "PE",
+      "cargo": 3,
+      "partido": "MISSAO"
+    },
+    "170002540420": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "170002541258": {
+      "uf": "PE",
+      "cargo": 3,
+      "partido": "DEMOCRATA"
+    },
+    "170002547771": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "PDT"
+    },
+    "170002547773": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "170002549655": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "REDE"
+    },
+    "170002552097": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "170002552102": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "170002552776": {
+      "uf": "PE",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "170002552943": {
+      "uf": "PE",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "180002532987": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "180002533964": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "180002533967": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "180002537340": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "180002537422": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "180002538530": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "PP"
+    },
+    "180002540446": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "180002540449": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "180002541938": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "180002544216": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "PSDB"
+    },
+    "180002544457": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "MOBILIZA"
+    },
+    "180002544459": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "MOBILIZA"
+    },
+    "180002547860": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "180002547863": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "180002548155": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "180002548157": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "180002548388": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "DEMOCRATA"
+    },
+    "180002548565": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "DC"
+    },
+    "180002548568": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "PSDB"
+    },
+    "180002549920": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "NOVO"
+    },
+    "180002549933": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "180002549936": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "AVANTE"
+    },
+    "180002549970": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "180002549995": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "180002550421": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "AVANTE"
+    },
+    "180002550977": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "180002550979": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "180002552962": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "AVANTE"
+    },
+    "180002552964": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "AVANTE"
+    },
+    "180002553722": {
+      "uf": "PI",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "180002553753": {
+      "uf": "PI",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "190002535142": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "190002536162": {
+      "uf": "RJ",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "190002536164": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "190002537524": {
+      "uf": "RJ",
+      "cargo": 3,
+      "partido": "NOVO"
+    },
+    "190002539827": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "190002540198": {
+      "uf": "RJ",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "190002542887": {
+      "uf": "RJ",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "190002542888": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "190002543380": {
+      "uf": "RJ",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "190002543961": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "MISSAO"
+    },
+    "190002544120": {
+      "uf": "RJ",
+      "cargo": 3,
+      "partido": "MISSAO"
+    },
+    "190002545553": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "PODE"
+    },
+    "190002547272": {
+      "uf": "RJ",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "190002548141": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "190002548145": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "190002548589": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "190002548590": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "190002550182": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "190002550184": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "190002550190": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "190002550192": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "190002550196": {
+      "uf": "RJ",
+      "cargo": 3,
+      "partido": "REPUBLICANOS"
+    },
+    "190002552083": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "PRTB"
+    },
+    "190002552513": {
+      "uf": "RJ",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "190002552521": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "190002554290": {
+      "uf": "RJ",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "200002533841": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "200002533843": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "PDT"
+    },
+    "200002534001": {
+      "uf": "RN",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "200002534442": {
+      "uf": "RN",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "200002534447": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "200002534448": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "PODE"
+    },
+    "200002535255": {
+      "uf": "RN",
+      "cargo": 3,
+      "partido": "UNIAO"
+    },
+    "200002535507": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "200002535511": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "200002542481": {
+      "uf": "RN",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "200002542483": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "200002542484": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "200002546756": {
+      "uf": "RN",
+      "cargo": 3,
+      "partido": "AGIR"
+    },
+    "200002546757": {
+      "uf": "RN",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "200002546792": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "200002546795": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "200002547826": {
+      "uf": "RN",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "200002548115": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "AGIR"
+    },
+    "200002549133": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "AGIR"
+    },
+    "200002550223": {
+      "uf": "RN",
+      "cargo": 3,
+      "partido": "DC"
+    },
+    "200002550225": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "200002550541": {
+      "uf": "RN",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "200002553301": {
+      "uf": "RN",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "210002533355": {
+      "uf": "RS",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "210002533434": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "210002533435": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "210002533581": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "210002533584": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "210002535802": {
+      "uf": "RS",
+      "cargo": 3,
+      "partido": "PSDB"
+    },
+    "210002538465": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "CIDADANIA"
+    },
+    "210002538467": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "PSDB"
+    },
+    "210002541367": {
+      "uf": "RS",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "210002542892": {
+      "uf": "RS",
+      "cargo": 3,
+      "partido": "MDB"
+    },
+    "210002543863": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "210002543865": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "210002544698": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "210002544699": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "210002547816": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "210002547819": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "210002547857": {
+      "uf": "RS",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "210002551508": {
+      "uf": "RS",
+      "cargo": 3,
+      "partido": "PDT"
+    },
+    "210002552592": {
+      "uf": "RS",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "210002552599": {
+      "uf": "RS",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "220002536806": {
+      "uf": "RO",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "220002539771": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "220002539995": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "220002539996": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "220002541490": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "PDT"
+    },
+    "220002541939": {
+      "uf": "RO",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "220002541944": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "MISSAO"
+    },
+    "220002542185": {
+      "uf": "RO",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "220002542916": {
+      "uf": "RO",
+      "cargo": 3,
+      "partido": "UNIAO"
+    },
+    "220002547309": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "220002547310": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "220002550927": {
+      "uf": "RO",
+      "cargo": 3,
+      "partido": "PSB"
+    },
+    "220002550928": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "220002551251": {
+      "uf": "RO",
+      "cargo": 3,
+      "partido": "MDB"
+    },
+    "220002551946": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "PV"
+    },
+    "220002551948": {
+      "uf": "RO",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "230002533586": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "230002534804": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "230002534806": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "230002549223": {
+      "uf": "RR",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "230002549294": {
+      "uf": "RR",
+      "cargo": 3,
+      "partido": "SOLIDARIEDADE"
+    },
+    "230002549330": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "230002549360": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "230002549361": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "230002549845": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "PSD"
+    },
+    "230002550787": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "AVANTE"
+    },
+    "230002550794": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "230002551571": {
+      "uf": "RR",
+      "cargo": 3,
+      "partido": "REPUBLICANOS"
+    },
+    "230002552060": {
+      "uf": "RR",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "230002552727": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "PV"
+    },
+    "230002553006": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "230002553010": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "230002553636": {
+      "uf": "RR",
+      "cargo": 5,
+      "partido": "PSDB"
+    },
+    "230002553857": {
+      "uf": "RR",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "240002533898": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "240002535770": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "240002537073": {
+      "uf": "SC",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "240002537630": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "240002537632": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "240002539636": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "240002541913": {
+      "uf": "SC",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "240002541931": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "240002541935": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "240002544094": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "MISSAO"
+    },
+    "240002544118": {
+      "uf": "SC",
+      "cargo": 3,
+      "partido": "MISSAO"
+    },
+    "240002548628": {
+      "uf": "SC",
+      "cargo": 3,
+      "partido": "PSB"
+    },
+    "240002548630": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "240002548632": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "240002550218": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "240002550544": {
+      "uf": "SC",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "240002551001": {
+      "uf": "SC",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "240002551377": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "PRD"
+    },
+    "240002552157": {
+      "uf": "SC",
+      "cargo": 3,
+      "partido": "PRD"
+    },
+    "240002553005": {
+      "uf": "SC",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "240002553718": {
+      "uf": "SC",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "250002532794": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "250002536915": {
+      "uf": "SP",
+      "cargo": 3,
+      "partido": "PSTU"
+    },
+    "250002541303": {
+      "uf": "SP",
+      "cargo": 3,
+      "partido": "REPUBLICANOS"
+    },
+    "250002541308": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "250002541312": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "PP"
+    },
+    "250002541362": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "250002541365": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "PSTU"
+    },
+    "250002544514": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "250002544516": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "UP"
+    },
+    "250002544673": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "PODE"
+    },
+    "250002544912": {
+      "uf": "SP",
+      "cargo": 3,
+      "partido": "UP"
+    },
+    "250002548080": {
+      "uf": "SP",
+      "cargo": 3,
+      "partido": "AGIR"
+    },
+    "250002549705": {
+      "uf": "SP",
+      "cargo": 3,
+      "partido": "PT"
+    },
+    "250002550913": {
+      "uf": "SP",
+      "cargo": 3,
+      "partido": "PCB"
+    },
+    "250002551501": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "REDE"
+    },
+    "250002551502": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "PSB"
+    },
+    "250002552153": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "PCB"
+    },
+    "250002552369": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "CIDADANIA"
+    },
+    "250002552955": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "PCO"
+    },
+    "250002553062": {
+      "uf": "SP",
+      "cargo": 3,
+      "partido": "PCO"
+    },
+    "250002553252": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "AGIR"
+    },
+    "250002553928": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "MISSAO"
+    },
+    "250002554075": {
+      "uf": "SP",
+      "cargo": 5,
+      "partido": "MISSAO"
+    },
+    "260002532010": {
+      "uf": "SE",
+      "cargo": 3,
+      "partido": "REPUBLICANOS"
+    },
+    "260002533084": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "260002542491": {
+      "uf": "SE",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "260002543589": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "260002543591": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "260002545677": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "260002547285": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "260002547290": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "260002547415": {
+      "uf": "SE",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "260002549127": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "260002549130": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "260002549466": {
+      "uf": "SE",
+      "cargo": 3,
+      "partido": "PL"
+    },
+    "260002550683": {
+      "uf": "SE",
+      "cargo": 3,
+      "partido": "DC"
+    },
+    "260002551362": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "260002551366": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "260002551550": {
+      "uf": "SE",
+      "cargo": 5,
+      "partido": "PDT"
+    },
+    "260002551712": {
+      "uf": "SE",
+      "cargo": 3,
+      "partido": "PSDB"
+    },
+    "270002539141": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "REDE"
+    },
+    "270002539142": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "PSOL"
+    },
+    "270002539187": {
+      "uf": "TO",
+      "cargo": 3,
+      "partido": "PSOL"
+    },
+    "270002544494": {
+      "uf": "TO",
+      "cargo": 3,
+      "partido": "PSD"
+    },
+    "270002544544": {
+      "uf": "TO",
+      "cargo": 3,
+      "partido": "PSDB"
+    },
+    "270002544599": {
+      "uf": "TO",
+      "cargo": 3,
+      "partido": "UNIAO"
+    },
+    "270002544629": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "PT"
+    },
+    "270002546038": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "PODE"
+    },
+    "270002546039": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "PODE"
+    },
+    "270002546333": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "PL"
+    },
+    "270002546368": {
+      "uf": "TO",
+      "cargo": 3,
+      "partido": "DEMOCRATA"
+    },
+    "270002548231": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "UNIAO"
+    },
+    "270002548344": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "MDB"
+    },
+    "270002548409": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "REPUBLICANOS"
+    },
+    "270002548412": {
+      "uf": "TO",
+      "cargo": 3,
+      "partido": "NOVO"
+    },
+    "270002550458": {
+      "uf": "TO",
+      "cargo": 3,
+      "partido": "DC"
+    },
+    "270002550610": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "NOVO"
+    },
+    "270002551270": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "270002551273": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "DEMOCRATA"
+    },
+    "270002552968": {
+      "uf": "TO",
+      "cargo": 5,
+      "partido": "DC"
+    },
+    "270002554375": {
+      "uf": "TO",
+      "cargo": 3,
+      "partido": "DEMOCRATA"
+    }
+  },
+  "senado2031": {
+    "disponivel": true,
+    "foto": null,
+    "senadores": {
+      "631": {
+        "uf": "ES",
+        "partido": "PL"
+      },
+      "1173": {
+        "uf": "MT",
+        "partido": "PL"
+      },
+      "3830": {
+        "uf": "AP",
+        "partido": "UNIAO"
+      },
+      "4639": {
+        "uf": "PA",
+        "partido": "PT"
+      },
+      "4642": {
+        "uf": "PB",
+        "partido": "PL"
+      },
+      "4694": {
+        "uf": "RN",
+        "partido": "PL"
+      },
+      "4811": {
+        "uf": "SE",
+        "partido": "PP"
+      },
+      "5070": {
+        "uf": "GO",
+        "partido": "PL"
+      },
+      "5207": {
+        "uf": "AL",
+        "partido": "MDB"
+      },
+      "5322": {
+        "uf": "RJ",
+        "partido": null
+      },
+      "5386": {
+        "uf": "TO",
+        "partido": "UNIAO"
+      },
+      "5523": {
+        "uf": "BA",
+        "partido": "PSD"
+      },
+      "5525": {
+        "uf": "AM",
+        "partido": "PSD"
+      },
+      "5672": {
+        "uf": "AC",
+        "partido": "REPUBLICANOS"
+      },
+      "5736": {
+        "uf": "MS",
+        "partido": "PP"
+      },
+      "5793": {
+        "uf": "RR",
+        "partido": "PP"
+      },
+      "6009": {
+        "uf": "SP",
+        "partido": "PL"
+      },
+      "6331": {
+        "uf": "PR",
+        "partido": "PL"
+      },
+      "6335": {
+        "uf": "DF",
+        "partido": "REPUBLICANOS"
+      },
+      "6336": {
+        "uf": "CE",
+        "partido": "PT"
+      },
+      "6337": {
+        "uf": "MG",
+        "partido": "REPUBLICANOS"
+      },
+      "6338": {
+        "uf": "PE",
+        "partido": "PT"
+      },
+      "6340": {
+        "uf": "RO",
+        "partido": "PL"
+      },
+      "6341": {
+        "uf": "RS",
+        "partido": "REPUBLICANOS"
+      },
+      "6342": {
+        "uf": "SC",
+        "partido": "PL"
+      },
+      "6359": {
+        "uf": "MA",
+        "partido": "PSB"
+      },
+      "6369": {
+        "uf": "PI",
+        "partido": "PSD"
+      }
+    }
+  }
+}

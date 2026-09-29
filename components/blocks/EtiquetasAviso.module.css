@@ -1,0 +1,13 @@
+/* components/blocks/EtiquetasAviso.module.css — spec 024, RF-237.
+ * Texto secundário (`--text-secondary` = ink-2: 5,52:1 sobre o papel da
+ * página no claro, 6,90:1 no escuro — medidos em app/globals.css). */
+
+.aviso {
+  margin: 0;
+  font: var(--type-body-sm);
+  color: var(--text-secondary);
+}
+
+.aviso a {
+  color: inherit;
+}

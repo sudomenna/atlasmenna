@@ -1,0 +1,61 @@
+/* =============================================================================
+ * components/atoms/data/EtiquetaEditorial.module.css
+ *
+ * Tokens LOCAIS da etiqueta editorial (spec 024, RF-235): `--etq-tinta`,
+ * `--etq-borda`, `--etq-fundo`. Moram aqui, e não em `app/globals.css`, porque
+ * esta frente não toca o CSS global; a barreira decide se sobem para
+ * `docs/design-system/tokens.md`.
+ *
+ * **Sem área de cor.** A etiqueta é texto + moldura tracejada, fundo
+ * transparente. Medido em 29/09: qualquer cinza de fundo fica a ΔE76 < 10 de
+ * alguma cor da paleta de partido — `--party-none` (2,6), os níveis 1 claros
+ * de DC/PP/Democrata (8,5) — e um fundo que lembra "partido X, disputa
+ * apertada" é justamente a confusão que a constituição § 2 proíbe. Sem fundo,
+ * não há área para confundir.
+ *
+ * Tinta e borda são APELIDOS de semânticos neutros do site, e não hexes
+ * próprios, por causa do tema: os semânticos já trocam com
+ * `data-theme="dark"` e já têm contraste medido nos dois temas (um hex local
+ * pediria seletor global, que o Biome recusa em CSS module).
+ *   - C* < 10 — nem vermelho, nem azul, nem matiz nenhuma;
+ *   - ΔE76 ≥ 10 contra toda cor de partido de `app/tokens-party.css` do mesmo
+ *     tema (exceto as tintas `-ink`, que SÃO a tinta do site). A borda NÃO é
+ *     `--text-secondary`: o cinza-ardósia do Democrata (#4b5563) fica a
+ *     ΔE 6,3 dele;
+ *   - tinta ≥ 4,5:1 e borda ≥ 3:1 sobre cartão / página / fundo afundado.
+ *   Tudo em `tests/unit/design-system/etiqueta-editorial-contraste.test.tsx`,
+ *   que resolve os apelidos até o hex de `app/globals.css`, tema a tema.
+ *
+ * Borda TRACEJADA e caixa baixa: a etiqueta de destino do voto ("Anulado",
+ * `DestinoEtiqueta`) é dado do TSE — borda contínua, caixa alta. A editorial
+ * é juízo nosso; as duas não podem parecer a mesma coisa.
+ * ========================================================================== */
+
+.etiqueta {
+  --etq-tinta: var(--text-primary);
+  --etq-borda: var(--border-strong);
+  --etq-fundo: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 1px var(--space-1);
+  border: 1px dashed var(--etq-borda);
+  border-radius: var(--radius-xs);
+  background: var(--etq-fundo);
+  color: var(--etq-tinta);
+  font: var(--type-label);
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+/* Linha de etiquetas: inline, porque mora dentro do `<span>` do nome (e, no
+ * /senador, dentro de um `<a>`) — um bloco ali quebraria o contrato da linha. */
+.linha {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  vertical-align: middle;
+}
