@@ -66,6 +66,7 @@ from api.model.cargos import (
 )
 from api.model.dado_ts import RelogioDoDado
 from api.model.deputado import (
+    ConferenciaTse,
     Divergencia,
     EntradaProporcional,
     IdentidadeAgremiacao,
@@ -91,7 +92,15 @@ def _pct(parte: int, total: int) -> float:
 #: visível, em `detalhe`.
 #:
 #: Acrescentar um valor aqui é mudança de contrato: combine com o lado TS antes.
-CHAVES_DE_DIVERGENCIA = ("quociente_eleitoral", "cadeiras")
+#:
+#: Spec 026 RF-269 (2026-09-29) acrescentou dois, ambos da conferência contra o
+#: agregado da UF (`deputado.conferir_agregado_da_uf`):
+#:   - `"eleitos"` — uma linha por candidatura que só um dos lados elegeu
+#:     (`nosso`/`tse` ∈ {0, 1}; o `sqcand` vai em `detalhe`), só com
+#:     totalização final;
+#:   - `"eleitorado"` — Σ `e.te` das zonas que somamos × `e.te` do agregado:
+#:     parte do estado fora da nossa soma (o caso real do AP, zona 0014).
+CHAVES_DE_DIVERGENCIA = ("quociente_eleitoral", "cadeiras", "eleitos", "eleitorado")
 
 #: Quantos suplentes por agremiação entram no payload de UF (D6). A lista
 #: completa de não eleitos de uma federação grande passa de 100 nomes numa UF
@@ -118,11 +127,32 @@ def normalizar_divergencia(divergencia: Divergencia) -> dict[str, Any]:
         cod = o_que[len("cadeiras[") : -1]
         o_que = "cadeiras"
         detalhe = f"agremiação {cod} — {detalhe}" if detalhe else f"agremiação {cod}"
+    elif o_que.startswith("eleito["):
+        sq = o_que[len("eleito[") : -1]
+        o_que = "eleitos"
+        detalhe = f"candidatura {sq} — {detalhe}" if detalhe else f"candidatura {sq}"
     return {
         "o_que": o_que,
         "nosso": divergencia.nosso,
         "tse": divergencia.tse,
         "detalhe": detalhe,
+    }
+
+
+def conferencia_payload(conferencia: ConferenciaTse) -> dict[str, Any]:
+    """`DeputadoUfDetail.conferencia` (spec 026 RF-269) — aditivo ao D6.
+
+    `{estado, boletim_dado_ts, totalizacao_final, divergencias}`. O `motivo` do
+    `sem_dado_tse` fica no log: o contrato tem três estados, e a tela diz "o
+    TSE ainda não publicou o que conferir" sem precisar do porquê interno.
+    `divergencias` sai normalizado (`CHAVES_DE_DIVERGENCIA`), igual ao campo
+    antigo.
+    """
+    return {
+        "estado": conferencia.estado,
+        "boletim_dado_ts": conferencia.boletim_dado_ts,
+        "totalizacao_final": conferencia.totalizacao_final,
+        "divergencias": [normalizar_divergencia(d) for d in conferencia.divergencias],
     }
 
 
@@ -146,6 +176,10 @@ class UfProporcional:
     #: opcional no contrato (D5/D6) exatamente para isso. Chega pronto: este
     #: módulo não sorteia nada.
     cadeiras_ci95: dict[str, tuple[int, int]] | None = None
+    #: RF-269 — a conferência contra o agregado da UF
+    #: (`deputado.conferir_agregado_da_uf`). `None` omite a chave
+    #: `conferencia` do detalhe (chamador antigo); o ciclo sempre a passa.
+    conferencia: ConferenciaTse | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -327,6 +361,7 @@ def _candidato_payload(
     votos: int,
     ordem: int,
     indefinidas: set[int],
+    status_tse: dict[int, str] | None = None,
 ) -> dict[str, Any]:
     ident = _identidade_cand(entrada, sqcand)
     saida: dict[str, Any] = {
@@ -338,6 +373,12 @@ def _candidato_payload(
     }
     if sqcand in indefinidas:
         saida["indefinido"] = True
+    # Spec 026 RF-267 — a situação oficial, só quando o agregado da UF trouxe
+    # totalização final. Ausente é "o TSE ainda não proclamou", nunca "não
+    # eleito".
+    marca_tse = (status_tse or {}).get(sqcand)
+    if marca_tse is not None:
+        saida["tse"] = marca_tse
     return saida
 
 
@@ -389,6 +430,13 @@ def construir_detalhe_uf(
     )
 
     votos_validos_uf = sum(a.votos_totais for a in entrada.agremiacoes)
+    # RF-267 — a marca oficial sai do AGREGADO da UF, nunca da soma das zonas
+    # (`combinar_entradas` a zera, como zera `qe`/`vag`).
+    status_tse = (
+        dados.conferencia.entrada.status_tse
+        if dados.conferencia is not None and dados.conferencia.entrada is not None
+        else None
+    )
 
     agremiacoes: list[dict[str, Any]] = []
     for agremiacao in entrada.agremiacoes:
@@ -426,11 +474,15 @@ def construir_detalhe_uf(
             # nacional precisa sai de `eleitos[].indefinido` — um campo, uma
             # verdade.
             "eleitos": [
-                _candidato_payload(entrada, c.cod, c.votos_nominais, i + 1, indefinidas)
+                _candidato_payload(
+                    entrada, c.cod, c.votos_nominais, i + 1, indefinidas, status_tse
+                )
                 for i, c in enumerate(eleitos_cod)
             ],
             "suplentes": [
-                _candidato_payload(entrada, c.cod, c.votos_nominais, i + 1, indefinidas)
+                _candidato_payload(
+                    entrada, c.cod, c.votos_nominais, i + 1, indefinidas, status_tse
+                )
                 for i, c in enumerate(suplentes_cod[:MAX_SUPLENTES])
             ],
         }
@@ -472,6 +524,11 @@ def construir_detalhe_uf(
     }
     if votacao is not None:
         detalhe["votacao"] = votacao
+    # Spec 026 RF-269 — aditivo. `divergencias` (acima) continua existindo
+    # para o leitor v1; o ciclo passa a enchê-lo com as MESMAS divergências
+    # desta conferência (`project.py::_do_project_proporcional`).
+    if dados.conferencia is not None:
+        detalhe["conferencia"] = conferencia_payload(dados.conferencia)
     return detalhe
 
 

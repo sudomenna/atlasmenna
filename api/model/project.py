@@ -99,9 +99,11 @@ from api.model.dado_ts import (
     relogio_por_uf,
 )
 from api.model.deputado import (
+    ConferenciaTse,
     EntradaProporcional,
+    anomalias_de_leitura,
     combinar_entradas,
-    conferir_contra_tse,
+    conferir_agregado_da_uf,
     extrair_entrada_proporcional,
 )
 from api.model.deputado_payload import (
@@ -7724,6 +7726,132 @@ def _entradas_por_zona(
     return [combinar_entradas(por_zona[cod_zona]) for cod_zona in ordem]
 
 
+def eleitorado_das_linhas(linhas: list[LatestSnapshot]) -> tuple[int, int, int]:
+    """`(n_linhas_com_e, Σ e.te, Σ e.esi)` das linhas de par lidas de uma UF.
+
+    Ponto único da leitura de eleitorado das linhas do cargo 6: alimenta o
+    `% apurado` (`pct_apurado_uf_proporcional`) e a cobertura da conferência
+    (`deputado.conferir_agregado_da_uf(eleitorado_lido=...)`). Linha sem `e.te`
+    legível não conta (`_extract_zone_participacao` devolve `None`).
+    """
+    n = soma_te = soma_esi = 0
+    for linha in linhas:
+        participacao = _extract_zone_participacao(linha.get("payload"))
+        if participacao is None:
+            continue
+        n += 1
+        soma_te += participacao["eleitores_aptos"]
+        soma_esi += participacao["eleitores_instalados"]
+    return n, soma_te, soma_esi
+
+
+def pct_apurado_uf_proporcional(
+    linhas: list[LatestSnapshot],
+    *,
+    eleitorado_total_uf: int,
+    agregado: LatestSnapshot | None = None,
+) -> tuple[float, str]:
+    """`% apurado` de uma UF do cargo 6, ponderado pelo eleitorado → `(pct, fonte)`.
+
+    Spec 026 RF-275 (2026-09-29). Até aqui era `max()` sobre o `pct_apurado`
+    das linhas de par: a primeira zona a fechar punha a UF inteira em 100%.
+    Isso desligava o "indefinido" de `_marcar_indefinidas` (a fatia faltante
+    virava zero) e abriria cedo a trava de 25% da projeção de deputado.
+
+    ## Por que NÃO o `pct_apurado` das linhas, nem ponderado
+
+    A coluna `pct_apurado` é `s.psa` (`lib/tse/ingest-handler.ts:732-745`), e no
+    simulado `s.psa` é **binário**: `0,00` até o primeiro boletim da zona,
+    `100,00` depois de qualquer um (medido em RR e AP, 28/09 —
+    `tests/fixtures/tse/2026-sim/dep/README.md`). Ponderar um número binário
+    pelo eleitorado ainda superestima: RR a 20% dava 38,6%.
+
+    ## A conta
+
+        % = 100 × Σ e.esi (linhas lidas) / eleitorado inteiro da UF
+
+    `e.esi` é o eleitorado das seções já totalizadas e instaladas da linha — o
+    que anda durante a noite (RR a 20%: Σ esi / te = 20,19%, contra `s.pst` =
+    20,06% do TSE). O denominador é o **maior** eleitorado conhecido da UF:
+    a tabela `eleitorado`, o `e.te` do agregado do TSE e Σ `e.te` das linhas.
+    O maior porque cada um pode faltar zona (o AP de 28/09 não lia a zona
+    0014: Σ te das zonas = 505.610, agregado = 628.071), e o erro para cima no
+    denominador deixa o número para baixo — o lado seguro para uma trava e para
+    o "indefinido". O número mede o que está **na nossa soma**, que é de onde
+    saem as cadeiras publicadas.
+
+    `fonte` (para o log):
+      - `"ponderado"` — o caminho normal;
+      - `"agregado"` — nenhuma linha com `e` legível: `e.esi/e.te` do agregado;
+      - `"maximo"` — nem isso: o valor de antes (`max` do `pct_apurado`), que o
+        chamador loga em `warn` porque superestima.
+
+    Resultado limitado a [0, 100].
+    """
+    participacao_agregado = (
+        _extract_zone_participacao(agregado.get("payload")) if agregado is not None else None
+    )
+    te_agregado = participacao_agregado["eleitores_aptos"] if participacao_agregado else 0
+
+    n, soma_te, soma_esi = eleitorado_das_linhas(linhas)
+    denominador = max(eleitorado_total_uf, te_agregado, soma_te)
+    if n > 0 and denominador > 0:
+        return min(100.0, max(0.0, 100.0 * soma_esi / denominador)), "ponderado"
+
+    if participacao_agregado is not None and te_agregado > 0:
+        pct = 100.0 * participacao_agregado["eleitores_instalados"] / te_agregado
+        return min(100.0, max(0.0, pct)), "agregado"
+
+    maximo = max((float(linha.get("pct_apurado") or 0.0) for linha in linhas), default=0.0)
+    return min(100.0, max(0.0, maximo)), "maximo"
+
+
+def _registrar_conferencia(
+    conferencia: ConferenciaTse, *, cargo: int, turno: int, uf: str
+) -> None:
+    """Log e alarme da conferência contra o TSE (spec 026 RF-269).
+
+    Só divergir COM totalização final no agregado é erro com alarme: antes
+    dela o TSE recalcula `qe`/`vag` a cada boletim, e a conferência parcial
+    divergente é observação (`info`) — mas nunca some, porque a tela a mostra.
+    `sem_dado_tse` não loga: é o estado normal até o TSE publicar `qe`.
+    """
+    if conferencia.estado != "diverge":
+        return
+    divergencias = [normalizar_divergencia(d) for d in conferencia.divergencias]
+    if not conferencia.totalizacao_final:
+        _log(
+            "info",
+            "conferência parcial diverge do TSE (agregado sem totalização final)",
+            cargo=cargo,
+            turno=turno,
+            uf=uf,
+            boletim_dado_ts=conferencia.boletim_dado_ts,
+            divergencias=divergencias,
+        )
+        return
+    _log(
+        "error",
+        "divergência contra o TSE com totalização final",
+        cargo=cargo,
+        turno=turno,
+        uf=uf,
+        boletim_dado_ts=conferencia.boletim_dado_ts,
+        divergencias=divergencias,
+    )
+    _alert_slack(
+        "error",
+        "conferência de Deputado Federal diverge do TSE com totalização final — "
+        "a conta sobre o agregado da UF (quociente, cadeiras, eleitos) ou a "
+        "cobertura de eleitorado das zonas lidas não batem com o TSE",
+        cargo=cargo,
+        turno=turno,
+        uf=uf,
+        o_que=sorted({d["o_que"] for d in divergencias}),
+        n_divergencias=len(divergencias),
+    )
+
+
 def _seed_agremiacoes(seed_base: int, uf: str) -> int:
     """Seed do bootstrap de cadeiras de uma UF (constituição § 6).
 
@@ -7874,6 +8002,11 @@ def _do_project_proporcional(
             continue
         por_uf.setdefault(sigla, []).append(row)
 
+    # Spec 026 RF-269/RF-275 — o agregado de cada UF (nível "uf"), escolhido
+    # pelo MESMO ponto único que alimenta `votacao` (`_agregados_de_uf`). Dele
+    # saem a conferência contra o TSE e o recurso do `% apurado`.
+    agregados_uf = _agregados_de_uf(agregados)
+
     if not por_uf:
         _log(
             "warn",
@@ -7911,17 +8044,69 @@ def _do_project_proporcional(
         ]
         entrada = combinar_entradas([leitura for _, leitura in pares])
         zonas = _entradas_por_zona(pares)
-        # Desde 2026-09-13 o cargo 6 (Deputado Federal) é ingerido em
-        # granularidade ZONA (emenda ao ADR-0026 item 1): mais de uma linha
-        # por UF passou a ser o caminho NORMAL — cada par (município, zona)
-        # chega como uma linha própria. Só volta a ser uma linha só quando o
-        # interruptor de emergência `TSE_DEPUTADO_GRANULARIDADE=uf`
-        # (`lib/tse/targets.ts::getGranularidade`) reverte o cargo à
-        # ingestão por UF. De qualquer forma, o `pct_apurado` não tem uma
-        # soma correta possível sem o eleitorado de cada zona (que este ponto
-        # do código não tem à mão) — o maior dos publicados é o menos errado
-        # dos números disponíveis.
-        pct_apurado = max(float(linha.get("pct_apurado") or 0.0) for linha in linhas)
+        # ADR-B (2026-09-29) — a invariante `Σ válidos == v.vv` e o recurso da
+        # legenda são conferidos POR ARQUIVO, mas avisados UMA vez por UF.
+        anomalias = anomalias_de_leitura([leitura for _, leitura in pares])
+        if anomalias is not None:
+            _log(
+                "warn",
+                "deputado: leitura com voto válido que não fecha com o TSE "
+                "(invariante v.vv, legenda recalculada ou dvt/st desconhecido)",
+                cargo=req.cargo,
+                turno=req.turno,
+                uf=sigla,
+                **anomalias,
+            )
+        agregado_da_uf = agregados_uf.get(sigla)
+        # Spec 026 RF-275 — `% apurado` ponderado pelo eleitorado da UF
+        # inteira. Até 2026-09-29 era `max()` sobre as linhas de par, e a
+        # primeira zona a fechar punha a UF em 100% (ver
+        # `pct_apurado_uf_proporcional`).
+        pct_apurado, fonte_pct = pct_apurado_uf_proporcional(
+            linhas,
+            eleitorado_total_uf=eleitorado_total_by_uf.get(sigla, 0),
+            agregado=agregado_da_uf[0] if agregado_da_uf is not None else None,
+        )
+        if fonte_pct != "ponderado":
+            _log(
+                "warn" if fonte_pct == "maximo" else "info",
+                "deputado: pct_apurado da UF sem ponderação pelo eleitorado — "
+                + (
+                    "usando o do agregado da UF"
+                    if fonte_pct == "agregado"
+                    else "usando o MAIOR das linhas (superestima)"
+                ),
+                cargo=req.cargo,
+                turno=req.turno,
+                uf=sigla,
+                fonte=fonte_pct,
+                pct_apurado=pct_apurado,
+            )
+        # Spec 026 RF-269 — a conferência DE VERDADE, sobre o agregado da UF.
+        # Sem agregado, a linha única de nível UF do interruptor de emergência
+        # (`cod_zona = 0`, gravada sem `nivel` por ingestão antiga) É o arquivo
+        # da UF — confere contra ela, como antes.
+        payload_conferencia = (
+            agregado_da_uf[0].get("payload")
+            if agregado_da_uf is not None
+            else (
+                linhas[0].get("payload")
+                if len(linhas) == 1 and int(linhas[0].get("cod_zona") or 0) == 0
+                else None
+            )
+        )
+        n_com_eleitorado, eleitorado_lido, _esi = eleitorado_das_linhas(linhas)
+        conferencia = conferir_agregado_da_uf(
+            payload_conferencia,
+            cargo=req.cargo,
+            # Cobertura: Σ `e.te` das linhas SOMADAS contra o `e.te` do
+            # agregado. `None` sem nenhuma linha com `e` (fixture podada).
+            eleitorado_lido=eleitorado_lido if n_com_eleitorado > 0 else None,
+        )
+        divergencias_por_uf[sigla] = [
+            normalizar_divergencia(d) for d in conferencia.divergencias
+        ]
+        _registrar_conferencia(conferencia, cargo=req.cargo, turno=req.turno, uf=sigla)
         if len(linhas) > 1:
             _log(
                 "info",
@@ -7981,7 +8166,11 @@ def _do_project_proporcional(
                 )
                 ufs.append(
                     UfProporcional(
-                        uf=sigla, pct_apurado=pct_apurado, entrada=entrada, resultado=None
+                        uf=sigla,
+                        pct_apurado=pct_apurado,
+                        entrada=entrada,
+                        resultado=None,
+                        conferencia=conferencia,
                     )
                 )
                 continue
@@ -7999,31 +8188,12 @@ def _do_project_proporcional(
                 seed=_seed_agremiacoes(seed_base, sigla),
             )
             contribuicoes_ci.append((intervalo, resultado.cadeiras))
-            divergencias = conferir_contra_tse(resultado, entrada)
-            # `o_que` sai num conjunto fechado (`CHAVES_DE_DIVERGENCIA`) — a
-            # tela rotula a divergência para o leitor e não pode ficar
-            # adivinhando string nossa.
-            divergencias_por_uf[sigla] = [normalizar_divergencia(d) for d in divergencias]
-            if divergencias and entrada.totalizacao_final:
-                # Com totalização final, divergir do TSE é erro — antes dela é
-                # esperado, porque o TSE recalcula a cada boletim.
-                _log(
-                    "error",
-                    "divergência contra o TSE com totalização final",
-                    cargo=req.cargo,
-                    turno=req.turno,
-                    uf=sigla,
-                    divergencias=divergencias_por_uf[sigla],
-                )
-                _alert_slack(
-                    "error",
-                    "cadeiras divergem do TSE com totalização final — "
-                    "a conta do ADR-0027 e a publicada não batem",
-                    cargo=req.cargo,
-                    turno=req.turno,
-                    uf=sigla,
-                    n_divergencias=len(divergencias),
-                )
+            # A conferência contra o TSE saiu daqui em 2026-09-29 (spec 026
+            # RF-269): `conferir_contra_tse(resultado, entrada)` sobre a
+            # entrada SOMADA das zonas devolvia sempre `[]` —
+            # `combinar_entradas` zera `qe`/`vag` —, e a tela afirmava
+            # "batem" sem ter comparado nada. Ela roda agora sobre o agregado
+            # da UF, acima (`conferir_agregado_da_uf`).
 
         ufs.append(
             UfProporcional(
@@ -8032,6 +8202,7 @@ def _do_project_proporcional(
                 entrada=entrada,
                 resultado=resultado,
                 cadeiras_ci95=intervalo.por_agremiacao if intervalo is not None else None,
+                conferencia=conferencia,
             )
         )
 

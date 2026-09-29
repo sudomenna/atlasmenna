@@ -46,6 +46,38 @@ Eles valem ouro por dois motivos:
 
 Enquanto a apuração é parcial, `vag` reflete o estado parcial e divergir dele é
 esperado: a comparação só é conclusiva com `tf == "s"` (totalização final).
+
+⚠️ **2026-09-29 — a conferência passou a ser feita de verdade.** No modo por
+zona (o normal desde o ADR-0036), `combinar_entradas` zera `qe`/`vag` — com
+razão: o `qe` de um arquivo de zona não é o da UF — e por isso
+`conferir_contra_tse` sobre a entrada somada devolvia sempre `[]`, e a tela
+afirmava "os nossos números batem com o TSE" sem ter comparado nada.
+`conferir_agregado_da_uf` fecha isso: roda o algoritmo sobre os votos do
+**próprio arquivo agregado da UF** e compara com o `qe`/`vag` (e, no final, o
+conjunto de eleitos) daquele mesmo arquivo — a única comparação em que os dois
+lados olham os mesmos votos —, e mede quanto do eleitorado da UF está na soma
+das zonas que lemos.
+
+## O destino do voto no proporcional (`cand.dvt`) — ADR-B, 2026-09-29
+
+`cand.vap` é voto **computado**, não voto **válido**: inclui o voto dado a
+candidatura anulada ou sub judice. O TSE diz o destino de cada voto em
+`cand.dvt` (dicionário, `tse-ea20-arquivo-de-resultado-unificado.txt:798-805`),
+e a decisão do dono é **seguir o TSE**, sem rederivar a lei:
+
+  - `"Válido"` (ou `dvt` ausente) → o voto é do candidato, que entra no cálculo;
+  - `"Válido (legenda)"` → o voto conta para a LEGENDA do partido (Lei 9.504
+    art. 16-A p.ú.; CE art. 175 § 4º), e o candidato não disputa vaga;
+  - `"Anulado"` / `"Anulado sub judice"` → fora do QE e do QP.
+
+É diferente do majoritário (ADR-0053, `project.py::_DESTINO_POR_DVT`), onde o
+voto anulado só sai da base "em disputa" da tela; aqui ele muda cadeira.
+`dvt` ausente (no simulado, só com `and == "n"`) dá resultado **bit-idêntico**
+ao anterior a esta regra — ver o ramo `not tem_destino` de
+`extrair_entrada_proporcional`; com `dvt`, a legenda é
+`_legenda_da_agremiacao`. Nas 27 capturas reais de cargo 6 (RR e AP) e nos
+33 envelopes majoritários do simulado, a soma das agremiações fecha com o
+`v.vv` do TSE em todos (`test_deputado_defeitos_p1.py`).
 """
 
 from __future__ import annotations
@@ -53,7 +85,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
-from api.model.cadeiras import Agremiacao, Candidato, ResultadoCadeiras
+from api.model.cadeiras import (
+    Agremiacao,
+    Candidato,
+    ResultadoCadeiras,
+    distribuir_cadeiras,
+)
+from api.model.dado_ts import DgHgInvalido, parse_dg_hg
 
 CARGO_DEPUTADO_FEDERAL = 6
 
@@ -151,6 +189,117 @@ def _raiz(payload: Any) -> dict[str, Any] | None:
 
 
 # ---------------------------------------------------------------------------
+# Destino do voto (`cand.dvt`) e situação oficial (`cand.st`) — ADR-B
+# ---------------------------------------------------------------------------
+
+#: O voto é do candidato e entra no cálculo (mesmo tratamento de `dvt` ausente).
+DESTINO_VALIDO = "valido"
+#: O voto vai para a legenda do partido; o candidato não disputa vaga.
+DESTINO_VALIDO_LEGENDA = "valido_legenda"
+#: Voto anulado — fora de QE e QP.
+DESTINO_ANULADO = "anulado"
+#: Voto anulado sub judice — fora de QE e QP enquanto o TSE o marcar assim.
+DESTINO_SUB_JUDICE = "sub_judice"
+#: Valor de `dvt` presente e fora do dicionário. NÃO é "válido": o candidato
+#: fica fora do cálculo (ver `destino_proporcional`).
+DESTINO_DESCONHECIDO = "desconhecido"
+
+#: `cand[].dvt` do EA20 → destino no cálculo proporcional (ADR-B, 2026-09-29).
+#:
+#: Os QUATRO valores do dicionário oficial para `cand.dvt`
+#: (`tse_docs/txt/tse-ea20-arquivo-de-resultado-unificado.txt:798-805`). O
+#: irmão majoritário (`project.py::_DESTINO_POR_DVT`) omite `"Válido
+#: (legenda)"` de propósito — lá ele é dado que não se entende; aqui é o caso
+#: do art. 16-A p.ú. da Lei 9.504 (voto de candidato com registro negado depois
+#: da eleição, que vale para o partido).
+#:
+#: 🔴 **Sem default.** Valor fora do dicionário não vira "válido": vira
+#: `DESTINO_DESCONHECIDO`, o candidato sai do cálculo, e o voto só volta à
+#: agremiação se o próprio TSE o tiver contado como válido (`tvtn`/`tvtl`, ver
+#: `_legenda_da_agremiacao`). Dar vaga a quem o TSE marcou com um destino que
+#: não entendemos é o erro que não se desfaz na tela.
+_DESTINO_PROPORCIONAL: dict[str, str] = {
+    "válido": DESTINO_VALIDO,
+    "válido (legenda)": DESTINO_VALIDO_LEGENDA,
+    "anulado": DESTINO_ANULADO,
+    "anulado sub judice": DESTINO_SUB_JUDICE,
+}
+
+#: Destinos cujo voto nominal vira `Candidato` — `None` é `dvt` ausente, que o
+#: TSE só publica "após a primeira totalização parcial" e que por isso é o
+#: estado normal do começo da noite (bit-idêntico ao cálculo anterior à regra).
+_DESTINOS_DO_CANDIDATO: frozenset[str | None] = frozenset({None, DESTINO_VALIDO})
+
+
+def destino_proporcional(dvt: Any) -> str | None:
+    """`cand[].dvt` → destino do voto no cálculo proporcional.
+
+    `None` quando ausente ou vazio (tratado como válido); `DESTINO_DESCONHECIDO`
+    quando presente e fora do dicionário — nunca um default silencioso.
+    """
+    if dvt is None:
+        return None
+    texto = str(dvt).strip()
+    if not texto:
+        return None
+    return _DESTINO_PROPORCIONAL.get(texto.casefold(), DESTINO_DESCONHECIDO)
+
+
+#: Situação oficial do candidato (`cand[].st`) → marca `tse` do payload.
+#:
+#: Dicionário oficial (`tse-ea20-arquivo-de-resultado-unificado.txt:825-833`):
+#: "Eleito", "Eleito por QP", "Eleito por média", "Não eleito", "2º turno",
+#: "Suplente". O campo "somente será preenchido quando houver totalização
+#: final" — por isso só é lido com `tf == "s"`.
+#:
+#: | `st` do TSE         | marca           |
+#: |---------------------|-----------------|
+#: | Eleito por QP       | `eleito_qp`     |
+#: | Eleito por média    | `eleito_media`  |
+#: | Eleito              | `eleito`        |
+#: | Suplente            | `suplente`      |
+#: | Não eleito          | `nao_eleito`    |
+#: | 2º turno            | — (majoritário; fora do mapa, sem marca)       |
+#: | `st` ausente        | `eleito` se `cand.e == "s"`; senão sem marca   |
+#:
+#: As grafias sem acento entram por tolerância: "media"/"Nao eleito" não mudam
+#: o sentido, e errar aqui só apagaria uma marca oficial.
+_STATUS_TSE_POR_ST: dict[str, str] = {
+    "eleito por qp": "eleito_qp",
+    "eleito por média": "eleito_media",
+    "eleito por media": "eleito_media",
+    "eleito": "eleito",
+    "suplente": "suplente",
+    "não eleito": "nao_eleito",
+    "nao eleito": "nao_eleito",
+}
+
+
+def status_tse_do_candidato(cand: dict[str, Any]) -> tuple[str | None, str | None]:
+    """`(marca, st_desconhecido)` de um `cand[]` de arquivo com `tf == "s"`.
+
+    `st` manda. Só com `st` AUSENTE, `cand.e == "s"` ainda diz "eleito" (sem
+    a via, QP ou média — o `e` não a tem). `cand.e == "n"` sozinho **não** vira
+    marca: não distingue suplente de não eleito, e escolher um seria inventar.
+
+    `st` presente e fora do mapa **não** cai no `e`: o caso real é `"2º
+    turno"`, que vem com `e == "s"` (dicionário: "caso o candidato tenha ido
+    para o segundo turno, esse campo também será preenchido com s") e viraria
+    "eleito". Devolve `(None, st)` para o chamador registrar.
+    """
+    st_bruto = cand.get("st")
+    if st_bruto is not None and str(st_bruto).strip():
+        texto = str(st_bruto).strip()
+        marca = _STATUS_TSE_POR_ST.get(texto.casefold())
+        if marca is not None:
+            return marca, None
+        return None, texto
+    if str(cand.get("e", "")).strip().lower() == "s":
+        return "eleito", None
+    return None, None
+
+
+# ---------------------------------------------------------------------------
 # Extração
 # ---------------------------------------------------------------------------
 
@@ -187,6 +336,13 @@ class IdentidadeCandidato:
     partido: str
     #: `cod` da agremiação a que pertence.
     agremiacao: str
+    #: `cand.n` — número de urna, só para EXIBIÇÃO (nunca chave: repete entre
+    #: partidos e UFs). `None` quando o envelope não o traz.
+    numero: str | None = None
+    #: Destino do voto (`destino_proporcional(cand.dvt)`): `"valido"`,
+    #: `"valido_legenda"`, `"anulado"`, `"sub_judice"`, `"desconhecido"` — ou
+    #: `None` quando o TSE ainda não publicou `dvt` (tratado como válido).
+    destino: str | None = None
 
 
 @dataclass(frozen=True)
@@ -205,7 +361,46 @@ class EntradaProporcional:
     #: `cod` → identidade da agremiação. Paralelo a `agremiacoes` (D4).
     identidade_agremiacoes: dict[str, IdentidadeAgremiacao] = field(default_factory=dict)
     #: `sqcand` → identidade do candidato. Paralelo aos `Candidato` (D4).
+    #: Inclui quem ficou FORA do cálculo por destino (ADR-B) — a identidade
+    #: existe para a tela, e a tela lista também o candidato anulado.
     identidade_candidatos: dict[int, IdentidadeCandidato] = field(default_factory=dict)
+    #: `sqcand` → `cand.vap` de quem NÃO virou `Candidato` por destino
+    #: (`valido_legenda`, `anulado`, `sub_judice`, `desconhecido`). Não entra em
+    #: nenhuma conta de cadeira; existe para a lista da tela mostrar o voto
+    #: computado dessas candidaturas sem reler o envelope.
+    votos_fora_do_calculo: dict[int, int] = field(default_factory=dict)
+    #: `sqcand` → situação oficial (`status_tse_do_candidato`), SÓ com
+    #: `tf == "s"`. Vazio em qualquer outro caso — inclusive na entrada somada
+    #: de várias zonas, pela mesma razão de `vagas_tse`.
+    status_tse: dict[int, str] = field(default_factory=dict)
+    #: `v.vv` do envelope — votos válidos da abrangência segundo o TSE. É o
+    #: lado direito da invariante `soma_validos == votos_validos_tse`. `None`
+    #: quando o envelope não traz `v.vv`.
+    votos_validos_tse: int | None = None
+    #: `cod`s de agremiação cuja legenda saiu pelo caminho de recurso (total
+    #: válido do partido menos os nominais elegíveis deu NEGATIVO — ver
+    #: `_legenda_da_agremiacao`). Vazio no caso normal.
+    legendas_recalculadas: tuple[str, ...] = ()
+    #: Valores de `dvt`/`st` presentes e fora do dicionário, como
+    #: `"dvt=<valor>"`/`"st=<valor>"`. Ordenados e sem repetição.
+    valores_desconhecidos: tuple[str, ...] = ()
+
+    @property
+    def soma_validos(self) -> int:
+        """Σ votos válidos das agremiações (legenda + nominais no cálculo)."""
+        return sum(a.votos_totais for a in self.agremiacoes)
+
+    @property
+    def diferenca_validos(self) -> int | None:
+        """`soma_validos − v.vv`. `0` é a invariante; `None` sem `v.vv`.
+
+        Com `dvt` publicado e `tvtn`/`tvtl` consistentes, a soma das
+        agremiações é exatamente o `v.vv` do TSE. Diferença diferente de zero
+        diz que algum voto foi contado onde o TSE não conta (ou o contrário).
+        """
+        if self.votos_validos_tse is None:
+            return None
+        return self.soma_validos - self.votos_validos_tse
 
     @property
     def tem_coligacao(self) -> bool:
@@ -249,6 +444,14 @@ def extrair_entrada_proporcional(
     (`fed[].sg`); partido isolado pega a do seu único `par[].sg`. É o único
     ponto em que `fed[]` é lida — e mesmo aqui só por identidade: nenhum voto e
     nenhum candidato passam por ela.
+
+    ## Destino do voto (ADR-B, 2026-09-29)
+
+    Só vira `Candidato` quem tem `dvt` `"Válido"` ou ausente. O voto de quem
+    tem `"Válido (legenda)"` vai para a legenda do partido; o de quem tem
+    `"Anulado"`/`"Anulado sub judice"` sai de QE e QP. Os três ficam em
+    `identidade_candidatos` (com `destino`) e em `votos_fora_do_calculo`. A
+    legenda com destino publicado é `_legenda_da_agremiacao`.
     """
     raiz = _raiz(payload)
     if raiz is None:
@@ -259,6 +462,8 @@ def extrair_entrada_proporcional(
         return EntradaProporcional([], None, None, {}, False)
 
     totalizacao_final = str(raiz.get("tf", "")).strip().lower() == "s"
+    v_raiz = raiz.get("v") if isinstance(raiz.get("v"), dict) else {}
+    votos_validos_tse = _int_ou_none(v_raiz.get("vv"))
 
     for carg in cargos:
         if not isinstance(carg, dict):
@@ -272,6 +477,10 @@ def extrair_entrada_proporcional(
         vagas_tse: dict[str, int] = {}
         identidade_agr: dict[str, IdentidadeAgremiacao] = {}
         identidade_cand: dict[int, IdentidadeCandidato] = {}
+        votos_fora: dict[int, int] = {}
+        status_tse: dict[int, str] = {}
+        recalculadas: list[str] = []
+        desconhecidos: set[str] = set()
 
         # `fed[]` só para IDENTIDADE (sigla/composição da federação) — nunca
         # para voto ou candidato, que chegam exclusivamente por `agr[]`.
@@ -294,26 +503,43 @@ def extrair_entrada_proporcional(
             candidatos: list[Candidato] = []
             legenda_dos_partidos = 0
             siglas_par: list[str] = []
+            parciais: list[_LegendaDoPartido] = []
+            tem_destino = False
             for par in agr.get("par") or []:
                 if not isinstance(par, dict):
                     continue
-                legenda_dos_partidos += _int(par.get("tvtl"))
+                tvtl_par = _int(par.get("tvtl"))
+                legenda_dos_partidos += tvtl_par
                 sigla_par = _texto(par.get("sg"))
                 if sigla_par:
                     siglas_par.append(sigla_par)
+                nominais_no_calculo = 0
                 for cand in par.get("cand") or []:
                     if not isinstance(cand, dict):
                         continue
+                    destino = destino_proporcional(cand.get("dvt"))
+                    if destino is not None:
+                        tem_destino = True
+                    if destino == DESTINO_DESCONHECIDO:
+                        desconhecidos.add(f"dvt={str(cand.get('dvt')).strip()}")
+                    votos = _int(cand.get("vap"))
+                    # O voto "Válido (legenda)" não é somado aqui: ele chega à
+                    # agremiação por `par.tvtl`, onde o TSE o põe (identidade
+                    # medida — ver `_legenda_da_agremiacao`).
                     cod_cand = _cod_candidato(cand)
                     if cod_cand is None:
                         continue
-                    candidatos.append(
-                        Candidato(
-                            cod=cod_cand,
-                            votos_nominais=_int(cand.get("vap")),
-                            nascimento=_nascimento(cand.get("dt")),
+                    if destino in _DESTINOS_DO_CANDIDATO:
+                        candidatos.append(
+                            Candidato(
+                                cod=cod_cand,
+                                votos_nominais=votos,
+                                nascimento=_nascimento(cand.get("dt")),
+                            )
                         )
-                    )
+                        nominais_no_calculo += votos
+                    else:
+                        votos_fora[cod_cand] = votos_fora.get(cod_cand, 0) + votos
                     # `nmu` (nome na urna) antes de `nm` (nome completo): é o
                     # nome pelo qual o eleitor conhece o candidato e o que o
                     # próprio TSE exibe. `nm` fica de reserva.
@@ -322,7 +548,22 @@ def extrair_entrada_proporcional(
                         nome=_texto(cand.get("nmu")) or _texto(cand.get("nm")),
                         partido=sigla_par,
                         agremiacao=cod,
+                        numero=_texto(cand.get("n")) or None,
+                        destino=destino,
                     )
+                    if totalizacao_final:
+                        marca, st_desconhecido = status_tse_do_candidato(cand)
+                        if marca is not None:
+                            status_tse[cod_cand] = marca
+                        if st_desconhecido is not None:
+                            desconhecidos.add(f"st={st_desconhecido}")
+                parciais.append(
+                    _LegendaDoPartido(
+                        tvtl=tvtl_par,
+                        tvtn=_int_ou_none(par.get("tvtn")),
+                        nominais_no_calculo=nominais_no_calculo,
+                    )
+                )
 
             identidade_agr[cod] = _identidade_agremiacao(
                 cod=cod,
@@ -332,12 +573,19 @@ def extrair_entrada_proporcional(
                 fed=federacoes.get(numero),
             )
 
-            # `agr[].tvtl` é o agregado publicado; a soma dos `par[].tvtl` é o
-            # mesmo número por construção. Preferimos o agregado quando existe,
-            # e caímos na soma quando o TSE o omite.
-            legenda = _int(agr.get("tvtl"), default=legenda_dos_partidos)
-            if agr.get("tvtl") is None:
-                legenda = legenda_dos_partidos
+            if not tem_destino:
+                # `dvt` ausente em toda a agremiação — o caminho de ANTES do
+                # ADR-B, byte a byte. `agr[].tvtl` é o agregado publicado; a
+                # soma dos `par[].tvtl` é o mesmo número por construção.
+                # Preferimos o agregado quando existe, e caímos na soma quando
+                # o TSE o omite.
+                legenda = _int(agr.get("tvtl"), default=legenda_dos_partidos)
+                if agr.get("tvtl") is None:
+                    legenda = legenda_dos_partidos
+            else:
+                legenda, recalculou = _legenda_da_agremiacao(parciais)
+                if recalculou:
+                    recalculadas.append(cod)
 
             agremiacoes.append(
                 Agremiacao(cod=cod, votos_legenda=legenda, candidatos=tuple(candidatos))
@@ -353,9 +601,101 @@ def extrair_entrada_proporcional(
             totalizacao_final=totalizacao_final,
             identidade_agremiacoes=identidade_agr,
             identidade_candidatos=identidade_cand,
+            votos_fora_do_calculo=votos_fora,
+            status_tse=status_tse,
+            votos_validos_tse=votos_validos_tse,
+            legendas_recalculadas=tuple(sorted(recalculadas)),
+            valores_desconhecidos=tuple(sorted(desconhecidos)),
         )
 
     return EntradaProporcional([], None, None, {}, totalizacao_final)
+
+
+def _int_ou_none(raw: Any) -> int | None:
+    """Como `_int`, mas distingue "ausente/ilegível" (`None`) de zero.
+
+    `tvtn` ausente e `tvtn == "0"` são coisas diferentes para a legenda: o
+    primeiro não diz nada; o segundo diz que o partido não tem voto nominal
+    válido — que é exatamente o caso do partido cujo único candidato foi
+    anulado (medido na captura do simulado de 16/09, `par.tvtn = "0"` com
+    `tvan = 54.758`).
+    """
+    if raw is None:
+        return None
+    texto = str(raw).strip().replace(".", "").replace(" ", "")
+    if not texto:
+        return None
+    try:
+        return int(texto)
+    except ValueError:
+        return None
+
+
+@dataclass(frozen=True)
+class _LegendaDoPartido:
+    """O que um `par[]` informa para a legenda da agremiação (ADR-B)."""
+
+    #: `par.tvtl` — votos válidos de legenda do partido.
+    tvtl: int
+    #: `par.tvtn` — votos válidos nominais do partido. `None` se ausente.
+    tvtn: int | None
+    #: Σ `vap` dos candidatos do partido que viraram `Candidato`.
+    nominais_no_calculo: int
+
+
+def _legenda_da_agremiacao(parciais: list[_LegendaDoPartido]) -> tuple[int, bool]:
+    """Legenda efetiva de uma agremiação com `dvt` publicado → `(votos, recalculou)`.
+
+    Regra do dono (ADR-B), por partido componente:
+
+        legenda = (tvtn + tvtl) − Σ nominais que viraram `Candidato`
+
+    Isto é: o total VÁLIDO que o TSE atribui ao partido, menos o que já está
+    nos candidatos do cálculo. O que sobra é, por construção, o voto de
+    legenda mais o voto de candidatura `"Válido (legenda)"` — **sem depender**
+    de em qual dos dois campos o TSE o pôs. Voto anulado não entra: `tvtn` e
+    `tvtl` são "votos VÁLIDOS" por definição do dicionário.
+
+    ## O que o simulado mostrou (417 arquivos de cargo 6 com `and ≠ "n"`, RR e
+    AP, capturados em 28/09 — `tests/fixtures/tse/2026-sim/dep/README.md`)
+
+    Identidades exatas em 100% dos arquivos:
+    `par.tvtn = Σ vap[dvt=Válido]`; `par.tvtl = par.tval + Σ vap[dvt=Válido
+    (legenda)]`; `v.vv = Σ (tvtn + tvtl)`. Ou seja, o TSE põe o voto de
+    candidatura "Válido (legenda)" DENTRO de `tvtl`, e a regra acima devolve
+    exatamente `tvtl`.
+
+    ## O recurso — `tvtl`, e só ele
+
+    Dois casos não podem usar a subtração:
+
+      - `tvtn` ausente — não há total válido de onde subtrair (nunca visto em
+        arquivo real com voto; é envelope podado de teste);
+      - a conta dá **negativo** — `tvtn` menor que os nominais que o próprio
+        arquivo lista como válidos, dado inconsistente. Registrado em
+        `legendas_recalculadas` para o chamador logar.
+
+    Nos dois, a legenda é `tvtl`. ⚠️ A redação original da regra do dono dizia
+    `tvtl + Σ vap("Válido (legenda)")`; com a identidade medida acima isso
+    contaria esse voto DUAS vezes (ele já está em `tvtl`). Decisão registrada
+    no relatório da frente P1 de 29/09 para o ADR-B.
+
+    `par.dvt` (destino do voto de LEGENDA do partido) não é lido: `tvtl` já é
+    "válidos de legenda", então partido com legenda anulada chega com `tvtl`
+    sem esses votos — e, se não chegar, a invariante contra `v.vv` acusa.
+    """
+    total = 0
+    recalculou = False
+    for p in parciais:
+        if p.tvtn is None:
+            total += p.tvtl
+            continue
+        efetiva = p.tvtn + p.tvtl - p.nominais_no_calculo
+        if efetiva < 0:
+            recalculou = True
+            efetiva = p.tvtl
+        total += efetiva
+    return total, recalculou
 
 
 def _identidade_agremiacao(
@@ -443,6 +783,13 @@ def combinar_entradas(entradas: list[EntradaProporcional]) -> EntradaProporciona
       - `lugares_a_preencher` é o **máximo** dos publicados — a circunscrição é
         a mesma para todas as linhas, e vaga não encolhe.
       - `totalizacao_final` só é verdadeira se **todas** as linhas o disserem.
+      - `status_tse` (situação oficial por candidato) vira `{}` pela mesma
+        razão do `qe`: a marca oficial vem do agregado da UF
+        (`conferir_agregado_da_uf`), não de uma soma de zonas.
+
+    O que é somado além do voto do cálculo: `votos_fora_do_calculo` (por
+    `sqcand`) e `votos_validos_tse` (`v.vv` — só quando TODAS as linhas o
+    trazem; uma linha sem ele faria a soma parecer um `v.vv` que não é).
     """
     if not entradas:
         return EntradaProporcional([], None, None, {}, False)
@@ -456,8 +803,15 @@ def combinar_entradas(entradas: list[EntradaProporcional]) -> EntradaProporciona
     ordem_cands: dict[str, list[int]] = {}
     identidade_agr: dict[str, IdentidadeAgremiacao] = {}
     identidade_cand: dict[int, IdentidadeCandidato] = {}
+    votos_fora: dict[int, int] = {}
+    recalculadas: set[str] = set()
+    desconhecidos: set[str] = set()
 
     for entrada in entradas:
+        for sq, votos in entrada.votos_fora_do_calculo.items():
+            votos_fora[sq] = votos_fora.get(sq, 0) + votos
+        recalculadas.update(entrada.legendas_recalculadas)
+        desconhecidos.update(entrada.valores_desconhecidos)
         for agremiacao in entrada.agremiacoes:
             cod = agremiacao.cod
             if cod not in legenda_por_cod:
@@ -476,7 +830,13 @@ def combinar_entradas(entradas: list[EntradaProporcional]) -> EntradaProporciona
         for cod, ident in entrada.identidade_agremiacoes.items():
             identidade_agr.setdefault(cod, ident)
         for sq, ident_c in entrada.identidade_candidatos.items():
-            identidade_cand.setdefault(sq, ident_c)
+            atual = identidade_cand.get(sq)
+            # A primeira leitura vence, com UMA exceção: uma linha que ainda
+            # não tinha `dvt` (destino `None`) cede para a que já tem. Sem
+            # isso, a ordem das zonas decidiria se a tela sabe que a
+            # candidatura foi anulada.
+            if atual is None or (atual.destino is None and ident_c.destino is not None):
+                identidade_cand[sq] = ident_c
 
     agremiacoes = [
         Agremiacao(
@@ -495,6 +855,7 @@ def combinar_entradas(entradas: list[EntradaProporcional]) -> EntradaProporciona
     ]
 
     lugares = [e.lugares_a_preencher for e in entradas if e.lugares_a_preencher is not None]
+    validos_tse = [e.votos_validos_tse for e in entradas]
 
     return EntradaProporcional(
         agremiacoes=agremiacoes,
@@ -504,6 +865,15 @@ def combinar_entradas(entradas: list[EntradaProporcional]) -> EntradaProporciona
         totalizacao_final=all(e.totalizacao_final for e in entradas),
         identidade_agremiacoes=identidade_agr,
         identidade_candidatos=identidade_cand,
+        votos_fora_do_calculo=votos_fora,
+        status_tse={},
+        votos_validos_tse=(
+            sum(v for v in validos_tse if v is not None)
+            if all(v is not None for v in validos_tse)
+            else None
+        ),
+        legendas_recalculadas=tuple(sorted(recalculadas)),
+        valores_desconhecidos=tuple(sorted(desconhecidos)),
     )
 
 
@@ -567,3 +937,211 @@ def conferir_contra_tse(
             )
 
     return divergencias
+
+
+EstadoConferencia = Literal["confere", "diverge", "sem_dado_tse"]
+
+
+@dataclass(frozen=True)
+class ConferenciaTse:
+    """Resultado da conferência contra o agregado da UF (RF-269, 2026-09-29).
+
+    `estado`:
+      - `"confere"` — o TSE publicou `qe` e/ou `vag` e a nossa conta sobre os
+        votos DAQUELE arquivo dá os mesmos números;
+      - `"diverge"` — publicou, e ao menos um número difere
+        (`divergencias` não vazio);
+      - `"sem_dado_tse"` — não há o que comparar (`motivo` diz por quê). É o
+        estado que substitui a afirmação falsa "batem" quando nada foi
+        comparado.
+    """
+
+    estado: EstadoConferencia
+    #: Hora de geração (`dg`/`hg`) do arquivo agregado conferido, ISO UTC.
+    #: `None` sem arquivo ou com `dg`/`hg` ilegível.
+    boletim_dado_ts: str | None
+    #: `tf == "s"` NO AGREGADO — só aí divergir é erro (e alarme).
+    totalizacao_final: bool
+    divergencias: tuple[Divergencia, ...] = ()
+    #: Por que a conta não pôde ser conferida (para o log; não vai ao
+    #: payload): `sem_agregado`, `sem_cargo`, `apuracao_nao_iniciada`,
+    #: `tse_nao_publicou`, `coligacao`, `sem_nv`, `sem_voto_valido`. `None`
+    #: quando a conta foi conferida.
+    motivo: str | None = None
+    #: A leitura do agregado — de onde sai `status_tse` (marca oficial por
+    #: candidato). `None` quando não houve arquivo.
+    entrada: EntradaProporcional | None = None
+
+
+def _boletim_dado_ts(payload: Any) -> str | None:
+    """`dg`/`hg` do topo do agregado → ISO UTC, ou `None` (ausente/ilegível)."""
+    raiz = _raiz(payload)
+    if raiz is None:
+        return None
+    try:
+        return parse_dg_hg(raiz.get("dg"), raiz.get("hg")).isoformat()
+    except DgHgInvalido:
+        return None
+
+
+#: Marcas oficiais que contam como "eleito" na comparação do CONJUNTO de
+#: eleitos. A via (QP × média) fica de fora de propósito: o rótulo do TSE não
+#: coincide com a divisão `floor(votos/QE)` (RR final do simulado: a divisão dá
+#: 6 por QP, o TSE rotula 3), então comparar a via acusaria divergência que não
+#: é de cadeira. A marca `tse` do payload guarda o rótulo do TSE como veio.
+_MARCAS_ELEITO = frozenset({"eleito", "eleito_qp", "eleito_media"})
+
+
+def _divergencias_de_eleitos(
+    resultado: ResultadoCadeiras, entrada: EntradaProporcional
+) -> list[Divergencia]:
+    """Candidaturas que só um dos dois lados elegeu (só com `tf == "s"`)."""
+    oficiais = {sq for sq, marca in entrada.status_tse.items() if marca in _MARCAS_ELEITO}
+    nossos = {c.cod for eleitos in resultado.eleitos.values() for c in eleitos}
+    saida: list[Divergencia] = []
+    for sq in sorted(oficiais ^ nossos):
+        ident = entrada.identidade_candidatos.get(sq)
+        rotulo = f"{ident.nome} ({ident.partido})" if ident is not None else ""
+        saida.append(
+            Divergencia(
+                o_que=f"eleito[{sq}]",
+                nosso=1 if sq in nossos else 0,
+                tse=1 if sq in oficiais else 0,
+                detalhe=rotulo,
+            )
+        )
+    return saida
+
+
+def conferir_agregado_da_uf(
+    payload: Any,
+    cargo: int = CARGO_DEPUTADO_FEDERAL,
+    *,
+    eleitorado_lido: int | None = None,
+) -> ConferenciaTse:
+    """A conferência de verdade contra o arquivo agregado da UF (RF-269).
+
+    Duas perguntas, as duas respondidas com o agregado da UF (`nivel = "uf"`,
+    já ingerido desde a spec 021):
+
+    **1. A nossa CONTA é a do TSE?** Roda `distribuir_cadeiras` sobre os votos
+    do **próprio** agregado e compara com o `qe`, o `vag` e — com
+    totalização final — o conjunto de eleitos (`cand.st`) que o **mesmo**
+    arquivo publica. As duas contas olham o mesmo boletim; divergir diz que a
+    aritmética do ADR-0027 (ou a regra de destino do ADR-B) não é a do TSE.
+    Nas capturas reais do simulado (RR e AP, 28/09) ela confere em todos os
+    momentos — inclusive no empate de RR a 20% (P 9979 × P 9980, 21.262 votos
+    cada), em que o desempate reproduz o do TSE.
+
+    **2. Os nossos VOTOS cobrem a UF?** `eleitorado_lido` é Σ `e.te` das
+    linhas de zona que somamos (quem chama mede); comparado com o `e.te` do
+    agregado, diz que parte do estado não está na nossa soma — o caso real do
+    AP, cuja zona 0014 de Macapá faltava na lista de zonas lidas (−19,5% do
+    eleitorado). É estrutural (o `e.te` de uma zona não muda durante a noite),
+    então não acusa atraso de boletim — só zona que não lemos.
+
+    `and == "n"` (apuração não iniciada) não confere a conta: o `vag` desse
+    arquivo é da rodada ANTERIOR (medido no simulado) e o `qe` é `"0"`.
+
+    `estado`: `diverge` se qualquer das duas acusar; `confere` se a conta foi
+    conferida e nada acusou; `sem_dado_tse` se não houve o que conferir
+    (`motivo`). Parcial também é conferível — o TSE recalcula `qe`/`vag` a cada
+    totalização —, mas só com `tf == "s"` divergir é erro. Quem decide alarmar
+    é o chamador (este módulo não loga nem alerta).
+    """
+    if payload is None:
+        return ConferenciaTse("sem_dado_tse", None, False, motivo="sem_agregado")
+
+    raiz = _raiz(payload) or {}
+    boletim = _boletim_dado_ts(payload)
+    entrada = extrair_entrada_proporcional(payload, cargo=cargo)
+    tf = entrada.totalizacao_final
+
+    divergencias: list[Divergencia] = []
+
+    e_raiz = raiz.get("e") if isinstance(raiz.get("e"), dict) else {}
+    eleitorado_tse = _int_ou_none(e_raiz.get("te"))
+    if eleitorado_lido is not None and eleitorado_tse and eleitorado_lido != eleitorado_tse:
+        cobertura = 100.0 * eleitorado_lido / eleitorado_tse
+        divergencias.append(
+            Divergencia(
+                o_que="eleitorado",
+                nosso=eleitorado_lido,
+                tse=eleitorado_tse,
+                detalhe=(
+                    f"as zonas lidas somam {cobertura:.1f}% do eleitorado da UF "
+                    "publicado pelo TSE — as cadeiras que publicamos não contam "
+                    "os votos da parte que falta"
+                ),
+            )
+        )
+
+    motivo = _motivo_sem_conferencia(raiz, entrada)
+    # `lugares_a_preencher` não é `None` aqui (é um dos motivos); repetido
+    # só para o verificador de tipos.
+    if motivo is None and entrada.lugares_a_preencher is not None:
+        resultado = distribuir_cadeiras(entrada.agremiacoes, entrada.lugares_a_preencher)
+        if resultado.quociente_eleitoral < 1:
+            motivo = "sem_voto_valido"
+        else:
+            divergencias.extend(conferir_contra_tse(resultado, entrada))
+            if tf and entrada.status_tse:
+                divergencias.extend(_divergencias_de_eleitos(resultado, entrada))
+
+    if divergencias:
+        estado: EstadoConferencia = "diverge"
+    elif motivo is None:
+        estado = "confere"
+    else:
+        estado = "sem_dado_tse"
+    return ConferenciaTse(
+        estado,
+        boletim,
+        tf,
+        divergencias=tuple(divergencias),
+        motivo=motivo,
+        entrada=entrada,
+    )
+
+
+def _motivo_sem_conferencia(raiz: dict[str, Any], entrada: EntradaProporcional) -> str | None:
+    """Por que a CONTA do agregado não é conferível — `None` se é."""
+    if not entrada.agremiacoes and entrada.lugares_a_preencher is None:
+        return "sem_cargo"
+    if str(raiz.get("and", "")).strip().lower() == "n":
+        return "apuracao_nao_iniciada"
+    if entrada.quociente_eleitoral_tse is None and not entrada.vagas_tse:
+        return "tse_nao_publicou"
+    if entrada.tem_coligacao:
+        return "coligacao"
+    if entrada.lugares_a_preencher is None:
+        return "sem_nv"
+    return None
+
+
+def anomalias_de_leitura(entradas: list[EntradaProporcional]) -> dict[str, Any] | None:
+    """Resumo, para UM aviso por UF, das anomalias das leituras individuais.
+
+    Cada arquivo é conferido sozinho — a invariante `Σ válidos das
+    agremiações == v.vv` é **por arquivo** (ADR-B) —, mas o aviso é por UF:
+    ~6.110 pares por ciclo com um `warn` cada inundariam o log justamente
+    quando algo sistemático estivesse errado.
+
+    `None` quando não há nada a dizer.
+    """
+    divergentes = [
+        e.diferenca_validos
+        for e in entradas
+        if e.diferenca_validos is not None and e.diferenca_validos != 0
+    ]
+    recalculadas = sorted({c for e in entradas for c in e.legendas_recalculadas})
+    desconhecidos = sorted({v for e in entradas for v in e.valores_desconhecidos})
+    if not divergentes and not recalculadas and not desconhecidos:
+        return None
+    return {
+        "n_leituras": len(entradas),
+        "n_validos_divergentes": len(divergentes),
+        "maior_diferenca_validos": max(divergentes, key=abs) if divergentes else 0,
+        "legendas_recalculadas": recalculadas,
+        "valores_desconhecidos": desconhecidos,
+    }

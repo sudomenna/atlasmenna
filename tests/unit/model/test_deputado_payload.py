@@ -1187,10 +1187,17 @@ def test_uf_com_mais_de_uma_linha_de_zona_loga_info_nao_warn(
     # outro assunto (o relógio do dado) e tem teste próprio em
     # `test_dado_ts.py`. Filtrar por assunto, e não afrouxar para "qualquer
     # warn serve", é o que mantém a tripwire original de pé.
+    # Idem, desde 2026-09-29 (spec 026 RF-275), o aviso de `pct_apurado` sem
+    # ponderação: os envelopes daqui não trazem `e.te`, e o ciclo avisa que
+    # caiu no `max()` — outro assunto, com teste próprio em
+    # `test_deputado_defeitos_p1.py`.
     warns_de_zona = [
         m
         for m in mensagens
-        if '"level": "warn"' in m and "dg/hg" not in m and "dado_ts" not in m
+        if '"level": "warn"' in m
+        and "dg/hg" not in m
+        and "dado_ts" not in m
+        and "pct_apurado da UF" not in m
     ]
     assert not warns_de_zona, warns_de_zona
 
