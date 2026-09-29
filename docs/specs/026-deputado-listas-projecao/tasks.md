@@ -113,13 +113,18 @@ proporcional) e **ADR-0065** (listas em três faixas); números a preencher.
 
 ## S — modo simulado (qui 01/10, depois de T)
 
-- [ ] S1. `data-pipeline/simulacao-gerar.ts::montarDeputado` emite v2: projeção com ruído
+- [x] S1. `data-pipeline/simulacao-gerar.ts::montarDeputado` emite v2: projeção com ruído
       decrescente com o % apurado; os três estados da trava; uma UF a 100% com `totalizacao_final`;
       destinos em duas UFs (inclusive chapa inteira sub judice); puxador em SP; os três estados da
-      Conferência, um deles com magnitude de eleitorado.
-- [ ] S2. `tests/fixtures/simulacao/deputado-uf-lista.json` novo; `pnpm sim:full` continua sendo a
-      cadeia inteira (nunca `pnpm sim` sozinho).
+      Conferência, um deles com magnitude de eleitorado. (RR a 100% com `tf`; AP a 80,5% com
+      `cobertura` + `diverge` −19,5% + chapa sub judice; RR com anulado/sub judice/legenda; SP com
+      puxador de 4 QE e lista 61+. Válidos da UF = os do painel Votação — ADR-0064.)
+- [x] S2. `tests/fixtures/simulacao/deputado-uf-lista.json` novo (+ `interruptor-projecao-dep.json`
+      ligado); `pnpm sim:full` continua sendo a cadeia inteira (nunca `pnpm sim` sozinho).
 - [ ] S3. O teste de contrato roda também sobre a fixture do simulado (parametrizar a fonte).
+      Coberto por equivalente: `validarDeputadoV2` (gerador, recontagem a partir dos votos) roda
+      antes de gravar E sobre os arquivos gravados (`simulacao-gerar.test.ts`); o arquivo de
+      contrato em si não foi parametrizado, para não conflitar com P/U na junção.
 
 ## U — telas
 

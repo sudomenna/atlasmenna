@@ -35,6 +35,8 @@ import {
   fatiasCirculo3,
 } from "@/components/blocks/VotacaoEleitorado";
 import {
+  type AgremiacaoSim,
+  ARQUIVOS,
   alocarInteiros,
   alocarMatriz,
   BRANCOS_NULOS_POR_VOTO_SENADO,
@@ -42,27 +44,52 @@ import {
   CLI_DEFAULT,
   contagensVotacao,
   type DadosSimulacao,
+  DEP_PCT_MINIMO_PROJECAO,
+  DEP_PCT_UF_COBERTURA,
+  DEP_RANK_MAXIMO_NA_PAGINA,
+  DEP_UF_CHAPA_SUB_JUDICE,
+  DEP_UF_COBERTURA,
+  DEP_UF_DESTINOS_INDIVIDUAIS,
+  DEP_UF_PUXADOR,
+  DEP_UF_TOTALIZADA,
   designarDestinos,
+  desvioProjecaoDeputado,
+  distribuirCadeiras,
   distribuirPctPorUf,
+  estadoProjecaoDeputado,
   FRACAO_ANULADOS_CENARIO,
   gerarSimulacao,
   type Manifest,
   type MunicipioBruto,
+  marcarIndefinidas,
   naBaseDaDisputa,
   PARAMETROS_VOTACAO,
   PERFIL_VELOCIDADE_2022,
   parseCli,
+  pctFixasDoDeputado,
   projetarVotacao,
   quocienteEleitoral,
   Rng,
+  reforcarPuxador,
   TOLERANCIA,
   UFS,
+  validarDeputadoV2,
   validarSaida,
   votosPorEleitorDoCargo,
+  zonasApuradasDeputado,
 } from "@/data-pipeline/simulacao-gerar";
-import type { DeputadoUfDetail } from "@/lib/blob/deputado-uf";
+import {
+  DEPUTADO_RANK_MAXIMO_NA_PAGINA,
+  type DeputadoUfAgremiacao,
+  type DeputadoUfDetail,
+  type DeputadoUfLinha,
+  type DeputadoUfLista,
+  sanearDeputadoUfDetail,
+  sanearDeputadoUfLista,
+} from "@/lib/blob/deputado-uf";
 import type { UfDetailBlob } from "@/lib/blob/uf-detail";
 import type { CargoTse } from "@/lib/config/cargos";
+import { TRAVA_PROJECAO_DEP_PCT } from "@/lib/edge-config/reader";
 import type {
   EdgePayload,
   EdgePayloadDeputado,
@@ -78,6 +105,25 @@ type EdgeUfCandidateLike = EdgeUfCandidate;
 
 /** ADR-0053 — quem disputa: tudo que não tem destino `"anulado"` (sub judice compete). */
 const compete = (c: { destino?: string }): boolean => c.destino !== "anulado";
+
+/**
+ * Spec 026 — teto do objeto de SP no Blob (`deputado/uf/SP.json`), MINIFICADO
+ * como o writer grava.
+ *
+ * Medido em 29/09 sobre o cadastro real de 2026, `--pct 25`: **151.349 B
+ * (147,8 KiB)**, 997 linhas nos 21 blocos (152 B por linha, com o resto do
+ * objeto). O pior caso de CONTAGEM é o Blob cheio — 21 agremiações × 60 ranks
+ * + as marcadas acima de 60 ≈ 1.260 linhas ≈ 187 KiB —, e é esse que o teto
+ * cobre: 200 KiB. O design 026 § 10 estimava ~180 KB.
+ */
+const TETO_BLOB_SP_BYTES = 200 * 1024;
+
+/**
+ * Spec 026 — teto da lista 61+ de SP (`deputado/uf-lista/SP.json`),
+ * minificada. Medido: 8.231 B (64 linhas). Pior caso: 21 agremiações × 11
+ * linhas (lista de 71 nomes, `vagas + 1`) ≈ 231 linhas ≈ 30 KiB.
+ */
+const TETO_LISTA_SP_BYTES = 32 * 1024;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Dados sintéticos — a camada hermética
@@ -3159,5 +3205,537 @@ describe("simulacao-gerar — emenda ao ADR-0053: percentuais sobre os votos em 
     const d = vvc - inteira.filter((c) => !compete(c)).reduce((a, c) => a + votos(c), 0);
     l.margem_atual = Math.round((l.margem_atual * d * 100) / vvc) / 100;
     expect(() => validarSaida(x)).toThrow(/margem_atual.*emenda ao ADR-0053/);
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Spec 026 — Deputado Federal v2 (frente S)
+// ═════════════════════════════════════════════════════════════════════════════
+//
+// Duas camadas, como o resto do arquivo: a hermética (dado sintético) prova a
+// aritmética e as mutações; a dos arquivos prova que o entregável lido por
+// `pnpm dev:sim` e pelos portões e2e tem cada estado da tela em alguma UF.
+
+/** `true` para "Eleito por QP/por média/Eleito" — o conjunto oficial de eleitos. */
+const eleitoTse = (l: DeputadoUfLinha): boolean =>
+  l.tse === "eleito" || l.tse === "eleito_qp" || l.tse === "eleito_media";
+
+/** Todas as linhas de uma UF: as do objeto e as da lista 61+. */
+function linhasDaUf(
+  d: DeputadoUfDetail,
+  lista: DeputadoUfLista | undefined,
+): Array<{ cod: string; l: DeputadoUfLinha }> {
+  return d.agremiacoes.flatMap((a) => [
+    ...(a.candidatos ?? []).map((l) => ({ cod: a.cod, l })),
+    ...(lista?.agremiacoes.find((x) => x.cod === a.cod)?.candidatos ?? []).map((l) => ({
+      cod: a.cod,
+      l,
+    })),
+  ]);
+}
+
+/** O sintético com uma lista de 74 nomes no PL de SP — o caso da lista 61+. */
+function dadosComListaLonga(): DadosSimulacao {
+  const extra: CandidatoBruto[] = Array.from({ length: 70 }, (_, k) => ({
+    cargo: 6,
+    uf: "SP",
+    numero: 2200 + k,
+    nome_urna: `PL SP ${k}`,
+    partido_sigla: "PL",
+    partido_numero: 11,
+    federacao_sigla: null,
+    sq_candidato: String(290000000000 + k),
+  }));
+  return { ...DADOS, candidatos: [...DADOS.candidatos, ...extra] };
+}
+
+describe("simulacao-gerar — Deputado v2 (spec 026): os estados da tela", () => {
+  const s = gerar();
+  const ufs = s.deputadoUf;
+
+  it("o contrato v2 fecha em TODO --pct, das bordas ao meio [mutação: qualquer invariante do design 026 § 2–3]", () => {
+    for (const pct of [0, 0.08, 5, 25, 62, 90, 100]) {
+      const g = gerar({ pct });
+      expect(
+        () => validarDeputadoV2(g.deputado, g.deputadoUf, g.deputadoUfLista),
+        `--pct ${pct}`,
+      ).not.toThrow();
+      for (const d of Object.values(g.deputadoUf)) {
+        expect(d.contrato, `${d.uf} --pct ${pct}`).toBe(2);
+      }
+    }
+  });
+
+  it("o leitor tolerante aceita cada campo sem descartar nada — a forma, não só a aritmética", () => {
+    for (const [uf, d] of Object.entries(ufs)) {
+      expect(sanearDeputadoUfDetail(d), uf).toEqual(d);
+    }
+    const longa = gerarSimulacao(dadosComListaLonga(), CLI_DEFAULT, TS);
+    for (const [uf, l] of Object.entries(longa.deputadoUfLista)) {
+      expect(sanearDeputadoUfLista(l), uf).toEqual(l);
+    }
+  });
+
+  it("os espelhos locais das constantes são as canônicas [mutação: trava 20 ou fronteira 50 no gerador]", () => {
+    expect(DEP_PCT_MINIMO_PROJECAO).toBe(TRAVA_PROJECAO_DEP_PCT);
+    expect(DEP_RANK_MAXIMO_NA_PAGINA).toBe(DEPUTADO_RANK_MAXIMO_NA_PAGINA);
+  });
+
+  it("RR a 100% e AP a 80,5%, e o nacional continua batendo o --pct [mutação: fixas sem reajustar as outras UFs]", () => {
+    const pct = (uf: string) => s.ctxs.find((c) => c.uf === uf)?.pctApurado;
+    expect(pct(DEP_UF_TOTALIZADA)).toBe(100);
+    expect(pct(DEP_UF_COBERTURA)).toBe(DEP_PCT_UF_COBERTURA);
+    expect(s.manifest.erro_pp).toBeLessThanOrEqual(TOLERANCIA.pctNacional);
+    expect(s.manifest.deputado_v2.pct_fixas).toEqual({ RR: 100, AP: 80.5 });
+    // Onde as fixas não cabem, a distribuição é a de sempre — "não começou"
+    // nunca ganha uma UF totalizada.
+    const peso = Object.fromEntries(UFS.map((uf) => [uf, DADOS.eleitorado[uf]?.aptos ?? 0]));
+    for (const p of [0, 0.08, 100]) expect(pctFixasDoDeputado(p, peso), `--pct ${p}`).toEqual({});
+    expect(gerar({ pct: 0 }).ctxs.every((c) => c.pctApurado === 0)).toBe(true);
+  });
+
+  it("os três estados da trava, com a cobertura no AP ACIMA de 25% [mutação: cobertura avaliada antes do pct_minimo]", () => {
+    const estados = new Set(Object.values(ufs).map((d) => d.projecao?.estado));
+    expect(estados).toEqual(new Set(["liberada", "aguardando", "indisponivel"]));
+    const ap = ufs[DEP_UF_COBERTURA] as DeputadoUfDetail;
+    expect(ap.projecao).toMatchObject({ estado: "indisponivel", motivo: "cobertura" });
+    expect(ap.pct_apurado).toBeGreaterThanOrEqual(DEP_PCT_MINIMO_PROJECAO);
+    // A ordem fixa do design § 2.7: abaixo de 25% o motivo é o pct, não a
+    // cobertura — mesmo no AP.
+    const baixo = gerar({ pct: 0.08 }).deputadoUf[DEP_UF_COBERTURA] as DeputadoUfDetail;
+    expect(baixo.projecao?.motivo).toBe("pct_minimo");
+    for (const d of Object.values(ufs)) {
+      if (d.pct_apurado < DEP_PCT_MINIMO_PROJECAO) {
+        expect(d.projecao, d.uf).toMatchObject({ estado: "aguardando", motivo: "pct_minimo" });
+      }
+    }
+  });
+
+  it("🔴 marca e número de projeção SÓ com a trava liberada [mutação M37: projetar a UF aguardando]", () => {
+    for (const d of Object.values(ufs)) {
+      const comProjecao = d.agremiacoes.some(
+        (a) =>
+          a.cadeiras_projetadas !== undefined ||
+          (a.candidatos ?? []).some((l) => l.projecao !== undefined),
+      );
+      expect(comProjecao, d.uf).toBe(d.projecao?.estado === "liberada");
+    }
+    // O validador reprova a mutação — é ele que barra a gravação.
+    const x = gerar();
+    const aguardando = Object.values(x.deputadoUf).find(
+      (d) => d.projecao?.estado === "aguardando" && d.agremiacoes.length > 0,
+    );
+    const linha = aguardando?.agremiacoes[0]?.candidatos?.[0];
+    if (linha === undefined) throw new Error("nenhuma UF aguardando com linha");
+    linha.projecao = "qp";
+    expect(() => validarSaida(x)).toThrow(/projeção publicada com a trava aguardando/);
+  });
+
+  it("🔴 a 100% a projeção É a parcial, cadeira a cadeira (G1) [mutação: ruído que não zera a 100%]", () => {
+    const rr = ufs[DEP_UF_TOTALIZADA] as DeputadoUfDetail;
+    const cem = gerar({ pct: 100 });
+    // O AP fica de fora: a falta de cobertura é ESTRUTURAL (a zona que não
+    // está na nossa tabela não aparece a 100%), então a trava segue fechada.
+    expect(cem.deputadoUf[DEP_UF_COBERTURA]?.projecao?.motivo).toBe("cobertura");
+    const cemSemAp = Object.values(cem.deputadoUf).filter((d) => d.uf !== DEP_UF_COBERTURA);
+    for (const d of [rr, ...cemSemAp]) {
+      expect(d.projecao?.estado, d.uf).toBe("liberada");
+      for (const a of d.agremiacoes) {
+        expect(a.cadeiras_projetadas, `${d.uf}/${a.sigla}`).toBe(a.cadeiras);
+        expect(a.votos_projetados, `${d.uf}/${a.sigla}`).toBe(a.votos_validos);
+        for (const l of a.candidatos ?? []) {
+          expect(l.projecao, `${d.uf}/${l.sqcand}`).toBe(l.parcial);
+        }
+      }
+    }
+    expect(desvioProjecaoDeputado(100)).toBe(0);
+  });
+
+  it("a 25% a projeção DIFERE da parcial em alguém — o bloco não é enfeite [mutação: projeção = cópia da parcial]", () => {
+    const linhas = Object.values(ufs)
+      .filter((d) => d.projecao?.estado === "liberada" && d.pct_apurado < 100)
+      .flatMap((d) => d.agremiacoes.flatMap((a) => a.candidatos ?? []));
+    expect(linhas.some((l) => l.parcial !== undefined && l.projecao === undefined)).toBe(true);
+    expect(linhas.some((l) => l.projecao !== undefined && l.parcial === undefined)).toBe(true);
+    expect(linhas.some((l) => l.projecao_apertada)).toBe(true);
+    expect(linhas.some((l) => l.indefinido)).toBe(true);
+  });
+
+  it("RR com totalização final: marca do TSE em toda linha, e ela bate com a parcial [mutação: tse só nos eleitos]", () => {
+    const rr = ufs[DEP_UF_TOTALIZADA] as DeputadoUfDetail;
+    expect(rr.totalizacao_final).toBe(true);
+    const linhas = linhasDaUf(rr, s.deputadoUfLista[DEP_UF_TOTALIZADA]).map((x) => x.l);
+    expect(linhas.every((l) => l.tse !== undefined)).toBe(true);
+    expect(linhas.filter(eleitoTse).length + rr.vagas_nao_preenchidas).toBe(rr.lugares_a_preencher);
+    expect(linhas.filter((l) => (l.parcial !== undefined) !== eleitoTse(l))).toEqual([]);
+    // O rótulo: a via da cadeira para quem se elegeu; "Suplente" para quem
+    // ficou numa agremiação que elegeu alguém; "Não eleito" no resto (e em
+    // toda linha com destino).
+    for (const { cod, l } of linhasDaUf(rr, s.deputadoUfLista[DEP_UF_TOTALIZADA])) {
+      const elegeu = (rr.agremiacoes.find((a) => a.cod === cod)?.cadeiras ?? 0) > 0;
+      const esperado =
+        l.parcial === "qp"
+          ? "eleito_qp"
+          : l.parcial === "sobra"
+            ? "eleito_media"
+            : l.destino === undefined && elegeu
+              ? "suplente"
+              : "nao_eleito";
+      expect(l.tse, `${cod}/${l.sqcand}`).toBe(esperado);
+    }
+    expect(linhas.some((l) => l.tse === "eleito_qp")).toBe(true);
+    // Nenhuma outra UF tem totalização final no default.
+    expect(
+      Object.values(ufs)
+        .filter((d) => d.totalizacao_final)
+        .map((d) => d.uf),
+    ).toEqual(["RR"]);
+    // Com tf não há voto por vir: nada "apertado" (`_marcar_indefinidas`).
+    expect(linhas.some((l) => l.indefinido || l.projecao_apertada)).toBe(false);
+  });
+
+  it("os três estados da Conferência — e o AP diverge pelo eleitorado com a magnitude medida [mutação: confere sem a conta]", () => {
+    expect(new Set(Object.values(ufs).map((d) => d.conferencia?.estado))).toEqual(
+      new Set(["confere", "diverge", "sem_dado_tse"]),
+    );
+    const ap = ufs[DEP_UF_COBERTURA] as DeputadoUfDetail;
+    expect(ap.conferencia?.estado).toBe("diverge");
+    const div = ap.conferencia?.divergencias.find((x) => x.o_que === "eleitorado");
+    expect(div?.diferenca_pct).toBeCloseTo(-19.498, 2);
+    // O QE do TSE conta a zona que nos falta: é outro número, e é a
+    // comparação de eleitorado que explica.
+    expect(ap.quociente_eleitoral_tse).toBeGreaterThan(ap.quociente_eleitoral as number);
+    const rr = ufs[DEP_UF_TOTALIZADA] as DeputadoUfDetail;
+    expect(rr.conferencia).toMatchObject({
+      estado: "confere",
+      totalizacao_final: true,
+      comparou: ["eleitorado", "algoritmo", "eleitos", "votos_validos"],
+    });
+    // O validador reprova "confere" sem a conta comparada (M6).
+    const x = gerar();
+    const confere = Object.values(x.deputadoUf).find((d) => d.conferencia?.estado === "confere");
+    if (confere?.conferencia === undefined) throw new Error("nenhuma UF confere");
+    confere.conferencia.comparou = ["eleitorado"];
+    expect(() => validarSaida(x)).toThrow(/"confere" sem a conta comparada/);
+  });
+
+  it("🔴 os válidos da lista são os do painel Votação — anulado e sub judice ficam DENTRO do vvc, fora da conta [mutação: repartir o vvc inteiro entre as agremiações]", () => {
+    for (const d of Object.values(ufs)) {
+      if (d.agremiacoes.length === 0) continue;
+      const c = d.votacao?.contagens;
+      const validos = d.agremiacoes.reduce((a, x) => a + x.votos_validos, 0);
+      expect(validos, d.uf).toBe(c?.validos);
+      expect(d.regras?.votos_validos, d.uf).toBe(c?.validos);
+    }
+    // Onde o destino é publicado, as linhas fecham com as contagens (ADR-0064).
+    for (const uf of [DEP_UF_DESTINOS_INDIVIDUAIS, DEP_UF_CHAPA_SUB_JUDICE]) {
+      const d = ufs[uf] as DeputadoUfDetail;
+      const linhas = linhasDaUf(d, s.deputadoUfLista[uf]).map((x) => x.l);
+      const soma = (dest: string) =>
+        linhas.filter((l) => l.destino === dest).reduce((a, l) => a + l.votos, 0);
+      expect(soma("sub_judice"), uf).toBe(d.votacao?.contagens.sub_judice);
+      if (uf === DEP_UF_DESTINOS_INDIVIDUAIS) {
+        expect(soma("anulado"), uf).toBe(d.votacao?.contagens.anulados);
+      }
+    }
+  });
+
+  it("destinos só em RR e AP: os três individuais em RR, a chapa inteira sub judice no AP [mutação: destino sem tirar o voto da conta]", () => {
+    expect(s.manifest.deputado_v2.destinos).toEqual(["AP", "RR"]);
+    const rr = linhasDaUf(ufs.RR as DeputadoUfDetail, s.deputadoUfLista.RR).map((x) => x.l);
+    expect(new Set(rr.map((l) => l.destino).filter(Boolean))).toEqual(
+      new Set(["valido_legenda", "anulado", "sub_judice"]),
+    );
+    // "Válido (legenda)" tem percentual (o voto é válido), e anulado não.
+    for (const l of rr.filter((x) => x.destino !== undefined)) {
+      expect(l.pct_validos === null, `${l.sqcand} ${l.destino}`).toBe(
+        l.destino !== "valido_legenda",
+      );
+    }
+    const ap = ufs.AP as DeputadoUfDetail;
+    const chapa = ap.agremiacoes.filter(
+      (a) =>
+        (a.candidatos ?? []).length > 0 &&
+        (a.candidatos ?? []).every((l) => l.destino === "sub_judice"),
+    );
+    expect(chapa).toHaveLength(1);
+    const [c] = chapa;
+    expect(c?.tipo).toBe("partido");
+    expect(c?.votos_validos).toBe(0);
+    expect(c?.pct_votos).toBe(0);
+    expect(c?.cadeiras).toBe(0);
+    expect((c?.candidatos ?? []).some((l) => l.votos > 0)).toBe(true);
+    // O validador reprova sub judice com percentual (M23).
+    const x = gerar();
+    const linha = (x.deputadoUf.AP as DeputadoUfDetail).agremiacoes
+      .flatMap((a) => a.candidatos ?? [])
+      .find((l) => l.destino === "sub_judice");
+    if (linha === undefined) throw new Error("sem linha sub judice no AP");
+    linha.pct_validos = 1;
+    expect(() => validarSaida(x)).toThrow(/pct_validos/);
+  });
+
+  it("puxador em SP: excedente = ⌊votos/QE⌋ − 1, e ele chega ao nacional [mutação M19: excedente sem o − 1]", () => {
+    const sp = ufs[DEP_UF_PUXADOR] as DeputadoUfDetail;
+    const pux = sp.agremiacoes.flatMap((a) => a.puxadores ?? []);
+    expect(pux.some((p) => p.quocientes >= 3)).toBe(true);
+    for (const p of pux) expect(p.excedente).toBe(p.quocientes - 1);
+    const doPais = s.deputado.puxadores ?? [];
+    expect(doPais.some((p) => p.uf === "SP")).toBe(true);
+    expect(doPais.length).toBeLessThanOrEqual(30);
+    for (const p of doPais) expect(p.quocientes).toBe(Math.floor(p.votos / p.quociente_eleitoral));
+    const x = gerar();
+    const ag = (x.deputadoUf.SP as DeputadoUfDetail).agremiacoes.find((a) => a.puxadores?.length);
+    const p0 = ag?.puxadores?.[0];
+    if (p0 === undefined) throw new Error("SP sem puxador");
+    p0.excedente = p0.quocientes;
+    expect(() => validarSaida(x)).toThrow(/puxadores/);
+  });
+
+  it("o reforço do puxador leva o 1º nome a 3,5 × QE sem mudar o total da agremiação [mutação: reforço tirando voto de outra agremiação]", () => {
+    const a: AgremiacaoSim = {
+      cod: "13",
+      sigla: "PT",
+      nome: "PT",
+      tipo: "partido",
+      componentes: [],
+      siglaLider: "PT",
+      votosNominais: 1000,
+      votosLegenda: 100,
+      candidatos: [
+        { sqcand: 1, nome: "A", partido: "PT", votos: 400 },
+        { sqcand: 2, nome: "B", partido: "PT", votos: 350 },
+        { sqcand: 3, nome: "C", partido: "PT", votos: 250 },
+      ],
+    };
+    reforcarPuxador([a], 200);
+    expect(a.candidatos.map((c) => c.votos)).toEqual([700, 175, 125]);
+    expect(a.candidatos.reduce((s2, c) => s2 + c.votos, 0)).toBe(1000);
+  });
+
+  it("a trava na ordem fixa do design § 2.7, e NO limiar [mutações M9 `>=`→`>`, M10 zonas 2→1, M13 ordem trocada]", () => {
+    // Exatamente 25,0% libera; 24,9% não.
+    expect(estadoProjecaoDeputado(25, 10, 20, false).estado).toBe("liberada");
+    expect(estadoProjecaoDeputado(24.9, 10, 20, false)).toMatchObject({ motivo: "pct_minimo" });
+    // Uma zona só, a 30%: aguarda a segunda.
+    expect(estadoProjecaoDeputado(30, 1, 16, false)).toMatchObject({
+      estado: "aguardando",
+      motivo: "zonas_minimas",
+    });
+    // Duas condições falhando juntas: publica a PRIMEIRA da ordem.
+    expect(estadoProjecaoDeputado(10, 1, 16, true).motivo).toBe("pct_minimo");
+    expect(estadoProjecaoDeputado(30, 1, 16, true).motivo).toBe("zonas_minimas");
+    expect(estadoProjecaoDeputado(30, 16, 16, true)).toMatchObject({
+      estado: "indisponivel",
+      motivo: "cobertura",
+    });
+    // Zonas com boletim: nenhuma a 0%, todas a 100% e com cobertura.
+    expect(zonasApuradasDeputado(16, 0, false)).toBe(0);
+    expect(zonasApuradasDeputado(16, 100, false)).toBe(16);
+    expect(zonasApuradasDeputado(17, 30, true)).toBe(17);
+    expect(zonasApuradasDeputado(16, 20, false)).toBe(6);
+  });
+
+  it("sobra apertada: a regra de `_marcar_indefinidas`, no limiar exato [mutação: `>=` → `>`, ou marcar com tf]", () => {
+    // QE 400, 5 vagas. A (1000) faz 2 por QP e ganha a 5ª na sobra aberta com
+    // média 333,3; B (700) faz 1 por QP e 1 na sobra restrita, média 350; a
+    // melhor perdedora é C (300 ÷ 1). Margem de A = 10%, de B = 14,29%.
+    const cand = (sqcand: number, votos: number, partido: string) => ({
+      sqcand,
+      nome: `C${sqcand}`,
+      partido,
+      votos,
+    });
+    const ag = (cod: string, cs: ReturnType<typeof cand>[]): AgremiacaoSim => ({
+      cod,
+      sigla: cod,
+      nome: cod,
+      tipo: "partido",
+      componentes: [],
+      siglaLider: cod,
+      votosNominais: cs.reduce((s2, c) => s2 + c.votos, 0),
+      votosLegenda: 0,
+      candidatos: cs,
+    });
+    const ags = [
+      ag("A", [cand(1, 600, "A"), cand(2, 390, "A"), cand(3, 10, "A")]),
+      ag("B", [cand(4, 500, "B"), cand(5, 190, "B"), cand(6, 10, "B")]),
+      ag("C", [cand(7, 290, "C"), cand(8, 10, "C")]),
+    ];
+    const res = distribuirCadeiras(ags, 5);
+    expect(res.qe).toBe(400);
+    expect(res.cadeiras).toEqual({ A: 3, B: 2, C: 0 });
+    const marca = (pct: number, tf = false) => [...marcarIndefinidas(ags, res, pct, tf)].sort();
+    expect(marca(50)).toEqual([3, 5]);
+    expect(marca(85.7)).toEqual([3, 5]);
+    expect(marca(85.8)).toEqual([3]);
+    // Margem de A exatamente 10% a 90,0% apurado: `≤`, então marca.
+    expect(marca(90)).toEqual([3]);
+    expect(marca(90.1)).toEqual([]);
+    expect(marca(100)).toEqual([]);
+    expect(marca(50, true)).toEqual([]);
+  });
+
+  it("regras com os pisos em ⌈ ⌉ — e o validador reprova o floor [mutação M21]", () => {
+    const sp = ufs.SP as DeputadoUfDetail;
+    const qe = sp.quociente_eleitoral as number;
+    expect(sp.regras).toEqual({
+      quociente_eleitoral: qe,
+      votos_validos: sp.agremiacoes.reduce((a, x) => a + x.votos_validos, 0),
+      lugares_a_preencher: sp.lugares_a_preencher,
+      piso_candidato: Math.ceil(qe / 10),
+      piso_agremiacao_sobras: Math.ceil((4 * qe) / 5),
+      piso_candidato_sobras: Math.ceil(qe / 5),
+    });
+    const x = gerar();
+    const r = (x.deputadoUf.SP as DeputadoUfDetail).regras;
+    if (r === undefined) throw new Error("SP sem regras");
+    r.piso_candidato -= 1;
+    expect(() => validarSaida(x)).toThrow(/regras/);
+  });
+
+  it("🔴 lista 61+: ranks > 60 fora do objeto, nenhum eleito lá, e `lista.restantes` conta certo [mutação M22: rank ≤ 60 na lista]", () => {
+    const g = gerarSimulacao(dadosComListaLonga(), CLI_DEFAULT, TS);
+    expect(() => validarSaida(g)).not.toThrow();
+    const lista = g.deputadoUfLista.SP;
+    expect(lista, "SP sem lista 61+").toBeDefined();
+    expect(Object.keys(g.deputadoUfLista)).toEqual(["SP"]);
+    const sp = g.deputadoUf.SP as DeputadoUfDetail;
+    const linhas = (lista?.agremiacoes ?? []).flatMap((a) => a.candidatos);
+    expect(linhas.length).toBeGreaterThan(0);
+    expect(sp.lista?.restantes).toBe(linhas.length);
+    expect(
+      linhas.every((l) => l.rank > 60 && l.parcial === undefined && l.projecao === undefined),
+    ).toBe(true);
+    expect(lista).toMatchObject({ ts: sp.ts, cargo: 6, turno: 1, contrato: 2, uf: "SP" });
+    const pl = sp.agremiacoes.find((a) => a.sigla === "PL") as DeputadoUfAgremiacao;
+    expect(pl.total_candidatos).toBeGreaterThan(60);
+    // Mutação: devolver o rank 60 à lista.
+    const r60 = (pl.candidatos ?? []).find((l) => l.rank === 60) as DeputadoUfLinha;
+    pl.candidatos = (pl.candidatos ?? []).filter((l) => l !== r60);
+    lista?.agremiacoes.find((a) => a.cod === pl.cod)?.candidatos.unshift(r60);
+    if (sp.lista) sp.lista.restantes += 1;
+    expect(() => validarSaida(g)).toThrow(/rank 60/);
+  });
+
+  it("mais votados: referências da UF que resolvem no objeto, e o top 10 do país autossuficiente [mutação: top 10 sem as linhas com destino]", () => {
+    for (const d of Object.values(ufs)) {
+      for (const ref of d.mais_votados ?? []) {
+        const a = d.agremiacoes.find((x) => x.cod === ref.cod);
+        expect(
+          a?.candidatos?.some((l) => l.sqcand === ref.sqcand),
+          `${d.uf}/${ref.sqcand}`,
+        ).toBe(true);
+      }
+    }
+    const mv = s.deputado.mais_votados ?? [];
+    expect(mv).toHaveLength(10);
+    for (const m of mv) {
+      expect(Object.keys(m)).toEqual(
+        expect.arrayContaining([
+          "uf",
+          "sqcand",
+          "nome",
+          "partido",
+          "cod",
+          "sigla",
+          "votos",
+          "pct_validos",
+        ]),
+      );
+    }
+    // Anulado e sub judice entram no top 10 da UF (open question 2): em RR
+    // eles carregam o pool inteiro da UF e ficam entre os mais votados.
+    const rr = ufs.RR as DeputadoUfDetail;
+    const destinos = linhasDaUf(rr, undefined)
+      .filter((x) => x.l.destino === "anulado" || x.l.destino === "sub_judice")
+      .map((x) => x.l.sqcand);
+    expect((rr.mais_votados ?? []).some((r) => destinos.includes(r.sqcand))).toBe(true);
+  });
+
+  it("`por_uf[].projecao` do nacional é o objeto da UF, e o validador reprova a divergência", () => {
+    for (const row of s.deputado.por_uf) {
+      expect(row.projecao, row.sigla).toEqual(ufs[row.sigla]?.projecao);
+    }
+    const x = gerar();
+    const row = x.deputado.por_uf.find((r) => r.projecao?.estado === "aguardando");
+    if (row?.projecao === undefined) throw new Error("sem UF aguardando");
+    const { motivo: _m, ...resto } = row.projecao;
+    row.projecao = { ...resto, estado: "liberada" };
+    expect(() => validarSaida(x)).toThrow(/por_uf\/.*projecao/);
+  });
+
+  it("o detalhe de UF não inventa hora de fonte: `dado_ts` e `pares_atrasados` são `null` [mutação: dado_ts = ts]", () => {
+    for (const d of Object.values(ufs)) {
+      expect(d.dado_ts, d.uf).toBeNull();
+      expect(d.pares_atrasados, d.uf).toBeNull();
+    }
+    const x = gerar();
+    (x.deputadoUf.SP as DeputadoUfDetail).dado_ts = TS;
+    expect(() => validarSaida(x)).toThrow(/hora de fonte inventada/);
+  });
+
+  it("o interruptor do simulado sai LIGADO e os dois arquivos novos estão no manifest", () => {
+    expect(s.interruptorProjecaoDep).toEqual({ ligada: true });
+    expect(ARQUIVOS["deputado-uf-lista.json"]).toBe("deputadoUfLista");
+    expect(ARQUIVOS["interruptor-projecao-dep.json"]).toBe("interruptorProjecaoDep");
+    expect(s.manifest.arquivos).toEqual(
+      expect.arrayContaining(["deputado-uf-lista.json", "interruptor-projecao-dep.json"]),
+    );
+    expect(s.manifest.deputado_v2.projecao.indisponivel).toEqual(["AP"]);
+    expect(s.manifest.deputado_v2.totalizacao_final).toEqual(["RR"]);
+  });
+});
+
+describe("simulacao-gerar — os arquivos gravados de Deputado v2 (spec 026)", () => {
+  const deputado = lerArquivo<EdgePayloadDeputado>("deputado.json");
+  const deputadoUf = lerArquivo<Record<string, DeputadoUfDetail>>("deputado-uf.json");
+  const listas = lerArquivo<Record<string, DeputadoUfLista>>("deputado-uf-lista.json");
+  const interruptor = lerArquivo<unknown>("interruptor-projecao-dep.json");
+
+  it("🔴 o contrato v2 fecha sobre os BYTES que a tela lê [mutação: gravar sem `validarSaida`]", () => {
+    expect(() => validarDeputadoV2(deputado, deputadoUf, listas)).not.toThrow();
+    for (const d of Object.values(deputadoUf)) expect(d.contrato, d.uf).toBe(2);
+  });
+
+  it("cada estado da tela está em alguma UF do entregável", () => {
+    const d = Object.values(deputadoUf);
+    expect(new Set(d.map((x) => x.projecao?.estado))).toEqual(
+      new Set(["liberada", "aguardando", "indisponivel"]),
+    );
+    expect(deputadoUf.AP?.projecao?.motivo).toBe("cobertura");
+    expect(new Set(d.map((x) => x.conferencia?.estado))).toEqual(
+      new Set(["confere", "diverge", "sem_dado_tse"]),
+    );
+    expect(deputadoUf.RR?.totalizacao_final).toBe(true);
+    const destinos = new Set(
+      d.flatMap((x) => x.agremiacoes.flatMap((a) => (a.candidatos ?? []).map((l) => l.destino))),
+    );
+    expect(destinos).toEqual(new Set([undefined, "valido_legenda", "anulado", "sub_judice"]));
+    expect(Object.keys(listas)).toEqual(["SP"]);
+    expect(
+      (deputadoUf.SP?.agremiacoes ?? []).some((a) =>
+        (a.puxadores ?? []).some((p) => p.quocientes >= 3),
+      ),
+    ).toBe(true);
+    expect(interruptor).toEqual({ ligada: true });
+  });
+
+  it("peso: o objeto de SP no Blob e a lista 61+, minificados como o writer grava", () => {
+    // O writer grava `JSON.stringify` sem espaço; a fixture no disco é
+    // formatada pelo Biome e pesa mais. O número que importa para o Blob e
+    // para o documento da página é o minificado — o medido em 29/09 está no
+    // comentário de `TETO_BLOB_SP_BYTES`.
+    const sp = Buffer.byteLength(JSON.stringify(deputadoUf.SP));
+    const lista = Buffer.byteLength(JSON.stringify(listas.SP));
+    expect(sp, `SP ${(sp / 1024).toFixed(1)} KiB`).toBeLessThan(TETO_BLOB_SP_BYTES);
+    expect(lista, `lista SP ${(lista / 1024).toFixed(1)} KiB`).toBeLessThan(TETO_LISTA_SP_BYTES);
+    // A soma das 27 (mais a lista) é o grosso do POST de escrita — design
+    // § 2.1: o writer avisa acima de 3,5 MB (limite da função: 4,5 MB).
+    const todas = Object.values(deputadoUf).reduce(
+      (a, x) => a + Buffer.byteLength(JSON.stringify(x)),
+      Buffer.byteLength(JSON.stringify(listas)),
+    );
+    expect(todas, `27 UFs ${(todas / 1024 / 1024).toFixed(2)} MiB`).toBeLessThan(3.5 * 1024 * 1024);
   });
 });

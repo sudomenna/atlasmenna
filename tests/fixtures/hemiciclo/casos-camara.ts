@@ -20,7 +20,15 @@
 
 import type { CamaraHemicicloProps } from "@/components/blocks/CamaraHemiciclo";
 import type { EdgeAgremiacaoBancada, EdgeBancadaNacional } from "@/lib/edge-config/types";
-import depSim from "@/tests/fixtures/simulacao/deputado.json" with { type: "json" };
+// 🔴 A bancada do simulado CONGELADA em 27/09 — a que existia quando o retrato
+// foi gerado (`a791e6d`). Até 29/09 este arquivo lia `simulacao/deputado.json`
+// ao vivo; a spec 026 regenerou o simulado (RR a 100%, válidos sem anulados),
+// a bancada mudou, e o caso "simulado" passaria a comparar o código com um
+// retrato de OUTRO dado. O retrato prova "o código não mudou"; para isso a
+// entrada também não pode mudar.
+import bancadaSimuladoCongelada from "@/tests/fixtures/hemiciclo/bancada-simulado-27set.json" with {
+  type: "json",
+};
 
 function agr(over: Partial<EdgeAgremiacaoBancada> = {}): EdgeAgremiacaoBancada {
   return {
@@ -62,7 +70,7 @@ function bancada120(over: Partial<EdgeBancadaNacional> = {}): EdgeBancadaNaciona
   };
 }
 
-const bancadaSim = (depSim as unknown as { bancada: EdgeBancadaNacional }).bancada;
+const bancadaSim = bancadaSimuladoCongelada as unknown as EdgeBancadaNacional;
 
 export function casosRetratoCamara(): Record<string, CamaraHemicicloProps> {
   return {

@@ -95,6 +95,12 @@
 // fonte é precisamente a mentira que aquele campo existe para impedir. As
 // quatro fixtures atuais também não o trazem, e a tela já sabe degradar.
 //
+// No detalhe de UF de Deputado v2 (spec 026) o contrato DECLARA `dado_ts` e
+// `pares_atrasados`, e o gerador os publica como `null` — o terceiro estado do
+// ADR-0038 ("hora indisponível neste ciclo"), que é exatamente o que o
+// produtor real publica quando o ciclo não tem relógio
+// (`deputado_payload.py`, `relogio=None`). Nunca uma hora inventada.
+//
 // `ts` é honesto e continua sendo o que sempre prometeu: a hora em que o
 // cálculo rodou — aqui, a hora em que o gerador rodou.
 //
@@ -162,6 +168,41 @@
 // Como `candidatos-publish`, `projection-seed` e `replay-2022`: importa de
 // `@/lib/`, e o loader `--experimental-strip-types` do Node não resolve o
 // alias `@/` do `tsconfig.json`.
+//
+// ════════════════════════════════════════════════════════════════════════════
+// 9. Deputado Federal v2 (spec 026) — cada estado da tela em algum lugar
+// ════════════════════════════════════════════════════════════════════════════
+//
+// O detalhe de UF de Deputado sai no contrato v2
+// (`docs/specs/026-deputado-listas-projecao/design.md` § 2) e o default
+// (`--pct 25`) põe CADA estado novo da tela em alguma UF, para o dono revisar
+// sem trocar de flag:
+//
+//   - **RR a 100%, com totalização final** — marca "Eleito (TSE)" em toda
+//     linha; Conferência `confere` com as quatro comparações; projeção
+//     `liberada` e idêntica à parcial (a identidade G1 do design).
+//   - **AP a 80,5%** — projeção `indisponivel` por `cobertura` e Conferência
+//     `diverge` pelo eleitorado (−19,5%): o achado real do simulado de 28/09
+//     (Macapá × 0014 fora da tabela `zonas`). E a chapa inteira sub judice.
+//   - **RR** também leva os destinos individuais: anulado, sub judice e
+//     "Válido (legenda)" (ADR-0064).
+//   - **SP** tem um puxador reforçado (≥ 3 × QE) e é a única UF com lista 61+.
+//   - as UFs abaixo de 25% ficam `aguardando` (`pct_minimo`); abaixo de 20%,
+//     sem o agregado lido no ciclo — Conferência `sem_dado_tse`.
+//
+// RR e AP entram com percentual FIXO (`pctFixasDoDeputado`), e o resto das
+// UFs se ajusta para o nacional continuar batendo o `--pct`. As urnas são as
+// mesmas nos quatro cargos (bloco 5), então os outros cargos dessas duas UFs
+// também passam a 100% e 80,5% — é o preço honesto de ter uma UF totalizada.
+// Quando o `--pct` pedido não comporta os dois fixos (`--pct 0`, `--pct 0,08`,
+// `--pct 100`), eles não se aplicam e a distribuição é a de sempre.
+//
+// A projeção do simulado é ruído sobre a parcial, e não o modelo: votos
+// projetados = votos apurados × um fator log-normal por agremiação e por
+// candidatura, com desvio que ENCOLHE com o % apurado (zero a 100%), repartidos
+// por maiores restos sobre os válidos do fim de noite da UF — e as cadeiras
+// saem do MESMO `distribuirCadeiras` da parcial. O modelo real é o
+// `api/model/deputado_projecao.py` (P2); o que se revisa aqui é a tela.
 
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
@@ -174,9 +215,20 @@ import {
   fatiasCirculo3,
 } from "@/components/blocks/VotacaoEleitorado";
 import type {
+  DeputadoConferencia,
+  DeputadoDestinoProporcional,
+  DeputadoDivergencia,
+  DeputadoMarcaTse,
+  DeputadoProjecaoUf,
+  DeputadoPuxador,
+  DeputadoRegras,
   DeputadoUfAgremiacao,
   DeputadoUfCandidato,
   DeputadoUfDetail,
+  DeputadoUfLinha,
+  DeputadoUfLista,
+  DeputadoUfListaAgremiacao,
+  DeputadoVia,
 } from "@/lib/blob/deputado-uf";
 import type { UfDetailBlob } from "@/lib/blob/uf-detail";
 import { type CargoTse, cargoInfo } from "@/lib/config/cargos";
@@ -186,6 +238,8 @@ import type {
   EdgeCandidate,
   EdgeCorridaEntrada,
   EdgeCorridaPartido,
+  EdgeDeputadoDestaque,
+  EdgeDeputadoPuxador,
   EdgeDestinoVoto,
   EdgeNational,
   EdgePayload,
@@ -199,6 +253,7 @@ import type {
   EdgeVotacaoContagens,
   EdgeVotacaoProjetada,
   EdgeVotacaoUf,
+  InterruptorProjecaoDep,
   NeedleBand,
 } from "@/lib/edge-config/types";
 import { colorForRank } from "@/lib/utils/cand-color";
@@ -596,10 +651,16 @@ export const UFS: readonly string[] = Object.keys(PERFIL_VELOCIDADE_2022).sort()
  * Cada UF é arredondada a 1 casa ANTES da conferência: é o número que vai ao
  * arquivo, e conferir sobre o não-arredondado deixaria o manifest provando uma
  * coisa e o payload dizendo outra.
+ *
+ * `fixas` (spec 026, bloco 9 do cabeçalho): UFs com percentual DADO, fora da
+ * bisseção — as outras se ajustam para o nacional continuar batendo o alvo.
+ * Vazio (o default) ⇒ exatamente a distribuição de sempre. Quem garante que o
+ * alvo comporta as fixas é {@link pctFixasDoDeputado}.
  */
 export function distribuirPctPorUf(
   pctAlvo: number,
   eleitoradoPorUf: Readonly<Record<string, number>>,
+  fixas: Readonly<Record<string, number>> = {},
 ): Record<string, number> {
   const ufs = UFS.filter((uf) => (eleitoradoPorUf[uf] ?? 0) > 0);
   const pesoTotal = ufs.reduce((a, uf) => a + (eleitoradoPorUf[uf] as number), 0);
@@ -607,6 +668,11 @@ export function distribuirPctPorUf(
   const comFator = (f: number): Record<string, number> => {
     const out: Record<string, number> = {};
     for (const uf of ufs) {
+      const fixa = fixas[uf];
+      if (fixa !== undefined) {
+        out[uf] = r1(Math.min(100, Math.max(0, fixa)));
+        continue;
+      }
       const v = (PERFIL_VELOCIDADE_2022[uf] as number) / 100;
       out[uf] = r1(Math.min(100, Math.max(0, pctAlvo * f * v)));
     }
@@ -630,6 +696,110 @@ export function distribuirPctPorUf(
     else hi = mid;
   }
   return melhor;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Deputado v2 (spec 026) — as UFs que exercitam cada estado (bloco 9)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A UF que chega a 100% com **totalização final** (`tf = "s"`): a marca
+ * "Eleito (TSE)" em toda linha e a Conferência com as quatro comparações. RR
+ * porque foi a UF do simulado de 28/09 que fechou exata em todos os momentos
+ * (`tests/fixtures/tse/2026-sim/dep/README.md`).
+ */
+export const DEP_UF_TOTALIZADA = "RR";
+
+/**
+ * A UF em que a soma do eleitorado das zonas da NOSSA tabela não fecha com o
+ * agregado do TSE: projeção `indisponivel` por `cobertura` e Conferência
+ * `diverge` pelo eleitorado. AP, o caso real de 28/09 (Macapá × 0014).
+ */
+export const DEP_UF_COBERTURA = "AP";
+
+/** % apurado do AP no simulado — o momento `m2-tardio` real (17 de 17 zonas). */
+export const DEP_PCT_UF_COBERTURA = 80.5;
+
+/**
+ * `e.te` do agregado ÷ Σ `e.te` das zonas lidas, MEDIDO no AP em 28/09:
+ * 628.071 ÷ 505.610 (−19,5% do lado de cá). O eleitorado "do TSE" do AP no
+ * simulado é o nosso × esta razão — número medido, nunca digitado.
+ */
+export const DEP_RAZAO_ELEITORADO_COBERTURA = 628_071 / 505_610;
+
+/** UF com anulado, sub judice e "Válido (legenda)" individuais (ADR-0064). */
+export const DEP_UF_DESTINOS_INDIVIDUAIS = "RR";
+
+/** UF com a chapa inteira de um partido sub judice (visto no AP real). */
+export const DEP_UF_CHAPA_SUB_JUDICE = "AP";
+
+/** UF com o puxador reforçado — a única com agremiação de mais de 60 nomes. */
+export const DEP_UF_PUXADOR = "SP";
+
+/** Quantos quocientes o puxador reforçado alcança: 3,5 × QE ⇒ excedente 2. */
+export const DEP_PUXADOR_QUOCIENTES = 3.5;
+
+/**
+ * Abaixo deste % a UF ainda não teve o agregado lido no ciclo — Conferência
+ * `sem_dado_tse`. Convenção do simulado (a volta das fatias leva 30 min,
+ * ADR-0036), para os três estados da Conferência aparecerem no default.
+ */
+export const DEP_PCT_AGREGADO_LIDO = 20;
+
+/**
+ * A trava da projeção (design 026 § 2.7 #4). Espelho LOCAL de
+ * `TRAVA_PROJECAO_DEP_PCT` (`lib/edge-config/reader.ts`) — importar o leitor
+ * do Edge Config puxaria o SDK para um script que não fala com a rede; o
+ * teste confere que os dois números são o mesmo.
+ */
+export const DEP_PCT_MINIMO_PROJECAO = 25;
+
+/** Design 026 § 2.7 #5. */
+export const DEP_ZONAS_MINIMAS = 2;
+
+/**
+ * A fronteira do DADO entre o objeto da UF e a lista 61+. Espelho local de
+ * `DEPUTADO_RANK_MAXIMO_NA_PAGINA` (`lib/blob/deputado-uf.ts`), pelo mesmo
+ * motivo; o teste confere a igualdade.
+ */
+export const DEP_RANK_MAXIMO_NA_PAGINA = 60;
+
+/**
+ * Os percentuais FIXOS do Deputado v2 — RR a 100% e AP a 80,5% —, ou `{}`
+ * quando o `--pct` pedido não os comporta.
+ *
+ * "Comporta" é: o alvo é positivo, e as outras UFs, entre 0% e 100%, ainda
+ * conseguem fechar o nacional. `--pct 0` é "não começou" (RR a 100% seria
+ * mentira), `--pct 0,08` é menor que o que só as duas fixas já somam, e
+ * `--pct 100` exige o AP a 100%. Nesses casos a saída é a de sempre, e a tela
+ * mostra os estados que aquele percentual produz.
+ */
+export function pctFixasDoDeputado(
+  pctAlvo: number,
+  eleitoradoPorUf: Readonly<Record<string, number>>,
+): Record<string, number> {
+  const fixas: Record<string, number> = {
+    [DEP_UF_TOTALIZADA]: 100,
+    [DEP_UF_COBERTURA]: DEP_PCT_UF_COBERTURA,
+  };
+  if (pctAlvo <= 0) return {};
+  const ufs = UFS.filter((uf) => (eleitoradoPorUf[uf] ?? 0) > 0);
+  if (Object.keys(fixas).some((uf) => !ufs.includes(uf))) return {};
+  const total = ufs.reduce((a, uf) => a + (eleitoradoPorUf[uf] as number), 0);
+  let pesoFixo = 0;
+  let somaFixa = 0;
+  for (const [uf, pct] of Object.entries(fixas)) {
+    const w = eleitoradoPorUf[uf] as number;
+    pesoFixo += w;
+    somaFixa += pct * w;
+  }
+  const minimo = somaFixa / total;
+  const maximo = (somaFixa + 100 * (total - pesoFixo)) / total;
+  // A folga de 0,5 pp de cada lado deixa a bisseção das outras UFs com onde
+  // se mexer — no limite exato ela empacaria em 0% ou em 100% e o nacional
+  // sairia fora da tolerância por arredondamento.
+  if (pctAlvo < minimo + 0.5 || pctAlvo > maximo - 0.5) return {};
+  return fixas;
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -3685,6 +3855,13 @@ export interface CandidatoProporcional {
   nome: string;
   partido: string;
   votos: number;
+  /** Número de urna (`candidatos.numero`) — exibição, nunca chave (spec 026). */
+  numero?: number;
+  /**
+   * ADR-0064 — só quando o voto NÃO é nominal válido. Candidatura com destino
+   * nunca entra na fila de `distribuirCadeiras` (ver `elegiveisDe`).
+   */
+  destino?: DeputadoDestinoProporcional;
 }
 
 export interface AgremiacaoSim {
@@ -3945,6 +4122,12 @@ export function montarAgremiacoesUf(
   uf: string,
   totalValidos: number,
   cods: Readonly<Record<string, string>>,
+  /**
+   * Chaves de agremiação SEM voto válido nesta UF — a chapa inteira sub judice
+   * (spec 026, ADR-0064). Peso zero na repartição dos válidos; os sorteios da
+   * agremiação continuam acontecendo, então nenhum outro número se mexe.
+   */
+  semVotoValido: ReadonlySet<string> = new Set(),
 ): AgremiacaoSim[] {
   const doUf = dados.candidatos
     .filter((c) => c.cargo === 6 && c.uf === uf)
@@ -3989,7 +4172,11 @@ export function montarAgremiacoesUf(
     // é informação real sobre estrutura partidária no estado, e não pode
     // voltar a dominar.
     const escala = ((tamanhos[i] as number) / Math.max(1, medianaCand)) ** 0.3;
-    return Math.max(1e-6, base * escala * Math.exp(rng.derive(`peso|${uf}|${k}`).normal() * 0.3));
+    const peso = Math.max(
+      1e-6,
+      base * escala * Math.exp(rng.derive(`peso|${uf}|${k}`).normal() * 0.3),
+    );
+    return semVotoValido.has(k) ? 0 : peso;
   });
   const totais = alocarInteiros(totalValidos, pesos);
 
@@ -4012,6 +4199,7 @@ export function montarAgremiacoesUf(
       nome: c.nome_urna,
       partido: c.partido_sigla,
       votos: votosCand[k] as number,
+      numero: c.numero,
     }));
 
     const ehFed = g[0]?.federacao_sigla !== null && g[0]?.federacao_sigla !== undefined;
@@ -4049,9 +4237,597 @@ export function montarAgremiacoesUf(
   });
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Deputado v2 (spec 026) — destinos, via, sobra apertada, projeção, TSE
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** 5 casas — a precisão de `_pct` do produtor (`deputado_payload.py`). */
+function r5(x: number): number {
+  return Math.round(x * 1e5) / 1e5;
+}
+
+/** `100·parte/total` com 5 casas; `0` sem denominador (mesma regra de `_pct`). */
+function pct5(parte: number, total: number): number {
+  return total <= 0 ? 0 : r5((100 * parte) / total);
+}
+
+/** ⌈a/b⌉ em inteiros positivos, sem `float` (design 026 § 2.6). */
+function tetoDiv(a: number, b: number): number {
+  return Math.floor((a + b - 1) / b);
+}
+
+/**
+ * Desempate do `rank` pelo destino (design 026 § 3.1): válido < "Válido
+ * (legenda)" < sub judice < anulado. Tabela FECHADA — destino fora dela é
+ * erro de compilação, nunca um default.
+ */
+const ORDEM_DO_DESTINO: Readonly<Record<DeputadoDestinoProporcional, number>> = {
+  valido_legenda: 1,
+  sub_judice: 2,
+  anulado: 3,
+};
+
+function ordemDoDestino(d: DeputadoDestinoProporcional | undefined): number {
+  return d === undefined ? 0 : ORDEM_DO_DESTINO[d];
+}
+
+/** A ordem da lista de uma agremiação: voto apurado, destino, `sqcand`. */
+function porRank(a: CandidatoProporcional, b: CandidatoProporcional): number {
+  return (
+    b.votos - a.votos ||
+    ordemDoDestino(a.destino) - ordemDoDestino(b.destino) ||
+    a.sqcand - b.sqcand
+  );
+}
+
+/**
+ * A agremiação como `distribuirCadeiras` a vê: só a fila de quem pode ocupar
+ * vaga (voto nominal válido). "Válido (legenda)", anulado e sub judice ficam
+ * fora da fila — o primeiro já está dentro de `votosLegenda`.
+ */
+export function elegiveisDe(a: AgremiacaoSim): AgremiacaoSim {
+  return { ...a, candidatos: a.candidatos.filter((c) => c.destino === undefined) };
+}
+
+/**
+ * A chapa que fica INTEIRA sub judice numa UF (visto no AP real, 28/09): o
+ * partido isolado — nunca federação — de menor força medida em 2022, entre os
+ * que lançaram pelo menos 2 nomes. Desempate por sigla. `null` sem candidato.
+ */
+export function escolherChapaSubJudice(dados: DadosSimulacao, uf: string): string | null {
+  const porChave = new Map<string, number>();
+  for (const c of dados.candidatos) {
+    if (c.cargo !== 6 || c.uf !== uf || c.federacao_sigla !== null) continue;
+    porChave.set(c.partido_sigla, (porChave.get(c.partido_sigla) ?? 0) + 1);
+  }
+  const forca = (s: string) => dados.forcaCamaraNacional[s] ?? dados.pisoForcaCamara;
+  const candidatas = [...porChave.entries()]
+    .filter(([, n]) => n >= 2)
+    .map(([s]) => s)
+    .sort((a, b) => forca(a) - forca(b) || a.localeCompare(b));
+  return candidatas[0] ?? null;
+}
+
+/**
+ * Tira `c` do voto nominal válido da agremiação: os votos dele voltam para os
+ * OUTROS nominais válidos da mesma agremiação (maiores restos, pesos = os
+ * votos deles). O total da agremiação não muda — e com ele o QE e as
+ * cadeiras que a UF tem para repartir.
+ */
+function tirarDoNominal(a: AgremiacaoSim, c: CandidatoProporcional): void {
+  const outros = a.candidatos.filter((x) => x !== c && x.destino === undefined);
+  const extra = alocarInteiros(
+    c.votos,
+    outros.map((x) => Math.max(1, x.votos)),
+  );
+  outros.forEach((x, i) => {
+    x.votos += extra[i] as number;
+  });
+  c.votos = 0;
+}
+
+/** As agremiações por total de válidos desc, sigla asc — só as com ≥ 2 nomes. */
+function agremiacoesComFila(ags: readonly AgremiacaoSim[]): AgremiacaoSim[] {
+  return ags
+    .filter((a) => a.candidatos.filter((c) => c.destino === undefined).length >= 2)
+    .sort(
+      (a, b) =>
+        b.votosNominais + b.votosLegenda - (a.votosNominais + a.votosLegenda) ||
+        a.sigla.localeCompare(b.sigla),
+    );
+}
+
+/** O primeiro (ou o `k`-ésimo) nominal válido da agremiação, por voto. */
+function nominalDeOrdem(a: AgremiacaoSim, k: number): CandidatoProporcional | undefined {
+  return a.candidatos.filter((c) => c.destino === undefined).sort(porRank)[k];
+}
+
+/**
+ * Os destinos fora do voto nominal válido de UMA UF (ADR-0064), aplicados
+ * sobre as agremiações já repartidas (MUTA os objetos, que são desta UF):
+ *
+ *   - `chapa` — a chapa inteira sub judice: os nomes dela recebem o pool de
+ *     sub judice da UF por Zipf; a agremiação fica com 0 válido;
+ *   - `individuais` — "Válido (legenda)" no 2º nome da maior agremiação,
+ *     anulado no 1º da 3ª e da 5ª (pool de anulados, 60/40), sub judice no 1º
+ *     da 4ª (pool de sub judice).
+ *
+ * Os pools são os de {@link repartirVotaveis} — os MESMOS `anulados`/
+ * `sub_judice` do painel "Votação" da UF, para Σ das linhas com destino bater
+ * com as contagens (a invariante do ADR-0064 com `v.vv`).
+ */
+export function aplicarDestinosDeputado(
+  ags: AgremiacaoSim[],
+  pools: { anulados: number; subJudice: number },
+  plano: { chapa: string | null; individuais: boolean },
+): void {
+  if (plano.chapa !== null) {
+    const chapa = ags.find((a) => a.sigla === plano.chapa);
+    if (chapa !== undefined && chapa.candidatos.length > 0) {
+      const zipf = chapa.candidatos.map((_, k) => 1 / (k + 1) ** 1.15);
+      const votos = alocarInteiros(pools.subJudice, zipf);
+      chapa.candidatos.forEach((c, k) => {
+        c.votos = votos[k] as number;
+        c.destino = "sub_judice";
+      });
+      chapa.votosNominais = 0;
+      chapa.votosLegenda = 0;
+    }
+  }
+  if (!plano.individuais) return;
+
+  const fila = agremiacoesComFila(ags);
+  const legenda = fila[0] !== undefined ? nominalDeOrdem(fila[0], 1) : undefined;
+  if (fila[0] !== undefined && legenda !== undefined) {
+    legenda.destino = "valido_legenda";
+    fila[0].votosNominais -= legenda.votos;
+    fila[0].votosLegenda += legenda.votos;
+  }
+
+  const anulados = [fila[2], fila[4]].filter((a): a is AgremiacaoSim => a !== undefined);
+  const partes = alocarInteiros(pools.anulados, [0.6, 0.4].slice(0, anulados.length));
+  anulados.forEach((a, i) => {
+    const c = nominalDeOrdem(a, 0);
+    if (c === undefined) return;
+    tirarDoNominal(a, c);
+    c.votos = partes[i] as number;
+    c.destino = "anulado";
+  });
+
+  // O pool de sub judice é um só: com a chapa inteira na mesma UF, é dela.
+  const sj = plano.chapa === null ? fila[3] : undefined;
+  const cSj = sj !== undefined ? nominalDeOrdem(sj, 0) : undefined;
+  if (sj !== undefined && cSj !== undefined) {
+    tirarDoNominal(sj, cSj);
+    cSj.votos = pools.subJudice;
+    cSj.destino = "sub_judice";
+  }
+}
+
+/**
+ * O puxador reforçado (spec 026 RF-273): o 1º nome da maior agremiação da UF
+ * passa a ter {@link DEP_PUXADOR_QUOCIENTES} × QE, tirados dos outros
+ * nominais da MESMA agremiação — o total dela não muda, nem o QE. Não mexe se
+ * ele já passa da meta, ou se a meta come mais de 80% dos nominais.
+ */
+export function reforcarPuxador(ags: AgremiacaoSim[], qe: number): void {
+  if (qe < 1) return;
+  const alvo = agremiacoesComFila(ags)[0];
+  if (alvo === undefined) return;
+  const validos = alvo.candidatos.filter((c) => c.destino === undefined).sort(porRank);
+  const top = validos[0];
+  const outros = validos.slice(1);
+  if (top === undefined || outros.length === 0) return;
+  const meta = Math.floor(DEP_PUXADOR_QUOCIENTES * qe);
+  const nominais = validos.reduce((s, c) => s + c.votos, 0);
+  if (top.votos >= meta || meta > 0.8 * nominais) return;
+  const falta = meta - top.votos;
+  const somaOutros = outros.reduce((s, c) => s + c.votos, 0);
+  const novos = alocarInteiros(
+    somaOutros - falta,
+    outros.map((c) => c.votos),
+  );
+  outros.forEach((c, i) => {
+    c.votos = novos[i] as number;
+  });
+  top.votos = meta;
+}
+
+/**
+ * Quantas cadeiras de cada agremiação vieram do quociente partidário — porte
+ * de `deputado_payload.py::_cadeiras_de_fase_1`: `min(QP, elegíveis ≥ 10% do
+ * QE)`. `res.eleitos[cod]` está na ordem em que as vagas foram ocupadas, então
+ * as primeiras `n` são `qp` e as demais `sobra` (design 026 § 2.2).
+ */
+export function cadeirasDeQuociente(
+  ags: readonly AgremiacaoSim[],
+  res: ResultadoCadeiras,
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const a of ags) {
+    if (res.qe < 1) {
+      out[a.cod] = 0;
+      continue;
+    }
+    const elegiveis = a.candidatos.filter((c) => c.votos * 10 >= res.qe).length;
+    out[a.cod] = Math.min(res.qp[a.cod] ?? 0, elegiveis);
+  }
+  return out;
+}
+
+/**
+ * RF-127 — as cadeiras de sobra ainda indefinidas. Porte de
+ * `deputado_payload.py::_marcar_indefinidas`, a MESMA regra do produtor:
+ *
+ *   a cadeira MARGINAL de sobra de uma agremiação é indefinida enquanto a
+ *   distância entre a média com que ela foi ganha e a melhor média de quem
+ *   ficou de fora for ≤ a fração da UF que ainda não foi apurada.
+ *
+ * Em 100% (ou com totalização final) nada é marcado. Aritmética em inteiros:
+ * `margem ≤ 1 − pct/100` ⟺ `1000·Vp·d ≥ (10·pct)·V·dp`, com as médias
+ * `V/d` (vitoriosa) e `Vp/dp` (melhor perdedora) — o `pct` tem uma casa.
+ */
+export function marcarIndefinidas(
+  ags: readonly AgremiacaoSim[],
+  res: ResultadoCadeiras,
+  pctApurado: number,
+  totalizacaoFinal: boolean,
+): Set<number> {
+  const marcadas = new Set<number>();
+  if (res.qe < 1 || totalizacaoFinal) return marcadas;
+  const pct10 = Math.round(pctApurado * 10);
+  if (pct10 >= 1000) return marcadas;
+
+  const fase1 = cadeirasDeQuociente(ags, res);
+  const votos = (a: AgremiacaoSim) => a.votosNominais + a.votosLegenda;
+  // `vagas_obtidas` do algoritmo: o QP inteiro + uma por sobra ganha.
+  const vagas = (a: AgremiacaoSim) =>
+    (res.qp[a.cod] ?? 0) + ((res.eleitos[a.cod]?.length ?? 0) - (fase1[a.cod] ?? 0));
+
+  // Melhor média entre quem ainda tem nome para a próxima vaga.
+  let melhorV = 0;
+  let melhorD = 1;
+  for (const a of ags) {
+    const eleitos = new Set((res.eleitos[a.cod] ?? []).map((c) => c.sqcand));
+    if (a.candidatos.every((c) => eleitos.has(c.sqcand))) continue;
+    const v = votos(a);
+    const d = vagas(a) + 1;
+    if (v * melhorD > melhorV * d) {
+      melhorV = v;
+      melhorD = d;
+    }
+  }
+
+  for (const a of ags) {
+    const eleitos = res.eleitos[a.cod] ?? [];
+    if (eleitos.length <= (fase1[a.cod] ?? 0)) continue; // nenhuma de sobra
+    const d = vagas(a);
+    const v = votos(a);
+    if (d < 1 || v <= 0) continue;
+    if (1000 * melhorV * d >= pct10 * v * melhorD) {
+      const ultimo = eleitos[eleitos.length - 1];
+      if (ultimo !== undefined) marcadas.add(ultimo.sqcand);
+    }
+  }
+  return marcadas;
+}
+
+/** A via de cada eleito (`sqcand → qp|sobra`), na ordem de ocupação. */
+function viasDosEleitos(
+  ags: readonly AgremiacaoSim[],
+  res: ResultadoCadeiras,
+): Map<number, DeputadoVia> {
+  const fase1 = cadeirasDeQuociente(ags, res);
+  const vias = new Map<number, DeputadoVia>();
+  for (const a of ags) {
+    (res.eleitos[a.cod] ?? []).forEach((c, i) => {
+      vias.set(c.sqcand, i < (fase1[a.cod] ?? 0) ? "qp" : "sobra");
+    });
+  }
+  return vias;
+}
+
+/**
+ * Desvio do ruído da projeção no % apurado — encolhe linearmente até ZERO a
+ * 100%, onde a projeção reencontra a parcial (identidade G1 do design).
+ */
+export function desvioProjecaoDeputado(pctApurado: number): number {
+  return 0.18 * Math.max(0, 1 - pctApurado / 100);
+}
+
+export interface ProjecaoDeputadoUf {
+  /** As agremiações com os votos PROJETADOS (só nominais válidos + legenda). */
+  ags: AgremiacaoSim[];
+  res: ResultadoCadeiras;
+  vias: Map<number, DeputadoVia>;
+  apertadas: Set<number>;
+}
+
+/**
+ * A projeção do simulado para UMA UF (bloco 9 do cabeçalho): votos apurados ×
+ * fator log-normal (agremiação e candidatura, desvio
+ * {@link desvioProjecaoDeputado}), repartidos por maiores restos sobre os
+ * válidos do FIM DE NOITE da UF, e o mesmo {@link distribuirCadeiras}.
+ *
+ * A 100% o desvio é zero, o fim de noite é o apurado, e `alocarInteiros` sobre
+ * pesos inteiros devolve os próprios votos: projeção == parcial, cadeira a
+ * cadeira.
+ */
+export function projetarDeputadoUf(
+  ctx: ContextoUf,
+  elegiveis: readonly AgremiacaoSim[],
+  lugares: number,
+  rng: Rng,
+): ProjecaoDeputadoUf {
+  const sigma = desvioProjecaoDeputado(ctx.pctApurado);
+  const total = repartirVotaveis(ctx, PARAMETROS_VOTACAO, ctx.votosFinais).validos;
+  const fator = (r: Rng, escala: number) =>
+    sigma === 0 ? 1 : Math.exp(r.normal() * sigma * escala);
+
+  const pesos: number[] = [];
+  for (const a of elegiveis) {
+    const fa = fator(rng.derive(`proj|${ctx.uf}|${a.cod}`), 0.6);
+    pesos.push(a.votosLegenda * fa * fator(rng.derive(`proj|${ctx.uf}|${a.cod}|legenda`), 1));
+    for (const c of a.candidatos) {
+      pesos.push(c.votos * fa * fator(rng.derive(`proj|${ctx.uf}|${c.sqcand}`), 1));
+    }
+  }
+  const alocado = alocarInteiros(total, pesos);
+
+  let k = 0;
+  const ags: AgremiacaoSim[] = elegiveis.map((a) => {
+    const legenda = alocado[k++] as number;
+    const candidatos = a.candidatos.map((c) => ({ ...c, votos: alocado[k++] as number }));
+    return {
+      ...a,
+      votosLegenda: legenda,
+      votosNominais: candidatos.reduce((s, c) => s + c.votos, 0),
+      candidatos,
+    };
+  });
+  const res = distribuirCadeiras(ags, lugares);
+  return {
+    ags,
+    res,
+    vias: viasDosEleitos(ags, res),
+    apertadas: marcarIndefinidas(ags, res, ctx.pctApurado, ctx.pctApurado >= 100),
+  };
+}
+
+/**
+ * Zonas com boletim (`e.esi > 0 ∧ v.vv > 0`): no simulado, uma função do %
+ * apurado — as zonas começam a publicar antes de fechar, então a fração delas
+ * corre à frente do % (o dobro, até o teto). Com `cobertura` todas as zonas DA
+ * NOSSA TABELA já publicaram (AP, `m2-tardio`: 17 de 17).
+ */
+export function zonasApuradasDeputado(
+  pares: number,
+  pctApurado: number,
+  cobertura: boolean,
+): number {
+  if (pctApurado <= 0 || pares <= 0) return 0;
+  if (pctApurado >= 100 || cobertura) return pares;
+  return Math.min(pares, Math.max(1, Math.round(pares * Math.min(1, (2 * pctApurado) / 100))));
+}
+
+/**
+ * O estado da trava (design 026 § 2.7), avaliado na ORDEM FIXA — o primeiro
+ * que falha é o publicado. O interruptor (#1) vale "ligado" aqui: quem o
+ * desliga no `dev:sim` é `interruptor-projecao-dep.json`, aplicado no render.
+ * Coligação (#2), `sem_vagas` (#3) e `erro` (#7) não existem no simulado.
+ */
+export function estadoProjecaoDeputado(
+  pctApurado: number,
+  zonasApuradas: number,
+  zonasTotal: number,
+  cobertura: boolean,
+): DeputadoProjecaoUf {
+  const base = {
+    pct_minimo: DEP_PCT_MINIMO_PROJECAO,
+    zonas_apuradas: zonasApuradas,
+    zonas_total: zonasTotal,
+  };
+  if (pctApurado < DEP_PCT_MINIMO_PROJECAO) {
+    return { estado: "aguardando", motivo: "pct_minimo", ...base };
+  }
+  if (zonasApuradas < DEP_ZONAS_MINIMAS) {
+    return { estado: "aguardando", motivo: "zonas_minimas", ...base };
+  }
+  if (cobertura) return { estado: "indisponivel", motivo: "cobertura", ...base };
+  return { estado: "liberada", ...base };
+}
+
+/**
+ * A Conferência do simulado (design 026 § 2.8). O "agregado do TSE" é o
+ * próprio estado simulado, então a conta confere — exceto onde o simulado
+ * reproduz um fato medido: a cobertura do AP (eleitorado, e com totalização
+ * final também os votos válidos).
+ */
+export function conferenciaDeputado(args: {
+  ctx: ContextoUf;
+  ts: string;
+  totalizacaoFinal: boolean;
+  cobertura: boolean;
+  votosValidos: number;
+}): { conferencia: DeputadoConferencia; razaoTse: number | null } {
+  const { ctx, ts, totalizacaoFinal, cobertura, votosValidos } = args;
+  const lido = ctx.pctApurado >= DEP_PCT_AGREGADO_LIDO || totalizacaoFinal || cobertura;
+  if (ctx.pctApurado <= 0 || !lido) {
+    return {
+      conferencia: {
+        estado: "sem_dado_tse",
+        boletim_dado_ts: null,
+        totalizacao_final: totalizacaoFinal,
+        comparou: [],
+        divergencias: [],
+      },
+      razaoTse: null,
+    };
+  }
+  const comparou: DeputadoConferencia["comparou"] = ["eleitorado", "algoritmo"];
+  if (totalizacaoFinal) comparou.push("eleitos", "votos_validos");
+  const divergencias: DeputadoDivergencia[] = [];
+  const razao = cobertura ? DEP_RAZAO_ELEITORADO_COBERTURA : 1;
+  if (cobertura) {
+    const tse = Math.round(ctx.eleitores * razao);
+    divergencias.push({
+      o_que: "eleitorado",
+      nosso: ctx.eleitores,
+      tse,
+      detalhe:
+        `as zonas lidas somam ${pp(pct5(ctx.eleitores, tse))}% do eleitorado da UF publicado ` +
+        "pelo TSE — as cadeiras que publicamos não contam os votos da parte que falta",
+      diferenca_pct: r5((100 * (ctx.eleitores - tse)) / tse),
+    });
+    if (totalizacaoFinal) {
+      const vvTse = Math.round(votosValidos * razao);
+      divergencias.push({
+        o_que: "votos_validos",
+        nosso: votosValidos,
+        tse: vvTse,
+        detalhe: "Σ dos votos válidos das zonas lidas × o agregado da UF",
+        diferenca_pct: r5((100 * (votosValidos - vvTse)) / vvTse),
+      });
+    }
+  }
+  return {
+    conferencia: {
+      estado: divergencias.length > 0 ? "diverge" : "confere",
+      boletim_dado_ts: ts,
+      totalizacao_final: totalizacaoFinal,
+      comparou,
+      divergencias,
+    },
+    razaoTse: razao,
+  };
+}
+
+/** `cand.st` do agregado com `tf`, no simulado (design 026 § 2.2, tabela). */
+function marcaTseDaLinha(
+  destino: DeputadoDestinoProporcional | undefined,
+  via: DeputadoVia | undefined,
+  agremiacaoElegeu: boolean,
+): DeputadoMarcaTse {
+  if (destino !== undefined) return "nao_eleito";
+  if (via === "qp") return "eleito_qp";
+  if (via === "sobra") return "eleito_media";
+  return agremiacaoElegeu ? "suplente" : "nao_eleito";
+}
+
+/** Uma linha da lista v2 — as chaves na ordem do design § 2.2, opcionais omitidas. */
+function linhaDeputado(
+  c: CandidatoProporcional,
+  rank: number,
+  vvUf: number,
+  marcas: {
+    parcial?: DeputadoVia;
+    indefinido: boolean;
+    projecao?: DeputadoVia;
+    projecaoApertada: boolean;
+    tse?: DeputadoMarcaTse;
+  },
+): DeputadoUfLinha {
+  const anulado = c.destino === "anulado" || c.destino === "sub_judice";
+  return {
+    sqcand: c.sqcand,
+    nome: c.nome,
+    partido: c.partido,
+    ...(c.numero !== undefined ? { numero: c.numero } : {}),
+    votos: c.votos,
+    rank,
+    pct_validos: anulado ? null : pct5(c.votos, vvUf),
+    ...(marcas.parcial !== undefined ? { parcial: marcas.parcial } : {}),
+    ...(marcas.indefinido ? { indefinido: true as const } : {}),
+    ...(marcas.projecao !== undefined ? { projecao: marcas.projecao } : {}),
+    ...(marcas.projecaoApertada ? { projecao_apertada: true as const } : {}),
+    ...(marcas.tse !== undefined ? { tse: marcas.tse } : {}),
+    ...(c.destino !== undefined ? { destino: c.destino } : {}),
+  };
+}
+
+/** A linha tem marca de eleito (parcial, projeção ou TSE)? — ADR-0065 D1. */
+function linhaMarcada(l: DeputadoUfLinha): boolean {
+  return (
+    l.parcial !== undefined ||
+    l.projecao !== undefined ||
+    l.tse === "eleito" ||
+    l.tse === "eleito_qp" ||
+    l.tse === "eleito_media"
+  );
+}
+
+/** Design 026 § 3.4 — na PARCIAL. `undefined` sem eleito ou sem válido de fora. */
+function corteDaAgremiacao(
+  linhas: readonly DeputadoUfLinha[],
+  qe: number,
+): DeputadoUfAgremiacao["corte"] {
+  const eleitos = linhas.filter((l) => l.parcial !== undefined);
+  const ultimo = eleitos[eleitos.length - 1];
+  const fora = linhas.find((l) => l.parcial === undefined && l.destino === undefined);
+  if (ultimo === undefined || fora === undefined) return undefined;
+  return {
+    ultimo_eleito: ultimo.sqcand,
+    primeiro_fora: fora.sqcand,
+    diferenca: ultimo.votos - fora.votos,
+    ...(10 * fora.votos < qe ? { primeiro_fora_abaixo_piso_10: true as const } : {}),
+  };
+}
+
+/** Design 026 § 3.5 — `⌊votos/QE⌋ − 1 ≥ 1`, só voto válido, por rank. */
+function puxadoresDaAgremiacao(linhas: readonly DeputadoUfLinha[], qe: number): DeputadoPuxador[] {
+  if (qe < 1) return [];
+  return linhas
+    .filter((l) => l.destino === undefined && Math.floor(l.votos / qe) - 1 >= 1)
+    .map((l) => ({
+      sqcand: l.sqcand,
+      quocientes: Math.floor(l.votos / qe),
+      excedente: Math.floor(l.votos / qe) - 1,
+    }));
+}
+
+/** Design 026 § 2.6. `undefined` sem QE. */
+function regrasDaUf(qe: number, votosValidos: number, lugares: number): DeputadoRegras | undefined {
+  if (qe < 1) return undefined;
+  return {
+    quociente_eleitoral: qe,
+    votos_validos: votosValidos,
+    lugares_a_preencher: lugares,
+    piso_candidato: tetoDiv(qe, 10),
+    piso_agremiacao_sobras: tetoDiv(4 * qe, 5),
+    piso_candidato_sobras: tetoDiv(qe, 5),
+  };
+}
+
+/** Uma linha qualquer da UF, com a agremiação — para os destaques. */
+interface LinhaComAgremiacao {
+  uf: string;
+  cod: string;
+  sigla: string;
+  linha: DeputadoUfLinha;
+}
+
+/** Destaque autossuficiente para a capa (design 026 § 2.9) — a capa nunca lê Blob. */
+function destaqueDe(x: LinhaComAgremiacao): EdgeDeputadoDestaque {
+  const l = x.linha;
+  return {
+    uf: x.uf,
+    sqcand: l.sqcand,
+    nome: l.nome,
+    partido: l.partido,
+    cod: x.cod,
+    sigla: x.sigla,
+    ...(l.numero !== undefined ? { numero: l.numero } : {}),
+    votos: l.votos,
+    pct_validos: l.pct_validos,
+    ...(l.destino !== undefined ? { destino: l.destino } : {}),
+  };
+}
+
 export interface SaidaDeputado {
   payload: EdgePayloadDeputado;
   porUf: Record<string, DeputadoUfDetail>;
+  /** `deputado/uf-lista/<UF>.json` — só as UFs com rank > 60 (na prática, SP). */
+  listaPorUf: Record<string, DeputadoUfLista>;
 }
 
 export function montarDeputado(
@@ -4061,10 +4837,17 @@ export function montarDeputado(
   ts: string,
 ): SaidaDeputado {
   const r = rng.derive("dep");
+  // Fluxo PRÓPRIO para o ruído da projeção: acrescentá-lo não pode mexer em
+  // nenhum voto da parcial (ver `Rng.derive`).
+  const rProj = rng.derive("dep-projecao");
   // Calculado UMA vez, sobre o cadastro inteiro — ver `codPorAgremiacao`.
   const cods = codPorAgremiacao(dados);
   const porUf: Record<string, DeputadoUfDetail> = {};
+  const listaPorUf: Record<string, DeputadoUfLista> = {};
   const linhas: EdgePayloadDeputado["por_uf"] = [];
+  /** Todas as linhas de todas as UFs — os destaques nacionais saem daqui. */
+  const todasAsLinhas: LinhaComAgremiacao[] = [];
+  const puxadoresPais: EdgeDeputadoPuxador[] = [];
 
   /** Acumulador nacional, reconciliado por `cod` de agremiação (RF-122). */
   const nacional = new Map<
@@ -4088,17 +4871,31 @@ export function montarDeputado(
   for (const ctx of ctxs) {
     const lugares = dados.cadeirasPorUf[ctx.uf];
     if (lugares === undefined) throw new Error(`Sem lugares_a_preencher para ${ctx.uf}`);
+    const cobertura = ctx.uf === DEP_UF_COBERTURA;
+    const totalizacaoFinal = ctx.pctApurado >= 100;
+    const zonas = zonasApuradasDeputado(ctx.pares, ctx.pctApurado, cobertura);
+    const projecao = estadoProjecaoDeputado(ctx.pctApurado, zonas, ctx.pares, cobertura);
 
     // UF sem boletim: `lugares_a_preencher` continua sendo FATO (vem da tabela
     // do TSE), mas quociente e cadeiras ficam `null`/0 — um zero no quociente
     // leria como "o quociente é zero", que é outra afirmação.
     if (ctx.pctApurado <= 0 || ctx.votosApurados <= 0) {
+      const { conferencia } = conferenciaDeputado({
+        ctx,
+        ts,
+        totalizacaoFinal: false,
+        cobertura,
+        votosValidos: 0,
+      });
       porUf[ctx.uf] = {
         ts,
         cargo: 6,
         turno: 1,
+        contrato: 2,
         uf: ctx.uf,
         pct_apurado: ctx.pctApurado,
+        dado_ts: null,
+        pares_atrasados: null,
         lugares_a_preencher: lugares,
         quociente_eleitoral: null,
         quociente_eleitoral_tse: null,
@@ -4108,6 +4905,9 @@ export function montarDeputado(
         vagas_nao_preenchidas: lugares,
         empates_indeterminados: [],
         votacao: votacaoDeputadoUf(ctx),
+        projecao,
+        conferencia,
+        mais_votados: [],
       };
       linhas.push({
         sigla: ctx.uf,
@@ -4118,15 +4918,63 @@ export function montarDeputado(
         vagas_nao_preenchidas: lugares,
         empates_indeterminados: 0,
         lider: null,
+        projecao,
       });
       continue;
     }
 
     ufsCalculadas++;
-    const ags = montarAgremiacoesUf(dados, r, ctx.uf, ctx.votosApurados, cods);
-    const res = distribuirCadeiras(ags, lugares);
+    // Os válidos da UF são os MESMOS do painel "Votação" (spec 021): anulados
+    // e sub judice saem de dentro do `vvc` (ADR-0064), e só voltam à lista
+    // nas UFs em que o simulado publica o destino por candidatura.
+    const urna = repartirVotaveis(ctx);
+    const chapa =
+      ctx.uf === DEP_UF_CHAPA_SUB_JUDICE && urna.subJudice > 0
+        ? escolherChapaSubJudice(dados, ctx.uf)
+        : null;
+    const ags = montarAgremiacoesUf(
+      dados,
+      r,
+      ctx.uf,
+      urna.validos,
+      cods,
+      chapa === null ? new Set() : new Set([chapa]),
+    );
+    aplicarDestinosDeputado(ags, urna, {
+      chapa,
+      individuais:
+        ctx.uf === DEP_UF_DESTINOS_INDIVIDUAIS && (urna.anulados > 0 || urna.subJudice > 0),
+    });
+    if (ctx.uf === DEP_UF_PUXADOR) reforcarPuxador(ags, quocienteEleitoral(urna.validos, lugares));
+
+    const elegiveis = ags.map(elegiveisDe);
+    const res = distribuirCadeiras(elegiveis, lugares);
+    const viasParcial = viasDosEleitos(elegiveis, res);
+    const indefinidas = marcarIndefinidas(elegiveis, res, ctx.pctApurado, totalizacaoFinal);
     const validosUf = ags.reduce((a, x) => a + x.votosNominais + x.votosLegenda, 0);
 
+    const proj =
+      projecao.estado === "liberada"
+        ? projetarDeputadoUf(ctx, elegiveis, lugares, rProj)
+        : undefined;
+    const cadeirasProj = new Map<string, number>();
+    const votosProj = new Map<string, number>();
+    if (proj !== undefined) {
+      for (const a of proj.ags) {
+        cadeirasProj.set(a.cod, proj.res.cadeiras[a.cod] ?? 0);
+        votosProj.set(a.cod, a.votosNominais + a.votosLegenda);
+      }
+    }
+
+    const { conferencia, razaoTse } = conferenciaDeputado({
+      ctx,
+      ts,
+      totalizacaoFinal,
+      cobertura,
+      votosValidos: validosUf,
+    });
+
+    const listaRestante: DeputadoUfListaAgremiacao[] = [];
     const agremiacoes: DeputadoUfAgremiacao[] = ags
       .map((a) => {
         const validos = a.votosNominais + a.votosLegenda;
@@ -4136,15 +4984,43 @@ export function montarDeputado(
           partido: c.partido,
           votos: c.votos,
           ordem: i + 1,
+          ...(indefinidas.has(c.sqcand) ? { indefinido: true } : {}),
         });
-        const eleitos = (res.eleitos[a.cod] as CandidatoProporcional[]).map(paraCand);
-        const indef = res.indefinidas[a.cod] as number;
-        // As cadeiras marcadas como indefinidas são as ÚLTIMAS da lista: são
-        // as ganhas em rodada de sobra apertada (RF-127).
-        for (let k = eleitos.length - indef; k < eleitos.length; k++) {
-          const e = eleitos[k];
-          if (e !== undefined) e.indefinido = true;
+        const cadeiras = res.cadeiras[a.cod] as number;
+        const todas = [...a.candidatos].sort(porRank).map((c, i) =>
+          linhaDeputado(c, i + 1, validosUf, {
+            parcial: viasParcial.get(c.sqcand),
+            indefinido: indefinidas.has(c.sqcand),
+            projecao: proj?.vias.get(c.sqcand),
+            projecaoApertada: proj?.apertadas.has(c.sqcand) ?? false,
+            tse: totalizacaoFinal
+              ? marcaTseDaLinha(c.destino, viasParcial.get(c.sqcand), cadeiras > 0)
+              : undefined,
+          }),
+        );
+        const corte = corteDaAgremiacao(todas, res.qe);
+        const puxadores = puxadoresDaAgremiacao(todas, res.qe);
+        const naPagina = todas.filter(
+          (l) =>
+            l.rank <= DEP_RANK_MAXIMO_NA_PAGINA ||
+            linhaMarcada(l) ||
+            l.sqcand === corte?.primeiro_fora,
+        );
+        const resto = todas.filter((l) => !naPagina.includes(l));
+        if (resto.length > 0) listaRestante.push({ cod: a.cod, candidatos: resto });
+        for (const l of todas) {
+          todasAsLinhas.push({ uf: ctx.uf, cod: a.cod, sigla: a.sigla, linha: l });
         }
+        for (const p of puxadores) {
+          const l = todas.find((x) => x.sqcand === p.sqcand) as DeputadoUfLinha;
+          puxadoresPais.push({
+            ...destaqueDe({ uf: ctx.uf, cod: a.cod, sigla: a.sigla, linha: l }),
+            quociente_eleitoral: res.qe,
+            quocientes: p.quocientes,
+            excedente: p.excedente,
+          });
+        }
+
         const linha: DeputadoUfAgremiacao = {
           cod: a.cod,
           sigla: a.sigla,
@@ -4155,35 +5031,86 @@ export function montarDeputado(
           votos_nominais: a.votosNominais,
           votos_legenda: a.votosLegenda,
           votos_validos: validos,
-          pct_votos: r2((100 * validos) / Math.max(1, validosUf)),
+          pct_votos: pct5(validos, validosUf),
           quociente_partidario: res.qp[a.cod] as number,
-          cadeiras: res.cadeiras[a.cod] as number,
-          eleitos,
+          cadeiras,
+          eleitos: (res.eleitos[a.cod] as CandidatoProporcional[]).map(paraCand),
           suplentes: (res.suplentes[a.cod] as CandidatoProporcional[]).map(paraCand),
+          candidatos: naPagina,
+          total_candidatos: todas.length,
+          ...(proj !== undefined
+            ? {
+                cadeiras_projetadas: cadeirasProj.get(a.cod) ?? 0,
+                votos_projetados: votosProj.get(a.cod) ?? 0,
+              }
+            : {}),
+          ...(corte !== undefined ? { corte } : {}),
+          ...(puxadores.length > 0 ? { puxadores } : {}),
         };
         return linha;
       })
-      // Determinismo declarado: cadeiras desc, depois sigla asc.
-      .sort((a, b) => b.cadeiras - a.cadeiras || a.sigla.localeCompare(b.sigla, "pt-BR"));
+      // Design 026 § 3.6: cadeiras DA PARCIAL desc, válidos desc, sigla, cod.
+      .sort(
+        (a, b) =>
+          b.cadeiras - a.cadeiras ||
+          b.votos_validos - a.votos_validos ||
+          a.sigla.localeCompare(b.sigla, "pt-BR") ||
+          a.cod.localeCompare(b.cod),
+      );
 
+    // A lista 61+ segue a ordem das agremiações do objeto da UF (design § 2.5).
+    const ordemCod = new Map(agremiacoes.map((a, i) => [a.cod, i]));
+    listaRestante.sort((a, b) => (ordemCod.get(a.cod) ?? 0) - (ordemCod.get(b.cod) ?? 0));
+    const restantes = listaRestante.reduce((s, a) => s + a.candidatos.length, 0);
+    if (restantes > 0) {
+      listaPorUf[ctx.uf] = {
+        ts,
+        cargo: 6,
+        turno: 1,
+        contrato: 2,
+        uf: ctx.uf,
+        agremiacoes: listaRestante,
+      };
+    }
+
+    const maisVotados = todasAsLinhas
+      .filter((x) => x.uf === ctx.uf)
+      .sort((a, b) => b.linha.votos - a.linha.votos || a.linha.sqcand - b.linha.sqcand)
+      .slice(0, 10)
+      .map((x) => ({ cod: x.cod, sqcand: x.linha.sqcand }));
+
+    const regras = regrasDaUf(res.qe, validosUf, lugares);
     porUf[ctx.uf] = {
       ts,
       cargo: 6,
       turno: 1,
+      contrato: 2,
       uf: ctx.uf,
       pct_apurado: ctx.pctApurado,
+      // Bloco 4 do cabeçalho: o simulado não tem relógio de fonte.
+      dado_ts: null,
+      pares_atrasados: null,
       lugares_a_preencher: lugares,
       quociente_eleitoral: res.qe,
-      // Numa simulação não existe TSE para divergir: o quociente "deles" é o
-      // nosso. Inventar uma divergência aqui poria na tela um conflito que não
-      // aconteceu (constituição § 8 vale nos dois sentidos).
-      quociente_eleitoral_tse: res.qe,
-      totalizacao_final: false,
-      divergencias: [],
+      // Design 026 § 2.8: o `carg.qe` do último agregado lido. Sem agregado,
+      // `null`; no AP, o QE do agregado — que conta a zona que nos falta.
+      quociente_eleitoral_tse:
+        razaoTse === null
+          ? null
+          : razaoTse === 1
+            ? res.qe
+            : quocienteEleitoral(Math.round(validosUf * razaoTse), lugares),
+      totalizacao_final: totalizacaoFinal,
+      divergencias: conferencia.divergencias,
       agremiacoes,
       vagas_nao_preenchidas: res.vagasNaoPreenchidas,
       empates_indeterminados: res.empates,
       votacao: votacaoDeputadoUf(ctx),
+      ...(regras !== undefined ? { regras } : {}),
+      projecao,
+      conferencia,
+      mais_votados: maisVotados,
+      ...(restantes > 0 ? { lista: { restantes } } : {}),
     };
 
     const lider = agremiacoes[0];
@@ -4199,6 +5126,9 @@ export function montarDeputado(
         lider === undefined
           ? null
           : { cod: lider.cod, sigla: lider.sigla, cadeiras: lider.cadeiras },
+      // O MESMO objeto do detalhe da UF (design 026 § 2.7): a capa desenha o
+      // selo daqui e nunca abre os 27 Blobs.
+      projecao,
     });
 
     for (const a of ags) {
@@ -4215,11 +5145,14 @@ export function montarDeputado(
         legenda: 0,
       };
       cur.cadeiras += res.cadeiras[a.cod] as number;
-      cur.indefinidas += res.indefinidas[a.cod] as number;
+      cur.indefinidas += (res.eleitos[a.cod] ?? []).filter((c) => indefinidas.has(c.sqcand)).length;
       cur.nominais += a.votosNominais;
       cur.legenda += a.votosLegenda;
       for (const c of a.candidatos) {
-        cur.porPartido.set(c.partido, (cur.porPartido.get(c.partido) ?? 0) + c.votos);
+        // Só voto NOMINAL válido pesa na liderança (ADR-0064); a linha com
+        // destino ainda registra o partido, para a união dos componentes.
+        const nominal = c.destino === undefined ? c.votos : 0;
+        cur.porPartido.set(c.partido, (cur.porPartido.get(c.partido) ?? 0) + nominal);
       }
       nacional.set(a.cod, cur);
     }
@@ -4253,7 +5186,7 @@ export function montarDeputado(
         votos_nominais: a.nominais,
         votos_legenda: a.legenda,
         votos_validos: validos,
-        pct_votos: r2((100 * validos) / Math.max(1, validosNacionais)),
+        pct_votos: pct5(validos, validosNacionais),
       };
       if (a.indefinidas > 0) linha.cadeiras_indefinidas = a.indefinidas;
       return linha;
@@ -4263,6 +5196,26 @@ export function montarDeputado(
   const totalCadeiras = Object.values(dados.cadeirasPorUf).reduce((a, b) => a + b, 0);
   const atribuidas = porAgremiacao.reduce((a, x) => a + x.cadeiras, 0);
   const pct = pctNacional(ctxs);
+
+  // Design 026 § 3.3 e § 3.5 — autossuficientes: a capa nunca lê Blob.
+  const maisVotadosPais = [...todasAsLinhas]
+    .sort(
+      (a, b) =>
+        b.linha.votos - a.linha.votos ||
+        a.uf.localeCompare(b.uf) ||
+        a.linha.sqcand - b.linha.sqcand,
+    )
+    .slice(0, 10)
+    .map(destaqueDe);
+  const puxadores = puxadoresPais
+    .sort(
+      (a, b) =>
+        b.excedente - a.excedente ||
+        b.votos - a.votos ||
+        a.uf.localeCompare(b.uf) ||
+        a.sqcand - b.sqcand,
+    )
+    .slice(0, 30);
 
   const payload: EdgePayloadDeputado = {
     ts,
@@ -4282,15 +5235,19 @@ export function montarDeputado(
     },
     votacao: blocoVotacao(ctxs),
     por_uf: linhas,
+    mais_votados: maisVotadosPais,
+    puxadores,
     insights: [
       `Câmara: ${pt(atribuidas)} de ${pt(totalCadeiras)} cadeiras já atribuídas — a soma é nossa, das ${ufsCalculadas} corridas estaduais com boletim, não um agregado nacional do TSE.`,
-      `${porAgremiacao[0]?.sigla ?? "—"} é a maior bancada projetada, com ${pt(porAgremiacao[0]?.cadeiras ?? 0)} cadeiras.`,
+      // "na parcial", e não "projetada": desde a spec 026 a projeção de
+      // Deputado é outro número, com rótulo próprio (RF-266).
+      `${porAgremiacao[0]?.sigla ?? "—"} é a maior bancada na parcial, com ${pt(porAgremiacao[0]?.cadeiras ?? 0)} cadeiras.`,
       `${pt(porAgremiacao.reduce((a, x) => a + (x.cadeiras_indefinidas ?? 0), 0))} cadeiras saíram de rodada de sobra apertada e estão marcadas como indefinidas.`,
     ],
     composition: composicao(pct),
   };
 
-  return { payload, porUf };
+  return { payload, porUf, listaPorUf };
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -4610,6 +5567,22 @@ export interface Manifest {
   por_uf: LinhaManifest[];
   avisos: string[];
   /**
+   * Spec 026 — ONDE olhar cada estado novo da tela de Deputado (bloco 9 do
+   * cabeçalho), para o dono ir direto à UF certa no `dev:sim`.
+   */
+  deputado_v2: {
+    /** RR e AP com percentual fixo; `{}` quando o `--pct` não os comporta. */
+    pct_fixas: Record<string, number>;
+    projecao: Record<DeputadoProjecaoUf["estado"], string[]>;
+    conferencia: Record<DeputadoConferencia["estado"], string[]>;
+    totalizacao_final: string[];
+    /** UFs com alguma linha fora do voto nominal válido (ADR-0064). */
+    destinos: string[];
+    /** UFs com objeto de lista 61+. */
+    lista_61: string[];
+    puxadores_no_pais: number;
+  };
+  /**
    * Presente só quando gerado com `--anulado-lidera <UF>` (ADR-0053 / RF-213):
    * diz ao dono QUAL UF tem a anulada no topo, para ele ir direto à tela.
    */
@@ -4623,6 +5596,18 @@ export interface SaidaSimulacao {
   deputado: EdgePayloadDeputado;
   senadorUf: Record<string, EdgePayloadUf>;
   deputadoUf: Record<string, DeputadoUfDetail>;
+  /**
+   * Spec 026 — `deputado/uf-lista/<UF>.json`: só as UFs com rank > 60 (na
+   * prática, SP). Servido pelo `edge-config-falso` e por
+   * `simulacaoDeputadoUfLista`.
+   */
+  deputadoUfLista: Record<string, DeputadoUfLista>;
+  /**
+   * Spec 026 RF-265 — o VALOR da chave `interruptor-projecao-dep` no modo
+   * simulado: LIGADA, para o `dev:sim` mostrar a projeção. Desligar na
+   * revisão é editar o arquivo (`{"ligada": false}`), sem regenerar.
+   */
+  interruptorProjecaoDep: InterruptorProjecaoDep;
   /** A votação presidencial DENTRO de cada estado — 27 UFs. */
   presidenteUf: Record<string, EdgePayloadUf>;
   /**
@@ -4662,6 +5647,11 @@ export const ARQUIVOS: Readonly<Record<string, keyof SaidaSimulacao>> = {
   "governador-uf.json": "governadorUf",
   "senador-uf.json": "senadorUf",
   "deputado-uf.json": "deputadoUf",
+  // Spec 026. Os dois nomes têm de casar com `lib/dev/simulacao.ts`
+  // (`simulacaoDeputadoUfLista`, `simulacaoInterruptorProjecao`) e com
+  // `scripts/edge-config-falso.ts` — é o nome do arquivo que liga as pontas.
+  "deputado-uf-lista.json": "deputadoUfLista",
+  "interruptor-projecao-dep.json": "interruptorProjecaoDep",
   "municipios-pres-t1.json": "municipiosPresT1",
   // 🔴 Os nomes têm de casar EXATAMENTE com o que `simulacaoMunicipiosUf`
   // monta (`lib/dev/simulacao.ts`: `municipios-${cargo}-t${turno}.json`) — é o
@@ -4675,6 +5665,39 @@ export const ARQUIVOS: Readonly<Record<string, keyof SaidaSimulacao>> = {
 // Geração
 // ═════════════════════════════════════════════════════════════════════════════
 
+/** O bloco `deputado_v2` do manifest — derivado da saída, nunca declarado à mão. */
+function resumoDeputadoV2(
+  dep: SaidaDeputado,
+  fixas: Readonly<Record<string, number>>,
+): Manifest["deputado_v2"] {
+  const ufs = Object.keys(dep.porUf).sort();
+  const onde = <T extends string>(valor: (d: DeputadoUfDetail) => T | undefined, estado: T) =>
+    ufs.filter((uf) => valor(dep.porUf[uf] as DeputadoUfDetail) === estado);
+  const proj = (d: DeputadoUfDetail) => d.projecao?.estado;
+  const conf = (d: DeputadoUfDetail) => d.conferencia?.estado;
+  return {
+    pct_fixas: { ...fixas },
+    projecao: {
+      liberada: onde(proj, "liberada"),
+      aguardando: onde(proj, "aguardando"),
+      indisponivel: onde(proj, "indisponivel"),
+    },
+    conferencia: {
+      confere: onde(conf, "confere"),
+      diverge: onde(conf, "diverge"),
+      sem_dado_tse: onde(conf, "sem_dado_tse"),
+    },
+    totalizacao_final: ufs.filter((uf) => dep.porUf[uf]?.totalizacao_final === true),
+    destinos: ufs.filter((uf) =>
+      (dep.porUf[uf]?.agremiacoes ?? []).some((a) =>
+        (a.candidatos ?? []).some((l) => l.destino !== undefined),
+      ),
+    ),
+    lista_61: Object.keys(dep.listaPorUf).sort(),
+    puxadores_no_pais: dep.payload.puxadores?.length ?? 0,
+  };
+}
+
 export function gerarSimulacao(
   dados: DadosSimulacao,
   cli: CliSimulacao,
@@ -4684,7 +5707,9 @@ export function gerarSimulacao(
 
   const eleitoradoPorUf: Record<string, number> = {};
   for (const uf of UFS) eleitoradoPorUf[uf] = dados.eleitorado[uf]?.aptos ?? 0;
-  const pctPorUf = distribuirPctPorUf(cli.pct, eleitoradoPorUf);
+  // Spec 026 (bloco 9): RR a 100% e AP a 80,5% quando o `--pct` comporta.
+  const fixas = pctFixasDoDeputado(cli.pct, eleitoradoPorUf);
+  const pctPorUf = distribuirPctPorUf(cli.pct, eleitoradoPorUf, fixas);
   // `--anulado-lidera` (ADR-0053 / RF-213): sem a flag, os mesmos contextos.
   const ctxs = aplicarCenarioAnulado(
     montarContextos(dados, pctPorUf, raiz.derive("ctx")),
@@ -4748,6 +5773,7 @@ export function gerarSimulacao(
       feitio_senador: sen.feitios[c.uf] as FeitioUf,
     })),
     avisos: [...dados.avisos],
+    deputado_v2: resumoDeputadoV2(dep, fixas),
   };
   // Só com a flag — o manifest do default não ganha chave nenhuma.
   if (cli.anuladoLidera !== undefined) {
@@ -4766,6 +5792,8 @@ export function gerarSimulacao(
     governadorUf,
     presidenteUf,
     deputadoUf: dep.porUf,
+    deputadoUfLista: dep.listaPorUf,
+    interruptorProjecaoDep: { ligada: true },
     municipiosPresT1,
     municipiosGovT1,
     municipiosSenT1,
@@ -5009,6 +6037,8 @@ export function validarSaida(s: SaidaSimulacao): void {
   if (deputado.bancada.ufs_calculadas + deputado.bancada.ufs_aguardando !== UFS.length) {
     erro("deputado: ufs_calculadas + ufs_aguardando ≠ 27");
   }
+  // (9b) Spec 026 — o contrato v2 inteiro, recontado a partir dos votos.
+  validarDeputadoV2(deputado, deputadoUf, s.deputadoUfLista);
 
   // (10) Município → UF: a média ponderada pelo eleitorado fecha com a UF.
   //
@@ -5249,6 +6279,415 @@ export function validarSaida(s: SaidaSimulacao): void {
 }
 
 /** `id → destino` (ou `undefined`, se ainda não publicado) de uma corrida. */
+/** Design 026 § 2.8 — cada chave de divergência pertence a UMA comparação. */
+const COMPARACAO_DA_DIVERGENCIA: Readonly<Record<string, string>> = {
+  quociente_eleitoral: "algoritmo",
+  cadeiras: "algoritmo",
+  eleitos: "eleitos",
+  eleitorado: "eleitorado",
+  votos_validos: "votos_validos",
+};
+
+/** Design 026 § 2.7 — os motivos, FECHADOS, por estado da trava. */
+const MOTIVOS_DA_TRAVA: Readonly<Record<string, readonly string[]>> = {
+  aguardando: ["pct_minimo", "zonas_minimas", "sem_vagas"],
+  indisponivel: ["interruptor", "coligacao", "cobertura", "erro"],
+};
+
+function ehEleitoTse(l: DeputadoUfLinha): boolean {
+  return l.tse === "eleito" || l.tse === "eleito_qp" || l.tse === "eleito_media";
+}
+
+/** `x` tem exatamente 5 casas (ou menos) e está a < 5e-6 de `100·parte/total`. */
+function pctConfere(x: number, parte: number, total: number): boolean {
+  const esperado = total <= 0 ? 0 : (100 * parte) / total;
+  const escalado = x * 1e5;
+  return Math.abs(x - esperado) < 5e-6 && Math.abs(escalado - Math.round(escalado)) < 1e-6;
+}
+
+/**
+ * (9b) O contrato v2 de Deputado (design 026 § 2–3) sobre a saída do
+ * simulado — as mesmas invariantes de `tests/unit/contrato/deputado-v2-fixtures.test.ts`,
+ * RECONTADAS a partir dos votos das linhas e nunca lidas do campo que
+ * conferem. Exportada para o teste rodá-la também sobre os arquivos gravados.
+ *
+ * Mata, entre outras, a mutação M37 do tasks.md da spec 026: marca de
+ * projeção numa UF que não está `liberada`.
+ */
+export function validarDeputadoV2(
+  nacional: EdgePayloadDeputado,
+  porUf: Readonly<Record<string, DeputadoUfDetail>>,
+  listas: Readonly<Record<string, DeputadoUfLista>>,
+): void {
+  const todasDoPais: Array<{ uf: string; cod: string; sigla: string; l: DeputadoUfLinha }> = [];
+  const puxadoresEsperados: Array<{
+    uf: string;
+    sqcand: number;
+    excedente: number;
+    votos: number;
+  }> = [];
+
+  for (const uf of Object.keys(listas)) {
+    if (porUf[uf] === undefined) erro(`deputado-uf-lista/${uf}: UF sem objeto de detalhe`);
+  }
+
+  for (const uf of Object.keys(porUf).sort()) {
+    const d = porUf[uf] as DeputadoUfDetail;
+    const tag = `deputado-uf/${uf}`;
+    if (d.contrato !== 2) erro(`${tag}: sem \`contrato: 2\``);
+    // Bloco 4 do cabeçalho: o simulado publica o terceiro estado, nunca uma hora.
+    if (d.dado_ts !== null || d.pares_atrasados !== null) {
+      erro(`${tag}: dado_ts/pares_atrasados diferentes de null — hora de fonte inventada`);
+    }
+
+    // ── trava ────────────────────────────────────────────────────────────
+    const p = d.projecao;
+    if (p === undefined) erro(`${tag}: sem \`projecao\``);
+    const motivos = MOTIVOS_DA_TRAVA[p.estado];
+    if (p.estado !== "liberada" && motivos === undefined) erro(`${tag}: estado ${p.estado}`);
+    if ((p.motivo === undefined) !== (p.estado === "liberada")) {
+      erro(`${tag}: motivo ${String(p.motivo)} com estado ${p.estado}`);
+    }
+    if (p.motivo !== undefined && !(motivos ?? []).includes(p.motivo)) {
+      erro(`${tag}: motivo ${p.motivo} fora do conjunto de ${p.estado}`);
+    }
+    if (p.pct_minimo !== DEP_PCT_MINIMO_PROJECAO) erro(`${tag}: pct_minimo ${p.pct_minimo}`);
+    if (p.zonas_apuradas > p.zonas_total) erro(`${tag}: zonas_apuradas > zonas_total`);
+    if (
+      p.estado === "liberada" &&
+      (d.pct_apurado < p.pct_minimo || p.zonas_apuradas < DEP_ZONAS_MINIMAS)
+    ) {
+      erro(
+        `${tag}: projeção liberada abaixo da trava (${d.pct_apurado}%, ${p.zonas_apuradas} zonas)`,
+      );
+    }
+
+    // ── Conferência ──────────────────────────────────────────────────────
+    const c = d.conferencia;
+    if (c === undefined) erro(`${tag}: sem \`conferencia\``);
+    if (c.totalizacao_final !== d.totalizacao_final) erro(`${tag}: totalizacao_final diverge`);
+    if (JSON.stringify(c.divergencias) !== JSON.stringify(d.divergencias)) {
+      erro(`${tag}: \`divergencias\` (v1) ≠ \`conferencia.divergencias\``);
+    }
+    for (const div of c.divergencias) {
+      const comp = COMPARACAO_DA_DIVERGENCIA[div.o_que];
+      if (comp === undefined || !c.comparou.includes(comp as DeputadoConferencia["comparou"][0])) {
+        erro(`${tag}: divergência ${div.o_que} sem a comparação que a produz`);
+      }
+      if (div.o_que === "eleitorado" || div.o_que === "votos_validos") {
+        if (
+          div.diferenca_pct === undefined ||
+          !pctConfere(div.diferenca_pct + 100, div.nosso, div.tse)
+        ) {
+          erro(`${tag}: diferenca_pct de ${div.o_que} não é 100·(nosso − tse)/tse`);
+        }
+      }
+    }
+    if (!d.totalizacao_final && c.comparou.some((x) => x === "eleitos" || x === "votos_validos")) {
+      erro(`${tag}: eleitos/votos_validos comparados sem totalização final`);
+    }
+    if (c.estado === "confere") {
+      if (c.divergencias.length > 0 || !c.comparou.includes("algoritmo")) {
+        erro(`${tag}: "confere" sem a conta comparada, ou com divergência`);
+      }
+      if (c.boletim_dado_ts === null) erro(`${tag}: "confere" sem hora do boletim`);
+      if (d.quociente_eleitoral_tse !== d.quociente_eleitoral) {
+        erro(`${tag}: "confere" com QE do TSE ≠ o nosso`);
+      }
+    } else if (c.estado === "sem_dado_tse") {
+      if (c.divergencias.length > 0 || c.comparou.includes("algoritmo")) {
+        erro(`${tag}: "sem_dado_tse" com divergência ou com a conta comparada`);
+      }
+      if (d.quociente_eleitoral_tse !== null) erro(`${tag}: "sem_dado_tse" com QE do TSE`);
+    } else if (c.divergencias.length === 0 || c.boletim_dado_ts === null) {
+      erro(`${tag}: "diverge" sem divergência ou sem hora do boletim`);
+    }
+    if (p.motivo === "cobertura" && !c.divergencias.some((x) => x.o_que === "eleitorado")) {
+      erro(`${tag}: trava fechada por cobertura sem a divergência de eleitorado que a sustenta`);
+    }
+
+    if (d.agremiacoes.length === 0) {
+      if ((d.mais_votados ?? []).length > 0) erro(`${tag}: mais votados sem agremiação`);
+      continue;
+    }
+
+    // ── a conta da UF ────────────────────────────────────────────────────
+    const lugares = d.lugares_a_preencher as number;
+    const qe = d.quociente_eleitoral as number;
+    const vv = d.agremiacoes.reduce((s, a) => s + a.votos_validos, 0);
+    if (qe !== quocienteEleitoral(vv, lugares)) erro(`${tag}: QE ${qe} ≠ art. 106 sobre ${vv}`);
+    if (qe >= 1) {
+      const r = d.regras;
+      if (
+        r === undefined ||
+        r.quociente_eleitoral !== qe ||
+        r.votos_validos !== vv ||
+        r.lugares_a_preencher !== lugares ||
+        r.piso_candidato !== tetoDiv(qe, 10) ||
+        r.piso_agremiacao_sobras !== tetoDiv(4 * qe, 5) ||
+        r.piso_candidato_sobras !== tetoDiv(qe, 5)
+      ) {
+        erro(`${tag}: \`regras\` não são os pisos do QE ${qe}`);
+      }
+    }
+    const ordenadas = [...d.agremiacoes].sort(
+      (a, b) =>
+        b.cadeiras - a.cadeiras ||
+        b.votos_validos - a.votos_validos ||
+        a.sigla.localeCompare(b.sigla, "pt-BR"),
+    );
+    if (ordenadas.some((a, i) => a.cod !== d.agremiacoes[i]?.cod)) {
+      erro(`${tag}: agremiações fora da ordem (cadeiras, válidos, sigla)`);
+    }
+
+    const lista = listas[uf];
+    if (lista !== undefined) {
+      if (lista.contrato !== 2 || lista.cargo !== 6 || lista.turno !== 1 || lista.uf !== uf) {
+        erro(`deputado-uf-lista/${uf}: envelope fora do contrato`);
+      }
+      if (lista.ts !== d.ts) erro(`deputado-uf-lista/${uf}: ts ≠ o do objeto da UF`);
+    }
+    const restantes = (lista?.agremiacoes ?? []).reduce((s, a) => s + a.candidatos.length, 0);
+    if ((d.lista?.restantes ?? 0) !== restantes) {
+      erro(`${tag}: lista.restantes ${String(d.lista?.restantes)} ≠ ${restantes} linhas na lista`);
+    }
+
+    const linhasUf: DeputadoUfLinha[] = [];
+    let somaProjetadas = 0;
+    for (const a of d.agremiacoes) {
+      const at = `${tag}/${a.sigla}`;
+      const blob = a.candidatos;
+      if (blob === undefined) erro(`${at}: sem \`candidatos\``);
+      const resto = lista?.agremiacoes.find((x) => x.cod === a.cod)?.candidatos ?? [];
+      const linhas = [...blob, ...resto].sort((x, y) => x.rank - y.rank);
+      linhasUf.push(...linhas);
+      for (const l of linhas) todasDoPais.push({ uf, cod: a.cod, sigla: a.sigla, l });
+
+      // rank contíguo, voto não crescente, fronteira do Blob
+      if (a.total_candidatos !== linhas.length) erro(`${at}: total_candidatos`);
+      linhas.forEach((l, i) => {
+        if (l.rank !== i + 1) erro(`${at}: rank ${l.rank} na posição ${i + 1}`);
+        const anterior = linhas[i - 1];
+        if (anterior !== undefined && l.votos > anterior.votos) erro(`${at}: rank fora do voto`);
+      });
+      const noBlob = new Set(blob.map((l) => l.rank));
+      for (let k = 1; k <= Math.min(DEP_RANK_MAXIMO_NA_PAGINA, linhas.length); k++) {
+        if (!noBlob.has(k)) erro(`${at}: rank ${k} fora do objeto da UF`);
+      }
+      const corte = a.corte;
+      for (const l of blob) {
+        if (
+          l.rank > DEP_RANK_MAXIMO_NA_PAGINA &&
+          l.parcial === undefined &&
+          l.projecao === undefined &&
+          !ehEleitoTse(l) &&
+          l.sqcand !== corte?.primeiro_fora
+        ) {
+          erro(`${at}: rank ${l.rank} sem marca no objeto da UF`);
+        }
+      }
+      for (const l of resto) {
+        if (l.rank <= DEP_RANK_MAXIMO_NA_PAGINA || noBlob.has(l.rank)) {
+          erro(`${at}: rank ${l.rank} na lista 61+`);
+        }
+        if (l.parcial !== undefined || l.projecao !== undefined || ehEleitoTse(l)) {
+          erro(`${at}: linha marcada na lista 61+ (ADR-0065 D1)`);
+        }
+      }
+
+      // votos da agremiação × linhas (regra do `dvt`, ADR-0064)
+      if (a.votos_validos !== a.votos_nominais + a.votos_legenda) erro(`${at}: válidos`);
+      const nominais = linhas
+        .filter((l) => l.destino === undefined)
+        .reduce((s, l) => s + l.votos, 0);
+      if (nominais !== a.votos_nominais)
+        erro(`${at}: Σ nominais válidos ${nominais} ≠ ${a.votos_nominais}`);
+      if (!pctConfere(a.pct_votos, a.votos_validos, vv)) erro(`${at}: pct_votos`);
+      if (a.quociente_partidario !== (qe >= 1 ? Math.floor(a.votos_validos / qe) : 0)) {
+        erro(`${at}: quociente_partidario`);
+      }
+      for (const l of linhas) {
+        const semPct = l.destino === "anulado" || l.destino === "sub_judice";
+        if (
+          semPct
+            ? l.pct_validos !== null
+            : l.pct_validos === null || !pctConfere(l.pct_validos, l.votos, vv)
+        ) {
+          erro(
+            `${at}/${l.sqcand}: pct_validos (${String(l.pct_validos)}, destino ${String(l.destino)})`,
+          );
+        }
+        if (
+          l.destino !== undefined &&
+          (l.parcial !== undefined || l.projecao !== undefined || ehEleitoTse(l))
+        ) {
+          erro(`${at}/${l.sqcand}: destino ${l.destino} com marca de eleito`);
+        }
+        if (l.indefinido && l.parcial !== "sobra")
+          erro(`${at}/${l.sqcand}: indefinido fora de sobra`);
+        if (l.projecao_apertada && l.projecao !== "sobra") {
+          erro(`${at}/${l.sqcand}: apertada fora de sobra na projeção`);
+        }
+        if (!d.totalizacao_final && l.tse !== undefined) erro(`${at}/${l.sqcand}: tse sem tf`);
+        if (d.totalizacao_final && l.tse === undefined) erro(`${at}/${l.sqcand}: sem tse com tf`);
+      }
+
+      // parcial: eleitos v1 == marcas v2, QP antes de sobra
+      const parcial = linhas.filter((l) => l.parcial !== undefined);
+      if (a.eleitos.length !== a.cadeiras || parcial.length !== a.cadeiras) {
+        erro(
+          `${at}: ${a.cadeiras} cadeiras, ${a.eleitos.length} eleitos, ${parcial.length} marcas`,
+        );
+      }
+      const eleitosV1 = new Map(a.eleitos.map((e) => [e.sqcand, e]));
+      for (const l of parcial) {
+        const e = eleitosV1.get(l.sqcand);
+        if (e === undefined) erro(`${at}/${l.sqcand}: marca de parcial sem eleito v1`);
+        if (Boolean(e.indefinido) !== Boolean(l.indefinido))
+          erro(`${at}/${l.sqcand}: indefinido v1 ≠ v2`);
+      }
+      const elegiveis10 = linhas.filter(
+        (l) => l.destino === undefined && 10 * l.votos >= qe,
+      ).length;
+      const nQp = parcial.filter((l) => l.parcial === "qp").length;
+      if (nQp !== Math.min(a.quociente_partidario, elegiveis10)) erro(`${at}: ${nQp} vagas por QP`);
+      if (parcial.some((l, i) => (l.parcial === "qp") !== i < nQp))
+        erro(`${at}: sobra antes de QP`);
+
+      // linha de corte e puxadores, recontados
+      const ultimo = parcial[parcial.length - 1];
+      const fora = linhas.find((l) => l.destino === undefined && l.parcial === undefined);
+      if (ultimo === undefined || fora === undefined) {
+        if (corte !== undefined) erro(`${at}: corte sem eleito ou sem válido de fora`);
+      } else if (
+        corte === undefined ||
+        corte.ultimo_eleito !== ultimo.sqcand ||
+        corte.primeiro_fora !== fora.sqcand ||
+        corte.diferenca !== ultimo.votos - fora.votos ||
+        (corte.primeiro_fora_abaixo_piso_10 === true) !== 10 * fora.votos < qe
+      ) {
+        erro(`${at}: linha de corte`);
+      }
+      const pux = linhas
+        .filter((l) => l.destino === undefined && qe >= 1 && Math.floor(l.votos / qe) - 1 >= 1)
+        .map((l) => ({
+          sqcand: l.sqcand,
+          quocientes: Math.floor(l.votos / qe),
+          excedente: Math.floor(l.votos / qe) - 1,
+        }));
+      if (JSON.stringify(a.puxadores ?? []) !== JSON.stringify(pux)) erro(`${at}: puxadores`);
+      for (const x of pux) {
+        const l = linhas.find((y) => y.sqcand === x.sqcand) as DeputadoUfLinha;
+        puxadoresEsperados.push({ uf, sqcand: x.sqcand, excedente: x.excedente, votos: l.votos });
+      }
+
+      // projeção: só com `liberada` (M37)
+      const proj = linhas.filter((l) => l.projecao !== undefined);
+      if (p.estado !== "liberada") {
+        if (
+          proj.length > 0 ||
+          linhas.some((l) => l.projecao_apertada) ||
+          a.cadeiras_projetadas !== undefined ||
+          a.votos_projetados !== undefined
+        ) {
+          erro(`${at}: projeção publicada com a trava ${p.estado}`);
+        }
+      } else if (a.cadeiras_projetadas !== proj.length || a.votos_projetados === undefined) {
+        erro(`${at}: ${String(a.cadeiras_projetadas)} cadeiras projetadas, ${proj.length} marcas`);
+      }
+      somaProjetadas += a.cadeiras_projetadas ?? 0;
+    }
+    if (p.estado === "liberada" && somaProjetadas !== lugares) {
+      erro(`${tag}: Σ cadeiras projetadas ${somaProjetadas} ≠ ${lugares}`);
+    }
+    if (d.totalizacao_final) {
+      const eleitosTse = linhasUf.filter(ehEleitoTse).length;
+      if (eleitosTse + d.vagas_nao_preenchidas !== lugares) erro(`${tag}: eleitos do TSE`);
+      if (
+        c.estado !== "diverge" &&
+        linhasUf.some((l) => (l.parcial !== undefined) !== ehEleitoTse(l))
+      ) {
+        erro(`${tag}: parcial ≠ TSE sem divergência de eleitos`);
+      }
+    }
+
+    // mais votados da UF: referências que resolvem NO objeto da UF
+    const esperado = todasDoPais
+      .filter((x) => x.uf === uf)
+      .sort((x, y) => y.l.votos - x.l.votos || x.l.sqcand - y.l.sqcand)
+      .slice(0, 10)
+      .map((x) => ({ cod: x.cod, sqcand: x.l.sqcand }));
+    if (JSON.stringify(d.mais_votados ?? []) !== JSON.stringify(esperado)) {
+      erro(`${tag}: mais_votados não são os 10 mais votados da UF`);
+    }
+    for (const ref of esperado) {
+      const ag = d.agremiacoes.find((a) => a.cod === ref.cod);
+      if (!ag?.candidatos?.some((l) => l.sqcand === ref.sqcand)) {
+        erro(`${tag}: mais votado ${ref.sqcand} fora do objeto da UF`);
+      }
+    }
+  }
+
+  // ── nacional ─────────────────────────────────────────────────────────────
+  for (const row of nacional.por_uf) {
+    const d = porUf[row.sigla];
+    if (JSON.stringify(row.projecao) !== JSON.stringify(d?.projecao)) {
+      erro(`deputado: por_uf/${row.sigla}.projecao ≠ a do objeto da UF`);
+    }
+  }
+  const top = [...todasDoPais]
+    .sort((x, y) => y.l.votos - x.l.votos || x.uf.localeCompare(y.uf) || x.l.sqcand - y.l.sqcand)
+    .slice(0, 10);
+  const mv = nacional.mais_votados ?? [];
+  if (
+    mv.length !== top.length ||
+    mv.some((m, i) => {
+      const e = top[i];
+      return (
+        e === undefined ||
+        m.uf !== e.uf ||
+        m.sqcand !== e.l.sqcand ||
+        m.nome !== e.l.nome ||
+        m.cod !== e.cod ||
+        m.sigla !== e.sigla ||
+        m.votos !== e.l.votos ||
+        m.pct_validos !== e.l.pct_validos
+      );
+    })
+  ) {
+    erro("deputado: mais_votados do país não são os 10 mais votados das UFs");
+  }
+  const puxEsperados = puxadoresEsperados
+    .sort(
+      (a, b) =>
+        b.excedente - a.excedente ||
+        b.votos - a.votos ||
+        a.uf.localeCompare(b.uf) ||
+        a.sqcand - b.sqcand,
+    )
+    .slice(0, 30);
+  const pux = nacional.puxadores ?? [];
+  if (
+    pux.length !== puxEsperados.length ||
+    pux.some((x, i) => {
+      const e = puxEsperados[i];
+      const d = porUf[x.uf];
+      return (
+        e === undefined ||
+        x.uf !== e.uf ||
+        x.sqcand !== e.sqcand ||
+        x.excedente !== e.excedente ||
+        d === undefined ||
+        x.quociente_eleitoral !== d.quociente_eleitoral ||
+        x.quocientes !== Math.floor(x.votos / x.quociente_eleitoral) ||
+        x.excedente !== x.quocientes - 1
+      );
+    })
+  ) {
+    erro("deputado: puxadores do país não são a união das UFs por excedente");
+  }
+}
+
 function destinoPorId(
   corrida: readonly EdgeCorridaEntrada[] | undefined,
 ): Map<number, EdgeDestinoVoto | undefined> {

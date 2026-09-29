@@ -99,7 +99,7 @@ describe("sanearDeputadoUfDetail — v1 e v2 bem formados saem idênticos, sem a
     expect(logWarnMock).not.toHaveBeenCalled();
   });
 
-  it("v1 do modo simulado (27 UFs, o que o e2e mede hoje)", () => {
+  it("v2 do modo simulado (27 UFs, o que o e2e mede — v2 desde a frente S)", () => {
     for (const [uf, d] of Object.entries(
       simulacaoUf as unknown as Record<string, DeputadoUfDetail>,
     )) {

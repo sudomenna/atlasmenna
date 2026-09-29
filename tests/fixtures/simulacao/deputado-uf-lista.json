@@ -1,0 +1,627 @@
+{
+  "SP": {
+    "ts": "2026-09-29T17:52:56.247Z",
+    "cargo": 6,
+    "turno": 1,
+    "contrato": 2,
+    "uf": "SP",
+    "agremiacoes": [
+      {
+        "cod": "11",
+        "candidatos": [
+          {
+            "sqcand": 250002532330,
+            "nome": "DERCINHO - O NEGÃO DO CAMINHÃO",
+            "partido": "UNIÃO",
+            "numero": 4474,
+            "votos": 2450,
+            "rank": 61,
+            "pct_validos": 0.03318
+          },
+          {
+            "sqcand": 250002532372,
+            "nome": "MAJOR PALUMBO",
+            "partido": "PP",
+            "numero": 1177,
+            "votos": 2405,
+            "rank": 62,
+            "pct_validos": 0.03257
+          },
+          {
+            "sqcand": 250002532329,
+            "nome": "THAÍS MARGARIDO",
+            "partido": "UNIÃO",
+            "numero": 4448,
+            "votos": 2361,
+            "rank": 63,
+            "pct_validos": 0.03198
+          },
+          {
+            "sqcand": 250002532359,
+            "nome": "MEGA",
+            "partido": "PP",
+            "numero": 1125,
+            "votos": 2319,
+            "rank": 64,
+            "pct_validos": 0.03141
+          },
+          {
+            "sqcand": 250002532338,
+            "nome": "FAUSTO PINATO",
+            "partido": "UNIÃO",
+            "numero": 4411,
+            "votos": 2278,
+            "rank": 65,
+            "pct_validos": 0.03085
+          },
+          {
+            "sqcand": 250002532341,
+            "nome": "GORETE",
+            "partido": "PP",
+            "numero": 1101,
+            "votos": 2238,
+            "rank": 66,
+            "pct_validos": 0.03031
+          },
+          {
+            "sqcand": 250002532364,
+            "nome": "SARGENTO NERES",
+            "partido": "PP",
+            "numero": 1120,
+            "votos": 2200,
+            "rank": 67,
+            "pct_validos": 0.0298
+          },
+          {
+            "sqcand": 250002532355,
+            "nome": "SIRLANGE MANGA",
+            "partido": "UNIÃO",
+            "numero": 4410,
+            "votos": 2162,
+            "rank": 68,
+            "pct_validos": 0.02928
+          },
+          {
+            "sqcand": 250002532328,
+            "nome": "RÔ SIQUEIRA",
+            "partido": "UNIÃO",
+            "numero": 4480,
+            "votos": 2126,
+            "rank": 69,
+            "pct_validos": 0.02879
+          }
+        ]
+      },
+      {
+        "cod": "22",
+        "candidatos": [
+          {
+            "sqcand": 250002535946,
+            "nome": "REPÓRTER RAFAELA HERNANDEZ",
+            "partido": "PL",
+            "numero": 2298,
+            "votos": 1572,
+            "rank": 61,
+            "pct_validos": 0.02129
+          },
+          {
+            "sqcand": 250002535944,
+            "nome": "LAIR MOURA",
+            "partido": "PL",
+            "numero": 2256,
+            "votos": 1543,
+            "rank": 62,
+            "pct_validos": 0.0209
+          },
+          {
+            "sqcand": 250002535979,
+            "nome": "ALE  DUARTE",
+            "partido": "PL",
+            "numero": 2266,
+            "votos": 1515,
+            "rank": 63,
+            "pct_validos": 0.02052
+          },
+          {
+            "sqcand": 250002535958,
+            "nome": "LUIZ PHILIPPE DE O E BRAGANÇA",
+            "partido": "PL",
+            "numero": 2225,
+            "votos": 1488,
+            "rank": 64,
+            "pct_validos": 0.02015
+          },
+          {
+            "sqcand": 250002535938,
+            "nome": "ADILSON BARROSO BOLSONARISTA",
+            "partido": "PL",
+            "numero": 2251,
+            "votos": 1462,
+            "rank": 65,
+            "pct_validos": 0.0198
+          },
+          {
+            "sqcand": 250002548340,
+            "nome": "VAL GIRIOLI",
+            "partido": "PL",
+            "numero": 2253,
+            "votos": 1436,
+            "rank": 66,
+            "pct_validos": 0.01945
+          },
+          {
+            "sqcand": 250002535936,
+            "nome": "GIL DINIZ",
+            "partido": "PL",
+            "numero": 2220,
+            "votos": 1412,
+            "rank": 67,
+            "pct_validos": 0.01912
+          },
+          {
+            "sqcand": 250002535976,
+            "nome": "POLICIAL KATIA SASTRE",
+            "partido": "PL",
+            "numero": 2240,
+            "votos": 1388,
+            "rank": 68,
+            "pct_validos": 0.0188
+          },
+          {
+            "sqcand": 250002535993,
+            "nome": "PRETO DE DIREITA",
+            "partido": "PL",
+            "numero": 2217,
+            "votos": 1365,
+            "rank": 69,
+            "pct_validos": 0.01849
+          },
+          {
+            "sqcand": 250002535947,
+            "nome": "RENATO BOLSONARO",
+            "partido": "PL",
+            "numero": 2222,
+            "votos": 1342,
+            "rank": 70,
+            "pct_validos": 0.01818
+          },
+          {
+            "sqcand": 250002535986,
+            "nome": "THIAGO SURFISTA",
+            "partido": "PL",
+            "numero": 2280,
+            "votos": 1321,
+            "rank": 71,
+            "pct_validos": 0.01789
+          }
+        ]
+      },
+      {
+        "cod": "23",
+        "candidatos": [
+          {
+            "sqcand": 250002550385,
+            "nome": "JEFFERSON CHINA",
+            "partido": "PSDB",
+            "numero": 4521,
+            "votos": 1597,
+            "rank": 61,
+            "pct_validos": 0.02163
+          },
+          {
+            "sqcand": 250002552939,
+            "nome": "FÁBIO MAGALHÃES",
+            "partido": "PSDB",
+            "numero": 4502,
+            "votos": 1567,
+            "rank": 62,
+            "pct_validos": 0.02122
+          },
+          {
+            "sqcand": 250002550415,
+            "nome": "FABIO BOMBEIRO",
+            "partido": "PSDB",
+            "numero": 4552,
+            "votos": 1538,
+            "rank": 63,
+            "pct_validos": 0.02083
+          },
+          {
+            "sqcand": 250002550378,
+            "nome": "VANILDA BORDIERI",
+            "partido": "PSDB",
+            "numero": 4522,
+            "votos": 1511,
+            "rank": 64,
+            "pct_validos": 0.02046
+          },
+          {
+            "sqcand": 250002550362,
+            "nome": "MATHEUS CERDEIRA",
+            "partido": "PSDB",
+            "numero": 4516,
+            "votos": 1484,
+            "rank": 65,
+            "pct_validos": 0.0201
+          },
+          {
+            "sqcand": 250002550381,
+            "nome": "DR. RAUL",
+            "partido": "CIDADANIA",
+            "numero": 2322,
+            "votos": 1458,
+            "rank": 66,
+            "pct_validos": 0.01975
+          }
+        ]
+      },
+      {
+        "cod": "30",
+        "candidatos": [
+          {
+            "sqcand": 250002530132,
+            "nome": "MARI LUZ ADVOGADA",
+            "partido": "NOVO",
+            "numero": 3027,
+            "votos": 1259,
+            "rank": 61,
+            "pct_validos": 0.01705
+          },
+          {
+            "sqcand": 250002530175,
+            "nome": "DANIEL MELO",
+            "partido": "NOVO",
+            "numero": 3055,
+            "votos": 1236,
+            "rank": 62,
+            "pct_validos": 0.01674
+          },
+          {
+            "sqcand": 250002530162,
+            "nome": "TENENTE PEDRO MIRANDA",
+            "partido": "NOVO",
+            "numero": 3038,
+            "votos": 1213,
+            "rank": 63,
+            "pct_validos": 0.01643
+          },
+          {
+            "sqcand": 250002530128,
+            "nome": "CLÁUDIA DO BATOM",
+            "partido": "NOVO",
+            "numero": 3008,
+            "votos": 1192,
+            "rank": 64,
+            "pct_validos": 0.01614
+          },
+          {
+            "sqcand": 250002530127,
+            "nome": "JOELMA FRANCO",
+            "partido": "NOVO",
+            "numero": 3067,
+            "votos": 1171,
+            "rank": 65,
+            "pct_validos": 0.01586
+          },
+          {
+            "sqcand": 250002530171,
+            "nome": "MARCOS CINTRA",
+            "partido": "NOVO",
+            "numero": 3001,
+            "votos": 1150,
+            "rank": 66,
+            "pct_validos": 0.01557
+          },
+          {
+            "sqcand": 250002530160,
+            "nome": "MARCELA NASCIMENTO",
+            "partido": "NOVO",
+            "numero": 3043,
+            "votos": 1131,
+            "rank": 67,
+            "pct_validos": 0.01532
+          },
+          {
+            "sqcand": 250002530129,
+            "nome": "CRIS MONTEIRO",
+            "partido": "NOVO",
+            "numero": 3011,
+            "votos": 1111,
+            "rank": 68,
+            "pct_validos": 0.01505
+          },
+          {
+            "sqcand": 250002530122,
+            "nome": "LORD MARINHO",
+            "partido": "NOVO",
+            "numero": 3068,
+            "votos": 1093,
+            "rank": 69,
+            "pct_validos": 0.0148
+          }
+        ]
+      },
+      {
+        "cod": "40",
+        "candidatos": [
+          {
+            "sqcand": 250002539401,
+            "nome": "DRA. DEISE PASSOS",
+            "partido": "PSB",
+            "numero": 4048,
+            "votos": 768,
+            "rank": 61,
+            "pct_validos": 0.0104
+          },
+          {
+            "sqcand": 250002539442,
+            "nome": "CÉSAR BARBARESCO",
+            "partido": "PSB",
+            "numero": 4003,
+            "votos": 754,
+            "rank": 62,
+            "pct_validos": 0.01021
+          },
+          {
+            "sqcand": 250002539391,
+            "nome": "SHEYLLI",
+            "partido": "PSB",
+            "numero": 4007,
+            "votos": 740,
+            "rank": 63,
+            "pct_validos": 0.01002
+          },
+          {
+            "sqcand": 250002539406,
+            "nome": "SAMUEL ENFERMEIRO",
+            "partido": "PSB",
+            "numero": 4001,
+            "votos": 727,
+            "rank": 64,
+            "pct_validos": 0.00985
+          },
+          {
+            "sqcand": 250002539411,
+            "nome": "JULIÃO SOARES",
+            "partido": "PSB",
+            "numero": 4021,
+            "votos": 714,
+            "rank": 65,
+            "pct_validos": 0.00967
+          },
+          {
+            "sqcand": 250002539448,
+            "nome": "PROFESSOR GILMAR",
+            "partido": "PSB",
+            "numero": 4026,
+            "votos": 701,
+            "rank": 66,
+            "pct_validos": 0.00949
+          }
+        ]
+      },
+      {
+        "cod": "55",
+        "candidatos": [
+          {
+            "sqcand": 250002541122,
+            "nome": "DRA. ANA VETERINÁRIA",
+            "partido": "PSD",
+            "numero": 5505,
+            "votos": 695,
+            "rank": 61,
+            "pct_validos": 0.00941
+          },
+          {
+            "sqcand": 250002541134,
+            "nome": "OLHAR SOB RODAS",
+            "partido": "PSD",
+            "numero": 5581,
+            "votos": 682,
+            "rank": 62,
+            "pct_validos": 0.00924
+          },
+          {
+            "sqcand": 250002541101,
+            "nome": "SILVINHO FILHO",
+            "partido": "PSD",
+            "numero": 5580,
+            "votos": 669,
+            "rank": 63,
+            "pct_validos": 0.00906
+          },
+          {
+            "sqcand": 250002541121,
+            "nome": "PASTOR ALMIR ARAUJO",
+            "partido": "PSD",
+            "numero": 5519,
+            "votos": 657,
+            "rank": 64,
+            "pct_validos": 0.0089
+          },
+          {
+            "sqcand": 250002541127,
+            "nome": "ELIEL MIRANDA",
+            "partido": "PSD",
+            "numero": 5553,
+            "votos": 646,
+            "rank": 65,
+            "pct_validos": 0.00875
+          },
+          {
+            "sqcand": 250002541094,
+            "nome": "ISRAEL PALESTRANTE",
+            "partido": "PSD",
+            "numero": 5508,
+            "votos": 634,
+            "rank": 66,
+            "pct_validos": 0.00859
+          },
+          {
+            "sqcand": 250002541144,
+            "nome": "NATY SANTANA",
+            "partido": "PSD",
+            "numero": 5557,
+            "votos": 624,
+            "rank": 67,
+            "pct_validos": 0.00845
+          },
+          {
+            "sqcand": 250002541148,
+            "nome": "MARCÃO DA ACADEMIA AO AR LIVRE",
+            "partido": "PSD",
+            "numero": 5582,
+            "votos": 613,
+            "rank": 68,
+            "pct_validos": 0.0083
+          }
+        ]
+      },
+      {
+        "cod": "15",
+        "candidatos": [
+          {
+            "sqcand": 250002533650,
+            "nome": "GIULIANE NERI",
+            "partido": "MDB",
+            "numero": 1564,
+            "votos": 505,
+            "rank": 61,
+            "pct_validos": 0.00684
+          },
+          {
+            "sqcand": 250002533632,
+            "nome": "HUGO ZAMBONI",
+            "partido": "MDB",
+            "numero": 1531,
+            "votos": 496,
+            "rank": 62,
+            "pct_validos": 0.00672
+          },
+          {
+            "sqcand": 250002533646,
+            "nome": "AMANDA SANTOS",
+            "partido": "MDB",
+            "numero": 1552,
+            "votos": 487,
+            "rank": 63,
+            "pct_validos": 0.0066
+          },
+          {
+            "sqcand": 250002533622,
+            "nome": "ANDRÉ DA MASSA",
+            "partido": "MDB",
+            "numero": 1562,
+            "votos": 478,
+            "rank": 64,
+            "pct_validos": 0.00647
+          },
+          {
+            "sqcand": 250002533617,
+            "nome": "ROSE SILVA",
+            "partido": "MDB",
+            "numero": 1503,
+            "votos": 470,
+            "rank": 65,
+            "pct_validos": 0.00637
+          },
+          {
+            "sqcand": 250002533628,
+            "nome": "NETINHO DE PAULA",
+            "partido": "MDB",
+            "numero": 1501,
+            "votos": 461,
+            "rank": 66,
+            "pct_validos": 0.00624
+          }
+        ]
+      },
+      {
+        "cod": "70",
+        "candidatos": [
+          {
+            "sqcand": 250002551105,
+            "nome": "PAULÃO DO SOCIAL",
+            "partido": "AVANTE",
+            "numero": 7025,
+            "votos": 0,
+            "rank": 61,
+            "pct_validos": 0
+          },
+          {
+            "sqcand": 250002551106,
+            "nome": "ELAINE GUEDES",
+            "partido": "AVANTE",
+            "numero": 7004,
+            "votos": 0,
+            "rank": 62,
+            "pct_validos": 0
+          },
+          {
+            "sqcand": 250002551107,
+            "nome": "CAROL CARVALHO",
+            "partido": "AVANTE",
+            "numero": 7065,
+            "votos": 0,
+            "rank": 63,
+            "pct_validos": 0
+          },
+          {
+            "sqcand": 250002551108,
+            "nome": "ADAUTO DO TRANSPORTE",
+            "partido": "AVANTE",
+            "numero": 7009,
+            "votos": 0,
+            "rank": 64,
+            "pct_validos": 0
+          },
+          {
+            "sqcand": 250002551109,
+            "nome": "DAVID CORRÊA DEFESA CONSUMIDOR",
+            "partido": "AVANTE",
+            "numero": 7060,
+            "votos": 0,
+            "rank": 65,
+            "pct_validos": 0
+          },
+          {
+            "sqcand": 250002551110,
+            "nome": "AMANDA NUNES",
+            "partido": "AVANTE",
+            "numero": 7056,
+            "votos": 0,
+            "rank": 66,
+            "pct_validos": 0
+          },
+          {
+            "sqcand": 250002551113,
+            "nome": "ANDREIA MÃE PRETA",
+            "partido": "AVANTE",
+            "numero": 7013,
+            "votos": 0,
+            "rank": 67,
+            "pct_validos": 0
+          },
+          {
+            "sqcand": 250002551117,
+            "nome": "ADRIANA PERFEITO",
+            "partido": "AVANTE",
+            "numero": 7017,
+            "votos": 0,
+            "rank": 68,
+            "pct_validos": 0
+          },
+          {
+            "sqcand": 250002554343,
+            "nome": "LUCIANA CARLA",
+            "partido": "AVANTE",
+            "numero": 7033,
+            "votos": 0,
+            "rank": 69,
+            "pct_validos": 0
+          }
+        ]
+      }
+    ]
+  }
+}

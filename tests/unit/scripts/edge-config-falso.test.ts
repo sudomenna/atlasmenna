@@ -45,8 +45,11 @@ const AUTH = "Bearer e2e";
 describe("montarChaves — fixtures do simulado", () => {
   const chaves = montarChaves();
 
-  it("serve exatamente 4 nacionais + 27 UFs × 3 cargos, e nada de turno 2 ou alias", () => {
-    expect(chaves.size).toBe(4 + 27 * 3);
+  it("serve exatamente 4 nacionais + 27 UFs × 3 cargos + o interruptor, e nada de turno 2 ou alias", () => {
+    // + 1: desde a frente S da spec 026 o simulado grava
+    // `interruptor-projecao-dep.json` (ligado), e o falso o serve.
+    expect(chaves.size).toBe(4 + 27 * 3 + 1);
+    expect(chaves.has(interruptorProjecaoDepKey())).toBe(true);
     for (const cargo of ["pres", "gov", "sen", "dep"] as const) {
       expect(chaves.has(currentProjectionKey(cargo, 1))).toBe(true);
       expect(chaves.has(currentProjectionKey(cargo, 2))).toBe(false);
@@ -290,7 +293,21 @@ describe("conferirBaseDoBlob — só este servidor", () => {
 
 describe("interruptor da projeção (ADR-0063) — só servido quando pedido", () => {
   it("sem flag e sem fixture: a chave fica AUSENTE (= desligada, a regra de produção)", () => {
-    expect(montarChaves().has(interruptorProjecaoDepKey())).toBe(false);
+    // Diretório próprio SEM `interruptor-projecao-dep.json`: desde a frente S
+    // da spec 026 o simulado gravado traz o arquivo (ligado), e o caso "sem
+    // fixture" deixou de existir no diretório padrão.
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "falso-sem-interruptor-"));
+    for (const nome of ["presidente", "governador", "senador", "deputado"]) {
+      fs.writeFileSync(path.join(dir, `${nome}.json`), "{}");
+    }
+    for (const nome of ["presidente-uf", "governador-uf", "senador-uf"]) {
+      fs.writeFileSync(path.join(dir, `${nome}.json`), "{}");
+    }
+    expect(montarChaves({ dir }).has(interruptorProjecaoDepKey())).toBe(false);
+  });
+
+  it("sem flag, com a fixture do simulado: serve o valor gravado pelo gerador (ligado)", () => {
+    expect(montarChaves().get(interruptorProjecaoDepKey())).toEqual({ ligada: true });
   });
 
   it("--projecao-ligada / --projecao-desligada servem o valor explícito", () => {

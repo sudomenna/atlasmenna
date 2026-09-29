@@ -255,6 +255,23 @@ function comRelogioAgora<T>(payload: T, agoraMs: number): T {
     saida.serie_por_candidato = deslocarEixoPorCandidato(bruto.serie_por_candidato, delta);
   }
 
+  // Spec 026 — o TERCEIRO relógio do detalhe de UF de Deputado: a Conferência
+  // data o boletim do agregado que comparou (`conferencia.boletim_dado_ts`).
+  // Sem andar junto, `/uf/RR/deputado-federal` diria "agora" no cabeçalho e
+  // "boletim das 10h40" na Conferência — a mesma discordância de relógios que
+  // a série por candidatura já teve. Anda pelo MESMO delta; `null` (sem
+  // agregado) e data impossível ficam como estão.
+  if (delta !== 0) {
+    const conf = bruto.conferencia;
+    if (conf !== null && typeof conf === "object") {
+      const boletim = (conf as Record<string, unknown>).boletim_dado_ts;
+      const ms = typeof boletim === "string" ? Date.parse(boletim) : Number.NaN;
+      if (Number.isFinite(ms)) {
+        saida.conferencia = { ...conf, boletim_dado_ts: new Date(ms + delta).toISOString() };
+      }
+    }
+  }
+
   return saida as T;
 }
 
