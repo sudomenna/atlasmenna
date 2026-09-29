@@ -1,0 +1,253 @@
+{
+  "fonte": "Senado Federal — Dados Abertos",
+  "fonte_url": "https://legis.senado.leg.br/dadosabertos/senador/lista/atual.json",
+  "consultado_em": "2026-09-29T04:47:02Z",
+  "versao_dataset": "29/09/2026 01:46:55",
+  "senadores": [
+    {
+      "uf": "AC",
+      "codigo": "5672",
+      "nome_parlamentar": "Alan Rick",
+      "partido": "REPUBLICANOS",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "596"
+    },
+    {
+      "uf": "AL",
+      "codigo": "5207",
+      "nome_parlamentar": "Renan Filho",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "597"
+    },
+    {
+      "uf": "AM",
+      "codigo": "5525",
+      "nome_parlamentar": "Omar Aziz",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "619"
+    },
+    {
+      "uf": "AP",
+      "codigo": "3830",
+      "nome_parlamentar": "Davi Alcolumbre",
+      "partido": "UNIÃO",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "618"
+    },
+    {
+      "uf": "BA",
+      "codigo": "5523",
+      "nome_parlamentar": "Otto Alencar",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "622"
+    },
+    {
+      "uf": "CE",
+      "codigo": "6336",
+      "nome_parlamentar": "Camilo Santana",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "598"
+    },
+    {
+      "uf": "DF",
+      "codigo": "6335",
+      "nome_parlamentar": "Damares Alves",
+      "partido": "REPUBLICANOS",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "599"
+    },
+    {
+      "uf": "ES",
+      "codigo": "631",
+      "nome_parlamentar": "Magno Malta",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "600"
+    },
+    {
+      "uf": "GO",
+      "codigo": "5070",
+      "nome_parlamentar": "Wilder Morais",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "601"
+    },
+    {
+      "uf": "MA",
+      "codigo": "6359",
+      "nome_parlamentar": "Lourdinha Pereira",
+      "partido": "PSB",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Flávio Dino",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "602"
+    },
+    {
+      "uf": "MG",
+      "codigo": "6337",
+      "nome_parlamentar": "Cleitinho",
+      "partido": "REPUBLICANOS",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "603"
+    },
+    {
+      "uf": "MS",
+      "codigo": "5736",
+      "nome_parlamentar": "Tereza Cristina",
+      "partido": "PP",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "595"
+    },
+    {
+      "uf": "MT",
+      "codigo": "1173",
+      "nome_parlamentar": "Wellington Fagundes",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "621"
+    },
+    {
+      "uf": "PA",
+      "codigo": "4639",
+      "nome_parlamentar": "Beto Faro",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "604"
+    },
+    {
+      "uf": "PB",
+      "codigo": "4642",
+      "nome_parlamentar": "Efraim Filho",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "605"
+    },
+    {
+      "uf": "PE",
+      "codigo": "6338",
+      "nome_parlamentar": "Teresa Leitão",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "606"
+    },
+    {
+      "uf": "PI",
+      "codigo": "6369",
+      "nome_parlamentar": "Jussara Lima",
+      "partido": "PSD",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Wellington Dias",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "607"
+    },
+    {
+      "uf": "PR",
+      "codigo": "6331",
+      "nome_parlamentar": "Sergio Moro",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "608"
+    },
+    {
+      "uf": "RJ",
+      "codigo": "5322",
+      "nome_parlamentar": "Romário",
+      "partido": "S/Partido",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "620"
+    },
+    {
+      "uf": "RN",
+      "codigo": "4694",
+      "nome_parlamentar": "Rogerio Marinho",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "616"
+    },
+    {
+      "uf": "RO",
+      "codigo": "6340",
+      "nome_parlamentar": "Jaime Bagattoli",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "610"
+    },
+    {
+      "uf": "RR",
+      "codigo": "5793",
+      "nome_parlamentar": "Dr. Hiran",
+      "partido": "PP",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "611"
+    },
+    {
+      "uf": "RS",
+      "codigo": "6341",
+      "nome_parlamentar": "Hamilton Mourão",
+      "partido": "REPUBLICANOS",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "612"
+    },
+    {
+      "uf": "SC",
+      "codigo": "6342",
+      "nome_parlamentar": "Jorge Seif",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "613"
+    },
+    {
+      "uf": "SE",
+      "codigo": "4811",
+      "nome_parlamentar": "Laércio Oliveira",
+      "partido": "PP",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "614"
+    },
+    {
+      "uf": "SP",
+      "codigo": "6009",
+      "nome_parlamentar": "Astronauta Marcos Pontes",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "617"
+    },
+    {
+      "uf": "TO",
+      "codigo": "5386",
+      "nome_parlamentar": "Professora Dorinha Seabra",
+      "partido": "UNIÃO",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "615"
+    }
+  ]
+}

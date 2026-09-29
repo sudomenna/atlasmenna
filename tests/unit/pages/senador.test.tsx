@@ -542,6 +542,129 @@ describe("/senador (T-09)", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Spec 023 — o Senado de 2027 em /senador (RF-216..RF-219)
+// ---------------------------------------------------------------------------
+
+describe("/senador — spec 023: as 81 cadeiras e a barra na paleta de partido", () => {
+  /** Os `<section>` de painel do `<main>`, pelo id do título. */
+  function ordemDosPaineis(doc: Document): string[] {
+    return [...doc.querySelectorAll("main > section[aria-labelledby]")].map(
+      (s) => s.getAttribute("aria-labelledby") as string,
+    );
+  }
+
+  const hemiciclo = (doc: Document) => doc.querySelector("[data-testid='senado-hemiciclo']");
+
+  it("RF-216: o hemiciclo vem logo DEPOIS das 54 vagas, e a barra das 54 FICA", async () => {
+    readProjectionMock.mockResolvedValue(nacional());
+    const doc = await render(SenadoPage());
+
+    const ordem = ordemDosPaineis(doc);
+    const i = ordem.indexOf("composicao-heading");
+    expect(i).toBeGreaterThanOrEqual(0);
+    expect(ordem[i + 1]).toBe("senado-2027-heading");
+    expect(ordem[i + 2]).toBe("corridas-heading");
+    expect(doc.querySelector("[data-testid='vote-bar']")).not.toBeNull();
+  });
+
+  it("RF-216: 81 bolinhas com a foto versionada do Senado, e a data dela visível", async () => {
+    readProjectionMock.mockResolvedValue(nacional());
+    const doc = await render(SenadoPage());
+
+    const h = hemiciclo(doc);
+    expect(
+      h?.querySelectorAll("[data-testid='senado-hemiciclo-figura'] > svg circle"),
+    ).toHaveLength(81);
+    expect(h?.getAttribute("data-fase")).toBe("normal");
+    // As 4 vagas do fixture (SP e RJ) estão projetadas; as 50 restantes, aguardando.
+    expect(h?.querySelectorAll("svg g[data-estado='projetada'] circle")).toHaveLength(4);
+    expect(h?.querySelectorAll("svg g[data-estado='aguardando'] circle")).toHaveLength(50);
+    expect(h?.querySelectorAll("svg g[data-estado='continua_2031'] circle")).toHaveLength(27);
+    expect(doc.querySelector("[data-testid='senado-hemiciclo-foto']")?.textContent).toMatch(
+      /conforme o Senado em \d{2}\/\d{2}\/\d{4}/,
+    );
+  });
+
+  it("RF-218: o bloco inteiro não diz 'eleito' — e o resto da página segue dizendo 'eleitos em 2022' na nota das 54", async () => {
+    readProjectionMock.mockResolvedValue(nacional());
+    const doc = await render(SenadoPage());
+
+    const painel = doc.querySelector("section[aria-labelledby='senado-2027-heading']");
+    expect(painel?.textContent ?? "").not.toMatch(/eleit/i);
+    expect(painel?.innerHTML ?? "").not.toMatch(/eleit/i);
+  });
+
+  // 🔴 MUTAÇÃO: voltar a barra para `var(--color-cand-${i + 1})` — os dois
+  // casos abaixo caem.
+  it("RF-219: cada segmento da barra das 54 tem a cor `-text` do PARTIDO, nunca a de rank", async () => {
+    readProjectionMock.mockResolvedValue(nacional());
+    const doc = await render(SenadoPage());
+
+    const segmentos = [...doc.querySelectorAll("[data-testid='vote-bar-segment']")];
+    expect(segmentos.length).toBe(4);
+    const fundos = segmentos.map((s) => (s as HTMLElement).getAttribute("style") ?? "");
+    for (const [i, partido] of ["pl", "pp", "psd", "pt"].entries()) {
+      expect(fundos[i], partido).toContain(`var(--party-${partido}-text)`);
+    }
+    expect(fundos.join(" ")).not.toContain("--color-cand-");
+  });
+
+  it("RF-219: o mesmo partido tem a MESMA cor na barra e no hemiciclo", async () => {
+    readProjectionMock.mockResolvedValue(nacional());
+    const doc = await render(SenadoPage());
+
+    const corNaBarra = (sigla: string) => {
+      const seg = [...doc.querySelectorAll("[data-testid='vote-bar-segment']")].find((s) =>
+        (s.getAttribute("style") ?? "").includes(`--party-${sigla.toLowerCase()}-text`),
+      );
+      return /background:\s*(var\([^)]+\))/.exec(seg?.getAttribute("style") ?? "")?.[1];
+    };
+    for (const sigla of ["PT", "PL", "PSD", "PP"]) {
+      const g = doc.querySelector(
+        `[data-testid='senado-hemiciclo'] svg g[data-partido='${sigla}'][data-estado='projetada']`,
+      );
+      expect(g, sigla).not.toBeNull();
+      expect(corNaBarra(sigla), sigla).toBe(g?.getAttribute("stroke"));
+    }
+  });
+
+  it("RF-217: composição que não fecha com os `top_candidatos` ⇒ sem hemiciclo, barra intacta", async () => {
+    const aviso = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const p = nacional();
+    (p.composicao_vagas as NonNullable<EdgePayload["composicao_vagas"]>).por_partido = [
+      { partido: "PL", vagas: 2 },
+      { partido: "PT", vagas: 2 },
+    ];
+    readProjectionMock.mockResolvedValue(p);
+    const doc = await render(SenadoPage());
+
+    expect(hemiciclo(doc)).toBeNull();
+    expect(doc.querySelector("section[aria-labelledby='senado-2027-heading']")).toBeNull();
+    expect(doc.querySelector("[data-testid='vote-bar']")).not.toBeNull();
+    expect(aviso.mock.calls.some((c) => String(c[0]).startsWith("[senado-2027]"))).toBe(true);
+    aviso.mockRestore();
+  });
+
+  it("fase pré: 27 que continuam + 54 cinzas, sem vocabulário de medição", async () => {
+    readProjectionMock.mockResolvedValue(nacional({ fase: FASE_PRE_ELEICAO }));
+    const doc = await render(SenadoPage());
+
+    const h = hemiciclo(doc);
+    expect(h?.getAttribute("data-fase")).toBe("pre");
+    expect(h?.querySelectorAll("svg g[data-estado='continua_2031'] circle")).toHaveLength(27);
+    expect(h?.querySelectorAll("svg g[data-estado='aguardando'] circle")).toHaveLength(54);
+    expect((h?.innerHTML ?? "").toLowerCase()).not.toContain("projeç");
+  });
+
+  it("sem payload: o ramo de espera NÃO ganha o hemiciclo (design 023 § D6)", async () => {
+    readProjectionMock.mockResolvedValue(null);
+    const doc = await render(SenadoPage());
+
+    expect(hemiciclo(doc)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // T-10 — /uf/[sigla]/senador
 // ---------------------------------------------------------------------------
 

@@ -1,16 +1,18 @@
 /**
- * lib/utils/hemiciclo.ts — a geometria do hemiciclo da Câmara, sem React.
+ * lib/utils/hemiciclo.ts — a geometria do hemiciclo, sem React: o plenário da
+ * Câmara (spec 017) e, desde 2026-09-29, o do Senado (spec 023).
  *
  * Vive aqui, e não dentro do componente, porque é **aritmética com um
- * invariante**: a soma dos assentos desenhados tem de ser exatamente `N`, e
- * `N` é `bancada.total_cadeiras` — RF-125.1. Um invariante de contagem se
+ * invariante**: a soma dos assentos desenhados tem de ser exatamente `N`. Na
+ * Câmara, `N` é `bancada.total_cadeiras` — RF-125.1; no Senado, os 27 mandatos
+ * até 2031 mais as vagas em disputa — RF-216. Um invariante de contagem se
  * testa melhor isolado do JSX, e é isso que separa "o SVG parece certo" de
- * "as bolinhas somam o que o TSE publicou".
+ * "as bolinhas somam o que a casa tem".
  *
- * ## 🔴 `513` não é constante em lugar nenhum
+ * ## 🔴 `513` (e `81`) não é constante em lugar nenhum
  *
- * Nada neste arquivo assume 513 — nem como default, nem como limite, nem como
- * divisor. Todo número de cadeira sai do argumento `total`.
+ * Nada neste arquivo assume 513 ou 81 — nem como default, nem como limite, nem
+ * como divisor. Todo número de cadeira sai do argumento `total`.
  *
  * ⚠️ **Corrigido em 2026-09-19.** Este parágrafo dizia que "o tamanho da Câmara
  * é a soma dos `lugares_a_preencher` publicados, lida em runtime", e que "a
@@ -24,30 +26,42 @@
  * RF-124 rege o número **por UF**, não o total nacional. A regra deste arquivo
  * não muda por isso: o desenho não pode assumir o tamanho da casa.
  *
- * ## 🔴 O número de arcos é CONSTANTE, e é por isso que ele é constante
+ * ## 🔴 O número de arcos é CONSTANTE POR CASA, e é por isso que ele é constante
  *
- * {@link ARCOS_PADRAO} é 12, fixo. A tentação natural é derivá-lo de `N` —
- * "mais cadeiras, mais linhas" —, e ela está errada pelo motivo que só aparece
- * no dia em que `N` muda: com o número de arcos derivado, **cruzar um limiar
- * entre 513 e 531 reestrutura o desenho inteiro**. O leitor veria o plenário
- * mudar de forma por causa de uma decisão do Congresso sobre o Censo, e leria
- * essa mudança como informação sobre a eleição. Com o número fixo, 513 → 531
- * acrescenta uma ou duas bolinhas a cada arco e nada mais muda.
+ * {@link ARCOS_CAMARA} é 12 e {@link ARCOS_SENADO} é 5, fixos. A tentação
+ * natural é derivar o número de arcos de `N` — "mais cadeiras, mais linhas" —,
+ * e ela está errada pelo motivo que só aparece no dia em que `N` muda: com o
+ * número de arcos derivado, **cruzar um limiar reestrutura o desenho
+ * inteiro**. O leitor veria o plenário mudar de forma por causa de uma decisão
+ * do Congresso sobre o Censo, e leria essa mudança como informação sobre a
+ * eleição. Com o número fixo, 513 → 531 acrescenta uma ou duas bolinhas a cada
+ * arco e nada mais muda.
  *
- * A única exceção é o extremo pequeno: uma Câmara com menos de duas cadeiras
+ * **O que mudou em 2026-09-29 (spec 023):** "a casa" passou a ser argumento
+ * (`layoutHemiciclo(total, { arcos })`). O número continua sendo escolha de
+ * desenho, fixa, feita **uma vez por casa** — nunca uma função de `N`. O
+ * default é o da Câmara, e o plenário da Câmara sai byte a byte igual ao de
+ * antes (`tests/unit/components/camara-hemiciclo-retrato.test.tsx`). Por que 5
+ * no Senado: com 81 cadeiras, 5 arcos dão 10/13/16/19/23 e os dois
+ * espaçamentos (radial 13,75; angular 13,66 no arco externo) quase coincidem —
+ * bolinhas redondas, pelo mesmo critério que escolheu 12 para 513.
+ *
+ * A única exceção é o extremo pequeno: uma casa com menos de duas cadeiras
  * por arco produziria arcos vazios, e arco vazio no meio do desenho é um
  * buraco que se lê como cadeira faltando. Ver {@link arcosPara}.
  *
  * ## Determinismo (constituição § 6)
  *
- * Sem `Math.random()`, sem `Date`, sem estado de módulo. Mesmo `total` ⇒ mesmo
- * layout, campo a campo, casa decimal a casa decimal (as coordenadas são
- * arredondadas em {@link arred} justamente para que a comparação byte a byte
- * valha, sem depender do último bit do `Math.cos` de uma plataforma).
+ * Sem `Math.random()`, sem `Date`, sem estado de módulo. Mesmo `total` e mesmos
+ * arcos ⇒ mesmo layout, campo a campo, casa decimal a casa decimal (as
+ * coordenadas são arredondadas em {@link arred} justamente para que a
+ * comparação byte a byte valha, sem depender do último bit do `Math.cos` de uma
+ * plataforma).
  *
  * ## O desenho, em quatro passos
  *
- *   1. **Arcos**: {@link ARCOS_PADRAO}, com a guarda do extremo pequeno.
+ *   1. **Arcos**: os da casa ({@link ARCOS_CAMARA} por default), com a guarda
+ *      do extremo pequeno.
  *   2. **Raios igualmente espaçados** entre {@link RAIO_INTERNO} e
  *      {@link RAIO_EXTERNO}.
  *   3. **Assentos por arco proporcionais ao raio** (arco maior comporta mais),
@@ -61,6 +75,14 @@
  * A ordem de varredura é da **esquerda para a direita** (θ decrescente),
  * atravessando os arcos — é isso que faz cada agremiação ocupar uma cunha
  * contígua em vez de pontilhar o desenho inteiro.
+ *
+ * ## Marcas de limiar (spec 023, design § D7)
+ *
+ * A visão por bloco (spec 025) vai marcar limiares — "k cadeiras antes daqui".
+ * {@link marcaDeLimiar} dá o ângulo da marca entre a cadeira `k − 1` e a `k`
+ * da varredura, e diz quando as duas estão na MESMA coluna (empate entre
+ * arcos), caso em que nenhuma linha radial as separa. Não é caso raro: a marca
+ * de maioria do Senado (41) cai exatamente assim.
  */
 
 /** Raio do arco mais externo, em unidades do `viewBox`. É a escala do desenho. */
@@ -77,12 +99,27 @@ export const FRACAO_INTERNA = 0.45;
 export const RAIO_INTERNO = RAIO_EXTERNO * FRACAO_INTERNA;
 
 /**
- * Número de arcos. **Constante de desenho, não derivada de `N`** — ver o
+ * Arcos da Câmara. **Constante de desenho, não derivada de `N`** — ver o
  * cabeçalho. Com 12 arcos e ~513 cadeiras o espaçamento angular (≈5,24) e o
  * radial (5,00) quase coincidem, que é o que faz as bolinhas saírem redondas e
  * igualmente afastadas nos dois eixos.
  */
-export const ARCOS_PADRAO = 12;
+export const ARCOS_CAMARA = 12;
+
+/**
+ * Arcos do Senado (spec 023). Com 81 cadeiras: 10/13/16/19/23 — o espaçamento
+ * radial (13,75) e o angular do arco externo (13,66) quase coincidem, o mesmo
+ * critério dos 12 da Câmara. Fixo pelo mesmo motivo: a forma do desenho não
+ * pode mudar com o número de cadeiras.
+ */
+export const ARCOS_SENADO = 5;
+
+/**
+ * O default de {@link arcosPara} e {@link layoutHemiciclo}: a Câmara, que é o
+ * uso anterior à generalização. Mantido com este nome porque é ele que os
+ * testes da spec 017 travam (`tests/unit/lib/hemiciclo.test.ts`).
+ */
+export const ARCOS_PADRAO = ARCOS_CAMARA;
 
 /** Folga em volta do arco, para o contorno do assento não ser cortado. */
 const MARGEM = 3;
@@ -91,8 +128,8 @@ const MARGEM = 3;
 const OCUPACAO_DO_ASSENTO = 0.4;
 
 /**
- * Quantos arcos para `total` cadeiras: {@link ARCOS_PADRAO}, exceto no extremo
- * pequeno.
+ * Quantos arcos para `total` cadeiras numa casa de `arcos` arcos
+ * ({@link ARCOS_PADRAO} por default), exceto no extremo pequeno.
  *
  * A guarda é `total < 2 · arcos ⇒ arcos = max(1, ⌊total / 2⌋)`: abaixo de duas
  * cadeiras por arco a distribuição proporcional começa a produzir arcos com
@@ -102,10 +139,19 @@ const OCUPACAO_DO_ASSENTO = 0.4;
  * Não é caminho hipotético: um payload degradado com 4 ou 10 cadeiras
  * publicadas passa por aqui na primeira meia hora da apuração.
  */
-export function arcosPara(total: number): number {
+export function arcosPara(total: number, arcos: number = ARCOS_PADRAO): number {
+  const casa = arcosDaCasa(arcos);
   if (total <= 0) return 0;
-  if (total < 2 * ARCOS_PADRAO) return Math.max(1, Math.floor(total / 2));
-  return ARCOS_PADRAO;
+  if (total < 2 * casa) return Math.max(1, Math.floor(total / 2));
+  return casa;
+}
+
+/**
+ * Normaliza o número de arcos pedido. Valor que não é inteiro positivo cai no
+ * default — nunca em "zero arcos", que apagaria o desenho em silêncio.
+ */
+function arcosDaCasa(arcos: number): number {
+  return Number.isInteger(arcos) && arcos > 0 ? arcos : ARCOS_PADRAO;
 }
 
 /** Raios dos arcos, do interno para o externo. Um arco só ⇒ o raio médio. */
@@ -156,6 +202,12 @@ export interface AssentoGeometria {
   i: number;
   /** Arco a que pertence. 0 = mais interno. */
   arco: number;
+  /**
+   * Ângulo da cadeira, em radianos: π na ponta esquerda, 0 na direita
+   * (`π (j + ½) / s`). **Não arredondado** — não vai para o SVG, e é por este
+   * valor exato que a varredura foi ordenada (ver {@link marcaDeLimiar}).
+   */
+  theta: number;
   cx: number;
   cy: number;
 }
@@ -166,11 +218,24 @@ export interface HemicicloLayout {
   arcos: number;
   /** Assentos por arco, do interno para o externo. */
   porArco: number[];
+  /** Raio de cada arco, do interno para o externo (unidades do `viewBox`). */
+  raios: number[];
+  /** Centro do semicírculo, em coordenadas do `viewBox`. */
+  centro: { cx: number; cy: number };
   /** Raio de cada bolinha, em unidades do `viewBox`. */
   raioAssento: number;
   width: number;
   height: number;
   assentos: AssentoGeometria[];
+}
+
+/** Opções de {@link layoutHemiciclo}. */
+export interface OpcoesHemiciclo {
+  /**
+   * Arcos da casa — {@link ARCOS_CAMARA} (default) ou {@link ARCOS_SENADO}.
+   * Constante por casa, nunca calculada a partir de `total` (ver o cabeçalho).
+   */
+  arcos?: number;
 }
 
 /**
@@ -190,15 +255,17 @@ function arred(n: number): number {
  * número não desenha bolinha nenhuma, e não inventa uma Câmara de tamanho
  * padrão para preencher o espaço (design 017 § D8).
  */
-export function layoutHemiciclo(total: number): HemicicloLayout {
+export function layoutHemiciclo(total: number, opcoes: OpcoesHemiciclo = {}): HemicicloLayout {
   const n = Number.isFinite(total) ? Math.max(0, Math.trunc(total)) : 0;
-  const arcos = arcosPara(n);
+  const arcos = arcosPara(n, opcoes.arcos ?? ARCOS_PADRAO);
 
   if (arcos === 0) {
     return {
       total: 0,
       arcos: 0,
       porArco: [],
+      raios: [],
+      centro: { cx: arred(RAIO_EXTERNO + MARGEM), cy: arred(RAIO_EXTERNO + MARGEM) },
       raioAssento: 0,
       width: arred(2 * (RAIO_EXTERNO + MARGEM)),
       height: arred(RAIO_EXTERNO + 2 * MARGEM),
@@ -255,9 +322,119 @@ export function layoutHemiciclo(total: number): HemicicloLayout {
   const assentos: AssentoGeometria[] = brutos.map((s, i) => ({
     i,
     arco: s.arco,
+    theta: s.theta,
     cx: s.cx,
     cy: s.cy,
   }));
 
-  return { total: assentos.length, arcos, porArco, raioAssento, width, height, assentos };
+  return {
+    total: assentos.length,
+    arcos,
+    porArco,
+    raios,
+    centro: { cx: arred(cx0), cy: arred(cy0) },
+    raioAssento,
+    width,
+    height,
+    assentos,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Marcas de limiar (spec 023, design § D7) — só a geometria; quem desenha é a
+// visão por bloco da spec 025
+// ---------------------------------------------------------------------------
+
+/**
+ * Tolerância para "mesmo ângulo". Não é folga de gosto: a varredura ordena
+ * pelo θ em ponto flutuante, e duas cadeiras que estão matematicamente na mesma
+ * coluna podem sair com θ diferentes no último bit — `(π · 6,5) / 13` dá
+ * `1,5707963267948968` e `(π · 9,5) / 19` dá `1,5707963267948966`, os dois
+ * valendo π/2. A menor distância angular REAL entre colunas distintas, em
+ * qualquer casa plausível, é da ordem de 1e-3; 1e-9 separa as duas escalas com
+ * seis ordens de grandeza de folga.
+ *
+ * ⚠️ Consequência registrada no design 023 § D7: o comentário da varredura em
+ * {@link layoutHemiciclo} ("desempate pelo arco, interno primeiro") só decide
+ * quando os θ são IGUAIS em ponto flutuante. Na coluna central é o último bit
+ * que decide. A ordem continua determinística (× e ÷ do IEEE-754 são
+ * corretamente arredondados em toda plataforma) e NÃO foi mudada: mudar
+ * mudaria o plenário da Câmara, que tem de sair byte a byte igual.
+ */
+export const EPS_ANGULO = 1e-9;
+
+/** Onde fica a marca do limiar `k` — ver {@link marcaDeLimiar}. */
+export interface MarcaDeLimiar {
+  /** Quantas cadeiras ficam ANTES da marca, na varredura esquerda → direita. */
+  k: number;
+  /**
+   * Ângulo da marca (rad). Sem empate, a média dos θ das cadeiras `k − 1` e
+   * `k` — a linha radial nesse ângulo separa EXATAMENTE as `k` primeiras das
+   * demais. Com empate, o ângulo da coluna em que as duas estão.
+   */
+  theta: number;
+  /**
+   * `true` quando as cadeiras `k − 1` e `k` estão na mesma coluna (mesmo
+   * ângulo, arcos diferentes): nenhuma linha radial as separa, e a coluna fica
+   * partida entre os dois lados da marca.
+   */
+  empate: boolean;
+  /** Em empate, os arcos da coluna cujas cadeiras ficam ANTES da marca. Sem empate, `[]`. */
+  arcosAntes: number[];
+  /** Em empate, os arcos da coluna cujas cadeiras ficam DEPOIS da marca. Sem empate, `[]`. */
+  arcosDepois: number[];
+}
+
+/**
+ * A marca do limiar `k`: entre a cadeira `k − 1` e a cadeira `k` da varredura
+ * (índices a partir de 0), isto é, com `k` cadeiras antes dela. `null` quando
+ * não há cadeira dos dois lados (`k < 1`, `k > total − 1`) ou `k` não é
+ * inteiro.
+ *
+ * 🔴 **`k − 1` e `k`, não `k` e `k + 1`.** "Maioria de 41" quer dizer 41
+ * cadeiras à esquerda — as de índice 0..40. Um erro de um aqui desloca a marca
+ * uma cadeira, e no Senado é a diferença entre a marca cair na coluna central
+ * (empate) ou fora dela.
+ */
+export function marcaDeLimiar(layout: HemicicloLayout, k: number): MarcaDeLimiar | null {
+  if (!Number.isInteger(k) || k < 1 || k > layout.total - 1) return null;
+  const antes = layout.assentos[k - 1] as AssentoGeometria;
+  const depois = layout.assentos[k] as AssentoGeometria;
+
+  if (Math.abs(antes.theta - depois.theta) >= EPS_ANGULO) {
+    return {
+      k,
+      theta: (antes.theta + depois.theta) / 2,
+      empate: false,
+      arcosAntes: [],
+      arcosDepois: [],
+    };
+  }
+
+  const coluna = layout.assentos.filter((a) => Math.abs(a.theta - antes.theta) < EPS_ANGULO);
+  return {
+    k,
+    theta: antes.theta,
+    empate: true,
+    arcosAntes: coluna.filter((a) => a.i < k).map((a) => a.arco),
+    arcosDepois: coluna.filter((a) => a.i >= k).map((a) => a.arco),
+  };
+}
+
+/**
+ * O ponto a `raio` do centro, no ângulo `theta`, em coordenadas do `viewBox`
+ * (arredondado como as cadeiras). Para a marca ficar FORA do arco externo, o
+ * raio passa de {@link RAIO_EXTERNO} + `raioAssento` — e quem desenha a marca
+ * precisa de um `viewBox` com essa folga, que o layout desta função não dá (e
+ * não pode dar sem mudar o plenário da Câmara).
+ */
+export function pontoNoAngulo(
+  layout: HemicicloLayout,
+  theta: number,
+  raio: number,
+): { x: number; y: number } {
+  return {
+    x: arred(layout.centro.cx + raio * Math.cos(theta)),
+    y: arred(layout.centro.cy - raio * Math.sin(theta)),
+  };
 }

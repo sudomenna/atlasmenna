@@ -90,10 +90,27 @@
  * também para a **lista textual de agremiações** da própria página.
  * Constituição § 4: gráfico colorido sem lista textual paralela é defeito; a
  * lista existe, e o que faltava era a ligação.
+ *
+ * ## 2026-09-29 — casca de `<Hemiciclo>` (spec 023, design § D5)
+ *
+ * A pintura do SVG (figure, svg, `<g>` por trecho, figcaption) subiu para
+ * `components/blocks/Hemiciclo.tsx`, que o hemiciclo do Senado também usa. O
+ * que é da Câmara ficou aqui: a fila de cadeiras (`assentosDaBancada`), os três
+ * estados, a pintura de cada um, o título, o `<desc>` e a legenda. **A saída é
+ * byte a byte a de antes** — retrato em
+ * `tests/fixtures/hemiciclo/camara-retrato.json`, tirado antes da extração, e
+ * comparado por `tests/unit/components/camara-hemiciclo-retrato.test.tsx`.
  */
 
 import type { CSSProperties } from "react";
 
+import {
+  agruparEmTrechos,
+  CINZA_ASSENTO,
+  CONTORNO_NEUTRO,
+  Hemiciclo,
+  type TrechoHemiciclo,
+} from "@/components/blocks/Hemiciclo";
 import type { EdgeBancadaNacional } from "@/lib/edge-config/types";
 import { ordenarBancada } from "@/lib/utils/bancada";
 import { layoutHemiciclo } from "@/lib/utils/hemiciclo";
@@ -156,11 +173,12 @@ export function assentosDaBancada(bancada: EdgeBancadaNacional): AssentoPintado[
 // Pintura
 // ---------------------------------------------------------------------------
 
-/** Cinza de fundo das cadeiras que ainda não são de ninguém, ou não são firmes. */
-const CINZA = "var(--surface-sunken)";
-
-/** Anel neutro — ≥5,0:1 contra as 3 superfícies claras, gate do RNF-035. */
-const CONTORNO_NEUTRO = "var(--text-secondary)";
+/**
+ * Cinza de fundo das cadeiras que ainda não são de ninguém, ou não são firmes.
+ * O token e o anel neutro (`CONTORNO_NEUTRO`) moram em `Hemiciclo.tsx` desde a
+ * spec 023, porque o Senado usa os mesmos dois.
+ */
+const CINZA = CINZA_ASSENTO;
 
 /**
  * 🔴 **Decisão do dono, 2026-09-18 — fechada, não reabrir.**
@@ -206,38 +224,26 @@ function pinturaDe(a: AssentoPintado): Pintura {
   return { fill: CINZA, stroke: CONTORNO_NEUTRO };
 }
 
-/** Um bloco contíguo de cadeiras com a mesma pintura — vira um `<g>`. */
-interface Trecho {
-  cod: string | null;
-  sigla: string | null;
-  estado: EstadoAssento;
-  fill: string;
-  stroke: string;
-  inicio: number;
-  fim: number;
-}
-
-function trechosDe(fila: readonly AssentoPintado[]): Trecho[] {
-  const trechos: Trecho[] = [];
-  for (let i = 0; i < fila.length; i++) {
-    const a = fila[i] as AssentoPintado;
-    const ultimo = trechos[trechos.length - 1];
-    if (ultimo && ultimo.cod === a.cod && ultimo.estado === a.estado) {
-      ultimo.fim = i + 1;
-      continue;
-    }
-    const { fill, stroke } = pinturaDe(a);
-    trechos.push({
-      cod: a.cod,
-      sigla: a.sigla,
-      estado: a.estado,
-      fill,
-      stroke,
-      inicio: i,
-      fim: i + 1,
-    });
-  }
-  return trechos;
+/**
+ * Um `<g>` por bloco contíguo de cadeiras da mesma agremiação no mesmo estado.
+ * `data-cod`/`data-sigla` saem nessa ordem, depois de `data-estado` — é a
+ * ordem do markup retratado antes da extração.
+ */
+function trechosDe(fila: readonly AssentoPintado[]): TrechoHemiciclo[] {
+  return agruparEmTrechos(
+    fila,
+    (anterior, atual) => anterior.cod === atual.cod && anterior.estado === atual.estado,
+    (a, inicio) => {
+      const { fill, stroke } = pinturaDe(a);
+      return {
+        chave: `${a.estado}-${a.cod ?? "sem-dono"}-${inicio}`,
+        estado: a.estado,
+        fill,
+        stroke,
+        dados: { "data-cod": a.cod ?? undefined, "data-sigla": a.sigla ?? undefined },
+      };
+    },
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -273,9 +279,6 @@ export function CamaraHemiciclo({
   const indefinidas = fila.filter((a) => a.estado === "indefinida").length;
   const semDono = fila.filter((a) => a.estado === "nao_atribuida").length;
 
-  const tituloId = `${idPrefixo}-title`;
-  const descId = `${idPrefixo}-desc`;
-
   // Sem cadeira publicada não há desenho a fazer — e um plenário de tamanho
   // inventado para preencher o espaço seria número escrito à mão (§ D8).
   if (layout.total === 0) return null;
@@ -286,75 +289,46 @@ export function CamaraHemiciclo({
     .join(", ");
 
   return (
-    <figure className={className} data-testid="camara-hemiciclo" style={{ margin: 0, ...style }}>
-      <svg
-        role="img"
-        aria-labelledby={tituloId}
-        aria-describedby={[descId, descritoPorId].filter(Boolean).join(" ")}
-        viewBox={`0 0 ${layout.width} ${layout.height}`}
-        preserveAspectRatio="xMidYMid meet"
-        className="w-full h-auto"
-        data-total={layout.total}
-        data-arcos={layout.arcos}
-      >
-        <title
-          id={tituloId}
-        >{`Plenário de ${layout.total} cadeiras, uma bolinha por cadeira`}</title>
-        <desc id={descId}>
-          {`${porTamanho || "Nenhuma cadeira atribuída ainda"}.` +
-            (indefinidas > 0 ? ` ${indefinidas} cadeiras ainda indefinidas.` : "") +
-            (semDono > 0 ? ` ${semDono} cadeiras ainda sem dono.` : "") +
-            " A ordem das cadeiras repete a ordem da lista abaixo — maior bancada primeiro — e" +
-            " não representa posição ideológica."}
-        </desc>
-        {trechos.map((t) => (
-          <g
-            key={`${t.estado}-${t.cod ?? "sem-dono"}-${t.inicio}`}
-            data-estado={t.estado}
-            data-cod={t.cod ?? undefined}
-            data-sigla={t.sigla ?? undefined}
-            fill={t.fill}
-            stroke={t.stroke}
-            strokeWidth={layout.raioAssento * 0.42}
-          >
-            {layout.assentos.slice(t.inicio, t.fim).map((a) => (
-              <circle key={a.i} cx={a.cx} cy={a.cy} r={layout.raioAssento} />
-            ))}
-          </g>
-        ))}
-      </svg>
-
-      <figcaption
-        data-testid="camara-hemiciclo-legenda"
-        className="max-w-prose"
-        style={{
-          font: "var(--type-body-sm)",
-          fontSize: "var(--text-xs)",
-          color: "var(--text-muted)",
-          textWrap: "pretty",
-          marginTop: "var(--space-2)",
-        }}
-      >
-        Cada bolinha é uma cadeira, pintada pela agremiação que a está ganhando com os votos já
-        contados. As cadeiras estão na mesma ordem da lista abaixo — maior bancada primeiro —, que
-        não é posição ideológica.{" "}
-        {indefinidas > 0 ? (
-          <span data-testid="camara-hemiciclo-indefinidas">
-            {indefinidas === 1
-              ? "1 cadeira aparece cinza com anel colorido"
-              : `${indefinidas} cadeiras aparecem cinzas com anel colorido`}
-            : foram decididas em rodada de sobra, por margem apertada, e ainda podem mudar de mão.{" "}
-          </span>
-        ) : null}
-        {semDono > 0 ? (
-          <span data-testid="camara-hemiciclo-sem-dono">
-            {semDono === 1
-              ? "1 cadeira está cinza sem anel colorido"
-              : `${semDono} cadeiras estão cinzas sem anel colorido`}
-            : ainda não há apuração suficiente para dizer de quem são.
-          </span>
-        ) : null}
-      </figcaption>
-    </figure>
+    <Hemiciclo
+      layout={layout}
+      trechos={trechos}
+      titulo={`Plenário de ${layout.total} cadeiras, uma bolinha por cadeira`}
+      descricao={
+        `${porTamanho || "Nenhuma cadeira atribuída ainda"}.` +
+        (indefinidas > 0 ? ` ${indefinidas} cadeiras ainda indefinidas.` : "") +
+        (semDono > 0 ? ` ${semDono} cadeiras ainda sem dono.` : "") +
+        " A ordem das cadeiras repete a ordem da lista abaixo — maior bancada primeiro — e" +
+        " não representa posição ideológica."
+      }
+      descritoPorId={descritoPorId}
+      idPrefixo={idPrefixo}
+      testId="camara-hemiciclo"
+      legendaTestId="camara-hemiciclo-legenda"
+      className={className}
+      style={style}
+      legenda={
+        <>
+          Cada bolinha é uma cadeira, pintada pela agremiação que a está ganhando com os votos já
+          contados. As cadeiras estão na mesma ordem da lista abaixo — maior bancada primeiro —, que
+          não é posição ideológica.{" "}
+          {indefinidas > 0 ? (
+            <span data-testid="camara-hemiciclo-indefinidas">
+              {indefinidas === 1
+                ? "1 cadeira aparece cinza com anel colorido"
+                : `${indefinidas} cadeiras aparecem cinzas com anel colorido`}
+              : foram decididas em rodada de sobra, por margem apertada, e ainda podem mudar de mão.{" "}
+            </span>
+          ) : null}
+          {semDono > 0 ? (
+            <span data-testid="camara-hemiciclo-sem-dono">
+              {semDono === 1
+                ? "1 cadeira está cinza sem anel colorido"
+                : `${semDono} cadeiras estão cinzas sem anel colorido`}
+              : ainda não há apuração suficiente para dizer de quem são.
+            </span>
+          ) : null}
+        </>
+      }
+    />
   );
 }

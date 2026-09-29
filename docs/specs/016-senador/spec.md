@@ -85,9 +85,16 @@ os dois primeiros**, e a margem que interessa é a do **2º para o 3º**, não a
   recebe linha (`docs/reference/risks.md:78`).
 
 ### Fora
-- **As 27 vagas que não estão em disputa.** 2026 renova 2/3 do Senado; os
+- ~~**As 27 vagas que não estão em disputa.** 2026 renova 2/3 do Senado; os
   senadores eleitos em 2022 com mandato até 2031 não aparecem na apuração e não
-  devem aparecer como "eleitos" na tela.
+  devem aparecer como "eleitos" na tela.~~
+  > 🔴 **EMENDADO em 2026-09-29 pela [spec 023](../023-senado-2027/spec.md)
+  > (decisão do dono).** As 27 cadeiras que não estão em disputa **passam a
+  > aparecer** em `/senador`, no hemiciclo de 81 cadeiras (RF-216), com o partido
+  > atual de quem ocupa a cadeira hoje, suplente incluído (RF-215) — rotuladas
+  > "mandato até 2031 — não estão em disputa" e **nunca** como "eleitos" (RF-218).
+  > O que continua valendo desta linha: elas não entram na apuração, não entram
+  > na contagem das 54 (RF-107) e não são apresentadas como resultado de 2026.
 - **2º turno.** Não existe para este cargo.
 
 ## Requisitos Funcionais
@@ -287,3 +294,10 @@ O painel "Votação" (RF-192..199) **não entra** na tela nacional `/senador`. E
 ### Spec 022 — A corrida em três círculos (2026-09-26)
 
 O painel "A corrida" (RF-200..210) **não entra** na tela nacional `/senador`. Entra apenas em `/uf/[sigla]/senador` imediatamente depois do `<ResultPanel>`. Os três círculos ficam em "aguardando" (RF-210) até haver captura real de cargo 5 para medir como o TSE conta os dois votos por eleitor. O produtor já publica `corrida` (UF) para Senador; `corrida_por_partido` não é usado neste cargo.
+
+### Spec 023 — Senado de 2027 (2026-09-29)
+
+As 27 cadeiras com mandato até 2031 saem do "Fora" desta spec (ver a emenda no próprio item) e
+entram em `/senador` no hemiciclo de 81 cadeiras, logo depois do bloco "As 54 vagas em disputa"
+(RF-215..RF-218). A barra das 54 (RF-107) continua, agora pintada pela paleta de partido
+(`textForParty`), a mesma do hemiciclo, e não mais pela posição no ranking (RF-219, ADR-0024).

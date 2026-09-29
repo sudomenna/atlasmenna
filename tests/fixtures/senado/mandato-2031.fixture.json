@@ -1,0 +1,253 @@
+{
+  "fonte": "FICTÍCIO — fixture de teste da spec 023, NÃO é dado do Senado",
+  "fonte_url": "https://example.invalid/fixture-spec-023",
+  "consultado_em": "2026-09-29T14:00:00-03:00",
+  "versao_dataset": "fixture",
+  "senadores": [
+    {
+      "uf": "AC",
+      "codigo": "9001",
+      "nome_parlamentar": "Senador(a) de teste AC",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8001"
+    },
+    {
+      "uf": "AL",
+      "codigo": "9002",
+      "nome_parlamentar": "Senador(a) de teste AL",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8002"
+    },
+    {
+      "uf": "AM",
+      "codigo": "9003",
+      "nome_parlamentar": "Senador(a) de teste AM",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8003"
+    },
+    {
+      "uf": "AP",
+      "codigo": "9004",
+      "nome_parlamentar": "Senador(a) de teste AP",
+      "partido": "UNIÃO",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8004"
+    },
+    {
+      "uf": "BA",
+      "codigo": "9005",
+      "nome_parlamentar": "Senador(a) de teste BA",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8005"
+    },
+    {
+      "uf": "CE",
+      "codigo": "9006",
+      "nome_parlamentar": "Senador(a) de teste CE",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8006"
+    },
+    {
+      "uf": "DF",
+      "codigo": "9007",
+      "nome_parlamentar": "Senador(a) de teste DF",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8007"
+    },
+    {
+      "uf": "ES",
+      "codigo": "9008",
+      "nome_parlamentar": "Senador(a) de teste ES",
+      "partido": "PODE",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8008"
+    },
+    {
+      "uf": "GO",
+      "codigo": "9009",
+      "nome_parlamentar": "Senador(a) de teste GO",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8009"
+    },
+    {
+      "uf": "MA",
+      "codigo": "9010",
+      "nome_parlamentar": "Senador(a) de teste MA",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8010"
+    },
+    {
+      "uf": "MG",
+      "codigo": "9011",
+      "nome_parlamentar": "Senador(a) de teste MG",
+      "partido": "PSD",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Titular de teste MG",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8011"
+    },
+    {
+      "uf": "MS",
+      "codigo": "9012",
+      "nome_parlamentar": "Senador(a) de teste MS",
+      "partido": "PP",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8012"
+    },
+    {
+      "uf": "MT",
+      "codigo": "9013",
+      "nome_parlamentar": "Senador(a) de teste MT",
+      "partido": "UNIÃO",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8013"
+    },
+    {
+      "uf": "PA",
+      "codigo": "9014",
+      "nome_parlamentar": "Senador(a) de teste PA",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8014"
+    },
+    {
+      "uf": "PB",
+      "codigo": "9015",
+      "nome_parlamentar": "Senador(a) de teste PB",
+      "partido": "PSB",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8015"
+    },
+    {
+      "uf": "PE",
+      "codigo": "9016",
+      "nome_parlamentar": "Senador(a) de teste PE",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8016"
+    },
+    {
+      "uf": "PI",
+      "codigo": "9017",
+      "nome_parlamentar": "Senador(a) de teste PI",
+      "partido": "PP",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8017"
+    },
+    {
+      "uf": "PR",
+      "codigo": "9018",
+      "nome_parlamentar": "Senador(a) de teste PR",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8018"
+    },
+    {
+      "uf": "RJ",
+      "codigo": "9019",
+      "nome_parlamentar": "Senador(a) de teste RJ",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8019"
+    },
+    {
+      "uf": "RN",
+      "codigo": "9020",
+      "nome_parlamentar": "Senador(a) de teste RN",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8020"
+    },
+    {
+      "uf": "RO",
+      "codigo": "9021",
+      "nome_parlamentar": "Senador(a) de teste RO",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8021"
+    },
+    {
+      "uf": "RR",
+      "codigo": "9022",
+      "nome_parlamentar": "Senador(a) de teste RR",
+      "partido": "PP",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Titular de teste RR",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8022"
+    },
+    {
+      "uf": "RS",
+      "codigo": "9023",
+      "nome_parlamentar": "Senador(a) de teste RS",
+      "partido": "REPUBLICANOS",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8023"
+    },
+    {
+      "uf": "SC",
+      "codigo": "9024",
+      "nome_parlamentar": "Senador(a) de teste SC",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8024"
+    },
+    {
+      "uf": "SE",
+      "codigo": "9025",
+      "nome_parlamentar": "Senador(a) de teste SE",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8025"
+    },
+    {
+      "uf": "SP",
+      "codigo": "9026",
+      "nome_parlamentar": "Senador(a) de teste SP",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8026"
+    },
+    {
+      "uf": "TO",
+      "codigo": "9027",
+      "nome_parlamentar": "Senador(a) de teste TO",
+      "partido": "PSDB",
+      "participacao": "Titular",
+      "legislaturas": [57, 58],
+      "codigo_mandato": "8027"
+    }
+  ]
+}

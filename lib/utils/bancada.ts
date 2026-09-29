@@ -31,8 +31,15 @@ import type { EdgeAgremiacaoBancada } from "@/lib/edge-config/types";
  * (constituição § 2), não temos medida para isso, e um plenário ordenado por
  * espectro leria como informação uma coisa que não medimos. Ver o `<desc>` do
  * `<CamaraHemiciclo>`, que diz isso ao leitor de tela em texto.
+ *
+ * **Genérica desde 2026-09-29 (spec 023, design § D4).** O hemiciclo do Senado
+ * ordena os partidos pela MESMA regra — total de cadeiras desc → sigla asc —, e
+ * a função passou a aceitar qualquer linha com `cadeiras` e `sigla` em vez de
+ * uma segunda implementação. Corpo, regra e chamadores da Câmara: inalterados.
  */
-export function ordenarBancada(rows: readonly EdgeAgremiacaoBancada[]): EdgeAgremiacaoBancada[] {
+export function ordenarBancada<T extends Pick<EdgeAgremiacaoBancada, "cadeiras" | "sigla">>(
+  rows: readonly T[],
+): T[] {
   return [...rows].sort((a, b) => {
     if (b.cadeiras !== a.cadeiras) return b.cadeiras - a.cadeiras;
     return a.sigla.localeCompare(b.sigla, "pt-BR");

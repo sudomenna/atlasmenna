@@ -61,6 +61,7 @@ import { Panel } from "@/components/atoms/surfaces/Panel";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { GovernorCard } from "@/components/blocks/GovernorCard";
 import { RegiaoConsolidada } from "@/components/blocks/RegiaoConsolidada";
+import { SenadoHemicicloPanel } from "@/components/blocks/SenadoHemiciclo";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
@@ -70,7 +71,9 @@ import { agruparPorRegiao } from "@/lib/config/regioes";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload } from "@/lib/edge-config/types";
+import { MANDATO_2031 } from "@/lib/senado/mandato-2031";
 import { haAnulada, NOTA_ANULADAS_SEM_REGRA_1T } from "@/lib/utils/destino-voto";
+import { textForParty } from "@/lib/utils/party-color";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import senFixture from "@/tests/fixtures/edge-config/sen-current.json" with { type: "json" };
 
@@ -223,16 +226,17 @@ export default async function SenadoPage() {
   const composicao = payload.composicao_vagas;
 
   // Segmentos da barra de composição: cada partido ocupa a fração das vagas
-  // EM DISPUTA que a projeção lhe dá. Cor por posição na lista (ADR-0013 —
-  // paleta dinâmica por rank), nunca a cor oficial do partido
-  // (constituição § 2).
+  // EM DISPUTA que a projeção lhe dá. 🔴 RF-219 (spec 023, ADR-0061 item 5):
+  // cor do PARTIDO pela sigla (`textForParty`, ADR-0024), a mesma das bolinhas
+  // do hemiciclo de 81 logo abaixo — não mais a cor por posição na lista
+  // (ADR-0013, superado), que dava ao mesmo partido duas cores na página.
   const vagasEmDisputa = composicao?.vagas_em_disputa ?? 0;
   const segmentos: VoteBarSegment[] = composicao
-    ? composicao.por_partido.map((p, i) => ({
+    ? composicao.por_partido.map((p) => ({
         id: p.partido,
         label: p.partido,
         pct: vagasEmDisputa > 0 ? (p.vagas * 100) / vagasEmDisputa : 0,
-        color: `var(--color-cand-${Math.min(i + 1, 11)})`,
+        color: textForParty(p.partido),
       }))
     : [];
   const aguardando = composicao ? Math.max(0, vagasEmDisputa - composicao.vagas_projetadas) : 0;
@@ -420,6 +424,11 @@ export default async function SenadoPage() {
           </p>
         )}
       </Panel>
+
+      {/* Spec 023 (RF-215..RF-218, ADR-0061 item 3) — o Senado de 2027: as 54
+          em disputa somadas aos 27 mandatos até 2031. Some sozinho se a conta
+          não fechar com `composicao_vagas` (RF-217). */}
+      <SenadoHemicicloPanel payload={payload} mandato={MANDATO_2031} />
 
       {/* Seção 3 — as corridas, estado a estado. A margem de cada linha é a
           da 2ª vaga (RF-104): `top_candidatos[1].pct − top_candidatos[2].pct`.

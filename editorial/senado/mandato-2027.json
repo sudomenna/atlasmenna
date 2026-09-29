@@ -1,0 +1,501 @@
+{
+  "fonte": "Senado Federal — Dados Abertos",
+  "fonte_url": "https://legis.senado.leg.br/dadosabertos/senador/lista/atual.json",
+  "consultado_em": "2026-09-29T04:47:02Z",
+  "versao_dataset": "29/09/2026 01:46:55",
+  "senadores": [
+    {
+      "uf": "AC",
+      "codigo": "4560",
+      "nome_parlamentar": "Sérgio Petecão",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "520"
+    },
+    {
+      "uf": "AC",
+      "codigo": "285",
+      "nome_parlamentar": "Marcio Bittar",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "536"
+    },
+    {
+      "uf": "AL",
+      "codigo": "70",
+      "nome_parlamentar": "Renan Calheiros",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "527"
+    },
+    {
+      "uf": "AL",
+      "codigo": "5906",
+      "nome_parlamentar": "Dra. Eudócia",
+      "partido": "PSDB",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Rodrigo Cunha",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "537"
+    },
+    {
+      "uf": "AM",
+      "codigo": "4994",
+      "nome_parlamentar": "Eduardo Braga",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "521"
+    },
+    {
+      "uf": "AM",
+      "codigo": "5502",
+      "nome_parlamentar": "Plínio Valério",
+      "partido": "PSDB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "573"
+    },
+    {
+      "uf": "AP",
+      "codigo": "5012",
+      "nome_parlamentar": "Randolfe Rodrigues",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "522"
+    },
+    {
+      "uf": "AP",
+      "codigo": "5926",
+      "nome_parlamentar": "Lucas Barreto",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "543"
+    },
+    {
+      "uf": "BA",
+      "codigo": "5967",
+      "nome_parlamentar": "Angelo Coronel",
+      "partido": "REPUBLICANOS",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "554"
+    },
+    {
+      "uf": "BA",
+      "codigo": "581",
+      "nome_parlamentar": "Jaques Wagner",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "555"
+    },
+    {
+      "uf": "CE",
+      "codigo": "5973",
+      "nome_parlamentar": "Cid Gomes",
+      "partido": "PSB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "556"
+    },
+    {
+      "uf": "CE",
+      "codigo": "5974",
+      "nome_parlamentar": "Sargento Reginauro",
+      "partido": "PSDB",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Eduardo Girão",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "557"
+    },
+    {
+      "uf": "DF",
+      "codigo": "4770",
+      "nome_parlamentar": "Izalci Lucas",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "552"
+    },
+    {
+      "uf": "DF",
+      "codigo": "5979",
+      "nome_parlamentar": "Leila Barros",
+      "partido": "PDT",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "558"
+    },
+    {
+      "uf": "ES",
+      "codigo": "5942",
+      "nome_parlamentar": "Marcos do Val",
+      "partido": "AVANTE",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "547"
+    },
+    {
+      "uf": "ES",
+      "codigo": "5953",
+      "nome_parlamentar": "Fabiano Contarato",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "548"
+    },
+    {
+      "uf": "GO",
+      "codigo": "5895",
+      "nome_parlamentar": "Jorge Kajuru",
+      "partido": "PSB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "533"
+    },
+    {
+      "uf": "GO",
+      "codigo": "5899",
+      "nome_parlamentar": "Vanderlan Cardoso",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "538"
+    },
+    {
+      "uf": "MA",
+      "codigo": "5411",
+      "nome_parlamentar": "Weverton",
+      "partido": "PDT",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "529"
+    },
+    {
+      "uf": "MA",
+      "codigo": "5718",
+      "nome_parlamentar": "Eliziane Gama",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "542"
+    },
+    {
+      "uf": "MG",
+      "codigo": "5732",
+      "nome_parlamentar": "Rodrigo Pacheco",
+      "partido": "PSB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "562"
+    },
+    {
+      "uf": "MG",
+      "codigo": "5990",
+      "nome_parlamentar": "Carlos Viana",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "563"
+    },
+    {
+      "uf": "MS",
+      "codigo": "5985",
+      "nome_parlamentar": "Nelsinho Trad",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "560"
+    },
+    {
+      "uf": "MS",
+      "codigo": "5988",
+      "nome_parlamentar": "Soraya Thronicke",
+      "partido": "PSB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "561"
+    },
+    {
+      "uf": "MT",
+      "codigo": "4531",
+      "nome_parlamentar": "Jayme Campos",
+      "partido": "UNIÃO",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "553"
+    },
+    {
+      "uf": "MT",
+      "codigo": "6295",
+      "nome_parlamentar": "Carlos Fávaro",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "592"
+    },
+    {
+      "uf": "PA",
+      "codigo": "35",
+      "nome_parlamentar": "Jader Barbalho",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "528"
+    },
+    {
+      "uf": "PA",
+      "codigo": "3806",
+      "nome_parlamentar": "Zequinha Marinho",
+      "partido": "PODE",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "566"
+    },
+    {
+      "uf": "PB",
+      "codigo": "5748",
+      "nome_parlamentar": "Veneziano Vital do Rêgo",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "564"
+    },
+    {
+      "uf": "PB",
+      "codigo": "5998",
+      "nome_parlamentar": "Daniella Ribeiro",
+      "partido": "PP",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "565"
+    },
+    {
+      "uf": "PE",
+      "codigo": "5008",
+      "nome_parlamentar": "Humberto Costa",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "525"
+    },
+    {
+      "uf": "PE",
+      "codigo": "5917",
+      "nome_parlamentar": "Fernando Dueire",
+      "partido": "PSD",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Jarbas Vasconcelos",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "526"
+    },
+    {
+      "uf": "PI",
+      "codigo": "739",
+      "nome_parlamentar": "Ciro Nogueira",
+      "partido": "PP",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "524"
+    },
+    {
+      "uf": "PI",
+      "codigo": "742",
+      "nome_parlamentar": "Marcelo Castro",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "539"
+    },
+    {
+      "uf": "PR",
+      "codigo": "345",
+      "nome_parlamentar": "Flávio Arns",
+      "partido": "PSB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "540"
+    },
+    {
+      "uf": "PR",
+      "codigo": "5924",
+      "nome_parlamentar": "Oriovisto Guimarães",
+      "partido": "PSDB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "541"
+    },
+    {
+      "uf": "RJ",
+      "codigo": "5894",
+      "nome_parlamentar": "Flávio Bolsonaro",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "532"
+    },
+    {
+      "uf": "RJ",
+      "codigo": "5936",
+      "nome_parlamentar": "Carlos Portinho",
+      "partido": "PL",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Arolde de Oliveira",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "545"
+    },
+    {
+      "uf": "RN",
+      "codigo": "5959",
+      "nome_parlamentar": "Styvenson Valentim",
+      "partido": "PODE",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "550"
+    },
+    {
+      "uf": "RN",
+      "codigo": "5783",
+      "nome_parlamentar": "Zenaide Maia",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "551"
+    },
+    {
+      "uf": "RO",
+      "codigo": "475",
+      "nome_parlamentar": "Confúcio Moura",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "575"
+    },
+    {
+      "uf": "RO",
+      "codigo": "5422",
+      "nome_parlamentar": "Marcos Rogério",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "576"
+    },
+    {
+      "uf": "RR",
+      "codigo": "470",
+      "nome_parlamentar": "Chico Rodrigues",
+      "partido": "PSB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "577"
+    },
+    {
+      "uf": "RR",
+      "codigo": "6025",
+      "nome_parlamentar": "Roberta Acioly",
+      "partido": "REPUBLICANOS",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Mecias de Jesus",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "578"
+    },
+    {
+      "uf": "RS",
+      "codigo": "825",
+      "nome_parlamentar": "Paulo Paim",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "523"
+    },
+    {
+      "uf": "RS",
+      "codigo": "1186",
+      "nome_parlamentar": "Luis Carlos Heinze",
+      "partido": "PP",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "574"
+    },
+    {
+      "uf": "SC",
+      "codigo": "6010",
+      "nome_parlamentar": "Ivete da Silveira",
+      "partido": "MDB",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Jorginho Mello",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "571"
+    },
+    {
+      "uf": "SC",
+      "codigo": "22",
+      "nome_parlamentar": "Esperidião Amin",
+      "partido": "PP",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "572"
+    },
+    {
+      "uf": "SE",
+      "codigo": "5982",
+      "nome_parlamentar": "Alessandro Vieira",
+      "partido": "MDB",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "559"
+    },
+    {
+      "uf": "SE",
+      "codigo": "5352",
+      "nome_parlamentar": "Rogério Carvalho",
+      "partido": "PT",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "579"
+    },
+    {
+      "uf": "SP",
+      "codigo": "5376",
+      "nome_parlamentar": "Mara Gabrilli",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "569"
+    },
+    {
+      "uf": "SP",
+      "codigo": "6008",
+      "nome_parlamentar": "Giordano",
+      "partido": "PODE",
+      "participacao": "Suplente em exercício",
+      "titular_do_mandato": "Major Olimpio",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "570"
+    },
+    {
+      "uf": "TO",
+      "codigo": "5385",
+      "nome_parlamentar": "Irajá",
+      "partido": "PSD",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "567"
+    },
+    {
+      "uf": "TO",
+      "codigo": "3777",
+      "nome_parlamentar": "Eduardo Gomes",
+      "partido": "PL",
+      "participacao": "Titular",
+      "legislaturas": [56, 57],
+      "codigo_mandato": "568"
+    }
+  ]
+}

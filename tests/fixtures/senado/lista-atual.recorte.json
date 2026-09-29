@@ -1,0 +1,2084 @@
+{
+  "ListaParlamentarEmExercicio": {
+    "Metadados": {
+      "Versao": "29/09/2026 01:46:55",
+      "VersaoServico": "4",
+      "DataVersaoServico": "2020-07-15",
+      "DescricaoDataSet": "Lista dos Parlamentares que estão atualmente em Exercício. Informações atuais sobre o Parlamentar."
+    },
+    "Parlamentares": {
+      "Parlamentar": [
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5672",
+            "NomeParlamentar": "Alan Rick",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "REPUBLICANOS",
+            "UfParlamentar": "AC"
+          },
+          "Mandato": {
+            "CodigoMandato": "596",
+            "UfParlamentar": "AC",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5982",
+            "NomeParlamentar": "Alessandro Vieira",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "SE"
+          },
+          "Mandato": {
+            "CodigoMandato": "559",
+            "UfParlamentar": "SE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5967",
+            "NomeParlamentar": "Angelo Coronel",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "REPUBLICANOS",
+            "UfParlamentar": "BA"
+          },
+          "Mandato": {
+            "CodigoMandato": "554",
+            "UfParlamentar": "BA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6009",
+            "NomeParlamentar": "Astronauta Marcos Pontes",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "SP"
+          },
+          "Mandato": {
+            "CodigoMandato": "617",
+            "UfParlamentar": "SP",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "4639",
+            "NomeParlamentar": "Beto Faro",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "PA"
+          },
+          "Mandato": {
+            "CodigoMandato": "604",
+            "UfParlamentar": "PA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6336",
+            "NomeParlamentar": "Camilo Santana",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "CE"
+          },
+          "Mandato": {
+            "CodigoMandato": "598",
+            "UfParlamentar": "CE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6295",
+            "NomeParlamentar": "Carlos Fávaro",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "MT"
+          },
+          "Mandato": {
+            "CodigoMandato": "592",
+            "UfParlamentar": "MT",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5936",
+            "NomeParlamentar": "Carlos Portinho",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "RJ"
+          },
+          "Mandato": {
+            "CodigoMandato": "545",
+            "UfParlamentar": "RJ",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente",
+            "Titular": {
+              "DescricaoParticipacao": "Titular",
+              "CodigoParlamentar": "751",
+              "NomeParlamentar": "Arolde de Oliveira"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5990",
+            "NomeParlamentar": "Carlos Viana",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "MG"
+          },
+          "Mandato": {
+            "CodigoMandato": "563",
+            "UfParlamentar": "MG",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "470",
+            "NomeParlamentar": "Chico Rodrigues",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSB",
+            "UfParlamentar": "RR"
+          },
+          "Mandato": {
+            "CodigoMandato": "577",
+            "UfParlamentar": "RR",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5973",
+            "NomeParlamentar": "Cid Gomes",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSB",
+            "UfParlamentar": "CE"
+          },
+          "Mandato": {
+            "CodigoMandato": "556",
+            "UfParlamentar": "CE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "739",
+            "NomeParlamentar": "Ciro Nogueira",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PP",
+            "UfParlamentar": "PI"
+          },
+          "Mandato": {
+            "CodigoMandato": "524",
+            "UfParlamentar": "PI",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6337",
+            "NomeParlamentar": "Cleitinho",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "REPUBLICANOS",
+            "UfParlamentar": "MG"
+          },
+          "Mandato": {
+            "CodigoMandato": "603",
+            "UfParlamentar": "MG",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "475",
+            "NomeParlamentar": "Confúcio Moura",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "RO"
+          },
+          "Mandato": {
+            "CodigoMandato": "575",
+            "UfParlamentar": "RO",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6335",
+            "NomeParlamentar": "Damares Alves",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "REPUBLICANOS",
+            "UfParlamentar": "DF"
+          },
+          "Mandato": {
+            "CodigoMandato": "599",
+            "UfParlamentar": "DF",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5998",
+            "NomeParlamentar": "Daniella Ribeiro",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PP",
+            "UfParlamentar": "PB"
+          },
+          "Mandato": {
+            "CodigoMandato": "565",
+            "UfParlamentar": "PB",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "3830",
+            "NomeParlamentar": "Davi Alcolumbre",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "UNIÃO",
+            "UfParlamentar": "AP"
+          },
+          "Mandato": {
+            "CodigoMandato": "618",
+            "UfParlamentar": "AP",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5793",
+            "NomeParlamentar": "Dr. Hiran",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PP",
+            "UfParlamentar": "RR"
+          },
+          "Mandato": {
+            "CodigoMandato": "611",
+            "UfParlamentar": "RR",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5906",
+            "NomeParlamentar": "Dra. Eudócia",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSDB",
+            "UfParlamentar": "AL"
+          },
+          "Mandato": {
+            "CodigoMandato": "537",
+            "UfParlamentar": "AL",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente",
+            "Titular": {
+              "DescricaoParticipacao": "Titular",
+              "CodigoParlamentar": "5905",
+              "NomeParlamentar": "Rodrigo Cunha"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "4994",
+            "NomeParlamentar": "Eduardo Braga",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "AM"
+          },
+          "Mandato": {
+            "CodigoMandato": "521",
+            "UfParlamentar": "AM",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "3777",
+            "NomeParlamentar": "Eduardo Gomes",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "TO"
+          },
+          "Mandato": {
+            "CodigoMandato": "568",
+            "UfParlamentar": "TO",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "4642",
+            "NomeParlamentar": "Efraim Filho",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "PB"
+          },
+          "Mandato": {
+            "CodigoMandato": "605",
+            "UfParlamentar": "PB",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5718",
+            "NomeParlamentar": "Eliziane Gama",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "MA"
+          },
+          "Mandato": {
+            "CodigoMandato": "542",
+            "UfParlamentar": "MA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "22",
+            "NomeParlamentar": "Esperidião Amin",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PP",
+            "UfParlamentar": "SC"
+          },
+          "Mandato": {
+            "CodigoMandato": "572",
+            "UfParlamentar": "SC",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5953",
+            "NomeParlamentar": "Fabiano Contarato",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "ES"
+          },
+          "Mandato": {
+            "CodigoMandato": "548",
+            "UfParlamentar": "ES",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5917",
+            "NomeParlamentar": "Fernando Dueire",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "PE"
+          },
+          "Mandato": {
+            "CodigoMandato": "526",
+            "UfParlamentar": "PE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente",
+            "Titular": {
+              "DescricaoParticipacao": "Titular",
+              "CodigoParlamentar": "4545",
+              "NomeParlamentar": "Jarbas Vasconcelos"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "345",
+            "NomeParlamentar": "Flávio Arns",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSB",
+            "UfParlamentar": "PR"
+          },
+          "Mandato": {
+            "CodigoMandato": "540",
+            "UfParlamentar": "PR",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5894",
+            "NomeParlamentar": "Flávio Bolsonaro",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "RJ"
+          },
+          "Mandato": {
+            "CodigoMandato": "532",
+            "UfParlamentar": "RJ",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6008",
+            "NomeParlamentar": "Giordano",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PODE",
+            "UfParlamentar": "SP"
+          },
+          "Mandato": {
+            "CodigoMandato": "570",
+            "UfParlamentar": "SP",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente",
+            "Titular": {
+              "DescricaoParticipacao": "Titular",
+              "CodigoParlamentar": "5666",
+              "NomeParlamentar": "Major Olimpio"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6341",
+            "NomeParlamentar": "Hamilton Mourão",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "REPUBLICANOS",
+            "UfParlamentar": "RS"
+          },
+          "Mandato": {
+            "CodigoMandato": "612",
+            "UfParlamentar": "RS",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5008",
+            "NomeParlamentar": "Humberto Costa",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "PE"
+          },
+          "Mandato": {
+            "CodigoMandato": "525",
+            "UfParlamentar": "PE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5385",
+            "NomeParlamentar": "Irajá",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "TO"
+          },
+          "Mandato": {
+            "CodigoMandato": "567",
+            "UfParlamentar": "TO",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6010",
+            "NomeParlamentar": "Ivete da Silveira",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "SC"
+          },
+          "Mandato": {
+            "CodigoMandato": "571",
+            "UfParlamentar": "SC",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente",
+            "Titular": {
+              "DescricaoParticipacao": "Titular",
+              "CodigoParlamentar": "5350",
+              "NomeParlamentar": "Jorginho Mello"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "4770",
+            "NomeParlamentar": "Izalci Lucas",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "DF"
+          },
+          "Mandato": {
+            "CodigoMandato": "552",
+            "UfParlamentar": "DF",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "35",
+            "NomeParlamentar": "Jader Barbalho",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "PA"
+          },
+          "Mandato": {
+            "CodigoMandato": "528",
+            "UfParlamentar": "PA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6340",
+            "NomeParlamentar": "Jaime Bagattoli",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "RO"
+          },
+          "Mandato": {
+            "CodigoMandato": "610",
+            "UfParlamentar": "RO",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "581",
+            "NomeParlamentar": "Jaques Wagner",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "BA"
+          },
+          "Mandato": {
+            "CodigoMandato": "555",
+            "UfParlamentar": "BA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "4531",
+            "NomeParlamentar": "Jayme Campos",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "UNIÃO",
+            "UfParlamentar": "MT"
+          },
+          "Mandato": {
+            "CodigoMandato": "553",
+            "UfParlamentar": "MT",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5895",
+            "NomeParlamentar": "Jorge Kajuru",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSB",
+            "UfParlamentar": "GO"
+          },
+          "Mandato": {
+            "CodigoMandato": "533",
+            "UfParlamentar": "GO",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6342",
+            "NomeParlamentar": "Jorge Seif",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "SC"
+          },
+          "Mandato": {
+            "CodigoMandato": "613",
+            "UfParlamentar": "SC",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6369",
+            "NomeParlamentar": "Jussara Lima",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "PI"
+          },
+          "Mandato": {
+            "CodigoMandato": "607",
+            "UfParlamentar": "PI",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente",
+            "Titular": {
+              "DescricaoParticipacao": "Titular",
+              "CodigoParlamentar": "5016",
+              "NomeParlamentar": "Wellington Dias"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "4811",
+            "NomeParlamentar": "Laércio Oliveira",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PP",
+            "UfParlamentar": "SE"
+          },
+          "Mandato": {
+            "CodigoMandato": "614",
+            "UfParlamentar": "SE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5979",
+            "NomeParlamentar": "Leila Barros",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PDT",
+            "UfParlamentar": "DF"
+          },
+          "Mandato": {
+            "CodigoMandato": "558",
+            "UfParlamentar": "DF",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6359",
+            "NomeParlamentar": "Lourdinha Pereira",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSB",
+            "UfParlamentar": "MA"
+          },
+          "Mandato": {
+            "CodigoMandato": "602",
+            "UfParlamentar": "MA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "2º Suplente",
+            "Titular": {
+              "DescricaoParticipacao": "Titular",
+              "CodigoParlamentar": "4605",
+              "NomeParlamentar": "Flávio Dino"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5926",
+            "NomeParlamentar": "Lucas Barreto",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "AP"
+          },
+          "Mandato": {
+            "CodigoMandato": "543",
+            "UfParlamentar": "AP",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "1186",
+            "NomeParlamentar": "Luis Carlos Heinze",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PP",
+            "UfParlamentar": "RS"
+          },
+          "Mandato": {
+            "CodigoMandato": "574",
+            "UfParlamentar": "RS",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "631",
+            "NomeParlamentar": "Magno Malta",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "ES"
+          },
+          "Mandato": {
+            "CodigoMandato": "600",
+            "UfParlamentar": "ES",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5376",
+            "NomeParlamentar": "Mara Gabrilli",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "SP"
+          },
+          "Mandato": {
+            "CodigoMandato": "569",
+            "UfParlamentar": "SP",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "742",
+            "NomeParlamentar": "Marcelo Castro",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "PI"
+          },
+          "Mandato": {
+            "CodigoMandato": "539",
+            "UfParlamentar": "PI",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "285",
+            "NomeParlamentar": "Marcio Bittar",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "AC"
+          },
+          "Mandato": {
+            "CodigoMandato": "536",
+            "UfParlamentar": "AC",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5422",
+            "NomeParlamentar": "Marcos Rogério",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "RO"
+          },
+          "Mandato": {
+            "CodigoMandato": "576",
+            "UfParlamentar": "RO",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5942",
+            "NomeParlamentar": "Marcos do Val",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "AVANTE",
+            "UfParlamentar": "ES"
+          },
+          "Mandato": {
+            "CodigoMandato": "547",
+            "UfParlamentar": "ES",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5985",
+            "NomeParlamentar": "Nelsinho Trad",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "MS"
+          },
+          "Mandato": {
+            "CodigoMandato": "560",
+            "UfParlamentar": "MS",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5525",
+            "NomeParlamentar": "Omar Aziz",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "AM"
+          },
+          "Mandato": {
+            "CodigoMandato": "619",
+            "UfParlamentar": "AM",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5924",
+            "NomeParlamentar": "Oriovisto Guimarães",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSDB",
+            "UfParlamentar": "PR"
+          },
+          "Mandato": {
+            "CodigoMandato": "541",
+            "UfParlamentar": "PR",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5523",
+            "NomeParlamentar": "Otto Alencar",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "BA"
+          },
+          "Mandato": {
+            "CodigoMandato": "622",
+            "UfParlamentar": "BA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "825",
+            "NomeParlamentar": "Paulo Paim",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "RS"
+          },
+          "Mandato": {
+            "CodigoMandato": "523",
+            "UfParlamentar": "RS",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5502",
+            "NomeParlamentar": "Plínio Valério",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSDB",
+            "UfParlamentar": "AM"
+          },
+          "Mandato": {
+            "CodigoMandato": "573",
+            "UfParlamentar": "AM",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5386",
+            "NomeParlamentar": "Professora Dorinha Seabra",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "UNIÃO",
+            "UfParlamentar": "TO"
+          },
+          "Mandato": {
+            "CodigoMandato": "615",
+            "UfParlamentar": "TO",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5012",
+            "NomeParlamentar": "Randolfe Rodrigues",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "AP"
+          },
+          "Mandato": {
+            "CodigoMandato": "522",
+            "UfParlamentar": "AP",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "70",
+            "NomeParlamentar": "Renan Calheiros",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "AL"
+          },
+          "Mandato": {
+            "CodigoMandato": "527",
+            "UfParlamentar": "AL",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5207",
+            "NomeParlamentar": "Renan Filho",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "AL"
+          },
+          "Mandato": {
+            "CodigoMandato": "597",
+            "UfParlamentar": "AL",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6025",
+            "NomeParlamentar": "Roberta Acioly",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "REPUBLICANOS",
+            "UfParlamentar": "RR"
+          },
+          "Mandato": {
+            "CodigoMandato": "578",
+            "UfParlamentar": "RR",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente",
+            "Titular": {
+              "DescricaoParticipacao": "Titular",
+              "CodigoParlamentar": "6027",
+              "NomeParlamentar": "Mecias de Jesus"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5732",
+            "NomeParlamentar": "Rodrigo Pacheco",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSB",
+            "UfParlamentar": "MG"
+          },
+          "Mandato": {
+            "CodigoMandato": "562",
+            "UfParlamentar": "MG",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "4694",
+            "NomeParlamentar": "Rogerio Marinho",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "RN"
+          },
+          "Mandato": {
+            "CodigoMandato": "616",
+            "UfParlamentar": "RN",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5352",
+            "NomeParlamentar": "Rogério Carvalho",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "SE"
+          },
+          "Mandato": {
+            "CodigoMandato": "579",
+            "UfParlamentar": "SE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5322",
+            "NomeParlamentar": "Romário",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "S/Partido",
+            "UfParlamentar": "RJ"
+          },
+          "Mandato": {
+            "CodigoMandato": "620",
+            "UfParlamentar": "RJ",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5974",
+            "NomeParlamentar": "Sargento Reginauro",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSDB",
+            "UfParlamentar": "CE"
+          },
+          "Mandato": {
+            "CodigoMandato": "557",
+            "UfParlamentar": "CE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "1º Suplente",
+            "Titular": {
+              "DescricaoParticipacao": "Titular",
+              "CodigoParlamentar": "5976",
+              "NomeParlamentar": "Eduardo Girão"
+            }
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6331",
+            "NomeParlamentar": "Sergio Moro",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "PR"
+          },
+          "Mandato": {
+            "CodigoMandato": "608",
+            "UfParlamentar": "PR",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5988",
+            "NomeParlamentar": "Soraya Thronicke",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSB",
+            "UfParlamentar": "MS"
+          },
+          "Mandato": {
+            "CodigoMandato": "561",
+            "UfParlamentar": "MS",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5959",
+            "NomeParlamentar": "Styvenson Valentim",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PODE",
+            "UfParlamentar": "RN"
+          },
+          "Mandato": {
+            "CodigoMandato": "550",
+            "UfParlamentar": "RN",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "4560",
+            "NomeParlamentar": "Sérgio Petecão",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "AC"
+          },
+          "Mandato": {
+            "CodigoMandato": "520",
+            "UfParlamentar": "AC",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "6338",
+            "NomeParlamentar": "Teresa Leitão",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PT",
+            "UfParlamentar": "PE"
+          },
+          "Mandato": {
+            "CodigoMandato": "606",
+            "UfParlamentar": "PE",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5736",
+            "NomeParlamentar": "Tereza Cristina",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PP",
+            "UfParlamentar": "MS"
+          },
+          "Mandato": {
+            "CodigoMandato": "595",
+            "UfParlamentar": "MS",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5899",
+            "NomeParlamentar": "Vanderlan Cardoso",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "GO"
+          },
+          "Mandato": {
+            "CodigoMandato": "538",
+            "UfParlamentar": "GO",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5748",
+            "NomeParlamentar": "Veneziano Vital do Rêgo",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "MDB",
+            "UfParlamentar": "PB"
+          },
+          "Mandato": {
+            "CodigoMandato": "564",
+            "UfParlamentar": "PB",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "1173",
+            "NomeParlamentar": "Wellington Fagundes",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "MT"
+          },
+          "Mandato": {
+            "CodigoMandato": "621",
+            "UfParlamentar": "MT",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5411",
+            "NomeParlamentar": "Weverton",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PDT",
+            "UfParlamentar": "MA"
+          },
+          "Mandato": {
+            "CodigoMandato": "529",
+            "UfParlamentar": "MA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5070",
+            "NomeParlamentar": "Wilder Morais",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PL",
+            "UfParlamentar": "GO"
+          },
+          "Mandato": {
+            "CodigoMandato": "601",
+            "UfParlamentar": "GO",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "58",
+              "DataInicio": "2027-02-01",
+              "DataFim": "2031-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "5783",
+            "NomeParlamentar": "Zenaide Maia",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PSD",
+            "UfParlamentar": "RN"
+          },
+          "Mandato": {
+            "CodigoMandato": "551",
+            "UfParlamentar": "RN",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        },
+        {
+          "IdentificacaoParlamentar": {
+            "CodigoParlamentar": "3806",
+            "NomeParlamentar": "Zequinha Marinho",
+            "NomeCompletoParlamentar": "NOME CIVIL SUBSTITUÍDO NO RECORTE — NÃO PODE IR PARA A FOTO",
+            "EmailParlamentar": "nao-gravar@example.invalid",
+            "SiglaPartidoParlamentar": "PODE",
+            "UfParlamentar": "PA"
+          },
+          "Mandato": {
+            "CodigoMandato": "566",
+            "UfParlamentar": "PA",
+            "PrimeiraLegislaturaDoMandato": {
+              "NumeroLegislatura": "56",
+              "DataInicio": "2019-02-01",
+              "DataFim": "2023-01-31"
+            },
+            "SegundaLegislaturaDoMandato": {
+              "NumeroLegislatura": "57",
+              "DataInicio": "2023-02-01",
+              "DataFim": "2027-01-31"
+            },
+            "DescricaoParticipacao": "Titular"
+          }
+        }
+      ]
+    }
+  }
+}

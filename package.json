@@ -45,6 +45,7 @@
     "replay-2022:sensitivity": "tsx scripts/replay-sensitivity.ts",
     "gen:party-scale": "tsx scripts/gen-party-scale.ts",
     "gen:uf-flags": "tsx scripts/gen-uf-flags.ts",
+    "senado:snapshot": "tsx data-pipeline/senado-mandatos-snapshot.ts",
     "verify-fatia-premise": "tsx scripts/verify-fatia-premise.ts",
     "vigia:ciclo": "tsx scripts/vigia-ciclo.ts",
     "vigia:armado": "tsx scripts/vigia-armado.ts",
