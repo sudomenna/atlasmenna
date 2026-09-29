@@ -46,12 +46,13 @@ import {
   deprecatedColonCurrentProjectionKey,
   deprecatedColonLegacyUfAliasKey,
   deprecatedColonUfProjectionKey,
+  interruptorProjecaoDepKey,
   LEGACY_CURRENT_ALIAS_KEY,
   legacyUfAliasKey,
   ufProjectionKey,
 } from "@/lib/edge-config/keys";
 import type { EdgePayload, EdgePayloadDeputado, EdgePayloadUf } from "@/lib/edge-config/types";
-import { logError } from "@/lib/tse/log";
+import { logError, logWarn } from "@/lib/tse/log";
 
 /**
  * Os cargos cujo payload **é** um `EdgePayload` — isto é, os majoritários.
@@ -470,4 +471,179 @@ export async function readDeputadoProjection(): Promise<EdgePayloadDeputado | nu
     cargo: "dep",
     turno: 1,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Interruptor da projeção de Deputado Federal — spec 026 RF-265, ADR-0063 D4
+// ---------------------------------------------------------------------------
+
+/**
+ * A trava da projeção em % apurado — o piso que o interruptor NÃO consegue
+ * baixar (ADR-0063 D4: "o piso de 25% é decisão do dono e só muda por ADR").
+ * Espelho TypeScript da constante do modelo Python; a trava que libera a
+ * projeção é a do modelo, esta só valida o `pct_minimo` da chave.
+ */
+export const TRAVA_PROJECAO_DEP_PCT = 25;
+
+/**
+ * De onde veio o estado do interruptor. Vai para o operador (`pnpm
+ * dep:projecao`, logs) e para o motivo que a tela mostra.
+ *
+ *   - `chave`    — a chave existe e tem forma válida;
+ *   - `ausente`  — a chave não existe (ou não há Global Config configurado);
+ *   - `invalida` — a chave existe com valor de forma inesperada;
+ *   - `falha`    — a leitura lançou.
+ *
+ * É daqui — e não de `projecao.motivo`, cujo conjunto é fechado (design 026
+ * § 2.7) — que a tela tira "desligada" (`chave`/`ausente`) × "não foi possível
+ * ler o interruptor" (`invalida`/`falha`), a distinção que o ADR-0063 D4 exige.
+ */
+export type OrigemInterruptor = "chave" | "ausente" | "invalida" | "falha";
+
+/**
+ * O interruptor como a TELA o vê. Sem `em`/`por`, de propósito: são de
+ * auditoria (ADR-0063 D4) e não podem nem chegar perto de um componente que
+ * os serializasse no HTML.
+ */
+export interface InterruptorProjecaoLido {
+  /** `true` só com `origem: "chave"`. */
+  ligada: boolean;
+  /** A trava em vigor: a da chave (25–100) ou, sem ela, {@link TRAVA_PROJECAO_DEP_PCT}. */
+  pct_minimo: number;
+  origem: OrigemInterruptor;
+  /** A chave trazia um `pct_minimo` que foi IGNORADO (< 25 ou inválido). */
+  pct_minimo_ignorado?: true;
+}
+
+/**
+ * Interpreta o resultado de uma leitura da chave `interruptor-projecao-dep`.
+ * Pura — é a regra inteira, e o script `pnpm dep:projecao` e o modo simulado a
+ * reusam para dizer ao operador o mesmo que a tela vai fazer.
+ *
+ * 🔴 **Falha fechada nos DOIS sentidos** (ADR-0063 D4): só uma leitura
+ * bem-sucedida com `ligada === true` liga. Chave AUSENTE desliga; leitura com
+ * FALHA desliga; valor INVÁLIDO (não-objeto — inclusive `false`/`null`/`true`
+ * crus —, ou `ligada` que não é booleano) desliga. "Começa ligada" é o passo
+ * de 03/10 que grava `{ligada: true}` (`pnpm dep:projecao --ligar
+ * --confirmar`), não um default daqui: um default ligado faria o "desligar"
+ * gravado no store errado deixar a produção ligada com cara de desligada.
+ *
+ * `origem` separa "desligada pela operação" (`chave`/`ausente`) de "não foi
+ * possível ler" (`invalida`/`falha`) — a tela diz coisas diferentes.
+ *
+ * `pct_minimo` só SOBE a trava: entre 25 e 100 vale; abaixo de 25, acima de
+ * 100 ou não-numérico é IGNORADO (`pct_minimo_ignorado`, e vale 25) sem mexer
+ * em `ligada` — ADR-0063 D4, "ignorado, com log". ⚠️ O design 026 § 2.10 diz
+ * "fora disso a chave é INVÁLIDA (⇒ desligada)"; o ADR vence o design, e a
+ * divergência está registrada no relatório da frente T. `em`/`por` não saem
+ * daqui.
+ */
+export function interpretarInterruptor(leitura: LeituraEdge<unknown>): InterruptorProjecaoLido {
+  const piso = TRAVA_PROJECAO_DEP_PCT;
+  if (leitura.estado === "ausente") return { ligada: false, pct_minimo: piso, origem: "ausente" };
+  if (leitura.estado === "falha") return { ligada: false, pct_minimo: piso, origem: "falha" };
+
+  const v = leitura.valor;
+  if (typeof v !== "object" || v === null || Array.isArray(v)) {
+    return { ligada: false, pct_minimo: piso, origem: "invalida" };
+  }
+  const bruto = v as Record<string, unknown>;
+  if (typeof bruto.ligada !== "boolean") {
+    return { ligada: false, pct_minimo: piso, origem: "invalida" };
+  }
+
+  const saida: InterruptorProjecaoLido = {
+    ligada: bruto.ligada,
+    pct_minimo: piso,
+    origem: "chave",
+  };
+  if (bruto.pct_minimo !== undefined) {
+    const pct = bruto.pct_minimo;
+    if (
+      typeof pct === "number" &&
+      Number.isFinite(pct) &&
+      pct >= TRAVA_PROJECAO_DEP_PCT &&
+      pct <= 100
+    ) {
+      saida.pct_minimo = pct;
+    } else {
+      saida.pct_minimo_ignorado = true;
+    }
+  }
+  return saida;
+}
+
+/** Avisos de uma vez por processo — o read path roda uma vez por leitor. */
+const avisosDoInterruptor = new Set<string>();
+
+function avisarUmaVez(chave: string, emitir: () => void): void {
+  if (avisosDoInterruptor.has(chave)) return;
+  avisosDoInterruptor.add(chave);
+  emitir();
+}
+
+/** Só para os testes: zera os avisos de uma vez por processo. */
+export function _reiniciarAvisosDoInterruptor(): void {
+  avisosDoInterruptor.clear();
+}
+
+/**
+ * Lê o interruptor da projeção de Deputado Federal (chave
+ * `interruptor-projecao-dep`). Regra em {@link interpretarInterruptor}: só
+ * `ligada === true` lido com sucesso liga; tudo o mais desliga.
+ *
+ * **Nunca lança.** Chamada a cada render das telas de Deputado e pela rota da
+ * lista 61+ — é o que faz "desligar" valer em até ~60 s mesmo com o objeto do
+ * Blob ainda carregando as marcas do ciclo anterior (ver
+ * `aplicarInterruptorProjecao`, `lib/blob/deputado-uf.ts`).
+ *
+ * Log: `falha`/`invalida` ⇒ `logError` a cada leitura (é alarme: a projeção
+ * sumiu sem ninguém decidir); `ausente` e `pct_minimo` ignorado ⇒ `logWarn`
+ * uma vez por processo (estado conhecido antes da virada; repetir por leitor
+ * seria ruído).
+ *
+ * ⚠️ Não usa `getFirst`, de propósito: `getFirst` trata valor falsy como "não
+ * existe" (`if (value)`). Aqui só `undefined` é ausência — um `false` cru
+ * gravado à mão no painel é INVÁLIDO, e o operador precisa ver isso.
+ */
+export async function readInterruptorProjecao(): Promise<InterruptorProjecaoLido> {
+  if (!process.env.EDGE_CONFIG) return interpretarInterruptor({ estado: "ausente" });
+
+  let leitura: LeituraEdge<unknown>;
+  try {
+    const valor = await get<unknown>(interruptorProjecaoDepKey());
+    leitura = valor === undefined ? { estado: "ausente" } : { estado: "ok", valor };
+  } catch (erro) {
+    leitura = { estado: "falha", erro };
+  }
+
+  const lido = interpretarInterruptor(leitura);
+  if (leitura.estado === "falha") {
+    logError("global-config read failed", {
+      fn: "readInterruptorProjecao",
+      efeito: "projeção de Deputado DESLIGADA (falha fechada, ADR-0063)",
+      erro: leitura.erro instanceof Error ? leitura.erro.message : String(leitura.erro),
+    });
+  } else if (lido.origem === "invalida") {
+    logError("interruptor-projecao-dep inválido — projeção de Deputado DESLIGADA", {
+      fn: "readInterruptorProjecao",
+      valor: String(JSON.stringify(leitura.estado === "ok" ? leitura.valor : null)).slice(0, 200),
+    });
+  } else if (lido.origem === "ausente") {
+    avisarUmaVez("ausente", () =>
+      logWarn("interruptor-projecao-dep ausente — projeção de Deputado DESLIGADA", {
+        fn: "readInterruptorProjecao",
+        comoLigar: "pnpm dep:projecao --ligar --confirmar (passo da virada, 03/10)",
+      }),
+    );
+  }
+  if (lido.pct_minimo_ignorado) {
+    avisarUmaVez("pct_minimo", () =>
+      logWarn("interruptor-projecao-dep: pct_minimo ignorado (só sobe a trava, 25–100)", {
+        fn: "readInterruptorProjecao",
+        piso: TRAVA_PROJECAO_DEP_PCT,
+      }),
+    );
+  }
+  return lido;
 }

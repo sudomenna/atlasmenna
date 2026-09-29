@@ -63,7 +63,7 @@
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-import type { DeputadoUfDetail } from "@/lib/blob/deputado-uf";
+import type { DeputadoUfDetail, DeputadoUfLista } from "@/lib/blob/deputado-uf";
 import type { UfDetailBlob } from "@/lib/blob/uf-detail";
 // ⚠️ `Cargo` daqui, e NÃO de `@/lib/edge-config/types`. Existem dois tipos com
 // este nome exato: o de `calendar` é a união de strings (`"pres" | "gov" | …`),
@@ -446,6 +446,31 @@ export function simulacaoUfPresidente(sigla: string): EdgePayloadUf | null {
 /** Detalhe de UF de Deputado Federal (`/uf/[sigla]/deputado-federal`). */
 export function simulacaoDeputadoUf(sigla: string): DeputadoUfDetail | null {
   return servirDoMapa<DeputadoUfDetail>("deputado-uf.json", sigla);
+}
+
+/**
+ * Lista 61+ de Deputado Federal (`/uf/[sigla]/deputado-federal/lista`, spec
+ * 026). `null` enquanto o gerador não emitir `deputado-uf-lista.json` — a rota
+ * então responde lista vazia, nunca a do Blob remoto.
+ */
+export function simulacaoDeputadoUfLista(sigla: string): DeputadoUfLista | null {
+  return servirDoMapa<DeputadoUfLista>("deputado-uf-lista.json", sigla);
+}
+
+/**
+ * O VALOR bruto do interruptor da projeção no modo simulado
+ * (`interruptor-projecao-dep.json`), ou `undefined` sem o arquivo — que é a
+ * chave ausente, e portanto DESLIGADA (falha fechada, ADR-0063 D4;
+ * `interpretarInterruptor`, `lib/edge-config/reader.ts`). Para revisar a tela
+ * com a projeção, o arquivo precisa dizer `{"ligada": true}`; para revisá-la
+ * desligada, `{"ligada": false}` ou nenhum arquivo.
+ *
+ * Não passa pelo relógio: não é resultado eleitoral, é decisão de operador.
+ */
+export function simulacaoInterruptorProjecao(): unknown {
+  if (!varianteAtiva()) return undefined;
+  const valor = lerArquivo("interruptor-projecao-dep.json");
+  return valor === null ? undefined : valor;
 }
 
 /**

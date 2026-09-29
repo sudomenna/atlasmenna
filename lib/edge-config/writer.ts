@@ -94,8 +94,17 @@
  *     ausente). Exceção final agrega o que falhou.
  */
 
-import type { DeputadoUfDetail } from "@/lib/blob/deputado-uf";
-import { deputadoUfBlobPathname, ufDetailBlobPathname } from "@/lib/blob/paths";
+import {
+  agremiacoesDaListaRestante,
+  type DeputadoUfDetail,
+  type DeputadoUfDetailComTransporte,
+  type DeputadoUfLista,
+} from "@/lib/blob/deputado-uf";
+import {
+  deputadoUfBlobPathname,
+  deputadoUfListaBlobPathname,
+  ufDetailBlobPathname,
+} from "@/lib/blob/paths";
 import { splitUfPayload, type UfDetailBlob } from "@/lib/blob/uf-detail";
 import { putJson } from "@/lib/blob/write";
 import type { Cargo, Turno } from "@/lib/config/calendar";
@@ -1260,7 +1269,7 @@ async function writeUfDetails(details: readonly UfDetailBlob[]): Promise<BlobWri
  */
 export async function writeDeputadoProjection(
   payload: EdgePayloadDeputado,
-  detalhes?: Record<string, DeputadoUfDetail>,
+  detalhes?: Record<string, DeputadoUfDetailComTransporte>,
 ): Promise<void> {
   // Turno único (`temSegundoTurno: false`): a chave é sempre `-t1`. Não sai
   // de `payload.turno` para que um payload malformado com `turno: 2` não
@@ -1330,13 +1339,82 @@ export async function writeDeputadoProjection(
     blobSkipped: blob.skipped,
     blobFailed: blob.failures.length,
     blobBytes: blob.bytes,
+    listasWritten: blob.listas.written,
+    listasBytes: blob.listas.bytes,
   });
 }
 
+/** Sumário da escrita de Deputado: o dos objetos de UF + o das listas 61+. */
+interface DeputadoBlobWriteSummary extends BlobWriteSummary {
+  listas: { written: number; skipped: number; bytes: number };
+}
+
 /**
- * Publica o detalhe de cada UF de Deputado Federal no Blob — best-effort e em
- * paralelo, a mesma política por chave do Global Config: uma UF com problema
- * transitório não cancela as outras 26.
+ * Separa o campo de TRANSPORTE `lista_restante` do objeto da UF (spec 026,
+ * ADR-0065 D4, design § 2.5).
+ *
+ * O Python manda as linhas 61+ dentro de `payloads_uf[UF]` porque o corpo da
+ * rota de escrita descarta chave nova no topo; elas não pertencem ao objeto da
+ * UF — que a página baixa inteiro no primeiro render —, e sim ao objeto de
+ * lista, que só é pedido no clique. `detalhe` sai SEM a chave, e a separação é
+ * feita aqui, num lugar só, antes de qualquer gravação.
+ *
+ * `lista: null` — nada a gravar — em três casos: produtor v1 (sem o campo),
+ * campo malformado (com `warn`), e lista sem NENHUMA linha (design § 2.5:
+ * "grava só se houver ao menos uma linha"; o objeto da UF então não traz
+ * `lista`, e a tela não oferece o botão).
+ */
+export function separarListaRestante(
+  bruto: DeputadoUfDetailComTransporte,
+  carimbo: string,
+): { detalhe: DeputadoUfDetail; lista: DeputadoUfLista | null } {
+  const { lista_restante, ...detalhe } = bruto;
+  const uf = bruto.uf.toUpperCase();
+  const agremiacoes = agremiacoesDaListaRestante(lista_restante);
+  if (lista_restante !== undefined && agremiacoes === null) {
+    logWarn("blob deputado uf-lista: lista_restante malformada — lista NÃO gravada neste ciclo", {
+      uf,
+    });
+  }
+  const temLinha = agremiacoes?.some((a) => a.candidatos.length > 0) ?? false;
+  return {
+    detalhe: { ...detalhe, ts: carimbo, uf },
+    lista:
+      agremiacoes !== null && temLinha
+        ? { ts: carimbo, cargo: 6, turno: 1, contrato: 2, uf, agremiacoes }
+        : null,
+  };
+}
+
+/** Resultado da gravação de UM objeto — para o sumário. */
+type GravacaoBlob =
+  | { key: string; lista: boolean; ok: true; status: "written" | "skipped"; bytes: number }
+  | { key: string; lista: boolean; ok: false; message: string };
+
+async function gravarObjeto(key: string, lista: boolean, gravar: () => ReturnType<typeof putJson>) {
+  try {
+    const r = await gravar();
+    return {
+      key,
+      lista,
+      ok: true,
+      status: r.status,
+      bytes: r.bytes,
+    } as const satisfies GravacaoBlob;
+  } catch (err) {
+    return {
+      key,
+      lista,
+      ok: false,
+      message: err instanceof Error ? err.message : String(err),
+    } as const satisfies GravacaoBlob;
+  }
+}
+
+/**
+ * Publica o detalhe de cada UF de Deputado Federal no Blob — best-effort, UFs
+ * em paralelo, a mesma política por chave do Global Config: uma UF com
+ * problema transitório não cancela as outras 26.
  *
  * **Nunca lança.** Falhas voltam no sumário e são logadas como `error`.
  *
@@ -1344,46 +1422,82 @@ export async function writeDeputadoProjection(
  * herdado do payload nacional — mesma decisão (e mesma razão) de
  * `splitUfPayload`: as duas escritas não são atômicas entre si, um ciclo pode
  * publicar o resumo e falhar o detalhe, e a UI precisa poder datar os dois
- * separadamente. Um `ts` comum aos dois esconderia justamente a divergência
- * que ele deveria revelar.
+ * separadamente. O objeto de lista leva o MESMO carimbo do objeto da UF.
  *
- * Volume por ciclo: até 27 `put()`, a cada **30 minutos** — a volta completa
- * das 6 fatias do cron do cargo (ADR-0036, 13/09; era 15 min quando isto foi
- * escrito, com a ingestão em granularidade UF).
+ * **Dentro de uma UF, a lista vai ANTES** (design 026 § 2.5): quem lê
+ * `lista.restantes > 0` no objeto da UF nunca encontra uma lista mais velha
+ * que ele. Se a lista falhar, o objeto da UF é gravado mesmo assim — o resumo
+ * vale mais —, e a falha vira `error` no log; as duas peças então divergem por
+ * um ciclo, e a tela mostra a hora de cada uma (ADR-0065 D4).
+ *
+ * Volume por ciclo: até 27 `put()` de UF, a cada **30 minutos** — a volta
+ * completa das 6 fatias do cron do cargo (ADR-0036) —, mais um por UF que
+ * tenha linha 61+ (na prática, só SP).
  */
 async function writeDeputadoUfDetails(
-  details: readonly DeputadoUfDetail[],
-): Promise<BlobWriteSummary> {
-  const summary: BlobWriteSummary = { written: 0, skipped: 0, bytes: 0, failures: [] };
+  details: readonly DeputadoUfDetailComTransporte[],
+): Promise<DeputadoBlobWriteSummary> {
+  const summary: DeputadoBlobWriteSummary = {
+    written: 0,
+    skipped: 0,
+    bytes: 0,
+    failures: [],
+    listas: { written: 0, skipped: 0, bytes: 0 },
+  };
   if (details.length === 0) return summary;
 
   const carimbo = new Date().toISOString();
 
-  const results = await Promise.allSettled(
-    details.map(async (detail) => {
-      const pathname = deputadoUfBlobPathname(detail.uf);
-      return putJson(pathname, { ...detail, ts: carimbo, uf: detail.uf.toUpperCase() });
+  const porUf = await Promise.all(
+    details.map(async (bruto): Promise<GravacaoBlob[]> => {
+      let separado: ReturnType<typeof separarListaRestante>;
+      try {
+        separado = separarListaRestante(bruto, carimbo);
+      } catch (err) {
+        return [
+          {
+            key: `deputado/uf/${String((bruto as { uf?: unknown }).uf)}`,
+            lista: false,
+            ok: false,
+            message: err instanceof Error ? err.message : String(err),
+          },
+        ];
+      }
+      const { detalhe, lista } = separado;
+      const feitas: GravacaoBlob[] = [];
+      if (lista) {
+        feitas.push(
+          await gravarObjeto(`deputado/uf-lista/${lista.uf}`, true, () =>
+            putJson(deputadoUfListaBlobPathname(lista.uf), lista),
+          ),
+        );
+      }
+      feitas.push(
+        await gravarObjeto(`deputado/uf/${detalhe.uf}`, false, () =>
+          putJson(deputadoUfBlobPathname(detalhe.uf), detalhe),
+        ),
+      );
+      return feitas;
     }),
   );
 
-  results.forEach((result, i) => {
-    const detail = details[i];
-    if (result.status === "fulfilled") {
-      if (result.value.status === "written") summary.written += 1;
-      else summary.skipped += 1;
-      summary.bytes += result.value.bytes;
-      return;
+  const gravacoes = porUf.flat();
+  for (const g of gravacoes) {
+    if (!g.ok) {
+      summary.failures.push({ key: g.key, message: g.message });
+      continue;
     }
-    summary.failures.push({
-      key: detail ? `deputado/uf/${detail.uf}` : `deputado/uf/<index-${i}>`,
-      message: result.reason instanceof Error ? result.reason.message : String(result.reason),
-    });
-  });
+    const alvo = g.lista ? summary.listas : summary;
+    if (g.status === "written") alvo.written += 1;
+    else alvo.skipped += 1;
+    alvo.bytes += g.bytes;
+  }
 
   if (summary.failures.length > 0) {
     logError("blob deputado uf write failures", {
       failed: summary.failures.length,
-      total: details.length,
+      total: gravacoes.length,
+      ufs: details.length,
       detail: summary.failures
         .map((f) => `${f.key}: ${f.message}`)
         .join("; ")

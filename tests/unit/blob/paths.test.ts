@@ -23,6 +23,7 @@ import {
   candidatosIndexBlobPathname,
   candidatosUfBlobPathname,
   deputadoUfBlobPathname,
+  deputadoUfListaBlobPathname,
   ufDetailBlobPathname,
 } from "@/lib/blob/paths";
 
@@ -56,6 +57,15 @@ describe("esquema de caminho", () => {
 
   it("Deputado (ADR-0026) sai do MESMO construtor de base — não de um segundo padrão", () => {
     expect(deputadoUfBlobPathname("SP")).toBe("deputado/uf/SP.json");
+  });
+
+  it("spec 026: a lista 61+ tem caminho PRÓPRIO, fora do prefixo do objeto da UF", () => {
+    expect(deputadoUfListaBlobPathname("SP")).toBe("deputado/uf-lista/SP.json");
+    expect(deputadoUfListaBlobPathname("sp")).toBe("deputado/uf-lista/SP.json");
+    // `deputado/uf/SP` não pode casar os dois recursos.
+    expect(deputadoUfListaBlobPathname("SP").startsWith("deputado/uf/SP")).toBe(false);
+    expect(() => deputadoUfListaBlobPathname("S")).toThrow(/sigla/);
+    expect(() => deputadoUfListaBlobPathname("../SP")).toThrow();
   });
 
   it("nenhum caminho carrega dois-pontos — a URL sairia percent-encoded", () => {

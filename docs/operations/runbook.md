@@ -226,6 +226,38 @@ Primeira execução (21/09): **10/10** no peso em 7 s, **64/64** na
 acessibilidade em 42,6 s, e a suíte e2e inteira em **98 passed / 14 skipped**
 (47,8 s), rodada exatamente por estes dois comandos.
 
+### O Blob e o interruptor também — spec 026 (29/09)
+
+🔴 **`/uf/SP/deputado-federal` era medida SEM a parte que pesa.** O detalhe de
+Deputado por UF mora no Vercel Blob (`deputado/uf/<UF>.json`, lido por
+`readDeputadoUfDetail`), e os dois scripts zeram `BLOB_READ_WRITE_TOKEN` — sem
+ele, `blobPublicBaseUrl()` devolve `null` e a página rendia "Detalhe
+indisponível". Com a spec 026 essa página ganha as listas por agremiação (60
+por agremiação no documento) e um teto de peso PRÓPRIO de **480 KiB**
+(ADR-0065 D5, `TETO_DOCUMENTO_POR_ROTA` em `tests/e2e/perf-budget.spec.ts`).
+
+O que mudou nos dois scripts:
+
+- `BLOB_PUBLIC_BASE_URL="http://127.0.0.1:3101/blob"` — o override que
+  `lib/blob/paths.ts` já tinha para os testes. O servidor falso responde como o
+  CDN público do Blob sob `/blob/`: `deputado/uf/<UF>.json` (de
+  `tests/fixtures/simulacao/deputado-uf.json`) e `deputado/uf-lista/<UF>.json`
+  (de `deputado-uf-lista.json`, quando o simulado passar a emiti-lo). Ele
+  recusa subir se `BLOB_PUBLIC_BASE_URL` apontar para qualquer outro lugar.
+- `--projecao-ligada` — serve `interruptor-projecao-dep = {ligada: true}`, o
+  estado pretendido da noite (e a página mais pesada). Sem a flag, a chave fica
+  AUSENTE, que é DESLIGADA (ver § interruptor abaixo). `--projecao-desligada`
+  mede a página sem projeção.
+- O portão de peso reprova se `/uf/SP/deputado-federal` trouxer alguma das
+  frases de "detalhe indisponível" — sinal de que o Blob não foi servido.
+
+⚠️ **Efeitos fora de Deputado, todos na direção de produção:** (1) com a base
+do Blob definida, as páginas passam a emitir `<img>` de foto de candidato — a
+URL existe, o arquivo não (404 do falso, não logado); (2) o detalhe municipal
+de `/uf/SP*` passa de "não configurado" a "não publicado" (mesma caixa, outra
+frase); (3) as etiquetas tentam o Blob e caem na cópia do build. Um peso de
+documento dessas rotas que mudou depois de 29/09 pode ser isso.
+
 ### O que estava quebrado, e o que o registro antigo dizia de errado
 
 `checkBotId()` (`proxy.ts`) **lança** fora da Vercel, o matcher do proxy é
@@ -1016,7 +1048,7 @@ Defaults abaixo **lidos do código** em 2026-09-05, não do plano — cada linha
 | `INGEST_CONCURRENCY` | `20` | `app/api/ingest/route.ts:117` (`getIngestConcurrency`) | Tamanho do semáforo de GETs simultâneos por invocação. Ortogonal a `TSE_MAX_RPS`: concorrência limita quantas requisições ficam em voo ao mesmo tempo; `TSE_MAX_RPS` limita quantas SAEM por segundo. Valor inválido cai no default com um warn. **Recomendação de produção para `zona`: `30`** — medido em 05/09: com `20`, o rps efetivo fica em ~34 e o rate limiter nunca satura (`waitedMs=0`, o semáforo é o gargalo); com `30`, o rps efetivo sobe para ~43–50 e o ciclo cai de ~156 s para ~106–123 s. Ver [Ensaio de escala](#ensaio-de-escala-05092026--mock-local-3-ciclos-completos). |
 | `TSE_CARGOS` | `1,3` | `lib/tse/targets.ts:336` (`getActiveCargos`) | Lista de cargos ativos (1=Presidente, 3=Governador), separada por vírgula. Usada tanto para materializar targets de produção quanto para decidir quais cargos disparam `/api/model/project` ao fim do ciclo. Tokens inválidos são ignorados com warn; se nenhum sobrar, cai no default. |
 | `TSE_GRANULARIDADE` | `zona` (desde 05/09, E4) | `lib/tse/targets.ts:399` (`getGranularidade`) | `uf` \| `zona`. `uf` = 27 UFs × cargos + 1 arquivo BR de Presidente ≈ **55 GETs/ciclo**, mas **está quebrado no modelo em produção** (ver aviso no topo de [dimensionamento do fan-out](#tse--dimensionamento-do-fan-out-revisado-em-2026-09-05) — sentinela `cod_zona=0` sem peso em `eleitorado`). `zona` = **~6.110 pares (município, zona) por cargo**, em invocações separadas desde o cron por cargo (ADR-0035 D3) — era 2.651 × cargos ≈ 5.302 GETs/ciclo até 10/09, quando o alvo ainda era a zona e perdíamos ~56% dos arquivos publicados. Necessária para a regra de três do modelo (RF-011/012) e único modo funcional hoje. Valor inválido cai no default com warn. **O default de código de `getGranularidade` é `zona`** (`lib/tse/targets.ts:404`) desde 05/09 — não é preciso definir a env explicitamente. |
-| `TSE_DEPUTADO_GRANULARIDADE` | *(ausente — segue o padrão do cargo, `zona` desde 2026-09-13)* | `lib/tse/targets.ts` (`getGranularidade`) | Interruptor de emergência **específico do cargo 6** (Deputado Federal), sem deploy. `uf` reverte só Deputado a granularidade UF (27 alvos) — os outros três cargos não são afetados, diferente de `TSE_GRANULARIDADE` (que sobrepõe TODOS os cargos e continua tendo prioridade sobre esta variável quando as duas estão setadas). Em modo `uf`, cada uma das 6 invocações fatiadas (`/api/ingest/deputado-federal/<1..6>`) devolve o agregado completo de 27 UFs — o fatiamento (`sliceTargets`) só se aplica a granularidade `zona`. Use quando o pipeline fatiado apresentar problema (ex.: formato EA20 mudou de um jeito que quebra `sliceTargets`, ou o volume de 6.110 alvos está causando erro sistemático) e for preciso voltar ao modo leve testado antes de 2026-09-13, sem esperar um deploy. Valor inválido (nem `uf` nem `zona`) é ignorado com warn, caindo no padrão do cargo. **Seguro acionar no meio da apuração** (achado de review, 2026-09-13): `fetch_snapshots`/`_discard_zero_zona_sentinel_when_real_zonas_exist` (`api/model/project.py`) decide entre a família sentinela (`cod_zona=0`) e a de zonas reais por **frescor de `ts`**, não por presença — a família mais recente (a que as invocações continuam alimentando) sempre vence, nas duas direções (`uf→zona` e `zona→uf`). Antes deste fix, acionar o interruptor no meio da apuração congelava o modelo nos pares de zona anteriores à virada, em silêncio (`snapshots` é append-only — a sentinela nova era descartada por presença, não por ser mais velha). |
+| `TSE_DEPUTADO_GRANULARIDADE` | *(ausente — segue o padrão do cargo, `zona` desde 2026-09-13)* | `lib/tse/targets.ts` (`getGranularidade`) | Chave de emergência **específica do cargo 6** (Deputado Federal) — 🔴 **exige novo deploy** (corrigido em 29/09, ADR-0063 D4): na Vercel, variável de ambiente só chega a um deployment NOVO; mudar o valor não altera nada no que já está no ar, e **das 16h às 05h de 04/10 não há deploy**. Depois de mudar: `vercel redeploy <deployment de produção> --target production`. `uf` reverte só Deputado a granularidade UF (27 alvos) — os outros três cargos não são afetados, diferente de `TSE_GRANULARIDADE` (que sobrepõe TODOS os cargos e continua tendo prioridade sobre esta variável quando as duas estão setadas). Em modo `uf`, cada uma das 6 invocações fatiadas (`/api/ingest/deputado-federal/<1..6>`) devolve o agregado completo de 27 UFs — o fatiamento (`sliceTargets`) só se aplica a granularidade `zona`. Use quando o pipeline fatiado apresentar problema (ex.: formato EA20 mudou de um jeito que quebra `sliceTargets`, ou o volume de 6.110 alvos está causando erro sistemático) e for preciso voltar ao modo leve testado antes de 2026-09-13 — **com um redeploy**, fora da janela congelada. Valor inválido (nem `uf` nem `zona`) é ignorado com warn, caindo no padrão do cargo. **Seguro acionar no meio da apuração** — isto é, sem corromper o modelo; o redeploy continua obrigatório (achado de review, 2026-09-13): `fetch_snapshots`/`_discard_zero_zona_sentinel_when_real_zonas_exist` (`api/model/project.py`) decide entre a família sentinela (`cod_zona=0`) e a de zonas reais por **frescor de `ts`**, não por presença — a família mais recente (a que as invocações continuam alimentando) sempre vence, nas duas direções (`uf→zona` e `zona→uf`). Antes deste fix, acionar o interruptor no meio da apuração congelava o modelo nos pares de zona anteriores à virada, em silêncio (`snapshots` é append-only — a sentinela nova era descartada por presença, não por ser mais velha). |
 | `TSE_ACOMPANHAMENTO` | *(desligado)* | `app/api/ingest/route.ts:426` | Opt-in literal: **só o valor exato `on` liga**. Quando ligado, 1 GET no EA14 diz quais UFs mudaram desde o último ciclo e os targets são filtrados para essas UFs (alvos de nível `br` nunca são filtrados). Fail-open em dois níveis: qualquer erro faz todas as UFs voltarem como `changed` — o gating economiza requisições, jamais perde atualização. Estado (ETag + hashes) vive em memória do processo, então cold start = 1 ciclo sem gating. **Recomendação de produção**: `on`, para reduzir GETs em ciclos "parados" mesmo em granularidade `zona` — não elimina o pico (quando muitas UFs mudam ao mesmo tempo o custo converge para o fan-out completo, ver opção Z3 em [dimensionamento do fan-out](#tse--dimensionamento-do-fan-out-revisado-em-2026-09-05)), mas não tem custo conhecido de correção; o gating **não foi exercitado neste ensaio** (rodou desligado, de propósito, para medir o pior caso — fan-out completo). |
 | `INGEST_WINDOW_OVERRIDE` | *(desligado)* | `app/api/ingest/route.ts:309` | `true` ignora `INGEST_WINDOW` por completo. Uso: dry-run manual e testes. **Nunca em produção.** |
 | `FIXTURE_VARIANT` | *(nenhum)* | `app/page.tsx:113` | **Só dev/teste.** `t2` troca a fixture local para o payload de 2º turno (`projection-current-t2.json`), permitindo renderizar o modo `binary` sem Edge Config. Qualquer outro valor = fixture de 1º turno. |
@@ -1309,6 +1341,92 @@ de credencial e fase, e remover a guarda de janela.
 (`"cego + payload de pré-eleição ainda é indeterminado"`). O defeito que passava: com um
 payload obsoleto em cache, o vigia relataria "não há o que apurar" quando na verdade não tinha
 conseguido ler nada.
+
+## Interruptor da projeção de Deputado Federal — `pnpm dep:projecao` (spec 026, 29/09)
+
+A projeção de cadeiras e de eleitos de Deputado Federal ([ADR-0063](../architecture/adrs/0063-projecao-deputado-federal-trava-25-e-interruptor-edge-config.md))
+tem um interruptor que **não precisa de deploy**: uma chave do Global Config,
+`interruptor-projecao-dep`, com o valor `{ligada, pct_minimo?, em?, por?}`.
+
+### Por que não é uma variável de ambiente
+
+Na Vercel, variável de ambiente só chega a um deployment **novo** — mudar o
+valor no painel não muda nada no que já está no ar, e das **16h às 05h de
+04/10** não há deploy. A chave do Global Config é lida a cada ciclo do modelo
+(vai no corpo do POST, `projecao_dep`) e **a cada abertura de página**. É a
+regra geral do ADR-0063: interruptor que precisa agir sem deploy mora no
+Global Config, nunca em variável.
+
+### O que "falha fechada" quer dizer
+
+A projeção só aparece quando a chave foi **lida com sucesso** e diz
+`ligada: true`. Em todos os outros casos ela some — e o resto da página
+(votos, eleitos na parcial, regras, Conferência) continua igual:
+
+| O que a leitura encontrou | Projeção | O que o operador vê no `pnpm dep:projecao` |
+|---|---|---|
+| `{ligada: true}` | aparece (se a trava de 25% da UF abriu) | `LIGADA — gravada na chave` |
+| `{ligada: false}` | some | `DESLIGADA — gravada na chave` |
+| chave **ausente** | some | `DESLIGADA — chave AUSENTE` |
+| valor malformado (`false` cru, `ligada: "sim"`…) | some, com `error` no log | `DESLIGADA — valor INVÁLIDO` |
+| a leitura falhou (Global Config fora) | some, com `error` no log | o script também falha ao ler (sai 1) |
+
+Consequência importante: **a chave começa AUSENTE, então a projeção começa
+DESLIGADA.** "Começa ligada" (decisão do dono) é um passo da virada, não um
+default do código.
+
+### Ligar na virada (03/10) — passo obrigatório
+
+Depois do passo 0.5 da véspera (o `EDGE_CONFIG` do `.env.local` apontando para
+o store que o site lê):
+
+```bash
+pnpm dep:projecao                                   # mostra o store e o estado — confira o id
+pnpm dep:projecao --ligar --por dono --confirmar ecfg_mcoa3usgvm5dbqb27vae8ptmpdxl
+```
+
+O script só grava com o **id do store digitado** em `--confirmar`, igual ao que
+ele mostrou. **Ligar é lento:** a projeção só aparece quando o modelo rodar o
+próximo ciclo de Deputado com a trava da UF aberta (a volta completa leva 30
+min, ADR-0036).
+
+### Desligar na noite (04/10) — se a projeção parecer errada
+
+```bash
+pnpm dep:projecao --desligar --por dono --confirmar ecfg_mcoa3usgvm5dbqb27vae8ptmpdxl
+```
+
+**Desligar é rápido:** a página lê a chave a cada abertura e apaga a projeção do
+que está no Blob antes de mostrar (`aplicarInterruptorProjecao`,
+`lib/blob/deputado-uf.ts`); o alvo é sumir em **até ~60 s** (cache da página e
+do CDN) — medida pendente, é o ensaio de 03/10. Confira na página de SP.
+
+Subir a trava sem desligar (ex.: se o replay mostrar que 25% é cedo):
+`pnpm dep:projecao --pct 40 --confirmar <id>`. O interruptor **só sobe** a
+trava: um `pct_minimo` abaixo de 25 é ignorado (com aviso no log) — o piso de
+25% só muda por ADR. `--sem-pct` volta à trava do modelo.
+
+### O store errado — a trava do script
+
+Até o passo 0.5 da véspera o `.env.local` aponta para o store de **ensaio**
+(`salacofre-edge-config-preview`, `ecfg_fdlfvusqgth3gc8eaxloahrvrsgh`), que o
+site **não** lê. Desligar lá não desliga nada. Por isso o script:
+
+- lê o alvo do `EDGE_CONFIG` (o que o site lê), **nunca** do `EDGE_CONFIG_ID`
+  (que desvia só a escrita do modelo durante o simulado);
+- mostra o id e o nome do store, perguntando à API da Vercel;
+- **recusa o store de ensaio** (por id e por nome, sai com código 3) — salvo com
+  `--ensaio`, que então só aceita o de ensaio;
+- do `.env.local` lê só `EDGE_CONFIG`, `EDGE_CONFIG_TOKEN` e `VERCEL_TEAM_ID` —
+  nunca o `DATABASE_URL` (mesmo molde de `scripts/_vigia-env.ts`).
+
+**Ensaio de 03/10 ("desligar → some em até 60 s"):** no store de ensaio, com um
+preview apontado para ele, `pnpm dep:projecao --ensaio --desligar --confirmar
+ecfg_fdlfvusqgth3gc8eaxloahrvrsgh`, cronometrando até a projeção sumir da página.
+
+Códigos de saída: `0` mostrou ou gravou e conferiu (ou simulou, sem
+`--confirmar`); `1` a API da Vercel falhou; `2` falta credencial; `3` store
+recusado ou id digitado diferente do alvo; `64` uso errado.
 
 ## Vigia de configuração — `pnpm vigia:armado` (incidente de 2026-09-22)
 

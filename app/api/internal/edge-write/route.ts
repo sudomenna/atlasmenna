@@ -62,7 +62,7 @@ import { CARGOS_TSE, type CargoTse, cargoInfo, isCargoTse } from "@/lib/config/c
 import { FASE_PRE_ELEICAO } from "@/lib/config/fase";
 import { GLOBAL_CONFIG_KEY_PATTERN } from "@/lib/edge-config/keys";
 import { writeDeputadoProjection, writeProjection } from "@/lib/edge-config/writer";
-import { logError, logInfo } from "@/lib/tse/log";
+import { logError, logInfo, logWarn } from "@/lib/tse/log";
 
 // ---------------------------------------------------------------------------
 // Vercel runtime config
@@ -77,6 +77,50 @@ export const runtime = "nodejs";
  * implícitos do runtime fetch.
  */
 export const maxDuration = 30;
+
+// ---------------------------------------------------------------------------
+// Tamanho do corpo — spec 026
+// ---------------------------------------------------------------------------
+
+/**
+ * Limite do corpo de requisição de uma Vercel Function: **4,5 MB**. Acima
+ * disso a plataforma responde 413 antes de este código rodar — a publicação
+ * inteira do ciclo se perde, não só a parte que sobrou.
+ *
+ * Não é exportado: um `route.ts` do App Router só pode exportar os métodos
+ * HTTP e a configuração de segmento, e o `next build` reprova qualquer outro
+ * nome.
+ */
+const LIMITE_CORPO_VERCEL_BYTES = 4_500_000;
+
+/**
+ * Aviso a **3,5 MB** (~78% do limite). A spec 026 estimou o corpo de
+ * Deputado com as listas completas em ~2–2,5 MB (SP sozinho ~180 KB no objeto
+ * da UF, mais as candidaturas 61+ em `lista_restante`); o aviso existe para
+ * que o crescimento durante a noite apareça no log ANTES do 413.
+ */
+const AVISO_CORPO_BYTES = 3_500_000;
+
+/**
+ * Loga o tamanho do corpo e avisa perto do limite. Devolve os bytes para a
+ * linha de sucesso levar o número junto.
+ *
+ * `Buffer.byteLength`, e não `texto.length`: são BYTES que a Vercel conta, e
+ * nome acentuado ocupa dois (a unidade UTF-16 de `length` fica abaixo do real
+ * — ver `putJson` em `lib/blob/write.ts`).
+ */
+function medirCorpo(texto: string, cargo: unknown): number {
+  const bytes = Buffer.byteLength(texto, "utf8");
+  if (bytes > AVISO_CORPO_BYTES) {
+    logWarn("edge-write corpo perto do limite da Vercel", {
+      bodyBytes: bytes,
+      avisoBytes: AVISO_CORPO_BYTES,
+      limiteBytes: LIMITE_CORPO_VERCEL_BYTES,
+      cargo,
+    });
+  }
+  return bytes;
+}
 
 // ---------------------------------------------------------------------------
 // Request schema — validação de borda
@@ -270,6 +314,24 @@ const deputadoUfDetailSchema = z
   })
   .passthrough();
 
+/**
+ * 🔴 **Spec 026 — onde o dado novo PODE viajar.** O objeto do TOPO deste
+ * schema é `z.object` sem `.passthrough()`: uma chave nova ao lado de
+ * `payload`/`payloads_uf` é **descartada sem erro** pelo Zod, e o dado some
+ * antes do escritor. Tudo o que a spec 026 acrescentou viaja DENTRO dos dois
+ * objetos `.passthrough()`:
+ *
+ *   - `payload.mais_votados`, `payload.puxadores`, `payload.por_uf[].projecao`
+ *     (nacional, Global Config);
+ *   - `payloads_uf[UF].candidatos/regras/projecao/conferencia/...` (objeto da
+ *     UF, Blob) e `payloads_uf[UF].lista_restante` (TRANSPORTE: o escritor
+ *     separa e grava `deputado/uf-lista/<UF>.json`, e o objeto da UF nunca o
+ *     carrega — `separarListaRestante`, `lib/edge-config/writer.ts`).
+ *
+ * `tests/unit/api/edge-write-deputado-v2.test.ts` prova que esses campos
+ * chegam ao escritor. Um campo novo no topo não chegaria, e nenhum teste
+ * positivo acusaria.
+ */
 const deputadoBodySchema = z.object({
   payload: z
     .object({
@@ -428,8 +490,16 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // 2. Parse + validate body
   // --------------------------------------------------------------------------
   let rawBody: unknown;
+  let bodyBytes: number;
   try {
-    rawBody = await req.json();
+    // Texto primeiro, e não `req.json()`: o tamanho em bytes do corpo é
+    // instrumentação obrigatória desde a spec 026 (ver `medirCorpo`).
+    const texto = await req.text();
+    rawBody = JSON.parse(texto);
+    bodyBytes = medirCorpo(
+      texto,
+      (rawBody as { payload?: { cargo?: unknown } } | null)?.payload?.cargo,
+    );
   } catch (err) {
     return NextResponse.json(
       {
@@ -475,6 +545,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     logInfo("edge-write ok", {
       keysWritten: 1,
       blobsEnviados: Object.keys(detalhes ?? {}).length,
+      bodyBytes,
       durationMs: Date.now() - t0,
       cargo: depPayload.cargo,
       turno: depPayload.turno,
@@ -526,6 +597,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const durationMs = Date.now() - t0;
   logInfo("edge-write ok", {
     keysWritten,
+    bodyBytes,
     durationMs,
     cargo: payload.cargo,
     turno: payload.turno,

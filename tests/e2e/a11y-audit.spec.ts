@@ -80,6 +80,12 @@ const ROUTES = [
   // (tabela de bancada, quociente eleitoral, o rótulo "ainda não dá para
   // dizer"). Estavam fora do portão desde que a spec 017 foi entregue.
   "/deputado-federal",
+  // ⚠️ 2026-09-29 (spec 026 RF-277): a partir daqui esta rota é auditada COM o
+  // detalhe do Blob servido (`BLOB_PUBLIC_BASE_URL` → servidor falso), e não
+  // mais sobre "Detalhe indisponível". O conteúdo VAI MUDAR enquanto a frente
+  // de telas da spec 026 preenche a página (listas em três faixas, marcas,
+  // regras, Conferência) — uma violação nova aqui é do componente novo, não
+  // do portão.
   "/uf/SP/deputado-federal",
   // `/sobre-as-etiquetas` entrou em 2026-09-29 (spec 025, RF-252): a página de
   // metodologia das etiquetas editoriais, obrigatória pela constituição 1.6

@@ -47,6 +47,7 @@
  *   projection-archive-<cargo>-t<turno>      projection-archive-pres-t1
  *   projection-current                       (alias dinâmico legado, S04)
  *   projection-uf-<SIGLA>                    (alias legado por UF, S04)
+ *   interruptor-projecao-dep                 (interruptor da projeção de Deputado, spec 026)
  * ```
  *
  * A **decisão de fundo do ADR-0012 permanece intacta**: chaves nomeadas por
@@ -222,6 +223,43 @@ export const LEGACY_CURRENT_ALIAS_KEY = "projection-current";
 export function legacyUfAliasKey(sigla: string): string {
   const uf = normaliseSigla(sigla, "legacyUfAliasKey");
   return assertValidGlobalConfigKey(`projection-uf-${uf}`, "legacyUfAliasKey");
+}
+
+// ---------------------------------------------------------------------------
+// Interruptor da projeção de Deputado Federal — spec 026 RF-265 (ADR-0063 D4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Nome da chave do interruptor (design 026 § 2.10). Constante, e não
+ * construída a partir de cargo:
+ * existe UMA projeção com trava e interruptor (a do cargo 6). Se um dia houver
+ * outra, ela ganha a própria chave aqui — não um parâmetro que abra a porta
+ * para uma chave que ninguém lê.
+ */
+export const INTERRUPTOR_PROJECAO_DEP_KEY = "interruptor-projecao-dep";
+
+/**
+ * Chave do interruptor da projeção de Deputado Federal:
+ * `interruptor-projecao-dep`. Valor: `InterruptorProjecaoDep`
+ * (`lib/edge-config/types.ts`).
+ *
+ * 🔴 **Por que uma chave e não uma variável de ambiente.** Na Vercel, variável
+ * de ambiente só chega a um deployment NOVO — mudá-la não muda nada no que já
+ * está no ar. Na noite da eleição o deploy fica congelado das 16h às 05h, e o
+ * interruptor tem de mexer sem deploy. Uma chave do Global Config é lida a
+ * cada ciclo do modelo e a cada render.
+ *
+ * Escrita só por `pnpm dep:projecao` (`scripts/interruptor-projecao.ts`), que
+ * confirma o store e recusa o de ensaio. Leitura: `readInterruptorProjecao`
+ * (`lib/edge-config/reader.ts`) no TypeScript; o modelo Python lê a MESMA
+ * string — mudar o nome aqui exige mudar lá.
+ *
+ * Falha fechada nos dois sentidos (ADR-0063 D4): chave AUSENTE = desligada.
+ * Enquanto ninguém gravar `{ligada: true}` (passo da virada, 03/10), a
+ * projeção não aparece.
+ */
+export function interruptorProjecaoDepKey(): string {
+  return assertValidGlobalConfigKey(INTERRUPTOR_PROJECAO_DEP_KEY, "interruptorProjecaoDepKey");
 }
 
 // ---------------------------------------------------------------------------

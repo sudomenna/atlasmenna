@@ -2089,6 +2089,17 @@ export interface EdgePayloadDeputado {
   votacao?: EdgeVotacao;
   por_uf: EdgeDeputadoUfRow[];
   /**
+   * Spec 026 RF-271 — os 10 mais votados do PAÍS, por voto apurado. Vem
+   * pronto no payload para que a capa nunca leia os 27 Blobs de UF.
+   * Ausente em payload v1 ⇒ o bloco não aparece.
+   */
+  mais_votados?: EdgeDeputadoDestaque[];
+  /**
+   * Spec 026 RF-273 — os puxadores do país (até 30), autocontidos pelo mesmo
+   * motivo de `mais_votados`.
+   */
+  puxadores?: EdgeDeputadoPuxador[];
+  /**
    * Frases curtas geradas por template — NUNCA LLM (ADR-0005,
    * constituição § 2).
    */
@@ -2257,4 +2268,248 @@ export interface EdgeDeputadoUfRow {
   empates_indeterminados: number;
   /** A agremiação com mais cadeiras na UF. `null` enquanto não há distribuição. */
   lider: { cod: string; sigla: string; cadeiras: number } | null;
+  /**
+   * Spec 026 (RF-264) — o estado da trava da projeção NESTA UF, para o selo
+   * da grade da capa. É o mesmo objeto de `DeputadoUfDetail.projecao`, e a
+   * capa o lê daqui para **nunca** precisar abrir os 27 Blobs.
+   *
+   * Opcional: payload v1 não tem a chave, e a capa então não desenha selo
+   * nenhum ("não sabemos" ≠ "aguardando").
+   */
+  projecao?: DeputadoProjecaoUf;
+}
+
+// ---------------------------------------------------------------------------
+// Deputado Federal — contrato v2 (spec 026: listas, projeção com trava, extras)
+// ---------------------------------------------------------------------------
+//
+// Espelho do design 026 § 2 (`docs/specs/026-deputado-listas-projecao/design.md`),
+// com os NOMES de lá. Tudo aqui é ADITIVO e OPCIONAL no objeto da UF: um
+// objeto v1 (sem `contrato`) continua válido e renderizando (RF-276, § 2.12).
+// O leitor tolerante — campo v2 malformado sai do objeto, nunca lança — mora em
+// `lib/blob/deputado-uf.ts::sanearDeputadoUfDetail`.
+//
+// Os tipos moram AQUI, e não em `lib/blob/deputado-uf.ts`, porque o payload
+// nacional (Global Config) também os usa e `lib/blob/deputado-uf.ts` já
+// importa deste arquivo — o caminho inverso criaria um ciclo. Aquele módulo os
+// reexporta.
+
+/** Por onde a cadeira veio, na NOSSA conta: quociente partidário ou sobra (design § 2.2). */
+export type DeputadoVia = "qp" | "sobra";
+
+/**
+ * `cand.st` do agregado mapeado — o RÓTULO do TSE, só com totalização final
+ * (`tf = "s"`), e então em toda linha (RF-267). Nunca é comparado com a nossa
+ * via (`parcial`/`projecao`): no simulado de 28/09 os dois não coincidem.
+ */
+export type DeputadoMarcaTse = "eleito_qp" | "eleito_media" | "eleito" | "suplente" | "nao_eleito";
+
+/**
+ * `cand.dvt` mapeado, **só quando NÃO é voto nominal válido**
+ * ([ADR-0064](../../docs/architecture/adrs/0064-destino-do-voto-proporcional-segue-o-dvt-do-tse.md)).
+ * Ausente = `Válido`, ou `dvt` ainda não publicado.
+ */
+export type DeputadoDestinoProporcional = "valido_legenda" | "anulado" | "sub_judice";
+
+/**
+ * Uma linha de candidato em `candidatos[]` (Blob) e em `lista_restante` /
+ * `deputado/uf-lista/<UF>.json` — design § 2.2.
+ *
+ * Chaves opcionais são OMITIDAS, nunca `null` (exceto `pct_validos`, em que
+ * `null` é o dado); booleano opcional só aparece como `true`.
+ */
+export interface DeputadoUfLinha {
+  /** `cand.sqcand` — a identidade. NÚMERO no JSON (11 dígitos, cabe em 2^53). Nunca `cand.n`. */
+  sqcand: number;
+  /** `cand.nmu`, depois `cand.nm`. */
+  nome: string;
+  /** Sigla do PARTIDO (dentro da federação, o componente) — RF-122. */
+  partido: string;
+  /** `cand.n` — número de urna. Exibição, nunca chave: repete entre UFs e partidos. */
+  numero?: number;
+  /** `cand.vap` — voto apurado, qualquer que seja o destino. */
+  votos: number;
+  /** 1-based na agremiação, por voto apurado (design § 3.1). A tela ordena por ele e NUNCA reordena. */
+  rank: number;
+  /** % dos válidos da UF, 0–100, 5 casas. `null` ⇔ destino anulado ou sub judice. */
+  pct_validos: number | null;
+  /** Eleito na parcial, e por onde (na NOSSA conta). */
+  parcial?: DeputadoVia;
+  /** Sobra apertada na parcial (`_marcar_indefinidas`). Só com `parcial: "sobra"`. */
+  indefinido?: true;
+  /** Eleito na projeção. Só existe com `projecao.estado === "liberada"` na UF. */
+  projecao?: DeputadoVia;
+  /** Sobra apertada na projeção. Só com `projecao: "sobra"`. */
+  projecao_apertada?: true;
+  /** Rótulo do TSE, só com totalização final. */
+  tse?: DeputadoMarcaTse;
+  /** Só quando NÃO é voto nominal válido (ADR-0064). */
+  destino?: DeputadoDestinoProporcional;
+}
+
+/** Os três estados da trava (RF-264, ADR-0063 D3). */
+export type DeputadoProjecaoEstado = "liberada" | "aguardando" | "indisponivel";
+
+/**
+ * Motivo da trava — conjunto FECHADO, por estado (design § 2.7), avaliado em
+ * ordem fixa pelo modelo; o primeiro que falha é o publicado.
+ *
+ *   - `aguardando` (resolve sozinho): `pct_minimo`, `zonas_minimas`, `sem_vagas`;
+ *   - `indisponivel` (não resolve sem ação): `interruptor`, `coligacao`,
+ *     `cobertura`, `erro`.
+ *
+ * Interruptor desligado e interruptor ILEGÍVEL publicam o mesmo `interruptor`:
+ * a distinção que a tela precisa ("desligada" × "não foi possível ler",
+ * ADR-0063 D4) está em `InterruptorProjecaoLido.origem`, que a página lê.
+ */
+export type DeputadoProjecaoMotivo =
+  | "pct_minimo"
+  | "zonas_minimas"
+  | "sem_vagas"
+  | "interruptor"
+  | "coligacao"
+  | "cobertura"
+  | "erro";
+
+/** Estado da projeção numa UF (design § 2.7). `por_uf[].projecao` é o MESMO objeto. */
+export interface DeputadoProjecaoUf {
+  estado: DeputadoProjecaoEstado;
+  /** Ausente ⇔ `liberada`. */
+  motivo?: DeputadoProjecaoMotivo;
+  /** 25, ou o da chave do interruptor (que só SOBE). */
+  pct_minimo: number;
+  /** Zonas com `e.esi > 0 ∧ v.vv > 0`. */
+  zonas_apuradas: number;
+  /** Pares (município×zona) da UF na nossa tabela. */
+  zonas_total: number;
+}
+
+/**
+ * Linha de corte da agremiação, na PARCIAL (RF-272, design § 3.4). Ausente sem
+ * eleito ou sem candidato válido de fora.
+ */
+export interface DeputadoCorte {
+  /** `sqcand` do maior rank com `parcial`. */
+  ultimo_eleito: number;
+  /** `sqcand` do menor rank sem `parcial` e sem `destino`. */
+  primeiro_fora: number;
+  /** `votos(ultimo_eleito) − votos(primeiro_fora)` ≥ 0. */
+  diferenca: number;
+  /** `10·votos(primeiro_fora) < QE` — não herdaria vaga nem com mais votos (CE art. 108). */
+  primeiro_fora_abaixo_piso_10?: true;
+}
+
+/**
+ * Puxador (RF-273, design § 3.5): linha sem `destino` com
+ * `excedente = ⌊votos/QE⌋ − 1 ≥ 1`.
+ */
+export interface DeputadoPuxador {
+  sqcand: number;
+  /** `⌊votos / QE⌋`. */
+  quocientes: number;
+  /** `quocientes − 1` ≥ 1. */
+  excedente: number;
+}
+
+/** RF-274 — regras com os números da UF, em inteiros com teto (design § 2.6). */
+export interface DeputadoRegras {
+  /** === `DeputadoUfDetail.quociente_eleitoral`. */
+  quociente_eleitoral: number;
+  /** Σ `agremiacoes[].votos_validos`. */
+  votos_validos: number;
+  lugares_a_preencher: number;
+  /** `⌈QE/10⌉` — art. 108: candidato precisa de ≥ 10% do QE para vaga de QP. */
+  piso_candidato: number;
+  /** `⌈4·QE/5⌉` — art. 109 § 2º I: agremiação com ≥ 80% do QE disputa sobra. */
+  piso_agremiacao_sobras: number;
+  /** `⌈QE/5⌉` — art. 109 § 2º II: candidato com ≥ 20% do QE na sobra restrita. */
+  piso_candidato_sobras: number;
+}
+
+/** O que a Conferência de fato comparou (design § 2.8). */
+export type DeputadoComparacao = "eleitorado" | "algoritmo" | "eleitos" | "votos_validos";
+
+/** Chaves de divergência — conjunto FECHADO (amplia `CHAVES_DE_DIVERGENCIA` do Python). */
+export type DeputadoDivergenciaChave =
+  | "quociente_eleitoral"
+  | "cadeiras"
+  | "eleitos"
+  | "eleitorado"
+  | "votos_validos";
+
+export interface DeputadoDivergencia {
+  o_que: DeputadoDivergenciaChave;
+  nosso: number;
+  tse: number;
+  detalhe: string;
+  /** `100·(nosso − tse)/tse`, 5 casas, com sinal. Presente em `eleitorado` e `votos_validos`. */
+  diferenca_pct?: number;
+}
+
+/**
+ * RF-269 — a Conferência de verdade (design § 2.8). A frase "batem com o TSE"
+ * só existe com `estado: "confere"`, e nomeia o horário do boletim.
+ */
+export interface DeputadoConferencia {
+  estado: "confere" | "diverge" | "sem_dado_tse";
+  /** Hora do boletim do agregado comparado. `null` sem agregado. */
+  boletim_dado_ts: string | null;
+  /** `tf` do agregado comparado. */
+  totalizacao_final: boolean;
+  /** O que foi DE FATO comparado neste ciclo. A frase da tela sai daqui. */
+  comparou: DeputadoComparacao[];
+  divergencias: DeputadoDivergencia[];
+}
+
+/**
+ * Um destaque do NACIONAL (RF-271, design § 2.9) — autossuficiente: a capa
+ * NUNCA lê Blob.
+ */
+export interface EdgeDeputadoDestaque {
+  uf: string;
+  sqcand: number;
+  nome: string;
+  partido: string;
+  /** Agremiação. */
+  cod: string;
+  /** Sigla da agremiação (a federação, quando há). */
+  sigla: string;
+  numero?: number;
+  votos: number;
+  /** % dos válidos DA UF DO CANDIDATO — o único denominador com sentido. */
+  pct_validos: number | null;
+  destino?: DeputadoDestinoProporcional;
+}
+
+/** Puxador do nacional (até 30, RF-273). */
+export interface EdgeDeputadoPuxador extends EdgeDeputadoDestaque {
+  /** O QE da UF dele. */
+  quociente_eleitoral: number;
+  /** `⌊votos/QE⌋`. */
+  quocientes: number;
+  /** `quocientes − 1` ≥ 1. */
+  excedente: number;
+}
+
+/**
+ * O VALOR da chave de Global Config `interruptor-projecao-dep` (RF-265,
+ * [ADR-0063](../../docs/architecture/adrs/0063-projecao-deputado-federal-trava-25-e-interruptor-edge-config.md)
+ * D4, design § 2.10). Escrito por `pnpm dep:projecao`; lido a cada render
+ * (`readInterruptorProjecao`) e mandado ao modelo no corpo do POST
+ * (`projecao_dep`, design § 2.11).
+ *
+ * Falha fechada nos dois sentidos: só uma leitura bem-sucedida com
+ * `ligada === true` liga. "Começa ligada" é o passo da virada de 03/10.
+ *
+ * `em` e `por` são de AUDITORIA: nunca entram no payload nem no Blob, e a
+ * leitura da tela nem os devolve.
+ */
+export interface InterruptorProjecaoDep {
+  ligada: boolean;
+  /** 25 ≤ x ≤ 100 — só SOBE a trava. Fora disso: ignorado, com log (ADR-0063 D4). */
+  pct_minimo?: number;
+  /** ISO 8601 de quando foi gravada. */
+  em?: string;
+  /** Rótulo curto de quem gravou ("dono", "plantao"). Nunca e-mail. */
+  por?: string;
 }

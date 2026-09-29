@@ -39,6 +39,7 @@
 import type { NextRequest } from "next/server";
 import { after, NextResponse } from "next/server";
 import { type CargoTse, cargoInfo, rpsMaxParaCargos } from "@/lib/config/cargos";
+import { readInterruptorProjecao } from "@/lib/edge-config/reader";
 import type { AcompanhamentoPrevious } from "@/lib/tse/acompanhamento";
 import { detectChangedUfs } from "@/lib/tse/acompanhamento";
 import { alertasDoCiclo, notifySlack } from "@/lib/tse/alerts";
@@ -132,7 +133,9 @@ function extractProvidedSecret(req: NextRequest): string | null {
  * CONCURRENCY — maximum parallel in-flight EA20 GETs per invocation.
  *
  * Lido de `INGEST_CONCURRENCY` (default 20) para permitir calibrar durante
- * os simulados sem redeploy. Note que concorrência e taxa são controles
+ * os simulados sem mexer em código — ⚠️ mas COM redeploy: na Vercel, variável
+ * de ambiente só chega a um deployment novo (corrigido em 29/09, ADR-0063
+ * D4). Note que concorrência e taxa são controles
  * ORTOGONAIS: este semáforo limita quantas requisições ficam simultaneamente
  * em voo; `getTseRateLimiter()` (lib/tse/rate-limiter.ts) limita quantas
  * SAEM por segundo (RF-010.3 — limite de 100 req/s/IP do TSE, agora dividido
@@ -220,14 +223,57 @@ function protectionBypassHeader(): Record<string, string> {
   return secret ? { "x-vercel-protection-bypass": secret } : {};
 }
 
+/**
+ * `projecao_dep` do corpo do POST do modelo (design 026 § 2.11, ADR-0063 D4):
+ * o estado do interruptor da projeção de Deputado, lido UMA vez por ciclo.
+ *
+ * O Python não lê o Edge Config — recebe o estado aqui e o registra no log do
+ * ciclo (`dep_projecao`), o que torna a projeção reproduzível. Falha fechada
+ * dos dois lados: a leitura já desliga em ausência/falha
+ * (`readInterruptorProjecao`), e o modelo desliga se o campo não vier.
+ *
+ * `pct_minimo` sai INTEIRO, arredondado para CIMA: o campo Python é `int`
+ * (`ge=25, le=100`), e um 40,5 da chave faria o POST inteiro voltar 422 — o
+ * ciclo de Deputado sem modelo por causa do interruptor. `ceil` erra para o
+ * lado de travar mais, nunca menos.
+ */
+export interface ProjecaoDepNoPost {
+  ligada: boolean;
+  pct_minimo: number;
+}
+
+export async function lerProjecaoDepParaOModelo(): Promise<ProjecaoDepNoPost> {
+  const lido = await readInterruptorProjecao();
+  return { ligada: lido.ligada, pct_minimo: Math.ceil(lido.pct_minimo) };
+}
+
+/**
+ * O corpo do POST ao modelo. `projecao_dep` só no cargo 6 — nos majoritários
+ * não há projeção com trava, e o campo não tem referente.
+ */
+export function corpoDoTriggerModel(
+  cargo: number,
+  turno: 1 | 2,
+  triggerTs: string,
+  projecaoDep: ProjecaoDepNoPost | undefined,
+): Record<string, unknown> {
+  return {
+    cargo,
+    turno,
+    trigger_ts: triggerTs,
+    ...(cargo === 6 && projecaoDep ? { projecao_dep: projecaoDep } : {}),
+  };
+}
+
 function triggerModel(opts: {
   baseUrl: string;
   cargo: number;
   turno: 1 | 2;
   triggerTs: string;
   modelSecret: string;
+  projecaoDep?: ProjecaoDepNoPost;
 }): void {
-  const { baseUrl, cargo, turno, triggerTs, modelSecret } = opts;
+  const { baseUrl, cargo, turno, triggerTs, modelSecret, projecaoDep } = opts;
   const url = `${baseUrl}/api/model/project`;
 
   // Encapsulada como Promise pra entregar pra `after()` E para que erros
@@ -241,7 +287,7 @@ function triggerModel(opts: {
           "content-type": "application/json",
           ...protectionBypassHeader(),
         },
-        body: JSON.stringify({ cargo, turno, trigger_ts: triggerTs }),
+        body: JSON.stringify(corpoDoTriggerModel(cargo, turno, triggerTs, projecaoDep)),
       });
       // Não bloqueia o ciclo — apenas registra resultado pra observabilidade.
       // Status 5xx do modelo = recompute do próximo ciclo se ressincroniza.
@@ -866,8 +912,12 @@ export async function runIngestCycle(
         }
       }
 
+      // Spec 026 — o interruptor da projeção de Deputado vai no corpo do POST
+      // do cargo 6, lido uma vez por ciclo. Nunca lança (falha ⇒ desligado).
+      const projecaoDep = activeCargos.includes(6) ? await lerProjecaoDepParaOModelo() : undefined;
+
       for (const cargo of activeCargos) {
-        triggerModel({ baseUrl, cargo, turno, triggerTs, modelSecret });
+        triggerModel({ baseUrl, cargo, turno, triggerTs, modelSecret, projecaoDep });
       }
       modelTriggered = [...activeCargos];
       logInfo("model-trigger dispatched", {

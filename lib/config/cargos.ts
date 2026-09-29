@@ -119,9 +119,11 @@ export interface CargoInfo {
    * (`/api/ingest/deputado-federal/<1..6>`, `sliceTargets` em
    * `lib/tse/targets.ts`), cada uma cobrindo ~1/6 do fan-out (~1.019 alvos,
    * ~204 s), disparadas a cada 5 min — a volta completa das 6 fatias leva
-   * 30 min. Interruptor de emergência específico deste cargo, sem deploy:
-   * `TSE_DEPUTADO_GRANULARIDADE=uf` (`lib/tse/targets.ts::getGranularidade`,
-   * documentado em `docs/operations/runbook.md` § Variáveis de ambiente).
+   * 30 min. Chave de emergência específica deste cargo — que EXIGE novo
+   * deploy (variável de ambiente só chega a um deployment novo; corrigido em
+   * 29/09, ADR-0063 D4): `TSE_DEPUTADO_GRANULARIDADE=uf`
+   * (`lib/tse/targets.ts::getGranularidade`, documentado em
+   * `docs/operations/runbook.md` § Variáveis de ambiente).
    *
    * `TSE_GRANULARIDADE` no ambiente sobrepõe isto para TODOS os cargos —
    * é escotilha de diagnóstico, não configuração de produção.

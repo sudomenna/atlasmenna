@@ -6,10 +6,10 @@
  * simulado passar a emitir v2 (design § 9), então um número que não fecha
  * aqui vira um teste de tela verde sobre dado impossível.
  *
- * Os tipos são LOCAIS de propósito: a frente T ainda vai escrever
- * `DeputadoUfDetail` v2 em `lib/blob/deputado-uf.ts`. Quando o tipo existir,
- * troque os `as unknown as` abaixo por `satisfies` contra ele (tasks T1.9) — o
- * teste passa a provar também a forma, não só a aritmética.
+ * Os tipos saem dos tipos REAIS (`lib/blob/deputado-uf.ts`,
+ * `lib/edge-config/types.ts` — tasks T1.9), e o bloco "forma" prova em runtime
+ * que o leitor tolerante aceita cada campo da fixture: o teste prova a forma,
+ * não só a aritmética.
  *
  * Cada invariante é recalculada aqui a partir dos votos, sem reaproveitar o
  * campo que ela confere: conferir `quociente_eleitoral` contra `regras`
@@ -18,6 +18,18 @@
 
 import { describe, expect, it } from "vitest";
 
+import {
+  type DeputadoComparacao,
+  type DeputadoDivergencia,
+  type DeputadoUfAgremiacao,
+  type DeputadoUfDetail,
+  type DeputadoUfLinha,
+  type DeputadoUfLista,
+  projecaoValida,
+  sanearDeputadoUfDetail,
+  sanearDeputadoUfLista,
+} from "@/lib/blob/deputado-uf";
+import type { EdgePayloadDeputado } from "@/lib/edge-config/types";
 import v1Fixture from "@/tests/fixtures/blob/dep-uf.json" with { type: "json" };
 import nacionalFixture from "@/tests/fixtures/contrato/deputado-nacional-v2.json" with {
   type: "json",
@@ -26,70 +38,45 @@ import listaFixture from "@/tests/fixtures/contrato/deputado-uf-lista.json" with
 import ufFixture from "@/tests/fixtures/contrato/deputado-uf-v2.json" with { type: "json" };
 
 // ---------------------------------------------------------------------------
-// Tipos locais — espelho do design 026 § 2 (não importar daqui)
+// Tipos — DERIVADOS dos tipos reais (tasks T1.9)
 // ---------------------------------------------------------------------------
+//
+// Até 29/09 este arquivo tinha um espelho local do design § 2. Agora os tipos
+// saem de `lib/blob/deputado-uf.ts` / `lib/edge-config/types.ts`: um campo
+// renomeado lá quebra a compilação aqui. O `as unknown as` nas três fixtures
+// continua — o TypeScript alarga os literais de um JSON importado (`"cargo": 6`
+// vira `number`), e `satisfies` sobre o JSON cru não compila por isso. A prova
+// de FORMA em runtime é o bloco "forma" logo abaixo: o leitor tolerante, que
+// codifica as tabelas fechadas do design, não pode descartar nada.
+//
+// Os aliases apertam o que a fixture v2 garante e o tipo deixa opcional (um
+// objeto v2 SEMPRE traz `regras`, `projecao`, `conferencia`...).
 
-type Destino = "valido_legenda" | "anulado" | "sub_judice";
-type Via = "qp" | "sobra";
+type Linha = DeputadoUfLinha;
+type Divergencia = DeputadoDivergencia;
+type Comparacao = DeputadoComparacao;
 
-interface Linha {
-  sqcand: number;
-  nome: string;
-  partido: string;
-  numero?: number;
-  votos: number;
-  rank: number;
-  pct_validos: number | null;
-  parcial?: Via;
-  indefinido?: true;
-  projecao?: Via;
-  projecao_apertada?: true;
-  tse?: "eleito_qp" | "eleito_media" | "eleito" | "suplente" | "nao_eleito";
-  destino?: Destino;
-}
+type Agremiacao = DeputadoUfAgremiacao &
+  Required<Pick<DeputadoUfAgremiacao, "candidatos" | "total_candidatos">>;
 
-interface CandidatoV1 {
-  sqcand: number;
-  votos: number;
-  ordem: number;
-  indefinido?: boolean;
-}
-
-interface Agremiacao {
-  cod: string;
-  sigla: string;
-  votos_nominais: number;
-  votos_legenda: number;
-  votos_validos: number;
-  pct_votos: number;
-  quociente_partidario: number;
-  cadeiras: number;
-  cadeiras_ci95?: [number, number];
-  cadeiras_projetadas?: number;
-  cadeiras_projetadas_ci95?: [number, number];
-  votos_projetados?: number;
-  corte?: {
-    ultimo_eleito: number;
-    primeiro_fora: number;
-    diferenca: number;
-    primeiro_fora_abaixo_piso_10?: true;
+type Detalhe = Omit<
+  DeputadoUfDetail,
+  "agremiacoes" | "lugares_a_preencher" | "quociente_eleitoral" | "divergencias"
+> &
+  Required<
+    Pick<DeputadoUfDetail, "contrato" | "regras" | "projecao" | "conferencia" | "mais_votados">
+  > & {
+    dado_ts: string | null;
+    pares_atrasados: number | null;
+    lugares_a_preencher: number;
+    quociente_eleitoral: number;
+    divergencias: Divergencia[];
+    agremiacoes: Agremiacao[];
   };
-  puxadores?: Array<{ sqcand: number; quocientes: number; excedente: number }>;
-  total_candidatos: number;
-  candidatos: Linha[];
-  eleitos: CandidatoV1[];
-  suplentes: CandidatoV1[];
-}
 
-interface Divergencia {
-  o_que: string;
-  nosso: number;
-  tse: number;
-  detalhe: string;
-  diferenca_pct?: number;
-}
-
-type Comparacao = "eleitorado" | "algoritmo" | "eleitos" | "votos_validos";
+type Lista = DeputadoUfLista;
+type Nacional = EdgePayloadDeputado &
+  Required<Pick<EdgePayloadDeputado, "mais_votados" | "puxadores">>;
 
 /** Design 026 § 2.8 — cada chave de divergência pertence a UMA comparação. */
 const COMPARACAO_DA_CHAVE: Record<string, Comparacao> = {
@@ -106,107 +93,29 @@ const MOTIVOS: Record<string, readonly string[]> = {
   indisponivel: ["interruptor", "coligacao", "cobertura", "erro"],
 };
 
-interface Detalhe {
-  contrato: 2;
-  cargo: 6;
-  turno: 1;
-  uf: string;
-  ts: string;
-  dado_ts: string | null;
-  pares_atrasados: number | null;
-  pct_apurado: number;
-  lugares_a_preencher: number;
-  quociente_eleitoral: number;
-  quociente_eleitoral_tse: number | null;
-  totalizacao_final: boolean;
-  divergencias: Divergencia[];
-  agremiacoes: Agremiacao[];
-  vagas_nao_preenchidas: number;
-  regras: {
-    quociente_eleitoral: number;
-    votos_validos: number;
-    lugares_a_preencher: number;
-    piso_candidato: number;
-    piso_agremiacao_sobras: number;
-    piso_candidato_sobras: number;
-  };
-  projecao: {
-    estado: "liberada" | "aguardando" | "indisponivel";
-    motivo?: string;
-    pct_minimo: number;
-    zonas_apuradas: number;
-    zonas_total: number;
-  };
-  conferencia: {
-    estado: "confere" | "diverge" | "sem_dado_tse";
-    boletim_dado_ts: string | null;
-    totalizacao_final: boolean;
-    comparou: Comparacao[];
-    divergencias: Divergencia[];
-  };
-  mais_votados: Array<{ cod: string; sqcand: number }>;
-  lista?: { restantes: number };
-}
-
-interface Lista {
-  contrato: 2;
-  uf: string;
-  agremiacoes: Array<{ cod: string; candidatos: Linha[] }>;
-}
-
-interface Destaque {
-  uf: string;
-  sqcand: number;
-  nome: string;
-  partido: string;
-  cod: string;
-  sigla: string;
-  numero?: number;
-  votos: number;
-  pct_validos: number | null;
-  destino?: Destino;
-}
-
-interface Puxador extends Destaque {
-  quociente_eleitoral: number;
-  quocientes: number;
-  excedente: number;
-}
-
-interface Nacional {
-  cargo: 6;
-  turno: 1;
-  bancada: {
-    total_cadeiras: number;
-    cadeiras_atribuidas: number;
-    ufs_calculadas: number;
-    ufs_aguardando: number;
-    por_agremiacao: Array<{
-      cod: string;
-      cadeiras: number;
-      votos_nominais: number;
-      votos_legenda: number;
-      votos_validos: number;
-    }>;
-  };
-  por_uf: Array<{
-    sigla: string;
-    pct_apurado: number;
-    lugares_a_preencher: number | null;
-    quociente_eleitoral: number | null;
-    cadeiras_definidas: number;
-    projecao?: Detalhe["projecao"];
-  }>;
-  mais_votados: Destaque[];
-  puxadores: Puxador[];
-  insights: string[];
-  composition: { pre_election: number; model: number; actual_results: number };
-  votacao?: unknown;
-}
-
 const UFS = ufFixture as unknown as Record<string, Detalhe>;
 const LISTAS = listaFixture as unknown as Record<string, Lista>;
 const NACIONAL = nacionalFixture as unknown as Nacional;
+
+describe("forma — os tipos reais e o leitor tolerante aceitam a fixture inteira (T1.9)", () => {
+  it("cada UF v2 passa por `sanearDeputadoUfDetail` sem perder um campo", () => {
+    for (const [uf, d] of Object.entries(UFS)) {
+      expect(sanearDeputadoUfDetail(d as unknown as DeputadoUfDetail), uf).toEqual(d);
+    }
+  });
+
+  it("a lista 61+ passa por `sanearDeputadoUfLista` sem perder uma linha", () => {
+    for (const [uf, l] of Object.entries(LISTAS)) {
+      expect(sanearDeputadoUfLista(l), uf).toEqual(l);
+    }
+  });
+
+  it("todo `por_uf[].projecao` do nacional tem a forma do design § 2.7", () => {
+    for (const row of NACIONAL.por_uf) {
+      if (row.projecao !== undefined) expect(projecaoValida(row.projecao), row.sigla).toBe(true);
+    }
+  });
+});
 
 /** O objeto de uma UF da fixture — lança se a sigla não existir (erro de teste, não de dado). */
 function ufDe(sigla: string): Detalhe {

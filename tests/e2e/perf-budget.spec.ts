@@ -106,12 +106,21 @@ const ARTIFACT_PATH = path.join(process.cwd(), "test-results", "perf-budget.json
 // Pôr a rota aqui deixaria o portão vermelho por um peso que já existia; a
 // decisão de apertar a página ou o teto é do dono (registrado no tasks.md da
 // spec 025).
+//
+// `/uf/SP/deputado-federal` entrou em 2026-09-29 (spec 026 RF-277, ADR-0065
+// D5): a página de UF de Deputado passa a carregar as listas por agremiação
+// (60 por agremiação no documento). Ela tem TETO PRÓPRIO de documento
+// (`TETO_DOCUMENTO_POR_ROTA`), e só é medida com o Blob servido: o
+// `build:e2e`/`start:e2e` apontam `BLOB_PUBLIC_BASE_URL` para o servidor falso
+// (`scripts/edge-config-falso.ts`, `/blob/deputado/uf/SP.json`). Antes disso ela
+// renderizava "Detalhe indisponível" — a parte mais pesada, fora da medição.
 const ROUTES = [
   "/",
   "/uf/SP",
   "/uf/SP/governador",
   "/uf/SP/senador",
   "/deputado-federal",
+  "/uf/SP/deputado-federal",
   "/senador",
   "/sobre-as-etiquetas",
 ] as const;
@@ -165,6 +174,37 @@ const ROTAS_COM_MAPA = new Set<string>(["/", "/uf/SP", "/uf/SP/governador", "/uf
  * use a medição de rede, que é a que o portão faz.
  */
 const BUDGET_DOCUMENT_BYTES = 300 * KIB;
+
+/**
+ * Tetos de documento PRÓPRIOS de uma rota — exceção nomeada, nunca
+ * afrouxamento do teto global acima, que não muda.
+ *
+ * `/uf/SP/deputado-federal` — **480 KiB** (≈ 70 KiB gzip), decisão do dono em
+ * 29/09 (plano da spec 026; ADR-0065 D5; design 026 § 10). SP é o pior caso do
+ * produto: 70 vagas, dezenas de agremiações, 60 linhas por agremiação no
+ * documento. ⚠️ O número é ESCOLHA, não medida da noite (ADR-0065, negativas):
+ * se o medido ficar longe dele, o teto se revê por ADR, não por edição deste
+ * arquivo.
+ */
+const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> = {
+  "/uf/SP/deputado-federal": 480 * KIB,
+};
+
+function tetoDoDocumento(route: (typeof ROUTES)[number]): number {
+  return TETO_DOCUMENTO_POR_ROTA[route] ?? BUDGET_DOCUMENT_BYTES;
+}
+
+/**
+ * Frases de "detalhe do Blob indisponível" da página de UF de Deputado
+ * (`MOTIVO_INDISPONIVEL`, `app/(dep)/uf/[sigla]/deputado-federal/page.tsx`).
+ * Com o Blob servido pelo falso, nenhuma pode aparecer: se aparecer, o teto
+ * de 480 KiB passaria medindo a página SEM a parte que ele existe para medir.
+ */
+const DETALHE_DEPUTADO_INDISPONIVEL = [
+  "O armazenamento do detalhe não está configurado",
+  "Ainda não há um detalhe publicado para este estado",
+  "Não conseguimos buscar o detalhe agora",
+] as const;
 
 /**
  * Rotas que JÁ estouravam o teto do documento quando o portão passou a medir a
@@ -487,19 +527,30 @@ test.describe("perf budget (RNF-007a/b/c)", () => {
         `${route} veio com a casca "sem dados" — o .next não saiu do \`pnpm build:e2e\`?`,
       ).toEqual([]);
 
+      if (route === "/uf/SP/deputado-federal") {
+        const html = corpo.toString("utf8");
+        expect(
+          DETALHE_DEPUTADO_INDISPONIVEL.filter((f) => html.includes(f)),
+          `${route} renderizou sem o detalhe do Blob — o BLOB_PUBLIC_BASE_URL do ` +
+            "build:e2e/start:e2e aponta para o servidor falso?",
+        ).toEqual([]);
+      }
+
       test.info().annotations.push({
         type: "document-size",
         description: `${route}: documento=${(bytes / KIB).toFixed(1)}KiB (${bytes} B)`,
       });
 
+      const teto = tetoDoDocumento(route);
       expect
         .soft(
           bytes,
-          `Documento de ${route} = ${bytes} B. Este é o único gate que enxerga ` +
-            "conteúdo renderizado no servidor — hemiciclo, grade de bandeiras, sprites " +
-            "SVG embutidos. Se estourou, o peso veio de markup, não de script.",
+          `Documento de ${route} = ${bytes} B (teto ${teto} B). Este é o único gate que ` +
+            "enxerga conteúdo renderizado no servidor — hemiciclo, grade de bandeiras, " +
+            "sprites SVG embutidos, listas de candidaturas. Se estourou, o peso veio de " +
+            "markup, não de script.",
         )
-        .toBeLessThan(BUDGET_DOCUMENT_BYTES);
+        .toBeLessThan(teto);
     });
   }
 });

@@ -181,10 +181,15 @@ const config: VercelProjectConfig = {
     // "atualizado às" único numa tela que mistura cargos de cadências
     // diferentes.
     //
-    // Interruptor de emergência sem deploy: `TSE_DEPUTADO_GRANULARIDADE=uf`
-    // reverte o cargo a UF — nesse modo cada uma das 6 invocações abaixo
-    // devolve o agregado completo de 27 UFs, ignorando a fatia (ver
+    // Chave de emergência: `TSE_DEPUTADO_GRANULARIDADE=uf` reverte o cargo a
+    // UF — nesse modo cada uma das 6 invocações abaixo devolve o agregado
+    // completo de 27 UFs, ignorando a fatia (ver
     // `getGranularidade`/`listIngestTargets`, `lib/tse/targets.ts`).
+    // 🔴 EXIGE NOVO DEPLOY (corrigido em 29/09, ADR-0063 D4): na Vercel,
+    // variável de ambiente só chega a um deployment novo — indisponível das
+    // 16h às 05h de 04/10, quando o deploy está congelado. O que age sem
+    // deploy é chave do Global Config (ex.: `interruptor-projecao-dep`,
+    // `pnpm dep:projecao`), nunca variável de ambiente.
     //
     // Mesmas duas janelas dos demais cargos: apuração (20-23,0-7 UTC) e
     // simulado (12-20 UTC).

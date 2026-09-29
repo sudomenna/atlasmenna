@@ -86,10 +86,47 @@
  * `pnpm build` comum depois do `build:e2e` troca o `BUILD_ID`, e o portão
  * voltaria a medir a casca sem ninguém ver.
  *
+ * ─── O Blob também (spec 026, 2026-09-29) ─────────────────────────────────
+ *
+ * `/uf/SP/deputado-federal` lê o detalhe da UF do Vercel Blob
+ * (`readDeputadoUfDetail`), não do Global Config — e com o
+ * `BLOB_READ_WRITE_TOKEN` zerado pelo `build:e2e`/`start:e2e` a página
+ * renderizava "Detalhe indisponível": o portão de peso media uma página sem a
+ * parte que mais pesa (ADR-0065 D5). Agora este servidor também responde como
+ * o CDN público do Blob, sob `/blob/`, e os dois scripts apontam
+ * `BLOB_PUBLIC_BASE_URL=http://127.0.0.1:3101/blob` para cá
+ * (`lib/blob/paths.ts::blobPublicBaseUrl` — o override que já existia para
+ * os testes).
+ *
+ *   `/blob/deputado/uf/<UF>.json`        ← `deputado-uf.json[UF]`
+ *   `/blob/deputado/uf-lista/<UF>.json`  ← `deputado-uf-lista.json[UF]` (se existir)
+ *
+ * Qualquer outro caminho do Blob ⇒ 404, a resposta do CDN para objeto não
+ * gravado. ⚠️ Isso muda três coisas FORA de Deputado, todas na direção de
+ * produção: (1) as páginas passam a emitir `<img>` de foto de candidato (a URL
+ * existe; o arquivo não — e o 404 da foto não é logado); (2) o detalhe
+ * municipal de `/uf/SP*` passa de "não configurado" a "não publicado"
+ * (`DetailUnavailable`, mesma caixa, outra frase); (3) as etiquetas tentam o
+ * Blob e caem na cópia do build, como em produção sem objeto publicado.
+ *
+ * ─── O interruptor da projeção (ADR-0063) ──────────────────────────────────
+ *
+ * Chave `interruptor-projecao-dep`. Falha fechada: AUSENTE = DESLIGADA. Por
+ * isso ela só é servida quando alguém pede:
+ *
+ *   `--projecao-ligada`     ⇒ `{ligada: true}`  — o estado pretendido da noite
+ *                             (o passo de 03/10), e o que os portões medem:
+ *                             é a página mais pesada;
+ *   `--projecao-desligada`  ⇒ `{ligada: false}` — para medir a página sem;
+ *   nenhum dos dois         ⇒ `interruptor-projecao-dep.json` da fixture, se
+ *                             existir; senão, AUSENTE (= desligada).
+ *
  * ─── Uso ───────────────────────────────────────────────────────────────────
  *
  *   tsx scripts/edge-config-falso.ts [--sem-blocos-novos] [--marcar-build]
- *                                    [--exigir-build-e2e] [-- <comando…>]
+ *                                    [--exigir-build-e2e]
+ *                                    [--projecao-ligada|--projecao-desligada]
+ *                                    [-- <comando…>]
  *
  * A porta vem do próprio `EDGE_CONFIG` (fonte única). Com `-- <comando>`, o
  * comando sobe como filho herdando o ambiente, e o servidor morre junto com
@@ -102,8 +139,13 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { deputadoUfBlobPathname, deputadoUfListaBlobPathname } from "@/lib/blob/paths";
 import type { Cargo } from "@/lib/config/calendar";
-import { currentProjectionKey, ufProjectionKey } from "@/lib/edge-config/keys";
+import {
+  currentProjectionKey,
+  interruptorProjecaoDepKey,
+  ufProjectionKey,
+} from "@/lib/edge-config/keys";
 
 const DIR_SIMULACAO = path.join(process.cwd(), "tests", "fixtures", "simulacao");
 
@@ -131,10 +173,27 @@ const DIGEST = "e2e-falso";
 export interface OpcoesChaves {
   dir?: string;
   semBlocosNovos?: boolean;
+  /**
+   * `true` ⇒ serve `{ligada: true}`; `false` ⇒ `{ligada: false}`; ausente ⇒
+   * a fixture `interruptor-projecao-dep.json`, ou a chave AUSENTE (= desligada).
+   */
+  projecaoLigada?: boolean;
 }
+
+/** Prefixo sob o qual este servidor imita o CDN público do Blob. */
+export const PREFIXO_BLOB = "/blob/";
+
+/** Arquivo opcional da fixture com o VALOR do interruptor. */
+const ARQUIVO_INTERRUPTOR = "interruptor-projecao-dep";
 
 function lerJson(dir: string, nome: string): unknown {
   return JSON.parse(fs.readFileSync(path.join(dir, `${nome}.json`), "utf8")) as unknown;
+}
+
+/** `lerJson`, ou `undefined` quando o arquivo não existe (fixture opcional). */
+function lerJsonOpcional(dir: string, nome: string): unknown {
+  if (!fs.existsSync(path.join(dir, `${nome}.json`))) return undefined;
+  return lerJson(dir, nome);
 }
 
 function ehObjeto(v: unknown): v is Record<string, unknown> {
@@ -184,7 +243,67 @@ export function montarChaves(opts: OpcoesChaves = {}): Map<string, unknown> {
     }
   }
 
+  // Interruptor: flag > fixture > AUSENTE (= desligada, a regra de produção).
+  if (opts.projecaoLigada !== undefined) {
+    chaves.set(interruptorProjecaoDepKey(), {
+      ligada: opts.projecaoLigada,
+      por: "edge-config-falso",
+    });
+  } else {
+    const interruptor = lerJsonOpcional(dir, ARQUIVO_INTERRUPTOR);
+    if (interruptor !== undefined) chaves.set(interruptorProjecaoDepKey(), interruptor);
+  }
+
   return chaves;
+}
+
+/**
+ * Monta o mapa pathname do Blob → objeto, a partir das fixtures. Os caminhos
+ * vêm de `lib/blob/paths.ts` — o mesmo construtor que o leitor usa.
+ */
+export function montarBlobs(opts: Pick<OpcoesChaves, "dir"> = {}): Map<string, unknown> {
+  const dir = opts.dir ?? DIR_SIMULACAO;
+  const blobs = new Map<string, unknown>();
+
+  const porUf = lerJson(dir, "deputado-uf");
+  if (!ehObjeto(porUf)) throw new Error("deputado-uf.json não é um mapa UF → detalhe");
+  for (const [sigla, detalhe] of Object.entries(porUf)) {
+    blobs.set(deputadoUfBlobPathname(sigla), detalhe);
+  }
+
+  const listas = lerJsonOpcional(dir, "deputado-uf-lista");
+  if (listas !== undefined) {
+    if (!ehObjeto(listas)) throw new Error("deputado-uf-lista.json não é um mapa UF → lista");
+    for (const [sigla, lista] of Object.entries(listas)) {
+      blobs.set(deputadoUfListaBlobPathname(sigla), lista);
+    }
+  }
+
+  return blobs;
+}
+
+/**
+ * `BLOB_PUBLIC_BASE_URL`, se declarado, tem de apontar para ESTE servidor:
+ * `http://127.0.0.1:<porta do EDGE_CONFIG>/blob`. Qualquer outra coisa é
+ * ambiente de teste errado — e recusamos em vez de "corrigir", como com o
+ * `EDGE_CONFIG`: o comando filho leria o Blob de outro lugar.
+ */
+export function conferirBaseDoBlob(base: string | undefined, porta: number): void {
+  if (!base) return;
+  let url: URL;
+  try {
+    url = new URL(base);
+  } catch {
+    throw new Error(`BLOB_PUBLIC_BASE_URL não é uma URL: "${base}"`);
+  }
+  const esperado = `http://127.0.0.1:${porta}${PREFIXO_BLOB.slice(0, -1)}`;
+  const recebido = `${url.protocol}//${url.host}${url.pathname.replace(/\/+$/, "")}`;
+  if (recebido !== esperado) {
+    throw new Error(
+      `BLOB_PUBLIC_BASE_URL precisa ser ${esperado} (recebido "${base}"). ` +
+        "O servidor falso não sobe — nem o comando filho — lendo o Blob de outro lugar.",
+    );
+  }
 }
 
 /** Porta e id lidos do `EDGE_CONFIG`. Lança se ele não apontar para 127.0.0.1. */
@@ -224,8 +343,23 @@ export function responder(
   metodo: string,
   urlPath: string,
   autorizacao: string | undefined,
+  blobs: ReadonlyMap<string, unknown> = new Map(),
 ): Resposta {
   const json = { "content-type": "application/json" };
+  const caminho = new URL(urlPath, "http://127.0.0.1").pathname;
+  // O Blob é PÚBLICO — o CDN real não pede credencial, e este também não. Vem
+  // antes do 401 do Global Config por isso.
+  if ((metodo === "GET" || metodo === "HEAD") && caminho.startsWith(PREFIXO_BLOB)) {
+    const pathname = decodeURIComponent(caminho.slice(PREFIXO_BLOB.length));
+    if (blobs.has(pathname)) {
+      return {
+        status: 200,
+        headers: { ...json, "cache-control": "public, max-age=60" },
+        corpo: metodo === "HEAD" ? "" : JSON.stringify(blobs.get(pathname)),
+      };
+    }
+    return { status: 404, headers: json, corpo: JSON.stringify({ error: "not_found" }) };
+  }
   if (!autorizacao?.startsWith("Bearer ")) {
     return { status: 401, headers: json, corpo: JSON.stringify({ error: "unauthorized" }) };
   }
@@ -320,10 +454,27 @@ export function conferirBuildE2e(distDir: string): ConferenciaBuild {
   return { ok: true, marca: marca as MarcaBuildE2e };
 }
 
-export function criarServidor(chaves: ReadonlyMap<string, unknown>, id: string): Server {
+/**
+ * Foto de candidato: a página emite a URL, a fixture não tem a imagem. São
+ * dezenas por página — logar cada 404 afogaria os que importam.
+ */
+const PREFIXO_FOTO_SEM_LOG = `${PREFIXO_BLOB}candidatos/foto/`;
+
+export function criarServidor(
+  chaves: ReadonlyMap<string, unknown>,
+  id: string,
+  blobs: ReadonlyMap<string, unknown> = new Map(),
+): Server {
   return createServer((req: IncomingMessage, res: ServerResponse) => {
-    const r = responder(chaves, id, req.method ?? "GET", req.url ?? "/", req.headers.authorization);
-    if (r.status === 404) {
+    const r = responder(
+      chaves,
+      id,
+      req.method ?? "GET",
+      req.url ?? "/",
+      req.headers.authorization,
+      blobs,
+    );
+    if (r.status === 404 && !(req.url ?? "").startsWith(PREFIXO_FOTO_SEM_LOG)) {
       process.stderr.write(`[edge-config-falso] 404 ${req.method} ${req.url}\n`);
     }
     res.writeHead(r.status, r.headers);
@@ -336,21 +487,36 @@ async function main(argv: string[]): Promise<void> {
   const flags = separador === -1 ? argv : argv.slice(0, separador);
   const comando = separador === -1 ? [] : argv.slice(separador + 1);
   const semBlocosNovos = flags.includes("--sem-blocos-novos");
+  const ligada = flags.includes("--projecao-ligada");
+  const desligada = flags.includes("--projecao-desligada");
+  if (ligada && desligada) throw new Error("--projecao-ligada e --projecao-desligada juntos");
+  const projecaoLigada = ligada ? true : desligada ? false : undefined;
   const marcarBuild = flags.includes("--marcar-build");
   const exigirBuildE2e = flags.includes("--exigir-build-e2e");
   const distDir = path.join(process.cwd(), ".next");
 
   const { porta, id } = lerConexao(process.env.EDGE_CONFIG);
+  conferirBaseDoBlob(process.env.BLOB_PUBLIC_BASE_URL, porta);
   if (exigirBuildE2e) {
     const conf = conferirBuildE2e(distDir);
     if (!conf.ok) throw new Error(conf.motivo);
     process.stderr.write(`[edge-config-falso] build:e2e ${conf.marca.build_id} conferido\n`);
   }
-  const chaves = montarChaves({ semBlocosNovos });
-  const servidor = criarServidor(chaves, id);
+  const chaves = montarChaves({ semBlocosNovos, projecaoLigada });
+  const blobs = montarBlobs();
+  const servidor = criarServidor(chaves, id, blobs);
   await new Promise<void>((ok) => servidor.listen(porta, "127.0.0.1", () => ok()));
+  const interruptor =
+    projecaoLigada === undefined
+      ? chaves.has(interruptorProjecaoDepKey())
+        ? "da fixture"
+        : "AUSENTE (= desligada)"
+      : projecaoLigada
+        ? "ligado"
+        : "desligado";
   process.stderr.write(
     `[edge-config-falso] ${chaves.size} chaves em http://127.0.0.1:${porta}/${id}` +
+      ` + ${blobs.size} objetos de Blob em ${PREFIXO_BLOB} · interruptor ${interruptor}` +
       `${semBlocosNovos ? " (--sem-blocos-novos)" : ""}\n`,
   );
 

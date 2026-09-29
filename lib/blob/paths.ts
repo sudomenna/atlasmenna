@@ -31,6 +31,7 @@
  * ```
  *   municipios/uf/<SIGLA>/<cargo>/t<turno>.json   municipios/uf/SP/pres/t1.json
  *   deputado/uf/<SIGLA>.json                      deputado/uf/SP.json
+ *   deputado/uf-lista/<SIGLA>.json                deputado/uf-lista/SP.json
  *   candidatos/uf/<SIGLA>/<cargo>.json            candidatos/uf/SP/dep.json
  *   candidatos/index.json                         candidatos/index.json
  *   candidatos/foto/<SIGLA>/<SQ_CANDIDATO>.jpg    candidatos/foto/SP/250002553928.jpg
@@ -207,6 +208,29 @@ export function ufDetailBlobPathname(sigla: string, cargo: Cargo, turno: Turno):
 export function deputadoUfBlobPathname(sigla: string): string {
   const uf = normaliseSigla(sigla, "deputadoUfBlobPathname");
   return blobPathname(["deputado", "uf", uf], "deputadoUfBlobPathname");
+}
+
+/**
+ * Lista RESTANTE de candidaturas de Deputado Federal de uma UF — os ranks
+ * **61 em diante** de cada agremiação (spec 026 RF-260, ADR-0065).
+ *
+ * `deputado/uf-lista/<SIGLA>.json` — ex. `deputado/uf-lista/SP.json`.
+ *
+ * Objeto próprio, e não mais um campo de `deputado/uf/<SIGLA>.json`, porque a
+ * página não os usa no primeiro render: os 60 primeiros de cada agremiação já
+ * vêm no objeto da UF, e o resto só é pedido quando o leitor clica em "ver
+ * todos". Colocá-los no objeto principal custaria ~5× o peso da página de SP
+ * para servir um clique que a maioria não dá. O escritor
+ * (`writeDeputadoUfDetails`, `lib/edge-config/writer.ts`) separa o campo de
+ * transporte `lista_restante` e grava os dois objetos no mesmo ciclo.
+ *
+ * `uf-lista`, e não `uf/<SIGLA>/lista`: com um segmento a mais sob
+ * `deputado/uf/`, o prefixo `deputado/uf/SP` casaria os dois objetos, e quem
+ * listar o store por prefixo passaria a ver dois recursos onde havia um.
+ */
+export function deputadoUfListaBlobPathname(sigla: string): string {
+  const uf = normaliseSigla(sigla, "deputadoUfListaBlobPathname");
+  return blobPathname(["deputado", "uf-lista", uf], "deputadoUfListaBlobPathname");
 }
 
 // ---------------------------------------------------------------------------

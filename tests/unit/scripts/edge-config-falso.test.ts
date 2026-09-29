@@ -19,13 +19,21 @@ import * as path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { currentProjectionKey, ufProjectionKey } from "@/lib/edge-config/keys";
+import { blobUrlFor, deputadoUfBlobPathname, deputadoUfListaBlobPathname } from "@/lib/blob/paths";
 import {
+  currentProjectionKey,
+  interruptorProjecaoDepKey,
+  ufProjectionKey,
+} from "@/lib/edge-config/keys";
+import {
+  conferirBaseDoBlob,
   conferirBuildE2e,
   gravarMarcaBuild,
   lerConexao,
   MARCA_BUILD_E2E,
+  montarBlobs,
   montarChaves,
+  PREFIXO_BLOB,
   responder,
   semBlocosNovosNacional,
   semBlocosNovosUf,
@@ -198,5 +206,111 @@ describe("build:e2e — a marca que o start:e2e exige (29/09)", () => {
     expect(ambiente(build)).toContain('EDGE_CONFIG="http://127.0.0.1:3101/');
     expect(build).toContain("--marcar-build -- next build");
     expect(start).toContain("--exigir-build-e2e -- next start -p 3100");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spec 026 — o Blob de Deputado e o interruptor (2026-09-29)
+// ---------------------------------------------------------------------------
+
+describe("montarBlobs — o CDN do Blob, a partir das fixtures", () => {
+  const blobs = montarBlobs();
+
+  it("serve o detalhe de Deputado das 27 UFs, no caminho que o leitor monta", () => {
+    for (const sigla of ["SP", "RR", "DF"]) {
+      const d = blobs.get(deputadoUfBlobPathname(sigla)) as { uf?: string; agremiacoes?: unknown };
+      expect(d?.uf).toBe(sigla);
+      expect(Array.isArray(d?.agremiacoes)).toBe(true);
+    }
+    expect(
+      [...blobs.keys()].filter((k) => k.startsWith("deputado/uf/") && k.endsWith(".json")),
+    ).toHaveLength(27);
+  });
+
+  it("a lista 61+ só é servida quando a fixture existe — nunca inventada", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "falso-blob-"));
+    fs.writeFileSync(path.join(dir, "deputado-uf.json"), JSON.stringify({ SP: { uf: "SP" } }));
+    expect([...montarBlobs({ dir }).keys()]).toEqual([deputadoUfBlobPathname("SP")]);
+
+    fs.writeFileSync(
+      path.join(dir, "deputado-uf-lista.json"),
+      JSON.stringify({ SP: { uf: "SP", agremiacoes: [] } }),
+    );
+    const comLista = montarBlobs({ dir });
+    expect(comLista.get(deputadoUfListaBlobPathname("SP"))).toEqual({ uf: "SP", agremiacoes: [] });
+  });
+});
+
+describe("responder — o Blob é público e vem antes do 401", () => {
+  const chaves = new Map<string, unknown>();
+  const blobs = new Map<string, unknown>([[deputadoUfBlobPathname("SP"), { uf: "SP" }]]);
+
+  it("objeto conhecido → 200, SEM exigir Authorization (o CDN real não exige)", () => {
+    const r = responder(chaves, ID, "GET", `${PREFIXO_BLOB}deputado/uf/SP.json`, undefined, blobs);
+    expect(r.status).toBe(200);
+    expect(JSON.parse(r.corpo)).toEqual({ uf: "SP" });
+  });
+
+  it("objeto desconhecido (foto, municípios) → 404, como o CDN para objeto não gravado", () => {
+    for (const p of ["candidatos/foto/SP/250002553928.jpg", "municipios/uf/SP/pres/t1.json"]) {
+      expect(responder(chaves, ID, "GET", `${PREFIXO_BLOB}${p}`, undefined, blobs).status).toBe(
+        404,
+      );
+    }
+  });
+
+  it("a URL que o leitor monta com BLOB_PUBLIC_BASE_URL cai exatamente neste prefixo", () => {
+    const antes = process.env.BLOB_PUBLIC_BASE_URL;
+    process.env.BLOB_PUBLIC_BASE_URL = "http://127.0.0.1:3101/blob";
+    try {
+      const url = new URL(blobUrlFor(deputadoUfBlobPathname("SP")) as string);
+      expect(responder(chaves, ID, "GET", url.pathname, undefined, blobs).status).toBe(200);
+    } finally {
+      if (antes === undefined) delete process.env.BLOB_PUBLIC_BASE_URL;
+      else process.env.BLOB_PUBLIC_BASE_URL = antes;
+    }
+  });
+});
+
+describe("conferirBaseDoBlob — só este servidor", () => {
+  it("aceita a base local na mesma porta (com ou sem barra final) e a ausência", () => {
+    expect(() => conferirBaseDoBlob("http://127.0.0.1:3101/blob", 3101)).not.toThrow();
+    expect(() => conferirBaseDoBlob("http://127.0.0.1:3101/blob/", 3101)).not.toThrow();
+    expect(() => conferirBaseDoBlob(undefined, 3101)).not.toThrow();
+  });
+
+  it("recusa o Blob de produção, outra porta e outro prefixo", () => {
+    expect(() =>
+      conferirBaseDoBlob("https://jbtu251tioj3y57z.public.blob.vercel-storage.com", 3101),
+    ).toThrow(/127\.0\.0\.1:3101\/blob/);
+    expect(() => conferirBaseDoBlob("http://127.0.0.1:3102/blob", 3101)).toThrow();
+    expect(() => conferirBaseDoBlob("http://127.0.0.1:3101/outro", 3101)).toThrow();
+  });
+});
+
+describe("interruptor da projeção (ADR-0063) — só servido quando pedido", () => {
+  it("sem flag e sem fixture: a chave fica AUSENTE (= desligada, a regra de produção)", () => {
+    expect(montarChaves().has(interruptorProjecaoDepKey())).toBe(false);
+  });
+
+  it("--projecao-ligada / --projecao-desligada servem o valor explícito", () => {
+    expect(montarChaves({ projecaoLigada: true }).get(interruptorProjecaoDepKey())).toMatchObject({
+      ligada: true,
+    });
+    expect(montarChaves({ projecaoLigada: false }).get(interruptorProjecaoDepKey())).toMatchObject({
+      ligada: false,
+    });
+  });
+
+  it("build:e2e e start:e2e medem a página COM a projeção e com o Blob servido", () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), "package.json"), "utf8")) as {
+      scripts: Record<string, string>;
+    };
+    for (const nome of ["build:e2e", "start:e2e"]) {
+      const cmd = pkg.scripts[nome] ?? "";
+      expect(cmd, nome).toContain('BLOB_PUBLIC_BASE_URL="http://127.0.0.1:3101/blob"');
+      expect(cmd, nome).toContain("--projecao-ligada");
+      expect(cmd, nome).toContain('BLOB_READ_WRITE_TOKEN=""');
+    }
   });
 });

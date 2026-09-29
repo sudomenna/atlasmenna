@@ -23,6 +23,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   agremiacoesFrom,
+  type DeputadoDivergenciaChave,
   type DeputadoUfAgremiacao,
   type DeputadoUfDetail,
   ordenarAgremiacoes,
@@ -293,10 +294,20 @@ describe("fixture dep-uf.json — o contrato de D2 (RF-125.1)", () => {
     }
   });
 
-  it("`divergencias[].o_que` fica no conjunto fechado do design 017 § D6", () => {
+  it("`divergencias[].o_que` fica no conjunto fechado (design 017 § D6, ampliado pelo 026 § 2.8)", () => {
+    // Spec 026 (P1, `9926fc0`) ampliou o conjunto com `eleitos`, `eleitorado`
+    // e `votos_validos` — mudança de contrato, espelhada no tipo
+    // `DeputadoDivergenciaChave` (`lib/edge-config/types.ts`).
+    const CHAVES: readonly DeputadoDivergenciaChave[] = [
+      "quociente_eleitoral",
+      "cadeiras",
+      "eleitos",
+      "eleitorado",
+      "votos_validos",
+    ];
     for (const [uf, detail] of Object.entries(fixture)) {
       for (const d of detail.divergencias) {
-        expect(["quociente_eleitoral", "cadeiras"], `${uf}`).toContain(d.o_que);
+        expect(CHAVES as readonly string[], `${uf}`).toContain(d.o_que);
         // O código da agremiação vai em `detalhe`, não embutido na chave — a
         // tela não decifra strings do modelo.
         expect(d.detalhe.length, `${uf}`).toBeGreaterThan(0);
