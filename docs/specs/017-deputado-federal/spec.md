@@ -93,7 +93,7 @@ de um estado costuma se decidir por algumas centenas de votos.
 
 ### Fora
 
-- **Deputado Estadual e Distrital** (cargos 7/8). Fora do escopo do produto.
+- ~~**Deputado Estadual e Distrital** (cargos 7/8). Fora do escopo do produto.~~ ⚠️ **Superado em 2026-09-29 pela [spec 027](../027-deputado-estadual-distrital/spec.md)** (RF-278..RF-290): os cargos 7/8 passam a ser cobertos com as telas e o cálculo desta spec e da 026; se a Fase 2 da 027 subir, a volta completa do RF-120 e o "a cada 30 min" do RF-128 passam a 60 min (RF-286, ADR-0067).
 - ~~**Projeção zona a zona.** Mesma razão da spec 016.~~ ⚠️ **Superado em
   2026-09-29 pela [spec 026](../026-deputado-listas-projecao/spec.md)** (RF-263,
   RF-264): a projeção de deputado passa a existir, zona a zona, com trava de 25%

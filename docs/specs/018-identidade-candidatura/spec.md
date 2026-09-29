@@ -82,8 +82,10 @@ informação que já existe e já é pública: **quem está concorrendo**.
   `lib/tse/ea20-schema.ts:83`), que continua sendo persistido **cru** no
   snapshot porque a constituição § 1 proíbe alterar o dado oficial — e que
   **não** pode ser derivado para nenhuma superfície desta spec.
-- **Deputado Estadual e Distrital** (11.276 candidaturas). Fora do escopo do
-  produto por `lib/config/cargos.ts`.
+- ~~**Deputado Estadual e Distrital** (11.276 candidaturas). Fora do escopo do
+  produto por `lib/config/cargos.ts`.~~ ⚠️ **Superado em 2026-09-29 pela
+  [spec 027](../027-deputado-estadual-distrital/spec.md)** (RF-288): as candidaturas de cargo 7/8
+  entram no cadastro, no publicador e em `/candidatos` a partir da reimportação de 02–03/10.
 - **Vice e suplente.** Ver open question 3 — é o único item deste bloco que
   ainda não está fechado.
 - **Uma 5ª aba no `CargoTabs`.** Não cabe: o rótulo "Deputado Federal" já
@@ -452,9 +454,12 @@ JavaScript de cliente.
   **nomeado** ("nenhuma candidatura para este filtro"), nunca 500 e nunca a
   lista inteira em silêncio — entrada inválida degrada fechado, como a
   publicabilidade.
-- Given `?cargo=7` (Deputado Estadual, existente no TSE e fora do produto), when
+- ~~Given `?cargo=7` (Deputado Estadual, existente no TSE e fora do produto), when
   a rota renderiza, then o mesmo estado vazio nomeado — a rota não revela
-  cargos que o produto não cobre.
+  cargos que o produto não cobre.~~ ⚠️ **Superado em 2026-09-29 pela
+  [spec 027](../027-deputado-estadual-distrital/spec.md)** (RF-288): `?cargo=7` e `?cargo=8` são filtros
+  válidos, cada um só nas UFs do cargo; a regra de não revelar cargo não coberto continua para os demais
+  (ex.: `?cargo=2`, `?cargo=4`).
 
 **RF-148 — Busca por nome**
 

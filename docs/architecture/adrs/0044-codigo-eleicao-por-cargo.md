@@ -12,6 +12,15 @@ date: 2026-09-17
 Aceito. Implementado no mesmo dia em `lib/config/cargos.ts` (campo `eleicao`) e `lib/tse/targets.ts`
 (`getCodEleicao(eleicao)`, `getCodEleicaoDoCargo`, `:293-367`).
 
+> **Nota 2026-09-29 ([ADR-0066](0066-cargos-7-e-8-como-proporcionais-do-produto.md)).** Os cargos 7 e 8
+> (Deputado Estadual e Distrital), que o Contexto abaixo cita como "fora do escopo do produto", passaram a
+> ser cobertos por decisão do dono em 29/09. O mecanismo deste ADR vale **sem alteração**: os dois entram na
+> tabela `CARGOS` com `eleicao: "estadual"` — a mesma eleição `21272` e a mesma
+> `TSE_COD_ELEICAO_ESTADUAL`, nenhuma variável nova — e a tabela passa de quatro a seis entradas (onde a
+> Decisão diz "cada uma das quatro entradas", leia-se cada uma das seis). A exaustividade por tipo
+> (`CargoTse`) segue sendo o que impede uma entrada sem `eleicao`. A Eleição Municipal (`21274`, Conselheiro
+> Distrital) continua fora de escopo. O corpo deste ADR não foi reescrito.
+
 ## Contexto
 
 A página técnica do TSE e o CDN do simulado, verificados em 17/09/2026, revelam que o pleito 2026

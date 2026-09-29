@@ -96,6 +96,10 @@ A página explica a **projeção de deputado** (RF-266, [spec 026](../026-deputa
 
 A frase da seção 5 é da frente U da spec 026 (tasks U8); o texto final passa pelo `constitution-guard` (§ 8).
 
+### Spec 027 — as Assembleias Legislativas e a Câmara Legislativa do DF (2026-09-29)
+
+A seção 5 ("Cadeiras", `#sec-cadeiras`) ganha **um parágrafo** sobre Deputado Estadual e Distrital ([spec 027](../027-deputado-estadual-distrital/spec.md), RF-281/RF-285/RF-287, ADR-0066): a mesma regra de cadeiras (ADR-0027) aplicada a cada uma das 27 casas **separadamente** — 26 Assembleias com 1.035 cadeiras e a Câmara Legislativa do DF com 24 —; enquanto as casas são lidas pelo resumo do estado não há projeção, só a conta sobre o voto já apurado; a projeção das assembleias, quando existir, é a mesma da Câmara, com interruptor próprio; e a soma nacional da capa `/deputado-estadual` é soma de casas separadas, não um plenário. **Nenhum `<h2>` novo** — o teste de estrutura segue travando oito. O texto é da frente U-b da spec 027 (tasks Ub6) e passa pelo `constitution-guard` (§ 8).
+
 ## Cross-refs
 
 - Design: [./design.md](./design.md)

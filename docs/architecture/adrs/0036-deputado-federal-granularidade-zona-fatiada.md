@@ -70,6 +70,16 @@ de emenda aplicada ao `## Status` do ADR-0026.
 > `fetch_eleitorado` desliga a trava em silêncio (ambos detalhados em Consequências →
 > Negativas).
 
+> **Nota 2026-09-29 ([ADR-0067](0067-orcamento-de-requisicoes-com-as-assembleias.md)) — cadência e pior
+> caso emendados.** A entrada dos cargos 7 e 8 (Deputado Estadual e Distrital) no orçamento de requisições
+> muda duas afirmações da Decisão abaixo. **(i)** "o pior caso agregado permanece 80 rps" passa a **82** na
+> Fase 1 do ADR-0067 e a **81** na Fase 2. **(ii)** Se a Fase 2 subir, a "volta completa em 30 minutos" do
+> cargo 6 passa a **60**: as 6 fatias do cargo 6 e as 6 do cargo 7 se intercalam na mesma faixa de 5 rps
+> (cargo 6 nos minutos 0/10/20/…, cargo 7 nos 5/15/25/…). Continuam intactos o fatiamento em 6 por
+> segmento de rota, a trava anti-overlap por `(cargo, fatia)`, `rpsMax = 5` e a recusa de subir a faixa a
+> 10 rps (85 rps agregados), que o ADR-0067 mantém. Se a Fase 2 não subir, o cargo 6 segue em 30 minutos e
+> este ADR vale como está, com pior caso de 82. O corpo deste ADR não foi reescrito.
+
 ## Contexto
 
 RF-127 (spec 017, `docs/specs/017-deputado-federal/spec.md:201-209`) exige que a tela de
