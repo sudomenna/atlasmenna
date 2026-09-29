@@ -100,7 +100,13 @@ const config: VercelProjectConfig = {
   //
   // - Cron de apuração: a cada minuto na janela 17h–04h BRT (UTC-3 sem DST).
   //   17h BRT = 20h UTC; 04h BRT = 07h UTC. Em cron UTC: hours 20-23,0-7.
-  // - Cron do simulado (2026-09-05): 9h-17h BRT = 12h-20h UTC, todo minuto.
+  // - Cron do simulado (2026-09-05): 9h-16h59 BRT = 12h-19h UTC, todo minuto.
+  //   ⚠️ 2026-09-29: era `12-20`, que se sobrepunha à hora 20 UTC (17h BRT) da
+  //   janela de apuração `20-23,0-7` — o MESMO path disparava duas vezes por
+  //   slot na primeira hora da apuração, e a trava `getLastIngestRun` é
+  //   ler-e-agir (não atômica): as duas invocações podiam passar e dobrar o
+  //   ritmo contra o CDN do TSE (limite 100 req/s, bloqueio de 10 min).
+  //   Teste: tests/unit/config/vercel-crons.test.ts.
   //   Os simulados oficiais TSE rodam 15-17/09 e 22-24/09, 9h-17h BRT
   //   (ver docs/testing/tse-simulados.md). Este cron roda TODO DIA nessa
   //   janela — não só nos dias do simulado — porque `runIngestCycle`
@@ -126,11 +132,11 @@ const config: VercelProjectConfig = {
     },
     {
       path: "/api/ingest/presidente",
-      schedule: "* 12-20 * * *",
+      schedule: "* 12-19 * * *",
     },
     {
       path: "/api/ingest/governador",
-      schedule: "* 12-20 * * *",
+      schedule: "* 12-19 * * *",
     },
     // ── Senador (cargo 5) — ADR-0026 item 1, emendado em 2026-09-11 ──
     // Cadência própria e MENOR que a de 60 s dos majoritários: a cada 5 min.
@@ -147,7 +153,7 @@ const config: VercelProjectConfig = {
     // opcional.
     //
     // Mesmas duas janelas dos demais: apuração (20-23,0-7 UTC = 17h-04h BRT) e
-    // simulado (12-20 UTC = 9h-17h BRT). `INGEST_WINDOW` decide qual vale em
+    // simulado (12-19 UTC = 9h-16h59 BRT). `INGEST_WINDOW` decide qual vale em
     // cada ambiente — fora dela o handler responde `{skipped}` sem custo.
     {
       path: "/api/ingest/senador",
@@ -155,7 +161,7 @@ const config: VercelProjectConfig = {
     },
     {
       path: "/api/ingest/senador",
-      schedule: "*/5 12-20 * * *",
+      schedule: "*/5 12-19 * * *",
     },
     // ── Deputado Federal (cargo 6) EM 6 FATIAS — ADR-0026 item 1, emenda
     //    2026-09-13 ──
@@ -192,7 +198,7 @@ const config: VercelProjectConfig = {
     // `pnpm dep:projecao`), nunca variável de ambiente.
     //
     // Mesmas duas janelas dos demais cargos: apuração (20-23,0-7 UTC) e
-    // simulado (12-20 UTC).
+    // simulado (12-19 UTC).
     {
       path: "/api/ingest/deputado-federal/1",
       schedule: "0,30 20-23,0-7 * * *",
@@ -219,27 +225,27 @@ const config: VercelProjectConfig = {
     },
     {
       path: "/api/ingest/deputado-federal/1",
-      schedule: "0,30 12-20 * * *",
+      schedule: "0,30 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/2",
-      schedule: "5,35 12-20 * * *",
+      schedule: "5,35 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/3",
-      schedule: "10,40 12-20 * * *",
+      schedule: "10,40 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/4",
-      schedule: "15,45 12-20 * * *",
+      schedule: "15,45 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/5",
-      schedule: "20,50 12-20 * * *",
+      schedule: "20,50 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/6",
-      schedule: "25,55 12-20 * * *",
+      schedule: "25,55 12-19 * * *",
     },
     {
       path: "/api/ingest",
