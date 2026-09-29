@@ -174,6 +174,9 @@ zona ausente conta 0%). O limiar é `>= 100`, estrito: 99,99% é `projetada`. O 
 o conservador (uma UF já concluída que o ponto flutuante deixou em 99,999… continua com anel), e
 nunca o contrário. `chamada`/`bucket` **não** servem: descrevem a margem do 1º sobre o 2º, e no
 Senado a vaga é dos dois primeiros (spec 016, RF-104).
+> ⚠️ **2026-09-29** — no Senado `chamada` passou a medir a margem da **2ª vaga** (2º − 3º, emenda
+> do RF-105 da spec 016). Continua não servindo aqui por outro motivo: é leitura do MODELO, e
+> "decidida" é fato da apuração (UF em 100%).
 
 **Conferência (fail-closed).** O total por partido derivado é comparado com
 `composicao_vagas.por_partido`, partido a partido, pela chave de sigla (sem acento, minúscula, só

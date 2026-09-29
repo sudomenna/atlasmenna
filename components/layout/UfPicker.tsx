@@ -53,7 +53,7 @@ import { useState } from "react";
 import { Button } from "@/components/atoms/controls/Button";
 import { ufsPorNome } from "@/components/atoms/maps/_shared";
 import { Sheet } from "@/components/atoms/overlays/Sheet";
-import { cargoFromToken, cargoInfo } from "@/lib/config/cargos";
+import { cargoFromToken, vagasDaCorrida } from "@/lib/config/cargos";
 import { ariaRessalvaVagas, margemSegundaVaga } from "@/lib/utils/margem-senado";
 import { type UfPickerCargo, ufHref } from "@/lib/utils/uf-href";
 
@@ -169,7 +169,9 @@ export function margemParaExibir(
  * quantidade certa de linhas como ocupantes de vaga.
  */
 export function vagasPorCargo(cargo: UfPickerCargo): number {
-  return cargoInfo(cargoFromToken(cargo)).vagasPorUf ?? 1;
+  // 2026-09-29 — sem o `?? 1` de antes: `vagasDaCorrida` lança para cargo sem
+  // vagas por corrida, em vez de marcar só o líder em silêncio.
+  return vagasDaCorrida(cargoFromToken(cargo));
 }
 
 const ITEM_STYLE: React.CSSProperties = {

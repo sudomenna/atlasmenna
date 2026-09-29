@@ -165,6 +165,17 @@ export interface HoverCardRow {
    * linha (emenda "opção A"): só os votos.
    */
   destino?: EdgeDestinoVoto;
+  /**
+   * 2026-09-29 (dono: "são 2 senadores eleitos") — o texto do selo de vaga
+   * desta linha ("Vaga projetada" / "Vaga na parcial"), JÁ DECIDIDO pelo
+   * caller: quem sabe quantas vagas a corrida tem, em que base a lista foi
+   * ordenada e quem disputa é `buildHoverRows`
+   * (`_NationalChoroplethMapImpl.tsx`, via `lib/utils/vagas-eleitas.ts`).
+   * Este átomo só desenha a pílula — a mesma forma do `<SeloPilula>` dos
+   * cartões, em tamanho de balão. Ausente (o caso de Presidente, Governador e
+   * de quem está fora das vagas) ⇒ nada.
+   */
+  vaga?: string;
 }
 
 export interface HoverCardProps {
@@ -210,6 +221,29 @@ const NOME_MIN_PX = 116;
  * ela o toma do nome.
  */
 const COLUNA_EXTRA_PX = 72;
+
+/**
+ * Quanto o teto de largura cresce quando alguma linha leva o selo de vaga
+ * (2026-09-29): a pílula "Vaga projetada" mede ~90px + o `gap`, e sai da
+ * coluna do NOME. Sem este acréscimo o teto antigo apertaria o nome — e entre
+ * linha mais larga e nome cortado, o nome ganha (decisão do dono, 14/09).
+ */
+const SELO_VAGA_EXTRA_PX = 100;
+
+/**
+ * A pílula do selo de vaga — `--surface-inverse` + `--text-inverse`, o MESMO
+ * par do `<SeloPilula>` (`CandidateResultRow.module.css`, `.pilula`), já medido
+ * nos dois temas; só o tamanho é o do balão.
+ */
+const SELO_VAGA_STYLE: CSSProperties = {
+  flex: "none",
+  padding: "1px 6px",
+  borderRadius: 999,
+  background: "var(--surface-inverse)",
+  color: "var(--text-inverse)",
+  font: "700 10px / 1.3 var(--font-sans)",
+  whiteSpace: "nowrap",
+};
 
 const HEAD_STYLE: CSSProperties = {
   // O `rowGap` da grade saiu em 19/09 (ver `CELULA_PADDING_BLOCK`); sem isto o
@@ -346,6 +380,7 @@ export function HoverCard({
   // no municipal, `proj` ausente só significa um teto ligeiramente folgado —
   // inofensivo, porque `width: max-content` já dimensiona pelo conteúdo real.
   const extras = [partido, votos, parcial].filter(Boolean).length;
+  const temSeloVaga = rows.some((r) => r.kind !== "outros" && !!r.vaga);
   const colunas = [
     { chave: "nome", trilho: `minmax(${NOME_MIN_PX}px, 1fr)`, presente: true },
     { chave: "partido", trilho: "auto", presente: partido },
@@ -416,7 +451,7 @@ export function HoverCard({
         // ganha `COLUNA_EXTRA_PX`, e `min(92vw, …)` impede que o balão
         // ultrapasse a viewport — ele é posicionado junto ao cursor e um teto
         // em px puro sairia da tela em janela estreita.
-        maxWidth: `min(92vw, ${280 + extras * COLUNA_EXTRA_PX}px)`,
+        maxWidth: `min(92vw, ${280 + extras * COLUNA_EXTRA_PX + (temSeloVaga ? SELO_VAGA_EXTRA_PX : 0)}px)`,
         padding: "var(--space-3)",
         background: "var(--surface-card)",
         border: "1px solid var(--border-strong)",
@@ -673,6 +708,12 @@ export function HoverCard({
                   />
                 )}
                 <span className="overflow-hidden text-ellipsis whitespace-nowrap">{row.name}</span>
+                {/* Nunca na linha "Outros": um agregado não ocupa vaga. */}
+                {row.vaga && !isOutros ? (
+                  <span data-testid="hover-card-vaga" style={SELO_VAGA_STYLE}>
+                    {row.vaga}
+                  </span>
+                ) : null}
                 <DestinoEtiqueta destino={row.destino} />
               </span>
               {partido ? (

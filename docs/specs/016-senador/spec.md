@@ -8,9 +8,9 @@ screens: [T-09, T-10]
 requirements: [RF-100, RF-101, RF-102, RF-103, RF-104, RF-105, RF-106, RF-107, RF-108, RF-179, RF-184, RF-181, RF-185, RF-186, RF-187, RF-188, RF-180, RF-189, RF-191]
 depends_on: [001-ingestao-tse, 002-modelo-estatistico]
 apis: [GET /api/ingest/senador, POST /api/ingest/senador, GET /api/projection?cargo=senador]
-components: [ResultPanel, CandidateListCollapse, ChancesPanel, CargoTabs, RaceHeader, ForecastTransparency, NationalChoroplethMap, ChoroplethMapUF, StateResultSheet, UfHoverLink, MunicipioTable, MunicipioExplorer]
+components: [ResultPanel, CandidateListCollapse, ChancesPanel, CargoTabs, RaceHeader, ForecastTransparency, NationalChoroplethMap, ChoroplethMapUF, StateResultSheet, UfHoverLink, MunicipioTable, MunicipioExplorer, GovernorCard, HoverCard]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-006, RNF-022, RNF-023, RNF-024]
-adrs: [0001, 0012, 0020, 0021, 0026, 0028, 0033, 0034, 0035, 0038, 0042, 0048, 0053, 0055, 0056, 0057]
+adrs: [0001, 0012, 0020, 0021, 0026, 0028, 0033, 0034, 0035, 0038, 0042, 0048, 0050, 0051, 0053, 0055, 0056, 0057]
 opens_after: 2026-09-11
 ---
 
@@ -179,8 +179,11 @@ e não a diferença entre 1º e 2º. Esta margem alimenta três superfícies:
 WHEN `/uf/[sigla]/senador` renderiza, the system SHALL marcar visualmente os
 **dois** primeiros colocados como ocupantes das vagas, com o mesmo tratamento —
 sem hierarquia visual entre 1º e 2º, que não existe no resultado. Este mesmo
-tratamento é reaproveitado na ficha (`<StateResultSheet>`) que abre ao clicar
-num estado no mapa nacional (`/senador`, nivel Brasil, ADR-0048).
+tratamento é reaproveitado na ficha (`<StateResultSheet>`) que abre ao tocar
+num estado no mapa nacional (`/senador`, nivel Brasil, ADR-0048, ADR-0050), no
+balão que abre ao passar o mouse sobre ele (desktop) e nos cartões "Estado a
+estado" da capa `/senador` — em todo estado do selo de eleito (emenda de
+2026-09-29, abaixo).
 
 **Aceitação**:
 - Given o payload de uma UF, when a tela renderiza, then exatamente 2 linhas
@@ -189,6 +192,54 @@ num estado no mapa nacional (`/senador`, nivel Brasil, ADR-0048).
   permanecem no DOM, visíveis (ADR-0017).
 - Given `/senador` (nível Brasil) + clique numa UF, when a ficha abre, then os
   dois ocupantes das vagas são marcados visualmente (mesmos `role="region"`/styles).
+
+> 🔴 **Emenda 2026-09-29 (decisão do dono: "são 2 senadores eleitos. Os dois primeiros
+> colocados de cada estado são eleitos").** Até esta data duas superfícies marcavam só o
+> líder ou ninguém: o ✓ de corrida chamada no balão do mapa (só o 1º) e os cartões da capa
+> `/senador` (nenhum selo, nota de 27/09 do RF-107). O selo de eleito passa a valer para os
+> **dois ocupantes de vaga** em toda superfície de Senador e em todos os seus estados:
+>
+> | Estado do selo | Superfície | Quem leva |
+> |---|---|---|
+> | **Chamada** (a corrida decidida pelo modelo — ✓ com faixa de cor) | balão do mapa nacional (desktop) | os 2 primeiros que disputam **pela projeção** |
+> | **Projetado** ("Vaga projetada") | página da UF, folha do toque (celular), balão do mapa | os 2 primeiros que disputam na base "Projeção" |
+> | **Parcial** ("Vaga na parcial") | página da UF, folha do toque (celular), balão do mapa | os 2 primeiros que disputam na base "Parcial" |
+> | **Eleito pela projeção** ("● ELEITO", o mesmo selo do cartão de governador) | cartões "Estado a estado" de `/senador` | os 2 primeiros que disputam na ordem do cartão (projeção), com apuração começada |
+> | **Decidida** (UF com 100% apurado) | hemiciclo de 2027 (spec 023) | os 2 primeiros — já era assim |
+>
+> - **`chamada` no Senado passa a significar "as DUAS vagas decididas"**: margem da 2ª vaga
+>   (2º − 3º que disputam, na base publicada) > 10 pp — `chamada_da_corrida`,
+>   `api/model/project.py`. Com a margem do 1º sobre o 2º (a regra até esta data, herdada da
+>   vaga única), um 40 / 29,9 / 29,8 era "chamado" e a tela proclamaria eleito um 2º empatado
+>   com o 3º (constituição § 1). Menos de 3 candidaturas que disputam ⇒ não chamada.
+>   Governador e Presidente: a regra de sempre (1º − 2º > 10), byte a byte.
+> - **O rótulo segue a base que a lista DE FATO usou**: a folha do toque dizia "Vaga
+>   projetada" também sob a ordem do apurado — corrigido (RF-184).
+> - **Anulada nunca ocupa vaga** (ADR-0053 / RF-213): o 3º que disputa sobe. A ordem é a da
+>   base ativa (ADR-0051); empate, o desempate do comparador de cada base.
+> - **Não é resultado oficial.** O payload não carrega a situação de eleito do TSE (`st` do
+>   EA20); "chamada" e "decidida" são leituras do modelo e da apuração, e os rótulos dizem
+>   isso ("projetada", "na parcial", "Não oficial" na capa).
+> - **Ponto único**: `lib/utils/vagas-eleitas.ts` (quem ocupa as vagas numa ordem) e
+>   `vagasDaCorrida` (`lib/config/cargos.ts`, quantas — sem o default `?? 1`, que marcaria só
+>   o líder em silêncio se a tabela perdesse o número).
+> - O mapa continua pintando cada UF pela cor do 1º colocado (decisão D1, RF-106); a ressalva
+>   "2 vagas" segue no nome acessível.
+>
+> **Aceitação adicional**:
+> - Given uma UF chamada com 45 / 30 / 15 / 10 pela projeção, when o mouse passa sobre ela no
+>   mapa nacional, then o ✓ aparece nas DUAS primeiras linhas do balão e não na 3ª.
+> - Given a base "Parcial" com ordem diferente da projeção, when a folha do celular abre, then
+>   as duas primeiras do apurado levam "Vaga na parcial".
+> - Given uma candidatura anulada em 2º na projeção, when qualquer superfície renderiza, then a
+>   2ª vaga vai para a 3ª que disputa, e a anulada não leva selo nenhum.
+> - Given 40 / 29,9 / 29,8 pela projeção, when o modelo publica a UF de Senador, then
+>   `chamada === false`; given 45 / 44 / 20, then `chamada === true`.
+> - Given uma UF de Governador chamada, when o balão abre, then o ✓ continua só no líder.
+>
+> Testes: `tests/unit/components/senado-dois-eleitos.test.tsx`,
+> `tests/unit/utils/vagas-eleitas.test.ts`, `tests/unit/model/test_chamada_senado_duas_vagas.py`,
+> `tests/unit/pages/senador.test.tsx` (g).
 
 **RF-106 — Rótulo explícito de duas vagas, incluindo no nome acessível do mapa**
 
@@ -217,9 +268,11 @@ composição total de 81 cadeiras do Senado.
 > **Nota 2026-09-27 (decisão do dono) — a lista "Estado a estado" de `/senador` (T-09).**
 > Passou a usar o mesmo cartão da grade de `/governador` (`<GovernorCard cargo="sen">`):
 > as quatro primeiras posições e "Outros", sempre em % dos votos válidos da UF, com o
-> apurado no cabeçalho. Sem o selo de status do governador ("● ELEITO" / "VAI A 2T"),
+> apurado no cabeçalho. ~~Sem o selo de status do governador ("● ELEITO" / "VAI A 2T"),
 > que não se aplica a turno único com duas vagas; o rótulo acessível nomeia os dois
-> primeiros. Substitui a linha de 19/09 ("ocupantes · Fora das vagas · margem p/ 2ª vaga").
+> primeiros.~~ **Revogado em 2026-09-29 (emenda do RF-105):** o "● ELEITO" volta ao
+> cartão, nos DOIS ocupantes de vaga (a objeção de 27/09 era o selo só no líder); "VAI A
+> 2T" / "EM APURAÇÃO" continuam fora. O rótulo acessível diz "eleitos" e nomeia os dois. Substitui a linha de 19/09 ("ocupantes · Fora das vagas · margem p/ 2ª vaga").
 > A margem 2º→3º (RF-104) segue nas três superfícies que o RF lista — nenhuma delas é
 > esta lista. Testes: `tests/unit/pages/senador.test.tsx` (f), (g), (g4), (g6) e
 > `tests/unit/pages/anulada-paginas.test.tsx`.

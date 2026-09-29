@@ -258,6 +258,26 @@ export function cargoInfo(cd: CargoTse): CargoInfo {
   return info;
 }
 
+/**
+ * Quantas cadeiras UMA corrida majoritária deste cargo elege por UF — lido da
+ * tabela, **sem default** (2026-09-29, correção "os dois eleitos do Senado").
+ *
+ * Existe porque o padrão anterior era `cargoInfo(cd).vagasPorUf ?? 1` espalhado
+ * pelos consumidores: o `?? 1` nunca disparava para os três majoritários, mas é
+ * exatamente o default silencioso de conversor de cargo que este repositório já
+ * pagou três vezes — um cargo novo sem `vagasPorUf` passaria a marcar só o líder
+ * como eleito, sem erro. Cargo proporcional (Deputado Federal, `vagasPorUf:
+ * null`) não tem "corrida de N vagas por UF": pedir isso dele é erro de
+ * programação, e lança.
+ */
+export function vagasDaCorrida(cd: CargoTse): number {
+  const vagas = cargoInfo(cd).vagasPorUf;
+  if (vagas === null) {
+    throw new Error(`[cargos] cargo ${cd} é proporcional — não tem vagas por corrida majoritária`);
+  }
+  return vagas;
+}
+
 /** Código numérico do TSE → token de chave (`1` → `"pres"`). */
 export function cargoToken(cd: CargoTse): CargoToken {
   return cargoInfo(cd).token;

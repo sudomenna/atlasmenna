@@ -2640,7 +2640,7 @@
           "margem_atual": 15.976680000000002,
           "margem_projetada": 15.976680000000002,
           "margem_projetada_ci": [15.92044, 16.04114],
-          "chamada": true,
+          "chamada": false,
           "swing_vs_2022": null,
           "top_candidatos": [
             {
@@ -2682,7 +2682,7 @@
             }
           ],
           "vai_a_2t": null,
-          "bucket": "chamada",
+          "bucket": "indefinido",
           "outros": {
             "pct": 12.9975,
             "pct_atual": 12.9975,
@@ -2698,7 +2698,7 @@
           "margem_atual": 15.976680000000002,
           "margem_projetada": 15.976680000000002,
           "margem_projetada_ci": [15.904650000000004, 16.040840000000003],
-          "chamada": true,
+          "chamada": false,
           "swing_vs_2022": null,
           "top_candidatos": [
             {
@@ -2740,7 +2740,7 @@
             }
           ],
           "vai_a_2t": null,
-          "bucket": "chamada",
+          "bucket": "indefinido",
           "outros": {
             "pct": 12.9975,
             "pct_atual": 12.9975,

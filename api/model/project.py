@@ -6364,6 +6364,48 @@ def build_uf_payloads(
     return out
 
 
+#: Margem (pp, na base publicada) acima da qual a corrida é "chamada" —
+#: placeholder v1 do ADR-0017, o mesmo número de sempre.
+LIMIAR_CHAMADA_PP = 10.0
+
+
+def chamada_da_corrida(
+    competem: list[dict[str, Any]],
+    vagas: int | None,
+    f_proj_uf: float | None,
+    margem_1_2: float,
+) -> bool:
+    """`por_uf[].chamada` — a corrida está decidida pela projeção?
+
+    Vaga única (Presidente, Governador; `vagas` ausente ou 1): a margem do 1º
+    sobre o 2º que competem, `> 10` pp — a regra de sempre, byte a byte.
+
+    🔴 **Mais de uma vaga (Senado, 2026-09-29, decisão do dono: "são 2
+    senadores eleitos").** A tela passou a marcar como eleitos os `vagas`
+    primeiros quando a UF é chamada — então "chamada" tem de querer dizer
+    "TODAS as vagas decididas". A margem que decide isso é a do último que
+    entra (`competem[vagas-1]`) sobre o primeiro que fica de fora
+    (`competem[vagas]`), a mesma "margem para a 2ª vaga" do RF-104. Com a
+    margem do 1º sobre o 2º, um 40/29,9/29,8 era "chamado" e a tela
+    proclamaria eleito um 2º colocado empatado com o 3º (constituição § 1).
+
+    Menos candidaturas que disputam do que `vagas + 1`: a margem da última
+    vaga não existe (o `NaN` de `margemSegundaVaga` no TS) ⇒ `False`, a
+    leitura conservadora — nunca "decidido" por falta de adversário medido.
+
+    `competem` chega na ordem da projeção, sem as anuladas (ADR-0053); os
+    percentuais vão para a base publicada (`na_disputa`, emenda de 27/09),
+    a mesma dos `top_candidatos[].pct`.
+    """
+    if vagas is None or vagas < 2:
+        return margem_1_2 > LIMIAR_CHAMADA_PP
+    if len(competem) <= vagas:
+        return False
+    ultimo_dentro = na_disputa(float(competem[vagas - 1].get("pct_projetado") or 0.0), f_proj_uf)
+    primeiro_fora = na_disputa(float(competem[vagas].get("pct_projetado") or 0.0), f_proj_uf)
+    return (ultimo_dentro - primeiro_fora) > LIMIAR_CHAMADA_PP
+
+
 def build_edge_payload(
     cargo: int,
     turno: int,
@@ -7188,7 +7230,7 @@ def build_edge_payload(
             vai_a_2t = None
 
         # bucket — estado declarativo (ADR-0017).
-        chamada = margem > 10.0
+        chamada = chamada_da_corrida(competem, vagas, f_proj_uf, margem)
         if chamada:
             bucket = "chamada"
         elif vai_a_2t is True:

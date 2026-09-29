@@ -358,19 +358,27 @@ describe("/senador (T-09)", () => {
     expect(doc.querySelector("a[data-uf='SP']")?.getAttribute("href")).toBe("/uf/SP/senador");
   });
 
-  it("🔴 (g) sem selo de 1º/2º turno — Senado é turno único com duas vagas", async () => {
-    // Mutação alvo: tirar a guarda `senado ? null : chipFor(uf)` e deixar o
-    // cartão imprimir "VAI A 2T" / "● ELEITO" / "EM APURAÇÃO" no líder.
+  it("🔴 (g) '● ELEITO' nos DOIS ocupantes de vaga, nunca no 3º; sem selo de turno", async () => {
+    // 2026-09-29 (dono: "são 2 senadores eleitos") — até esta data este caso
+    // afirmava o CONTRÁRIO (nenhum "ELEITO" no cartão): a decisão de 27/09
+    // tirou o selo porque ele só existia no líder. Agora ele volta nos dois.
+    // Mutações alvo: selo só no rank 1 (Bruno perde); `vagas = 1` no Senado
+    // (idem); selo de turno vazando (VAI A 2T / EM APURAÇÃO).
     readProjectionMock.mockResolvedValue(nacional());
     const doc = await render(SenadoPage());
     const lista = doc.querySelector("ul[aria-label='Corridas estaduais de senador']");
     expect(lista).not.toBeNull();
-    const texto = lista?.textContent ?? "";
-    expect(texto).not.toMatch(/VAI A 2T|ELEITO|EM APURAÇÃO/);
-    // O rótulo acessível nomeia os DOIS mais votados, não "o líder".
+    expect(lista?.textContent ?? "").not.toMatch(/VAI A 2T|EM APURAÇÃO/);
+
+    const sp = linhasDoCartao(doc, "SP");
+    expect(sp[0]).toMatch(/Ana Lima.*● ELEITO/);
+    expect(sp[1]).toMatch(/Bruno Reis.*● ELEITO/);
+    expect(sp[2]).not.toContain("ELEITO");
+    expect(doc.querySelectorAll("[data-uf='SP'] article b[data-s='e']")).toHaveLength(VAGAS_SENADO);
+
+    // O rótulo acessível diz "eleitos" e nomeia os DOIS, não "o líder".
     const aria = doc.querySelector("[data-uf='SP'] article")?.getAttribute("aria-label") ?? "";
-    expect(aria).toContain("Ana Lima");
-    expect(aria).toContain("Bruno Reis");
+    expect(aria).toMatch(/eleitos: Ana Lima .* e Bruno Reis /);
     expect(aria).not.toContain("Célia Mota");
     expect(aria).not.toMatch(/líder/);
   });

@@ -8,6 +8,7 @@
 
 import { describe, expect, it } from "vitest";
 
+import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
 import {
   type CandidatoSelo,
   selosDaBase,
@@ -19,7 +20,7 @@ const c = (
   id: number,
   pct_atual: number,
   pct_projetado: number,
-  destino?: string,
+  destino?: EdgeDestinoVoto,
 ): CandidatoSelo => ({ id, pct_atual, pct_projetado, ...(destino ? { destino } : {}) });
 
 /** Já ordenada pela base de uso em cada caso. */

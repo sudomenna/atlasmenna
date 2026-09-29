@@ -17,7 +17,7 @@
  *      (invariante 1 de `EdgeUfRow.top_candidatos`). Não reordena por `pct`: o
  *      `pct` publicado é arredondado, e reordenar poderia desfazer um desempate
  *      que o produtor já fez.
- *   2. Sem as anuladas (`queCompetem`, ADR-0053). `sub_judice` compete.
+ *   2. Sem as anuladas (`ocupantesDasVagas`, ADR-0053). `sub_judice` compete.
  *   3. As `vagas_por_uf` primeiras. Partido ausente vira `"—"`, o mesmo
  *      marcador do produtor.
  *
@@ -64,7 +64,7 @@ import {
   type ValidacaoMandato2031,
 } from "@/lib/senado/mandato-2031";
 import { ordenarBancada } from "@/lib/utils/bancada";
-import { queCompetem } from "@/lib/utils/destino-voto";
+import { ocupantesDasVagas } from "@/lib/utils/vagas-eleitas";
 
 /** Estado de uma cadeira do Senado de 2027. Ordem = ordem dentro da cunha. */
 export type EstadoCadeiraSenado = "continua_2031" | "decidida" | "projetada" | "aguardando";
@@ -202,7 +202,9 @@ export function vagasDerivadas(payload: EdgePayload, vagasPorUf: number): VagaEm
   const vagas: VagaEmDisputa[] = [];
   for (const uf of payload.por_uf ?? []) {
     const estado = uf.pct_apurado >= PCT_UF_CONCLUIDA ? "decidida" : "projetada";
-    for (const c of queCompetem(uf.top_candidatos ?? []).slice(0, vagasPorUf)) {
+    // Ponto único de "quem ocupa as vagas" (`lib/utils/vagas-eleitas.ts`,
+    // 2026-09-29) — o mesmo dos cartões, do balão do mapa e da ficha da UF.
+    for (const c of ocupantesDasVagas(uf.top_candidatos ?? [], vagasPorUf)) {
       vagas.push({
         estado,
         sigla: c.partido ?? PARTIDO_DESCONHECIDO,

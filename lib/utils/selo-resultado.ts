@@ -32,6 +32,9 @@
  *    `> 50`, estritamente: 50,0% não é maioria absoluta.
  */
 
+import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
+import { ocupantesDasVagas } from "@/lib/utils/vagas-eleitas";
+
 /** Qual gramática de selo a corrida usa. */
 export type RegraSelo =
   /** Presidente na home e Governador por UF: 2º turno / vence no 1º turno. */
@@ -60,7 +63,7 @@ export interface CandidatoSelo {
   id: number;
   pct_atual: number;
   pct_projetado: number;
-  destino?: string;
+  destino?: EdgeDestinoVoto;
 }
 
 export interface OpcoesSelo {
@@ -91,7 +94,12 @@ export function selosDaBase(
 
   if (regra === "vaga") {
     const n = Math.min(SELOS_MAX, Math.max(1, Math.trunc(Number.isFinite(vagas) ? vagas : 1)));
-    for (const c of disputam.slice(0, n)) selos.set(c.id, VAGA_LABEL[base]);
+    // 2026-09-29 — quem ocupa as vagas sai do ponto único
+    // (`lib/utils/vagas-eleitas.ts`), o mesmo do `<StateResultSheet>`, do
+    // balão do mapa, dos cartões de `/senador` e do hemiciclo de 2027. O
+    // clamp acima continua aqui: ele é sobre CARTÕES (`SELOS_MAX`), não sobre
+    // a regra de quem elege.
+    for (const c of ocupantesDasVagas(ordenada, n)) selos.set(c.id, VAGA_LABEL[base]);
     return selos;
   }
 

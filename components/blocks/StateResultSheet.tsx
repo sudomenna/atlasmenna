@@ -245,6 +245,7 @@ import { formatPercent, formatPp } from "@/lib/utils/format";
 import { liderIdPorBase, ordenarTopCandidatosPorBase } from "@/lib/utils/lider-por-base";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
+import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
 
 /** Mesma tabela de `GovernorCard.tsx` — sem módulo compartilhado em `lib/utils/**`
  * pra este propósito, então repetida aqui (padrão já existente no repo). */
@@ -471,6 +472,16 @@ export function StateResultSheet({
   // um literal "2" solto aqui.
   const multiVaga = cargo === "sen";
   const vagas = multiVaga ? vagasPorCargo(cargo) : 1;
+  // 2026-09-29 — quem ocupa as vagas NA BASE DA LISTA, pelo ponto único
+  // (`lib/utils/vagas-eleitas.ts`): os `vagas` primeiros que disputam de
+  // `topPorBase`. É o mesmo conjunto que a página da UF (`<ResultPanel>`), o
+  // balão do mapa no desktop e os cartões de `/senador` marcam.
+  const ocupantes = multiVaga ? idsDasVagas(topPorBase, vagas) : new Set<number>();
+  // O rótulo do marcador segue a base que a lista DE FATO usou (`usouParcial`,
+  // não `viewMode`): "Vaga projetada" sobre uma lista ordenada pelo apurado
+  // diria que o modelo projeta o que quem diz é o boletim. Até esta data a
+  // folha chamava `<VagaBadge />` sem base — "Vaga projetada" nas duas.
+  const baseDoMarcador = usouParcial ? "parcial" : "proj";
   // 🔴 Identidade do líder — mesma regra de `resolveIdentidade` (RF-144/145):
   // a linha da própria UF (`top_candidatos`) primeiro, `candidatosById`
   // (nacional) só como fallback. `row.lider` é só o ID; o TOP_CANDIDATOS que
@@ -660,7 +671,7 @@ export function StateResultSheet({
               // (`ordenarTopCandidatosPorBase`) e nunca ocupa vaga nem
               // recebe colocação.
               const disputa = compete(tc);
-              const ocupaVaga = multiVaga && disputa && index < vagas;
+              const ocupaVaga = ocupantes.has(tc.id);
               return (
                 <li
                   key={tc.id}
@@ -671,7 +682,7 @@ export function StateResultSheet({
                 >
                   {ocupaVaga ? (
                     <div style={{ marginBottom: "var(--space-1)" }}>
-                      <VagaBadge />
+                      <VagaBadge base={baseDoMarcador} />
                     </div>
                   ) : null}
                   {/* 🔴 A identidade ocupa a LINHA INTEIRA, e os números vêm

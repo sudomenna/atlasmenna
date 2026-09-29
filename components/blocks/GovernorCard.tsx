@@ -6,7 +6,9 @@
  *   - Header: "Nome do estado · SIGLA    pct% apur"
  *   - Top-4 candidatos com nome + partido + barra colorida pela SIGLA
  *   - 5ª linha "Outros" agregando o restante
- *   - Chip de status à direita do líder (● ELEITO / VAI A 2T / EM APURAÇÃO)
+ *   - Chip de status à direita do líder (● ELEITO / VAI A 2T / EM APURAÇÃO);
+ *     no Senado (`cargo="sen"`), "● ELEITO" nos DOIS ocupantes de vaga
+ *     (2026-09-29, decisão do dono)
  *
  * **Eram 3 candidatos + "Outros" até 2026-09-19.** O dono decidiu naquele dia
  * que as três telas de resumo de UF (esta, a ficha `<StateResultSheet>` e a
@@ -33,6 +35,7 @@ import type { CSSProperties } from "react";
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { EtiquetasLinha } from "@/components/atoms/data/EtiquetasLinha";
 import { candidateColor } from "@/components/blocks/_candidateColor";
+import { vagasDaCorrida } from "@/lib/config/cargos";
 import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
 import { normalizarSqcand } from "@/lib/etiquetas/formato";
 import type { EtiquetasDaCorrida } from "@/lib/etiquetas/telas";
@@ -41,6 +44,7 @@ import { anuladasAoFim, compete, exibePercentual, votosDaAnulada } from "@/lib/u
 import { formatPercentTrim } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
+import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
 
 import styles from "./GovernorCard.module.css";
 
@@ -95,11 +99,15 @@ export interface GovernorCardProps {
   /**
    * 🔴 2026-09-27 (decisão do dono) — a capa `/senador` passou a usar ESTE
    * cartão, no mesmo formato de `/governador`: 4 posições + "Outros", em % dos
-   * votos válidos. Em `"sen"` o selo de status some — ele diz "eleito no 1º
-   * turno / vai a 2º turno", e o Senado é turno único com DUAS vagas por
-   * estado: "● ELEITO" só no líder negaria a segunda vaga, e "VAI A 2T" é
-   * falso por construção. O `aria-label` nomeia os dois primeiros pelo mesmo
-   * motivo (duas vagas, não um líder).
+   * votos válidos. Em `"sen"` o selo de TURNO some — "VAI A 2T" é falso por
+   * construção (turno único), e "● ELEITO" só no líder negaria a segunda vaga.
+   *
+   * 🔴 2026-09-29 (decisão do dono, "são 2 senadores eleitos") — o selo
+   * "● ELEITO" VOLTA ao cartão de Senador, **nas duas** candidaturas que
+   * ocupam as vagas (as `vagasDaCorrida(5)` primeiras que disputam, na ordem
+   * do cartão — a da projeção), com o mesmo desenho do selo de governador. A
+   * objeção de 27/09 era o selo só no líder; com ele nos dois, ela cai. O
+   * `aria-label` diz "eleitos" e nomeia os dois.
    *
    * 🔴 2026-09-28 (ADR-0057 item 6) — `"pres"`: o cartão por estado da seção
    * regional da home de Presidente. **Sem selo** de turno (ADR-0055: o 2º
@@ -125,8 +133,22 @@ export interface GovernorCardProps {
   etiquetas?: EtiquetasDaCorrida;
 }
 
-/** Vagas por UF no Senado em 2026 (renovação de 2/3) — só para a variante `"sen"`. */
-const VAGAS_SENADO = 2;
+/**
+ * Vagas por UF no Senado — da tabela canônica (`lib/config/cargos.ts`: 2 em
+ * 2026, renovação de 2/3), nunca um literal. Só a variante `"sen"` lê.
+ */
+const VAGAS_SENADO = vagasDaCorrida(5);
+
+/**
+ * 2026-09-29 — o selo de eleito do SENADO, o MESMO desenho e o mesmo texto do
+ * de governador (`chipFor`, variante `e`), em cada ocupante de vaga. Pela
+ * projeção (a ordem do cartão), e só com apuração começada: sem voto contado
+ * não há projeção, e "● ELEITO" seria fabricado (constituição § 1).
+ */
+const CHIP_ELEITO_SENADO: StatusChip = { label: "● ELEITO", s: "e", ariaText: "eleitos" };
+
+/** Nenhum ocupante de vaga — as variantes de vaga única (`"gov"`, `"pres"`). */
+const SEM_OCUPANTES: ReadonlySet<number> = new Set();
 
 interface StatusChip {
   label: string;
@@ -207,7 +229,8 @@ export function GovernorCard({
   // ADR-0053 / RF-213 — anulada no fim das 4 linhas (antes de "Outros"), com
   // etiqueta; o líder do cartão é o 1º QUE COMPETE. Sem anulada, a ordem é a
   // de sempre.
-  const top = anuladasAoFim((uf.top_candidatos ?? []).slice(0, 4)).map<Row>((t, i) => {
+  const topCandidatos = anuladasAoFim((uf.top_candidatos ?? []).slice(0, 4));
+  const top = topCandidatos.map<Row>((t, i) => {
     const meta = candIndex.get(t.id);
     return {
       id: t.id,
@@ -292,15 +315,31 @@ export function GovernorCard({
     : top;
 
   const liderRow = top.find(compete);
+  // 2026-09-29 — Senado: quem ocupa as vagas, pelo ponto único
+  // (`lib/utils/vagas-eleitas.ts`) sobre a ORDEM DO CARTÃO (a da projeção,
+  // anulada no fim). É o mesmo conjunto do hemiciclo de 2027 e do balão do
+  // mapa na base "Projeção".
+  const ocupantes = senado ? idsDasVagas(topCandidatos, VAGAS_SENADO) : SEM_OCUPANTES;
+  const chipSenado = senado && uf.pct_apurado > 0 ? CHIP_ELEITO_SENADO : null;
+  /** O selo desta linha: o de turno no líder (gov), o de eleito em cada vaga (sen). */
+  const seloDe = (r: Row): StatusChip | null => {
+    if (r.id === null) return null;
+    if (senado) return ocupantes.has(r.id) ? chipSenado : null;
+    return r.id === liderRow?.id ? chip : null;
+  };
   // 🔊 `aria-label` — sigla INTEIRA, de propósito (2026-09-19). A abreviação
   // resolve largura, e aqui não há largura: "REPUBLICANOS" dito por inteiro é
   // exatamente o que o TSE publica. A regra está em `lib/utils/sigla-partido.ts`.
   // Senado: os que ocupam as vagas pela ordem do cartão — não "o líder".
-  const destaque = senado ? top.filter(compete).slice(0, VAGAS_SENADO) : liderRow ? [liderRow] : [];
+  const destaque = senado
+    ? top.filter((r) => r.id !== null && ocupantes.has(r.id))
+    : liderRow
+      ? [liderRow]
+      : [];
   const descreve = (r: Row) => `${r.nome} (${r.partido}) com ${formatPercentTrim(r.pct)}`;
   const apurado = `${formatPercentTrim(uf.pct_apurado)} apurado`;
   const ariaLabel = senado
-    ? `${nomeUf}${destaque.length > 0 ? `, mais votados: ${destaque.map(descreve).join(" e ")}` : ""}, ${apurado}`
+    ? `${nomeUf}${destaque.length > 0 ? `, ${chipSenado ? chipSenado.ariaText : "mais votados"}: ${destaque.map(descreve).join(" e ")}` : ""}, ${apurado}`
     : presidente
       ? `${nomeUf}${liderRow ? `, na frente no estado: ${descreve(liderRow)}` : ""}, ${apurado}`
       : `${nomeUf}, ${chip?.ariaText}${liderRow ? `, líder: ${descreve(liderRow)}` : ""}, ${apurado}`;
@@ -333,7 +372,7 @@ export function GovernorCard({
       </header>
       <ul>
         {rows.map((r, idx) => {
-          const isLider = r.id !== null && r.id === liderRow?.id;
+          const selo = seloDe(r);
           const pctWidth = Math.max(0, Math.min(100, r.pct));
           return (
             <li key={r.id ?? `outros-${idx}`}>
@@ -355,11 +394,11 @@ export function GovernorCard({
                     para quem tem chance, e só com a chave `chips` ligada. */}
                 {r.sqcand && etiquetas?.porSqcand.has(r.sqcand) ? (
                   <>
-                    {isLider && chip ? <b data-s={chip.s}>{chip.label}</b> : null}
+                    {selo ? <b data-s={selo.s}>{selo.label}</b> : null}
                     <EtiquetasLinha resolucoes={etiquetas.porSqcand.get(r.sqcand)} />
                   </>
-                ) : isLider && chip ? (
-                  <b data-s={chip.s}>{chip.label}</b>
+                ) : selo ? (
+                  <b data-s={selo.s}>{selo.label}</b>
                 ) : null}
               </span>
               {r.id !== null && !exibePercentual(r) ? (

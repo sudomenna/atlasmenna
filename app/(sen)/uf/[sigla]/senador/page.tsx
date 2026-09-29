@@ -88,7 +88,7 @@ import {
   seriePorCandidatoFrom,
   type UfDetailResult,
 } from "@/lib/blob/uf-detail";
-import { cargoInfo } from "@/lib/config/cargos";
+import { cargoInfo, vagasDaCorrida } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
 import { simulacaoLigada, simulacaoMunicipiosUf, simulacaoSenadorUf } from "@/lib/dev/simulacao";
 import { readProjection, readUfProjection } from "@/lib/edge-config/reader";
@@ -124,8 +124,10 @@ const SEM_DETALHE_REMOTO: UfDetailResult = {
 
 export const revalidate = 60;
 
-const SENADOR = cargoInfo(5);
-const VAGAS_PADRAO = SENADOR.vagasPorUf ?? 1;
+// 2026-09-29 — `vagasDaCorrida`, sem o `?? 1` de antes: um default de UMA vaga
+// aqui marcaria só o líder como eleito se a tabela perdesse o número, em
+// silêncio. A tabela diz 2 (renovação de 2/3 em 2026).
+const VAGAS_PADRAO = vagasDaCorrida(CARGO_SENADOR);
 const CADENCIA_MIN = 5;
 
 /**

@@ -115,10 +115,15 @@ import { FILL_OPACITY, fillOpacityExpression, swingToColor } from "@/components/
 // custo — só os TRÊS valores de runtime precisam de módulo puro. Ver
 // docstrings completas em `lib/utils/margem-senado.ts` e `lib/utils/uf-href.ts`.
 import type { UfPickerCargo } from "@/components/layout/UfPicker";
+// 2026-09-29 — `vagasDaCorrida` (quantas vagas a corrida elege por UF) vem da
+// tabela canônica, e ESTE import de runtime é deliberado: `lib/config/cargos.ts`
+// é puro (sem React, sem `"use client"`), e medido minificado dá 1,2 KB (0,5 KB
+// gzip) — o custo de ler o número da fonte única em vez de um literal "2" no
+// chunk lazy (RNF-007b).
+import { cargoFromToken, vagasDaCorrida } from "@/lib/config/cargos";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { useHoverStore } from "@/lib/state/hover-store";
 import type { ViewMode } from "@/lib/state/view-mode";
-import { compete } from "@/lib/utils/destino-voto";
 // (Nada de `@/lib/utils/cand-color` aqui desde 2026-09-20: nenhuma cor deste
 // mapa deriva mais da COLOCAÇÃO do líder — ver `resolveColor` e
 // `buildHoverRows` abaixo, e o topo de `components/blocks/_candidateColor.ts`.)
@@ -144,7 +149,12 @@ import {
   resolvePartyHex,
   textForParty,
 } from "@/lib/utils/party-color";
+import { VAGA_LABEL } from "@/lib/utils/selo-resultado";
 import { ufHref } from "@/lib/utils/uf-href";
+import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
+
+/** Nenhum id marcado — UF não chamada, ou corrida de vaga única (selo de vaga). */
+const SEM_IDS: ReadonlySet<number> = new Set();
 
 const PMTILES_BASE = "https://jbtu251tioj3y57z.public.blob.vercel-storage.com";
 
@@ -570,9 +580,10 @@ function applyColors(
  * fixa essa identidade ANTES de reordenar. Sem esta correção, alternar para
  * "Parcial" moveria o ✓ para quem quer que a apuração esteja favorecendo
  * agora — inventando uma "chamada" que o modelo nunca fez. Mesmo assim,
- * `isCalledWinner` marca no máximo UMA linha (`tc.id === liderProjId` só é
- * verdadeiro pra um `id`): a constituição § 1 continua proibindo publicar como
- * decidido o que não foi (2º e 3º colocados). O par (fundo, tinta) é resolvido
+ * `isCalledWinner` marca no máximo `vagas` linhas — UMA em Presidente e
+ * Governador, as DUAS vagas no Senado (2026-09-29, decisão do dono: "são 2
+ * senadores eleitos"): a constituição § 1 continua proibindo publicar como
+ * decidido o que não foi (o 2º de uma corrida de uma vaga, o 3º do Senado). O par (fundo, tinta) é resolvido
  * AQUI, não em `<HoverCard>`: o átomo não conhece partido (teste (h) de
  * `HoverCard.test.tsx`) — `partyChipInk` já vem com o contraste medido
  * (≥4,5:1, docstring dele), inclusive para o par de `outros`.
@@ -595,22 +606,39 @@ function buildHoverRows(
   candidatosById: Map<number, EdgeCandidate>,
   _rankByLider: Record<number, number> | undefined,
   viewMode: ViewMode = "proj",
+  vagas = 1,
 ): HoverCardRow[] {
-  const { ordenados } = ordenarTopCandidatosPorBase(row.top_candidatos, viewMode);
-  // Ver o comentário grande acima: o ✓ segue a IDENTIDADE do líder projetado,
-  // não a posição 0 pós-reordenação.
+  const { ordenados, usouParcial } = ordenarTopCandidatosPorBase(row.top_candidatos, viewMode);
+  // Ver o comentário grande acima: o ✓ segue a IDENTIDADE de quem o modelo
+  // chamou, não a posição pós-reordenação.
   //
-  // ADR-0053 / RF-213 — o 1º do corte QUE COMPETE, nunca `top_candidatos[0]`
+  // ADR-0053 / RF-213 — os do corte QUE COMPETEM, nunca `top_candidatos[0]`
   // cru: o corte chega por `pct_projetado` sobre `vvc`, e uma anulada pode
   // estar no topo dele. O modelo nunca a chama (`chamada` já a exclui), mas
   // sem o filtro o ✓ não cairia em ninguém — ou, pior, na anulada.
-  const liderProjId = row.top_candidatos.find(compete)?.id ?? row.lider;
+  //
+  // 🔴 2026-09-29 (dono: "são 2 senadores eleitos") — o ✓ vai para os
+  // `vagas` ocupantes das vagas PELA PROJEÇÃO (a ordem do array, a mesma que o
+  // modelo leu para decidir `chamada`), e não mais só para o líder. Em
+  // Presidente/Governador `vagas === 1` e o conjunto é o líder de sempre. No
+  // Senado o produtor passou, na mesma data, a chamar a corrida pela margem da
+  // 2ª vaga (2º − 3º, `api/model/project.py`) — com a margem do 1º sobre o 2º,
+  // marcar o 2º como eleito seria proclamar uma vaga que o modelo não decidiu.
+  // Ponto único: `lib/utils/vagas-eleitas.ts`.
+  const chamados = row.chamada === true ? idsDasVagas(row.top_candidatos, vagas) : SEM_IDS;
+  // 🔴 2026-09-29 — no Senado (mais de uma vaga), cada ocupante de vaga NA
+  // BASE DA LISTA leva o selo "Vaga projetada"/"Vaga na parcial", o mesmo da
+  // folha do celular (`<StateResultSheet>`) e da página da UF. O rótulo segue
+  // a base que a lista DE FATO usou (`usouParcial`), nunca `viewMode` cru:
+  // sem `pct_atual` a ordem cai na de projeção, e o selo diz "projetada".
+  const ocupantes = vagas > 1 ? idsDasVagas(ordenados, vagas) : SEM_IDS;
+  const seloVaga = VAGA_LABEL[usouParcial ? "parcial" : "proj"];
   const linhas: HoverCardRow[] = ordenados.map((tc) => {
     const cand = candidatosById.get(tc.id);
     const nomeBruto = tc.nome ?? cand?.nome;
     const partido = tc.partido ?? cand?.partido;
     const sqcand = tc.sqcand ?? cand?.sqcand;
-    const isCalledWinner = tc.id === liderProjId && row.chamada === true;
+    const isCalledWinner = chamados.has(tc.id);
     // 🔴 2026-09-20 — `partyChipInk` sem desvio de rank. Ele já devolve o par
     // MEDIDO de `outros` (`--party-outros-chip` / `--party-outros-ink`) para
     // sigla ausente, desconhecida ou de federação; o desvio antigo caía em
@@ -653,6 +681,7 @@ function buildHoverRows(
       // ADR-0053 — etiqueta "Anulado"/"Sub judice" no balão. A ORDEM (anulada
       // no fim, antes de "Outros") já vem de `ordenarTopCandidatosPorBase`.
       ...(tc.destino ? { destino: tc.destino } : {}),
+      ...(ocupantes.has(tc.id) ? { vaga: seloVaga } : {}),
     };
   });
 
@@ -1601,7 +1630,13 @@ export function NationalChoroplethMapImpl({
             title={ufTitleFor(tooltip.sigla)}
             kicker={tooltip.row.chamada ? "Chamada" : undefined}
             apurado={tooltip.row.pct_apurado}
-            rows={buildHoverRows(tooltip.row, candidatosById, effectiveRankByLider, viewMode)}
+            rows={buildHoverRows(
+              tooltip.row,
+              candidatosById,
+              effectiveRankByLider,
+              viewMode,
+              vagasDaCorrida(cargoFromToken(cargo)),
+            )}
           />
         </div>
       )}

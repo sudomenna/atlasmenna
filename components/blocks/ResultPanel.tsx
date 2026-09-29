@@ -116,6 +116,7 @@ import { formatPp, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { ordensPorBase } from "@/lib/utils/rank-parcial";
 import { type BaseSelo, type RegraSelo, selosDaBase, VAGA_LABEL } from "@/lib/utils/selo-resultado";
+import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
 
 import styles from "./ResultPanel.module.css";
 
@@ -378,6 +379,9 @@ function segmentos(
     },
   ];
 }
+
+/** Nenhuma vaga marcada — corrida de vaga única (a gramática ali é a do turno). */
+const SEM_VAGAS: ReadonlySet<number> = new Set();
 
 /**
  * Marcador de vaga — o mesmo em todas as `vagas` linhas (RF-105).
@@ -719,6 +723,12 @@ export function ResultPanel({
   const opcoesSelo = { regra: regraSelo, turno, vagas: nVagas };
   const selosParcial = selosDaBase(porParcial, "parcial", opcoesSelo);
   const selosProj = selosDaBase(porProj, "proj", opcoesSelo);
+  // RF-105 — quem ocupa vaga em cada base, pelo ponto único
+  // (`lib/utils/vagas-eleitas.ts`, 2026-09-29): os `nVagas` primeiros QUE
+  // DISPUTAM daquela ordem. Vaga única não marca ninguém — ali a gramática é a
+  // do selo de turno, não a de vaga.
+  const vagasParcial = multiVaga ? idsDasVagas(porParcial, nVagas) : SEM_VAGAS;
+  const vagasProj = multiVaga ? idsDasVagas(porProj, nVagas) : SEM_VAGAS;
   const classeLista = `${styles.list} ${LISTA_PAINEL_CLASSES.lista}`;
 
   const linhas = identidade
@@ -769,8 +779,8 @@ export function ResultPanel({
         // ADR-0053 — a anulada não ocupa vaga, nem que a corrida tenha menos
         // candidaturas que disputam do que vagas.
         const disputa = compete(c);
-        const ocupaParcial = multiVaga && disputa && iParcial < nVagas;
-        const ocupaProj = multiVaga && disputa && iProj < nVagas;
+        const ocupaParcial = vagasParcial.has(c.id);
+        const ocupaProj = vagasProj.has(c.id);
 
         // Quais bases clipam esta linha no colapso. Em cada base o número de
         // linhas clipadas é o mesmo (`total - limit`); quais linhas, não.
