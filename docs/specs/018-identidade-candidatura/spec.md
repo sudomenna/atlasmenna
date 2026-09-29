@@ -5,12 +5,12 @@ status: draft
 priority: M
 personas: [P1, P2, P3]
 screens: [T-13, T-14]
-requirements: [RF-140, RF-141, RF-142, RF-143, RF-144, RF-145, RF-146, RF-147, RF-148, RF-149, RF-150, RF-151, RF-152]
+requirements: [RF-140, RF-141, RF-142, RF-143, RF-144, RF-145, RF-146, RF-147, RF-148, RF-149, RF-150, RF-151, RF-152, RF-214]
 depends_on: [001-ingestao-tse, 002-modelo-estatistico, 016-senador, 017-deputado-federal]
 apis: []
 components: [CandidatoAvatar, CandidatoCard, CandidatosGrid, CandidatosFiltros, CandidaturasFonte, Panel, Footer]
 nfr: [RNF-002, RNF-003, RNF-007a, RNF-019, RNF-022, RNF-023, RNF-024]
-adrs: [0039, 0040, 0041, 0042]
+adrs: [0039, 0040, 0041, 0042, 0058]
 amends: [016-senador, 017-deputado-federal]
 ship_blocked_on: []
 ---
@@ -276,6 +276,94 @@ publicação anterior intacta e acionar alerta.
   movem dezenas, não centenas, por ciclo) e ainda pega um download truncado.
   Recalibrar com o histórico das primeiras semanas, via nova medição, não por
   palpite.
+
+**RF-214 — Trajetória na Câmara de cada candidatura a Deputado Federal**
+
+> Emenda de 2026-09-26, renumerada em 2026-09-29
+> ([ADR-0058](../../architecture/adrs/0058-trajetoria-camara-nome-nascimento-em-memoria.md)).
+> O ID fica fora da faixa RF-140..152 da spec porque é emenda posterior a ela:
+> em 29/09, RF-200..RF-213 já estavam ocupados na `main` por outras specs
+> (`docs/_meta/traceability.md`) e RF-214 era o primeiro livre. O rascunho de
+> 26/09 usava RF-200, justificado por um retrato que caducou quando a
+> numeração da `main` avançou; o número não é reaberto.
+>
+> **Entrega dividida (ADR-0058 item 5).** Este RF entrega hoje o **cálculo** e
+> a **exportação offline** para `editorial/derivados/trajetoria-camara.json`,
+> sem banco. A **persistência em `candidatos`** — migration 0011
+> (`trajetoria_camara text`, `camara_ids integer[]`), colunas em
+> `lib/db/schema.ts`, integração em `candidatos-import.ts` e backfill — fica
+> **adiada para depois de 25/10/2026, e só com autorização expressa do dono**:
+> o import da véspera (`docs/operations/vespera-03-10.md:90`) roda contra
+> produção, onde essas colunas não existem, e quebraria. Até lá o import de
+> 03/10 executa exatamente o código e o schema que já estão em produção. O
+> critério marcado *(perna estacionada)* só vale quando ela entrar.
+
+WHEN a exportação offline da trajetória (`pnpm trajetoria:exportar`) processa o
+cadastro de candidaturas do TSE, the system SHALL classificar cada candidatura
+de cargo 6 em exatamente uma de quatro trajetórias — `em_exercicio` (deputado
+federal em exercício hoje, segundo a API de Dados Abertos da Câmara),
+`legislatura_atual` (exerceu mandato na 57ª legislatura, 2023–2027, e não está
+em exercício), `mandato_anterior` (exerceu só em legislaturas anteriores) ou
+`estreante` (nunca exerceu) — casando-a com o histórico `deputados.csv` da
+Câmara por **nome civil normalizado + data de nascimento** e, sem casamento
+exato, entre os deputados **nascidos no mesmo dia**, por qualquer de:
+(a) tokens em comum ≥ max(2, min(|A|,|B|) − 1), (b) primeiro e último token
+iguais, (c) nome parlamentar igual ao nome de urna ou ao nome social; AND the
+system SHALL gravar `editorial/derivados/trajetoria-camara.json` com
+**somente** a categoria (`t`) e o(s) id(s) público(s) do deputado
+(`camara_ids`) por `sqcand`, com **toda** candidatura de cargo 6 do universo
+presente (estreante com `camara_ids: []`) e a contagem `universo`; AND the
+system SHALL ler `DT_NASCIMENTO` e `NM_SOCIAL_CANDIDATO` em **um único ponto**
+(`trajetoriaDaLinha`, `data-pipeline/trajetoria-camara-calculo.ts`), só em
+memória e fora do caminho de import; AND IF o histórico da Câmara não puder ser
+obtido, the system SHALL abortar sem gravar o arquivo — "não calculado", nunca
+`estreante` por omissão.
+
+**Aceitação**:
+- Given o cadastro gerado pelo TSE em 12/09/2026 e o histórico da Câmara de
+  26/09/2026, when a regra roda sobre as **7.791** candidaturas de cargo 6,
+  then produz `estreante` 7.085 · `em_exercicio` 439 · `legislatura_atual` 70
+  · `mandato_anterior` 197, **zero** candidatura casando com mais de um
+  deputado, e **7.791/7.791** linhas iguais (categoria, ids da Câmara e modo de
+  casamento) a `referencia_trajetoria.csv`
+  (`data-pipeline/trajetoria-camara-paridade.ts`; medido de novo em 29/09). A
+  divisão `em_exercicio` × `legislatura_atual` não é verificada de forma
+  independente (ADR-0058, § Paridade) — e não chega a nenhum rótulo público.
+- Given o arquivo exportado, when um consumidor procura um `sqcand` de cargo 6,
+  then ele está lá — `universo` é igual ao número de chaves de `por_sqcand`; um
+  `sqcand` fora do arquivo é "não calculado", nunca "estreante".
+- Given `ST_REELEICAO` do arquivo complementar — `#NE` em **100%** das 7.791
+  —, when a trajetória é calculada, then esse campo **não participa**.
+- Given `DT_NASCIMENTO` e `NM_SOCIAL_CANDIDATO`, lidos para o casamento, when o
+  arquivo exportado ou o log são produzidos, then nenhum dos dois valores
+  ocorre, nem nome algum — **asserção negativa**; nenhum outro arquivo de
+  código lê essas colunas (teste de fio); e `CandidatoRow` continua com as
+  mesmas 19 chaves — constituição § 5, RNF-019, ADR-0039 com a exceção estrita
+  do ADR-0058.
+- Given um deputado **estadual** que declara ocupação `DEPUTADO` e não tem
+  registro na Câmara, when classificado, then é `estreante` — `DS_OCUPACAO`
+  não é sinal de mandato federal.
+- Given um candidato e um deputado com a **mesma data de nascimento** e nomes
+  sem nenhuma das três regras em comum, when casados, then **não** casam; e o
+  mesmo nome com data diferente também não.
+- Given maior legislatura casada = 57 sem exercício hoje, then
+  `legislatura_atual`; = 56, then `mandato_anterior` — a fronteira é
+  exatamente a 57ª; e exercício hoje vence a legislatura.
+- Given a exportação sem `--camara-refresh`, when roda, then não toca a rede e
+  não cria nem escreve no diretório do cache da Câmara (modo só-cache); cache
+  ausente aborta.
+- Given a lista em exercício com menos de 500 ids, ou paginada, when baixada
+  (`--camara-refresh`), then o ciclo aborta e a resposta **não** vira cache —
+  cortada, ela rebaixaria deputados em exercício para `legislatura_atual` em
+  silêncio.
+- *(perna estacionada — só depois de 25/10, com autorização do dono)* Given
+  candidaturas de cargo 6 já no banco, when a trajetória for persistida depois
+  da migration 0011, then o preenchimento é um `UPDATE` **só** de
+  `trajetoria_camara` e `camara_ids` (backfill dedicado, ROLLBACK por padrão),
+  nunca reimport (DELETE + INSERT), que zeraria `foto_ok` e regravaria o
+  cadastro; e nenhuma coluna de `candidatos` tem nome que case
+  `cpf|email|titulo|nascimento` (a guarda da migration 0008 roda de novo na
+  0011).
 
 ### Payload
 
@@ -570,6 +658,7 @@ carregam o defeito que o ADR-0042 previne — são
 - [ADR-0040](../../architecture/adrs/0040-publicabilidade-candidatura-fail-closed.md) — publicabilidade fail-closed, situação como texto, cadência
 - [ADR-0041](../../architecture/adrs/0041-foto-candidato-blob-binario-cache-um-ano.md) — `putBinary`, cache de 1 ano, `unoptimized`, esquema de caminho
 - [ADR-0042](../../architecture/adrs/0042-cargo-uf-numero-chave-identidade-candidatura.md) — a chave, a função de resolução, a emenda a `top_candidatos`
+- [ADR-0058](../../architecture/adrs/0058-trajetoria-camara-nome-nascimento-em-memoria.md) — RF-214: trajetória na Câmara, casamento por nome + nascimento só em memória, entrega dividida (exportação offline agora; banco depois de 25/10)
 - [ADR-0038](../../architecture/adrs/0038-dado-ts-hora-do-dado-nao-hora-do-calculo.md) — precedente de "a hora do dado, não a hora do cálculo", aplicado aqui como `fonte_ts`
 - [Design 018](./design.md) — contratos, caminhos, componentes e restrições de tela
 - Constituição [§ 1](../../constitution.md) (TSE, dado oficial intocável, não oficial no footer), [§ 2](../../constitution.md) (cor), [§ 5](../../constitution.md) (sem PII), [§ 8](../../constitution.md) (transparência)

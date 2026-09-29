@@ -31,6 +31,8 @@
     "candidatos:import": "node --experimental-strip-types data-pipeline/candidatos-import.ts",
     "candidatos:publish": "tsx data-pipeline/candidatos-publish.ts",
     "candidatos:fotos": "tsx data-pipeline/candidatos-fotos-import.ts",
+    "trajetoria:exportar": "node --experimental-strip-types data-pipeline/trajetoria-exportar.ts",
+    "alinhamento:importar": "node --experimental-strip-types data-pipeline/alinhamento-importar.ts --corte 2026-09-03",
     "edge-config:smoke": "tsx scripts/edge-config-smoke.ts",
     "edge-config:prune": "tsx scripts/edge-config-prune.ts",
     "projection:seed": "tsx data-pipeline/projection-seed.ts",
