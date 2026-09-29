@@ -301,3 +301,7 @@ As 27 cadeiras com mandato até 2031 saem do "Fora" desta spec (ver a emenda no 
 entram em `/senador` no hemiciclo de 81 cadeiras, logo depois do bloco "As 54 vagas em disputa"
 (RF-215..RF-218). A barra das 54 (RF-107) continua, agora pintada pela paleta de partido
 (`textForParty`), a mesma do hemiciclo, e não mais pela posição no ranking (RF-219, ADR-0024).
+
+### Spec 025 — Visões editoriais em `/senador` (2026-09-29)
+
+Todas desligadas até o dono ligar a chave em `editorial/etiquetas/publicar.json` ([spec 025](../025-visoes-editoriais/spec.md)): **V1** "Senado de 2027: quem terá maioria" (as 81 cadeiras por bloco de relação com o governo Lula, marcas 41/49/54) e **V2** "Impeachment de ministros do STF no Senado de 2027", logo depois do hemiciclo de 81 por partido; **V4** "Renovação", só com UF de apuração concluída; o **filtro por etiqueta** e os chips nos cartões do "Estado a estado" (tokens no `<li>` de cada corrida; região sem corrida no filtro some). A página continua estática (ISR 60 s, sem `searchParams`).

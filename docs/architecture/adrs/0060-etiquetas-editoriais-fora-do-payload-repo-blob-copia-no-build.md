@@ -182,6 +182,35 @@ nenhuma variável que toque banco.
 - **Chaves por visão fora do arquivo (por exemplo, no Edge Config).** Rejeitada: separar chave e dado
   permite uma visão ligada sobre uma `versao` de dado que não a sustenta.
 
+## Emenda 2026-09-29 (spec 025): as chaves da cópia do build vêm do `publicar.json` versionado
+
+**O que mudou no item 4.** "No build, o padrão é **tudo desligado**" deixou de valer. Combinado com
+"vence a maior `versao`" (item 3), ele armava uma armadilha para a noite da eleição, registrada como
+open question 5 da spec 024: um deploy que levasse uma compilação **mais nova** que a última
+publicação fazia a cópia do build vencer — e apagava, em silêncio, toda visão que o dono tinha
+ligado, até alguém publicar de novo. Com o deploy congelado das 16h às 5h de 04/10, ninguém
+publicaria a tempo de perceber.
+
+**Decisão (autorizada pelo dono na execução do plano de 29/09; revisão final pendente):**
+
+1. O compilador lê `editorial/etiquetas/publicar.json` (ausente ou inválido ⇒ a compilação falha) e
+   grava as chaves na cópia do build — **fora** do `conteudo_sha256`: ligar uma visão não é mudar
+   classificação, não gera `versao` nova nem entrada no histórico.
+2. O leitor honra as chaves do arquivo escolhido, **qualquer que seja a fonte** (Blob ou build).
+3. O publicador recusa publicar quando `publicar.json` diverge das chaves da cópia do build: Blob e
+   build carregam sempre o mesmo arquivo, e quem vence pela versão não muda o que está ligado.
+
+**Consequências.** Deploy nunca apaga visão (travado em `tests/unit/etiquetas/leitor.test.ts`,
+"deploy depois da publicação"). A primeira negativa deste ADR ("Blob fora do ar apaga as visões que
+o dono ligou") também deixa de valer: com o Blob fora, vale o `publicar.json` do último deploy — o
+"último valor conhecido" do § 7. **Custo novo, conhecido:** desligar às pressas é publicar com a
+chave em `false`; a cópia do build no ar continua dizendo `true` até o próximo deploy, e se o Blob
+cair nessa janela a visão volta. Mudar uma chave exige compilar (o cadastro do TSE precisa estar na
+máquina de quem compila), como já exigia mudar uma classificação.
+
+Spec: [025, RF-253](../../specs/025-visoes-editoriais/spec.md); emenda correspondente nos RF-228 e
+RF-231 da [spec 024](../../specs/024-etiquetas-editoriais/spec.md).
+
 ## Cross-refs
 
 - [ADR-0059](0059-classificacao-editorial-de-candidatos-governanca.md) — governança e as condições

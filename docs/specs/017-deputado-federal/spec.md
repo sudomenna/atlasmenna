@@ -328,6 +328,14 @@ página — cadeiras desc, sigla asc —, sem rótulo de espectro nas extremidad
 arco e sem marcador de maioria, porque o produto não mede posição ideológica de
 partido (constituição § 2).
 
+> 🔴 **EMENDADO em 2026-09-29 pela [spec 025](../025-visoes-editoriais/spec.md) (ADR-0061 item 4).** "Sem marcador de
+> maioria em 257" e "sem eixo" continuam valendo, inteiros, **para esta visão por
+> partido** — o `<CamaraHemiciclo>` não muda. O que deixou de ser verdade é o
+> motivo "o produto não mede posição": a classificação editorial existe desde a
+> constituição 1.6 (ADR-0059), mas vive só na camada de etiquetas, nunca decide
+> ordem e tem desenho próprio — a **Câmara de 2027 por bloco** (RF-244), um painel
+> separado, depois deste, que é o ÚNICO lugar com marcas de 257/308/342.
+
 > **Histórico**: este RF é **novo em 2026-09-19** e não substitui texto anterior —
 > ele fecha uma lacuna. O hemiciclo entrou em produção em 2026-09-18 (`16d4a26`)
 > e passou a ser o elemento de maior destaque visual do produto **sem que nenhum
@@ -459,6 +467,10 @@ O painel "Votação" (RF-192..199) entra na tela de UF `/uf/[sigla]/deputado-fed
 ### Spec 022 — A corrida em três círculos (2026-09-26)
 
 O painel "A corrida" (RF-200..210) **não entra** em nenhuma tela de Deputado Federal (`/deputado-federal` nacional nem `/uf/[sigla]/deputado-federal` de UF) — a disputa é proporcional, sem colocados (RF-200 limitação de escopo).
+
+### Spec 025 — Câmara de 2027 por bloco (2026-09-29)
+
+`/deputado-federal` ganha, **depois** do painel com o plenário por partido (inalterado), o painel "Câmara de 2027: quem terá maioria" (RF-244): as mesmas cadeiras por relação com o governo Lula, com o padrão de cada partido ou federação durante a apuração, as marcas de 257/308/342 (calculadas do total) e a fonte de cada padrão. Só com a chave `camara2027`, o critério publicado e toda agremiação com cadeira classificada. A regra "sem marca em 257" desta spec continua valendo para a visão por partido ([spec 025](../025-visoes-editoriais/spec.md), ADR-0061 item 4).
 
 ## Cross-refs
 

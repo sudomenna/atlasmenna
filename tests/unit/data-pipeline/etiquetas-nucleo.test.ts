@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 
 import type { AlinhamentoInsumo, TrajetoriaInsumo } from "@/data-pipeline/etiquetas-insumos";
 import { compilarEtiquetas, relacaoPeloAlinhamento } from "@/data-pipeline/etiquetas-nucleo";
+import { todasDesligadas } from "@/lib/etiquetas/catalogo";
 import type { ArquivoNacional } from "@/lib/etiquetas/formato";
 import { insumosMajoritario, insumosSenador2031, resolverDeputado } from "@/lib/etiquetas/montagem";
 import { resolverCategoria } from "@/lib/etiquetas/resolver";
@@ -707,9 +708,29 @@ describe("RF-228 — saída determinística", () => {
     expect(b.nacional.meta.gerado_em).toBe(depois.toISOString());
   });
 
-  it("chaves por visão SEMPRE desligadas no compilado", () => {
+  it("chaves por visão: sem publicar.json na entrada, todas desligadas", () => {
     const r = compilarOk(entrada(fontes));
     expect(Object.values(r.nacional.publicar).every((v) => v === false)).toBe(true);
+  });
+
+  it("🔴 chaves por visão: o publicar.json vai para a cópia do build, sem mudar a versão (spec 025)", () => {
+    const desligado = compilarOk(entrada(fontes));
+    const ligado = compilarOk(
+      entrada(fontes, {
+        publicar: { ...todasDesligadas(), v1: true, chips: true },
+        anterior: {
+          nacional: desligado.nacional,
+          ufs: new Map(Object.entries(desligado.ufs)),
+          historico: desligado.historico,
+        },
+        agora: new Date(AGORA.getTime() + 86_400_000),
+      }),
+    );
+    expect(ligado.nacional.publicar).toEqual({ ...todasDesligadas(), v1: true, chips: true });
+    // Ligar uma chave não é mudar classificação: mesma versão, nada no histórico.
+    expect(ligado.nacional.meta).toEqual(desligado.nacional.meta);
+    expect(ligado.historico.entradas).toEqual(desligado.historico.entradas);
+    expect(ligado.relatorio.conteudoMudou).toBe(false);
   });
 
   it("27 UFs, sqcand em ordem numérica (11 dígitos antes de 12)", () => {

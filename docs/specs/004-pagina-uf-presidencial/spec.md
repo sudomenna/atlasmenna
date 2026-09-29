@@ -214,6 +214,10 @@ O painel "A corrida" (RF-200..210) entra imediatamente **depois** do painel "Vot
 
 Decisão do dono, opção A ([ADR-0053, emenda](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md#emenda-2026-09-27-tarde-a-lista-passa-a-mostrar-a-base-da-disputa)): sempre que a UF tem ao menos uma candidatura com `dvt = "Anulado"`, todo percentual publicado de candidatura que compete nesta rota (`<CandidateRow />`, RF-061, o balão do mapa e `<StateResultSheet>` herdados da spec 003) passa a ter como base os **votos em disputa** (`vvc − Σ votos das candidaturas anuladas`), não `vvc` inteiro — a mesma base que já decide `p_fecha_1t` por UF (RF-213, spec 002). A candidatura anulada permanece na lista, ao final, só com votos absolutos (sem percentual). Sem candidatura anulada — o caso hoje observado —, nada muda: a base continua `vvc` inteiro, igual ao `pvap` do TSE. Ver RF-202/203/204/205/212 da [spec 022](../022-corrida-em-tres-circulos/spec.md) para o efeito nos três círculos "A corrida".
 
+### Spec 025 — Etiquetas editoriais nas páginas de UF (2026-09-29)
+
+As páginas de UF de Governador e de Senador passam a poder mostrar etiquetas editoriais sob o nome de cada candidatura no `<ResultPanel>` (RF-245, [spec 025](../025-visoes-editoriais/spec.md)), com o aviso e o link para `/sobre-as-etiquetas` dentro do painel. **Esta rota (Presidente) não recebe etiqueta**: o catálogo não tem categoria que se aplique ao cargo 1 (spec 024, RF-220). O `<ResultPanel>` compartilhado ganhou a prop opcional `etiquetas`; sem ela, o painel sai idêntico.
+
 ## v2 — S05 Multi-candidato e 2º turno
 
 Extensão da v1 (2 candidatos em foco) para visualização completa de todos os candidatos em 1T e métricas de 2º turno.

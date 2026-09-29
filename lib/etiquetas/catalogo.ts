@@ -283,13 +283,113 @@ export function blocoDoHemiciclo(valor: string | null | undefined): BlocoHemicic
   return "aguardando";
 }
 
+/**
+ * Rótulo de cada bloco NAS VISÕES POR BLOCO (spec 025, RF-241). Diferente do
+ * rótulo do valor ("Base do governo"): no Senado e na Câmara de 2027 o governo
+ * pode ser outro (posse em 01/01/2027), e a classificação é a relação com o
+ * governo **Lula** — o nome tem de dizer isso (ADR-0061, Consequências).
+ * `aguardando` é genérico; cada visão diz o que falta ("aguardando apuração",
+ * "sem dono ainda").
+ */
+export const ROTULO_BLOCO_HEMICICLO: Readonly<Record<BlocoHemiciclo, string>> = {
+  base_governo: "Base do governo Lula",
+  independente: "Independentes",
+  aguardando: "Aguardando",
+  oposicao: "Oposição ao governo Lula",
+};
+
+// ---------------------------------------------------------------------------
+// Critérios publicados (constituição 1.6, § 2 (a); spec 025, RF-250)
+// ---------------------------------------------------------------------------
+
+function dataBr(iso: string): string {
+  const [a, m, d] = iso.split("-");
+  return `${d}/${m}/${a}`;
+}
+
+/**
+ * O critério ESCRITO de cada categoria, como a página `/sobre-as-etiquetas`
+ * o publica. `null` = o dono ainda não mandou o critério.
+ *
+ * 🔴 **Sem critério publicado, nenhuma etiqueta da categoria vai à tela** —
+ * constituição § 2 (a): "o critério escrito de cada valor está publicado
+ * ANTES de o valor ser usado". Não é convenção: `<EtiquetaEditorial>` devolve
+ * nada para categoria sem critério ({@link categoriaExibivel}), o filtro não
+ * oferece a categoria e nenhuma visão agregada que dependa dela é liberada. A
+ * metodologia diz, para cada `null`, "critério em definição — nenhuma
+ * etiqueta desta categoria é exibida", e essa frase é verdadeira por
+ * construção, não por coincidência de nenhuma linha estar revisada.
+ *
+ * Os números saem das constantes deste arquivo — nunca repetidos no texto.
+ */
+export const CRITERIOS: Readonly<Record<CategoriaId, string | null>> = {
+  campo_ideologico: null,
+  palanque_presidencial: null,
+  relacao_governo:
+    "Relação com o governo Lula — não é posição ideológica. Deputado federal com mandato: a " +
+    "taxa de votos iguais à orientação do governo nas votações nominais disputadas do plenário " +
+    "da Câmara (aquelas em que a bancada da Oposição orientou o contrário do governo ou " +
+    `orientou obstrução), com dados até ${dataBr(ALINHAMENTO_CORTE)}. Com ao menos ` +
+    `${ALINHAMENTO_MIN_VOTOS_DISPUTADAS} votos nessas votações: ${ALINHAMENTO_BASE_MIN}% ou ` +
+    `mais é Base do governo; ${ALINHAMENTO_OPOSICAO_MAX}% ou menos é Oposição; entre os dois é ` +
+    `Independente. Com menos de ${ALINHAMENTO_MIN_VOTOS_DISPUTADAS} votos disputados, sem ` +
+    "mandato na Câmara, e nas candidaturas a Governador e a Senador e nos senadores que seguem " +
+    "até 2031: vale o padrão do partido (ou da federação), com a fonte indicada em cada padrão, " +
+    "salvo classificação individual com fonte própria. Senador com mandato: a mesma regra, sobre " +
+    "as votações do Senado, quando esse dado estiver publicado.",
+  centrao: null,
+  trajetoria_cargo:
+    "Deputado federal: pelos registros da Câmara dos Deputados — em exercício hoje, ou com " +
+    "exercício na legislatura atual (2023–2027), é Tenta a reeleição; com exercício só em " +
+    "legislatura anterior, Volta ao cargo; sem exercício como deputado federal, Estreante no " +
+    "cargo. Candidatura que o cruzamento com a Câmara não encontra fica sem etiqueta — ausência " +
+    "nunca vira estreante. Senador: a mesma regra sobre os registros do Senado, quando esse dado " +
+    "estiver publicado. Governador: só por classificação individual, com fonte.",
+  impeachment_stf: null,
+};
+
+/** A categoria tem critério escrito e publicado? */
+export function criterioPublicado(cat: string): boolean {
+  return isCategoriaId(cat) && typeof CRITERIOS[cat] === "string";
+}
+
+/**
+ * Uma etiqueta desta categoria PODE ir à tela? Hoje: sse o critério está
+ * publicado (constituição § 2 (a)). Único ponto de decisão — o átomo, o filtro
+ * e as visões perguntam aqui.
+ */
+export function categoriaExibivel(cat: string): boolean {
+  return criterioPublicado(cat);
+}
+
+/**
+ * Categorias que viram "chip" ao lado do nome do candidato (spec 025,
+ * RF-245), na ordem do catálogo. O impeachment NÃO está aqui: fora do Senado
+ * não se aplica, e no Senado ele aparece qualificado (ver
+ * {@link QUALIFICADOR_VISIVEL}) só onde há espaço para a frase inteira.
+ */
+export const CATEGORIAS_CHIP: readonly CategoriaId[] = ORDEM_CATEGORIAS.filter(
+  (c) => c !== "impeachment_stf",
+);
+
+/**
+ * Categorias cujo valor sozinho não diz nada — "A favor" num cartão não diz a
+ * favor de quê (open question 2 da spec 024). A etiqueta delas mostra, VISÍVEL,
+ * o qualificador antes do valor: "Posição pública sobre impeachment de
+ * ministros do STF: a favor". Nunca um "A favor" solto (spec 025, RF-246).
+ */
+export const QUALIFICADOR_VISIVEL: Readonly<Partial<Record<CategoriaId, string>>> = {
+  impeachment_stf: "Posição pública sobre impeachment de ministros do STF",
+};
+
 // ---------------------------------------------------------------------------
 // Visões com chave de publicação
 // ---------------------------------------------------------------------------
 
 /**
  * As superfícies que o dono liga e desliga sem deploy (RF-230/231). Na cópia
- * do build, todas desligadas.
+ * do build, as de `editorial/etiquetas/publicar.json` versionado (spec 025,
+ * RF-253 — até 29/09 eram sempre desligadas, e um deploy apagava as visões).
  */
 export const VISOES = ["chips", "filtro", "v1", "v2", "v3", "v4", "camara2027"] as const;
 export type Visao = (typeof VISOES)[number];

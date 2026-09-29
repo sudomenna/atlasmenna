@@ -31,8 +31,11 @@
 import type { CSSProperties } from "react";
 
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
+import { EtiquetasLinha } from "@/components/atoms/data/EtiquetasLinha";
 import { candidateColor } from "@/components/blocks/_candidateColor";
 import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
+import { normalizarSqcand } from "@/lib/etiquetas/formato";
+import type { EtiquetasDaCorrida } from "@/lib/etiquetas/telas";
 import { classificarProjecao } from "@/lib/utils/desfecho-governador";
 import { anuladasAoFim, compete, exibePercentual, votosDaAnulada } from "@/lib/utils/destino-voto";
 import { formatPercentTrim } from "@/lib/utils/format";
@@ -111,6 +114,15 @@ export interface GovernorCardProps {
    * home) o cartão desce para 4, para não achatar o outline da página.
    */
   nivelTitulo?: 3 | 4;
+  /**
+   * Spec 025 (RF-245/RF-247) — as etiquetas editoriais desta corrida, já
+   * juntadas por `etiquetasDasCorridas` (`lib/etiquetas/telas.ts`): o chip ao
+   * lado do nome de quem tem chance e, com o filtro ligado, os tokens que vão
+   * para `data-etq` do `<article>`. Ausente ⇒ o cartão sai byte a byte igual.
+   * Nunca muda a ordem das linhas (constituição § 2 (e)): a lista é
+   * `top_candidatos`, e a etiqueta só é consultada linha a linha.
+   */
+  etiquetas?: EtiquetasDaCorrida;
 }
 
 /** Vagas por UF no Senado em 2026 (renovação de 2/3) — só para a variante `"sen"`. */
@@ -163,6 +175,8 @@ interface Row {
   destino?: EdgeDestinoVoto;
   /** Votos apurados — lidos SÓ na linha da anulada, que não mostra % (opção A). */
   votos?: number;
+  /** Spec 025 — a chave da junção com as etiquetas editoriais. */
+  sqcand?: string | null;
 }
 
 export function GovernorCard({
@@ -170,6 +184,7 @@ export function GovernorCard({
   candidatos,
   cargo = "gov",
   nivelTitulo = 3,
+  etiquetas,
 }: GovernorCardProps) {
   const senado = cargo === "sen";
   const presidente = cargo === "pres";
@@ -225,6 +240,7 @@ export function GovernorCard({
       rank: meta?.rank ?? i + 1,
       ...(t.destino ? { destino: t.destino } : {}),
       ...(typeof t.votos_atuais === "number" ? { votos: t.votos_atuais } : {}),
+      ...(etiquetas ? { sqcand: normalizarSqcand(t.sqcand) } : {}),
     };
   });
 
@@ -298,7 +314,14 @@ export function GovernorCard({
   // linha é contrato daquele arquivo: mudar a ordem dos filhos do `<li>` muda
   // o desenho.
   return (
-    <article aria-label={ariaLabel} className={styles.c}>
+    <article
+      aria-label={ariaLabel}
+      className={styles.c}
+      // Spread condicional, e não `data-etq={undefined}`: o cartão também viaja
+      // no payload RSC (é `children` do `<RegiaoRecolhivel>`, cliente), e lá um
+      // `undefined` vira `"data-etq":"$undefined"` — 23 B × 27 cartões por nada.
+      {...(etiquetas?.tokens !== undefined ? { "data-etq": etiquetas.tokens } : {})}
+    >
       {/* 🔴 2026-09-28 (decisão do dono) — o cartão completo (4 primeiros +
           "Outros") vale em TODA largura; a linha única do celular saiu. */}
       <header>
@@ -324,7 +347,20 @@ export function GovernorCard({
                 {/* Desenhado ⇒ abreviado (2026-09-19). */}
                 {r.partido ? <span>{siglaExibicao(r.partido)}</span> : null}
                 {r.destino ? <DestinoEtiqueta destino={r.destino} /> : null}
-                {isLider && chip ? <b data-s={chip.s}>{chip.label}</b> : null}
+                {/* Spec 025 — o chip editorial divide a MESMA posição do selo:
+                    sem etiqueta, a lista de filhos do `<span>` é a de antes, e
+                    o payload RSC (o cartão é filho de `<RegiaoRecolhivel>`,
+                    cliente) não ganha um `null` por linha. `<span>` de texto,
+                    nunca interativo (no /senador o cartão está num `<a>`); só
+                    para quem tem chance, e só com a chave `chips` ligada. */}
+                {r.sqcand && etiquetas?.porSqcand.has(r.sqcand) ? (
+                  <>
+                    {isLider && chip ? <b data-s={chip.s}>{chip.label}</b> : null}
+                    <EtiquetasLinha resolucoes={etiquetas.porSqcand.get(r.sqcand)} />
+                  </>
+                ) : isLider && chip ? (
+                  <b data-s={chip.s}>{chip.label}</b>
+                ) : null}
               </span>
               {r.id !== null && !exibePercentual(r) ? (
                 // Emenda "opção A" ao ADR-0053 — a anulada não tem barra nem

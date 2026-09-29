@@ -79,6 +79,12 @@ Com a introdução de suporte multi-turno ([ADR-0014](../../architecture/adrs/00
 - Multi-candidato em 1T aumenta incerteza da projeção — CI é mais largo (documentado).
 - **Viés de composição** é o ângulo cego central da extrapolação: as seções que apuram primeiro numa zona podem não parecer com as que faltam, e o bootstrap não mede esse resíduo. Mitigação declarada: IC inflado abaixo de 5% apurado (RF-018) + rótulo "projeção a partir do apurado" (RF-062).
 
+## Emendas por specs posteriores
+
+### Spec 025 — link para a metodologia das etiquetas (2026-09-29)
+
+A página ganha **um parágrafo** com link para `/sobre-as-etiquetas` (RF-252, [spec 025](../025-visoes-editoriais/spec.md); constituição 1.6 § 8), na seção 6 (Limitações), logo depois da lista de limitações: as etiquetas editoriais são classificação do AtlasMenna, com fonte e data, e não entram no modelo. **Nenhum `<h2>` novo** — o teste de estrutura (`tests/integration/sobre-o-modelo-page.test.tsx`) segue travando oito. A limitação 03 ("nenhum ajuste editorial") continua verdadeira: o modelo não lê etiqueta.
+
 ## Cross-refs
 
 - Design: [./design.md](./design.md)

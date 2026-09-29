@@ -68,6 +68,10 @@ const ROUTES = [
   // dizer"). Estavam fora do portão desde que a spec 017 foi entregue.
   "/deputado-federal",
   "/uf/SP/deputado-federal",
+  // `/sobre-as-etiquetas` entrou em 2026-09-29 (spec 025, RF-252): a página de
+  // metodologia das etiquetas editoriais, obrigatória pela constituição 1.6
+  // § 8 — tabelas, listas longas e links de fonte que nenhuma rota acima tem.
+  "/sobre-as-etiquetas",
 ];
 const VIEWPORTS = [
   { name: "desktop", width: 1280, height: 900 },

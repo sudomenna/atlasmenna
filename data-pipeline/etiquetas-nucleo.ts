@@ -33,6 +33,7 @@ import {
   type ArquivoFonte,
   aplicaA,
   type CategoriaId,
+  type ChavesPublicacao,
   categoria as defCategoria,
   isCategoriaId,
   ORDEM_CATEGORIAS,
@@ -108,6 +109,18 @@ export interface EntradaCompilacao {
   derivados: InsumosDerivadosEntrada;
   anterior: AnteriorCompilado;
   agora: Date;
+  /**
+   * As chaves por visão de `editorial/etiquetas/publicar.json`, já lidas por
+   * `lerChavesPublicacao`. Vão para a cópia do build (spec 025, emenda ao
+   * RF-228/231): o deploy carrega o MESMO estado que o publicador leva ao
+   * Blob, e nunca apaga uma visão que o dono ligou. Ausente ⇒ tudo desligado.
+   *
+   * **Fora do `conteudo_sha256`** de propósito: ligar uma chave não é mudar
+   * classificação, e não gera versão nova nem entrada no histórico — o
+   * publicador carimba a versão (sempre maior que a do build) quando o dono
+   * publica.
+   */
+  publicar?: ChavesPublicacao;
 }
 
 export interface RelatorioCompilacao {
@@ -692,7 +705,7 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
   const nacional: ArquivoNacional = {
     formato: FORMATO_ETIQUETAS,
     meta,
-    publicar: todasDesligadas(),
+    publicar: { ...todasDesligadas(), ...e.publicar },
     ...corpoNacional,
   };
   const ufs: Record<string, ArquivoUf> = {};

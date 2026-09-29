@@ -33,11 +33,23 @@ import { isArquivoNacional, isArquivoUf, UFS } from "@/lib/etiquetas/formato";
 
 import { compilarOk, csv, entrada, GOV_SP_PT } from "../etiquetas/_fixtures";
 
-function gerado() {
+/**
+ * Compilado com as chaves do `publicar.json` que `deps()` devolve
+ * (`{ v1: true, chips: false }`): desde a spec 025 a cópia do build carrega o
+ * mesmo `publicar.json`, e o publicador recusa quando os dois divergem.
+ */
+function gerado(publicar = { ...todasDesligadas(), v1: true }) {
   return compilarOk(
-    entrada({
-      "governador.csv": csv({ chave: GOV_SP_PT, categoria: "campo_ideologico", valor: "esquerda" }),
-    }),
+    entrada(
+      {
+        "governador.csv": csv({
+          chave: GOV_SP_PT,
+          categoria: "campo_ideologico",
+          valor: "esquerda",
+        }),
+      },
+      { publicar },
+    ),
   );
 }
 
@@ -112,6 +124,15 @@ describe("RF-230 — o que o publicador recusa (sem gravar nada)", () => {
     });
     const r = await publicarEtiquetas(d, { dryRun: false });
     expect(r.ok === false && r.motivo).toContain("divergem");
+    expect(escritas).toEqual([]);
+  });
+
+  it("🔴 publicar.json diverge da cópia do build (spec 025) ⇒ recusa", async () => {
+    // O dono ligou uma visão no arquivo e não recompilou: Blob e build
+    // passariam a discordar sobre o que está ligado.
+    const { d, escritas } = deps({ lerPublicarJson: async () => ({ v1: true, v2: true }) });
+    const r = await publicarEtiquetas(d, { dryRun: false });
+    expect(r.ok === false && r.motivo).toContain("diverge da cópia do build nas visões v2");
     expect(escritas).toEqual([]);
   });
 

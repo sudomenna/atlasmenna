@@ -113,12 +113,16 @@ import type { Metadata } from "next";
 
 import { TurnoBadge } from "@/components/atoms/badges/TurnoBadge";
 import { FasePreEleicaoBanner } from "@/components/atoms/banners/FasePreEleicaoBanner";
+import { EtiquetaFiltro } from "@/components/atoms/controls/EtiquetaFiltro";
 import { Panel } from "@/components/atoms/surfaces/Panel";
+import { palanquesDaCapa } from "@/components/blocks/_palanques-capa";
 import { BreakingNewsTicker } from "@/components/blocks/BreakingNewsTicker";
+import { EtiquetasAviso } from "@/components/blocks/EtiquetasAviso";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { GovernadoresPlacarTurno } from "@/components/blocks/GovernadoresPlacarTurno";
 import { GovernadoresPorPartido } from "@/components/blocks/GovernadoresPorPartido";
 import { GovernorCard } from "@/components/blocks/GovernorCard";
+import { PalanquesMapa } from "@/components/blocks/PalanquesMapa";
 import { RegiaoConsolidada } from "@/components/blocks/RegiaoConsolidada";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
@@ -128,6 +132,8 @@ import { agruparPorRegiao } from "@/lib/config/regioes";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
+import { lerEtiquetas } from "@/lib/etiquetas/leitor";
+import { editorialDaCapa } from "@/lib/etiquetas/telas";
 import { classificarProjecao } from "@/lib/utils/desfecho-governador";
 import { haAnulada, NOTA_ANULADAS } from "@/lib/utils/destino-voto";
 import govFixture from "@/tests/fixtures/edge-config/gov-current.json" with { type: "json" };
@@ -371,6 +377,18 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
 
   const ufsFiltradas = por_uf.filter((uf) => passesFilter(uf, status));
 
+  // Spec 025 — etiquetas editoriais (chips, filtro, V3): lidas no servidor
+  // (Blob com revalidate 60, ou a cópia do build), nunca do payload. Com as
+  // chaves de `publicar.json` desligadas, nada abaixo muda a página — e o V3
+  // nem lê o payload de Presidente (`_palanques-capa.ts`).
+  const etiquetas = await lerEtiquetas();
+  const capa = editorialDaCapa(etiquetas, por_uf, {
+    cargo: 3,
+    turno: payload.turno === 2 ? 2 : 1,
+    preEleicao: pre,
+  });
+  const palanques = await palanquesDaCapa(payload, etiquetas);
+
   // S07/Bloco 1 — a lista de cargos (Presidente/Governador + os ainda não
   // cobertos) saiu daqui: agora é `<CargoTabs>` no `<TopBar>` global
   // (app/layout.tsx, ADR-0025 § 2), uma vez por documento.
@@ -529,6 +547,24 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
         </Panel>
       ) : null}
 
+      {/* Spec 025 (RF-251) — V3, o mapa dos palanques presidenciais. Abaixo da
+          dobra, zero JS; só com a chave `v3`, o critério de palanque publicado
+          e o portão de cobertura aberto — senão `palanques` é `null` e nem o
+          payload de Presidente é lido. */}
+      {palanques ? (
+        <Panel
+          kicker="Governadores · classificação editorial · não oficial"
+          title="Palanques presidenciais nos estados"
+          titleId="palanques-heading"
+        >
+          <PalanquesMapa
+            parcial={palanques.parcial}
+            projecao={palanques.projecao}
+            turno={palanques.turno}
+          />
+        </Panel>
+      ) : null}
+
       {/* Seção 3 — as 27 corridas.
           🔴 RF-162 — em fase pré esta seção é **27 links e mais nada**.
           Decisão do dono do produto em 13/09, e não é opção em aberto: são 27
@@ -599,6 +635,11 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
               </ul>
             </nav>
 
+            {/* Spec 025 (RF-247) — filtro por etiqueta: esconde cartões inteiros
+                (os que o filtro de status deixou), nunca reordena; o
+                consolidado de cada região segue somando todos os estados. */}
+            {capa.filtro.length > 0 ? <EtiquetaFiltro grupos={capa.filtro} /> : null}
+
             {ufsFiltradas.length === 0 ? (
               <p style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}>
                 Nenhuma UF se encaixa no filtro <strong>{FILTER_LABELS[status]}</strong> no momento.{" "}
@@ -650,7 +691,12 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
                     {cartoes.length > 0 ? (
                       <div className="grid grid-cols-1 gap-3">
                         {cartoes.map((uf) => (
-                          <GovernorCard key={uf.sigla} uf={uf} candidatos={national.candidatos} />
+                          <GovernorCard
+                            key={uf.sigla}
+                            uf={uf}
+                            candidatos={national.candidatos}
+                            etiquetas={capa.cartao(uf.sigla)}
+                          />
                         ))}
                       </div>
                     ) : (
@@ -679,6 +725,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
                   {NOTA_ANULADAS}
                 </p>
               ) : null}
+              {capa.aviso ? <EtiquetasAviso /> : null}
             </section>
           </div>
         )}

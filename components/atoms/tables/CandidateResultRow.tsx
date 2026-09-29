@@ -214,6 +214,12 @@ export interface CandidateResultRowProps {
    * sai sob `data-view-only` da sua base — nunca os dois ao mesmo tempo.
    */
   selos?: { parcial?: ReactNode; proj?: ReactNode };
+  /**
+   * **Só `variant="kit"`.** Spec 025 (RF-245) — as etiquetas editoriais da
+   * candidatura, já prontas (`<EtiquetasLinha>`), numa linha própria logo
+   * abaixo do nome. Ausente ⇒ linha idêntica à de antes.
+   */
+  etiquetas?: ReactNode;
 }
 
 /**
@@ -529,6 +535,7 @@ type LinhaPainelProps = Pick<
   | "destino"
   | "numero"
   | "selos"
+  | "etiquetas"
 >;
 
 /**
@@ -575,6 +582,7 @@ function LinhaPainel({
   destino,
   numero,
   selos,
+  etiquetas,
 }: LinhaPainelProps) {
   const atual = clampPct(pctAtual);
   const projetado = clampPct(pctProjetado);
@@ -616,6 +624,11 @@ function LinhaPainel({
           {destino === "anulado" || destino === "sub_judice" ? " " : null}
           <DestinoEtiqueta destino={destino} />
         </div>
+        {etiquetas ? (
+          <div data-testid="candidate-result-etiquetas" style={{ marginTop: "var(--space-1)" }}>
+            {etiquetas}
+          </div>
+        ) : null}
       </div>
 
       <div className={s.num}>
@@ -742,6 +755,7 @@ export function CandidateResultRow({
   destino,
   numero,
   selos,
+  etiquetas,
 }: CandidateResultRowProps) {
   if (variant === "kit") {
     return (
@@ -749,6 +763,7 @@ export function CandidateResultRow({
         avatar={avatar}
         cor={cor}
         destino={destino}
+        etiquetas={etiquetas}
         nome={nome}
         numero={numero}
         partido={partido}

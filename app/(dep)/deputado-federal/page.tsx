@@ -92,6 +92,7 @@ import { FasePreEleicaoBanner } from "@/components/atoms/banners/FasePreEleicaoB
 import { VoteBar, type VoteBarSegment } from "@/components/atoms/bars/VoteBar";
 import { Figure } from "@/components/atoms/data/Figure";
 import { Panel } from "@/components/atoms/surfaces/Panel";
+import { Camara2027Panel } from "@/components/blocks/Camara2027Panel";
 import { CamaraHemiciclo } from "@/components/blocks/CamaraHemiciclo";
 import { DeputadoMetodologia } from "@/components/blocks/DeputadoMetodologia";
 import {
@@ -107,6 +108,7 @@ import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshnes
 import { resultadoEleitoral, simulacaoDeputadoNacional } from "@/lib/dev/simulacao";
 import { readDeputadoProjection } from "@/lib/edge-config/reader";
 import type { EdgeAgremiacaoBancada, EdgePayloadDeputado } from "@/lib/edge-config/types";
+import { lerEtiquetas } from "@/lib/etiquetas/leitor";
 import { ordenarBancada } from "@/lib/utils/bancada";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { colorForParty, textForParty } from "@/lib/utils/party-color";
@@ -352,6 +354,10 @@ export default async function DeputadoFederalPage() {
   // 5 min do intervalo entre fatias, que é a leitura errada do cron.
   const frescorDado = avaliarFrescorDado(payload.dado_ts, payload.cargo);
 
+  // Spec 025 (RF-244) — a Câmara de 2027 por bloco. Etiqueta lida no servidor
+  // (Blob ou cópia do build), nunca do payload; desligada, o painel não sai.
+  const etiquetas = await lerEtiquetas();
+
   return (
     <main
       data-trilha="dep"
@@ -470,6 +476,11 @@ export default async function DeputadoFederalPage() {
           </p>
         </div>
       </Panel>
+
+      {/* Spec 025 (RF-244) — "Câmara de 2027: quem terá maioria", depois do
+          plenário por partido (que fica igual, sem marca de limiar — ADR-0049
+          item 6 vale para ELE; as marcas moram só na visão por bloco). */}
+      <Camara2027Panel bancada={bancada} etiquetas={etiquetas} />
 
       {/* Spec 021 RF-192 — EMENDADO em 2026-09-26 (noite), decisão do dono:
           "Votação" SAIU desta capa (repetia o eleitorado do Brasil da capa de

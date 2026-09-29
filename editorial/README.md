@@ -144,13 +144,23 @@ etiqueta. `true` liga, `false` desliga:
 | `v4` | renovação |
 | `camara2027` | Câmara 2027 por bloco |
 
-Mudou o arquivo? Salve a versão e publique de novo. Mesmo ligada, uma visão
-agregada **só aparece** quando todos os candidatos com chance naquela corrida
-estão classificados.
+Mudou o arquivo? **Compile** (`pnpm etiquetas:compilar`), salve a versão e
+publique de novo. Compilar é obrigatório: a chave vai para dentro da cópia que
+viaja com o deploy, e o publicador **recusa** publicar se o `publicar.json`
+estiver diferente dessa cópia. Mesmo ligada, uma visão agregada **só aparece**
+quando todos os candidatos com chance naquela corrida estão classificados — e
+só em categoria cujo critério já está publicado no site.
 
-⚠️ Depois de um deploy que leve etiquetas novas, **publique de novo**: a cópia
-que vai com o deploy sai sempre com tudo desligado, e ela vale até a próxima
-publicação.
+✅ **Deploy não apaga visão** (mudou em 29/09). Até então a cópia que vai com o
+deploy saía sempre com tudo desligado e, sendo mais nova que a última
+publicação, apagava as visões até alguém publicar de novo. Agora ela leva o
+MESMO `publicar.json` que você salvou: o que está ligado no arquivo continua
+ligado depois do deploy, e também se o Blob sair do ar.
+
+⚠️ Para **desligar às pressas**, publique com a chave em `false` (vale em até 1
+minuto). A cópia do deploy que está no ar ainda diz `true` até o próximo deploy:
+se o Blob cair justo nessa janela, a visão volta. É o preço de o deploy nunca
+apagar nada.
 
 ### Voltar atrás
 

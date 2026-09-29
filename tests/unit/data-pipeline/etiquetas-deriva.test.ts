@@ -33,7 +33,13 @@ import {
   lerGerados,
 } from "@/data-pipeline/etiquetas-compilar";
 import { PADRAO_CAMPO_PESSOAL } from "@/data-pipeline/etiquetas-insumos";
-import { isArquivoHistorico, isArquivoNacional, isArquivoUf, UFS } from "@/lib/etiquetas/formato";
+import {
+  isArquivoHistorico,
+  isArquivoNacional,
+  isArquivoUf,
+  lerChavesPublicacao,
+  UFS,
+} from "@/lib/etiquetas/formato";
 
 const c = caminhosPadrao(process.cwd());
 const temCadastro = existsSync(c.tseCache);
@@ -112,7 +118,13 @@ describe("RF-231 — a cópia do build honra o contrato", () => {
     const nac: unknown = JSON.parse(readFileSync(caminhoNacional(c.saida), "utf8"));
     expect(isArquivoNacional(nac)).toBe(true);
     if (!isArquivoNacional(nac)) return;
-    expect(Object.values(nac.publicar).every((v) => v === false)).toBe(true);
+    // Spec 025 (emenda ao RF-228/231): a cópia do build carrega o
+    // `publicar.json` versionado — e só ele.
+    const pub = lerChavesPublicacao(
+      JSON.parse(readFileSync(resolve(c.editorial, "etiquetas", "publicar.json"), "utf8")),
+    );
+    expect("erro" in pub).toBe(false);
+    expect(nac.publicar).toEqual(pub);
     expect(nac.meta.git_sha).toBeNull();
     for (const uf of UFS) {
       const u: unknown = JSON.parse(readFileSync(caminhoUf(c.saida, uf), "utf8"));
@@ -128,9 +140,11 @@ describe("RF-231 — a cópia do build honra o contrato", () => {
     for (const f of ["governador", "senador", "senado-2031", "partidos", "deputados-excecoes"]) {
       expect(existsSync(resolve(c.editorial, "etiquetas", `${f}.csv`)), f).toBe(true);
     }
-    const pub = JSON.parse(
-      readFileSync(resolve(c.editorial, "etiquetas", "publicar.json"), "utf8"),
+    // O dono edita este arquivo para ligar visões (spec 025): o que se exige é
+    // que ele seja válido, não que esteja todo desligado.
+    const pub = lerChavesPublicacao(
+      JSON.parse(readFileSync(resolve(c.editorial, "etiquetas", "publicar.json"), "utf8")),
     );
-    expect(Object.values(pub).every((v) => v === false)).toBe(true);
+    expect("erro" in pub, JSON.stringify(pub)).toBe(false);
   });
 });

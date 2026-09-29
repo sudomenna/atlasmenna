@@ -63,6 +63,12 @@ export interface TrechoHemiciclo {
   inicio: number;
   /** Índice seguinte à última (intervalo semiaberto). */
   fim: number;
+  /**
+   * Contorno tracejado (spec 025, visão por bloco: a cadeira ainda sem dono).
+   * Ausente ⇒ o atributo nem sai — a Câmara e o Senado por partido ficam byte
+   * a byte iguais.
+   */
+  tracejado?: boolean;
 }
 
 /**
@@ -88,6 +94,11 @@ export function agruparEmTrechos<A>(
   return trechos;
 }
 
+/** Duas casas decimais — número de atributo de SVG, não de geometria. */
+function arred2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
 export interface HemicicloProps {
   layout: HemicicloLayout;
   trechos: readonly TrechoHemiciclo[];
@@ -111,6 +122,16 @@ export interface HemicicloProps {
   legendaTestId: string;
   className?: string;
   style?: CSSProperties;
+  /**
+   * Spec 025 (visão por bloco): folga do `viewBox`, em unidades, à esquerda, à
+   * direita e em cima — para marcas FORA do arco externo. Ausente ⇒ o
+   * `viewBox` de sempre (a Câmara sai byte a byte igual).
+   */
+  folga?: number;
+  /** Spec 025: `<defs>` do SVG (padrões de hachura). Sai antes das cadeiras. */
+  defs?: ReactNode;
+  /** Spec 025: o que vai POR CIMA das cadeiras (marcas de limiar). */
+  sobreposicao?: ReactNode;
 }
 
 export function Hemiciclo({
@@ -125,9 +146,17 @@ export function Hemiciclo({
   legendaTestId,
   className,
   style,
+  folga,
+  defs,
+  sobreposicao,
 }: HemicicloProps) {
   const tituloId = `${idPrefixo}-title`;
   const descId = `${idPrefixo}-desc`;
+  const f = folga && folga > 0 ? folga : 0;
+  const viewBox =
+    f > 0
+      ? `${-f} ${-f} ${layout.width + 2 * f} ${layout.height + f}`
+      : `0 0 ${layout.width} ${layout.height}`;
 
   return (
     <figure className={className} data-testid={testId} style={{ margin: 0, ...style }}>
@@ -135,7 +164,7 @@ export function Hemiciclo({
         role="img"
         aria-labelledby={tituloId}
         aria-describedby={[descId, descritoPorId].filter(Boolean).join(" ")}
-        viewBox={`0 0 ${layout.width} ${layout.height}`}
+        viewBox={viewBox}
         preserveAspectRatio="xMidYMid meet"
         className="w-full h-auto"
         data-total={layout.total}
@@ -143,6 +172,7 @@ export function Hemiciclo({
       >
         <title id={tituloId}>{titulo}</title>
         <desc id={descId}>{descricao}</desc>
+        {defs ? <defs>{defs}</defs> : null}
         {trechos.map((t) => (
           <g
             key={t.chave}
@@ -151,12 +181,18 @@ export function Hemiciclo({
             fill={t.fill}
             stroke={t.stroke}
             strokeWidth={layout.raioAssento * FRACAO_CONTORNO}
+            strokeDasharray={
+              t.tracejado
+                ? `${arred2(layout.raioAssento * 0.5)} ${arred2(layout.raioAssento * 0.35)}`
+                : undefined
+            }
           >
             {layout.assentos.slice(t.inicio, t.fim).map((a) => (
               <circle key={a.i} cx={a.cx} cy={a.cy} r={layout.raioAssento} />
             ))}
           </g>
         ))}
+        {sobreposicao}
       </svg>
 
       <figcaption

@@ -25,15 +25,18 @@
  * mesma função que a lista de agremiações usa logo abaixo, não uma segunda
  * implementação com a mesma regra.
  *
- * Reusar a ordem existente **não afirma nada novo**. Ordenar por eixo
- * ideológico afirmaria: o produto não classifica partido em esquerda/direita
- * (constituição § 2), não temos medida para isso, e o desenho passaria a
- * comunicar uma leitura política que não medimos. Três coisas concretas
- * impedem essa leitura aqui: (a) **nenhum rótulo nas extremidades** do arco;
- * (b) o `<desc>` diz em texto que a ordem é por tamanho e não por posição
- * ideológica; (c) **nenhum marcador de maioria em 257** — a página já
- * argumenta que nada nesta eleição se decide em maioria simples, e um traço no
- * meio do arco diria o contrário.
+ * Reusar a ordem existente **não afirma nada novo**. A ORDEM desta visão é
+ * por tamanho; a classificação editorial (relação com o governo, campo
+ * ideológico…) vive só na camada de etiquetas (spec 024, ADR-0059), nunca
+ * decide ordem (constituição § 2 (e)) e tem o seu próprio desenho — a visão
+ * por bloco, `<HemicicloPorBloco>` (spec 025, ADR-0061 item 4). Três coisas
+ * concretas impedem que ESTE desenho seja lido como espectro: (a) **nenhum
+ * rótulo nas extremidades** do arco; (b) o `<desc>` diz em texto que a ordem é
+ * por tamanho e não por posição ideológica; (c) **nenhum marcador de maioria
+ * em 257** — a página já argumenta que nada nesta eleição se decide em maioria
+ * simples, e um traço no meio do arco diria o contrário. A regra do 257 vale
+ * para esta visão por partido (ADR-0061 item 4); as marcas de limiar moram só
+ * na visão por bloco.
  *
  * ## Os três estados da cadeira
  *

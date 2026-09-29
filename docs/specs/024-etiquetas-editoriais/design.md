@@ -75,7 +75,9 @@ por `sqcand` na hora de montar a página.
 Sigla comparada normalizada (sem acento, maiúscula, espaços colapsados):
 `federacao:PT/PC do B/PV` ≡ `PT/PC DO B/PV`; `partido:União` ≡ `UNIAO`.
 `editorial/etiquetas/publicar.json` = `{ chips, filtro, v1, v2, v3, v4, camara2027: boolean }`
-— lido **só pelo publicador**.
+— lido pelo **compilador** (vai para a cópia do build, fora do `conteudo_sha256`)
+e pelo **publicador** (que recusa quando ele diverge da cópia do build). Emenda de
+29/09, spec 025 RF-253; o parser único é `lerChavesPublicacao` (`formato.ts`).
 
 ### 2.2 Insumos de outras frentes (todos opcionais)
 
@@ -103,7 +105,7 @@ Registro = { valor, fonte_url, fonte_descricao, data, revisado_em }   // lista b
 Registros = { [categoria | "palanque_presidencial:1|2"]: Registro }
 Meta      = { versao, gerado_em, conteudo_sha256, git_sha|null }
 
-nacional = { formato, meta, publicar: {7 × false no build},
+nacional = { formato, meta, publicar: {7 × boolean — no build, as do publicar.json versionado},
   derivados: { trajetoria_camara|alinhamento_camara|trajetoria_senado|alinhamento_senado: {fonte_url,fonte_descricao,data}|null },
   partidos: { PARTIDO: FEDERACAO|null },                 // observado no TSE (+ partidos da foto do Senado)
   padroes:  { "partido:PT" | "federacao:PT/PC DO B/PV": Registros },
@@ -181,8 +183,10 @@ interrompe antes do nacional (a versão nova não fica visível pela metade).
 
 Nacional e UF escolhem cada um, pela **maior `versao`** (empate ⇒ build), entre
 Blob (`fetch` + `next.revalidate: 60`, sem `AbortSignal`) e cópia do build.
-Blob ausente/404/rede/corpo inválido ⇒ build, sem lançar. Da cópia do build,
-`publicar` é **forçado** a tudo desligado, diga o arquivo o que disser.
+Blob ausente/404/rede/corpo inválido ⇒ build, sem lançar. ~~Da cópia do build,
+`publicar` é **forçado** a tudo desligado, diga o arquivo o que disser.~~ Desde
+29/09 (spec 025, RF-253) as chaves são as do arquivo escolhido, e a cópia do build
+carrega as do `publicar.json` versionado — deploy não apaga visão.
 
 API: `Etiquetas.resolver(sqcand: string|number, cargo: 3|5|6, turno)`,
 `.classificadas(...)`, `.senador2031(cod, turno)`, `.padraoDoPartido(sigla,
@@ -262,13 +266,20 @@ module, e `light-dark()` dependeria do pipeline de CSS.
 
 | Risco | Mitigação |
 |---|---|
-| Deploy com compilação nova apaga as visões até republicar | fail-safe; `editorial/README.md` manda publicar depois de deploy |
+| ~~Deploy com compilação nova apaga as visões até republicar~~ | resolvido em 29/09 (spec 025, RF-253): a cópia do build leva o `publicar.json` versionado |
+| Blob fora do ar logo depois de um "desligar às pressas" | a cópia do build no ar ainda diz `true` até o próximo deploy — custo conhecido, no guia editorial |
 | Nacional grande no pior caso (1,3 MB) | abaixo de 2 MB do Data Cache; se crescer, deduplicar fontes numa tabela (`fontes[]` + índice) — mudança de formato `v2` |
 | Histórico > 2 MB no pior caso | não é lido pelo leitor; a metodologia lê de outro jeito |
 | Cadastro do TSE muda (substituição) | teste de deriva acusa localmente; compilar de novo; o universo dos derivados precisa bater |
 | `import()` de JSON com atributo no Turbopack | conferido em 29/09: `next build` compila e `next dev` serve uma rota que carrega SP e RJ |
 
 ## 7. Pendências para a spec 025 / frente de telas
+
+> ✅ **Atendidas em 29/09 pela [spec 025](../025-visoes-editoriais/design.md)**:
+> `/sobre-as-etiquetas` lê o histórico por `lerHistoricoEtiquetas` (Blob ou build,
+> mostra as 50 mais recentes e aponta para o arquivo inteiro); `comEtiquetas`/o
+> auxiliar de invariância nas superfícies; impeachment sempre qualificado
+> (RF-246); `/sobre-as-etiquetas` nas rotas e2e de peso e acessibilidade.
 
 - `/sobre-as-etiquetas` deve ler o histórico sem passar pelo Data Cache de 2 MB
   (paginação ou cópia do build).

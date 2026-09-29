@@ -101,6 +101,9 @@ import {
   cargoToken,
   parseCargoSegment,
 } from "@/lib/config/cargos";
+import { CATEGORIAS_CHIP } from "@/lib/etiquetas/catalogo";
+import { lerEtiquetas } from "@/lib/etiquetas/leitor";
+import { etiquetasDaLista } from "@/lib/etiquetas/telas";
 
 /**
  * 12 horas — tem que bater com `CANDIDATOS_REVALIDATE_SECONDS`.
@@ -585,6 +588,23 @@ export default async function CandidatosPage({ searchParams }: PageProps) {
   // contagem que ela mostra vem de `total`, não de `exibidos.length`.
   const exibidos = ordenados.slice(0, filtros.limite);
 
+  // Spec 025 (RF-245) — etiquetas editoriais das candidaturas EXIBIDAS, por
+  // `sqcand`. Governador e Senador vêm do arquivo nacional; Deputado Federal,
+  // do arquivo da UF. Presidente não tem etiqueta no catálogo. Vazio com a
+  // chave `chips` desligada. Não mexe na ordem (número na urna) nem no corte.
+  const cargoEtiquetado =
+    filtros.cargo === 3 || filtros.cargo === 5 || filtros.cargo === 6 ? filtros.cargo : null;
+  const etiquetasDaGrade =
+    slice && cargoEtiquetado
+      ? etiquetasDaLista(
+          await lerEtiquetas({ uf: cargoEtiquetado === 6 ? (slice.uf ?? filtros.uf) : null }),
+          exibidos,
+          cargoEtiquetado,
+          1,
+          cargoEtiquetado === 5 ? [...CATEGORIAS_CHIP, "impeachment_stf"] : CATEGORIAS_CHIP,
+        )
+      : undefined;
+
   // O rótulo da seção sai do cargo e da UF **lidos**, não dos pedidos: se a
   // fatia veio, ela é autodescritiva e é ela que manda.
   const ufExibida = slice?.uf ?? filtros.uf;
@@ -666,6 +686,7 @@ export default async function CandidatosPage({ searchParams }: PageProps) {
           <>
             <CandidatosGrid
               candidatos={exibidos}
+              etiquetas={etiquetasDaGrade}
               total={total}
               uf={ufExibida}
               rotulo={`Candidaturas a ${info.label} em ${ufExibida}`}

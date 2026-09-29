@@ -228,8 +228,9 @@ mínimo de 30 conta **votos disputados**, não todos os votos válidos.
 
 WHEN o compilador termina sem erro, the system SHALL gravar
 `lib/data/etiquetas/nacional.generated.json` (Governador, Senador,
-senado2031, padrões de partido/federação, chaves de visão **todas
-desligadas**, meta), `lib/data/etiquetas/uf/<UF>.generated.json` (Deputado
+senado2031, padrões de partido/federação, chaves de visão ~~**todas
+desligadas**~~ **as de `editorial/etiquetas/publicar.json`** — emenda de
+29/09, RF-253 da spec 025 —, meta), `lib/data/etiquetas/uf/<UF>.generated.json` (Deputado
 Federal: candidaturas por partido + trajetória e alinhamento derivados +
 exceções individuais) para as 27 UFs e `lib/data/etiquetas/historico.json`;
 cada valor resolvido SHALL carregar `origem` (`individual` | `derivado` |
@@ -285,12 +286,23 @@ cada arquivo público campo a campo (lista branca); SHALL gravar com
 WHEN uma página no servidor pede etiquetas, the system SHALL ler
 `etiquetas/v1/*` do Blob com `revalidate: 60` e a cópia do build, usar a de
 maior `versao` e, IF o Blob falhar (ausente, rede, corpo inválido), SHALL usar
-a cópia do build sem erro (constituição § 7); as chaves por visão da cópia do
-build SHALL estar sempre desligadas.
+a cópia do build sem erro (constituição § 7); ~~as chaves por visão da cópia do
+build SHALL estar sempre desligadas~~ as chaves por visão SHALL ser as do
+arquivo escolhido, e a cópia do build SHALL carregar as do `publicar.json`
+versionado.
+
+> 🔴 **EMENDADO em 2026-09-29 — [spec 025, RF-253](../025-visoes-editoriais/spec.md)
+> (ADR-0060, emenda).** A versão anterior forçava a cópia do build a tudo
+> desligado. Combinado com "vence a maior `versao`", um deploy que levasse uma
+> compilação mais nova que a última publicação apagava as visões em silêncio
+> (open question 5 abaixo). Agora Blob e build carregam o mesmo `publicar.json`
+> e o publicador recusa quando divergem.
 
 **Aceitação**:
-- Given Blob fora do ar, when lê, then devolve a cópia do build e
-  `viewLigada(qualquer)` é `false`.
+- Given Blob fora do ar, when lê, then devolve a cópia do build, com as chaves
+  que o `publicar.json` versionado liga (tudo `false` no de hoje).
+- Given o dono ligou `v1`, compilou e publicou, when um deploy leva uma
+  compilação mais nova, then `viewLigada("v1")` continua `true`.
 
 **RF-232 — Junção por `sqcand` normalizado**
 
@@ -398,10 +410,10 @@ e quando — sem nunca reescrever entradas anteriores.
   valor que caiba; hoje o único destino possível é "Sem palanque declarado",
   que é impreciso. O catálogo aceita valor novo sem migração (RF-220) —
   decisão do dono.
-- ? **Chip de impeachment fora do placar.** "A favor" sozinho, num cartão de
-  candidato, não diz a favor de quê. O componente mostra só o rótulo do valor
-  (o nome da categoria vai só para leitor de tela); a frente de telas decide
-  se esse chip aparece fora da V2.
+- ~~? **Chip de impeachment fora do placar.**~~ **Resolvida (spec 025, RF-246):**
+  a etiqueta de impeachment mostra SEMPRE a frase qualificada, visível
+  ("Posição pública sobre impeachment de ministros do STF: a favor"), e só em
+  superfícies do Senado — nunca nos cartões das capas.
 - ? **Contrato de `editorial/senado/mandato-2031.json`** (produzido pela frente
   023): o compilador lê com tolerância (`codigo`/`codigo_parlamentar`, `uf`,
   `partido`/`partido_atual`); confirmar na barreira.
@@ -409,8 +421,9 @@ e quando — sem nunca reescrever entradas anteriores.
   (`ALINHAMENTO_CORTE = 2026-09-03`; outro corte derruba a compilação). O do
   Senado é aceito como vier e viaja na proveniência
   (`derivados.alinhamento_senado.data`). Prender também?
-- ? **Visões apagam depois de deploy.** A cópia do build tem as chaves sempre
-  desligadas e vence quando a versão compilada é mais nova que a publicada:
-  depois de um deploy que leve uma compilação nova, as visões somem até a
-  próxima publicação. É o lado seguro, está no guia editorial, mas é uma
-  armadilha operacional para o dia D (o deploy fica congelado das 16h às 5h).
+- ~~? **Visões apagam depois de deploy.**~~ **Resolvida (spec 025, RF-253,
+  2026-09-29):** a cópia do build passa a carregar o `publicar.json` versionado
+  (fora do `conteudo_sha256` — ligar uma chave não gera versão nem histórico); o
+  leitor honra as chaves de qualquer fonte; o publicador recusa `publicar.json`
+  diferente da cópia do build. Deploy depois de publicação não apaga visão
+  (teste em `tests/unit/etiquetas/leitor.test.ts`).

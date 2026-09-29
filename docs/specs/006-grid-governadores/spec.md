@@ -183,6 +183,14 @@ O painel "Votação" (RF-192..199) **não entra** na tela nacional `/governador`
 
 O painel "A corrida" (RF-200..210) **não entra** na tela nacional `/governador`. Entra apenas nas telas de UF `/uf/[sigla]/governador`, imediatamente após o `<ResultPanel>` (e após o painel "Votação" quando presente).
 
+### Spec 025 — Visões editoriais (2026-09-29)
+
+Três acréscimos, todos desligados até o dono ligar a chave em `editorial/etiquetas/publicar.json` ([spec 025](../025-visoes-editoriais/spec.md)):
+
+- **Filtro por etiqueta** (RF-247) logo depois do `<nav>` de filtros por status. Os dois se somam: o de status tira cartões do HTML (links GET, RF-006.2); o de etiqueta esconde, por CSS, os que sobram, sem reordenar. O consolidado de cada região segue somando todos os estados dela (ADR-0057 item 5) e a região não some.
+- **Etiquetas nos cartões** (RF-245): só para quem tem chance na corrida, dentro do `<span>` do nome, sem mudar o contrato da linha; `data-etq` no `<article>` para o filtro. Ordem das linhas e dos cartões inalterada.
+- **Mapa dos palanques** (V3, RF-251) abaixo do painel "1º ou 2º turno". Só com a chave `v3`, o critério de palanque publicado e o portão de cobertura; só então a página lê o payload de Presidente.
+
 ## Cross-refs
 
 - Design: [./design.md](./design.md)

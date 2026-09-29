@@ -10,6 +10,8 @@
 //
 // Lê:
 //   editorial/etiquetas/*.csv                    (obrigatórios — nascem só com cabeçalho)
+//   editorial/etiquetas/publicar.json            (obrigatório — chaves por visão; vão para a
+//                                                 cópia do build desde 29/09, spec 025)
 //   editorial/senado/mandato-2031.json           (opcional — frente 023)
 //   editorial/derivados/trajetoria-camara.json   (opcional — frente 3B)
 //   editorial/derivados/alinhamento-camara.json  (opcional — frente 3B)
@@ -37,6 +39,7 @@ import {
   isArquivoHistorico,
   isArquivoNacional,
   isArquivoUf,
+  lerChavesPublicacao,
   UFS,
 } from "@/lib/etiquetas/formato";
 
@@ -145,6 +148,34 @@ export async function entradaDoDisco(
 
   const { universo } = await lerUniversoTse(c.tseCache);
 
+  // Chaves por visão (spec 025, emenda ao RF-228/231): o arquivo versionado
+  // vai para a cópia do build. Ausente ou inválido ⇒ erro — sem ele a cópia do
+  // build não sabe o que o dono ligou, e "tudo desligado por omissão" é
+  // exatamente a armadilha que a emenda fechou.
+  const caminhoPublicar = resolve(c.editorial, "etiquetas", "publicar.json");
+  let publicar: ReturnType<typeof lerChavesPublicacao> | null = null;
+  if (!existsSync(caminhoPublicar)) {
+    erros.push({
+      arquivo: "editorial/etiquetas/publicar.json",
+      linha: null,
+      mensagem: "arquivo ausente — ele diz quais visões estão ligadas",
+    });
+  } else {
+    try {
+      publicar = lerChavesPublicacao(JSON.parse(await readFile(caminhoPublicar, "utf8")));
+    } catch (err) {
+      publicar = { erro: `JSON inválido (${err instanceof Error ? err.message : String(err)})` };
+    }
+    if ("erro" in publicar) {
+      erros.push({
+        arquivo: "editorial/etiquetas/publicar.json",
+        linha: null,
+        mensagem: publicar.erro,
+      });
+      publicar = null;
+    }
+  }
+
   const coletar = <T>(nome: string, r: Insumo<T>): T | null => {
     if (!r.ok) {
       for (const m of r.erros) erros.push({ arquivo: nome, linha: null, mensagem: m });
@@ -187,6 +218,7 @@ export async function entradaDoDisco(
       derivados,
       anterior: await lerGerados(c.saida),
       agora,
+      ...(publicar && !("erro" in publicar) ? { publicar } : {}),
     },
     erros,
     avisos,

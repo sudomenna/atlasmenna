@@ -133,6 +133,9 @@ import type {
   EdgeUfCandidate,
   EdgeUfMunicipio,
 } from "@/lib/edge-config/types";
+import { CATEGORIAS_CHIP } from "@/lib/etiquetas/catalogo";
+import { lerEtiquetas } from "@/lib/etiquetas/leitor";
+import { etiquetasDaLista } from "@/lib/etiquetas/telas";
 import { primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import govFixture from "@/tests/fixtures/edge-config/gov-current.json" with { type: "json" };
 
@@ -560,6 +563,17 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
 
   const municipioRows = toMunicipioRows(municipios, candidateColor, candidateShortName);
 
+  // Spec 025 (RF-245) — etiquetas editoriais de TODA candidatura da lista,
+  // por `sqcand`; vazio com a chave `chips` desligada. Não entram no payload
+  // nem mudam a ordem do painel.
+  const etiquetasDoPainel = etiquetasDaLista(
+    await lerEtiquetas(),
+    payload.candidatos,
+    3,
+    payload.turno === 2 ? 2 : 1,
+    CATEGORIAS_CHIP,
+  );
+
   // O dispatch `binary` | `multi-1t` saiu com os termômetros (D23): o
   // `<ResultPanel>` é o mesmo nos dois turnos — em 2T a lista tem duas linhas.
 
@@ -619,6 +633,7 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
         // base ativa. Entregar uma ordem só voltaria a congelar a lista numa
         // base — que é o defeito que a mudança corrigiu.
         candidatos={payload.candidatos}
+        etiquetas={etiquetasDoPainel}
         headingLevel={1}
         kicker="Projeção Atlas Menna · não oficial"
         note="Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados na UF."

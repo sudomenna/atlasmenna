@@ -80,7 +80,28 @@ const ARTIFACT_PATH = path.join(process.cwd(), "test-results", "perf-budget.json
 // somam `request.resourceType() === "script"`; o hemiciclo é zero JavaScript —
 // ~513 `<circle>` renderizados no servidor. Ele poderia dobrar de tamanho com
 // os três gates verdes. Daí o bloco "peso do DOCUMENTO" no fim deste arquivo.
-const ROUTES = ["/", "/uf/SP", "/uf/SP/governador", "/uf/SP/senador", "/deputado-federal"] as const;
+// `/senador` e `/sobre-as-etiquetas` entraram em 2026-09-29 (spec 025): a capa
+// do Senado ganhou chips, filtro e as visões por bloco — tudo zero JS menos o
+// filtro (~2 KB gz), e custo em HTML que só o bloco "peso do DOCUMENTO"
+// enxerga; `/sobre-as-etiquetas` é a metodologia nova.
+//
+// ⚠️ `/governador` NÃO entrou, e o motivo é um achado, não uma escolha: medida
+// em 29/09 contra este mesmo servidor (dado fixo), com as etiquetas DESLIGADAS,
+// o documento tem 325.635 B — acima dos 300 KiB do teto abaixo, antes de
+// qualquer coisa da spec 025 (o consolidado por região do ADR-0057 e os 27
+// cartões saem duas vezes: no HTML e no payload RSC do `<RegiaoRecolhivel>`).
+// Pôr a rota aqui deixaria o portão vermelho por um peso que já existia; a
+// decisão de apertar a página ou o teto é do dono (registrado no tasks.md da
+// spec 025).
+const ROUTES = [
+  "/",
+  "/uf/SP",
+  "/uf/SP/governador",
+  "/uf/SP/senador",
+  "/deputado-federal",
+  "/senador",
+  "/sobre-as-etiquetas",
+] as const;
 
 /**
  * Das rotas acima, as que renderizam um mapa MapLibre — medido em 2026-09-21

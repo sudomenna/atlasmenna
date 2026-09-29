@@ -90,7 +90,8 @@ export type MotivoBloqueio =
   | "sem_sqcand"
   | "cauda_sem_universo"
   | "senado2031_indisponivel"
-  | "agremiacao_a_classificar";
+  | "agremiacao_a_classificar"
+  | "universo_indisponivel";
 
 export interface Bloqueante {
   corrida: string;
@@ -269,6 +270,35 @@ export function avaliarCamara2027(
       nome: a.sigla,
       motivo: "agremiacao_a_classificar" as const,
     }));
+  return { ok: bloqueantes.length === 0, bloqueantes };
+}
+
+/**
+ * Uma corrida INTEIRA classificada (spec 025, V4 — renovação): quando a visão
+ * precisa de toda candidatura da corrida, e não só de quem tem chance — "quem
+ * tentou a reeleição e perdeu" só é uma lista completa se ninguém ficou
+ * `a_classificar`. Universo vazio bloqueia (não há como provar cobertura), e a
+ * ordem dos bloqueantes é a do universo (RF-238).
+ */
+export function avaliarUniverso(
+  chave: string,
+  universo: readonly (string | number)[] | null | undefined,
+  classificado: (sqcand: string) => boolean,
+): ResultadoPortao {
+  if (!universo || universo.length === 0) {
+    return {
+      ok: false,
+      bloqueantes: [{ corrida: chave, chave: null, motivo: "universo_indisponivel" }],
+    };
+  }
+  const bloqueantes: Bloqueante[] = [];
+  const vistos = new Set<string>();
+  for (const u of universo) {
+    const sq = normalizarSqcand(u);
+    if (!sq || vistos.has(sq)) continue;
+    vistos.add(sq);
+    if (!classificado(sq)) bloqueantes.push({ corrida: chave, chave: sq, motivo: "a_classificar" });
+  }
   return { ok: bloqueantes.length === 0, bloqueantes };
 }
 

@@ -74,7 +74,10 @@
  */
 
 import { CandidateCard } from "@/components/atoms/data/CandidateCard";
+import { EtiquetasLinha } from "@/components/atoms/data/EtiquetasLinha";
+import { EtiquetasAviso } from "@/components/blocks/EtiquetasAviso";
 import type { CandidatoIdentidade } from "@/lib/blob/candidatos";
+import type { ResolucoesExibiveis } from "@/lib/etiquetas/telas";
 
 /**
  * Quantas células saem com `loading="eager"`.
@@ -215,6 +218,12 @@ export interface CandidatosGridProps {
    */
   total?: number;
   className?: string;
+  /**
+   * Spec 025 (RF-245) — etiquetas editoriais por `sqcand` (`etiquetasDaLista`),
+   * sob o cartão. Ausente ou vazio ⇒ grade idêntica. Não muda a ordem (que é
+   * o número na urna) nem o corte.
+   */
+  etiquetas?: ReadonlyMap<string, ResolucoesExibiveis>;
 }
 
 export function CandidatosGrid({
@@ -224,6 +233,7 @@ export function CandidatosGrid({
   textoVazio,
   total,
   className,
+  etiquetas,
 }: CandidatosGridProps) {
   const ordenados = ordenarCandidatosPorNumero(candidatos);
   // O `??` aqui é o oposto do "default silencioso" que já mordeu este repo: a
@@ -287,10 +297,24 @@ export function CandidatosGrid({
                 uf={uf}
                 eager={i < CANDIDATOS_GRID_EAGER_CELLS}
               />
+              {etiquetas?.has(candidato.sqcand) ? (
+                <div
+                  data-testid="candidatos-grid-etiquetas"
+                  style={{ marginTop: "var(--space-1)" }}
+                >
+                  <EtiquetasLinha resolucoes={etiquetas.get(candidato.sqcand)} />
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
       )}
+      {/* Spec 025 (RF-248) — o aviso vai junto de toda superfície com etiqueta. */}
+      {etiquetas && etiquetas.size > 0 && ordenados.some((c) => etiquetas.has(c.sqcand)) ? (
+        <div style={{ marginTop: "var(--space-4)" }}>
+          <EtiquetasAviso />
+        </div>
+      ) : null}
     </div>
   );
 }

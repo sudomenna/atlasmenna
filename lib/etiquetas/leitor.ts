@@ -12,14 +12,30 @@
  *     ausente, fora do ar ou com corpo inválido ⇒ esta, sem erro na tela
  *     (constituição § 7).
  *
- * ## As chaves por visão da cópia do build estão SEMPRE desligadas
+ * ## As chaves por visão vêm do `publicar.json` versionado — nos DOIS lados
  *
- * O compilador já grava tudo `false`; este leitor reforça, ignorando o que o
- * arquivo embutido disser. Uma visão só liga quando o dono publica no Blob.
- * Consequência a lembrar: depois de um deploy com uma compilação **mais nova**
- * que a última publicação, a cópia do build vence e as visões apagam até a
- * próxima publicação — falha para o lado seguro, e o README editorial manda
- * publicar de novo depois de todo deploy que leve etiquetas novas.
+ * **Emenda de 2026-09-29 (spec 025; ADR-0060, emenda; RF-231 emendado).** Até
+ * esta data a cópia do build tinha as chaves SEMPRE desligadas, e este leitor
+ * as forçava a `false`. Combinado com "vence a maior `versao`", isso armava uma
+ * armadilha para o dia D: um deploy que levasse uma compilação mais nova que a
+ * última publicação fazia a cópia do build vencer — e apagava, em silêncio,
+ * toda visão que o dono tinha ligado, até a próxima publicação (open question 5
+ * da spec 024). Com o deploy congelado das 16h às 5h, ninguém perceberia.
+ *
+ * Agora o compilador grava na cópia do build as chaves de
+ * `editorial/etiquetas/publicar.json` (o arquivo que o dono edita e versiona),
+ * e o publicador leva ao Blob o MESMO arquivo — e recusa publicar se os dois
+ * divergirem. Então Blob e build dizem a mesma coisa sobre o que está ligado,
+ * e quem vence pela versão não muda o que aparece. Consequências:
+ *   - deploy depois de publicação NÃO apaga visão (o teste que trava isso está
+ *     em `tests/unit/etiquetas/leitor.test.ts`, "deploy depois da publicação");
+ *   - Blob fora do ar mantém as visões que o `publicar.json` do deploy liga
+ *     (o último estado conhecido, constituição § 7), em vez de apagá-las;
+ *   - desligar uma visão às pressas é publicar com a chave em `false`; o build
+ *     no ar ainda diz `true` até o próximo deploy — se o Blob cair NESSA janela,
+ *     a visão volta. É o custo conhecido, registrado na emenda do ADR-0060.
+ *
+ * Chave com valor não booleano, ou ausente, fica desligada (falha fechada).
  *
  * ## Só no servidor
  *
@@ -37,7 +53,11 @@
 
 import { blobUrlFor } from "@/lib/blob/paths";
 
-import { etiquetasNacionalBlobPathname, etiquetasUfBlobPathname } from "./caminhos";
+import {
+  etiquetasHistoricoBlobPathname,
+  etiquetasNacionalBlobPathname,
+  etiquetasUfBlobPathname,
+} from "./caminhos";
 import {
   type AlvoEtiqueta,
   type CategoriaId,
@@ -46,12 +66,14 @@ import {
   todasDesligadas,
   type Visao,
 } from "./catalogo";
-import { CARREGADORES_UF, NACIONAL_EMBUTIDO } from "./embutido";
+import { CARREGADOR_HISTORICO, CARREGADORES_UF, NACIONAL_EMBUTIDO } from "./embutido";
 import {
+  type ArquivoHistorico,
   type ArquivoNacional,
   type ArquivoUf,
   chaveFederacao,
   chavePartido,
+  isArquivoHistorico,
   isArquivoNacional,
   isArquivoUf,
   isSiglaUf,
@@ -127,6 +149,14 @@ export type CargoEtiquetado = 3 | 5 | 6;
 export interface Etiquetas {
   fonte: FonteEtiquetas;
   versao: number;
+  /**
+   * O arquivo nacional escolhido, cru — para a página de metodologia listar
+   * as classificações publicadas (spec 025, RF-252). As telas de voto usam
+   * `resolver`, nunca isto.
+   */
+  nacional: ArquivoNacional;
+  /** O arquivo da UF carregada, cru (mesmo uso: metodologia). `null` sem UF. */
+  arquivoUf: ArquivoUf | null;
   /** A UF cujos deputados foram carregados (`null` = só o nacional). */
   uf: string | null;
   publicar: ChavesPublicacao;
@@ -156,6 +186,20 @@ export interface Etiquetas {
     tipo: "partido" | "federacao",
     turno: 1 | 2,
   ): Record<CategoriaId, Resolucao>;
+  /**
+   * A federação (normalizada) que o TSE registra para o partido, ou `null`.
+   * Spec 025: o payload da Câmara nomeia a federação pelo apelido do EA20
+   * ("FE BRASIL") e lista os partidos-membro; o padrão editorial é chaveado
+   * pela federação do cadastro ("PT/PC DO B/PV") — é por aqui que as duas se
+   * encontram.
+   */
+  federacaoDoPartido(sigla: string): string | null;
+  /**
+   * Todos os `sqcand` de uma corrida majoritária (cargo 3 ou 5 numa UF), na
+   * ordem do arquivo — o `universo` que o portão exige na fase pré-eleição ou
+   * quando a cauda pode ter chance (RF-233). Spec 025.
+   */
+  universo(cargo: 3 | 5, uf: string): string[];
 }
 
 const TODAS_A_CLASSIFICAR = (): Record<CategoriaId, Resolucao> => {
@@ -188,11 +232,9 @@ export function montarEtiquetas(
   fonte: FonteEtiquetas,
   uf: ArquivoUf | null,
 ): Etiquetas {
-  // Cópia do build ⇒ tudo desligado, diga o arquivo o que disser.
-  const publicar: ChavesPublicacao =
-    fonte === "blob"
-      ? { ...todasDesligadas(), ...pickBooleans(nacional.publicar) }
-      : todasDesligadas();
+  // As chaves do arquivo escolhido — Blob ou build carregam o MESMO
+  // `publicar.json` (ver o cabeçalho). Só `true` literal liga.
+  const publicar: ChavesPublicacao = { ...todasDesligadas(), ...pickBooleans(nacional.publicar) };
   const idxUf = uf ? indiceDeputadosDaUf(uf, nacional) : null;
   const base = { padroes: nacional.padroes, partidos: nacional.partidos };
 
@@ -221,6 +263,8 @@ export function montarEtiquetas(
   return {
     fonte,
     versao: nacional.meta.versao,
+    nacional,
+    arquivoUf: uf,
     uf: uf?.uf ?? null,
     publicar,
     viewLigada: (v) => publicar[v] === true,
@@ -252,6 +296,15 @@ export function montarEtiquetas(
       return r;
     },
     padraoDaAgremiacao,
+    federacaoDoPartido: (sigla) => nacional.partidos[normalizarSigla(sigla)] ?? null,
+    universo: (cargo, ufPedida) => {
+      const alvo = ufPedida.toUpperCase();
+      const out: string[] = [];
+      for (const [sq, c] of Object.entries(nacional.candidatos)) {
+        if (c.cargo === cargo && c.uf === alvo) out.push(sq);
+      }
+      return out;
+    },
   };
 }
 
@@ -327,6 +380,40 @@ export async function lerEtiquetas(opts: { uf?: string | null } = {}): Promise<E
     else uf = doBlob;
   }
   return montarEtiquetas(nac.arquivo, nac.fonte, uf);
+}
+
+/**
+ * O histórico público de alterações (RF-239) — só para `/sobre-as-etiquetas`
+ * (spec 025, RF-252). Mesma regra do nacional: a maior `versao` entre Blob e
+ * cópia do build; Blob fora ⇒ build. O arquivo pode passar de 2 MB no pior
+ * caso (design 024 § 2.3) — acima disso o Data Cache do Next não guarda a
+ * resposta, mas o `fetch` ainda devolve o corpo; a página só MOSTRA as
+ * entradas mais recentes e aponta para o arquivo inteiro. Nunca lança.
+ */
+export async function lerHistoricoEtiquetas(): Promise<{
+  arquivo: ArquivoHistorico;
+  fonte: FonteEtiquetas;
+  url: string | null;
+}> {
+  const vazio: ArquivoHistorico = {
+    formato: "etiquetas/v1",
+    meta: { versao: 0, gerado_em: "", conteudo_sha256: "", git_sha: null },
+    entradas: [],
+  };
+  const doBlob = await lerJsonDoBlob(etiquetasHistoricoBlobPathname(), isArquivoHistorico);
+  let embutido = vazio;
+  try {
+    const mod = await CARREGADOR_HISTORICO();
+    if (isArquivoHistorico(mod.default)) embutido = mod.default;
+  } catch {
+    // cópia do build ilegível: fica o vazio, e a página diz que não há registro.
+  }
+  const escolhido = escolherMaisNovo(doBlob.status === "ok" ? doBlob.valor : null, embutido);
+  return {
+    arquivo: escolhido.arquivo,
+    fonte: escolhido.fonte,
+    url: escolhido.fonte === "blob" ? blobUrlFor(etiquetasHistoricoBlobPathname()) : null,
+  };
 }
 
 // ---------------------------------------------------------------------------

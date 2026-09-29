@@ -92,6 +92,7 @@ import type { CSSProperties, ReactNode } from "react";
 
 import { VoteBar, type VoteBarSegment } from "@/components/atoms/bars/VoteBar";
 import { CandidateAvatar } from "@/components/atoms/data/CandidateAvatar";
+import { EtiquetasLinha } from "@/components/atoms/data/EtiquetasLinha";
 import { Figure } from "@/components/atoms/data/Figure";
 import { PartyTag } from "@/components/atoms/data/PartyTag";
 import { Panel, type PanelRule } from "@/components/atoms/surfaces/Panel";
@@ -104,9 +105,12 @@ import {
 import { candidateColor } from "@/components/blocks/_candidateColor";
 import { ATRIBUTO_LISTA } from "@/components/blocks/_lista-por-base";
 import { CandidateListCollapse } from "@/components/blocks/CandidateListCollapse";
+import { EtiquetasAviso } from "@/components/blocks/EtiquetasAviso";
 import { ReordenaListaPorBase } from "@/components/blocks/ReordenaListaPorBase";
 import { candidatoFotoUrl } from "@/lib/blob/paths";
 import type { EdgeCandidate } from "@/lib/edge-config/types";
+import { normalizarSqcand } from "@/lib/etiquetas/formato";
+import type { ResolucoesExibiveis } from "@/lib/etiquetas/telas";
 import { compete, haAnulada, notaAnuladas, queCompetem } from "@/lib/utils/destino-voto";
 import { formatPp, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
@@ -145,6 +149,13 @@ export type ResultPanelCandidate = Pick<
    */
   sqcand?: string;
 };
+
+/**
+ * Spec 025 (RF-245) — as etiquetas editoriais de cada candidatura do painel,
+ * por `sqcand` normalizado (`etiquetasDaLista`, `lib/etiquetas/telas.ts`).
+ * Consultadas linha a linha: não mudam ordem, colapso nem selo.
+ */
+export type EtiquetasDoPainel = ReadonlyMap<string, ResolucoesExibiveis>;
 
 export interface ResultPanelProps {
   /**
@@ -270,6 +281,11 @@ export interface ResultPanelProps {
   selo?: RegraSelo;
   /** Turno da corrida. `2` ⇒ nenhum selo (com dois nomes, "2º turno" é tautologia). */
   turno?: number;
+  /**
+   * Spec 025 (RF-245) — etiquetas editoriais por `sqcand`. Ausente ou vazio ⇒
+   * painel idêntico ao de antes. Nunca decide ordem, colapso ou selo.
+   */
+  etiquetas?: EtiquetasDoPainel;
 
   // --- repassados ao `<Panel>` ---
   kicker?: string;
@@ -444,9 +460,12 @@ const AVATAR_LINHA_PX = 26;
 function CandidaturaIdentidadeRow({
   candidato,
   ufDaFoto,
+  etiquetas,
 }: {
   candidato: ResultPanelCandidate;
   ufDaFoto: string;
+  /** Spec 025 — `<EtiquetasLinha>` da candidatura, ou nada. */
+  etiquetas?: ReactNode;
 }) {
   /*
    * A foto NÃO viaja no payload: é derivada de `sqcand` (ADR-0041/0042). Sem
@@ -521,6 +540,7 @@ function CandidaturaIdentidadeRow({
           size="sm"
         />
       </span>
+      {etiquetas ?? null}
     </div>
   );
 }
@@ -542,7 +562,14 @@ export function ResultPanel({
   headingLevel = 2,
   rule = "double",
   action,
+  etiquetas,
 }: ResultPanelProps) {
+  // Spec 025 — a linha de etiquetas de UMA candidatura, ou nada.
+  const etiquetasDe = (sqcand: string | undefined) => {
+    const sq = normalizarSqcand(sqcand);
+    const r = sq ? etiquetas?.get(sq) : undefined;
+    return r ? <EtiquetasLinha resolucoes={r} /> : undefined;
+  };
   const identidade = variant === "identidade";
   // `vagas` chega do payload; um valor absurdo não pode marcar a lista
   // inteira nem quebrar o índice do corte.
@@ -697,7 +724,11 @@ export function ResultPanel({
   const linhas = identidade
     ? candidatos.map((c) => (
         <li key={c.id}>
-          <CandidaturaIdentidadeRow candidato={c} ufDaFoto={ufDaFoto} />
+          <CandidaturaIdentidadeRow
+            candidato={c}
+            ufDaFoto={ufDaFoto}
+            etiquetas={etiquetasDe(c.sqcand)}
+          />
         </li>
       ))
     : naOrdemDoDom.map((c, i) => {
@@ -799,6 +830,7 @@ export function ResultPanel({
               // O número na urna (ADR-0042), ao lado da sigla: "PT – 13".
               numero={c.id}
               selos={{ parcial: seloDe("parcial", selosParcial), proj: seloDe("proj", selosProj) }}
+              etiquetas={etiquetasDe(c.sqcand)}
               // A versão D não tem número de colocação à esquerda — a ordem da
               // lista e os dois cartões dizem a posição. `rank` segue
               // alimentando só a COR de fallback (ver acima).
@@ -942,6 +974,13 @@ export function ResultPanel({
         >
           {notaAnuladas(nVagas === 1)}
         </p>
+      ) : null}
+
+      {/* Spec 025 (RF-248) — o aviso vai junto de toda superfície com etiqueta. */}
+      {etiquetas && etiquetas.size > 0 ? (
+        <div style={{ marginTop: "var(--space-3)" }}>
+          <EtiquetasAviso />
+        </div>
       ) : null}
 
       {note ? (

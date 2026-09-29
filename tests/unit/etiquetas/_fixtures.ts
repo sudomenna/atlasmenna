@@ -152,6 +152,7 @@ export function entrada(
     derivados: { ...semDerivados(), ...opts.derivados },
     anterior: opts.anterior ?? semAnterior(),
     agora: opts.agora ?? AGORA,
+    ...(opts.publicar ? { publicar: opts.publicar } : {}),
   };
 }
 

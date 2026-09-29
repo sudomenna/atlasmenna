@@ -22,6 +22,15 @@ export const NACIONAL_EMBUTIDO: unknown = nacionalJson;
 
 type Carregador = () => Promise<{ default: unknown }>;
 
+/**
+ * O histórico da cópia do build, sob demanda (spec 025): só a página
+ * `/sobre-as-etiquetas` o lê, e só quando o Blob não responde. Import literal,
+ * como as UFs — o pior caso medido é 2,9 MB (design 024 § 2.3), e ele não pode
+ * ir junto do nacional para toda página.
+ */
+export const CARREGADOR_HISTORICO: Carregador = () =>
+  import("@/lib/data/etiquetas/historico.json", { with: { type: "json" } });
+
 export const CARREGADORES_UF: Readonly<Record<SiglaUf, Carregador>> = {
   AC: () => import("@/lib/data/etiquetas/uf/AC.generated.json", { with: { type: "json" } }),
   AL: () => import("@/lib/data/etiquetas/uf/AL.generated.json", { with: { type: "json" } }),

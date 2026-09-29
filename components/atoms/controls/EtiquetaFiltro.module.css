@@ -1,0 +1,218 @@
+/* =============================================================================
+ * components/atoms/controls/EtiquetaFiltro.module.css — spec 025, RF-247.
+ *
+ * O filtro por etiqueta ESCONDE corridas inteiras; nunca reordena. O
+ * componente escreve `data-filtro="categoria:valor"` no próprio invólucro
+ * (`.filtro`), e a regra daquele token, abaixo, esconde todo `[data-etq]` da
+ * mesma `<main>` que não carrega o token. Com `data-regioes="esconder"`
+ * (`/senador`), também some a região (`[data-regiao]`, `RegiaoRecolhivel`)
+ * que ficou sem nenhuma corrida no filtro. Sem JavaScript ninguém escreve
+ * `data-filtro` e nada casa; sem `:has()`, idem — a página fica inteira.
+ *
+ * ## Uma regra por token do catálogo
+ *
+ * CSS não itera: há UMA regra por valor exibível do catálogo
+ * (`todosOsTokensDoCatalogo`, `lib/etiquetas/telas.ts`). Valor novo no
+ * catálogo sem regra aqui = filtro que não filtra; o teste
+ * `tests/unit/components/EtiquetaFiltro.test.tsx` reprova a lacuna.
+ *
+ * ## Por que `:global`, e o `biome-ignore`
+ *
+ * Os cartões moram em outros componentes (`GovernorCard`, a página de
+ * `/senador`): o seletor precisa alcançar atributos fora deste módulo. `:global`
+ * é a sintaxe de CSS Modules para isso — e cada regra ainda carrega a classe
+ * local `.filtro` (modo `pure`). O Biome deste repositório não habilita o
+ * parser de CSS Modules e lê `:global` como pseudo-classe desconhecida; a
+ * supressão cobre SÓ o bloco das regras por token (`biome-ignore-start` /
+ * `biome-ignore-end`), com o motivo. `app/globals.css` não é tocado.
+ * ========================================================================== */
+
+.filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rotulo {
+  font: var(--type-body-sm);
+  color: var(--text-secondary);
+}
+
+.select {
+  min-height: var(--tap-min);
+  max-width: 100%;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font: var(--type-body-sm);
+}
+
+.contagem {
+  flex-basis: 100%;
+  margin: 0;
+  font: var(--type-body-sm);
+  color: var(--text-secondary);
+}
+
+.contagem:empty {
+  display: none;
+}
+
+/* biome-ignore-start lint/correctness/noUnknownPseudoClass: `:global` é sintaxe de CSS Modules */
+
+:global(main):has(.filtro[data-filtro="campo_ideologico:esquerda"])
+  :global([data-etq]:not([data-etq~="campo_ideologico:esquerda"])),
+:global(main):has(.filtro[data-filtro="campo_ideologico:esquerda"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="campo_ideologico:esquerda"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="campo_ideologico:centro_esquerda"])
+  :global([data-etq]:not([data-etq~="campo_ideologico:centro_esquerda"])),
+:global(main):has(.filtro[data-filtro="campo_ideologico:centro_esquerda"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="campo_ideologico:centro_esquerda"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="campo_ideologico:centro"])
+  :global([data-etq]:not([data-etq~="campo_ideologico:centro"])),
+:global(main):has(.filtro[data-filtro="campo_ideologico:centro"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="campo_ideologico:centro"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="campo_ideologico:centro_direita"])
+  :global([data-etq]:not([data-etq~="campo_ideologico:centro_direita"])),
+:global(main):has(.filtro[data-filtro="campo_ideologico:centro_direita"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="campo_ideologico:centro_direita"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="campo_ideologico:direita"])
+  :global([data-etq]:not([data-etq~="campo_ideologico:direita"])),
+:global(main):has(.filtro[data-filtro="campo_ideologico:direita"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="campo_ideologico:direita"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="campo_ideologico:sem_posicao_clara"])
+  :global([data-etq]:not([data-etq~="campo_ideologico:sem_posicao_clara"])),
+:global(main):has(
+    .filtro[data-filtro="campo_ideologico:sem_posicao_clara"][data-regioes="esconder"]
+  )
+  :global([data-regiao]:not(:has([data-etq~="campo_ideologico:sem_posicao_clara"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="palanque_presidencial:palanque_lula"])
+  :global([data-etq]:not([data-etq~="palanque_presidencial:palanque_lula"])),
+:global(main):has(
+    .filtro[data-filtro="palanque_presidencial:palanque_lula"][data-regioes="esconder"]
+  )
+  :global([data-regiao]:not(:has([data-etq~="palanque_presidencial:palanque_lula"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="palanque_presidencial:palanque_flavio_bolsonaro"])
+  :global([data-etq]:not([data-etq~="palanque_presidencial:palanque_flavio_bolsonaro"])),
+:global(main):has(
+    .filtro[data-filtro="palanque_presidencial:palanque_flavio_bolsonaro"][data-regioes="esconder"]
+  )
+  :global([data-regiao]:not(:has([data-etq~="palanque_presidencial:palanque_flavio_bolsonaro"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="palanque_presidencial:palanque_duplo"])
+  :global([data-etq]:not([data-etq~="palanque_presidencial:palanque_duplo"])),
+:global(main):has(
+    .filtro[data-filtro="palanque_presidencial:palanque_duplo"][data-regioes="esconder"]
+  )
+  :global([data-regiao]:not(:has([data-etq~="palanque_presidencial:palanque_duplo"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="palanque_presidencial:sem_palanque_declarado"])
+  :global([data-etq]:not([data-etq~="palanque_presidencial:sem_palanque_declarado"])),
+:global(main):has(
+    .filtro[data-filtro="palanque_presidencial:sem_palanque_declarado"][data-regioes="esconder"]
+  )
+  :global([data-regiao]:not(:has([data-etq~="palanque_presidencial:sem_palanque_declarado"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="relacao_governo:base_governo"])
+  :global([data-etq]:not([data-etq~="relacao_governo:base_governo"])),
+:global(main):has(.filtro[data-filtro="relacao_governo:base_governo"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="relacao_governo:base_governo"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="relacao_governo:oposicao"])
+  :global([data-etq]:not([data-etq~="relacao_governo:oposicao"])),
+:global(main):has(.filtro[data-filtro="relacao_governo:oposicao"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="relacao_governo:oposicao"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="relacao_governo:independente"])
+  :global([data-etq]:not([data-etq~="relacao_governo:independente"])),
+:global(main):has(.filtro[data-filtro="relacao_governo:independente"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="relacao_governo:independente"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="centrao:sim"])
+  :global([data-etq]:not([data-etq~="centrao:sim"])),
+:global(main):has(.filtro[data-filtro="centrao:sim"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="centrao:sim"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="trajetoria_cargo:tenta_reeleicao"])
+  :global([data-etq]:not([data-etq~="trajetoria_cargo:tenta_reeleicao"])),
+:global(main):has(.filtro[data-filtro="trajetoria_cargo:tenta_reeleicao"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="trajetoria_cargo:tenta_reeleicao"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="trajetoria_cargo:volta_ao_cargo"])
+  :global([data-etq]:not([data-etq~="trajetoria_cargo:volta_ao_cargo"])),
+:global(main):has(.filtro[data-filtro="trajetoria_cargo:volta_ao_cargo"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="trajetoria_cargo:volta_ao_cargo"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="trajetoria_cargo:estreante"])
+  :global([data-etq]:not([data-etq~="trajetoria_cargo:estreante"])),
+:global(main):has(.filtro[data-filtro="trajetoria_cargo:estreante"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="trajetoria_cargo:estreante"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="impeachment_stf:a_favor"])
+  :global([data-etq]:not([data-etq~="impeachment_stf:a_favor"])),
+:global(main):has(.filtro[data-filtro="impeachment_stf:a_favor"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="impeachment_stf:a_favor"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="impeachment_stf:contra"])
+  :global([data-etq]:not([data-etq~="impeachment_stf:contra"])),
+:global(main):has(.filtro[data-filtro="impeachment_stf:contra"][data-regioes="esconder"])
+  :global([data-regiao]:not(:has([data-etq~="impeachment_stf:contra"]))) {
+  display: none;
+}
+
+:global(main):has(.filtro[data-filtro="impeachment_stf:sem_posicao_publica"])
+  :global([data-etq]:not([data-etq~="impeachment_stf:sem_posicao_publica"])),
+:global(main):has(
+    .filtro[data-filtro="impeachment_stf:sem_posicao_publica"][data-regioes="esconder"]
+  )
+  :global([data-regiao]:not(:has([data-etq~="impeachment_stf:sem_posicao_publica"]))) {
+  display: none;
+}
+
+/* biome-ignore-end lint/correctness/noUnknownPseudoClass: fim das regras por token */

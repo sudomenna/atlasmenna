@@ -8,6 +8,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { projetarNacional, proximaVersao } from "@/data-pipeline/etiquetas-publicar";
+import { todasDesligadas, VISOES } from "@/lib/etiquetas/catalogo";
 import type { ArquivoNacional, ArquivoUf } from "@/lib/etiquetas/formato";
 import { normalizarSqcand } from "@/lib/etiquetas/formato";
 import {
@@ -67,18 +69,75 @@ describe("RF-231 — escolha da cópia", () => {
     expect(ETIQUETAS_REVALIDATE_SECONDS).toBe(60);
   });
 
-  it("🔴 cópia do build ⇒ chaves desligadas, diga o arquivo o que disser", () => {
+  it("cópia do build ⇒ as chaves do publicar.json compilado (spec 025, emenda ao RF-231)", () => {
+    // Até 29/09 a cópia do build era forçada a tudo desligado. Agora ela
+    // carrega o `publicar.json` versionado — o mesmo que o publicador leva ao
+    // Blob —, e o leitor honra o que ela diz, nos dois lados.
     const { nacional } = compilado();
-    const adulterado: ArquivoNacional = {
+    const comChaves: ArquivoNacional = {
       ...nacional,
       publicar: { ...nacional.publicar, v1: true, chips: true },
     };
-    const e = montarEtiquetas(adulterado, "embutido", null);
-    expect(e.viewLigada("v1")).toBe(false);
-    expect(e.viewLigada("chips")).toBe(false);
-    const doBlob = montarEtiquetas(adulterado, "blob", null);
+    const e = montarEtiquetas(comChaves, "embutido", null);
+    expect(e.viewLigada("v1")).toBe(true);
+    expect(e.viewLigada("chips")).toBe(true);
+    expect(e.viewLigada("v2")).toBe(false);
+    const doBlob = montarEtiquetas(comChaves, "blob", null);
     expect(doBlob.viewLigada("v1")).toBe(true);
     expect(doBlob.viewLigada("v2")).toBe(false);
+  });
+
+  it("🔴 deploy depois da publicação NÃO apaga as visões que o publicar.json liga", () => {
+    // A armadilha da open question 5 da spec 024, em três passos:
+    //   1. o dono liga v1 no `publicar.json`, compila (build A) e publica
+    //      (Blob B, versão > A);
+    //   2. alguém compila etiquetas novas (build C, versão > B — o relógio
+    //      andou) e faz deploy SEM publicar;
+    //   3. C vence pela versão. Antes da emenda, C tinha as chaves forçadas a
+    //      `false` e a V1 sumia da tela. Agora C carrega o mesmo `publicar.json`.
+    const ligado = { ...todasDesligadas(), v1: true };
+    const fontesA = {
+      "partidos.csv": csv({ chave: "partido:PL", categoria: "relacao_governo", valor: "oposicao" }),
+    };
+    const a = compilarOk(entrada(fontesA, { publicar: ligado }));
+    const t1 = new Date(a.nacional.meta.versao * 1000 + 3_600_000);
+    const b = projetarNacional(
+      a.nacional,
+      { ...a.nacional.meta, versao: proximaVersao(t1, null, a.nacional.meta.versao), git_sha: "x" },
+      ligado,
+    );
+    const c = compilarOk(
+      entrada(
+        {
+          "partidos.csv": csv(
+            { chave: "partido:PL", categoria: "relacao_governo", valor: "oposicao" },
+            { chave: "partido:PSD", categoria: "relacao_governo", valor: "independente" },
+          ),
+        },
+        {
+          publicar: ligado,
+          anterior: {
+            nacional: a.nacional,
+            ufs: new Map(Object.entries(a.ufs)),
+            historico: a.historico,
+          },
+          agora: new Date(b.meta.versao * 1000 + 3_600_000),
+        },
+      ),
+    );
+    expect(c.nacional.meta.versao).toBeGreaterThan(b.meta.versao);
+
+    const escolhido = escolherMaisNovo(b, c.nacional);
+    expect(escolhido.fonte).toBe("embutido");
+    expect(montarEtiquetas(escolhido.arquivo, escolhido.fonte, null).viewLigada("v1")).toBe(true);
+    // E o Blob fora do ar dá o mesmo: a cópia do build diz o que o dono ligou.
+    expect(montarEtiquetas(c.nacional, "embutido", null).viewLigada("v1")).toBe(true);
+  });
+
+  it("publicar.json todo desligado ⇒ cópia do build toda desligada", () => {
+    const { nacional } = compilado();
+    const e = montarEtiquetas(nacional, "embutido", null);
+    for (const v of VISOES) expect(e.viewLigada(v), v).toBe(false);
   });
 
   it("chave publicada com valor não booleano não liga nada", () => {

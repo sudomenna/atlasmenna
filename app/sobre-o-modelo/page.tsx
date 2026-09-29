@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
 /**
@@ -706,6 +707,17 @@ export default function SobreOModeloPage() {
               </div>
             </div>
           </div>
+
+          {/* Spec 025 (RF-252; constituição 1.6 § 8) — UM parágrafo com link,
+              sem `<h2>` novo (o teste de estrutura trava oito). A metodologia
+              das etiquetas mora na página própria. */}
+          <p style={S.body} data-testid="sobre-o-modelo-etiquetas">
+            Algumas telas mostram, ao lado dos candidatos, <strong>etiquetas editoriais</strong> —
+            como a relação com o governo Lula ou a trajetória no cargo. Elas são classificação
+            nossa, com fonte e data em cada uma, e não entram no modelo: não mudam projeção, ordem
+            de candidato nem nenhum número desta página. Critérios, fontes e o registro de mudanças
+            estão em <Link href="/sobre-as-etiquetas">Como classificamos os candidatos</Link>.
+          </p>
         </section>
 
         {/* 7. Quem somos */}

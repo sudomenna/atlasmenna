@@ -23,7 +23,13 @@
  * Senado. O teste de ausência de dado pessoal varre os gerados.
  */
 
-import type { ChavesPublicacao, ValorId } from "./catalogo";
+import {
+  type ChavesPublicacao,
+  todasDesligadas,
+  type ValorId,
+  VISOES,
+  type Visao,
+} from "./catalogo";
 
 export const FORMATO_ETIQUETAS = "etiquetas/v1" as const;
 
@@ -129,7 +135,13 @@ export interface Senador2031 {
 export interface ArquivoNacional {
   formato: typeof FORMATO_ETIQUETAS;
   meta: MetaEtiquetas;
-  /** Na cópia do build, todas `false` — sempre (RF-231). */
+  /**
+   * As chaves por visão. Desde 2026-09-29 (spec 025, emenda ao RF-228/231 e ao
+   * ADR-0060) a cópia do build carrega as do `editorial/etiquetas/publicar.json`
+   * **versionado** — o mesmo arquivo que o publicador leva ao Blob. Antes eram
+   * sempre `false` no build, e um deploy com compilação mais nova que a última
+   * publicação apagava as visões em silêncio (open question 5 da spec 024).
+   */
   publicar: ChavesPublicacao;
   /** Proveniência de cada insumo derivado; `null` = insumo ausente nesta compilação. */
   derivados: Record<InsumoDerivado, FonteDerivada | null>;
@@ -319,6 +331,28 @@ export function isArquivoUf(v: unknown, ufEsperada: string): v is ArquivoUf {
     isObj(v.alinhamento) &&
     isObj(v.excecoes)
   );
+}
+
+/**
+ * `editorial/etiquetas/publicar.json` → chaves. Recusa objeto que não seja
+ * `{ visão: boolean }`, visão fora de `VISOES` e valor não booleano; visão
+ * ausente do arquivo fica desligada. Lido pelo COMPILADOR (a cópia do build
+ * carrega estas chaves) e pelo PUBLICADOR (o Blob carrega as mesmas) — um
+ * parser só, para os dois lados nunca discordarem sobre o que o arquivo diz.
+ */
+export function lerChavesPublicacao(json: unknown): ChavesPublicacao | { erro: string } {
+  if (typeof json !== "object" || json === null || Array.isArray(json)) {
+    return { erro: "publicar.json deve ser um objeto { visão: true|false }" };
+  }
+  const out = todasDesligadas();
+  for (const [k, v] of Object.entries(json)) {
+    if (!(VISOES as readonly string[]).includes(k)) {
+      return { erro: `publicar.json: visão desconhecida "${k}" (aceitas: ${VISOES.join(", ")})` };
+    }
+    if (typeof v !== "boolean") return { erro: `publicar.json: "${k}" deve ser true ou false` };
+    out[k as Visao] = v;
+  }
+  return out;
 }
 
 export function isArquivoHistorico(v: unknown): v is ArquivoHistorico {

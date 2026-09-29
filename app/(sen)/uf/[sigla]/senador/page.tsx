@@ -93,6 +93,9 @@ import { isPreEleicao } from "@/lib/config/fase";
 import { simulacaoLigada, simulacaoMunicipiosUf, simulacaoSenadorUf } from "@/lib/dev/simulacao";
 import { readProjection, readUfProjection } from "@/lib/edge-config/reader";
 import type { EdgePayloadUf, EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge-config/types";
+import { CATEGORIAS_CHIP } from "@/lib/etiquetas/catalogo";
+import { lerEtiquetas } from "@/lib/etiquetas/leitor";
+import { etiquetasDaLista } from "@/lib/etiquetas/telas";
 import { queCompetem } from "@/lib/utils/destino-voto";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { ordensPorBase } from "@/lib/utils/rank-parcial";
@@ -530,6 +533,14 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
   const municipioReason = municipioDetailReason(detalhe, municipios.length);
   const municipioRows = toMunicipioRows(municipios, candidateColor, candidateShortName);
 
+  // Spec 025 (RF-245/246) — etiquetas editoriais de toda candidatura da lista;
+  // no Senado entra também o impeachment de ministros do STF, SEMPRE com a
+  // frase qualificada (`EtiquetaEditorial`). Vazio com `chips` desligado.
+  const etiquetasDoPainel = etiquetasDaLista(await lerEtiquetas(), payload.candidatos, 5, 1, [
+    ...CATEGORIAS_CHIP,
+    "impeachment_stf",
+  ]);
+
   return (
     <main
       data-trilha="sen"
@@ -546,6 +557,7 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
             navegador do leitor, sem nenhum erro do lado do servidor. */}
       <ResultPanel
         candidatos={payload.candidatos}
+        etiquetas={etiquetasDoPainel}
         headingLevel={1}
         kicker="Projeção Atlas Menna · não oficial"
         note={`${vagas} vagas por estado, em turno único — as ${vagas} candidaturas mais votadas se elegem, sem diferença entre elas. A margem acima é a distância da ${vagas}ª vaga para a primeira candidatura fora dela. Projeção por regra de três sobre o boletim do estado.`}

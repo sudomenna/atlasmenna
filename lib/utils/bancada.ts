@@ -27,10 +27,12 @@ import type { EdgeAgremiacaoBancada } from "@/lib/edge-config/types";
  *
  * 🔴 **É ordem por TAMANHO DE BANCADA, e o hemiciclo a reusa como está.** Ela
  * não afirma nada sobre posição ideológica, e o desenho não pode passar a
- * afirmar: o produto não classifica partido em esquerda/direita
- * (constituição § 2), não temos medida para isso, e um plenário ordenado por
- * espectro leria como informação uma coisa que não medimos. Ver o `<desc>` do
- * `<CamaraHemiciclo>`, que diz isso ao leitor de tela em texto.
+ * afirmar: a ORDEM desta lista é por tamanho; a classificação editorial vive
+ * só na camada de etiquetas (spec 024, ADR-0059), nunca decide ordem
+ * (constituição § 2 (e)) e tem desenho próprio (a visão por bloco da spec 025).
+ * Um plenário ordenado por espectro leria como informação uma coisa que esta
+ * lista não mede. Ver o `<desc>` do `<CamaraHemiciclo>`, que diz isso ao leitor
+ * de tela em texto.
  *
  * **Genérica desde 2026-09-29 (spec 023, design § D4).** O hemiciclo do Senado
  * ordena os partidos pela MESMA regra — total de cadeiras desc → sigla asc —, e

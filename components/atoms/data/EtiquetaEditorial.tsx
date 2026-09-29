@@ -16,9 +16,23 @@
  * - **Leitor de tela** ouve "Fulano, relação com o governo Lula: Base do
  *   governo" — a vírgula e o nome da categoria vão num `sr-only`, sem
  *   aparecer.
+ * - **Nunca categoria sem critério publicado** (spec 025, RF-250;
+ *   constituição § 2 (a)): `categoriaExibivel` diz não ⇒ nada. É o que torna
+ *   verdadeira, por construção, a frase "critério em definição — nenhuma
+ *   etiqueta desta categoria é exibida" de `/sobre-as-etiquetas`.
+ * - **Nunca "A favor" solto** (spec 025, RF-246): categoria com qualificador
+ *   (`QUALIFICADOR_VISIVEL`, hoje o impeachment de ministros do STF) mostra a
+ *   frase inteira, visível — "Posição pública sobre impeachment de ministros
+ *   do STF: a favor".
  */
 
-import { categoria as defCategoria, isCategoriaId, rotuloDoValor } from "@/lib/etiquetas/catalogo";
+import {
+  categoriaExibivel,
+  categoria as defCategoria,
+  isCategoriaId,
+  QUALIFICADOR_VISIVEL,
+  rotuloDoValor,
+} from "@/lib/etiquetas/catalogo";
 
 import styles from "./EtiquetaEditorial.module.css";
 
@@ -29,7 +43,23 @@ export interface EtiquetaEditorialProps {
 
 export function EtiquetaEditorial({ categoria, valor }: EtiquetaEditorialProps) {
   const rotulo = rotuloDoValor(categoria, valor);
-  if (rotulo === null) return null;
+  if (rotulo === null || !categoriaExibivel(categoria)) return null;
+  const qualificador = isCategoriaId(categoria) ? QUALIFICADOR_VISIVEL[categoria] : undefined;
+  if (qualificador) {
+    // A frase inteira é visível — o qualificador não é detalhe de leitor de
+    // tela, é o que dá sentido ao valor.
+    return (
+      <span
+        className={styles.etiqueta}
+        data-etiqueta={categoria}
+        data-valor={valor ?? undefined}
+        data-testid="etiqueta-editorial"
+      >
+        <span className="sr-only">, </span>
+        {`${qualificador}: ${rotulo.toLocaleLowerCase("pt-BR")}`}
+      </span>
+    );
+  }
   const acessivel = isCategoriaId(categoria) ? defCategoria(categoria).rotuloAcessivel : null;
   return (
     <span

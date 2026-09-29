@@ -27,8 +27,10 @@
  *
  * ## Ordem por contagem, nunca por espectro
  *
- * Total desc → eleitos desc → sigla. A lista não afirma nada sobre posição
- * política (constituição § 2).
+ * Total desc → eleitos desc → sigla. A ORDEM desta lista é por contagem; a
+ * classificação editorial vive só na camada de etiquetas (spec 024, ADR-0059)
+ * e nunca decide ordem (constituição § 2 (e)). A lista não afirma nada sobre
+ * posição política.
  *
  * ## Sigla
  *

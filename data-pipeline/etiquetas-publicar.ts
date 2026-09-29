@@ -20,7 +20,9 @@
 //      antes) — publicar de um branch velho reverteria correções alheias;
 //   3. erro de validação, ou gerado versionado divergente da recompilação —
 //      o validador roda de novo aqui, antes de subir qualquer byte;
-//   4. `editorial/etiquetas/publicar.json` com chave fora de `VISOES`;
+//   4. `editorial/etiquetas/publicar.json` com chave fora de `VISOES`, ou
+//      diferente das chaves que a cópia do build compilou (spec 025) — Blob e
+//      build carregam o MESMO `publicar.json`;
 //   5. versão do Blob ilegível (rede) — sem ela não há como garantir que a
 //      nova `versao` é maior, e uma versão menor seria ignorada pelo leitor.
 //
@@ -55,12 +57,7 @@ import {
   etiquetasNacionalBlobPathname,
   etiquetasUfBlobPathname,
 } from "@/lib/etiquetas/caminhos";
-import {
-  type ChavesPublicacao,
-  todasDesligadas,
-  VISOES,
-  type Visao,
-} from "@/lib/etiquetas/catalogo";
+import { type ChavesPublicacao, todasDesligadas, VISOES } from "@/lib/etiquetas/catalogo";
 import {
   type ArquivoHistorico,
   type ArquivoNacional,
@@ -72,6 +69,7 @@ import {
   INSUMOS_DERIVADOS,
   type InsumoDerivado,
   isArquivoNacional,
+  lerChavesPublicacao,
   type MetaEtiquetas,
   type Registros,
   registroPublico,
@@ -212,21 +210,13 @@ export function projetarHistorico(h: ArquivoHistorico, meta: MetaEtiquetas): Arq
   return { formato: FORMATO_ETIQUETAS, meta: projetarMeta(meta), entradas };
 }
 
-/** `publicar.json` → chaves; recusa chave desconhecida ou valor não booleano. */
-export function lerChavesPublicacao(json: unknown): ChavesPublicacao | { erro: string } {
-  if (typeof json !== "object" || json === null || Array.isArray(json)) {
-    return { erro: "publicar.json deve ser um objeto { visão: true|false }" };
-  }
-  const out = todasDesligadas();
-  for (const [k, v] of Object.entries(json)) {
-    if (!(VISOES as readonly string[]).includes(k)) {
-      return { erro: `publicar.json: visão desconhecida "${k}" (aceitas: ${VISOES.join(", ")})` };
-    }
-    if (typeof v !== "boolean") return { erro: `publicar.json: "${k}" deve ser true ou false` };
-    out[k as Visao] = v;
-  }
-  return out;
-}
+/**
+ * `publicar.json` → chaves. Mora em `lib/etiquetas/formato.ts` desde
+ * 2026-09-29 — o COMPILADOR também o lê (a cópia do build carrega as chaves
+ * versionadas; spec 025, emenda ao RF-231). Reexportado aqui para quem já
+ * importava deste módulo.
+ */
+export { lerChavesPublicacao };
 
 /** A nova versão: estritamente maior que a do Blob e a do build, e nunca menor que o relógio. */
 export function proximaVersao(agora: Date, versaoBlob: number | null, versaoBuild: number): number {
@@ -297,6 +287,20 @@ export async function publicarEtiquetas(
 
   const chaves = lerChavesPublicacao(await dep.lerPublicarJson());
   if ("erro" in chaves) return { ok: false, motivo: chaves.erro };
+  // Spec 025 (emenda ao RF-231): a cópia do build carrega as chaves do
+  // `publicar.json` versionado. Blob e build têm de dizer a MESMA coisa — senão
+  // um deploy (build) e uma publicação (Blob) discordariam sobre o que está
+  // ligado, e quem vence seria decidido pela versão, não pelo dono.
+  const doBuild = { ...todasDesligadas(), ...c.nacional.publicar };
+  const diferentes = VISOES.filter((v) => doBuild[v] !== chaves[v]);
+  if (diferentes.length > 0) {
+    return {
+      ok: false,
+      motivo:
+        `publicar.json diverge da cópia do build nas visões ${diferentes.join(", ")} — ` +
+        "rode `pnpm etiquetas:compilar`, faça commit e publique de novo",
+    };
+  }
 
   let versaoBlob: number | null;
   try {

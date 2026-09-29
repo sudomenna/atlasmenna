@@ -12,7 +12,12 @@ import { describe, expect, it } from "vitest";
 import { EtiquetaEditorial } from "@/components/atoms/data/EtiquetaEditorial";
 import { EtiquetasLinha } from "@/components/atoms/data/EtiquetasLinha";
 import { EtiquetasAviso, TEXTO_AVISO_ETIQUETAS } from "@/components/blocks/EtiquetasAviso";
-import type { CategoriaId } from "@/lib/etiquetas/catalogo";
+import {
+  CATEGORIAS,
+  type CategoriaId,
+  categoriaExibivel,
+  ORDEM_CATEGORIAS,
+} from "@/lib/etiquetas/catalogo";
 import type { Resolucao } from "@/lib/etiquetas/resolver";
 
 function classificado(categoria: CategoriaId, valor: string, rotulo: string | null): Resolucao {
@@ -58,15 +63,30 @@ describe("RF-235 — <EtiquetaEditorial />", () => {
     }
   });
 
-  it("centrão: rótulo diz tudo, sem prefixo de categoria", () => {
+  it("centrão: rótulo diz tudo, sem prefixo de categoria — quando o critério está publicado", () => {
     const html = renderToStaticMarkup(<EtiquetaEditorial categoria="centrao" valor="sim" />);
-    expect(html).toContain('<span class="sr-only">, </span>Centrão');
+    // Spec 025 (RF-250): sem critério publicado, nada vai à tela. O formato
+    // do centrão com critério está em `etiqueta-qualificada.test.tsx`.
+    if (categoriaExibivel("centrao")) {
+      expect(html).toContain('<span class="sr-only">, </span>Centrão');
+    } else {
+      expect(html).toBe("");
+    }
+  });
+
+  it("🔴 categoria sem critério publicado não vai à tela (spec 025, RF-250)", () => {
+    for (const c of CATEGORIAS) {
+      const primeiro = c.valores.find((v) => v.rotulo !== null);
+      if (!primeiro) continue;
+      const html = renderToStaticMarkup(<EtiquetaEditorial categoria={c.id} valor={primeiro.id} />);
+      expect(html === "", c.id).toBe(!categoriaExibivel(c.id));
+    }
   });
 
   it("🔴 nunca interativa — pode morar dentro de um <a>", () => {
     const html = renderToStaticMarkup(
       <a href="/uf/sp/senador">
-        Fulano <EtiquetaEditorial categoria="impeachment_stf" valor="contra" />
+        Fulano <EtiquetaEditorial categoria="relacao_governo" valor="oposicao" />
       </a>,
     );
     const doc = new DOMParser().parseFromString(html, "text/html");
@@ -96,9 +116,13 @@ describe("RF-236 — <EtiquetasLinha />", () => {
         .querySelectorAll("[data-testid='etiqueta-editorial']"),
     ].map((e) => e.getAttribute("data-etiqueta"));
 
-  it("ordem do catálogo, só classificadas", () => {
+  it("ordem do catálogo, só classificadas (e só as de critério publicado)", () => {
     const html = renderToStaticMarkup(<EtiquetasLinha resolucoes={resolucoes} />);
-    expect(textos(html)).toEqual(["relacao_governo", "centrao", "trajetoria_cargo"]);
+    const esperadas = ORDEM_CATEGORIAS.filter(
+      (c) => ["relacao_governo", "centrao", "trajetoria_cargo"].includes(c) && categoriaExibivel(c),
+    );
+    expect(textos(html)).toEqual(esperadas);
+    expect(esperadas.length).toBeGreaterThan(0);
     expect(html.startsWith('<span class="')).toBe(true);
   });
 

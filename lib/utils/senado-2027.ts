@@ -139,6 +139,11 @@ export interface Senado2027 {
   continuaSemPartido: number;
   /** DD/MM/AAAA da foto do Senado. */
   dataFoto: string;
+  /**
+   * As vagas em disputa atribuídas, com identidade (spec 025). Vazio na fase
+   * pré e sem dados. `vagas.length === contagem.decidida + contagem.projetada`.
+   */
+  vagas: VagaEmDisputa[];
 }
 
 export type MotivoRecusaSenado2027 =
@@ -172,18 +177,40 @@ function recusa(motivo: MotivoRecusaSenado2027, detalhe: string): ResultadoSenad
   return { ok: false, motivo, detalhe };
 }
 
-interface VagaEmDisputa {
+/**
+ * Uma vaga em disputa já atribuída pelo payload — com a IDENTIDADE de quem a
+ * ocupa (spec 025: a visão por bloco e o placar do impeachment juntam a
+ * etiqueta por `sqcand`). A composição por partido (acima) só lê `estado` e
+ * `sigla`; os outros campos existem para a spec 025 usar a MESMA derivação, em
+ * vez de uma segunda implementação que um dia discorde desta.
+ */
+export interface VagaEmDisputa {
   estado: "decidida" | "projetada";
   sigla: string;
+  uf: string;
+  /** `null` quando o payload não traz (fixture antiga) — o portão bloqueia. */
+  sqcand: string | null;
+  nome: string | null;
+  id: number;
 }
 
-/** As vagas em disputa que o payload já atribui, UF a UF (passos 1–3 do cabeçalho). */
-function vagasDerivadas(payload: EdgePayload, vagasPorUf: number): VagaEmDisputa[] {
+/**
+ * As vagas em disputa que o payload já atribui, UF a UF (passos 1–3 do
+ * cabeçalho), na ordem de `por_uf` e, dentro da UF, na ordem da projeção.
+ */
+export function vagasDerivadas(payload: EdgePayload, vagasPorUf: number): VagaEmDisputa[] {
   const vagas: VagaEmDisputa[] = [];
   for (const uf of payload.por_uf ?? []) {
     const estado = uf.pct_apurado >= PCT_UF_CONCLUIDA ? "decidida" : "projetada";
     for (const c of queCompetem(uf.top_candidatos ?? []).slice(0, vagasPorUf)) {
-      vagas.push({ estado, sigla: c.partido ?? PARTIDO_DESCONHECIDO });
+      vagas.push({
+        estado,
+        sigla: c.partido ?? PARTIDO_DESCONHECIDO,
+        uf: uf.sigla,
+        sqcand: c.sqcand ?? null,
+        nome: c.nome ?? null,
+        id: c.id,
+      });
     }
   }
   return vagas;
@@ -355,6 +382,7 @@ export function derivarSenado2027(
       contagem,
       continuaSemPartido,
       dataFoto: dataDaFoto(foto),
+      vagas,
     },
   };
 }

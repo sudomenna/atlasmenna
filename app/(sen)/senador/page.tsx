@@ -56,11 +56,15 @@ import type { Metadata } from "next";
 
 import { FasePreEleicaoBanner } from "@/components/atoms/banners/FasePreEleicaoBanner";
 import { VoteBar, type VoteBarSegment } from "@/components/atoms/bars/VoteBar";
+import { EtiquetaFiltro } from "@/components/atoms/controls/EtiquetaFiltro";
 import { Figure } from "@/components/atoms/data/Figure";
 import { Panel } from "@/components/atoms/surfaces/Panel";
+import { EtiquetasAviso } from "@/components/blocks/EtiquetasAviso";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { GovernorCard } from "@/components/blocks/GovernorCard";
 import { RegiaoConsolidada } from "@/components/blocks/RegiaoConsolidada";
+import { RenovacaoPanel } from "@/components/blocks/RenovacaoPanel";
+import { SenadoDe2027Panel } from "@/components/blocks/SenadoDe2027Panel";
 import { SenadoHemicicloPanel } from "@/components/blocks/SenadoHemiciclo";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
@@ -71,6 +75,9 @@ import { agruparPorRegiao } from "@/lib/config/regioes";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload } from "@/lib/edge-config/types";
+import { lerEtiquetas } from "@/lib/etiquetas/leitor";
+import { editorialDaCapa } from "@/lib/etiquetas/telas";
+import { MANDATO_2027 } from "@/lib/senado/mandato-2027";
 import { MANDATO_2031 } from "@/lib/senado/mandato-2031";
 import { haAnulada, NOTA_ANULADAS_SEM_REGRA_1T } from "@/lib/utils/destino-voto";
 import { textForParty } from "@/lib/utils/party-color";
@@ -224,6 +231,17 @@ export default async function SenadoPage() {
   const pre = isPreEleicao(payload);
 
   const composicao = payload.composicao_vagas;
+
+  // Spec 025 — etiquetas editoriais (chips, filtro, V1, V2, V4): lidas no
+  // servidor (Blob com revalidate 60, ou a cópia do build), nunca do payload.
+  // Com as chaves de `publicar.json` desligadas, nada abaixo muda a página.
+  const etiquetas = await lerEtiquetas();
+  const capa = editorialDaCapa(etiquetas, payload.por_uf, {
+    cargo: CARGO_SENADOR,
+    turno: 1,
+    preEleicao: pre,
+    vagasUf: VAGAS,
+  });
 
   // Segmentos da barra de composição: cada partido ocupa a fração das vagas
   // EM DISPUTA que a projeção lhe dá. 🔴 RF-219 (spec 023, ADR-0061 item 5):
@@ -430,6 +448,13 @@ export default async function SenadoPage() {
           não fechar com `composicao_vagas` (RF-217). */}
       <SenadoHemicicloPanel payload={payload} mandato={MANDATO_2031} />
 
+      {/* Spec 025 (RF-242/243/249) — V1 (Senado de 2027 por bloco), V2
+          (impeachment de ministros do STF) e V4 (renovação). Cada uma só
+          aparece com a chave ligada, o critério publicado e o portão de
+          cobertura aberto; fechada, não desenha nada. */}
+      <SenadoDe2027Panel payload={payload} mandato={MANDATO_2031} etiquetas={etiquetas} />
+      <RenovacaoPanel payload={payload} mandato2027={MANDATO_2027} etiquetas={etiquetas} />
+
       {/* Seção 3 — as corridas, estado a estado. A margem de cada linha é a
           da 2ª vaga (RF-104): `top_candidatos[1].pct − top_candidatos[2].pct`.
           É lista, não mapa: este cargo não tem dado municipal (ADR-0026). */}
@@ -477,6 +502,10 @@ export default async function SenadoPage() {
               Os quatro mais votados de cada estado e a soma dos demais, em percentual dos votos
               válidos. São duas vagas por estado: ficam com elas as duas primeiras posições.
             </p>
+            {/* Spec 025 (RF-247) — filtro por etiqueta: esconde corridas, nunca reordena. */}
+            {capa.filtro.length > 0 ? (
+              <EtiquetaFiltro grupos={capa.filtro} esconderRegiaoVazia />
+            ) : null}
             {/* 🔴 ADR-0057 (2026-09-28, decisão do dono) — agrupado por
                 REGIÃO, com o consolidado por partido no topo de cada uma, em
                 "% dos votos" (cada eleitor vota duas vezes). A lista externa
@@ -504,7 +533,7 @@ export default async function SenadoPage() {
                         style={{ listStyle: "none", margin: 0, padding: 0 }}
                       >
                         {grupo.rows.map((uf) => (
-                          <li key={uf.sigla}>
+                          <li key={uf.sigla} {...capa.atributos(uf.sigla)}>
                             <a
                               href={`/uf/${uf.sigla}/senador`}
                               data-testid="corrida-uf"
@@ -517,6 +546,7 @@ export default async function SenadoPage() {
                                 candidatos={payload.national.candidatos}
                                 cargo="sen"
                                 nivelTitulo={4}
+                                etiquetas={capa.chips(uf.sigla)}
                               />
                             </a>
                           </li>
@@ -537,6 +567,7 @@ export default async function SenadoPage() {
                 {NOTA_ANULADAS_SEM_REGRA_1T}
               </p>
             ) : null}
+            {capa.aviso ? <EtiquetasAviso /> : null}
           </div>
         ) : (
           <p

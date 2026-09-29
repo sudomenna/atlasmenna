@@ -652,6 +652,10 @@ carregam o defeito que o ADR-0042 previne — são
 **A propagação do frontmatter `adrs:` e do texto das duas specs é do
 `spec-syncer`**, não desta spec.
 
+## Emenda da spec 025 — etiquetas em `/candidatos` (2026-09-29)
+
+Com a chave `chips` ligada, cada candidatura exibida em `/candidatos` (Governador, Senador, Deputado Federal) ganha, sob o cartão, as etiquetas editoriais das categorias com critério publicado (RF-245, [spec 025](../025-visoes-editoriais/spec.md)); no Senado, também a posição sobre impeachment de ministros do STF, sempre qualificada (RF-246). O aviso com link para `/sobre-as-etiquetas` fica sob a grade. Nada muda na ordem (número na urna), no corte de 60 nem na rota ser zero JavaScript de aplicação: a etiqueta é Server Component.
+
 ## Cross-refs
 
 - [ADR-0039](../../architecture/adrs/0039-portal-dados-abertos-tse-identidade-candidatura.md) — a fonte, a licença cc-by, as três armadilhas medidas, o recorte de PII
