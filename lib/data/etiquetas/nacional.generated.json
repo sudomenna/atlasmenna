@@ -1,9 +1,9 @@
 {
   "formato": "etiquetas/v1",
   "meta": {
-    "versao": 1790660408,
-    "gerado_em": "2026-09-29T05:40:08.529Z",
-    "conteudo_sha256": "c5aff8a0910339d013534555e40065d2715255034b30fe78b98c4957a75b2b97",
+    "versao": 1790666935,
+    "gerado_em": "2026-09-29T07:28:55.613Z",
+    "conteudo_sha256": "7764d6aea91c6ad9cc6770aa27a0604873b8250f2c9ced8489f189612fdb93bf",
     "git_sha": null
   },
   "publicar": {
@@ -16,26 +16,10 @@
     "camara2027": false
   },
   "derivados": {
-    "trajetoria_camara": {
-      "fonte_url": "https://dadosabertos.camara.leg.br/",
-      "fonte_descricao": "Câmara dos Deputados — histórico de mandatos, cruzado com a candidatura no TSE",
-      "data": "2026-09-29"
-    },
-    "alinhamento_camara": {
-      "fonte_url": "https://dadosabertos.camara.leg.br",
-      "fonte_descricao": "Câmara dos Deputados — Dados Abertos (votações nominais do plenário com orientação do governo)",
-      "data": "2026-09-03"
-    },
-    "trajetoria_senado": {
-      "fonte_url": "https://legis.senado.leg.br/dadosabertos/",
-      "fonte_descricao": "Senado Federal — Dados Abertos (senadores em exercício e das legislaturas 50 a 57), casados com as candidaturas do cadastro do TSE",
-      "data": "2026-09-29"
-    },
-    "alinhamento_senado": {
-      "fonte_url": "https://legis.senado.leg.br/dadosabertos/",
-      "fonte_descricao": "Senado Federal — Dados Abertos (votações nominais do plenário com orientação do Governo)",
-      "data": "2026-07-15"
-    }
+    "trajetoria_camara": null,
+    "alinhamento_camara": null,
+    "trajetoria_senado": null,
+    "alinhamento_senado": null
   },
   "partidos": {
     "AGIR": null,
@@ -84,35 +68,22 @@
     "10002533895": {
       "uf": "AC",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REPUBLICANOS"
     },
     "10002535804": {
       "uf": "AC",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSD"
     },
     "10002536441": {
       "uf": "AC",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PT"
     },
     "10002536710": {
       "uf": "AC",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "10002544015": {
       "uf": "AC",
@@ -127,34 +98,22 @@
     "10002544110": {
       "uf": "AC",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "10002544274": {
       "uf": "AC",
       "cargo": 5,
-      "partido": "SOLIDARIEDADE",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "SOLIDARIEDADE"
     },
     "10002548046": {
       "uf": "AC",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PP"
     },
     "10002548050": {
       "uf": "AC",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PL"
     },
     "10002549500": {
       "uf": "AC",
@@ -174,18 +133,12 @@
     "20002540197": {
       "uf": "AL",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "20002548147": {
       "uf": "AL",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REPUBLICANOS"
     },
     "20002552502": {
       "uf": "AL",
@@ -195,18 +148,12 @@
     "20002552524": {
       "uf": "AL",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "20002553272": {
       "uf": "AL",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PP"
     },
     "20002553350": {
       "uf": "AL",
@@ -216,26 +163,17 @@
     "20002553711": {
       "uf": "AL",
       "cargo": 5,
-      "partido": "PSDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSDB"
     },
     "20002553726": {
       "uf": "AL",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "20002553727": {
       "uf": "AL",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "MDB"
     },
     "20002553745": {
       "uf": "AL",
@@ -250,19 +188,12 @@
     "30002530069": {
       "uf": "AP",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "relacao_governo": "oposicao",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSD"
     },
     "30002530071": {
       "uf": "AP",
       "cargo": 5,
-      "partido": "PODE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PODE"
     },
     "30002536311": {
       "uf": "AP",
@@ -277,43 +208,27 @@
     "30002549909": {
       "uf": "AP",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PT"
     },
     "30002549911": {
       "uf": "AP",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "30002550229": {
       "uf": "AP",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PSB"
     },
     "30002551381": {
       "uf": "AP",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "30002551382": {
       "uf": "AP",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "30002551388": {
       "uf": "AP",
@@ -323,10 +238,7 @@
     "30002551576": {
       "uf": "AP",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "30002552017": {
       "uf": "AP",
@@ -336,18 +248,12 @@
     "30002553708": {
       "uf": "AP",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "40002531447": {
       "uf": "AM",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "MDB"
     },
     "40002532272": {
       "uf": "AM",
@@ -362,18 +268,12 @@
     "40002535270": {
       "uf": "AM",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "40002535391": {
       "uf": "AM",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "40002536086": {
       "uf": "AM",
@@ -383,11 +283,7 @@
     "40002537344": {
       "uf": "AM",
       "cargo": 5,
-      "partido": "PSDB",
-      "d": {
-        "relacao_governo": "oposicao",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSDB"
     },
     "40002541626": {
       "uf": "AM",
@@ -402,18 +298,12 @@
     "40002541744": {
       "uf": "AM",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "40002542686": {
       "uf": "AM",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "40002550776": {
       "uf": "AM",
@@ -423,26 +313,17 @@
     "40002550806": {
       "uf": "AM",
       "cargo": 5,
-      "partido": "MOBILIZA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MOBILIZA"
     },
     "40002551281": {
       "uf": "AM",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "40002551283": {
       "uf": "AM",
       "cargo": 5,
-      "partido": "REDE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REDE"
     },
     "40002551740": {
       "uf": "AM",
@@ -457,19 +338,12 @@
     "50002533123": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "50002533124": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "REPUBLICANOS"
     },
     "50002533190": {
       "uf": "BA",
@@ -479,18 +353,12 @@
     "50002534769": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "50002534774": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "REDE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REDE"
     },
     "50002535253": {
       "uf": "BA",
@@ -505,27 +373,17 @@
     "50002536317": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PT"
     },
     "50002536321": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "50002536577": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "50002536579": {
       "uf": "BA",
@@ -535,10 +393,7 @@
     "50002536625": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "MOBILIZA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MOBILIZA"
     },
     "50002544692": {
       "uf": "BA",
@@ -548,10 +403,7 @@
     "50002550314": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "50002552489": {
       "uf": "BA",
@@ -561,10 +413,7 @@
     "50002553643": {
       "uf": "BA",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "60002531351": {
       "uf": "CE",
@@ -579,18 +428,12 @@
     "60002533959": {
       "uf": "CE",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "60002539687": {
       "uf": "CE",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "60002540336": {
       "uf": "CE",
@@ -605,34 +448,22 @@
     "60002540753": {
       "uf": "CE",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "60002540754": {
       "uf": "CE",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "60002542476": {
       "uf": "CE",
       "cargo": 5,
-      "partido": "REDE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REDE"
     },
     "60002542479": {
       "uf": "CE",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSB"
     },
     "60002543969": {
       "uf": "CE",
@@ -647,18 +478,12 @@
     "60002550748": {
       "uf": "CE",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "60002551397": {
       "uf": "CE",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "60002552320": {
       "uf": "CE",
@@ -683,10 +508,7 @@
     "70002536445": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "70002537111": {
       "uf": "DF",
@@ -696,10 +518,7 @@
     "70002537112": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "70002547775": {
       "uf": "DF",
@@ -709,10 +528,7 @@
     "70002548624": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "70002551298": {
       "uf": "DF",
@@ -722,18 +538,12 @@
     "70002551323": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "AGIR",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AGIR"
     },
     "70002551426": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "70002551557": {
       "uf": "DF",
@@ -748,19 +558,12 @@
     "70002552490": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "70002552492": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "PDT",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PDT"
     },
     "70002552496": {
       "uf": "DF",
@@ -770,10 +573,7 @@
     "70002552582": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "AVANTE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AVANTE"
     },
     "70002552586": {
       "uf": "DF",
@@ -783,18 +583,12 @@
     "70002552934": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "70002552936": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "70002552965": {
       "uf": "DF",
@@ -809,26 +603,17 @@
     "70002553296": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "PSDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSDB"
     },
     "70002553751": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSD"
     },
     "70002553859": {
       "uf": "DF",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "70002553982": {
       "uf": "DF",
@@ -838,18 +623,12 @@
     "80002530022": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "80002538202": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "AVANTE",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "AVANTE"
     },
     "80002541012": {
       "uf": "ES",
@@ -859,27 +638,17 @@
     "80002542401": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "80002549404": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "80002550187": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PT"
     },
     "80002550832": {
       "uf": "ES",
@@ -889,18 +658,12 @@
     "80002551368": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "MDB"
     },
     "80002551370": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PSB"
     },
     "80002551833": {
       "uf": "ES",
@@ -915,10 +678,7 @@
     "80002552373": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "PRTB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PRTB"
     },
     "80002552682": {
       "uf": "ES",
@@ -928,26 +688,17 @@
     "80002552692": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSD"
     },
     "80002553265": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REPUBLICANOS"
     },
     "80002553269": {
       "uf": "ES",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "90002540993": {
       "uf": "GO",
@@ -957,42 +708,27 @@
     "90002540997": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "90002540998": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "PRD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PRD"
     },
     "90002541454": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "90002541455": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSB"
     },
     "90002543215": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSD"
     },
     "90002543463": {
       "uf": "GO",
@@ -1002,34 +738,22 @@
     "90002543556": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "90002543560": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "90002545243": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "PSDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSDB"
     },
     "90002545244": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "CIDADANIA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "CIDADANIA"
     },
     "90002545476": {
       "uf": "GO",
@@ -1039,10 +763,7 @@
     "90002546974": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "90002550707": {
       "uf": "GO",
@@ -1052,10 +773,7 @@
     "90002551198": {
       "uf": "GO",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "90002551791": {
       "uf": "GO",
@@ -1075,35 +793,22 @@
     "100002536212": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "100002537338": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "PDT",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PDT"
     },
     "100002537364": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "100002541459": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PT"
     },
     "100002542556": {
       "uf": "MA",
@@ -1113,10 +818,7 @@
     "100002542867": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PP"
     },
     "100002543869": {
       "uf": "MA",
@@ -1141,42 +843,27 @@
     "100002548011": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "100002548853": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "100002549014": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "PCB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCB"
     },
     "100002549583": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "MDB"
     },
     "100002550418": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "MOBILIZA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MOBILIZA"
     },
     "100002551399": {
       "uf": "MA",
@@ -1191,18 +878,12 @@
     "100002553336": {
       "uf": "MA",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "110002540403": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "AVANTE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AVANTE"
     },
     "110002543953": {
       "uf": "MT",
@@ -1217,26 +898,17 @@
     "110002544986": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSD"
     },
     "110002544988": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PSB"
     },
     "110002548042": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "110002551480": {
       "uf": "MT",
@@ -1251,34 +923,22 @@
     "110002551966": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "110002551967": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PP"
     },
     "110002552693": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PL"
     },
     "110002552698": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "110002553058": {
       "uf": "MT",
@@ -1288,18 +948,12 @@
     "110002553701": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "AGIR",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AGIR"
     },
     "110002553706": {
       "uf": "MT",
       "cargo": 5,
-      "partido": "AGIR",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AGIR"
     },
     "110002553937": {
       "uf": "MT",
@@ -1319,34 +973,22 @@
     "120002532721": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "120002534952": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "AGIR",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AGIR"
     },
     "120002535764": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "120002535769": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "120002536582": {
       "uf": "MS",
@@ -1361,19 +1003,12 @@
     "120002547434": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "relacao_governo": "independente",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSB"
     },
     "120002547435": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "120002549681": {
       "uf": "MS",
@@ -1388,18 +1023,12 @@
     "120002551909": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "120002552115": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "120002552155": {
       "uf": "MS",
@@ -1409,10 +1038,7 @@
     "120002552183": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "PRD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PRD"
     },
     "120002552191": {
       "uf": "MS",
@@ -1422,10 +1048,7 @@
     "120002552196": {
       "uf": "MS",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "120002552201": {
       "uf": "MS",
@@ -1455,11 +1078,7 @@
     "130002545590": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "relacao_governo": "independente",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSD"
     },
     "130002546802": {
       "uf": "MG",
@@ -1474,26 +1093,17 @@
     "130002547882": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "130002547884": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "130002548381": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PP"
     },
     "130002549557": {
       "uf": "MG",
@@ -1508,18 +1118,12 @@
     "130002550557": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "130002550560": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "130002550834": {
       "uf": "MG",
@@ -1529,50 +1133,32 @@
     "130002551265": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "130002551284": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "130002551786": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "130002551929": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "130002551930": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "130002552186": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "AVANTE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AVANTE"
     },
     "130002552296": {
       "uf": "MG",
@@ -1582,18 +1168,12 @@
     "130002552299": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "130002552302": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "130002552308": {
       "uf": "MG",
@@ -1603,42 +1183,27 @@
     "130002552311": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "130002553354": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PSDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSDB"
     },
     "130002553856": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PDT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PDT"
     },
     "130002554332": {
       "uf": "MG",
       "cargo": 5,
-      "partido": "PSDB",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PSDB"
     },
     "140002538404": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "PDT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PDT"
     },
     "140002538631": {
       "uf": "PA",
@@ -1653,50 +1218,32 @@
     "140002542691": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "PODE",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PODE"
     },
     "140002544855": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "140002545671": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "140002545674": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "140002548150": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "140002548387": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "140002549930": {
       "uf": "PA",
@@ -1706,18 +1253,12 @@
     "140002550779": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "140002550780": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "140002551357": {
       "uf": "PA",
@@ -1737,26 +1278,17 @@
     "140002553743": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "140002553852": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "MOBILIZA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MOBILIZA"
     },
     "140002553952": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "SOLIDARIEDADE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "SOLIDARIEDADE"
     },
     "140002554108": {
       "uf": "PA",
@@ -1766,10 +1298,7 @@
     "140002554209": {
       "uf": "PA",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "140002554434": {
       "uf": "PA",
@@ -1779,10 +1308,7 @@
     "150002538459": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "150002538692": {
       "uf": "PB",
@@ -1802,67 +1328,42 @@
     "150002544135": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "150002544140": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "150002544905": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "MDB"
     },
     "150002544909": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "150002548968": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "150002548971": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "150002549791": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REPUBLICANOS"
     },
     "150002549793": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSB"
     },
     "150002551789": {
       "uf": "PB",
@@ -1882,10 +1383,7 @@
     "150002552607": {
       "uf": "PB",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "160002540833": {
       "uf": "PR",
@@ -1900,34 +1398,22 @@
     "160002547656": {
       "uf": "PR",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PT"
     },
     "160002547658": {
       "uf": "PR",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "160002547660": {
       "uf": "PR",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "160002547661": {
       "uf": "PR",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "160002547666": {
       "uf": "PR",
@@ -1937,10 +1423,7 @@
     "160002547963": {
       "uf": "PR",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REPUBLICANOS"
     },
     "160002548010": {
       "uf": "PR",
@@ -1955,10 +1438,7 @@
     "160002549555": {
       "uf": "PR",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSD"
     },
     "160002550997": {
       "uf": "PR",
@@ -1968,18 +1448,12 @@
     "160002551043": {
       "uf": "PR",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "160002551121": {
       "uf": "PR",
       "cargo": 5,
-      "partido": "MISSAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MISSAO"
     },
     "160002551353": {
       "uf": "PR",
@@ -1994,18 +1468,12 @@
     "160002552563": {
       "uf": "PR",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "170002530097": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "170002536575": {
       "uf": "PE",
@@ -2030,26 +1498,17 @@
     "170002537334": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "170002537335": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "170002537418": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "170002538097": {
       "uf": "PE",
@@ -2059,10 +1518,7 @@
     "170002539456": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "170002540337": {
       "uf": "PE",
@@ -2072,10 +1528,7 @@
     "170002540420": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "170002541258": {
       "uf": "PE",
@@ -2085,43 +1538,27 @@
     "170002547771": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "PDT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PDT"
     },
     "170002547773": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PT"
     },
     "170002549655": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "REDE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REDE"
     },
     "170002552097": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSD"
     },
     "170002552102": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PP"
     },
     "170002552776": {
       "uf": "PE",
@@ -2131,10 +1568,7 @@
     "170002552943": {
       "uf": "PE",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "180002532987": {
       "uf": "PI",
@@ -2144,27 +1578,17 @@
     "180002533964": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSD"
     },
     "180002533967": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "MDB"
     },
     "180002537340": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "180002537422": {
       "uf": "PI",
@@ -2179,27 +1603,17 @@
     "180002540446": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "relacao_governo": "oposicao",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PP"
     },
     "180002540449": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "180002541938": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "180002544216": {
       "uf": "PI",
@@ -2209,50 +1623,32 @@
     "180002544457": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "MOBILIZA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MOBILIZA"
     },
     "180002544459": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "MOBILIZA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MOBILIZA"
     },
     "180002547860": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "180002547863": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "180002548155": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "180002548157": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "180002548388": {
       "uf": "PI",
@@ -2267,10 +1663,7 @@
     "180002548568": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "PSDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSDB"
     },
     "180002549920": {
       "uf": "PI",
@@ -2280,18 +1673,12 @@
     "180002549933": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "180002549936": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "AVANTE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AVANTE"
     },
     "180002549970": {
       "uf": "PI",
@@ -2311,34 +1698,22 @@
     "180002550977": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "180002550979": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "180002552962": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "AVANTE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AVANTE"
     },
     "180002552964": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "AVANTE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AVANTE"
     },
     "180002553722": {
       "uf": "PI",
@@ -2348,19 +1723,12 @@
     "180002553753": {
       "uf": "PI",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "190002535142": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "relacao_governo": "oposicao",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PL"
     },
     "190002536162": {
       "uf": "RJ",
@@ -2370,10 +1738,7 @@
     "190002536164": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "190002537524": {
       "uf": "RJ",
@@ -2383,10 +1748,7 @@
     "190002539827": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "190002540198": {
       "uf": "RJ",
@@ -2401,10 +1763,7 @@
     "190002542888": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "190002543380": {
       "uf": "RJ",
@@ -2414,10 +1773,7 @@
     "190002543961": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "MISSAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MISSAO"
     },
     "190002544120": {
       "uf": "RJ",
@@ -2427,10 +1783,7 @@
     "190002545553": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "PODE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PODE"
     },
     "190002547272": {
       "uf": "RJ",
@@ -2440,66 +1793,42 @@
     "190002548141": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PT"
     },
     "190002548145": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSD"
     },
     "190002548589": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "190002548590": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "190002550182": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REPUBLICANOS"
     },
     "190002550184": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "REPUBLICANOS"
     },
     "190002550190": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "190002550192": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "190002550196": {
       "uf": "RJ",
@@ -2509,10 +1838,7 @@
     "190002552083": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "PRTB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PRTB"
     },
     "190002552513": {
       "uf": "RJ",
@@ -2522,34 +1848,22 @@
     "190002552521": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "190002554290": {
       "uf": "RJ",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "200002533841": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "200002533843": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "PDT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PDT"
     },
     "200002534001": {
       "uf": "RN",
@@ -2564,19 +1878,12 @@
     "200002534447": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "200002534448": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "PODE",
-      "d": {
-        "relacao_governo": "oposicao",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PODE"
     },
     "200002535255": {
       "uf": "RN",
@@ -2586,19 +1893,12 @@
     "200002535507": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSD"
     },
     "200002535511": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "200002542481": {
       "uf": "RN",
@@ -2608,18 +1908,12 @@
     "200002542483": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "200002542484": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "200002546756": {
       "uf": "RN",
@@ -2634,18 +1928,12 @@
     "200002546792": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "200002546795": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "200002547826": {
       "uf": "RN",
@@ -2655,18 +1943,12 @@
     "200002548115": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "AGIR",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AGIR"
     },
     "200002549133": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "AGIR",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AGIR"
     },
     "200002550223": {
       "uf": "RN",
@@ -2676,18 +1958,12 @@
     "200002550225": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "200002550541": {
       "uf": "RN",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "200002553301": {
       "uf": "RN",
@@ -2702,34 +1978,22 @@
     "210002533434": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "210002533435": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "210002533581": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "210002533584": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "210002535802": {
       "uf": "RS",
@@ -2739,18 +2003,12 @@
     "210002538465": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "CIDADANIA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "CIDADANIA"
     },
     "210002538467": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "PSDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSDB"
     },
     "210002541367": {
       "uf": "RS",
@@ -2765,50 +2023,32 @@
     "210002543863": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "210002543865": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSD"
     },
     "210002544698": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "210002544699": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "210002547816": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "210002547819": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "210002547857": {
       "uf": "RS",
@@ -2828,10 +2068,7 @@
     "210002552599": {
       "uf": "RS",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "220002536806": {
       "uf": "RO",
@@ -2841,34 +2078,22 @@
     "220002539771": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSD"
     },
     "220002539995": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "220002539996": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "220002541490": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "PDT",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PDT"
     },
     "220002541939": {
       "uf": "RO",
@@ -2878,10 +2103,7 @@
     "220002541944": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "MISSAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MISSAO"
     },
     "220002542185": {
       "uf": "RO",
@@ -2896,18 +2118,12 @@
     "220002547309": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PP"
     },
     "220002547310": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REPUBLICANOS"
     },
     "220002550927": {
       "uf": "RO",
@@ -2917,10 +2133,7 @@
     "220002550928": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSB"
     },
     "220002551251": {
       "uf": "RO",
@@ -2930,42 +2143,27 @@
     "220002551946": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "PV",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PV"
     },
     "220002551948": {
       "uf": "RO",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "230002533586": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "230002534804": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "230002534806": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "230002549223": {
       "uf": "RR",
@@ -2980,51 +2178,32 @@
     "230002549330": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "230002549360": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "230002549361": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "230002549845": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "PSD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSD"
     },
     "230002550787": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "AVANTE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AVANTE"
     },
     "230002550794": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PSB"
     },
     "230002551571": {
       "uf": "RR",
@@ -3039,34 +2218,22 @@
     "230002552727": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "PV",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PV"
     },
     "230002553006": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "230002553010": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "230002553636": {
       "uf": "RR",
       "cargo": 5,
-      "partido": "PSDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSDB"
     },
     "230002553857": {
       "uf": "RR",
@@ -3076,18 +2243,12 @@
     "240002533898": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "240002535770": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "240002537073": {
       "uf": "SC",
@@ -3097,26 +2258,17 @@
     "240002537630": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "240002537632": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "240002539636": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "240002541913": {
       "uf": "SC",
@@ -3126,26 +2278,17 @@
     "240002541931": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "240002541935": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "240002544094": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "MISSAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MISSAO"
     },
     "240002544118": {
       "uf": "SC",
@@ -3160,27 +2303,17 @@
     "240002548630": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "240002548632": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "relacao_governo": "oposicao",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PP"
     },
     "240002550218": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "240002550544": {
       "uf": "SC",
@@ -3195,10 +2328,7 @@
     "240002551377": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "PRD",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PRD"
     },
     "240002552157": {
       "uf": "SC",
@@ -3208,10 +2338,7 @@
     "240002553005": {
       "uf": "SC",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "240002553718": {
       "uf": "SC",
@@ -3221,10 +2348,7 @@
     "250002532794": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "250002536915": {
       "uf": "SP",
@@ -3239,58 +2363,37 @@
     "250002541308": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "250002541312": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "PP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PP"
     },
     "250002541362": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "250002541365": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "PSTU",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSTU"
     },
     "250002544514": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "250002544516": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "UP",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UP"
     },
     "250002544673": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "PODE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PODE"
     },
     "250002544912": {
       "uf": "SP",
@@ -3315,42 +2418,27 @@
     "250002551501": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "REDE",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "REDE"
     },
     "250002551502": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "PSB",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "PSB"
     },
     "250002552153": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "PCB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCB"
     },
     "250002552369": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "CIDADANIA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "CIDADANIA"
     },
     "250002552955": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "PCO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PCO"
     },
     "250002553062": {
       "uf": "SP",
@@ -3360,26 +2448,17 @@
     "250002553252": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "AGIR",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "AGIR"
     },
     "250002553928": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "MISSAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MISSAO"
     },
     "250002554075": {
       "uf": "SP",
       "cargo": 5,
-      "partido": "MISSAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MISSAO"
     },
     "260002532010": {
       "uf": "SE",
@@ -3389,11 +2468,7 @@
     "260002533084": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "MDB"
     },
     "260002542491": {
       "uf": "SE",
@@ -3403,43 +2478,27 @@
     "260002543589": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "260002543591": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "260002545677": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "260002547285": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "relacao_governo": "base_governo",
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PT"
     },
     "260002547290": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "260002547415": {
       "uf": "SE",
@@ -3449,18 +2508,12 @@
     "260002549127": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "volta_ao_cargo"
-      }
+      "partido": "REPUBLICANOS"
     },
     "260002549130": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REPUBLICANOS"
     },
     "260002549466": {
       "uf": "SE",
@@ -3475,26 +2528,17 @@
     "260002551362": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "260002551366": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PL"
     },
     "260002551550": {
       "uf": "SE",
       "cargo": 5,
-      "partido": "PDT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PDT"
     },
     "260002551712": {
       "uf": "SE",
@@ -3504,18 +2548,12 @@
     "270002539141": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "REDE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REDE"
     },
     "270002539142": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "PSOL",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PSOL"
     },
     "270002539187": {
       "uf": "TO",
@@ -3540,34 +2578,22 @@
     "270002544629": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "PT",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PT"
     },
     "270002546038": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "PODE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PODE"
     },
     "270002546039": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "PODE",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "PODE"
     },
     "270002546333": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "PL",
-      "d": {
-        "trajetoria_cargo": "tenta_reeleicao"
-      }
+      "partido": "PL"
     },
     "270002546368": {
       "uf": "TO",
@@ -3577,26 +2603,17 @@
     "270002548231": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "UNIAO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "UNIAO"
     },
     "270002548344": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "MDB",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "MDB"
     },
     "270002548409": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "REPUBLICANOS",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "REPUBLICANOS"
     },
     "270002548412": {
       "uf": "TO",
@@ -3611,34 +2628,22 @@
     "270002550610": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "NOVO",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "NOVO"
     },
     "270002551270": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "270002551273": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "DEMOCRATA",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DEMOCRATA"
     },
     "270002552968": {
       "uf": "TO",
       "cargo": 5,
-      "partido": "DC",
-      "d": {
-        "trajetoria_cargo": "estreante"
-      }
+      "partido": "DC"
     },
     "270002554375": {
       "uf": "TO",
@@ -3660,45 +2665,27 @@
       },
       "3830": {
         "uf": "AP",
-        "partido": "UNIAO",
-        "d": {
-          "relacao_governo": "base_governo"
-        }
+        "partido": "UNIAO"
       },
       "4639": {
         "uf": "PA",
-        "partido": "PT",
-        "d": {
-          "relacao_governo": "base_governo"
-        }
+        "partido": "PT"
       },
       "4642": {
         "uf": "PB",
-        "partido": "PL",
-        "d": {
-          "relacao_governo": "independente"
-        }
+        "partido": "PL"
       },
       "4694": {
         "uf": "RN",
-        "partido": "PL",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "PL"
       },
       "4811": {
         "uf": "SE",
-        "partido": "PP",
-        "d": {
-          "relacao_governo": "independente"
-        }
+        "partido": "PP"
       },
       "5070": {
         "uf": "GO",
-        "partido": "PL",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "PL"
       },
       "5207": {
         "uf": "AL",
@@ -3710,17 +2697,11 @@
       },
       "5386": {
         "uf": "TO",
-        "partido": "UNIAO",
-        "d": {
-          "relacao_governo": "base_governo"
-        }
+        "partido": "UNIAO"
       },
       "5523": {
         "uf": "BA",
-        "partido": "PSD",
-        "d": {
-          "relacao_governo": "base_governo"
-        }
+        "partido": "PSD"
       },
       "5525": {
         "uf": "AM",
@@ -3728,24 +2709,15 @@
       },
       "5672": {
         "uf": "AC",
-        "partido": "REPUBLICANOS",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "REPUBLICANOS"
       },
       "5736": {
         "uf": "MS",
-        "partido": "PP",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "PP"
       },
       "5793": {
         "uf": "RR",
-        "partido": "PP",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "PP"
       },
       "6009": {
         "uf": "SP",
@@ -3753,17 +2725,11 @@
       },
       "6331": {
         "uf": "PR",
-        "partido": "PL",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "PL"
       },
       "6335": {
         "uf": "DF",
-        "partido": "REPUBLICANOS",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "REPUBLICANOS"
       },
       "6336": {
         "uf": "CE",
@@ -3771,38 +2737,23 @@
       },
       "6337": {
         "uf": "MG",
-        "partido": "REPUBLICANOS",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "REPUBLICANOS"
       },
       "6338": {
         "uf": "PE",
-        "partido": "PT",
-        "d": {
-          "relacao_governo": "base_governo"
-        }
+        "partido": "PT"
       },
       "6340": {
         "uf": "RO",
-        "partido": "PL",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "PL"
       },
       "6341": {
         "uf": "RS",
-        "partido": "REPUBLICANOS",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "REPUBLICANOS"
       },
       "6342": {
         "uf": "SC",
-        "partido": "PL",
-        "d": {
-          "relacao_governo": "oposicao"
-        }
+        "partido": "PL"
       },
       "6359": {
         "uf": "MA",
@@ -3810,10 +2761,7 @@
       },
       "6369": {
         "uf": "PI",
-        "partido": "PSD",
-        "d": {
-          "relacao_governo": "base_governo"
-        }
+        "partido": "PSD"
       }
     }
   }

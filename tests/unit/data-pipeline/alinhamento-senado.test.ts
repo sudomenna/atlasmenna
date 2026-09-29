@@ -426,7 +426,9 @@ describe("montarArquivoAlinhamento — formato e lista branca", () => {
   const arq = montarArquivoAlinhamento(rodar());
 
   it("tem exatamente as chaves do contrato, na ordem", () => {
-    expect(Object.keys(arq)).toEqual(["corte", "fonte", "universo", "por_senador"]);
+    expect(Object.keys(arq)).toEqual(["revisao", "corte", "fonte", "universo", "por_senador"]);
+    // 🔴 Regenerar ZERA a revisão do dono (spec 024, RF-223 emendado).
+    expect(arq.revisao).toEqual({ revisado: "nao", revisado_em: null, por: null });
     expect(arq.fonte).toEqual(FONTE_ALINHAMENTO_SENADO);
     expect(arq.corte).toBe("2025-04-09");
     expect(arq.universo).toEqual({ votacoes: 6, disputadas: 4, excluidas_sem_sequencial: 1 });

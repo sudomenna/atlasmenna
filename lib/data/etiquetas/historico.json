@@ -1,9 +1,9 @@
 {
   "formato": "etiquetas/v1",
   "meta": {
-    "versao": 1790660408,
-    "gerado_em": "2026-09-29T05:40:08.529Z",
-    "conteudo_sha256": "c5aff8a0910339d013534555e40065d2715255034b30fe78b98c4957a75b2b97",
+    "versao": 1790666935,
+    "gerado_em": "2026-09-29T07:28:55.613Z",
+    "conteudo_sha256": "7764d6aea91c6ad9cc6770aa27a0604873b8250f2c9ced8489f189612fdb93bf",
     "git_sha": null
   },
   "entradas": [
@@ -58,6 +58,58 @@
       "fonte_descricao": "Senado Federal — Dados Abertos (votações nominais do plenário com orientação do Governo)",
       "data": "2026-07-15",
       "resumo": "41 classificadas, 0 mudaram de valor, 0 deixaram de ser classificadas"
+    },
+    {
+      "em": "2026-09-29T07:28:55.613Z",
+      "versao": 1790666935,
+      "chave": "derivado:trajetoria_camara",
+      "categoria": "trajetoria_cargo",
+      "turno": null,
+      "de": null,
+      "para": null,
+      "fonte_url": "https://dadosabertos.camara.leg.br/",
+      "fonte_descricao": "Câmara dos Deputados — histórico de mandatos, cruzado com a candidatura no TSE",
+      "data": "2026-09-29",
+      "resumo": "0 classificadas, 0 mudaram de valor, 7791 deixaram de ser classificadas"
+    },
+    {
+      "em": "2026-09-29T07:28:55.613Z",
+      "versao": 1790666935,
+      "chave": "derivado:alinhamento_camara",
+      "categoria": "relacao_governo",
+      "turno": null,
+      "de": null,
+      "para": null,
+      "fonte_url": "https://dadosabertos.camara.leg.br",
+      "fonte_descricao": "Câmara dos Deputados — Dados Abertos (votações nominais do plenário com orientação do governo)",
+      "data": "2026-09-03",
+      "resumo": "0 classificadas, 0 mudaram de valor, 488 deixaram de ser classificadas"
+    },
+    {
+      "em": "2026-09-29T07:28:55.613Z",
+      "versao": 1790666935,
+      "chave": "derivado:trajetoria_senado",
+      "categoria": "trajetoria_cargo",
+      "turno": null,
+      "de": null,
+      "para": null,
+      "fonte_url": "https://legis.senado.leg.br/dadosabertos/",
+      "fonte_descricao": "Senado Federal — Dados Abertos (senadores em exercício e das legislaturas 50 a 57), casados com as candidaturas do cadastro do TSE",
+      "data": "2026-09-29",
+      "resumo": "0 classificadas, 0 mudaram de valor, 319 deixaram de ser classificadas"
+    },
+    {
+      "em": "2026-09-29T07:28:55.613Z",
+      "versao": 1790666935,
+      "chave": "derivado:alinhamento_senado",
+      "categoria": "relacao_governo",
+      "turno": null,
+      "de": null,
+      "para": null,
+      "fonte_url": "https://legis.senado.leg.br/dadosabertos/",
+      "fonte_descricao": "Senado Federal — Dados Abertos (votações nominais do plenário com orientação do Governo)",
+      "data": "2026-07-15",
+      "resumo": "0 classificadas, 0 mudaram de valor, 41 deixaram de ser classificadas"
     }
   ]
 }

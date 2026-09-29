@@ -95,6 +95,25 @@ export interface FonteDerivada {
   fonte_url: string;
   fonte_descricao: string;
   data: string;
+  /**
+   * Data em que o dono aprovou o ARQUIVO derivado inteiro (carimbo `revisao`
+   * do cabeçalho — constituição § 2 (b); spec 024, RF-223 emendado em 29/09).
+   * Derivado sem aprovação nem entra no gerado (`derivados[insumo] = null`).
+   * Opcional só para ler um arquivo publicado antes da emenda.
+   */
+  revisado_em?: string;
+}
+
+/**
+ * A medida que produziu uma relação com o governo derivada do alinhamento:
+ * votos em votações disputadas (somados entre os ids do parlamentar) e a taxa
+ * ponderada por eles, 0–100, com 2 casas. Só existe para quem a regra
+ * CLASSIFICOU (≥ 30 votos) — é o que a lista pública de classificações mostra
+ * ao lado da etiqueta (constituição § 8).
+ */
+export interface MedidaAlinhamento {
+  votos: number;
+  taxa: number;
 }
 
 /**
@@ -121,6 +140,8 @@ export interface CandidatoNacional {
   x?: Registros;
   /** Só cargo 5: trajetória e alinhamento derivados do Senado. */
   d?: ValoresDerivados;
+  /** Só com `d.relacao_governo`: a medida que o produziu. */
+  m?: MedidaAlinhamento;
 }
 
 export interface Senador2031 {
@@ -130,6 +151,8 @@ export interface Senador2031 {
   x?: Registros;
   /** Relação com o governo derivada do alinhamento no Senado. */
   d?: ValoresDerivados;
+  /** Só com `d.relacao_governo`: a medida que o produziu. */
+  m?: MedidaAlinhamento;
 }
 
 export interface ArquivoNacional {
@@ -170,6 +193,12 @@ export interface ArquivoUf {
   trajetoria: Partial<Record<ValorId<"trajetoria_cargo">, string[]>>;
   /** Relação com o governo derivada do alinhamento (só quem passou do mínimo de votos). */
   alinhamento: Partial<Record<ValorId<"relacao_governo">, string[]>>;
+  /**
+   * `sqcand` → a medida de quem está em `alinhamento`. Opcional só para ler um
+   * arquivo publicado antes de 29/09; o compilador sempre grava (vazio quando
+   * não há alinhamento aprovado).
+   */
+  medidas?: Record<string, MedidaAlinhamento>;
   /** Linhas individuais revisadas (`deputados-excecoes.csv`). */
   excecoes: Record<string, Registros>;
 }

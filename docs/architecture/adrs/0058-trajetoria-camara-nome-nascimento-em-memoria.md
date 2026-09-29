@@ -109,6 +109,17 @@ não muda. Sob a divisão do item 5, a invariante é "um único ponto de leitura
 esse ponto mora depois de a leitura sair do import é detalhe da renumeração do worktree, não
 exceção nova.
 
+*Acréscimo de 29/09, após a auditoria constitucional:* os **caches brutos das fontes oficiais
+públicas** — `build/camara/` (arquivos da Câmara, que trazem `dataNascimento`), `build/senado/`
+(respostas do Senado) e `build/tse-archives/` (cadastro do TSE, com `DT_NASCIMENTO`) — ficam **só
+na máquina local**, sob `build/`, que é ignorado pelo git (`.gitignore`) e pela Vercel
+(`.vercelignore`): nunca versionados, nunca publicados, nunca lidos pelo site. São cópia do dado
+público na forma em que a fonte o distribui, não dado "gravado pelo produto" no sentido da
+constituição § 5, e ficam fora da exceção deste item. O que **sai** deles, porém, segue a regra
+inteira: nenhum arquivo derivado, exportado ou gerado a partir desses caches pode carregar data de
+nascimento (nem CPF, título de eleitor ou e-mail) — a lista branca dos exportadores e os
+testes de varredura dos arquivos em `editorial/derivados/` travam isso.
+
 **5. Entrega dividida.**
 
 *Entra agora (antes de 04/10):* o **cálculo puro** — normalização de nome, `casaAproximado`,

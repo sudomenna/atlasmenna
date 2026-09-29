@@ -87,19 +87,46 @@ describe("RF-252 — /sobre-as-etiquetas", () => {
 
   it("nada revisado na cópia do build de hoje ⇒ 'nenhuma classificação no ar', sem tabela vazia", async () => {
     const { doc } = await render();
-    // Se um dia houver linha revisada, este caso passa a exigir a tabela.
-    const tabela = doc.querySelector("[data-testid='etiquetas-publicadas']");
-    const nenhuma = doc.querySelector("[data-testid='etiquetas-nenhuma-publicada']");
-    expect(Boolean(tabela) !== Boolean(nenhuma)).toBe(true);
+    // Três estados, exatamente um: tabela, "só derivadas" ou "nenhuma".
+    const estados = [
+      "etiquetas-publicadas",
+      "etiquetas-so-derivadas",
+      "etiquetas-nenhuma-publicada",
+    ].filter((id) => doc.querySelector(`[data-testid='${id}']`));
+    expect(estados).toHaveLength(1);
   });
 
-  it("🔴 canal de correção: o repositório público que o site já cita — nenhum e-mail inventado", async () => {
+  it("🔴 § 8 — a lista COMPLETA (com as derivadas) é linkada: o CSV público", async () => {
+    const { doc } = await render();
+    const p = doc.querySelector("[data-testid='etiquetas-lista-completa']");
+    expect(p?.querySelector("a[href='/sobre-as-etiquetas/classificacoes.csv']")).not.toBeNull();
+    expect(p?.textContent).toContain("regra derivada");
+    // A frase antiga ("não estão linha a linha aqui") era falsa e saiu.
+    expect(doc.body.textContent).not.toContain("não estão linha a linha");
+  });
+
+  it("🔴 § 2 (b) — diz que a regra derivada só vale com o arquivo inteiro aprovado, com data", async () => {
+    const { doc } = await render();
+    const t = doc.querySelector("[data-testid='etiquetas-revisao-derivada']")?.textContent ?? "";
+    expect(t).toContain("arquivo inteiro");
+    expect(t).toContain("data e nome");
+  });
+
+  it("🔴 com todas as chaves desligadas, NÃO afirma que 'algumas telas mostram etiquetas'", async () => {
+    // A cópia do build versionada tem tudo desligado (teste de deriva).
+    const { doc } = await render();
+    const deck = doc.querySelector("[data-testid='etiquetas-deck']")?.textContent ?? "";
+    expect(deck).toContain("Nenhuma tela do AtlasMenna mostra etiquetas editoriais ainda");
+    expect(deck).not.toContain("Algumas telas");
+  });
+
+  it("🔴 canal de correção: as issues do repositório público — nenhum e-mail inventado, nenhuma promessa circular", async () => {
     const { html, doc } = await render();
+    const secao = doc.getElementById("sec-correcao")?.parentElement;
     expect(
-      doc
-        .getElementById("sec-correcao")
-        ?.parentElement?.querySelector("a[href='https://github.com/sudomenna/salacofre']"),
+      secao?.querySelector("a[href='https://github.com/sudomenna/salacofre/issues']"),
     ).not.toBeNull();
+    expect(secao?.textContent).not.toContain("será publicado");
     expect(html).not.toMatch(/mailto:|@[a-z0-9-]+\.[a-z]{2,}/i);
   });
 
@@ -111,14 +138,24 @@ describe("RF-252 — /sobre-as-etiquetas", () => {
 });
 
 describe("RF-252 — /sobre-o-modelo aponta para a metodologia das etiquetas", () => {
-  it("um parágrafo com o link, sem <h2> novo (continuam oito)", () => {
+  it("um parágrafo com o link, sem <h2> novo (continuam oito)", async () => {
     const doc = new DOMParser().parseFromString(
-      renderToStaticMarkup(<SobreOModeloPage />),
+      renderToStaticMarkup(await SobreOModeloPage()),
       "text/html",
     );
     const p = doc.querySelector("[data-testid='sobre-o-modelo-etiquetas']");
     expect(p?.tagName).toBe("P");
     expect(p?.querySelector("a[href='/sobre-as-etiquetas']")).not.toBeNull();
+    // Chaves todas desligadas na cópia do build ⇒ não afirma que telas mostram etiquetas.
+    expect(p?.textContent).toContain("Nenhuma tela mostra");
+    expect(p?.textContent).not.toContain("Algumas telas");
+    // O canal de correção existe AQUI também — sem "será publicado" em círculo.
+    expect(
+      doc.querySelector(
+        "a[data-testid='sobre-o-modelo-canal-correcao'][href='https://github.com/sudomenna/salacofre/issues']",
+      ),
+    ).not.toBeNull();
+    expect(doc.body.textContent).not.toContain("contato de redação serão publicados");
     expect(p?.closest("section")?.getAttribute("aria-labelledby")).toBe("sec-limits");
     expect(doc.querySelectorAll("h2")).toHaveLength(8);
   });

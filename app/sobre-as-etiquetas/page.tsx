@@ -11,7 +11,13 @@
  *     "critério em definição — nenhuma etiqueta desta categoria é exibida", e
  *     isso é verdade por construção (`categoriaExibivel`);
  *   - as classificações no ar, com fonte, data e origem → os MESMOS arquivos
- *     que as telas leem (`lerEtiquetas`: Blob ou cópia do build);
+ *     que as telas leem (`lerEtiquetas`: Blob ou cópia do build). A página
+ *     mostra as individuais e os padrões; a lista COMPLETA, com cada
+ *     classificação por regra derivada e a medida dela, é o CSV público
+ *     `./classificacoes.csv` (mesma fonte, `lib/etiquetas/lista-publica.ts`);
+ *   - "algumas telas mostram etiquetas" só é dito com alguma chave ligada
+ *     (`algumaVisaoLigada`) — com tudo desligado, a página diz que nenhuma
+ *     tela mostra ainda;
  *   - a proveniência das regras derivadas (corte, fonte) → `nacional.derivados`;
  *   - a data da foto do Senado → `editorial/senado/mandato-2031.json`;
  *   - o registro de alterações → `historico.json` (Blob ou build). Pode passar
@@ -26,13 +32,12 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
 import { Footer } from "@/components/layout/Footer";
-import { type CandidatoIdentidade, readCandidatosUf } from "@/lib/blob/candidatos";
-import { cargoToken } from "@/lib/config/cargos";
 import {
   ALINHAMENTO_BASE_MIN,
   ALINHAMENTO_CORTE,
   ALINHAMENTO_MIN_VOTOS_DISPUTADAS,
   ALINHAMENTO_OPOSICAO_MAX,
+  algumaVisaoLigada,
   CATEGORIAS,
   type CategoriaId,
   CRITERIOS,
@@ -41,14 +46,10 @@ import {
   QUALIFICADOR_VISIVEL,
   rotuloDoValor,
 } from "@/lib/etiquetas/catalogo";
-import { type ArquivoUf, type EntradaHistorico, UFS } from "@/lib/etiquetas/formato";
-import { lerEtiquetas, lerHistoricoEtiquetas } from "@/lib/etiquetas/leitor";
-import {
-  contagemDerivada,
-  type LinhaPublicada,
-  linhasPublicadas,
-  separarPorCriterio,
-} from "@/lib/etiquetas/metodologia";
+import type { EntradaHistorico } from "@/lib/etiquetas/formato";
+import { lerHistoricoEtiquetas } from "@/lib/etiquetas/leitor";
+import { lerClassificacoesPublicadas, nomesDasLinhas } from "@/lib/etiquetas/lista-publica";
+import { contagemDerivada, type LinhaPublicada } from "@/lib/etiquetas/metodologia";
 import { dataDaFoto, MANDATO_2031 } from "@/lib/senado/mandato-2031";
 
 export const revalidate = 60;
@@ -65,7 +66,15 @@ export const ENTRADAS_DO_REGISTRO_NA_PAGINA = 50;
 
 /** O repositório público — o mesmo que `/sobre-o-modelo` já cita para os ADRs. */
 const REPOSITORIO = "https://github.com/sudomenna/salacofre";
+/**
+ * O canal de correção (constituição § 2 (h)): as issues do repositório
+ * público — abertas a qualquer pessoa com conta no GitHub, e o registro da
+ * conversa fica público. Nenhum e-mail inventado.
+ */
+const CANAL_DE_CORRECAO = `${REPOSITORIO}/issues`;
 const HISTORICO_NO_REPOSITORIO = `${REPOSITORIO}/blob/main/lib/data/etiquetas/historico.json`;
+/** A lista completa, em planilha (`./classificacoes.csv/route.ts`). */
+const CSV_DAS_CLASSIFICACOES = "/sobre-as-etiquetas/classificacoes.csv";
 
 const S = {
   page: {
@@ -146,6 +155,7 @@ const ROTULO_ALVO: Record<number | string, string> = {
 const ROTULO_ORIGEM: Record<LinhaPublicada["origem"], string> = {
   individual: "classificação individual",
   partido: "padrão do partido ou da federação",
+  derivado: "regra derivada",
 };
 
 function Secao({
@@ -168,35 +178,6 @@ function Secao({
       {children}
     </section>
   );
-}
-
-/** Nome de exibição de quem tem linha individual — pelo cadastro publicado, quando der. */
-async function nomesDasLinhas(linhas: readonly LinhaPublicada[]): Promise<Map<string, string>> {
-  const nomes = new Map<string, string>();
-  if (MANDATO_2031.ok) {
-    for (const s of MANDATO_2031.mandato.senadores)
-      nomes.set(`senado:${s.codigo}`, s.nome_parlamentar);
-  }
-  const pedidos = new Map<string, { uf: string; cargo: 3 | 5 | 6 }>();
-  for (const l of linhas) {
-    if (!l.uf) continue;
-    const cargo =
-      l.alvo === "governador" ? 3 : l.alvo === "senador" ? 5 : l.alvo === "deputado" ? 6 : null;
-    if (cargo) pedidos.set(`${l.uf}:${cargo}`, { uf: l.uf, cargo });
-  }
-  await Promise.all(
-    [...pedidos.values()].map(async ({ uf, cargo }) => {
-      try {
-        const r = await readCandidatosUf(uf, cargoToken(cargo));
-        if (r.status !== "ok") return;
-        for (const c of r.slice.candidatos as CandidatoIdentidade[])
-          nomes.set(c.sqcand, c.nome_urna);
-      } catch {
-        // Sem o cadastro, a linha sai com o número da candidatura — nunca some.
-      }
-    }),
-  );
-  return nomes;
 }
 
 function quem(l: LinhaPublicada, nomes: Map<string, string>): string {
@@ -238,12 +219,15 @@ function descreverEntrada(e: EntradaHistorico): string {
 }
 
 export default async function SobreAsEtiquetasPage() {
-  const etiquetas = await lerEtiquetas();
-  const ufs = (await Promise.all(UFS.map((uf) => lerEtiquetas({ uf }))))
-    .map((e) => e.arquivoUf)
-    .filter((u): u is ArquivoUf => u !== null);
+  const {
+    etiquetas,
+    ufs,
+    porLinha: exibiveis,
+    derivadas,
+    aguardandoCriterio,
+  } = await lerClassificacoesPublicadas();
   const nacional = etiquetas.nacional;
-  const { exibiveis, aguardandoCriterio } = separarPorCriterio(linhasPublicadas(nacional, ufs));
+  const algumaLigada = algumaVisaoLigada(etiquetas.publicar);
   const nomes = await nomesDasLinhas(exibiveis);
   const derivados = contagemDerivada(nacional, ufs);
   const historico = await lerHistoricoEtiquetas();
@@ -260,11 +244,13 @@ export default async function SobreAsEtiquetasPage() {
       <article style={S.container}>
         <p style={S.kicker}>Metodologia</p>
         <h1 style={S.title}>Como classificamos os candidatos</h1>
-        <p style={S.deck}>
-          Algumas telas do AtlasMenna mostram, ao lado dos candidatos, etiquetas como "Base do
-          governo" ou "Tenta a reeleição". São classificação editorial nossa, com fonte e data em
-          cada uma — não são dado do TSE nem resultado do modelo. Esta página diz o critério de cada
-          etiqueta, de onde ela vem, quando uma visão aparece, o que já está no ar e o que mudou.
+        <p style={S.deck} data-testid="etiquetas-deck">
+          {algumaLigada
+            ? 'Algumas telas do AtlasMenna mostram, ao lado dos candidatos, etiquetas como "Base do governo" ou "Tenta a reeleição".'
+            : 'Nenhuma tela do AtlasMenna mostra etiquetas editoriais ainda. Quando mostrarem, serão rótulos como "Base do governo" ou "Tenta a reeleição", ao lado dos candidatos.'}{" "}
+          São classificação editorial nossa, com fonte e data em cada uma — não são dado do TSE nem
+          resultado do modelo. Esta página diz o critério de cada etiqueta, de onde ela vem, quando
+          uma visão aparece, o que já está no ar e o que mudou.
         </p>
 
         <Secao id="sec-o-que-e" n={1} titulo="O que uma etiqueta é, e o que ela nunca faz">
@@ -274,6 +260,13 @@ export default async function SobreAsEtiquetasPage() {
             gravada junto do resultado da apuração. Uma classificação só vai ao ar depois de
             revisada, com fonte e data; enquanto não está revisada, o candidato simplesmente fica
             sem etiqueta.
+          </p>
+          <p style={S.body} data-testid="etiquetas-revisao-derivada">
+            Nas regras derivadas (seção 5), que classificam milhares de candidaturas de uma vez, a
+            revisão é do <strong>arquivo inteiro</strong>: o arquivo de dados de onde a regra sai só
+            é usado depois que o responsável editorial o aprova, com data e nome. Sem essa
+            aprovação, a regra não classifica ninguém; e um arquivo refeito com dados novos volta a
+            precisar de aprovação.
           </p>
           <p style={S.body}>
             As posições "Base do governo", "Independente" e "Oposição" descrevem a relação com o{" "}
@@ -323,7 +316,8 @@ export default async function SobreAsEtiquetasPage() {
         <Secao id="sec-fontes" n={3} titulo="De onde vem cada classificação">
           <p style={S.body}>
             Toda classificação tem uma fonte (endereço e descrição), a data da fonte e a data da
-            revisão. Ela chega à tela por um de três caminhos, e a lista abaixo diz qual:
+            revisão — na regra derivada, a data em que o arquivo inteiro foi aprovado. Ela chega à
+            tela por um de três caminhos, e a lista da seção 6 diz qual:
           </p>
           <ul style={{ ...S.body, paddingLeft: "var(--space-5)" }}>
             <li>
@@ -375,11 +369,12 @@ export default async function SobreAsEtiquetasPage() {
                 <a href={d.alinhamento_camara.fonte_url} rel="noopener noreferrer" target="_blank">
                   {d.alinhamento_camara.fonte_descricao}
                 </a>
-                . {derivados.camara.relacao_governo} candidaturas a Deputado Federal classificadas
+                , aprovado em {dataBr(d.alinhamento_camara.revisado_em)}.{" "}
+                {derivados.camara.relacao_governo} candidaturas a Deputado Federal classificadas
                 pela regra.
               </>
             ) : (
-              ". O dado da Câmara ainda não está publicado."
+              ". O dado da Câmara ainda não está no ar."
             )}
           </p>
           <p style={S.small} data-testid="etiquetas-corte-senado">
@@ -389,11 +384,12 @@ export default async function SobreAsEtiquetasPage() {
                 <a href={d.alinhamento_senado.fonte_url} rel="noopener noreferrer" target="_blank">
                   {d.alinhamento_senado.fonte_descricao}
                 </a>
-                . {derivados.senado.relacao_governo} senadores e candidaturas ao Senado
-                classificados pela regra.
+                , aprovado em {dataBr(d.alinhamento_senado.revisado_em)}.{" "}
+                {derivados.senado.relacao_governo} senadores e candidaturas ao Senado classificados
+                pela regra.
               </>
             ) : (
-              "Senado: o dado de votações do Senado ainda não está publicado."
+              "Senado: o dado de votações do Senado ainda não está no ar."
             )}
           </p>
           <p style={S.body}>
@@ -402,11 +398,11 @@ export default async function SobreAsEtiquetasPage() {
             exerceu só antes volta ao cargo; quem nunca exerceu é estreante. Candidatura que o
             cruzamento não encontra fica sem etiqueta — ausência nunca vira "estreante".
             {d.trajetoria_camara
-              ? ` Câmara: ${derivados.camara.trajetoria_cargo} candidaturas classificadas.`
-              : ""}
+              ? ` Câmara: ${derivados.camara.trajetoria_cargo} candidaturas classificadas (arquivo aprovado em ${dataBr(d.trajetoria_camara.revisado_em)}).`
+              : " Câmara: ainda não está no ar."}
             {d.trajetoria_senado
-              ? ` Senado: ${derivados.senado.trajetoria_cargo} candidaturas classificadas.`
-              : ""}
+              ? ` Senado: ${derivados.senado.trajetoria_cargo} candidaturas classificadas (arquivo aprovado em ${dataBr(d.trajetoria_senado.revisado_em)}).`
+              : " Senado: ainda não está no ar."}
           </p>
           <p style={S.small} data-testid="etiquetas-foto-senado">
             Os 27 senadores com mandato até 2031 e o partido de cada um: foto do Senado Federal
@@ -416,9 +412,21 @@ export default async function SobreAsEtiquetasPage() {
         </Secao>
 
         <Secao id="sec-publicadas" n={6} titulo="Todas as classificações no ar">
-          {exibiveis.length === 0 ? (
+          <p style={S.body} data-testid="etiquetas-lista-completa">
+            A lista completa — cada classificação no ar, uma por linha, inclusive as por regra
+            derivada ({derivadas.length.toLocaleString("pt-BR")} agora), com origem, fonte, data da
+            fonte, data da revisão e, na relação com o governo medida, os votos e a taxa — está em{" "}
+            <a href={CSV_DAS_CLASSIFICACOES}>classificacoes.csv</a> (planilha, atualizada junto com
+            esta página). Abaixo, as classificações individuais e os padrões de partido.
+          </p>
+          {exibiveis.length === 0 && derivadas.length === 0 ? (
             <p style={S.body} data-testid="etiquetas-nenhuma-publicada">
               Nenhuma classificação está no ar agora.
+            </p>
+          ) : exibiveis.length === 0 ? (
+            <p style={S.body} data-testid="etiquetas-so-derivadas">
+              Nenhuma classificação individual ou padrão de partido está no ar agora — só as por
+              regra derivada, na lista completa.
             </p>
           ) : (
             <div style={{ overflowX: "auto" }}>
@@ -469,10 +477,6 @@ export default async function SobreAsEtiquetasPage() {
               .
             </p>
           ) : null}
-          <p style={S.small}>
-            As classificações por regra derivada não estão linha a linha aqui — são milhares, e a
-            regra é a mesma para todas (seção 5).
-          </p>
         </Secao>
 
         <Secao id="sec-registro" n={7} titulo="Registro de alterações">
@@ -545,13 +549,14 @@ export default async function SobreAsEtiquetasPage() {
         </Secao>
 
         <Secao id="sec-correcao" n={9} titulo="Como pedir uma correção">
-          <p style={S.body}>
-            Se uma classificação estiver errada, diga qual, por quê e com que fonte pelo{" "}
-            <a href={REPOSITORIO} rel="noopener noreferrer" target="_blank">
-              repositório público do projeto
-            </a>
-            . Uma correção aceita vai ao ar em minutos, sem esperar nova versão do site, e entra no
-            registro acima com a data. O contato de redação será publicado em{" "}
+          <p style={S.body} data-testid="etiquetas-canal-correcao">
+            Se uma classificação estiver errada, diga qual, por quê e com que fonte{" "}
+            <a href={CANAL_DE_CORRECAO} rel="noopener noreferrer" target="_blank">
+              abrindo uma issue no repositório público do projeto
+            </a>{" "}
+            (é preciso uma conta gratuita no GitHub; o pedido e a resposta ficam públicos). Uma
+            correção aceita vai ao ar em minutos, sem esperar nova versão do site, e entra no
+            registro acima com a data. Pedidos sobre a projeção seguem pelo mesmo canal — ver{" "}
             <Link href="/sobre-o-modelo">Sobre o modelo</Link>.
           </p>
         </Secao>

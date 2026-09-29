@@ -1,4 +1,9 @@
 {
+  "revisao": {
+    "revisado": "nao",
+    "revisado_em": null,
+    "por": null
+  },
   "corte": "2026-07-15",
   "fonte": {
     "descricao": "Senado Federal — Dados Abertos (votações nominais do plenário com orientação do Governo)",

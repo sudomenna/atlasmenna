@@ -5,8 +5,13 @@
 // `etiquetas/v1/…`, onde o leitor os acha em até 60 s, **sem deploy**.
 //
 // Uso (acionado só pelo dono — nunca por cron, nunca por agente):
-//   pnpm etiquetas:publicar --dry-run    # confere tudo, não grava
-//   pnpm etiquetas:publicar              # publica
+//   pnpm etiquetas:publicar              # SÓ CONFERE (padrão): diz o que gravaria, não grava
+//   pnpm etiquetas:publicar --confirmar  # publica de verdade
+//
+// 🔴 O padrão é NÃO gravar (desde 29/09, auditoria constitucional). Antes, o
+// padrão gravava e era o `--dry-run` que protegia — um `pnpm etiquetas:publicar`
+// digitado para "ver o que acontece" publicava. Agora escrever no Blob exige
+// dizer `--confirmar` por extenso; `--dry-run` continua aceito (e é o padrão).
 //
 // 🔴 NÃO carregue `.env.local` inteiro (`set -a; . ./.env.local`). Este script
 // lê do arquivo SÓ `BLOB_READ_WRITE_TOKEN` e `BLOB_PUBLIC_BASE_URL`, por lista
@@ -70,6 +75,7 @@ import {
   type InsumoDerivado,
   isArquivoNacional,
   lerChavesPublicacao,
+  type MedidaAlinhamento,
   type MetaEtiquetas,
   type Registros,
   registroPublico,
@@ -106,7 +112,16 @@ function projetarDerivados(d: ValoresDerivados | undefined): ValoresDerivados | 
 }
 
 function projetarFonte(f: FonteDerivada | null): FonteDerivada | null {
-  return f ? { fonte_url: f.fonte_url, fonte_descricao: f.fonte_descricao, data: f.data } : null;
+  if (!f) return null;
+  return comOpcionais(
+    { fonte_url: f.fonte_url, fonte_descricao: f.fonte_descricao, data: f.data },
+    { revisado_em: typeof f.revisado_em === "string" ? f.revisado_em : undefined },
+  );
+}
+
+function projetarMedida(m: MedidaAlinhamento | undefined): MedidaAlinhamento | undefined {
+  if (!m || typeof m.votos !== "number" || typeof m.taxa !== "number") return undefined;
+  return { votos: m.votos, taxa: m.taxa };
 }
 
 function projetarMeta(m: MetaEtiquetas): MetaEtiquetas {
@@ -139,14 +154,14 @@ export function projetarNacional(
   for (const [sq, c] of Object.entries(n.candidatos)) {
     candidatos[sq] = comOpcionais(
       { uf: c.uf, cargo: c.cargo, partido: c.partido },
-      { x: projetarRegistros(c.x), d: projetarDerivados(c.d) },
+      { x: projetarRegistros(c.x), d: projetarDerivados(c.d), m: projetarMedida(c.m) },
     );
   }
   const senadores: ArquivoNacional["senado2031"]["senadores"] = {};
   for (const [cod, s] of Object.entries(n.senado2031.senadores)) {
     senadores[cod] = comOpcionais(
       { uf: s.uf, partido: s.partido },
-      { x: projetarRegistros(s.x), d: projetarDerivados(s.d) },
+      { x: projetarRegistros(s.x), d: projetarDerivados(s.d), m: projetarMedida(s.m) },
     );
   }
   const partidos: Record<string, string | null> = {};
@@ -178,6 +193,11 @@ export function projetarUf(u: ArquivoUf, meta: MetaEtiquetas): ArquivoUf {
   for (const [p, l] of Object.entries(u.por_partido)) por_partido[p] = lista(l);
   const excecoes: Record<string, Registros> = {};
   for (const [sq, regs] of Object.entries(u.excecoes)) excecoes[sq] = projetarRegistros(regs) ?? {};
+  const medidas: Record<string, MedidaAlinhamento> = {};
+  for (const [sq, m] of Object.entries(u.medidas ?? {})) {
+    const p = projetarMedida(m);
+    if (p) medidas[sq] = p;
+  }
   return {
     formato: FORMATO_ETIQUETAS,
     meta: projetarMeta(meta),
@@ -185,6 +205,7 @@ export function projetarUf(u: ArquivoUf, meta: MetaEtiquetas): ArquivoUf {
     por_partido,
     trajetoria: grupos(u.trajetoria),
     alinhamento: grupos(u.alinhamento),
+    medidas,
     excecoes,
   };
 }
@@ -331,8 +352,15 @@ export async function publicarEtiquetas(
   );
   dep.log(`  commit     : ${git_sha}`);
   dep.log(`  visões     : ${ligadas.length > 0 ? ligadas.join(", ") : "todas desligadas"}`);
-  dep.log(`  arquivos   : ${arquivos.length}`);
+  const pendentes = (Object.keys(INSUMOS_DERIVADOS) as InsumoDerivado[]).filter(
+    (k) => c.nacional.derivados[k] === null,
+  );
+  dep.log(
+    `  derivados  : ${pendentes.length === 0 ? "os quatro aprovados" : `fora (sem aprovação ou ausentes): ${pendentes.join(", ")}`}`,
+  );
+  dep.log(`  arquivos   : ${arquivos.length}${opts.dryRun ? " — gravaria, nesta ordem:" : ""}`);
   if (opts.dryRun) {
+    for (const [pathname] of arquivos) dep.log(`    ${pathname}`);
     return { ok: true, versao, git_sha, escritos: [], dryRun: true };
   }
 
@@ -432,11 +460,38 @@ function dependenciasReais(raiz: string): DependenciasPublicacao {
   };
 }
 
+/**
+ * Modo pela linha de comando. **Sem `--confirmar`, não grava** — o padrão é
+ * conferir. `--dry-run` junto de `--confirmar` é contradição e é recusado
+ * (melhor parar que adivinhar qual das duas o dono quis).
+ */
+export function modoDaLinhaDeComando(
+  argv: readonly string[],
+): { dryRun: boolean } | { erro: string } {
+  const confirmar = argv.includes("--confirmar");
+  const dryRun = argv.includes("--dry-run");
+  const desconhecidos = argv.filter((a) => a !== "--confirmar" && a !== "--dry-run");
+  if (desconhecidos.length > 0) {
+    return {
+      erro: `argumento desconhecido: ${desconhecidos.join(" ")} (aceitos: --confirmar, --dry-run)`,
+    };
+  }
+  if (confirmar && dryRun) return { erro: "--confirmar e --dry-run juntos — escolha um" };
+  return { dryRun: !confirmar };
+}
+
 async function main(): Promise<void> {
-  const dryRun = process.argv.includes("--dry-run");
+  const modo = modoDaLinhaDeComando(process.argv.slice(2));
+  if ("erro" in modo) {
+    console.error(`✗ ${modo.erro}`);
+    process.exit(1);
+  }
+  const { dryRun } = modo;
   const raiz = caminhosPadrao().raiz;
   await carregarEnvDoPublicador(raiz);
-  console.log(`[etiquetas-publicar] ${dryRun ? "DRY RUN — nada é gravado" : "publicando"}`);
+  console.log(
+    `[etiquetas-publicar] ${dryRun ? "SÓ CONFERE — nada é gravado (para publicar: --confirmar)" : "PUBLICANDO (--confirmar)"}`,
+  );
   if (!dryRun && !hasBlobWriteCredentials()) {
     console.error("✗ BLOB_READ_WRITE_TOKEN ausente (nem no ambiente, nem no .env.local).");
     process.exit(1);
@@ -447,7 +502,9 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   if (r.dryRun) {
-    console.log("✓ tudo conferido — rode sem --dry-run para publicar.");
+    console.log(
+      "✓ tudo conferido, NADA foi gravado. Para publicar: pnpm etiquetas:publicar --confirmar",
+    );
     return;
   }
   console.log(

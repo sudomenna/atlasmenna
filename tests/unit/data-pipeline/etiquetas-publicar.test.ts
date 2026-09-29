@@ -19,6 +19,7 @@ vi.mock("@vercel/blob", () => ({
 
 const {
   lerChavesPublicacao,
+  modoDaLinhaDeComando,
   projetarHistorico,
   projetarNacional,
   projetarUf,
@@ -190,11 +191,18 @@ describe("RF-230 — versão, carimbo e ordem", () => {
     expect(isArquivoUf(sp, "SP") && sp.meta.versao).toBe(10_000_000_000);
   });
 
-  it("dry-run confere tudo e não grava", async () => {
-    const { d, escritas } = deps();
+  it("dry-run confere tudo, não grava, e DIZ o que gravaria (29 caminhos, nacional por último)", async () => {
+    const logs: string[] = [];
+    const { d, escritas } = deps({ log: (m) => logs.push(m) });
     const r = await publicarEtiquetas(d, { dryRun: true });
     expect(r).toMatchObject({ ok: true, dryRun: true, escritos: [] });
     expect(escritas).toEqual([]);
+    const caminhos = logs.filter((l) => /^\s+etiquetas\/v1\//.test(l)).map((l) => l.trim());
+    expect(caminhos).toHaveLength(UFS.length + 2);
+    expect(caminhos.at(-1)).toBe("etiquetas/v1/nacional.json");
+    expect(logs.some((l) => l.includes("gravaria"))).toBe(true);
+    // Diz também quais derivados estão fora (sem aprovação do dono).
+    expect(logs.some((l) => l.includes("derivados"))).toBe(true);
   });
 
   it("escrita pulada (sem credencial) interrompe antes do nacional", async () => {
@@ -211,7 +219,53 @@ describe("RF-230 — versão, carimbo e ordem", () => {
   });
 });
 
+describe("🔴 I1 — o padrão é NÃO gravar: escrever exige --confirmar", () => {
+  it("sem argumento ⇒ só confere (dry-run)", () => {
+    expect(modoDaLinhaDeComando([])).toEqual({ dryRun: true });
+  });
+  it("--dry-run continua aceito e é o mesmo que o padrão", () => {
+    expect(modoDaLinhaDeComando(["--dry-run"])).toEqual({ dryRun: true });
+  });
+  it("--confirmar ⇒ grava", () => {
+    expect(modoDaLinhaDeComando(["--confirmar"])).toEqual({ dryRun: false });
+  });
+  it("os dois juntos, ou argumento desconhecido, é erro — nunca adivinha", () => {
+    expect(modoDaLinhaDeComando(["--confirmar", "--dry-run"])).toHaveProperty("erro");
+    expect(modoDaLinhaDeComando(["--confirma"])).toHaveProperty("erro");
+    expect(modoDaLinhaDeComando(["--force"])).toHaveProperty("erro");
+  });
+});
+
 describe("ADR-0062 — lista branca nos arquivos públicos", () => {
+  it("a data de aprovação do derivado e a medida do alinhamento passam; o resto fica", () => {
+    const { g } = deps();
+    const n = structuredClone(g.nacional) as unknown as Record<string, unknown>;
+    (n.derivados as Record<string, unknown>).trajetoria_camara = {
+      fonte_url: "https://x/",
+      fonte_descricao: "X",
+      data: "2026-09-26",
+      revisado_em: "2026-09-28",
+      por: "NOME DO REVISOR",
+    };
+    const cand = (n.candidatos as Record<string, Record<string, unknown>>)[GOV_SP_PT]!;
+    cand.m = { votos: 40, taxa: 70.5, nome: "NÃO" };
+    const pub = projetarNacional(n as never, g.nacional.meta, todasDesligadas());
+    expect(pub.derivados.trajetoria_camara).toEqual({
+      fonte_url: "https://x/",
+      fonte_descricao: "X",
+      data: "2026-09-26",
+      revisado_em: "2026-09-28",
+    });
+    expect(pub.candidatos[GOV_SP_PT]?.m).toEqual({ votos: 40, taxa: 70.5 });
+    expect(JSON.stringify(pub)).not.toContain("NOME DO REVISOR");
+
+    const uf = structuredClone(g.ufs.SP) as unknown as Record<string, unknown>;
+    uf.medidas = { "1": { votos: 30, taxa: 12.5, extra: 1 } };
+    expect(projetarUf(uf as never, g.nacional.meta).medidas).toEqual({
+      "1": { votos: 30, taxa: 12.5 },
+    });
+  });
+
   it("🔴 `nota` e qualquer campo fora do contrato ficam para trás", () => {
     const { g } = deps();
     const sujo = structuredClone(g.nacional) as unknown as Record<string, unknown>;

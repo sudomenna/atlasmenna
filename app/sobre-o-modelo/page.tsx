@@ -2,6 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
+import { algumaVisaoLigada } from "@/lib/etiquetas/catalogo";
+import { lerEtiquetas } from "@/lib/etiquetas/leitor";
+
+/**
+ * ISR no mesmo piso do leitor de etiquetas (60 s): o parágrafo das etiquetas
+ * só diz "algumas telas mostram" com alguma chave ligada — e a chave pode
+ * mudar sem deploy (publicação no Blob). Blob fora ou lento ⇒ cópia do build.
+ */
+export const revalidate = 60;
+
+/** O canal público de correção — o mesmo de `/sobre-as-etiquetas` (constituição § 2 (h)). */
+const CANAL_DE_CORRECAO = "https://github.com/sudomenna/salacofre/issues";
+
 /**
  * Folha de estilo desta página, em tokens do design system Atlas Menna
  * (ADR-0025). S07/Bloco 2 tirou a rota do CSS Module (removido) e a trouxe
@@ -300,7 +313,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SobreOModeloPage() {
+export default async function SobreOModeloPage() {
+  const etiquetasNoAr = algumaVisaoLigada((await lerEtiquetas()).publicar);
   return (
     <main style={S.page}>
       <article style={S.container}>
@@ -712,11 +726,21 @@ export default function SobreOModeloPage() {
               sem `<h2>` novo (o teste de estrutura trava oito). A metodologia
               das etiquetas mora na página própria. */}
           <p style={S.body} data-testid="sobre-o-modelo-etiquetas">
-            Algumas telas mostram, ao lado dos candidatos, <strong>etiquetas editoriais</strong> —
-            como a relação com o governo Lula ou a trajetória no cargo. Elas são classificação
-            nossa, com fonte e data em cada uma, e não entram no modelo: não mudam projeção, ordem
-            de candidato nem nenhum número desta página. Critérios, fontes e o registro de mudanças
-            estão em <Link href="/sobre-as-etiquetas">Como classificamos os candidatos</Link>.
+            {etiquetasNoAr ? (
+              <>
+                Algumas telas mostram, ao lado dos candidatos, <strong>etiquetas editoriais</strong>{" "}
+                — como a relação com o governo Lula ou a trajetória no cargo.
+              </>
+            ) : (
+              <>
+                Nenhuma tela mostra <strong>etiquetas editoriais</strong> ainda — rótulos como a
+                relação com o governo Lula ou a trajetória no cargo, ao lado dos candidatos.
+              </>
+            )}{" "}
+            Elas são classificação nossa, com fonte e data em cada uma, e não entram no modelo: não
+            mudam projeção, ordem de candidato nem nenhum número desta página. Critérios, fontes e o
+            registro de mudanças estão em{" "}
+            <Link href="/sobre-as-etiquetas">Como classificamos os candidatos</Link>.
           </p>
         </section>
 
@@ -728,8 +752,17 @@ export default function SobreOModeloPage() {
           </h2>
           <p style={S.body}>
             O AtlasMenna é um projeto independente de jornalismo de dados eleitorais. Os nomes da
-            equipe, créditos editoriais e contato de redação serão publicados aqui antes do dia da
-            eleição.
+            equipe e os créditos editoriais serão publicados aqui antes do dia da eleição. Para
+            pedir uma correção — da projeção ou de uma etiqueta —, o canal público é o das{" "}
+            <a
+              href={CANAL_DE_CORRECAO}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="sobre-o-modelo-canal-correcao"
+            >
+              issues do repositório do projeto
+            </a>
+            : o pedido e a resposta ficam registrados e abertos a qualquer pessoa.
           </p>
           <p style={S.body}>
             Não temos vínculo partidário, não recebemos financiamento de campanhas, e o código que

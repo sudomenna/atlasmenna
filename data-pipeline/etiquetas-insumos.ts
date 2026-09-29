@@ -21,6 +21,12 @@
 // para: nada que carregue esses campos passa por este pipeline. A foto do
 // Senado é a exceção controlada — traz nome, e é lida por lista branca
 // (código, UF, partido), sem copiar mais nada.
+//
+// ─── Revisão do dono: carimbo no cabeçalho (§ 2 (b); RF-223 emendado) ───────
+//
+// Cada derivado traz `revisao` (ver `_revisao-derivado.ts`). O leitor daqui só
+// o LÊ e devolve (`revisao`); quem decide que um derivado pendente vale como
+// ausente é o núcleo (`etiquetas-nucleo.ts`), que também confere as datas.
 
 import {
   ALINHAMENTO_CORTE,
@@ -29,6 +35,11 @@ import {
   type TrajetoriaDerivada,
 } from "@/lib/etiquetas/catalogo";
 import { type FonteDerivada, normalizarSigla, normalizarSqcand } from "@/lib/etiquetas/formato";
+
+import { lerCarimboRevisao, type RevisaoLida } from "./_revisao-derivado.ts";
+
+/** A proveniência que o próprio arquivo declara — a data da revisão vem do carimbo. */
+export type FonteDeclarada = Omit<FonteDerivada, "revisado_em">;
 
 /** Nome de campo que denuncia dado pessoal. */
 export const PADRAO_CAMPO_PESSOAL =
@@ -169,7 +180,7 @@ function fonteDeclarada(
   data: string,
   casa: Casa,
   descricaoPadrao: string,
-): FonteDerivada {
+): FonteDeclarada {
   const padrao = FONTE_PADRAO[casa];
   if (typeof v === "string" && /^https?:\/\//.test(v.trim())) {
     return { fonte_url: v.trim(), fonte_descricao: descricaoPadrao, data };
@@ -199,7 +210,9 @@ export interface TrajetoriaInsumo {
   universo: number;
   /** sqcand → trajetória e os ids do parlamentar na casa (texto). */
   por_sqcand: ReadonlyMap<string, { t: TrajetoriaDerivada; ids: string[] }>;
-  fonte: FonteDerivada;
+  fonte: FonteDeclarada;
+  /** Carimbo do dono. Pendente ⇒ o núcleo trata o insumo como ausente. */
+  revisao: RevisaoLida;
 }
 
 const TRAJETORIA_CFG = {
@@ -225,6 +238,8 @@ export function lerTrajetoria(json: unknown, casa: Casa): Resultado<TrajetoriaIn
     };
   }
   if (!isObj(json)) return { ok: false, erros: [`${cfg.arquivo}: raiz não é objeto`] };
+  const carimbo = lerCarimboRevisao(json, cfg.arquivo);
+  if (!carimbo.ok) return { ok: false, erros: carimbo.erros };
   const erros: string[] = [];
   const { gerado_em, universo, por_sqcand } = json;
   if (typeof gerado_em !== "string" || Number.isNaN(Date.parse(gerado_em))) {
@@ -266,6 +281,7 @@ export function lerTrajetoria(json: unknown, casa: Casa): Resultado<TrajetoriaIn
       universo: universo as number,
       por_sqcand: mapa,
       fonte: fonteDeclarada(json.fonte, data, casa, cfg.descricao),
+      revisao: carimbo.valor,
     },
     avisos: [],
   };
@@ -280,7 +296,9 @@ export interface AlinhamentoInsumo {
   corte: string;
   /** id do parlamentar na casa (texto) → votos disputados e taxa (0–100). */
   por_id: ReadonlyMap<string, { votos_disputadas: number; taxa_disputadas: number }>;
-  fonte: FonteDerivada;
+  fonte: FonteDeclarada;
+  /** Carimbo do dono. Pendente ⇒ o núcleo trata o insumo como ausente. */
+  revisao: RevisaoLida;
 }
 
 const ALINHAMENTO_CFG = {
@@ -308,6 +326,8 @@ export function lerAlinhamento(json: unknown, casa: Casa): Resultado<Alinhamento
     };
   }
   if (!isObj(json)) return { ok: false, erros: [`${cfg.arquivo}: raiz não é objeto`] };
+  const carimbo = lerCarimboRevisao(json, cfg.arquivo);
+  if (!carimbo.ok) return { ok: false, erros: carimbo.erros };
   const erros: string[] = [];
   const { corte } = json;
   const porId = json[cfg.campo];
@@ -366,6 +386,7 @@ export function lerAlinhamento(json: unknown, casa: Casa): Resultado<Alinhamento
       corte: corte as string,
       por_id: mapa,
       fonte: fonteDeclarada(json.fonte, corte as string, casa, cfg.descricao),
+      revisao: carimbo.valor,
     },
     avisos: [],
   };

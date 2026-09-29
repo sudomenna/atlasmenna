@@ -394,7 +394,9 @@ describe("montarArquivoTrajetoria — formato e lista branca", () => {
   const arq = montarArquivoTrajetoria(calcularTrajetorias(CANDIDATOS, indice, ocupacao), GERADO);
 
   it("tem exatamente as chaves do contrato, na ordem", () => {
-    expect(Object.keys(arq)).toEqual(["gerado_em", "fonte", "universo", "por_sqcand"]);
+    expect(Object.keys(arq)).toEqual(["revisao", "gerado_em", "fonte", "universo", "por_sqcand"]);
+    // 🔴 Regenerar ZERA a revisão do dono (spec 024, RF-223 emendado).
+    expect(arq.revisao).toEqual({ revisado: "nao", revisado_em: null, por: null });
     expect(arq.gerado_em).toBe(GERADO);
     expect(arq.fonte).toEqual(FONTE_TRAJETORIA_SENADO);
   });

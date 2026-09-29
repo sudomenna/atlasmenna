@@ -136,6 +136,26 @@ describe("RF-231 — a cópia do build honra o contrato", () => {
     );
   });
 
+  it("🔴 § 2 (b) — derivado na cópia do build SÓ com a aprovação do dono (e a data dela)", () => {
+    // Emenda de 29/09 ao RF-223: derivado sem o carimbo `revisao` aprovado
+    // entra como `null`; o que entra leva `revisado_em`. Vale para qualquer
+    // estado futuro do `editorial/derivados/` — não só o de hoje (tudo pendente).
+    const nac = JSON.parse(readFileSync(caminhoNacional(c.saida), "utf8")) as {
+      derivados: Record<string, { revisado_em?: string } | null>;
+    };
+    for (const [insumo, fonte] of Object.entries(nac.derivados)) {
+      const nome = `${insumo.replace("_", "-")}.json`;
+      const bruto = JSON.parse(readFileSync(resolve(c.editorial, "derivados", nome), "utf8")) as {
+        revisao?: { revisado?: string; revisado_em?: string | null };
+      };
+      if (bruto.revisao?.revisado !== "sim") {
+        expect(fonte, `${insumo} sem aprovação não pode estar no build`).toBeNull();
+      } else if (fonte !== null) {
+        expect(fonte.revisado_em).toBe(bruto.revisao.revisado_em);
+      }
+    }
+  });
+
   it("as fontes versionadas existem (os cinco CSVs e o publicar.json)", () => {
     for (const f of ["governador", "senador", "senado-2031", "partidos", "deputados-excecoes"]) {
       expect(existsSync(resolve(c.editorial, "etiquetas", `${f}.csv`)), f).toBe(true);

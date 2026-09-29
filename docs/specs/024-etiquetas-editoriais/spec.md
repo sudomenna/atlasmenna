@@ -150,15 +150,42 @@ algum partido-membro com linha em `(categoria, turno)` sem linha própria
 - Given `partido:PT` com `campo_ideologico` e sem `federacao:PT/PC do B/PV`
   na mesma categoria, when compila, then falha.
 
-**RF-223 — Linha não revisada não vai ao ar**
+**RF-223 — Linha não revisada não vai ao ar; derivado não aprovado também não**
 
 IF uma linha tem `revisado ≠ sim`, the system SHALL compilá-la como se não
 existisse (o candidato fica `a_classificar` naquela categoria, ou cai na
 próxima regra da precedência), sem deixar de validá-la.
 
+**Emenda de 2026-09-29 (auditoria constitucional, § 2 (b)).** A regra
+derivada classifica milhares de candidaturas de uma vez, e até esta data ia ao
+ar sem revisão nenhuma — só as linhas de CSV passavam pelo `revisado`. Agora
+cada insumo derivado (`editorial/derivados/trajetoria-camara.json`,
+`alinhamento-camara.json`, `trajetoria-senado.json`, `alinhamento-senado.json`)
+traz no cabeçalho o carimbo de revisão do dono sobre o **arquivo inteiro**:
+`"revisao": { "revisado": "sim"|"nao", "revisado_em": "AAAA-MM-DD"|null, "por": <nome>|null }`.
+IF o carimbo falta ou diz `"nao"`, the system SHALL tratar o insumo como
+AUSENTE (RF-226/227: ninguém classificado por ele; relação com o governo cai
+no padrão do partido; trajetória fica `a_classificar`), sem deixar de
+validá-lo, e SHALL listá-lo no relatório de cobertura como "aguardando
+revisão do dono". IF `"revisado": "sim"` vier sem `revisado_em` (data real)
+ou sem `por`, com `revisado_em` no futuro, ou com `revisado_em` anterior à
+geração do arquivo (`gerado_em` em BRT na trajetória, `corte` no
+alinhamento), the system SHALL recusar a compilação. Os quatro exportadores
+SHALL gravar sempre `"revisado": "nao"` — **regenerar zera a revisão**. A
+data da aprovação viaja na proveniência pública (`derivados.<insumo>.revisado_em`).
+
 **Aceitação**:
 - Given uma linha válida com `revisado=nao`, when compila, then o gerado não a
   contém e a resolução daquela categoria não a usa.
+- Given `trajetoria-camara.json` válido com `"revisado": "nao"` (ou sem o
+  bloco), when compila, then nenhum deputado tem trajetória derivada,
+  `derivados.trajetoria_camara` é `null` e o relatório lista o arquivo como
+  aguardando revisão.
+- Given `"revisado": "sim"` sem `por`, ou com `revisado_em` anterior ao
+  `gerado_em`, when compila, then falha.
+- Given `pnpm trajetoria:exportar` (ou `alinhamento:importar`,
+  `alinhamento:senado`, `trajetoria:senado`), when grava, then o carimbo sai
+  `"nao"`, `null`, `null`.
 
 **RF-224 — Precedência**
 
@@ -188,7 +215,9 @@ nas demais categorias, `turno` SHALL ser vazio.
 **RF-226 — Trajetória derivada da Câmara (cargo 6) e do Senado (cargo 5)**
 
 WHERE `editorial/derivados/trajetoria-camara.json` (cargo 6) ou
-`editorial/derivados/trajetoria-senado.json` (cargo 5) existir, the system
+`editorial/derivados/trajetoria-senado.json` (cargo 5) existir **com o
+carimbo de revisão aprovado pelo dono** (RF-223, emenda de 29/09 — sem ele, o
+arquivo vale como ausente), the system
 SHALL mapear `em_exercicio` e `legislatura_atual` → Tenta a reeleição,
 `mandato_anterior` → Volta ao cargo, `estreante` → Estreante no cargo;
 `sqcand` ausente do arquivo SHALL ficar `a_classificar` (ausência nunca vira
@@ -202,20 +231,30 @@ individual.
   when compila, then falha (idem Senador).
 - Given o arquivo ausente, when compila, then a trajetória fica
   `a_classificar` e a compilação passa.
+- Given o arquivo presente sem aprovação do dono, when compila, then o mesmo
+  que ausente — mas o universo e o formato continuam validados.
 
 **RF-227 — Relação com o governo de quem tem mandato, pelo alinhamento**
 
-WHERE houver insumo de alinhamento — `alinhamento-camara.json` (pelos
-`camara_ids` da trajetória da Câmara, cargo 6) ou `alinhamento-senado.json`
-(pelos `senado_codigos` da trajetória do Senado, cargo 5, e pelo próprio
-código de cada um dos 27 de senado2031) — e o parlamentar tiver dado, the
+WHERE houver insumo de alinhamento **aprovado pelo dono** (RF-223, emenda de
+29/09) — `alinhamento-camara.json` (pelos `camara_ids` da trajetória da
+Câmara, cargo 6, que também precisa estar aprovada) ou
+`alinhamento-senado.json` (pelos `senado_codigos` da trajetória do Senado,
+cargo 5, e pelo próprio código de cada um dos 27 de senado2031) — e o
+parlamentar tiver dado, the
 system SHALL somar `votos_disputadas` dos ids e calcular a taxa ponderada
 pelos votos; IF a soma for ≥ 30, the system SHALL classificar taxa ≥ 65 como
 Base do governo, taxa ≤ 35 como Oposição e o resto como Independente; caso
 contrário (soma < 30, sem id, sem dado), SHALL cair no padrão do partido. O
-mínimo de 30 conta **votos disputados**, não todos os votos válidos.
+mínimo de 30 conta **votos disputados**, não todos os votos válidos. Para
+quem a regra classifica, the system SHALL gravar a medida junto (`votos` e
+`taxa` com 2 casas — `m` no nacional, `medidas` no arquivo de UF), para a
+lista pública de classificações (constituição § 8); a classificação usa a
+taxa sem arredondar.
 
 **Aceitação**:
+- Given o alinhamento aprovado e a trajetória da mesma casa sem aprovação,
+  then o alinhamento não classifica nenhum candidato daquela casa (sem ids).
 - Given taxa exatamente 65 com 30 votos, then Base; 64,99 → Independente.
 - Given taxa exatamente 35, then Oposição; 35,01 → Independente.
 - Given 29 votos e taxa 90, then padrão do partido.
@@ -262,7 +301,10 @@ dos CSVs (anotação interna do dono) nunca sai do repositório editorial
 
 **RF-230 — Publicação pelo dono, sem deploy**
 
-WHEN o dono roda `pnpm etiquetas:publicar`, the system SHALL recusar se a
+WHEN o dono roda `pnpm etiquetas:publicar`, the system SHALL apenas conferir
+e listar o que gravaria — **sem gravar** — a menos que o comando traga
+`--confirmar` (emenda de 29/09: o padrão era gravar, e `--dry-run` protegia;
+agora é o inverso). Com `--confirmar`, the system SHALL recusar se a
 árvore do git estiver suja, se HEAD estiver atrás de `origin/main`, se o
 validador falhar, se os gerados divergirem da recompilação ou se não
 conseguir ler a versão hoje no Blob; SHALL carimbar o sha do git e uma

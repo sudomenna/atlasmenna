@@ -36,20 +36,31 @@
 // 0–100 é recusado; um arquivo inteiro em 0–1 (fração) também, porque passaria
 // pela faixa e poria todo deputado em "Oposição".
 //
+// ─── Revisão do dono ────────────────────────────────────────────────────────
+//
+// O arquivo sai com o carimbo `revisao` PENDENTE (`"revisado": "nao"`):
+// reimportar zera a aprovação, e o compilador de etiquetas trata o arquivo
+// como ausente até o dono carimbar `"sim"`, a data e o nome (spec 024, RF-223
+// emendado em 29/09; `editorial/README.md`).
+//
 // Uso:
-//   pnpm alinhamento:importar [--entrada <alinhamento.csv>] [--saida <json>]
-//   (o script do package.json já passa `--corte 2026-09-03`)
+//   pnpm alinhamento:importar --entrada <alinhamento.csv> [--saida <json>]
+//   ALINHAMENTO_CAMARA_CSV=<alinhamento.csv> pnpm alinhamento:importar
+//   (o script do package.json já passa `--corte 2026-09-03`). A entrada é
+//   OBRIGATÓRIA: o CSV vive num projeto externo, fora do repositório, e não
+//   há caminho padrão que valha em outra máquina.
 
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { basename, dirname, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { type CarimboRevisao, carimboPendente } from "./_revisao-derivado.ts";
 import { registrosCsv } from "./trajetoria-camara.ts";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-export const ENTRADA_PADRAO =
-  "/Users/tiagomenna/Projetos/alinhamento-governo-camara/alinhamento.csv";
+/** A variável de ambiente que substitui `--entrada`. */
+export const ENV_ENTRADA = "ALINHAMENTO_CAMARA_CSV";
 export const SAIDA_PADRAO = resolve(ROOT, "editorial/derivados/alinhamento-camara.json");
 
 export const FONTE_DESCRICAO =
@@ -79,6 +90,8 @@ export interface AlinhamentoDeputado {
 }
 
 export interface AlinhamentoExportado {
+  /** Sempre pendente na importação — regenerar zera a revisão do dono (RF-223). */
+  revisao: CarimboRevisao;
   corte: string;
   fonte: { descricao: string; url: string; sha256: string };
   por_deputado: Record<string, AlinhamentoDeputado>;
@@ -214,6 +227,7 @@ export function montarAlinhamento(
     };
   }
   return {
+    revisao: carimboPendente(),
     corte: validarCorte(corte),
     fonte: { descricao: FONTE_DESCRICAO, url: FONTE_URL, sha256 },
     por_deputado,
@@ -226,8 +240,10 @@ export function serializarAlinhamento(e: AlinhamentoExportado): string {
     ([id, x]) =>
       `    ${JSON.stringify(id)}: { "votos_disputadas": ${x.votos_disputadas}, "taxa_disputadas": ${x.taxa_disputadas} }`,
   );
+  const r = e.revisao;
   return [
     "{",
+    `  "revisao": { "revisado": ${JSON.stringify(r.revisado)}, "revisado_em": ${JSON.stringify(r.revisado_em)}, "por": ${JSON.stringify(r.por)} },`,
     `  "corte": ${JSON.stringify(e.corte)},`,
     '  "fonte": {',
     `    "descricao": ${JSON.stringify(e.fonte.descricao)},`,
@@ -261,9 +277,16 @@ interface Cli {
   corte: string;
 }
 
-export function parseCli(argv: readonly string[]): Cli {
+export function parseCli(
+  argv: readonly string[],
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): Cli {
   const vistos = new Set<string>();
-  const cli: Partial<Cli> = { entrada: ENTRADA_PADRAO, saida: SAIDA_PADRAO };
+  const doAmbiente = env[ENV_ENTRADA]?.trim();
+  const cli: Partial<Cli> = {
+    saida: SAIDA_PADRAO,
+    ...(doAmbiente ? { entrada: resolve(doAmbiente) } : {}),
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i] as string;
     const v = argv[i + 1];
@@ -278,6 +301,12 @@ export function parseCli(argv: readonly string[]): Cli {
   }
   if (!cli.corte) {
     throw new Error("--corte AAAA-MM-DD é obrigatório (ADR-0062: informado, nunca inferido)");
+  }
+  if (!cli.entrada) {
+    throw new Error(
+      `--entrada <alinhamento.csv> é obrigatório (ou ${ENV_ENTRADA}=<caminho>): o CSV vem do ` +
+        "projeto externo alinhamento-governo-camara, fora do repositório — não há caminho padrão",
+    );
   }
   return cli as Cli;
 }

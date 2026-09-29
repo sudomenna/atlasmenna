@@ -17,12 +17,18 @@
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import SobreOModeloPage from "@/app/sobre-o-modelo/page";
 
+// A página é async desde 29/09 (lê as chaves das etiquetas); renderiza uma vez.
+let MARKUP = "";
+beforeAll(async () => {
+  MARKUP = renderToStaticMarkup(await SobreOModeloPage());
+});
+
 function parse(): Document {
-  return new DOMParser().parseFromString(renderToStaticMarkup(<SobreOModeloPage />), "text/html");
+  return new DOMParser().parseFromString(MARKUP, "text/html");
 }
 
 describe("/sobre-o-modelo — restyle em tokens (S07/Bloco 2)", () => {
@@ -93,7 +99,7 @@ describe("/sobre-o-modelo — restyle em tokens (S07/Bloco 2)", () => {
   });
 
   it("(g) nenhuma classe de CSS Module sobrou, e as cores saem de tokens", () => {
-    const html = renderToStaticMarkup(<SobreOModeloPage />);
+    const html = MARKUP;
     // Classes de módulo têm hash (`sobre-o-modelo_body__xxxxx`).
     expect(html).not.toMatch(/sobre-o-modelo_/);
     // Nada de hex cravado no markup — tudo por `var(--token)`.
@@ -103,7 +109,7 @@ describe("/sobre-o-modelo — restyle em tokens (S07/Bloco 2)", () => {
   });
 
   it("(h) `--accent` e `--ink-3` não carregam texto nesta página (RNF-022)", () => {
-    const html = renderToStaticMarkup(<SobreOModeloPage />);
+    const html = MARKUP;
     expect(html).not.toMatch(/color:var\(--accent\)/);
     expect(html).not.toMatch(/color:var\(--ink-3\)/);
   });

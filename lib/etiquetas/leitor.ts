@@ -92,6 +92,14 @@ import {
 /** 60 s — ver o cabeçalho. */
 export const ETIQUETAS_REVALIDATE_SECONDS = 60;
 
+/**
+ * Teto de espera pelo Blob. Estourou ⇒ cópia do build (a tela nunca espera
+ * uma etiqueta). 2,5 s: um Blob lento não pode segurar o render de uma página
+ * da apuração (RNF-002, LCP < 2,5 s é de percepção, não deste fetch — mas um
+ * fetch pendurado sem teto seria pior que qualquer LCP).
+ */
+export const ETIQUETAS_BLOB_TIMEOUT_MS = 2_500;
+
 export type FonteEtiquetas = "blob" | "embutido";
 
 export type MotivoIndisponivel = "not_configured" | "not_found" | "fetch_error" | "invalid";
@@ -100,18 +108,36 @@ export type LeituraBlob<T> =
   | { status: "ok"; valor: T }
   | { status: "indisponivel"; motivo: MotivoIndisponivel };
 
-/** GET de um JSON do Blob com o Data Cache do Next. Nunca lança. */
+/**
+ * GET de um JSON do Blob com o Data Cache do Next e teto de espera. Nunca lança.
+ *
+ * **O `signal` NÃO desliga o Data Cache** (conferido no Next 16.2.6, 29/09):
+ * `patch-fetch.js` monta a chave do cache SEM o `signal`
+ * (`incremental-cache/index.js`, `generateCacheKey`), consulta o cache ANTES
+ * da rede e, na revalidação em segundo plano de uma entrada vencida, descarta
+ * o `signal` (`isStale ? undefined : signal`). O que o `signal` desliga é só a
+ * DEDUPLICAÇÃO por request do React (`dedupe-fetch.js`: "If we're passed a
+ * signal … opts out") — que fica na camada DE DENTRO do Data Cache, e que a
+ * trava por chave do próprio `patch-fetch` (`incrementalCache.lock`) já cobre.
+ * O comentário antigo daqui ("um `signal` desliga o Data Cache", herdado de
+ * `lib/blob/deputado-uf.ts`) vale para versões antigas do Next, não para esta.
+ */
 export async function lerJsonDoBlob<T>(
   pathname: string,
   guarda: (v: unknown) => v is T,
+  opts: { timeoutMs?: number } = {},
 ): Promise<LeituraBlob<T>> {
   const url = blobUrlFor(pathname);
   if (!url) return { status: "indisponivel", motivo: "not_configured" };
+  const signal = AbortSignal.timeout(opts.timeoutMs ?? ETIQUETAS_BLOB_TIMEOUT_MS);
   let res: Response;
   try {
-    // Sem AbortSignal: um `signal` desliga o Data Cache (ver lib/blob/deputado-uf.ts).
-    res = await fetch(url, { next: { revalidate: ETIQUETAS_REVALIDATE_SECONDS } } as RequestInit);
+    res = await fetch(url, {
+      next: { revalidate: ETIQUETAS_REVALIDATE_SECONDS },
+      signal,
+    } as RequestInit);
   } catch {
+    // rede, ou o teto estourou (TimeoutError) — cópia do build.
     return { status: "indisponivel", motivo: "fetch_error" };
   }
   if (res.status === 404) return { status: "indisponivel", motivo: "not_found" };
@@ -120,7 +146,8 @@ export async function lerJsonDoBlob<T>(
   try {
     corpo = await res.json();
   } catch {
-    return { status: "indisponivel", motivo: "invalid" };
+    // Corpo cortado pelo teto é falha de rede, não arquivo inválido.
+    return { status: "indisponivel", motivo: signal.aborted ? "fetch_error" : "invalid" };
   }
   return guarda(corpo)
     ? { status: "ok", valor: corpo }

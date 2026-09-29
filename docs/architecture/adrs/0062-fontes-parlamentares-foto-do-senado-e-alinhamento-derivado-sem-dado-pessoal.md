@@ -87,6 +87,17 @@ ADR-0039 e do ADR-0058, **condicionada ao spike** confirmar que a API do Senado 
 nascimento. Se não expõe, o casamento do Senado precisará de outro meio, a definir em spec, e este
 ADR não o fixa.
 
+*Acréscimo de 29/09, após a auditoria constitucional:* os **caches brutos das fontes oficiais
+públicas** — `build/camara/` (arquivos da Câmara, que trazem `dataNascimento`), `build/senado/`
+(respostas do Senado) e `build/tse-archives/` (cadastro do TSE, com `DT_NASCIMENTO`) — ficam **só
+na máquina local**, sob `build/`, que é ignorado pelo git (`.gitignore`) e pela Vercel
+(`.vercelignore`): nunca versionados, nunca publicados, nunca lidos pelo site. São cópia do dado
+público na forma em que a fonte o distribui, não dado "gravado pelo produto" no sentido da
+constituição § 5, e ficam fora da exceção deste item e da do ADR-0058. O que **sai** deles, porém, segue a regra
+inteira: nenhum arquivo derivado, exportado ou gerado a partir desses caches pode carregar data de
+nascimento (nem CPF, título de eleitor ou e-mail) — a lista branca dos exportadores e os
+testes de varredura dos arquivos em `editorial/derivados/` travam isso.
+
 ## Consequências
 
 **Positivas**:

@@ -13,12 +13,18 @@
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import SobreOModeloPage, { metadata } from "@/app/sobre-o-modelo/page";
 
+// A página é async desde 29/09 (lê as chaves das etiquetas); renderiza uma vez.
+let MARKUP = "";
+beforeAll(async () => {
+  MARKUP = renderToStaticMarkup(await SobreOModeloPage());
+});
+
 function html(): string {
-  return renderToStaticMarkup(<SobreOModeloPage />);
+  return MARKUP;
 }
 
 /**

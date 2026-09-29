@@ -11,6 +11,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { lerCarimboRevisao } from "@/data-pipeline/_revisao-derivado.ts";
 import { TRAJETORIAS } from "@/data-pipeline/trajetoria-camara.ts";
 
 const RAIZ = resolve(__dirname, "../../..");
@@ -26,6 +27,20 @@ const TEXTO_ALINHAMENTO = readFileSync(
 // Palavras que denunciariam dado pessoal ou identificação no arquivo.
 const PROIBIDOS = /nascimento|cpf|nome|civil|email|titulo/i;
 
+describe("🔴 § 2 (b) — os quatro derivados versionados têm o carimbo de revisão do dono", () => {
+  it.each([
+    "trajetoria-camara.json",
+    "alinhamento-camara.json",
+    "trajetoria-senado.json",
+    "alinhamento-senado.json",
+  ])("%s: bloco `revisao` presente e bem formado ('nao', ou 'sim' com data e nome)", (nome) => {
+    const json = JSON.parse(readFileSync(resolve(RAIZ, "editorial/derivados", nome), "utf8"));
+    expect(Object.keys(json)[0]).toBe("revisao");
+    const r = lerCarimboRevisao(json, nome);
+    expect(r.ok, r.ok ? "" : r.erros.join("; ")).toBe(true);
+  });
+});
+
 describe("editorial/derivados/trajetoria-camara.json", () => {
   const e = JSON.parse(TEXTO_TRAJETORIA) as {
     gerado_em: string;
@@ -35,7 +50,7 @@ describe("editorial/derivados/trajetoria-camara.json", () => {
   };
 
   it("formato exato no topo", () => {
-    expect(Object.keys(e)).toEqual(["gerado_em", "fonte", "universo", "por_sqcand"]);
+    expect(Object.keys(e)).toEqual(["revisao", "gerado_em", "fonte", "universo", "por_sqcand"]);
     expect(Object.keys(e.fonte)).toEqual(["tse_dt_geracao", "camara"]);
     expect(new Date(e.gerado_em).toISOString()).toBe(e.gerado_em);
     expect(e.fonte.tse_dt_geracao).toMatch(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/);
@@ -92,7 +107,7 @@ describe("editorial/derivados/alinhamento-camara.json", () => {
   };
 
   it("formato exato; corte de 03/09/2026; hash do CSV de entrada", () => {
-    expect(Object.keys(e)).toEqual(["corte", "fonte", "por_deputado"]);
+    expect(Object.keys(e)).toEqual(["revisao", "corte", "fonte", "por_deputado"]);
     expect(Object.keys(e.fonte)).toEqual(["descricao", "url", "sha256"]);
     expect(e.corte).toBe("2026-09-03");
     expect(e.fonte.url).toBe("https://dadosabertos.camara.leg.br");

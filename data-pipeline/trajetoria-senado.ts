@@ -40,10 +40,11 @@
 // são logados. O arquivo derivado é montado campo a campo em
 // `montarArquivoTrajetoria` (lista branca): `t` e códigos públicos do Senado.
 //
-// (No worktree 3B, `trajetoriaDaLinha` em `candidatos-parse.ts` é o ponto
-// equivalente da Câmara; a invariante "um ponto de leitura por casa" vale para
-// cada uma.)
+// O ponto equivalente da Câmara é `trajetoriaDaLinha`, em
+// `trajetoria-camara-calculo.ts`. A invariante é "um ponto de leitura por
+// casa": são DOIS no projeto, um para a Câmara e este para o Senado.
 
+import { type CarimboRevisao, carimboPendente } from "./_revisao-derivado.ts";
 import { campo, opcional } from "./candidatos-parse.ts";
 import {
   casar,
@@ -323,6 +324,8 @@ export function calcularTrajetorias(
 // ---------------------------------------------------------------------------
 
 export interface ArquivoTrajetoriaSenado {
+  /** Sempre pendente aqui — regenerar zera a revisão do dono (spec 024, RF-223). */
+  revisao: CarimboRevisao;
   gerado_em: string;
   fonte: { descricao: string; url: string };
   /** Quantas candidaturas de cargo 5 o arquivo cobre: ausente ≠ estreante. */
@@ -345,6 +348,7 @@ export function montarArquivoTrajetoria(
     por_sqcand[sq] = { t: r.t, senado_codigos: [...r.senado_codigos] };
   }
   return {
+    revisao: carimboPendente(),
     gerado_em: geradoEm,
     fonte: { ...FONTE_TRAJETORIA_SENADO },
     universo: calculadas.porSqcand.size,

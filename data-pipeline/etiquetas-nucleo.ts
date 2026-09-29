@@ -20,6 +20,16 @@
 // numérico (11 e 12 dígitos convivem: ordem de texto poria "99…" depois de
 // "100…"), e `meta` preservada quando o conteúdo não muda — recompilar as
 // mesmas fontes dá o mesmo resultado.
+//
+// ─── Derivado sem revisão do dono = derivado ausente (§ 2 (b)) ──────────────
+//
+// Emenda de 29/09 (auditoria constitucional; spec 024, RF-223/226/227): cada
+// `editorial/derivados/*.json` traz o carimbo `revisao` no cabeçalho. Sem
+// `revisado: "sim"` + data + nome, o insumo é VALIDADO como qualquer outro
+// (formato, universo, dado pessoal) mas não classifica ninguém — exatamente
+// como se o arquivo não existisse — e o relatório o lista como "aguardando
+// revisão do dono". Antes desta emenda, só as linhas de CSV passavam pela
+// revisão; a regra derivada ia ao ar sem ela.
 
 import { createHash } from "node:crypto";
 
@@ -55,6 +65,7 @@ import {
   type FonteDerivada,
   INSUMOS_DERIVADOS,
   type InsumoDerivado,
+  type MedidaAlinhamento,
   type MetaEtiquetas,
   normalizarSigla,
   normalizarSqcand,
@@ -130,6 +141,11 @@ export interface RelatorioCompilacao {
   avisos: string[];
   /** Por alvo e categoria: quantos classificados / total do universo (turno 1). */
   cobertura: Array<{ alvo: string; categoria: CategoriaId; classificados: number; total: number }>;
+  /**
+   * Derivados presentes e válidos, mas sem a aprovação do dono no carimbo
+   * `revisao` — ficaram fora da compilação (como se não existissem).
+   */
+  derivadosPendentes: InsumoDerivado[];
   mudancas: number;
   conteudoMudou: boolean;
 }
@@ -364,6 +380,18 @@ export function relacaoPeloAlinhamento(
   ids: readonly (string | number)[],
   alinhamento: AlinhamentoInsumo,
 ): ValorId<"relacao_governo"> | null {
+  return classificarPeloAlinhamento(ids, alinhamento)?.valor ?? null;
+}
+
+/**
+ * {@link relacaoPeloAlinhamento} com a medida que a produziu — o que a lista
+ * pública de classificações mostra ao lado da etiqueta (constituição § 8). A
+ * classificação usa a taxa SEM arredondar; a medida publicada tem 2 casas.
+ */
+export function classificarPeloAlinhamento(
+  ids: readonly (string | number)[],
+  alinhamento: AlinhamentoInsumo,
+): { valor: ValorId<"relacao_governo">; medida: MedidaAlinhamento } | null {
   let votos = 0;
   let ponderado = 0;
   for (const id of new Set(ids.map(String))) {
@@ -374,9 +402,13 @@ export function relacaoPeloAlinhamento(
   }
   if (votos < ALINHAMENTO_MIN_VOTOS_DISPUTADAS) return null;
   const taxa = ponderado / votos;
-  if (taxa >= ALINHAMENTO_BASE_MIN) return "base_governo";
-  if (taxa <= ALINHAMENTO_OPOSICAO_MAX) return "oposicao";
-  return "independente";
+  const valor: ValorId<"relacao_governo"> =
+    taxa >= ALINHAMENTO_BASE_MIN
+      ? "base_governo"
+      : taxa <= ALINHAMENTO_OPOSICAO_MAX
+        ? "oposicao"
+        : "independente";
+  return { valor, medida: { votos, taxa: Math.round(taxa * 100) / 100 } };
 }
 
 // ---------------------------------------------------------------------------
@@ -437,8 +469,72 @@ function separarCatKey(catKey: string): { categoria: string; turno: 1 | 2 | null
   return { categoria: categoria ?? catKey, turno: t === "1" ? 1 : t === "2" ? 2 : null };
 }
 
-function arquivoDoInsumo(i: InsumoDerivado): string {
+export function arquivoDoInsumo(i: InsumoDerivado): string {
   return `editorial/derivados/${i.replace("_", "-")}.json`;
+}
+
+/** Data (AAAA-MM-DD) de um instante ISO no fuso de Brasília. */
+function dataBrtDe(iso: string): string {
+  const t = Date.parse(iso);
+  return Number.isNaN(t) ? iso.slice(0, 10) : hojeBrt(new Date(t));
+}
+
+/**
+ * Separa os derivados APROVADOS pelo dono (carimbo `revisao`) dos pendentes,
+ * e confere as datas do carimbo: nem no futuro, nem anterior à geração do
+ * arquivo (`gerado_em` na trajetória, `corte` no alinhamento) — aprovação mais
+ * velha que o arquivo não é aprovação DESTE arquivo.
+ */
+function separarAprovados(
+  presentes: InsumosDerivadosEntrada,
+  hoje: string,
+): { aprovados: InsumosDerivadosEntrada; pendentes: InsumoDerivado[]; erros: ErroCompilacao[] } {
+  const aprovados = semDerivados();
+  const pendentes: InsumoDerivado[] = [];
+  const erros: ErroCompilacao[] = [];
+  const conferir = (insumo: InsumoDerivado, rev: TrajetoriaInsumo["revisao"], piso: string) => {
+    if (rev.estado === "pendente") {
+      pendentes.push(insumo);
+      return false;
+    }
+    const arquivo = arquivoDoInsumo(insumo);
+    if (rev.revisado_em > hoje) {
+      erros.push({
+        arquivo,
+        linha: null,
+        mensagem: `revisao.revisado_em ${rev.revisado_em} está no futuro`,
+      });
+      return false;
+    }
+    if (rev.revisado_em < piso) {
+      erros.push({
+        arquivo,
+        linha: null,
+        mensagem:
+          `revisao.revisado_em ${rev.revisado_em} é anterior ao próprio arquivo (${piso}) — ` +
+          "a aprovação é de outra versão; revise o arquivo atual e carimbe de novo",
+      });
+      return false;
+    }
+    return true;
+  };
+  for (const insumo of ["trajetoria_camara", "trajetoria_senado"] as const) {
+    const t = presentes[insumo];
+    if (t && conferir(insumo, t.revisao, dataBrtDe(t.gerado_em))) aprovados[insumo] = t;
+  }
+  for (const insumo of ["alinhamento_camara", "alinhamento_senado"] as const) {
+    const a = presentes[insumo];
+    if (a && conferir(insumo, a.revisao, a.corte)) aprovados[insumo] = a;
+  }
+  return { aprovados, pendentes: pendentes.sort(), erros };
+}
+
+/** A proveniência pública de um derivado APROVADO; `null` sem aprovação. */
+function comRevisao(
+  x: { fonte: TrajetoriaInsumo["fonte"]; revisao: TrajetoriaInsumo["revisao"] } | null,
+): FonteDerivada | null {
+  if (!x || x.revisao.estado !== "aprovado") return null;
+  return { ...x.fonte, revisado_em: x.revisao.revisado_em };
 }
 
 // ---------------------------------------------------------------------------
@@ -449,7 +545,9 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
   const erros: ErroCompilacao[] = [];
   const avisos: string[] = [];
   const hoje = hojeBrt(e.agora);
-  const der = e.derivados;
+  // TODOS os derivados presentes são validados (passo 4); só os APROVADOS
+  // classificam (passo 4b em diante) — ver o cabeçalho.
+  const presentes = e.derivados;
 
   // Partidos que uma linha `partido:` pode citar: os do universo do TSE e os
   // partidos atuais dos 27 que seguem até 2031.
@@ -522,7 +620,7 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
     ["trajetoria_camara", 6, "Deputado Federal"],
     ["trajetoria_senado", 5, "Senador"],
   ] as const) {
-    const t = der[insumo];
+    const t = presentes[insumo];
     if (!t) continue;
     const arquivo = arquivoDoInsumo(insumo);
     const doCargo = todos.filter((c) => c.cargo === cargo).length;
@@ -546,7 +644,18 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
     }
   }
 
+  // ── 4b. carimbo de revisão dos derivados (§ 2 (b)) ───────────────────────
+  const { aprovados: der, pendentes, erros: errRevisao } = separarAprovados(presentes, hoje);
+  erros.push(...errRevisao);
+
   if (erros.length > 0) return { ok: false, erros };
+
+  for (const insumo of pendentes) {
+    avisos.push(
+      `derivado ${arquivoDoInsumo(insumo)} aguardando revisão do dono — fica fora ` +
+        '(carimbo "revisao" sem revisado: "sim", data e nome)',
+    );
+  }
 
   const efetivas = [...vistas.values()].filter((v) => v.revisado);
   const naoRevisadas = vistas.size - efetivas.length;
@@ -576,22 +685,21 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
   // Proveniência dos derivados. Alinhamento da Câmara sem trajetória da Câmara
   // não alcança ninguém (os camara_ids vêm dela) — fica de fora, com aviso.
   const fontesDerivadas: Record<InsumoDerivado, FonteDerivada | null> = {
-    trajetoria_camara: der.trajetoria_camara?.fonte ?? null,
-    alinhamento_camara:
-      der.alinhamento_camara && der.trajetoria_camara ? der.alinhamento_camara.fonte : null,
-    trajetoria_senado: der.trajetoria_senado?.fonte ?? null,
-    alinhamento_senado: der.alinhamento_senado?.fonte ?? null,
+    trajetoria_camara: comRevisao(der.trajetoria_camara),
+    alinhamento_camara: der.trajetoria_camara ? comRevisao(der.alinhamento_camara) : null,
+    trajetoria_senado: comRevisao(der.trajetoria_senado),
+    alinhamento_senado: comRevisao(der.alinhamento_senado),
   };
   if (der.alinhamento_camara && !der.trajetoria_camara) {
     avisos.push(
-      "alinhamento-camara.json existe mas trajetoria-camara.json não — sem camara_ids por sqcand, " +
-        "o alinhamento da Câmara não classifica ninguém (vale o padrão do partido)",
+      "alinhamento-camara.json aprovado, mas trajetoria-camara.json ausente ou sem aprovação — " +
+        "sem camara_ids por sqcand, o alinhamento da Câmara não classifica ninguém (vale o padrão do partido)",
     );
   }
   if (der.alinhamento_senado && !der.trajetoria_senado) {
     avisos.push(
-      "alinhamento-senado.json existe mas trajetoria-senado.json não — o alinhamento do Senado " +
-        "classifica só os 27 de senado2031, nenhum candidato a Senador",
+      "alinhamento-senado.json aprovado, mas trajetoria-senado.json ausente ou sem aprovação — o " +
+        "alinhamento do Senado classifica só os 27 de senado2031, nenhum candidato a Senador",
     );
   }
 
@@ -602,16 +710,20 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
   for (const c of majoritarios) {
     const x = regsDe(c.sqcand);
     let d: ValoresDerivados | undefined;
+    let m: MedidaAlinhamento | undefined;
     if (c.cargo === 5) {
       const t = der.trajetoria_senado?.por_sqcand.get(c.sqcand);
       const rel =
-        t && der.alinhamento_senado ? relacaoPeloAlinhamento(t.ids, der.alinhamento_senado) : null;
+        t && der.alinhamento_senado
+          ? classificarPeloAlinhamento(t.ids, der.alinhamento_senado)
+          : null;
       if (t || rel) {
         d = {
-          ...(rel ? { relacao_governo: rel } : {}),
+          ...(rel ? { relacao_governo: rel.valor } : {}),
           ...(t ? { trajetoria_cargo: TRAJETORIA_PARA_VALOR[t.t] } : {}),
         };
       }
+      m = rel?.medida;
     }
     candidatos[c.sqcand] = {
       uf: c.uf,
@@ -619,6 +731,7 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
       partido: c.partido,
       ...(x ? { x } : {}),
       ...(d ? { d } : {}),
+      ...(m ? { m } : {}),
     };
   }
 
@@ -629,13 +742,13 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
       if (!s) continue;
       const x = regsDe(`senado:${cod}`);
       const rel = der.alinhamento_senado
-        ? relacaoPeloAlinhamento([cod], der.alinhamento_senado)
+        ? classificarPeloAlinhamento([cod], der.alinhamento_senado)
         : null;
       senadores[cod] = {
         uf: s.uf,
         partido: s.partido,
         ...(x ? { x } : {}),
-        ...(rel ? { d: { relacao_governo: rel } } : {}),
+        ...(rel ? { d: { relacao_governo: rel.valor }, m: rel.medida } : {}),
       };
     }
   }
@@ -662,6 +775,7 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
     const por_partido: Record<string, string[]> = {};
     const trajetoria: Partial<Record<ValorId<"trajetoria_cargo">, string[]>> = {};
     const alinhamento: Partial<Record<ValorId<"relacao_governo">, string[]>> = {};
+    const medidas: Record<string, MedidaAlinhamento> = {};
     const excecoes: Record<string, Registros> = {};
     for (const c of deputados) {
       if (c.uf !== uf) continue;
@@ -669,8 +783,11 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
       const t = der.trajetoria_camara?.por_sqcand.get(c.sqcand);
       if (t) empilhar(trajetoria, TRAJETORIA_PARA_VALOR[t.t], c.sqcand);
       if (t && alinCamara) {
-        const r = relacaoPeloAlinhamento(t.ids, alinCamara);
-        if (r) empilhar(alinhamento, r, c.sqcand);
+        const r = classificarPeloAlinhamento(t.ids, alinCamara);
+        if (r) {
+          empilhar(alinhamento, r.valor, c.sqcand);
+          medidas[c.sqcand] = r.medida;
+        }
       }
       const x = regsDe(c.sqcand);
       if (x) excecoes[c.sqcand] = x;
@@ -679,6 +796,7 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
       por_partido: ordenarChaves(por_partido),
       trajetoria: ordenarChaves(trajetoria),
       alinhamento: ordenarChaves(alinhamento),
+      medidas,
       excecoes,
     };
   }
@@ -824,6 +942,7 @@ export function compilarEtiquetas(e: EntradaCompilacao): ResultadoCompilacao {
       naoRevisadas,
       avisos,
       cobertura,
+      derivadosPendentes: pendentes,
       mudancas: novas.length,
       conteudoMudou,
     },

@@ -53,6 +53,7 @@
 // nascimento e qualquer coisa que identifique a pessoa além do código público
 // **não entram** no arquivo (ADR-0062 item 2, constituição § 5).
 
+import { type CarimboRevisao, carimboPendente } from "./_revisao-derivado.ts";
 import type { OrientacaoLideranca, VotacaoComOrientacao, VotacaoNominal } from "./senado-parse.ts";
 
 export const FONTE_ALINHAMENTO_SENADO = {
@@ -404,6 +405,8 @@ export function calcularAlinhamento(
 // ---------------------------------------------------------------------------
 
 export interface ArquivoAlinhamentoSenado {
+  /** Sempre pendente aqui — regenerar zera a revisão do dono (spec 024, RF-223). */
+  revisao: CarimboRevisao;
   corte: string;
   fonte: { descricao: string; url: string };
   universo: { votacoes: number; disputadas: number; excluidas_sem_sequencial: number };
@@ -430,6 +433,7 @@ export function montarArquivoAlinhamento(r: ResultadoAlinhamento): ArquivoAlinha
     };
   }
   return {
+    revisao: carimboPendente(),
     corte: r.corte,
     fonte: { ...FONTE_ALINHAMENTO_SENADO },
     universo: {

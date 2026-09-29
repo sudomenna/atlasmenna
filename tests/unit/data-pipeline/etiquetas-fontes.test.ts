@@ -284,6 +284,40 @@ describe("insumos derivados — portas de entrada", () => {
     });
   });
 
+  it("🔴 carimbo de revisão (§ 2 (b)): sem bloco ou 'nao' ⇒ pendente; 'sim' exige data e nome", () => {
+    const sem = lerTrajetoria(traj({ universo: 1 }), "camara");
+    expect(sem.ok && sem.valor.revisao).toEqual({ estado: "pendente", motivo: "sem_carimbo" });
+    const nao = lerTrajetoria(
+      traj({ revisao: { revisado: "nao", revisado_em: null, por: null } }),
+      "camara",
+    );
+    expect(nao.ok && nao.valor.revisao).toEqual({ estado: "pendente", motivo: "nao_revisado" });
+    const sim = lerAlinhamento(
+      {
+        revisao: { revisado: "sim", revisado_em: "2026-09-28", por: " Dono " },
+        corte: "2026-09-03",
+        por_deputado: {},
+      },
+      "camara",
+    );
+    expect(sim.ok && sim.valor.revisao).toEqual({
+      estado: "aprovado",
+      revisado_em: "2026-09-28",
+      por: "Dono",
+    });
+    for (const ruim of [
+      { revisado: "sim", revisado_em: null, por: "Dono" },
+      { revisado: "sim", revisado_em: "2026-09-28", por: null },
+      { revisado: "sim", revisado_em: "2026-09-28", por: "   " },
+      { revisado: "sim", revisado_em: "2026-02-30", por: "Dono" },
+      { revisado: "talvez", revisado_em: null, por: null },
+      "sim",
+    ]) {
+      const r = lerTrajetoria(traj({ revisao: ruim }), "camara");
+      expect(r.ok, JSON.stringify(ruim)).toBe(false);
+    }
+  });
+
   it("foto do Senado: formato tolerante, só código/UF/partido, S/Partido ⇒ null", () => {
     const r = lerSenado2031({
       data_foto: "2026-09-29",

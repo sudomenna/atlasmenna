@@ -169,7 +169,13 @@ leitor, e a página de metodologia (spec 025) precisa lê-lo de outro jeito
 4. Só linhas `revisado=sim` entram (RF-223).
 5. Monta nacional + 27 UFs, meta, histórico; grava; `biome format`.
 
-### 3.2 Publicar (`pnpm etiquetas:publicar [--dry-run]`)
+### 3.2 Publicar (`pnpm etiquetas:publicar [--confirmar]`)
+
+**Padrão: só confere** (emenda de 29/09). Sem `--confirmar` o publicador roda
+todas as recusas abaixo, lista os 29 caminhos que gravaria (nacional por
+último), a versão, as visões ligadas e os derivados fora por falta de
+aprovação — e não grava nada. `--dry-run` segue aceito (é o padrão);
+`--confirmar` junto de `--dry-run` é erro.
 
 Ambiente por lista branca (`BLOB_READ_WRITE_TOKEN`, `BLOB_PUBLIC_BASE_URL`) —
 **nunca** `set -a; . ./.env.local`. Recusa: árvore suja; HEAD atrás de

@@ -13,8 +13,13 @@
 //   editorial/etiquetas/publicar.json            (obrigatório — chaves por visão; vão para a
 //                                                 cópia do build desde 29/09, spec 025)
 //   editorial/senado/mandato-2031.json           (opcional — frente 023)
-//   editorial/derivados/trajetoria-camara.json   (opcional — frente 3B)
-//   editorial/derivados/alinhamento-camara.json  (opcional — frente 3B)
+//   editorial/derivados/trajetoria-camara.json   (opcional)
+//   editorial/derivados/alinhamento-camara.json  (opcional)
+//   editorial/derivados/trajetoria-senado.json   (opcional)
+//   editorial/derivados/alinhamento-senado.json  (opcional)
+//     ↳ cada derivado só classifica com o carimbo `revisao` aprovado pelo dono
+//       (`"revisado": "sim"`, data e nome); sem ele, vale como ausente e o
+//       relatório diz "aguardando revisão do dono" (§ 2 (b), RF-223 emendado).
 //   build/tse-archives/consulta_cand_2026/       (obrigatório — `pnpm candidatos:import` baixa)
 //   lib/data/etiquetas/*                          (o gerado anterior: meta e histórico)
 //
@@ -53,6 +58,7 @@ import {
 } from "./etiquetas-insumos";
 import {
   type AnteriorCompilado,
+  arquivoDoInsumo,
   compilarEtiquetas,
   type EntradaCompilacao,
   type ErroCompilacao,
@@ -328,6 +334,9 @@ async function main(): Promise<void> {
   console.log("  cobertura (turno 1):");
   for (const x of rel.cobertura) {
     console.log(`    ${x.alvo.padEnd(10)} ${x.categoria.padEnd(22)} ${x.classificados}/${x.total}`);
+  }
+  for (const insumo of rel.derivadosPendentes) {
+    console.log(`  ⏸  derivado ${arquivoDoInsumo(insumo)} aguardando revisão do dono (fica fora)`);
   }
 }
 

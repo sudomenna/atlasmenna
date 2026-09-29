@@ -16,6 +16,18 @@
  * `categoriaExibivel`, constituição § 2 (a)) e só valor classificado com
  * rótulo (`centrao: nao` nunca vira chip nem token).
  *
+ * ## 🔴 O filtro passa pelo MESMO portão das visões (constituição § 2 (f))
+ *
+ * O filtro é uma visão agregada: "mostrar só as corridas com alguém da Base"
+ * afirma algo sobre o CONJUNTO de candidatos com chance — se um deles está sem
+ * classificação, a corrida some ou fica pelo motivo errado. Então cada
+ * categoria só vira opção do filtro quando o portão de cobertura dela
+ * (`avaliarCorridas`, RF-233 — o das visões V1/V2) passa em TODAS as corridas
+ * da página, com o universo de cada UF. Categoria com portão fechado não vira
+ * token nem opção; nenhuma aberta ⇒ não há filtro (`filtro: []`, tokens
+ * ausentes do HTML). Até 29/09 o filtro era isento (`CATEGORIA_DA_VISAO.filtro
+ * = null`) — achado da auditoria constitucional.
+ *
  * ## 🔴 A ordem é a da ENTRADA, sempre (constituição § 2 (e), RF-238)
  *
  * Nada aqui ordena, filtra ou agrupa candidatos. O resultado é um MAPA por
@@ -39,7 +51,7 @@ import {
 import { normalizarSqcand } from "./formato";
 import { comEtiquetas } from "./juncao";
 import type { CargoEtiquetado, Etiquetas } from "./leitor";
-import { comChance, corridaDeUfRow } from "./portao";
+import { avaliarCorridas, type CorridaPortao, comChance, corridaDeUfRow } from "./portao";
 import type { Resolucao } from "./resolver";
 
 /** As resoluções que uma tela exibe para UM candidato — só exibíveis e classificadas. */
@@ -102,13 +114,59 @@ export interface OpcoesCapa {
   vagasUf?: number | null;
 }
 
+/** As corridas de uma capa como o portão as lê — com o universo de cada UF. */
+function corridasDaCapa(
+  etiquetas: Etiquetas,
+  rows: readonly EdgeUfRow[],
+  o: OpcoesCapa,
+): CorridaPortao[] {
+  return rows.map((row) =>
+    corridaDeUfRow(row, {
+      cargo: o.cargo,
+      turno: o.turno,
+      preEleicao: o.preEleicao,
+      vagasUf: o.vagasUf ?? null,
+      universo: etiquetas.universo(o.cargo, row.sigla),
+    }),
+  );
+}
+
+/** Categorias que o filtro PODE oferecer numa capa (as de chip; no Senado, mais o impeachment). */
+export function categoriasDoFiltro(cargo: 3 | 5): CategoriaId[] {
+  return cargo === 5 ? [...CATEGORIAS_CHIP, "impeachment_stf"] : [...CATEGORIAS_CHIP];
+}
+
+/**
+ * As categorias do filtro com o portão de cobertura ABERTO nas corridas desta
+ * página (constituição § 2 (f); o mesmo `avaliarCorridas` das visões): critério
+ * publicado e todo candidato com chance classificado — em todas as corridas.
+ * Sem corrida nenhuma, nada passa (não há como provar cobertura).
+ */
+export function categoriasDoFiltroLiberadas(
+  etiquetas: Etiquetas,
+  rows: readonly EdgeUfRow[],
+  o: OpcoesCapa,
+): CategoriaId[] {
+  if (rows.length === 0) return [];
+  const corridas = corridasDaCapa(etiquetas, rows, o);
+  return categoriasDoFiltro(o.cargo).filter(
+    (cat) =>
+      categoriaExibivel(cat) &&
+      avaliarCorridas(
+        corridas,
+        (sq) => etiquetas.resolver(sq, o.cargo, o.turno)[cat]?.estado === "classificado",
+      ).ok,
+  );
+}
+
 /**
  * As etiquetas dos CARTÕES de uma capa (`/governador`, `/senador`), por UF.
  * Mapa vazio quando nem `chips` nem `filtro` estão ligados — a capa sai
  * idêntica à de antes.
  *
- * Chips: {@link CATEGORIAS_CHIP}. Tokens do filtro: os mesmos e, no Senado,
- * também o impeachment (qualificado na opção do `<select>`).
+ * Chips: {@link CATEGORIAS_CHIP}. Tokens do filtro: só as categorias com o
+ * portão aberto ({@link categoriasDoFiltroLiberadas}); nenhuma aberta ⇒ o
+ * filtro fica como desligado (tokens ausentes).
  */
 export function etiquetasDasCorridas(
   etiquetas: Etiquetas,
@@ -116,21 +174,15 @@ export function etiquetasDasCorridas(
   o: OpcoesCapa,
 ): Map<string, EtiquetasDaCorrida> {
   const chips = etiquetas.viewLigada("chips");
-  const filtro = etiquetas.viewLigada("filtro");
+  const categoriasToken = etiquetas.viewLigada("filtro")
+    ? categoriasDoFiltroLiberadas(etiquetas, rows, o)
+    : [];
+  const filtro = categoriasToken.length > 0;
   const out = new Map<string, EtiquetasDaCorrida>();
   if (!chips && !filtro) return out;
-  const categoriasToken: CategoriaId[] =
-    o.cargo === 5 ? [...CATEGORIAS_CHIP, "impeachment_stf"] : [...CATEGORIAS_CHIP];
 
-  for (const row of rows) {
-    const { membros } = comChance(
-      corridaDeUfRow(row, {
-        cargo: o.cargo,
-        turno: o.turno,
-        preEleicao: o.preEleicao,
-        vagasUf: o.vagasUf ?? null,
-      }),
-    );
+  for (const corrida of corridasDaCapa(etiquetas, rows, o)) {
+    const { membros } = comChance(corrida);
     const porSqcand = new Map<string, ResolucoesExibiveis>();
     const tokens = new Set<string>();
     // `comEtiquetas` (juncao.ts) — o ÚNICO lugar em que lista encontra
@@ -146,7 +198,7 @@ export function etiquetasDasCorridas(
       if (filtro) for (const t of tokensDe(exibiveis(r, categoriasToken))) tokens.add(t);
     }
     const ordenados = ordenarTokens(tokens);
-    out.set(row.sigla, {
+    out.set(corrida.chave, {
       porSqcand,
       tokens: filtro ? ordenados.join(" ") : undefined,
     });
@@ -280,9 +332,9 @@ export function editorialDaCapa(
   o: OpcoesCapa,
 ): EditorialDaCapa {
   const porUf = etiquetasDasCorridas(etiquetas, rows, o);
-  const filtro = etiquetas.viewLigada("filtro")
-    ? opcoesDoFiltro([...porUf.values()].map((e) => e.tokens ?? ""))
-    : [];
+  // Os tokens já saem só das categorias com portão aberto — então as opções
+  // também (`etiquetasDasCorridas`).
+  const filtro = opcoesDoFiltro([...porUf.values()].map((e) => e.tokens ?? ""));
   const comChip = [...porUf.values()].some((e) => e.porSqcand.size > 0);
   return {
     cartao: (sigla) => porUf.get(sigla),

@@ -400,10 +400,22 @@ export function todasDesligadas(): ChavesPublicacao {
 }
 
 /**
+ * Alguma superfície com etiqueta está ligada? É o que decide se as páginas de
+ * metodologia podem dizer "algumas telas mostram etiquetas" (constituição
+ * § 8) — com tudo desligado, a frase seria falsa. Só `true` literal liga.
+ */
+export function algumaVisaoLigada(publicar: Readonly<Partial<ChavesPublicacao>>): boolean {
+  return VISOES.some((v) => publicar[v] === true);
+}
+
+/**
  * Qual categoria cada visão agregada exige classificada nos candidatos com
- * chance (portão, RF-233). `chips` e `filtro` não são agregados: cada chip só
- * aparece se classificado, e o candidato não classificado simplesmente não
- * ganha chip. `v4` (renovação) lê trajetória.
+ * chance (portão, RF-233). `chips` não é agregado: cada chip só aparece se
+ * classificado, e o candidato não classificado simplesmente não ganha chip.
+ * `filtro` É agregado (constituição § 2 (f)), mas tem UM portão POR
+ * CATEGORIA — cada opção só existe com o portão dela aberto
+ * (`categoriasDoFiltroLiberadas`, `lib/etiquetas/telas.ts`) —, por isso não
+ * tem uma categoria única aqui. `v4` (renovação) lê trajetória.
  */
 export const CATEGORIA_DA_VISAO: Readonly<Record<Visao, CategoriaId | null>> = {
   chips: null,

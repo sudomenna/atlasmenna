@@ -59,7 +59,9 @@ const traj = (trajetoria: Trajetoria["trajetoria"], ids: number[] | null): Traje
 describe("montarExportacao — o contrato", () => {
   it("formato exato, chave a chave", () => {
     const e = exportarFixture();
-    expect(Object.keys(e)).toEqual(["gerado_em", "fonte", "universo", "por_sqcand"]);
+    expect(Object.keys(e)).toEqual(["revisao", "gerado_em", "fonte", "universo", "por_sqcand"]);
+    // 🔴 Regenerar ZERA a revisão do dono (spec 024, RF-223 emendado).
+    expect(e.revisao).toEqual({ revisado: "nao", revisado_em: null, por: null });
     expect(Object.keys(e.fonte)).toEqual(["tse_dt_geracao", "camara"]);
     expect(e.gerado_em).toBe("2026-09-29T12:00:00.000Z");
     expect(e.fonte).toEqual({ tse_dt_geracao: "12/09/2026 19:31:30", camara: CAMARA });

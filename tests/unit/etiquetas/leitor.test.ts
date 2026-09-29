@@ -11,11 +11,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { projetarNacional, proximaVersao } from "@/data-pipeline/etiquetas-publicar";
 import { todasDesligadas, VISOES } from "@/lib/etiquetas/catalogo";
 import type { ArquivoNacional, ArquivoUf } from "@/lib/etiquetas/formato";
-import { normalizarSqcand } from "@/lib/etiquetas/formato";
+import { isArquivoNacional, normalizarSqcand } from "@/lib/etiquetas/formato";
 import {
+  ETIQUETAS_BLOB_TIMEOUT_MS,
   ETIQUETAS_REVALIDATE_SECONDS,
   escolherMaisNovo,
   lerEtiquetas,
+  lerJsonDoBlob,
   montarEtiquetas,
 } from "@/lib/etiquetas/leitor";
 
@@ -282,6 +284,37 @@ describe("RF-231 — carga com Blob (fetch simulado)", () => {
       "https://blob.exemplo.test/etiquetas/v1/nacional.json",
     );
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ next: { revalidate: 60 } });
+  });
+
+  it("🔴 Blob pendurado ⇒ o teto corta a espera e vale a cópia do build (sem lançar)", async () => {
+    // fetch que só termina quando o signal aborta — um Blob que nunca responde.
+    fetchMock.mockImplementation(
+      (_url: string, init?: RequestInit) =>
+        new Promise((_ok, falha) => {
+          init?.signal?.addEventListener("abort", () => falha(init.signal?.reason));
+        }),
+    );
+    const t0 = Date.now();
+    const r = await lerJsonDoBlob("etiquetas/v1/nacional.json", isArquivoNacional, {
+      timeoutMs: 50,
+    });
+    expect(r).toEqual({ status: "indisponivel", motivo: "fetch_error" });
+    expect(Date.now() - t0).toBeLessThan(2_000);
+    // O pedido leva o signal E o revalidate: o Data Cache continua ligado.
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit & { next?: unknown };
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+    expect(init.next).toEqual({ revalidate: ETIQUETAS_REVALIDATE_SECONDS });
+  });
+
+  it("o teto padrão é curto (≤ 3 s) e a carga inteira cai na cópia do build quando estoura", async () => {
+    expect(ETIQUETAS_BLOB_TIMEOUT_MS).toBeGreaterThan(0);
+    expect(ETIQUETAS_BLOB_TIMEOUT_MS).toBeLessThanOrEqual(3_000);
+    fetchMock.mockImplementation((_url: string, init?: RequestInit) =>
+      Promise.reject(init?.signal ? new DOMException("tempo", "TimeoutError") : new Error("x")),
+    );
+    const e = await lerEtiquetas({ uf: "SP" });
+    expect(e.fonte).toBe("embutido");
+    expect(e.uf).toBe("SP");
   });
 
   it("sem Blob configurado nem tenta a rede", async () => {

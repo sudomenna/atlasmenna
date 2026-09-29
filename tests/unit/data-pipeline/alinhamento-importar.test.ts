@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 import {
   type AlinhamentoExportado,
   COLUNAS_LIDAS,
-  ENTRADA_PADRAO,
+  ENV_ENTRADA,
   FONTE_DESCRICAO,
   FONTE_URL,
   importarAlinhamento,
@@ -190,7 +190,9 @@ describe("importarAlinhamento — o arquivo derivado", () => {
 
   it("formato exato, chave a chave", () => {
     const e = importar();
-    expect(Object.keys(e)).toEqual(["corte", "fonte", "por_deputado"]);
+    expect(Object.keys(e)).toEqual(["revisao", "corte", "fonte", "por_deputado"]);
+    // 🔴 Reimportar ZERA a revisão do dono (spec 024, RF-223 emendado): sai pendente.
+    expect(e.revisao).toEqual({ revisado: "nao", revisado_em: null, por: null });
     expect(e.corte).toBe("2026-09-03");
     expect(e.fonte).toEqual({
       descricao: FONTE_DESCRICAO,
@@ -238,7 +240,10 @@ describe("importarAlinhamento — o arquivo derivado", () => {
     const e = importar();
     const s = serializarAlinhamento(e);
     expect(JSON.parse(s) as AlinhamentoExportado).toEqual(e);
-    for (const l of s.split("\n").slice(7)) expect(l.length).toBeLessThanOrEqual(100);
+    for (const l of s.split("\n").slice(8)) expect(l.length).toBeLessThanOrEqual(100);
+    expect(s.split("\n")[1]).toBe(
+      '  "revisao": { "revisado": "nao", "revisado_em": null, "por": null },',
+    );
   });
 });
 
@@ -251,18 +256,35 @@ describe("corte, caminho e CLI", () => {
   });
 
   it("--corte é obrigatório (informado, nunca inferido) e não pode repetir", () => {
-    expect(() => parseCli([])).toThrow(/--corte/);
-    expect(parseCli(["--corte", "2026-09-03"])).toMatchObject({
+    const ent = ["--entrada", "/x/alinhamento-governo-camara/alinhamento.csv"];
+    expect(() => parseCli(ent, {})).toThrow(/--corte/);
+    expect(parseCli([...ent, "--corte", "2026-09-03"], {})).toMatchObject({
       corte: "2026-09-03",
-      entrada: ENTRADA_PADRAO,
+      entrada: "/x/alinhamento-governo-camara/alinhamento.csv",
     });
-    expect(() => parseCli(["--corte", "2026-09-03", "--corte", "2026-09-10"])).toThrow(/repetido/);
-    expect(() => parseCli(["--corte", "2026-09-03", "--x", "1"])).toThrow(/desconhecido/);
+    expect(() => parseCli([...ent, "--corte", "2026-09-03", "--corte", "2026-09-10"], {})).toThrow(
+      /repetido/,
+    );
+    expect(() => parseCli([...ent, "--corte", "2026-09-03", "--x", "1"], {})).toThrow(
+      /desconhecido/,
+    );
   });
 
-  it("a entrada padrão é o alinhamento.csv do projeto externo, fora da raw/", () => {
-    expect(ENTRADA_PADRAO.endsWith("/alinhamento-governo-camara/alinhamento.csv")).toBe(true);
-    expect(() => verificarCaminhoEntrada(ENTRADA_PADRAO)).not.toThrow();
+  it("a entrada é OBRIGATÓRIA — sem --entrada nem a variável, erro claro (nada de caminho pessoal)", () => {
+    expect(() => parseCli(["--corte", "2026-09-03"], {})).toThrow(/--entrada.*obrigatório/);
+    expect(() => parseCli(["--corte", "2026-09-03"], { [ENV_ENTRADA]: "  " })).toThrow(/--entrada/);
+    expect(
+      parseCli(["--corte", "2026-09-03"], { [ENV_ENTRADA]: "/y/alinhamento.csv" }).entrada,
+    ).toBe("/y/alinhamento.csv");
+    // --entrada vence a variável.
+    expect(
+      parseCli(["--corte", "2026-09-03", "--entrada", "/z/alinhamento.csv"], {
+        [ENV_ENTRADA]: "/y/alinhamento.csv",
+      }).entrada,
+    ).toBe("/z/alinhamento.csv");
+    expect(() =>
+      verificarCaminhoEntrada("/x/alinhamento-governo-camara/alinhamento.csv"),
+    ).not.toThrow();
   });
 
   it("RECUSA qualquer caminho sob raw/ e o votos.csv", () => {

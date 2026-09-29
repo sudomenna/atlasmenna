@@ -98,7 +98,9 @@ Não existe valor "a classificar": para deixar alguém sem classificação,
 ## Quem vale mais quando há mais de uma informação
 
 1. A linha do **próprio candidato** (revisada).
-2. A **regra automática** da Câmara ou do Senado:
+2. A **regra automática** da Câmara ou do Senado — **só depois que você
+   aprovar o arquivo dela** (ver "Aprovar um arquivo da regra automática",
+   abaixo):
    - *relação com o governo* de quem já tem mandato: pela taxa de votos com o
      governo nas votações disputadas — **65% ou mais** = Base do governo,
      **35% ou menos** = Oposição, entre os dois = Independente. Com **menos de
@@ -122,9 +124,11 @@ federação que ocupa as cadeiras na Câmara).
    havendo qualquer erro, **não grava nada** e diz o arquivo e a linha. Nada
    vai ao ar com erro.
 3. **Salve a versão** (commit) — só publica o que está salvo.
-4. **Publique**: `pnpm etiquetas:publicar --dry-run` para conferir, depois
-   `pnpm etiquetas:publicar`. O site mostra a mudança em até 1 minuto, **sem
-   deploy**.
+4. **Publique**: `pnpm etiquetas:publicar` **só confere** — mostra o que
+   gravaria e não grava nada. Para publicar de verdade:
+   `pnpm etiquetas:publicar --confirmar`. O site mostra a mudança em até 1
+   minuto, **sem deploy**. (Até 29/09 era o contrário: o comando sem nada
+   publicava. Mudou para que ninguém publique sem querer.)
 
 O histórico de tudo o que mudou (o quê, de → para, fonte e quando) é mantido
 automaticamente e é público.
@@ -166,6 +170,47 @@ apagar nada.
 
 Desfaça a mudança na planilha (ou reverta o commit), compile, salve a versão
 e publique. A versão nova é sempre maior, então o site troca em até 1 minuto.
+
+---
+
+## Aprovar um arquivo da regra automática
+
+A regra automática (relação com o governo medida nas votações, e trajetória
+no cargo) não sai de uma planilha sua: sai de quatro arquivos de dados em
+`editorial/derivados/` — `trajetoria-camara.json`, `alinhamento-camara.json`,
+`trajetoria-senado.json` e `alinhamento-senado.json`. Cada um classifica
+centenas ou milhares de candidatos de uma vez, então **a revisão é do arquivo
+inteiro**, e ele só vale no site depois que você o aprova.
+
+A aprovação fica nas primeiras linhas do arquivo, no bloco `revisao`:
+
+```json
+"revisao": { "revisado": "nao", "revisado_em": null, "por": null },
+```
+
+Para aprovar, depois de conferir o arquivo (o relatório do
+`pnpm etiquetas:compilar` ajuda: diz quantos candidatos cada regra
+classificaria), troque para:
+
+```json
+"revisao": { "revisado": "sim", "revisado_em": "2026-09-30", "por": "Seu Nome" },
+```
+
+- `revisado_em` é a data em que você conferiu, no formato ANO-MÊS-DIA. Não
+  pode ser no futuro, nem anterior à data em que o arquivo foi gerado.
+- `por` é o seu nome — a revisão é nominal. Ele fica só aqui; não vai ao
+  site.
+- Depois: **compile**, salve a versão e publique, como qualquer mudança.
+
+Enquanto o arquivo não está aprovado, a regra **não classifica ninguém**: o
+compilador avisa "aguardando revisão do dono", a relação com o governo cai no
+padrão do partido e a trajetória fica sem etiqueta. No site, a página "Como
+classificamos os candidatos" mostra a data da aprovação de cada arquivo.
+
+⚠️ **Refazer o arquivo apaga a aprovação.** Os comandos que geram esses
+arquivos (`pnpm trajetoria:exportar`, `pnpm alinhamento:importar`,
+`pnpm alinhamento:senado`, `pnpm trajetoria:senado`) sempre gravam
+`"revisado": "nao"`. Dado novo precisa de revisão nova.
 
 ---
 

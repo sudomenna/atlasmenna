@@ -13,6 +13,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { lerCarimboRevisao } from "@/data-pipeline/_revisao-derivado.ts";
 import { FONTE_ALINHAMENTO_SENADO } from "@/data-pipeline/alinhamento-senado.ts";
 import { FONTE_TRAJETORIA_SENADO, TRAJETORIAS_SENADO } from "@/data-pipeline/trajetoria-senado.ts";
 
@@ -37,6 +38,7 @@ function chavesDeCampo(v: unknown, saida: string[] = []): string[] {
 
 describe("editorial/derivados/alinhamento-senado.json", () => {
   const a = lerDerivado("alinhamento-senado.json") as {
+    revisao: unknown;
     corte: string;
     fonte: unknown;
     universo: { votacoes: number; disputadas: number; excluidas_sem_sequencial: number };
@@ -44,7 +46,9 @@ describe("editorial/derivados/alinhamento-senado.json", () => {
   };
 
   it("tem exatamente as chaves do contrato, e a fonte declarada no código", () => {
-    expect(Object.keys(a)).toEqual(["corte", "fonte", "universo", "por_senador"]);
+    expect(Object.keys(a)).toEqual(["revisao", "corte", "fonte", "universo", "por_senador"]);
+    // O carimbo do dono (§ 2 (b)) existe e é bem formado — "nao" ou "sim" com data e nome.
+    expect(lerCarimboRevisao(a, "alinhamento-senado.json").ok).toBe(true);
     expect(a.fonte).toEqual(FONTE_ALINHAMENTO_SENADO);
     expect(Object.keys(a.universo)).toEqual(["votacoes", "disputadas", "excluidas_sem_sequencial"]);
   });
@@ -87,12 +91,15 @@ describe("editorial/derivados/alinhamento-senado.json", () => {
     // objeto `por_senador` tem por dentro (`votos_disputadas`, `taxa_disputadas`).
     const camposDeSenador = new Set(Object.values(por_senador).flatMap((v) => Object.keys(v)));
     expect([...camposDeSenador].sort()).toEqual(["taxa_disputadas", "votos_disputadas"]);
-    expect(JSON.stringify(a).match(new RegExp(DATA, "g"))).toEqual([a.corte]);
+    // A data do carimbo do dono é a única outra data admitida — e fica fora da varredura.
+    const { revisao: _carimbo, ...semCarimbo } = a;
+    expect(JSON.stringify(semCarimbo).match(new RegExp(DATA, "g"))).toEqual([a.corte]);
   });
 });
 
 describe("editorial/derivados/trajetoria-senado.json", () => {
   const t = lerDerivado("trajetoria-senado.json") as {
+    revisao: unknown;
     gerado_em: string;
     fonte: unknown;
     universo: number;
@@ -100,7 +107,8 @@ describe("editorial/derivados/trajetoria-senado.json", () => {
   };
 
   it("tem exatamente as chaves do contrato, e a fonte declarada no código", () => {
-    expect(Object.keys(t)).toEqual(["gerado_em", "fonte", "universo", "por_sqcand"]);
+    expect(Object.keys(t)).toEqual(["revisao", "gerado_em", "fonte", "universo", "por_sqcand"]);
+    expect(lerCarimboRevisao(t, "trajetoria-senado.json").ok).toBe(true);
     expect(t.fonte).toEqual(FONTE_TRAJETORIA_SENADO);
     expect(t.gerado_em).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/);
     expect(Date.parse(t.gerado_em)).toBeLessThanOrEqual(Date.now());
@@ -136,6 +144,6 @@ describe("editorial/derivados/trajetoria-senado.json", () => {
     expect(chavesDeCampo(resto).filter((k) => CHAVES_PROIBIDAS.test(k))).toEqual([]);
     const camposDeEntrada = new Set(Object.values(por_sqcand).flatMap((v) => Object.keys(v)));
     expect([...camposDeEntrada].sort()).toEqual(["senado_codigos", "t"]);
-    expect(JSON.stringify({ ...t, gerado_em: "" })).not.toMatch(DATA);
+    expect(JSON.stringify({ ...t, gerado_em: "", revisao: null })).not.toMatch(DATA);
   });
 });

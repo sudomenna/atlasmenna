@@ -1,4 +1,9 @@
 {
+  "revisao": {
+    "revisado": "nao",
+    "revisado_em": null,
+    "por": null
+  },
   "gerado_em": "2026-09-29T05:35:47.588Z",
   "fonte": {
     "descricao": "Senado Federal — Dados Abertos (senadores em exercício e das legislaturas 50 a 57), casados com as candidaturas do cadastro do TSE",

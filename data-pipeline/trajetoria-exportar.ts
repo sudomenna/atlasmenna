@@ -15,6 +15,7 @@
 // ─── Formato (contrato — outra frente consome) ──────────────────────────────
 //
 //   {
+//     "revisao": { "revisado": "nao", "revisado_em": null, "por": null },
 //     "gerado_em": "<ISO>",
 //     "fonte": { "tse_dt_geracao": "<DT_GERACAO HH_GERACAO>", "camara": "<…>" },
 //     "universo": <nº de candidaturas de cargo 6>,
@@ -30,6 +31,10 @@
 //   Nunca se infere estreia por ausência (ADR-0058 item 4).
 // - Chave `sqcand` sempre texto; ordem numérica crescente; campos em ordem fixa.
 //   Mesmo cache → mesmo arquivo, a menos do `gerado_em`.
+// - `revisao` é o carimbo de aprovação do dono (constituição § 2 (b); spec 024,
+//   RF-223 emendado): **sempre gravado pendente** — regenerar ZERA a revisão, e
+//   o compilador de etiquetas trata o arquivo como ausente até o dono carimbar
+//   `"revisado": "sim"`, a data e o nome (`editorial/README.md`).
 // - **Nenhum nome, nenhuma data de nascimento, nenhum dado pessoal.** O único
 //   texto por candidatura é a categoria. Teste de asserção negativa sobre a
 //   saída em `tests/unit/data-pipeline/trajetoria-exportar.test.ts`.
@@ -42,6 +47,7 @@
 import { mkdirSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { type CarimboRevisao, carimboPendente } from "./_revisao-derivado.ts";
 import { TRAJETORIAS, type Trajetoria, type TrajetoriaCamara } from "./trajetoria-camara.ts";
 import { calcularTrajetoriasDoCache } from "./trajetoria-camara-calculo.ts";
 import type { FonteCamara } from "./trajetoria-camara-fonte.ts";
@@ -59,6 +65,8 @@ export interface EntradaTrajetoria {
 }
 
 export interface ExportacaoTrajetoria {
+  /** Sempre pendente na exportação — regenerar zera a revisão do dono. */
+  revisao: CarimboRevisao;
   gerado_em: string;
   fonte: { tse_dt_geracao: string; camara: string };
   universo: number;
@@ -119,6 +127,7 @@ export function montarExportacao(p: ParametrosExportacao): ExportacaoTrajetoria 
   }
 
   return {
+    revisao: carimboPendente(),
     gerado_em: p.geradoEm.toISOString(),
     fonte: { tse_dt_geracao: p.geracaoDeclarada, camara: p.camara },
     universo: p.universo.length,
@@ -150,8 +159,10 @@ export function serializarExportacao(e: ExportacaoTrajetoria): string {
       "    }",
     ].join("\n");
   });
+  const r = e.revisao;
   return [
     "{",
+    `  "revisao": { "revisado": ${JSON.stringify(r.revisado)}, "revisado_em": ${JSON.stringify(r.revisado_em)}, "por": ${JSON.stringify(r.por)} },`,
     `  "gerado_em": ${JSON.stringify(e.gerado_em)},`,
     '  "fonte": {',
     `    "tse_dt_geracao": ${JSON.stringify(e.fonte.tse_dt_geracao)},`,

@@ -411,6 +411,14 @@ describe("RF-225 — palanque por turno, sem vazamento", () => {
 // RF-226 / RF-227 — derivados
 // ---------------------------------------------------------------------------
 
+/** O carimbo do dono que libera um derivado (§ 2 (b), RF-223 emendado). */
+const APROVADO: TrajetoriaInsumo["revisao"] = {
+  estado: "aprovado",
+  revisado_em: "2026-09-28",
+  por: "Dono do produto",
+};
+const PENDENTE: TrajetoriaInsumo["revisao"] = { estado: "pendente", motivo: "nao_revisado" };
+
 function trajetoria(
   casa: "camara" | "senado",
   por: Record<
@@ -425,9 +433,11 @@ function trajetoria(
     }
   >,
   universo: number,
+  revisao: TrajetoriaInsumo["revisao"] = APROVADO,
 ): TrajetoriaInsumo {
   return {
     casa,
+    revisao,
     gerado_em: "2026-09-26T10:00:00Z",
     universo,
     por_sqcand: new Map(Object.entries(por).map(([k, v]) => [k, { t: v.t, ids: v.ids ?? [] }])),
@@ -442,9 +452,11 @@ function trajetoria(
 function alinhamento(
   casa: "camara" | "senado",
   por: Record<string, [number, number]>,
+  revisao: AlinhamentoInsumo["revisao"] = APROVADO,
 ): AlinhamentoInsumo {
   return {
     casa,
+    revisao,
     corte: "2026-09-03",
     por_id: new Map(
       Object.entries(por).map(([k, [votos, taxa]]) => [
@@ -580,6 +592,9 @@ describe("RF-227 — relação pelo alinhamento (limiares 65/35/30)", () => {
     ]);
     const tr = resolverGov(r.nacional, SEN_SP_PL, "trajetoria_cargo");
     expect(tr.estado === "classificado" && tr.etiqueta.valor).toBe("tenta_reeleicao");
+    // A medida que classificou vai junto — é o que a lista pública mostra (§ 8).
+    expect(r.nacional.candidatos[SEN_SP_PL]?.m).toEqual({ votos: 50, taxa: 70 });
+    expect(r.nacional.senado2031.senadores["5000"]?.m).toEqual({ votos: 40, taxa: 20 });
   });
 
   it("senador sem partido (S/Partido) cai em a_classificar sem quebrar", () => {
@@ -602,6 +617,130 @@ describe("RF-227 — relação pelo alinhamento (limiares 65/35/30)", () => {
     expect(
       resolverCategoria(insumosSenador2031(r.nacional, cod, s), "campo_ideologico", 1).estado,
     ).toBe("a_classificar");
+  });
+});
+
+describe("🔴 § 2 (b) / RF-223 — derivado sem a aprovação do dono vale como AUSENTE", () => {
+  const universo = () =>
+    universoTeste([{ sqcand: "250002000199", cargo: 6, uf: "SP", partido: "PL", federacao: null }]);
+  const partidoPL = {
+    "partidos.csv": csv({ chave: "partido:PL", categoria: "relacao_governo", valor: "oposicao" }),
+  };
+  const derivadosCamara = (rev: TrajetoriaInsumo["revisao"], revAlin = rev) => ({
+    trajetoria_camara: trajetoria(
+      "camara",
+      {
+        [DEP_SP_PL]: { t: "em_exercicio", ids: ["11"] },
+        "250002000199": { t: "estreante" },
+      },
+      6,
+      rev,
+    ),
+    alinhamento_camara: alinhamento("camara", { "11": [100, 80] }, revAlin),
+  });
+
+  it.each([
+    ["revisado: nao", PENDENTE],
+    ["sem o bloco revisao", { estado: "pendente", motivo: "sem_carimbo" } as const],
+  ])("%s ⇒ ninguém classificado pela regra; cai no partido; relatório diz quem aguarda", (_n, rev) => {
+    const r = compilarOk(
+      entrada(partidoPL, { universo: universo(), derivados: derivadosCamara(rev) }),
+    );
+    const rel = resolveDeputadoCompilado(r, "SP", DEP_SP_PL, "relacao_governo");
+    expect(rel.estado === "classificado" && [rel.etiqueta.valor, rel.etiqueta.origem]).toEqual([
+      "oposicao",
+      "partido",
+    ]);
+    expect(resolveDeputadoCompilado(r, "SP", DEP_SP_PL, "trajetoria_cargo").estado).toBe(
+      "a_classificar",
+    );
+    expect(r.nacional.derivados).toEqual({
+      trajetoria_camara: null,
+      alinhamento_camara: null,
+      trajetoria_senado: null,
+      alinhamento_senado: null,
+    });
+    expect(r.ufs.SP?.trajetoria).toEqual({});
+    expect(r.ufs.SP?.alinhamento).toEqual({});
+    expect(r.ufs.SP?.medidas).toEqual({});
+    expect(r.relatorio.derivadosPendentes).toEqual(["alinhamento_camara", "trajetoria_camara"]);
+    expect(r.relatorio.avisos.filter((a) => a.includes("aguardando revisão do dono"))).toHaveLength(
+      2,
+    );
+    const cob = r.relatorio.cobertura.find(
+      (c) => c.alvo === "6" && c.categoria === "trajetoria_cargo",
+    );
+    expect(cob?.classificados).toBe(0);
+  });
+
+  it("só o alinhamento aprovado, trajetória pendente ⇒ o alinhamento também não alcança ninguém", () => {
+    const r = compilarOk(
+      entrada(partidoPL, { universo: universo(), derivados: derivadosCamara(PENDENTE, APROVADO) }),
+    );
+    expect(r.nacional.derivados.alinhamento_camara).toBeNull();
+    expect(r.relatorio.avisos.some((a) => a.includes("ausente ou sem aprovação"))).toBe(true);
+    const rel = resolveDeputadoCompilado(r, "SP", DEP_SP_PL, "relacao_governo");
+    expect(rel.estado === "classificado" && rel.etiqueta.origem).toBe("partido");
+  });
+
+  it("aprovado ⇒ classifica, a proveniência leva a data da revisão e a medida vai junto", () => {
+    const r = compilarOk(
+      entrada(partidoPL, { universo: universo(), derivados: derivadosCamara(APROVADO) }),
+    );
+    expect(r.nacional.derivados.trajetoria_camara?.revisado_em).toBe("2026-09-28");
+    expect(r.nacional.derivados.alinhamento_camara?.revisado_em).toBe("2026-09-28");
+    expect(r.ufs.SP?.alinhamento).toEqual({ base_governo: [DEP_SP_PL] });
+    expect(r.ufs.SP?.medidas).toEqual({ [DEP_SP_PL]: { votos: 100, taxa: 80 } });
+    expect(r.relatorio.derivadosPendentes).toEqual([]);
+  });
+
+  it("🔴 revisado_em no futuro, ou anterior ao próprio arquivo ⇒ a compilação recusa", () => {
+    const futuro = mensagensDeErro(
+      entrada(partidoPL, {
+        universo: universo(),
+        derivados: derivadosCamara({ estado: "aprovado", revisado_em: "2026-09-30", por: "D" }),
+      }),
+    );
+    expect(futuro.some((m) => m.includes("está no futuro"))).toBe(true);
+    // trajetória gerada em 26/09 (BRT); aprovação de 25/09 é de outra versão.
+    const velha = mensagensDeErro(
+      entrada(partidoPL, {
+        universo: universo(),
+        derivados: derivadosCamara(
+          { estado: "aprovado", revisado_em: "2026-09-25", por: "D" },
+          APROVADO,
+        ),
+      }),
+    );
+    expect(velha.some((m) => m.includes("anterior ao próprio arquivo"))).toBe(true);
+  });
+
+  it("Senado pendente ⇒ nem candidato a Senador nem os 27 até 2031 ganham derivado", () => {
+    const r = compilarOk(
+      entrada(
+        {},
+        {
+          senado2031: senadoTeste(),
+          derivados: {
+            trajetoria_senado: trajetoria(
+              "senado",
+              { [SEN_SP_PL]: { t: "em_exercicio", ids: ["777"] } },
+              2,
+              PENDENTE,
+            ),
+            alinhamento_senado: alinhamento(
+              "senado",
+              { "5000": [40, 20], "777": [50, 70] },
+              PENDENTE,
+            ),
+          },
+        },
+      ),
+    );
+    expect(r.nacional.candidatos[SEN_SP_PL]?.d).toBeUndefined();
+    expect(r.nacional.candidatos[SEN_SP_PL]?.m).toBeUndefined();
+    expect(r.nacional.senado2031.senadores["5000"]?.d).toBeUndefined();
+    expect(resolverGov(r.nacional, SEN_SP_PL, "trajetoria_cargo").estado).toBe("a_classificar");
   });
 });
 

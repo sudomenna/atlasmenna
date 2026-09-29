@@ -15,9 +15,11 @@
 // importado só pelo leitor de CSV). Não loga nome civil, data de nascimento
 // nem nome social.
 //
-// ─── O ÚNICO ponto que lê `DT_NASCIMENTO` e `NM_SOCIAL_CANDIDATO` ───────────
+// ─── O ponto da Câmara que lê `DT_NASCIMENTO` e `NM_SOCIAL_CANDIDATO` ───────
 //
-// É `trajetoriaDaLinha`, abaixo. A exceção de PII do ADR-0039 aberta pelo
+// São DOIS no projeto, um por casa: `trajetoriaDaLinha`, abaixo, e
+// `candidatoSenadoDaLinha` em `trajetoria-senado.ts` (ADR-0062). A exceção de
+// PII do ADR-0039 aberta pelo
 // ADR-0058 é estrita: os dois valores existem só como argumento de
 // `calcularTrajetoria` e morrem ali. **Não** entram em `CandidatoRow` (o
 // import não os lê — `candidatos-parse.ts` e `candidatos-import.ts` ficam
@@ -42,9 +44,10 @@ import { carregarFonteCamara, type FonteCamara } from "./trajetoria-camara-fonte
 /**
  * Trajetória na Câmara de uma linha do arquivo principal do TSE (RF-214).
  *
- * **O único ponto do projeto que lê `DT_NASCIMENTO` e `NM_SOCIAL_CANDIDATO`.**
- * Os dois valores existem só como argumento da chamada abaixo e não são
- * devolvidos, guardados nem logados — ver o cabeçalho deste arquivo.
+ * **O único ponto da Câmara que lê `DT_NASCIMENTO` e `NM_SOCIAL_CANDIDATO`**
+ * (o do Senado é `candidatoSenadoDaLinha`, em `trajetoria-senado.ts`). Os dois
+ * valores existem só como argumento da chamada abaixo e não são devolvidos,
+ * guardados nem logados — ver o cabeçalho deste arquivo.
  */
 export function trajetoriaDaLinha(
   campos: readonly string[],
