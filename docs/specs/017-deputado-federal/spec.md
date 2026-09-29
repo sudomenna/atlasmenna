@@ -94,9 +94,15 @@ de um estado costuma se decidir por algumas centenas de votos.
 ### Fora
 
 - **Deputado Estadual e Distrital** (cargos 7/8). Fora do escopo do produto.
-- **Projeção zona a zona.** Mesma razão da spec 016.
-- **Suplência nominal.** O ADR-0027 descreve a regra (Código Eleitoral art. 112),
-  mas exibir lista de suplentes não entra nesta janela.
+- ~~**Projeção zona a zona.** Mesma razão da spec 016.~~ ⚠️ **Superado em
+  2026-09-29 pela [spec 026](../026-deputado-listas-projecao/spec.md)** (RF-263,
+  RF-264): a projeção de deputado passa a existir, zona a zona, com trava de 25%
+  e interruptor no Edge Config (ADR-0063 da spec 026).
+- ~~**Suplência nominal.** O ADR-0027 descreve a regra (Código Eleitoral art. 112),
+  mas exibir lista de suplentes não entra nesta janela.~~ ⚠️ **Superado em
+  2026-09-29 pela [spec 026](../026-deputado-listas-projecao/spec.md)** (RF-260,
+  RF-261): a lista inteira de cada agremiação vai à tela, em três faixas, na
+  ordem do voto apurado — que é a ordem de suplência do art. 112.
 
 ## Requisitos Funcionais
 
@@ -269,6 +275,12 @@ depende de sobras ainda indefinidas.
 **Aceitação**:
 - Given uma UF com a última vaga dentro do IC entre duas agremiações, when a tela
   renderiza, then isso é legível — não uma cadeira atribuída com falsa firmeza.
+
+> **Emendado em 2026-09-29 pela [spec 026](../026-deputado-listas-projecao/spec.md)
+> (ADR-0063).** O requisito passa a valer também para as **cadeiras projetadas**:
+> `cadeiras_projetadas_ci95` quando a faixa for medida, e a marca "apertada" na
+> vaga de sobra projetada (RF-263). O número central continua sendo o da parcial
+> (`cadeiras`) — a projeção vive em campo próprio e é sempre "não oficial".
 
 **RF-128 — Cadência de 30 minutos visível**
 
@@ -471,6 +483,25 @@ O painel "A corrida" (RF-200..210) **não entra** em nenhuma tela de Deputado Fe
 ### Spec 025 — Câmara de 2027 por bloco (2026-09-29)
 
 `/deputado-federal` ganha, **depois** do painel com o plenário por partido (inalterado), o painel "Câmara de 2027: quem terá maioria" (RF-244): as mesmas cadeiras por relação com o governo Lula, com o padrão de cada partido ou federação durante a apuração, as marcas de 257/308/342 (calculadas do total) e a fonte de cada padrão. Só com a chave `camara2027`, o critério publicado e toda agremiação com cadeira classificada. A regra "sem marca em 257" desta spec continua valendo para a visão por partido ([spec 025](../025-visoes-editoriais/spec.md), ADR-0061 item 4).
+
+### Spec 026 — listas por agremiação, projeção com trava, extras e três correções (2026-09-29)
+
+A [spec 026](../026-deputado-listas-projecao/spec.md) (RF-260..RF-277) estende as duas telas desta spec e **supera** duas decisões dela:
+
+- **Design D9** ("o número central é voto apurado; a tela não pode chamar isso de projeção") fica **superado** pelo ADR-0063 da spec 026 (projeção de deputado com trava de 25% e interruptor no Edge Config). O número central continua sendo o da parcial (`cadeiras`, `bancada`); a projeção entra em campos próprios, só com a trava aberta e o interruptor ligado, sempre rotulada "projeção · não oficial". O texto do D10 muda de razão, não de valor: `composition` continua `{0, 0, 1}` porque `bancada` continua sendo só voto contado.
+- **"Suplência nominal" em Fora** fica **superada**: a lista inteira de cada agremiação vai à tela, em três faixas (20 visíveis · 21–60 na página · 61+ sob demanda), na ordem do voto apurado.
+- **RF-127** passa a valer também para as cadeiras projetadas (nota no próprio RF).
+- **Três correções** entram junto, sem mudar os RFs daqui: a Conferência deixa de afirmar que os números "batem" sem ter comparado (hoje `deputado.py:502-503` zera o dado do TSE no modo por zona e `page.tsx:752-753` afirma a igualdade); o voto de candidato anulado ou sub judice sai da conta de cadeiras (`dvt`); e o % apurado da UF deixa de ser o da zona mais adiantada.
+
+**Testes desta spec afetados** (`tests/unit/pages/deputado-federal.test.tsx`):
+
+| Teste | Destino |
+|---|---|
+| **(m5)** "D9: a tela NÃO chama isto de projeção" | **reescrever** — a palavra passa a ser permitida, mas só no mesmo elemento que "não oficial"; o número de `bancada` continua nunca sendo chamado de projeção |
+| **(t5)** "D9: a tela de UF também não chama isto de projeção" | **reescrever** — mesma regra, na tela de UF |
+| **(t)** "suplentes NÃO vão à tela" | **reescrever** — a lista vai à tela; o teste passa a exigir a ordem por voto apurado e as três faixas |
+| **(c3)** "sem payload, a tela NÃO afirma granularidade" | **reescrever** a última asserção (`metodologia` ≈ "não são uma projeção"); as duas asserções negativas de granularidade ficam |
+| **(m6)** "a barra 'Modelo x%' não existe" | **fica como está** — nenhuma barra de composição entra no Deputado |
 
 ## Cross-refs
 

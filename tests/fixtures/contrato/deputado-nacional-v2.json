@@ -1,0 +1,390 @@
+{
+  "ts": "2026-10-04T23:41:07.312Z",
+  "dado_ts": "2026-10-04T23:36:55Z",
+  "pares_atrasados": 3,
+  "cargo": 6,
+  "turno": 1,
+  "pct_apurado_total": 7.84113,
+  "ufs_apuradas": 4,
+  "atualizacao_min": 30,
+  "bancada": {
+    "total_cadeiras": 513,
+    "cadeiras_atribuidas": 94,
+    "ufs_calculadas": 4,
+    "ufs_aguardando": 23,
+    "por_agremiacao": [
+      {
+        "cod": "22",
+        "sigla": "PL",
+        "nome": "Partido Liberal",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PL",
+        "cadeiras": 35,
+        "cadeiras_indefinidas": 2,
+        "votos_nominais": 1790816,
+        "votos_legenda": 70611,
+        "votos_validos": 1861427,
+        "pct_votos": 35.39456
+      },
+      {
+        "cod": "13",
+        "sigla": "PT/PC do B/PV",
+        "nome": "Federação Brasil da Esperança",
+        "tipo": "federacao",
+        "componentes": ["PT", "PC do B", "PV"],
+        "sigla_lider": "PT",
+        "cadeiras": 24,
+        "cadeiras_indefinidas": 3,
+        "votos_nominais": 1193617,
+        "votos_legenda": 89539,
+        "votos_validos": 1283156,
+        "pct_votos": 24.39889
+      },
+      {
+        "cod": "15",
+        "sigla": "MDB",
+        "nome": "Movimento Democrático Brasileiro",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "MDB",
+        "cadeiras": 8,
+        "cadeiras_indefinidas": 1,
+        "votos_nominais": 384445,
+        "votos_legenda": 18588,
+        "votos_validos": 403033,
+        "pct_votos": 7.66357
+      },
+      {
+        "cod": "50",
+        "sigla": "PSOL/REDE",
+        "nome": "Federação PSOL REDE",
+        "tipo": "federacao",
+        "componentes": ["PSOL", "REDE"],
+        "sigla_lider": "PSOL",
+        "cadeiras": 7,
+        "cadeiras_indefinidas": 1,
+        "votos_nominais": 420550,
+        "votos_legenda": 21239,
+        "votos_validos": 441789,
+        "pct_votos": 8.40051
+      },
+      {
+        "cod": "44",
+        "sigla": "UNIÃO",
+        "nome": "União Brasil",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "UNIÃO",
+        "cadeiras": 7,
+        "cadeiras_indefinidas": 1,
+        "votos_nominais": 356706,
+        "votos_legenda": 23034,
+        "votos_validos": 379740,
+        "pct_votos": 7.22066
+      },
+      {
+        "cod": "55",
+        "sigla": "PSD",
+        "nome": "Partido Social Democrático",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PSD",
+        "cadeiras": 5,
+        "cadeiras_indefinidas": 0,
+        "votos_nominais": 311728,
+        "votos_legenda": 14128,
+        "votos_validos": 325856,
+        "pct_votos": 6.19607
+      },
+      {
+        "cod": "10",
+        "sigla": "REPUBLICANOS",
+        "nome": "Republicanos",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "REPUBLICANOS",
+        "cadeiras": 5,
+        "cadeiras_indefinidas": 0,
+        "votos_nominais": 351265,
+        "votos_legenda": 16615,
+        "votos_validos": 367880,
+        "pct_votos": 6.99515
+      },
+      {
+        "cod": "40",
+        "sigla": "PSB",
+        "nome": "Partido Socialista Brasileiro",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PSB",
+        "cadeiras": 3,
+        "cadeiras_indefinidas": 0,
+        "votos_nominais": 188321,
+        "votos_legenda": 7874,
+        "votos_validos": 196195,
+        "pct_votos": 3.7306
+      },
+      {
+        "cod": "36",
+        "sigla": "AGIR",
+        "nome": "Agir",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "AGIR",
+        "cadeiras": 0,
+        "cadeiras_indefinidas": 0,
+        "votos_nominais": 0,
+        "votos_legenda": 0,
+        "votos_validos": 0,
+        "pct_votos": 0.0
+      }
+    ]
+  },
+  "por_uf": [
+    {
+      "sigla": "AC",
+      "pct_apurado": 100.0,
+      "lugares_a_preencher": 8,
+      "quociente_eleitoral": 35203,
+      "cadeiras_definidas": 8,
+      "vagas_nao_preenchidas": 0,
+      "empates_indeterminados": 0,
+      "lider": {
+        "cod": "22",
+        "sigla": "PL",
+        "cadeiras": 3
+      },
+      "projecao": {
+        "estado": "liberada",
+        "pct_minimo": 25,
+        "zonas_apuradas": 31,
+        "zonas_total": 31
+      }
+    },
+    {
+      "sigla": "AP",
+      "pct_apurado": 80.50254,
+      "lugares_a_preencher": 8,
+      "quociente_eleitoral": 44770,
+      "cadeiras_definidas": 8,
+      "vagas_nao_preenchidas": 0,
+      "empates_indeterminados": 0,
+      "lider": {
+        "cod": "22",
+        "sigla": "PL",
+        "cadeiras": 3
+      },
+      "projecao": {
+        "estado": "indisponivel",
+        "motivo": "cobertura",
+        "pct_minimo": 25,
+        "zonas_apuradas": 17,
+        "zonas_total": 17
+      }
+    },
+    {
+      "sigla": "RR",
+      "pct_apurado": 62.41573,
+      "lugares_a_preencher": 8,
+      "quociente_eleitoral": 32426,
+      "cadeiras_definidas": 8,
+      "vagas_nao_preenchidas": 0,
+      "empates_indeterminados": 0,
+      "lider": {
+        "cod": "22",
+        "sigla": "PL",
+        "cadeiras": 4
+      },
+      "projecao": {
+        "estado": "liberada",
+        "pct_minimo": 25,
+        "zonas_apuradas": 13,
+        "zonas_total": 16
+      }
+    },
+    {
+      "sigla": "SP",
+      "pct_apurado": 18.71204,
+      "lugares_a_preencher": 70,
+      "quociente_eleitoral": 62284,
+      "cadeiras_definidas": 70,
+      "vagas_nao_preenchidas": 0,
+      "empates_indeterminados": 0,
+      "lider": {
+        "cod": "22",
+        "sigla": "PL",
+        "cadeiras": 25
+      },
+      "projecao": {
+        "estado": "aguardando",
+        "motivo": "pct_minimo",
+        "pct_minimo": 25,
+        "zonas_apuradas": 388,
+        "zonas_total": 1011
+      }
+    }
+  ],
+  "mais_votados": [
+    {
+      "uf": "SP",
+      "sqcand": 10002630001,
+      "nome": "Araújo SP-22-01",
+      "partido": "PL",
+      "cod": "22",
+      "sigla": "PL",
+      "numero": 2201,
+      "votos": 189224,
+      "pct_validos": 4.34013
+    },
+    {
+      "uf": "SP",
+      "sqcand": 10002630002,
+      "nome": "Conceição SP-22-02",
+      "partido": "PL",
+      "cod": "22",
+      "sigla": "PL",
+      "numero": 2202,
+      "votos": 136316,
+      "pct_validos": 3.1266
+    },
+    {
+      "uf": "SP",
+      "sqcand": 10002630072,
+      "nome": "Conceição SP-13-01",
+      "partido": "PT",
+      "cod": "13",
+      "sigla": "PT/PC do B/PV",
+      "numero": 1301,
+      "votos": 119288,
+      "pct_validos": 2.73604
+    },
+    {
+      "uf": "SP",
+      "sqcand": 10002630003,
+      "nome": "Gonçalves SP-22-03",
+      "partido": "PL",
+      "cod": "22",
+      "sigla": "PL",
+      "numero": 2203,
+      "votos": 105154,
+      "pct_validos": 2.41186
+    },
+    {
+      "uf": "SP",
+      "sqcand": 10002630160,
+      "nome": "Ribeiro SP-50-01",
+      "partido": "PSOL",
+      "cod": "50",
+      "sigla": "PSOL/REDE",
+      "numero": 5001,
+      "votos": 104718,
+      "pct_validos": 2.40186
+    },
+    {
+      "uf": "SP",
+      "sqcand": 10002630073,
+      "nome": "Gonçalves SP-13-02",
+      "partido": "PT",
+      "cod": "13",
+      "sigla": "PT/PC do B/PV",
+      "numero": 1302,
+      "votos": 90921,
+      "pct_validos": 2.0854
+    },
+    {
+      "uf": "SP",
+      "sqcand": 10002630004,
+      "nome": "Magalhães SP-22-04",
+      "partido": "PL",
+      "cod": "22",
+      "sigla": "PL",
+      "numero": 2204,
+      "votos": 84827,
+      "pct_validos": 1.94563
+    },
+    {
+      "uf": "SP",
+      "sqcand": 10002630074,
+      "nome": "Magalhães SP-13-03",
+      "partido": "PC do B",
+      "cod": "13",
+      "sigla": "PT/PC do B/PV",
+      "numero": 6501,
+      "votos": 73141,
+      "pct_validos": 1.67759
+    },
+    {
+      "uf": "RR",
+      "sqcand": 10002620001,
+      "nome": "Araújo RR-22-01",
+      "partido": "PL",
+      "cod": "22",
+      "sigla": "PL",
+      "numero": 2201,
+      "votos": 71480,
+      "pct_validos": 27.55473
+    },
+    {
+      "uf": "SP",
+      "sqcand": 10002630005,
+      "nome": "Brandão SP-22-05",
+      "partido": "PL",
+      "cod": "22",
+      "sigla": "PL",
+      "numero": 2205,
+      "votos": 70623,
+      "pct_validos": 1.61984
+    }
+  ],
+  "puxadores": [
+    {
+      "uf": "SP",
+      "sqcand": 10002630001,
+      "nome": "Araújo SP-22-01",
+      "partido": "PL",
+      "cod": "22",
+      "sigla": "PL",
+      "numero": 2201,
+      "votos": 189224,
+      "pct_validos": 4.34013,
+      "quociente_eleitoral": 62284,
+      "quocientes": 3,
+      "excedente": 2
+    },
+    {
+      "uf": "SP",
+      "sqcand": 10002630002,
+      "nome": "Conceição SP-22-02",
+      "partido": "PL",
+      "cod": "22",
+      "sigla": "PL",
+      "numero": 2202,
+      "votos": 136316,
+      "pct_validos": 3.1266,
+      "quociente_eleitoral": 62284,
+      "quocientes": 2,
+      "excedente": 1
+    },
+    {
+      "uf": "RR",
+      "sqcand": 10002620001,
+      "nome": "Araújo RR-22-01",
+      "partido": "PL",
+      "cod": "22",
+      "sigla": "PL",
+      "numero": 2201,
+      "votos": 71480,
+      "pct_validos": 27.55473,
+      "quociente_eleitoral": 32426,
+      "quocientes": 2,
+      "excedente": 1
+    }
+  ],
+  "insights": [],
+  "composition": {
+    "pre_election": 0.0,
+    "model": 0.0,
+    "actual_results": 1.0
+  }
+}

@@ -128,8 +128,8 @@
       "title": "Todos os candidatos do 1T visíveis em 3 camadas fixas, sem collapsible",
       "status": "accepted",
       "path": "docs/architecture/adrs/0017-transparencia-total-3-camadas.md",
-      "note": "parcialmente superado por ADR-0018 no modo multi-1t (apenas Camada 1); emendado por ADR-0029 (formato de linha) e ADR-0034 (D21 — distingue colapso visual de remoção de nós); ver seção Status do arquivo",
-      "amended_by": ["0029", "0034"]
+      "note": "parcialmente superado por ADR-0018 no modo multi-1t (apenas Camada 1); emendado por ADR-0029 (formato de linha), ADR-0034 (D21 — distingue colapso visual de remoção de nós) e ADR-0065 (emenda ESCOPADA às listas de candidaturas proporcionais — faixas 20/60/61+; <details> segue proibido; só a faixa 61+ fica fora do documento); ver seção Status do arquivo",
+      "amended_by": ["0029", "0034", "0065"]
     },
     {
       "id": "0018",
@@ -164,8 +164,8 @@
       "status": "accepted",
       "date": "2026-09-05",
       "supersedes": "0015",
-      "amended_by": "0035",
-      "note": "nota 2026-09-11: ingestão passou a ser por par (município, zona); merge_pairs_into_zonas recompõe a zona em memória antes do estimador — método intocado, gate OT-4 idêntico ao dígito antes/depois",
+      "amended_by": ["0035", "0063"],
+      "note": "nota 2026-09-11: ingestão passou a ser por par (município, zona); merge_pairs_into_zonas recompõe a zona em memória antes do estimador — método intocado, gate OT-4 idêntico ao dígito antes/depois. Nota 2026-09-29 (ADR-0063): método estendido ao cargo 6 (Deputado Federal), projeção do estado inteiro com imputação das zonas sem boletim — nada do que este ADR decide muda",
       "path": "docs/architecture/adrs/0021-extrapolacao-do-apurado-sem-2022.md"
     },
     {
@@ -182,8 +182,8 @@
       "title": "Pós-estratificação por porte de zona no bootstrap de candidatos, não amostragem simples das zonas apuradas",
       "status": "accepted",
       "date": "2026-09-07",
-      "amended_by": "0035",
-      "note": "continuação direta do ADR-0021 — não o supersede; responde ao risco de viés de composição já nomeado ali como central. Nota 2026-09-11: ingestão por par não altera os estratos — eleitorado segue somada por zona na leitura",
+      "amended_by": ["0035", "0063"],
+      "note": "continuação direta do ADR-0021 — não o supersede; responde ao risco de viés de composição já nomeado ali como central. Nota 2026-09-11: ingestão por par não altera os estratos — eleitorado segue somada por zona na leitura. Nota 2026-09-29 (ADR-0063): estratos servem também à imputação das zonas sem boletim na projeção de Deputado Federal",
       "path": "docs/architecture/adrs/0023-pos-estratificacao-por-porte-de-zona.md"
     },
     {
@@ -217,7 +217,8 @@
       "title": "Conversão de votos em cadeiras para Deputado Federal — quociente eleitoral truncado (não round()), sobras em duas fases via médias (80/20 depois abertas), art. 111 substituído pelo art. 12-A pós-ADIs 7228/7263/7325",
       "status": "accepted",
       "date": "2026-09-11",
-      "note": "fecha a lacuna reservada pelo ADR-0026 (:37, :75); corrige citação do ADR-0026, que atribuía o art. 111 à Lei 9.504 — o dispositivo é do Código Eleitoral (Lei 4.737/1965); art. 111 declarado inconstitucional pelo STF (ADIs 7228/7263/7325), substituído pelo art. 12-A da Res.-TSE 23.677/2021 (redações 23.734/2024 e 23.748/2026); lugaresAPreencher lido do dado do TSE, nunca hardcoded; nota de emenda sugerida ao ADR-0026, não aplicada por este ADR",
+      "amended_by": "0064",
+      "note": "Nota 2026-09-29 (ADR-0064): emenda escopada só à ENTRADA do algoritmo (o que é voto nominal e legenda: pelo dvt do TSE) — algoritmo intocado, golden 511/513 inalterado. Fecha a lacuna reservada pelo ADR-0026 (:37, :75); corrige citação do ADR-0026, que atribuía o art. 111 à Lei 9.504 — o dispositivo é do Código Eleitoral (Lei 4.737/1965); art. 111 declarado inconstitucional pelo STF (ADIs 7228/7263/7325), substituído pelo art. 12-A da Res.-TSE 23.677/2021 (redações 23.734/2024 e 23.748/2026); lugaresAPreencher lido do dado do TSE, nunca hardcoded; nota de emenda sugerida ao ADR-0026, não aplicada por este ADR",
       "path": "docs/architecture/adrs/0027-conversao-votos-em-cadeiras-deputado-federal.md"
     },
     {
@@ -514,6 +515,33 @@
       "date": "2026-09-29",
       "note": "Foto estática dos 27 senadores com mandato até 2031 (Senado Dados Abertos, suplente em exercício incluído) em editorial/senado/mandato-2031.json — exatamente 27, um por UF, todo partido na paleta, data da foto visível; mandato-2027.json (os 54 atuais) depois. Alinhamento ao governo derivado do projeto externo alinhamento-governo-camara (871 votações nominais de plenário até 03/09/2026, 597 disputadas; validado contra o Poder360 2023-24) importado por lista branca (deputado_id, votos_disputadas, taxa_alinhamento_disputadas + data de corte) para editorial/derivados/alinhamento-camara.json; recusa dataNascimento/cpf e nunca lê raw/ (que tem dataNascimento). A regra usa votos_disputadas (limiar 30), NÃO o amostra_pequena do projeto (30 votos válidos totais). Junção do deputado pelos camara_ids da trajetória (ADR-0058), não por nome. Casamento por nome + nascimento só em memória (Senado condicionado ao spike). Negativas: proveniência do alinhamento fora do repositório; corte em 03/09; só a Câmara é medida (Senado por partido — assimetria entre casas); os 27 são retrato (senador eleito governador cede a vaga a suplente em 2027); 'exatamente 27' falha em vez de ajustar.",
       "path": "docs/architecture/adrs/0062-fontes-parlamentares-foto-do-senado-e-alinhamento-derivado-sem-dado-pessoal.md"
+    },
+    {
+      "id": "0063",
+      "title": "Projeção de votos e de cadeiras de Deputado Federal — extrapolação do estado inteiro por zona, com trava de 25% apurado e interruptor em chave do Edge Config; supera o D9 do design da spec 017",
+      "status": "accepted",
+      "date": "2026-09-29",
+      "amends": ["0021", "0023"],
+      "note": "Plano aprovado pelo dono em 29/09. Supera o D9 (e a redação do D10) do design da spec 017 — 'no cargo 6 não há projeção de voto' — e emenda o RF-127 (o intervalo de cadeiras vale para a projeção); estende os ADR-0021/0023 ao cargo 6 sem superseder; NÃO toca o ADR-0027 (mesmo algoritmo, entrada já filtrada pelo ADR-0064). Método: zona apurada = esi>0 ∧ vv>0, k = te/esi, razão das somas por chave (sqcand, legenda:<cod>), pós-estratificação por tercis de te (UF com >=12 zonas), imputação das zonas sem boletim no estado inteiro (decisão do dono), arredondamento inteiro determinístico em Fraction, depois distribuir_cadeiras inalterado. Trava por UF, todas juntas: % apurado >= 25 (PONDERADO pelo eleitorado — corrige project.py:7924, que pegava o max entre zonas; zona sem boletim conta zero), >= 2 zonas apuradas, nv publicado, sem coligação, interruptor ligado; estado liberada|aguardando|indisponivel sempre com motivo. Interruptor = chave do Global Config `interruptor-projecao-dep` {ligada, pct_minimo?, em?, por?}, lida a cada ciclo E a cada render (desligar->sumir alvo 60 s, não medido); falha fechada (erro de leitura, valor inválido e chave ausente = desligada); pct_minimo só sobe; em/por nunca publicados; `pnpm dep:projecao` confirma o id do store e recusa o de ensaio por omissão. Regra registrada: variável de ambiente NÃO é interruptor de runtime na Vercel (só deployment novo) — runbook.md:870 e vercel.ts:184 afirmam 'sem deploy' para TSE_DEPUTADO_GRANULARIDADE e estão errados; deploy congelado 16h-05h em 04/10. Sempre 'projeção · não oficial' (§ 1) + bloco § 8; ordem das listas segue o voto apurado, a projeção nunca ordena (§ 2/ADR-0051). § 6: sem linhas novas em `projections` — precedente do dono de 17/09 (CARGOS_COM_SERIE_PERSISTIDA={1,3,5}) + candidato_id int4 não comporta sqcand de 11-12 dígitos; exceção assumida ao texto da constituição, não reinterpretada. Validação G1 (identidades) / G2 (replay sintético, reportado ao dono, NÃO sobe a trava sozinho) / G3 (geografia real de 2022, só se o dono baixar) / G4 (simulado) / G5 (replay presidencial inalterado, MAE@1h 2,3623 pp / cobertura 82,5%); limitação: sem ordem de chegada real de 2022 — risco de voto de reduto a 25%; degradação pré-acordada: se G2 falhar feio, a projeção sobe DESLIGADA. Negativas: nasce ligada sem validação contra a noite real; desligar é rápido, ligar leva um ciclo do modelo; sem alarme que compare projeção e parcial; Blob reescrito a cada ciclo (histórico só por replay).",
+      "path": "docs/architecture/adrs/0063-projecao-deputado-federal-trava-25-e-interruptor-edge-config.md"
+    },
+    {
+      "id": "0064",
+      "title": "Destino do voto na eleição proporcional — o modelo segue o `dvt` que o TSE publica por candidatura (só voto válido conta para o candidato, 'Válido (legenda)' conta para o partido, 'Anulado' e 'Anulado sub judice' ficam fora do quociente eleitoral e do partidário); difere do majoritário (ADR-0053) porque o TSE trata o voto de forma diferente",
+      "status": "accepted",
+      "date": "2026-09-29",
+      "amends": "0027",
+      "note": "Plano aprovado pelo dono em 29/09. Emenda ESCOPADA ao ADR-0027 (só a entrada do algoritmo; algoritmo e golden 511/513 intocados); contrasta com o ADR-0053 sem emendá-lo. Bug: api/model/deputado.py:313 usa cand.vap ('votos computados' — qualquer destino) e nenhum ponto do caminho proporcional lê dvt; o golden 2022 foi montado com QT_VOTOS_NOMINAIS_VALIDOS/QT_VOTOS_LEGENDA_VALIDOS (votos válidos) — a produção roda com entrada diferente da validada. Regra: _DESTINO_PROPORCIONAL (4 valores do dicionário EA20, separado do _DESTINO_POR_DVT majoritário, que de propósito não tem 'Válido (legenda)'): Válido/ausente -> nominal do candidato; Válido (legenda) -> partido, não elegível; Anulado e Anulado sub judice -> fora de QE e QP. Desconhecido = ausente; divergente entre arquivos do ciclo = ausente com aviso (regra 4 do ADR-0053). Legenda efetiva = (tvtn+tvtl) - Σ vap dos elegíveis, ancorada nos totais válidos do TSE (independe de em qual dos dois o TSE soma 'Válido (legenda)'); fallback tvtl + Σ vap(legenda) se negativa ou sem tvtn, com log — pode contar em dobro, quem acusa é a invariante. Invariante: Σ totais das agremiações == v.vv por arquivo, AVISO (não altera o cálculo). dvt ausente -> bit-idêntico a hoje (protege golden e replay). Tela: candidatura excluída aparece na lista com o texto do destino e pct_validos=null (estendido por este ADR também a 'Válido (legenda)'), nunca eleita; % das demais sobre vv da UF, não vvc. Por que difere do ADR-0053: mesmo princípio (seguir o TSE), outro destino — no majoritário sub judice segue formalmente na disputa (st '2º turno', e 's'); no proporcional o voto é insumo do quociente de todos os partidos e o TSE o mantém fora (vv exclui van e vansj). Contexto legal citado sem reinterpretação: CE art. 175 §§ 3-4; Lei 9.504 art. 16-A e p.ú. Negativas: erro persiste até a 1ª totalização parcial (dvt só existe depois); resultado muda entre ciclos se o TSE reclassificar; tratamento diferente entre cargos exige nota em /sobre-o-modelo, sem parecer jurídico registrado. Pontos em aberto: medição de W0 (RR/AP) ainda não existe — a regra assume que tvtn/tvtl já excluem anulados e sub judice; par[].dvt não lido; artigos de lei citados a partir do plano, não relidos.",
+      "path": "docs/architecture/adrs/0064-destino-do-voto-proporcional-segue-o-dvt-do-tse.md"
+    },
+    {
+      "id": "0065",
+      "title": "Listas de candidaturas proporcionais em três faixas — 20 visíveis, 21 a 60 já na página e recortadas por CSS, 61 em diante buscadas no clique por rota fora de `/api`; emenda escopada ao ADR-0017 e teto de peso próprio para /uf/SP/deputado-federal",
+      "status": "accepted",
+      "date": "2026-09-29",
+      "amends": "0017",
+      "note": "Plano aprovado pelo dono em 29/09. Emenda ESCOPADA ao ADR-0017 (só a lista por agremiação em eleição proporcional; corridas majoritárias intactas; <details> segue proibido — mecanismo = recorte CSS + botão, a mecânica do ADR-0034 D21, reaproveitada sem emendá-lo). Faixas por rank: 1-20 visíveis; 21-60 no documento/DOM/árvore de acessibilidade, recortadas (height:0; overflow:hidden), botão com aria-expanded/aria-controls; 61+ FORA do documento, buscadas em clique explícito (aria-busy, região viva, foco na 1ª linha nova, erro com 'tentar de novo', memória do cliente, sem carga por rolagem). Candidatura com marca de eleito fica sempre na página (posições 1-60 ∪ marcadas) — a faixa 3 nunca carrega marca nem projeção, o interruptor do ADR-0063 não precisa alcançá-la; sem posição (Anulado/sub judice/Válido (legenda), ADR-0064) = último grupo, sempre na página; união por sqcand. Ordem = voto apurado (nominais válidos), rank com desempate ordem de alocação -> sqcand; nunca projeção/marca/etiqueta (§ 2, ADR-0051). Rota app/(dep)/uf/[sigla]/deputado-federal/lista/route.ts FORA de /api (BotID cobre /api/*: 403 bot_detected a cliente automatizado, runbook:1067-1075) lê Blob deputado/uf-lista/<UF>.json, revalidate 60, Cache-Control public, s-maxage=60, stale-while-revalidate=300; sigla contra as 27 UFs (404 fora), erro sempre no-store. Dado viaja em payloads_uf[UF].lista_restante (o schema de escrita descarta chaves novas no topo sem erro), writer separa em objeto próprio; peças levam o mesmo dado_ts e o cliente mostra a hora de cada uma se diferirem. Peso: teto próprio ≈ 480 KiB (~70 KiB gzip; decisão do dono) para /uf/SP/deputado-federal, medido no e2e COM o Blob servido (senão mede casca vazia); teto global de 300 KiB (perf-budget.spec.ts:167) NÃO muda; tuplas compactas (evita HTML + RSC duplicados, defeito do /governador, 325.635 B) + content-visibility:auto por agremiação. Negativas: primeira vez que linhas ficam fora do documento por peso numa lista de candidaturas (Ctrl+F e leitor de tela não acham 61+); D21 foi medido com 11 linhas, aqui até 40 recortadas por agremiação × dezenas em SP — escala não medida; linhas viram client-rendered (fora de Server Components); duas peças escritas em momentos diferentes; rota sem BotID (Blob já é público); teto de 480 KiB é escolha, não medida da noite. Ponto em aberto relevante: pela lembrança do autor da regra de registro (Lei 9.504 art. 10, redação Lei 14.211/2021: 100% das vagas + 1) a faixa 3 só existiria em SP (71 por lista, no máximo 11 linhas) — NÃO conferido; contar em candidatos/uf/<UF>/dep.json antes de construir a rota.",
+      "path": "docs/architecture/adrs/0065-listas-proporcionais-em-tres-faixas.md"
     }
   ],
   "nfr": {

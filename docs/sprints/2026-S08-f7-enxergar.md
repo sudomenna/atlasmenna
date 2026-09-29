@@ -8,7 +8,7 @@ sequence: 1
 opened: 2026-09-18
 phase: F7
 goal: Parar de trabalhar às cegas — o alarme sai do código e chega a um canal, um vigia de fora prova que o ciclo rodou, e o portão de CI passa a enxergar o modelo.
-specs_in_flight: [010-operacao-monitoramento]
+specs_in_flight: [010-operacao-monitoramento, 026-deputado-listas-projecao]
 specs_planned_next: [020-evolucao-da-apuracao, 001-ingestao-tse, 002-modelo-estatistico]
 ---
 

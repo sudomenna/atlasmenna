@@ -1,0 +1,5253 @@
+{
+  "AC": {
+    "ts": "2026-10-04T23:41:07.312Z",
+    "dado_ts": "2026-10-04T22:58:40Z",
+    "pares_atrasados": 0,
+    "cargo": 6,
+    "turno": 1,
+    "contrato": 2,
+    "uf": "AC",
+    "pct_apurado": 100.0,
+    "lugares_a_preencher": 8,
+    "quociente_eleitoral": 35203,
+    "quociente_eleitoral_tse": 35203,
+    "totalizacao_final": true,
+    "divergencias": [
+      {
+        "o_que": "cadeiras",
+        "nosso": 2,
+        "tse": 1,
+        "detalhe": "agremiação 15"
+      },
+      {
+        "o_que": "cadeiras",
+        "nosso": 1,
+        "tse": 2,
+        "detalhe": "agremiação 55"
+      },
+      {
+        "o_que": "eleitos",
+        "nosso": 1,
+        "tse": 1,
+        "detalhe": "eleitos só no nosso cálculo: 10002610019; só no do TSE: 10002610026"
+      }
+    ],
+    "agremiacoes": [
+      {
+        "cod": "22",
+        "sigla": "PL",
+        "nome": "Partido Liberal",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PL",
+        "votos_nominais": 95983,
+        "votos_legenda": 3310,
+        "votos_validos": 99293,
+        "pct_votos": 35.25679,
+        "quociente_partidario": 2,
+        "cadeiras": 3,
+        "cadeiras_projetadas": 3,
+        "votos_projetados": 99293,
+        "corte": {
+          "ultimo_eleito": 10002610003,
+          "primeiro_fora": 10002610004,
+          "diferenca": 5450
+        },
+        "total_candidatos": 9,
+        "candidatos": [
+          {
+            "sqcand": 10002610001,
+            "nome": "Araújo AC-22-01",
+            "partido": "PL",
+            "votos": 38210,
+            "rank": 1,
+            "pct_validos": 13.56754,
+            "parcial": "qp",
+            "projecao": "qp",
+            "tse": "eleito_qp"
+          },
+          {
+            "sqcand": 10002610002,
+            "nome": "Conceição AC-22-02",
+            "partido": "PL",
+            "votos": 21450,
+            "rank": 2,
+            "pct_validos": 7.61643,
+            "parcial": "qp",
+            "projecao": "qp",
+            "tse": "eleito_qp"
+          },
+          {
+            "sqcand": 10002610003,
+            "nome": "Gonçalves AC-22-03",
+            "partido": "PL",
+            "votos": 15320,
+            "rank": 3,
+            "pct_validos": 5.4398,
+            "parcial": "sobra",
+            "projecao": "sobra",
+            "tse": "eleito_media"
+          },
+          {
+            "sqcand": 10002610004,
+            "nome": "Magalhães AC-22-04",
+            "partido": "PL",
+            "votos": 9870,
+            "rank": 4,
+            "pct_validos": 3.50462,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610005,
+            "nome": "Brandão AC-22-05",
+            "partido": "PL",
+            "votos": 6140,
+            "rank": 5,
+            "pct_validos": 2.18018,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610006,
+            "nome": "Assunção AC-22-06",
+            "partido": "PL",
+            "votos": 3310,
+            "rank": 6,
+            "pct_validos": 1.17531,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610007,
+            "nome": "Ribeiro AC-22-07",
+            "partido": "PL",
+            "votos": 1205,
+            "rank": 7,
+            "pct_validos": 0.42787,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610008,
+            "nome": "Nóbrega AC-22-08",
+            "partido": "PL",
+            "votos": 390,
+            "rank": 8,
+            "pct_validos": 0.13848,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610009,
+            "nome": "Araújo AC-22-09",
+            "partido": "PL",
+            "votos": 88,
+            "rank": 9,
+            "pct_validos": 0.03125,
+            "tse": "suplente"
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002610001,
+            "nome": "Araújo AC-22-01",
+            "partido": "PL",
+            "votos": 38210,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002610002,
+            "nome": "Conceição AC-22-02",
+            "partido": "PL",
+            "votos": 21450,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002610003,
+            "nome": "Gonçalves AC-22-03",
+            "partido": "PL",
+            "votos": 15320,
+            "ordem": 3
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002610004,
+            "nome": "Magalhães AC-22-04",
+            "partido": "PL",
+            "votos": 9870,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002610005,
+            "nome": "Brandão AC-22-05",
+            "partido": "PL",
+            "votos": 6140,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002610006,
+            "nome": "Assunção AC-22-06",
+            "partido": "PL",
+            "votos": 3310,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002610007,
+            "nome": "Ribeiro AC-22-07",
+            "partido": "PL",
+            "votos": 1205,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002610008,
+            "nome": "Nóbrega AC-22-08",
+            "partido": "PL",
+            "votos": 390,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "13",
+        "sigla": "PT/PC do B/PV",
+        "nome": "Federação Brasil da Esperança",
+        "tipo": "federacao",
+        "componentes": ["PT", "PC do B", "PV"],
+        "sigla_lider": "PT",
+        "votos_nominais": 69720,
+        "votos_legenda": 5210,
+        "votos_validos": 74930,
+        "pct_votos": 26.60602,
+        "quociente_partidario": 2,
+        "cadeiras": 2,
+        "cadeiras_projetadas": 2,
+        "votos_projetados": 74930,
+        "corte": {
+          "ultimo_eleito": 10002610011,
+          "primeiro_fora": 10002610012,
+          "diferenca": 5180
+        },
+        "total_candidatos": 8,
+        "candidatos": [
+          {
+            "sqcand": 10002610010,
+            "nome": "Conceição AC-13-01",
+            "partido": "PT",
+            "votos": 24880,
+            "rank": 1,
+            "pct_validos": 8.83435,
+            "parcial": "qp",
+            "projecao": "qp",
+            "tse": "eleito_qp"
+          },
+          {
+            "sqcand": 10002610011,
+            "nome": "Gonçalves AC-13-02",
+            "partido": "PC do B",
+            "votos": 17120,
+            "rank": 2,
+            "pct_validos": 6.07894,
+            "parcial": "qp",
+            "projecao": "qp",
+            "tse": "eleito_media"
+          },
+          {
+            "sqcand": 10002610012,
+            "nome": "Magalhães AC-13-03",
+            "partido": "PT",
+            "votos": 11940,
+            "rank": 3,
+            "pct_validos": 4.23964,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610013,
+            "nome": "Brandão AC-13-04",
+            "partido": "PV",
+            "votos": 8230,
+            "rank": 4,
+            "pct_validos": 2.92229,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610014,
+            "nome": "Assunção AC-13-05",
+            "partido": "PT",
+            "votos": 4410,
+            "rank": 5,
+            "pct_validos": 1.5659,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610015,
+            "nome": "Ribeiro AC-13-06",
+            "partido": "PC do B",
+            "votos": 2150,
+            "rank": 6,
+            "pct_validos": 0.76342,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610016,
+            "nome": "Nóbrega AC-13-07",
+            "partido": "PT",
+            "votos": 870,
+            "rank": 7,
+            "pct_validos": 0.30892,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610017,
+            "nome": "Araújo AC-13-08",
+            "partido": "PV",
+            "votos": 120,
+            "rank": 8,
+            "pct_validos": 0.04261,
+            "tse": "suplente"
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002610010,
+            "nome": "Conceição AC-13-01",
+            "partido": "PT",
+            "votos": 24880,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002610011,
+            "nome": "Gonçalves AC-13-02",
+            "partido": "PC do B",
+            "votos": 17120,
+            "ordem": 2
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002610012,
+            "nome": "Magalhães AC-13-03",
+            "partido": "PT",
+            "votos": 11940,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002610013,
+            "nome": "Brandão AC-13-04",
+            "partido": "PV",
+            "votos": 8230,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002610014,
+            "nome": "Assunção AC-13-05",
+            "partido": "PT",
+            "votos": 4410,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002610015,
+            "nome": "Ribeiro AC-13-06",
+            "partido": "PC do B",
+            "votos": 2150,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002610016,
+            "nome": "Nóbrega AC-13-07",
+            "partido": "PT",
+            "votos": 870,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "15",
+        "sigla": "MDB",
+        "nome": "Movimento Democrático Brasileiro",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "MDB",
+        "votos_nominais": 54280,
+        "votos_legenda": 2140,
+        "votos_validos": 56420,
+        "pct_votos": 20.03352,
+        "quociente_partidario": 1,
+        "cadeiras": 2,
+        "cadeiras_projetadas": 2,
+        "votos_projetados": 56420,
+        "corte": {
+          "ultimo_eleito": 10002610019,
+          "primeiro_fora": 10002610020,
+          "diferenca": 5120
+        },
+        "total_candidatos": 7,
+        "candidatos": [
+          {
+            "sqcand": 10002610018,
+            "nome": "Gonçalves AC-15-01",
+            "partido": "MDB",
+            "votos": 19870,
+            "rank": 1,
+            "pct_validos": 7.05541,
+            "parcial": "qp",
+            "projecao": "qp",
+            "tse": "eleito_qp"
+          },
+          {
+            "sqcand": 10002610019,
+            "nome": "Magalhães AC-15-02",
+            "partido": "MDB",
+            "votos": 14230,
+            "rank": 2,
+            "pct_validos": 5.05276,
+            "parcial": "sobra",
+            "projecao": "sobra",
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610020,
+            "nome": "Brandão AC-15-03",
+            "partido": "MDB",
+            "votos": 9110,
+            "rank": 3,
+            "pct_validos": 3.23476,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610021,
+            "nome": "Assunção AC-15-04",
+            "partido": "MDB",
+            "votos": 6550,
+            "rank": 4,
+            "pct_validos": 2.32576,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610022,
+            "nome": "Ribeiro AC-15-05",
+            "partido": "MDB",
+            "votos": 2980,
+            "rank": 5,
+            "pct_validos": 1.05813,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610023,
+            "nome": "Nóbrega AC-15-06",
+            "partido": "MDB",
+            "votos": 1130,
+            "rank": 6,
+            "pct_validos": 0.40124,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610024,
+            "nome": "Araújo AC-15-07",
+            "partido": "MDB",
+            "votos": 410,
+            "rank": 7,
+            "pct_validos": 0.14558,
+            "tse": "suplente"
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002610018,
+            "nome": "Gonçalves AC-15-01",
+            "partido": "MDB",
+            "votos": 19870,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002610019,
+            "nome": "Magalhães AC-15-02",
+            "partido": "MDB",
+            "votos": 14230,
+            "ordem": 2
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002610020,
+            "nome": "Brandão AC-15-03",
+            "partido": "MDB",
+            "votos": 9110,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002610021,
+            "nome": "Assunção AC-15-04",
+            "partido": "MDB",
+            "votos": 6550,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002610022,
+            "nome": "Ribeiro AC-15-05",
+            "partido": "MDB",
+            "votos": 2980,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002610023,
+            "nome": "Nóbrega AC-15-06",
+            "partido": "MDB",
+            "votos": 1130,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002610024,
+            "nome": "Araújo AC-15-07",
+            "partido": "MDB",
+            "votos": 410,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "55",
+        "sigla": "PSD",
+        "nome": "Partido Social Democrático",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PSD",
+        "votos_nominais": 44580,
+        "votos_legenda": 1480,
+        "votos_validos": 46060,
+        "pct_votos": 16.35491,
+        "quociente_partidario": 1,
+        "cadeiras": 1,
+        "cadeiras_projetadas": 1,
+        "votos_projetados": 46060,
+        "corte": {
+          "ultimo_eleito": 10002610025,
+          "primeiro_fora": 10002610026,
+          "diferenca": 4060
+        },
+        "total_candidatos": 6,
+        "candidatos": [
+          {
+            "sqcand": 10002610025,
+            "nome": "Magalhães AC-55-01",
+            "partido": "PSD",
+            "votos": 16940,
+            "rank": 1,
+            "pct_validos": 6.01503,
+            "parcial": "qp",
+            "projecao": "qp",
+            "tse": "eleito_qp"
+          },
+          {
+            "sqcand": 10002610026,
+            "nome": "Brandão AC-55-02",
+            "partido": "PSD",
+            "votos": 12880,
+            "rank": 2,
+            "pct_validos": 4.57341,
+            "tse": "eleito_media"
+          },
+          {
+            "sqcand": 10002610027,
+            "nome": "Assunção AC-55-03",
+            "partido": "PSD",
+            "votos": 7720,
+            "rank": 3,
+            "pct_validos": 2.7412,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610028,
+            "nome": "Ribeiro AC-55-04",
+            "partido": "PSD",
+            "votos": 4390,
+            "rank": 4,
+            "pct_validos": 1.55879,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610029,
+            "nome": "Nóbrega AC-55-05",
+            "partido": "PSD",
+            "votos": 2010,
+            "rank": 5,
+            "pct_validos": 0.71371,
+            "tse": "suplente"
+          },
+          {
+            "sqcand": 10002610030,
+            "nome": "Araújo AC-55-06",
+            "partido": "PSD",
+            "votos": 640,
+            "rank": 6,
+            "pct_validos": 0.22725,
+            "tse": "suplente"
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002610025,
+            "nome": "Magalhães AC-55-01",
+            "partido": "PSD",
+            "votos": 16940,
+            "ordem": 1
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002610026,
+            "nome": "Brandão AC-55-02",
+            "partido": "PSD",
+            "votos": 12880,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002610027,
+            "nome": "Assunção AC-55-03",
+            "partido": "PSD",
+            "votos": 7720,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002610028,
+            "nome": "Ribeiro AC-55-04",
+            "partido": "PSD",
+            "votos": 4390,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002610029,
+            "nome": "Nóbrega AC-55-05",
+            "partido": "PSD",
+            "votos": 2010,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002610030,
+            "nome": "Araújo AC-55-06",
+            "partido": "PSD",
+            "votos": 640,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "50",
+        "sigla": "PSOL/REDE",
+        "nome": "Federação PSOL REDE",
+        "tipo": "federacao",
+        "componentes": ["PSOL", "REDE"],
+        "sigla_lider": "PSOL",
+        "votos_nominais": 4235,
+        "votos_legenda": 690,
+        "votos_validos": 4925,
+        "pct_votos": 1.74876,
+        "quociente_partidario": 0,
+        "cadeiras": 0,
+        "cadeiras_projetadas": 0,
+        "votos_projetados": 4925,
+        "total_candidatos": 3,
+        "candidatos": [
+          {
+            "sqcand": 10002610031,
+            "nome": "Brandão AC-50-01",
+            "partido": "PSOL",
+            "votos": 2410,
+            "rank": 1,
+            "pct_validos": 0.85574,
+            "tse": "nao_eleito"
+          },
+          {
+            "sqcand": 10002610032,
+            "nome": "Assunção AC-50-02",
+            "partido": "REDE",
+            "votos": 1320,
+            "rank": 2,
+            "pct_validos": 0.4687,
+            "tse": "nao_eleito"
+          },
+          {
+            "sqcand": 10002610033,
+            "nome": "Ribeiro AC-50-03",
+            "partido": "PSOL",
+            "votos": 505,
+            "rank": 3,
+            "pct_validos": 0.17931,
+            "tse": "nao_eleito"
+          }
+        ],
+        "eleitos": [],
+        "suplentes": [
+          {
+            "sqcand": 10002610031,
+            "nome": "Brandão AC-50-01",
+            "partido": "PSOL",
+            "votos": 2410,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002610032,
+            "nome": "Assunção AC-50-02",
+            "partido": "REDE",
+            "votos": 1320,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002610033,
+            "nome": "Ribeiro AC-50-03",
+            "partido": "PSOL",
+            "votos": 505,
+            "ordem": 3
+          }
+        ]
+      }
+    ],
+    "vagas_nao_preenchidas": 0,
+    "empates_indeterminados": [],
+    "regras": {
+      "quociente_eleitoral": 35203,
+      "votos_validos": 281628,
+      "lugares_a_preencher": 8,
+      "piso_candidato": 3521,
+      "piso_agremiacao_sobras": 28163,
+      "piso_candidato_sobras": 7041
+    },
+    "projecao": {
+      "estado": "liberada",
+      "pct_minimo": 25,
+      "zonas_apuradas": 31,
+      "zonas_total": 31
+    },
+    "conferencia": {
+      "estado": "diverge",
+      "boletim_dado_ts": "2026-10-04T22:58:40Z",
+      "totalizacao_final": true,
+      "comparou": ["eleitorado", "algoritmo", "eleitos", "votos_validos"],
+      "divergencias": [
+        {
+          "o_que": "cadeiras",
+          "nosso": 2,
+          "tse": 1,
+          "detalhe": "agremiação 15"
+        },
+        {
+          "o_que": "cadeiras",
+          "nosso": 1,
+          "tse": 2,
+          "detalhe": "agremiação 55"
+        },
+        {
+          "o_que": "eleitos",
+          "nosso": 1,
+          "tse": 1,
+          "detalhe": "eleitos só no nosso cálculo: 10002610019; só no do TSE: 10002610026"
+        }
+      ]
+    },
+    "mais_votados": [
+      {
+        "cod": "22",
+        "sqcand": 10002610001
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002610010
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002610002
+      },
+      {
+        "cod": "15",
+        "sqcand": 10002610018
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002610011
+      },
+      {
+        "cod": "55",
+        "sqcand": 10002610025
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002610003
+      },
+      {
+        "cod": "15",
+        "sqcand": 10002610019
+      },
+      {
+        "cod": "55",
+        "sqcand": 10002610026
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002610012
+      }
+    ]
+  },
+  "AP": {
+    "ts": "2026-10-04T23:41:07.312Z",
+    "dado_ts": "2026-10-04T23:31:18Z",
+    "pares_atrasados": 0,
+    "cargo": 6,
+    "turno": 1,
+    "contrato": 2,
+    "uf": "AP",
+    "pct_apurado": 80.50254,
+    "lugares_a_preencher": 8,
+    "quociente_eleitoral": 44770,
+    "quociente_eleitoral_tse": 46725,
+    "totalizacao_final": false,
+    "divergencias": [
+      {
+        "o_que": "eleitorado",
+        "nosso": 505610,
+        "tse": 628071,
+        "detalhe": "soma do eleitorado das 17 zonas que lemos × eleitorado do boletim do TSE",
+        "diferenca_pct": -19.49795
+      }
+    ],
+    "agremiacoes": [
+      {
+        "cod": "22",
+        "sigla": "PL",
+        "nome": "Partido Liberal",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PL",
+        "votos_nominais": 119807,
+        "votos_legenda": 4553,
+        "votos_validos": 124360,
+        "pct_votos": 34.72162,
+        "quociente_partidario": 2,
+        "cadeiras": 3,
+        "corte": {
+          "ultimo_eleito": 10002640003,
+          "primeiro_fora": 10002640004,
+          "diferenca": 8892
+        },
+        "total_candidatos": 9,
+        "candidatos": [
+          {
+            "sqcand": 10002640001,
+            "nome": "Araújo AP-22-01",
+            "partido": "PL",
+            "numero": 2201,
+            "votos": 45076,
+            "rank": 1,
+            "pct_validos": 12.58533,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002640002,
+            "nome": "Conceição AP-22-02",
+            "partido": "PL",
+            "numero": 2202,
+            "votos": 28158,
+            "rank": 2,
+            "pct_validos": 7.86178,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002640003,
+            "nome": "Gonçalves AP-22-03",
+            "partido": "PL",
+            "numero": 2203,
+            "votos": 20551,
+            "rank": 3,
+            "pct_validos": 5.73789,
+            "parcial": "sobra"
+          },
+          {
+            "sqcand": 10002640004,
+            "nome": "Magalhães AP-22-04",
+            "partido": "PL",
+            "numero": 2204,
+            "votos": 11659,
+            "rank": 4,
+            "pct_validos": 3.25522
+          },
+          {
+            "sqcand": 10002640005,
+            "nome": "Brandão AP-22-05",
+            "partido": "PL",
+            "numero": 2205,
+            "votos": 8270,
+            "rank": 5,
+            "pct_validos": 2.309
+          },
+          {
+            "sqcand": 10002640006,
+            "nome": "Assunção AP-22-06",
+            "partido": "PL",
+            "numero": 2206,
+            "votos": 3852,
+            "rank": 6,
+            "pct_validos": 1.07549
+          },
+          {
+            "sqcand": 10002640007,
+            "nome": "Ribeiro AP-22-07",
+            "partido": "PL",
+            "numero": 2207,
+            "votos": 1646,
+            "rank": 7,
+            "pct_validos": 0.45957
+          },
+          {
+            "sqcand": 10002640008,
+            "nome": "Nóbrega AP-22-08",
+            "partido": "PL",
+            "numero": 2208,
+            "votos": 505,
+            "rank": 8,
+            "pct_validos": 0.141
+          },
+          {
+            "sqcand": 10002640009,
+            "nome": "Araújo AP-22-09",
+            "partido": "PL",
+            "numero": 2209,
+            "votos": 90,
+            "rank": 9,
+            "pct_validos": 0.02513
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002640001,
+            "nome": "Araújo AP-22-01",
+            "partido": "PL",
+            "votos": 45076,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002640002,
+            "nome": "Conceição AP-22-02",
+            "partido": "PL",
+            "votos": 28158,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002640003,
+            "nome": "Gonçalves AP-22-03",
+            "partido": "PL",
+            "votos": 20551,
+            "ordem": 3
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002640004,
+            "nome": "Magalhães AP-22-04",
+            "partido": "PL",
+            "votos": 11659,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002640005,
+            "nome": "Brandão AP-22-05",
+            "partido": "PL",
+            "votos": 8270,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002640006,
+            "nome": "Assunção AP-22-06",
+            "partido": "PL",
+            "votos": 3852,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002640007,
+            "nome": "Ribeiro AP-22-07",
+            "partido": "PL",
+            "votos": 1646,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002640008,
+            "nome": "Nóbrega AP-22-08",
+            "partido": "PL",
+            "votos": 505,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "13",
+        "sigla": "PT/PC do B/PV",
+        "nome": "Federação Brasil da Esperança",
+        "tipo": "federacao",
+        "componentes": ["PT", "PC do B", "PV"],
+        "sigla_lider": "PT",
+        "votos_nominais": 96730,
+        "votos_legenda": 6863,
+        "votos_validos": 103593,
+        "pct_votos": 28.92342,
+        "quociente_partidario": 2,
+        "cadeiras": 3,
+        "corte": {
+          "ultimo_eleito": 10002640012,
+          "primeiro_fora": 10002640013,
+          "diferenca": 5133
+        },
+        "total_candidatos": 8,
+        "candidatos": [
+          {
+            "sqcand": 10002640010,
+            "nome": "Conceição AP-13-01",
+            "partido": "PT",
+            "numero": 1301,
+            "votos": 39158,
+            "rank": 1,
+            "pct_validos": 10.93301,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002640011,
+            "nome": "Gonçalves AP-13-02",
+            "partido": "PV",
+            "numero": 4301,
+            "votos": 25011,
+            "rank": 2,
+            "pct_validos": 6.98313,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002640012,
+            "nome": "Magalhães AP-13-03",
+            "partido": "PT",
+            "numero": 1302,
+            "votos": 14408,
+            "rank": 3,
+            "pct_validos": 4.02275,
+            "parcial": "sobra",
+            "indefinido": true
+          },
+          {
+            "sqcand": 10002640013,
+            "nome": "Brandão AP-13-04",
+            "partido": "PC do B",
+            "numero": 6501,
+            "votos": 9275,
+            "rank": 4,
+            "pct_validos": 2.5896
+          },
+          {
+            "sqcand": 10002640014,
+            "nome": "Assunção AP-13-05",
+            "partido": "PT",
+            "numero": 1303,
+            "votos": 5900,
+            "rank": 5,
+            "pct_validos": 1.64729
+          },
+          {
+            "sqcand": 10002640015,
+            "nome": "Ribeiro AP-13-06",
+            "partido": "PV",
+            "numero": 4302,
+            "votos": 2094,
+            "rank": 6,
+            "pct_validos": 0.58465
+          },
+          {
+            "sqcand": 10002640016,
+            "nome": "Nóbrega AP-13-07",
+            "partido": "PT",
+            "numero": 1304,
+            "votos": 762,
+            "rank": 7,
+            "pct_validos": 0.21275
+          },
+          {
+            "sqcand": 10002640017,
+            "nome": "Araújo AP-13-08",
+            "partido": "PC do B",
+            "numero": 6502,
+            "votos": 122,
+            "rank": 8,
+            "pct_validos": 0.03406
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002640010,
+            "nome": "Conceição AP-13-01",
+            "partido": "PT",
+            "votos": 39158,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002640011,
+            "nome": "Gonçalves AP-13-02",
+            "partido": "PV",
+            "votos": 25011,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002640012,
+            "nome": "Magalhães AP-13-03",
+            "partido": "PT",
+            "votos": 14408,
+            "ordem": 3,
+            "indefinido": true
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002640013,
+            "nome": "Brandão AP-13-04",
+            "partido": "PC do B",
+            "votos": 9275,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002640014,
+            "nome": "Assunção AP-13-05",
+            "partido": "PT",
+            "votos": 5900,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002640015,
+            "nome": "Ribeiro AP-13-06",
+            "partido": "PV",
+            "votos": 2094,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002640016,
+            "nome": "Nóbrega AP-13-07",
+            "partido": "PT",
+            "votos": 762,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002640017,
+            "nome": "Araújo AP-13-08",
+            "partido": "PC do B",
+            "votos": 122,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "15",
+        "sigla": "MDB",
+        "nome": "Movimento Democrático Brasileiro",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "MDB",
+        "votos_nominais": 59398,
+        "votos_legenda": 2917,
+        "votos_validos": 62315,
+        "pct_votos": 17.3985,
+        "quociente_partidario": 1,
+        "cadeiras": 1,
+        "corte": {
+          "ultimo_eleito": 10002640018,
+          "primeiro_fora": 10002640019,
+          "diferenca": 7939
+        },
+        "total_candidatos": 6,
+        "candidatos": [
+          {
+            "sqcand": 10002640018,
+            "nome": "Gonçalves AP-15-01",
+            "partido": "MDB",
+            "numero": 1501,
+            "votos": 25554,
+            "rank": 1,
+            "pct_validos": 7.13474,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002640019,
+            "nome": "Magalhães AP-15-02",
+            "partido": "MDB",
+            "numero": 1502,
+            "votos": 17615,
+            "rank": 2,
+            "pct_validos": 4.91815
+          },
+          {
+            "sqcand": 10002640020,
+            "nome": "Brandão AP-15-03",
+            "partido": "MDB",
+            "numero": 1503,
+            "votos": 9126,
+            "rank": 3,
+            "pct_validos": 2.548
+          },
+          {
+            "sqcand": 10002640021,
+            "nome": "Assunção AP-15-04",
+            "partido": "MDB",
+            "numero": 1504,
+            "votos": 4876,
+            "rank": 4,
+            "pct_validos": 1.36139
+          },
+          {
+            "sqcand": 10002640022,
+            "nome": "Ribeiro AP-15-05",
+            "partido": "MDB",
+            "numero": 1505,
+            "votos": 1851,
+            "rank": 5,
+            "pct_validos": 0.5168
+          },
+          {
+            "sqcand": 10002640023,
+            "nome": "Nóbrega AP-15-06",
+            "partido": "MDB",
+            "numero": 1506,
+            "votos": 376,
+            "rank": 6,
+            "pct_validos": 0.10498
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002640018,
+            "nome": "Gonçalves AP-15-01",
+            "partido": "MDB",
+            "votos": 25554,
+            "ordem": 1
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002640019,
+            "nome": "Magalhães AP-15-02",
+            "partido": "MDB",
+            "votos": 17615,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002640020,
+            "nome": "Brandão AP-15-03",
+            "partido": "MDB",
+            "votos": 9126,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002640021,
+            "nome": "Assunção AP-15-04",
+            "partido": "MDB",
+            "votos": 4876,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002640022,
+            "nome": "Ribeiro AP-15-05",
+            "partido": "MDB",
+            "votos": 1851,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002640023,
+            "nome": "Nóbrega AP-15-06",
+            "partido": "MDB",
+            "votos": 376,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "44",
+        "sigla": "UNIÃO",
+        "nome": "União Brasil",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "UNIÃO",
+        "votos_nominais": 47236,
+        "votos_legenda": 2478,
+        "votos_validos": 49714,
+        "pct_votos": 13.88027,
+        "quociente_partidario": 1,
+        "cadeiras": 1,
+        "corte": {
+          "ultimo_eleito": 10002640024,
+          "primeiro_fora": 10002640025,
+          "diferenca": 6891
+        },
+        "total_candidatos": 6,
+        "candidatos": [
+          {
+            "sqcand": 10002640024,
+            "nome": "Magalhães AP-44-01",
+            "partido": "UNIÃO",
+            "numero": 4401,
+            "votos": 20701,
+            "rank": 1,
+            "pct_validos": 5.77977,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002640025,
+            "nome": "Brandão AP-44-02",
+            "partido": "UNIÃO",
+            "numero": 4402,
+            "votos": 13810,
+            "rank": 2,
+            "pct_validos": 3.85579
+          },
+          {
+            "sqcand": 10002640026,
+            "nome": "Assunção AP-44-03",
+            "partido": "UNIÃO",
+            "numero": 4403,
+            "votos": 7583,
+            "rank": 3,
+            "pct_validos": 2.11719
+          },
+          {
+            "sqcand": 10002640027,
+            "nome": "Ribeiro AP-44-04",
+            "partido": "UNIÃO",
+            "numero": 4404,
+            "votos": 3726,
+            "rank": 4,
+            "pct_validos": 1.04031
+          },
+          {
+            "sqcand": 10002640028,
+            "nome": "Nóbrega AP-44-05",
+            "partido": "UNIÃO",
+            "numero": 4405,
+            "votos": 1131,
+            "rank": 5,
+            "pct_validos": 0.31578
+          },
+          {
+            "sqcand": 10002640029,
+            "nome": "Araújo AP-44-06",
+            "partido": "UNIÃO",
+            "numero": 4406,
+            "votos": 285,
+            "rank": 6,
+            "pct_validos": 0.07957
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002640024,
+            "nome": "Magalhães AP-44-01",
+            "partido": "UNIÃO",
+            "votos": 20701,
+            "ordem": 1
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002640025,
+            "nome": "Brandão AP-44-02",
+            "partido": "UNIÃO",
+            "votos": 13810,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002640026,
+            "nome": "Assunção AP-44-03",
+            "partido": "UNIÃO",
+            "votos": 7583,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002640027,
+            "nome": "Ribeiro AP-44-04",
+            "partido": "UNIÃO",
+            "votos": 3726,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002640028,
+            "nome": "Nóbrega AP-44-05",
+            "partido": "UNIÃO",
+            "votos": 1131,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002640029,
+            "nome": "Araújo AP-44-06",
+            "partido": "UNIÃO",
+            "votos": 285,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "10",
+        "sigla": "REPUBLICANOS",
+        "nome": "Republicanos",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "REPUBLICANOS",
+        "votos_nominais": 17148,
+        "votos_legenda": 1033,
+        "votos_validos": 18181,
+        "pct_votos": 5.07618,
+        "quociente_partidario": 0,
+        "cadeiras": 0,
+        "total_candidatos": 4,
+        "candidatos": [
+          {
+            "sqcand": 10002640030,
+            "nome": "Brandão AP-10-01",
+            "partido": "REPUBLICANOS",
+            "numero": 1001,
+            "votos": 9200,
+            "rank": 1,
+            "pct_validos": 2.56866
+          },
+          {
+            "sqcand": 10002640031,
+            "nome": "Assunção AP-10-02",
+            "partido": "REPUBLICANOS",
+            "numero": 1002,
+            "votos": 5171,
+            "rank": 2,
+            "pct_validos": 1.44376
+          },
+          {
+            "sqcand": 10002640032,
+            "nome": "Ribeiro AP-10-03",
+            "partido": "REPUBLICANOS",
+            "numero": 1003,
+            "votos": 2066,
+            "rank": 3,
+            "pct_validos": 0.57683
+          },
+          {
+            "sqcand": 10002640033,
+            "nome": "Nóbrega AP-10-04",
+            "partido": "REPUBLICANOS",
+            "numero": 1004,
+            "votos": 711,
+            "rank": 4,
+            "pct_validos": 0.19851
+          }
+        ],
+        "eleitos": [],
+        "suplentes": [
+          {
+            "sqcand": 10002640030,
+            "nome": "Brandão AP-10-01",
+            "partido": "REPUBLICANOS",
+            "votos": 9200,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002640031,
+            "nome": "Assunção AP-10-02",
+            "partido": "REPUBLICANOS",
+            "votos": 5171,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002640032,
+            "nome": "Ribeiro AP-10-03",
+            "partido": "REPUBLICANOS",
+            "votos": 2066,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002640033,
+            "nome": "Nóbrega AP-10-04",
+            "partido": "REPUBLICANOS",
+            "votos": 711,
+            "ordem": 4
+          }
+        ]
+      },
+      {
+        "cod": "36",
+        "sigla": "AGIR",
+        "nome": "Agir",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "AGIR",
+        "votos_nominais": 0,
+        "votos_legenda": 0,
+        "votos_validos": 0,
+        "pct_votos": 0.0,
+        "quociente_partidario": 0,
+        "cadeiras": 0,
+        "total_candidatos": 5,
+        "candidatos": [
+          {
+            "sqcand": 10002640034,
+            "nome": "Assunção AP-36-01",
+            "partido": "AGIR",
+            "numero": 3601,
+            "votos": 10528,
+            "rank": 1,
+            "pct_validos": null,
+            "destino": "sub_judice"
+          },
+          {
+            "sqcand": 10002640035,
+            "nome": "Ribeiro AP-36-02",
+            "partido": "AGIR",
+            "numero": 3602,
+            "votos": 4035,
+            "rank": 2,
+            "pct_validos": null,
+            "destino": "sub_judice"
+          },
+          {
+            "sqcand": 10002640036,
+            "nome": "Nóbrega AP-36-03",
+            "partido": "AGIR",
+            "numero": 3603,
+            "votos": 1758,
+            "rank": 3,
+            "pct_validos": null,
+            "destino": "sub_judice"
+          },
+          {
+            "sqcand": 10002640037,
+            "nome": "Araújo AP-36-04",
+            "partido": "AGIR",
+            "numero": 3604,
+            "votos": 580,
+            "rank": 4,
+            "pct_validos": null,
+            "destino": "sub_judice"
+          },
+          {
+            "sqcand": 10002640038,
+            "nome": "Conceição AP-36-05",
+            "partido": "AGIR",
+            "numero": 3605,
+            "votos": 70,
+            "rank": 5,
+            "pct_validos": null,
+            "destino": "sub_judice"
+          }
+        ],
+        "eleitos": [],
+        "suplentes": []
+      }
+    ],
+    "vagas_nao_preenchidas": 0,
+    "empates_indeterminados": [],
+    "regras": {
+      "quociente_eleitoral": 44770,
+      "votos_validos": 358163,
+      "lugares_a_preencher": 8,
+      "piso_candidato": 4477,
+      "piso_agremiacao_sobras": 35816,
+      "piso_candidato_sobras": 8954
+    },
+    "projecao": {
+      "estado": "indisponivel",
+      "motivo": "cobertura",
+      "pct_minimo": 25,
+      "zonas_apuradas": 17,
+      "zonas_total": 17
+    },
+    "conferencia": {
+      "estado": "diverge",
+      "boletim_dado_ts": "2026-10-04T23:31:15Z",
+      "totalizacao_final": false,
+      "comparou": ["eleitorado", "algoritmo"],
+      "divergencias": [
+        {
+          "o_que": "eleitorado",
+          "nosso": 505610,
+          "tse": 628071,
+          "detalhe": "soma do eleitorado das 17 zonas que lemos × eleitorado do boletim do TSE",
+          "diferenca_pct": -19.49795
+        }
+      ]
+    },
+    "mais_votados": [
+      {
+        "cod": "22",
+        "sqcand": 10002640001
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002640010
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002640002
+      },
+      {
+        "cod": "15",
+        "sqcand": 10002640018
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002640011
+      },
+      {
+        "cod": "44",
+        "sqcand": 10002640024
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002640003
+      },
+      {
+        "cod": "15",
+        "sqcand": 10002640019
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002640012
+      },
+      {
+        "cod": "44",
+        "sqcand": 10002640025
+      }
+    ]
+  },
+  "RR": {
+    "ts": "2026-10-04T23:41:07.312Z",
+    "dado_ts": "2026-10-04T23:35:12Z",
+    "pares_atrasados": 0,
+    "cargo": 6,
+    "turno": 1,
+    "contrato": 2,
+    "uf": "RR",
+    "pct_apurado": 62.41573,
+    "lugares_a_preencher": 8,
+    "quociente_eleitoral": 32426,
+    "quociente_eleitoral_tse": 32426,
+    "totalizacao_final": false,
+    "divergencias": [],
+    "agremiacoes": [
+      {
+        "cod": "22",
+        "sigla": "PL",
+        "nome": "Partido Liberal",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PL",
+        "votos_nominais": 114551,
+        "votos_legenda": 2980,
+        "votos_validos": 117531,
+        "pct_votos": 45.30687,
+        "quociente_partidario": 3,
+        "cadeiras": 4,
+        "cadeiras_ci95": [2, 4],
+        "cadeiras_projetadas": 4,
+        "cadeiras_projetadas_ci95": [2, 4],
+        "votos_projetados": 170418,
+        "corte": {
+          "ultimo_eleito": 10002620004,
+          "primeiro_fora": 10002620005,
+          "diferenca": 2265
+        },
+        "puxadores": [
+          {
+            "sqcand": 10002620001,
+            "quocientes": 2,
+            "excedente": 1
+          }
+        ],
+        "total_candidatos": 9,
+        "candidatos": [
+          {
+            "sqcand": 10002620001,
+            "nome": "Araújo RR-22-01",
+            "partido": "PL",
+            "numero": 2201,
+            "votos": 71480,
+            "rank": 1,
+            "pct_validos": 27.55473,
+            "parcial": "qp",
+            "projecao": "qp"
+          },
+          {
+            "sqcand": 10002620002,
+            "nome": "Conceição RR-22-02",
+            "partido": "PL",
+            "numero": 2202,
+            "votos": 14820,
+            "rank": 2,
+            "pct_validos": 5.71294,
+            "parcial": "qp",
+            "projecao": "qp"
+          },
+          {
+            "sqcand": 10002620003,
+            "nome": "Gonçalves RR-22-03",
+            "partido": "PL",
+            "numero": 2203,
+            "votos": 9410,
+            "rank": 3,
+            "pct_validos": 3.62745,
+            "parcial": "qp",
+            "projecao": "qp"
+          },
+          {
+            "sqcand": 10002620004,
+            "nome": "Magalhães RR-22-04",
+            "partido": "PL",
+            "numero": 2204,
+            "votos": 7385,
+            "rank": 4,
+            "pct_validos": 2.84683,
+            "parcial": "sobra",
+            "indefinido": true,
+            "projecao": "sobra",
+            "projecao_apertada": true
+          },
+          {
+            "sqcand": 10002620005,
+            "nome": "Brandão RR-22-05",
+            "partido": "PL",
+            "numero": 2205,
+            "votos": 5120,
+            "rank": 5,
+            "pct_validos": 1.9737
+          },
+          {
+            "sqcand": 10002620006,
+            "nome": "Assunção RR-22-06",
+            "partido": "PL",
+            "numero": 2206,
+            "votos": 3301,
+            "rank": 6,
+            "pct_validos": 1.2725
+          },
+          {
+            "sqcand": 10002620007,
+            "nome": "Ribeiro RR-22-07",
+            "partido": "PL",
+            "numero": 2207,
+            "votos": 1980,
+            "rank": 7,
+            "pct_validos": 0.76327
+          },
+          {
+            "sqcand": 10002620008,
+            "nome": "Nóbrega RR-22-08",
+            "partido": "PL",
+            "numero": 2208,
+            "votos": 845,
+            "rank": 8,
+            "pct_validos": 0.32574
+          },
+          {
+            "sqcand": 10002620009,
+            "nome": "Araújo RR-22-09",
+            "partido": "PL",
+            "numero": 2209,
+            "votos": 210,
+            "rank": 9,
+            "pct_validos": 0.08095
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002620001,
+            "nome": "Araújo RR-22-01",
+            "partido": "PL",
+            "votos": 71480,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002620002,
+            "nome": "Conceição RR-22-02",
+            "partido": "PL",
+            "votos": 14820,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002620003,
+            "nome": "Gonçalves RR-22-03",
+            "partido": "PL",
+            "votos": 9410,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002620004,
+            "nome": "Magalhães RR-22-04",
+            "partido": "PL",
+            "votos": 7385,
+            "ordem": 4,
+            "indefinido": true
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002620005,
+            "nome": "Brandão RR-22-05",
+            "partido": "PL",
+            "votos": 5120,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002620006,
+            "nome": "Assunção RR-22-06",
+            "partido": "PL",
+            "votos": 3301,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002620007,
+            "nome": "Ribeiro RR-22-07",
+            "partido": "PL",
+            "votos": 1980,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002620008,
+            "nome": "Nóbrega RR-22-08",
+            "partido": "PL",
+            "votos": 845,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002620009,
+            "nome": "Araújo RR-22-09",
+            "partido": "PL",
+            "votos": 210,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "44",
+        "sigla": "UNIÃO",
+        "nome": "União Brasil",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "UNIÃO",
+        "votos_nominais": 37500,
+        "votos_legenda": 7350,
+        "votos_validos": 44850,
+        "pct_votos": 17.28917,
+        "quociente_partidario": 1,
+        "cadeiras": 2,
+        "cadeiras_projetadas": 1,
+        "votos_projetados": 76693,
+        "corte": {
+          "ultimo_eleito": 10002620029,
+          "primeiro_fora": 10002620030,
+          "diferenca": 3130
+        },
+        "total_candidatos": 9,
+        "candidatos": [
+          {
+            "sqcand": 10002620028,
+            "nome": "Magalhães RR-44-01",
+            "partido": "UNIÃO",
+            "numero": 4401,
+            "votos": 13350,
+            "rank": 1,
+            "pct_validos": 5.14627,
+            "parcial": "qp",
+            "projecao": "qp"
+          },
+          {
+            "sqcand": 10002620029,
+            "nome": "Brandão RR-44-02",
+            "partido": "UNIÃO",
+            "numero": 4402,
+            "votos": 10110,
+            "rank": 2,
+            "pct_validos": 3.89729,
+            "parcial": "sobra",
+            "indefinido": true
+          },
+          {
+            "sqcand": 10002620030,
+            "nome": "Assunção RR-44-03",
+            "partido": "UNIÃO",
+            "numero": 4403,
+            "votos": 6980,
+            "rank": 3,
+            "pct_validos": 2.69071
+          },
+          {
+            "sqcand": 10002620031,
+            "nome": "Ribeiro RR-44-04",
+            "partido": "UNIÃO",
+            "numero": 4404,
+            "votos": 5840,
+            "rank": 4,
+            "pct_validos": 2.25125,
+            "destino": "valido_legenda"
+          },
+          {
+            "sqcand": 10002620032,
+            "nome": "Nóbrega RR-44-05",
+            "partido": "UNIÃO",
+            "numero": 4405,
+            "votos": 3375,
+            "rank": 5,
+            "pct_validos": 1.30102
+          },
+          {
+            "sqcand": 10002620033,
+            "nome": "Araújo RR-44-06",
+            "partido": "UNIÃO",
+            "numero": 4406,
+            "votos": 2240,
+            "rank": 6,
+            "pct_validos": 0.86349
+          },
+          {
+            "sqcand": 10002620034,
+            "nome": "Conceição RR-44-07",
+            "partido": "UNIÃO",
+            "numero": 4407,
+            "votos": 980,
+            "rank": 7,
+            "pct_validos": 0.37778
+          },
+          {
+            "sqcand": 10002620035,
+            "nome": "Gonçalves RR-44-08",
+            "partido": "UNIÃO",
+            "numero": 4408,
+            "votos": 405,
+            "rank": 8,
+            "pct_validos": 0.15612
+          },
+          {
+            "sqcand": 10002620036,
+            "nome": "Magalhães RR-44-09",
+            "partido": "UNIÃO",
+            "numero": 4409,
+            "votos": 60,
+            "rank": 9,
+            "pct_validos": 0.02313
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002620028,
+            "nome": "Magalhães RR-44-01",
+            "partido": "UNIÃO",
+            "votos": 13350,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002620029,
+            "nome": "Brandão RR-44-02",
+            "partido": "UNIÃO",
+            "votos": 10110,
+            "ordem": 2,
+            "indefinido": true
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002620030,
+            "nome": "Assunção RR-44-03",
+            "partido": "UNIÃO",
+            "votos": 6980,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002620032,
+            "nome": "Nóbrega RR-44-05",
+            "partido": "UNIÃO",
+            "votos": 3375,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002620033,
+            "nome": "Araújo RR-44-06",
+            "partido": "UNIÃO",
+            "votos": 2240,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002620034,
+            "nome": "Conceição RR-44-07",
+            "partido": "UNIÃO",
+            "votos": 980,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002620035,
+            "nome": "Gonçalves RR-44-08",
+            "partido": "UNIÃO",
+            "votos": 405,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "15",
+        "sigla": "MDB",
+        "nome": "Movimento Democrático Brasileiro",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "MDB",
+        "votos_nominais": 42530,
+        "votos_legenda": 1875,
+        "votos_validos": 44405,
+        "pct_votos": 17.11762,
+        "quociente_partidario": 1,
+        "cadeiras": 1,
+        "cadeiras_projetadas": 2,
+        "votos_projetados": 79929,
+        "corte": {
+          "ultimo_eleito": 10002620019,
+          "primeiro_fora": 10002620020,
+          "diferenca": 4640
+        },
+        "total_candidatos": 9,
+        "candidatos": [
+          {
+            "sqcand": 10002620019,
+            "nome": "Gonçalves RR-15-01",
+            "partido": "MDB",
+            "numero": 1501,
+            "votos": 15880,
+            "rank": 1,
+            "pct_validos": 6.12156,
+            "parcial": "qp",
+            "projecao": "qp"
+          },
+          {
+            "sqcand": 10002620020,
+            "nome": "Magalhães RR-15-02",
+            "partido": "MDB",
+            "numero": 1502,
+            "votos": 11240,
+            "rank": 2,
+            "pct_validos": 4.33289,
+            "projecao": "sobra",
+            "projecao_apertada": true
+          },
+          {
+            "sqcand": 10002620021,
+            "nome": "Brandão RR-15-03",
+            "partido": "MDB",
+            "numero": 1503,
+            "votos": 7715,
+            "rank": 3,
+            "pct_validos": null,
+            "destino": "anulado"
+          },
+          {
+            "sqcand": 10002620022,
+            "nome": "Assunção RR-15-04",
+            "partido": "MDB",
+            "numero": 1504,
+            "votos": 6310,
+            "rank": 4,
+            "pct_validos": 2.43243
+          },
+          {
+            "sqcand": 10002620023,
+            "nome": "Ribeiro RR-15-05",
+            "partido": "MDB",
+            "numero": 1505,
+            "votos": 4020,
+            "rank": 5,
+            "pct_validos": 1.54966
+          },
+          {
+            "sqcand": 10002620024,
+            "nome": "Nóbrega RR-15-06",
+            "partido": "MDB",
+            "numero": 1506,
+            "votos": 2890,
+            "rank": 6,
+            "pct_validos": 1.11406
+          },
+          {
+            "sqcand": 10002620025,
+            "nome": "Araújo RR-15-07",
+            "partido": "MDB",
+            "numero": 1507,
+            "votos": 1450,
+            "rank": 7,
+            "pct_validos": 0.55896
+          },
+          {
+            "sqcand": 10002620026,
+            "nome": "Conceição RR-15-08",
+            "partido": "MDB",
+            "numero": 1508,
+            "votos": 610,
+            "rank": 8,
+            "pct_validos": 0.23515
+          },
+          {
+            "sqcand": 10002620027,
+            "nome": "Gonçalves RR-15-09",
+            "partido": "MDB",
+            "numero": 1509,
+            "votos": 130,
+            "rank": 9,
+            "pct_validos": 0.05011
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002620019,
+            "nome": "Gonçalves RR-15-01",
+            "partido": "MDB",
+            "votos": 15880,
+            "ordem": 1
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002620020,
+            "nome": "Magalhães RR-15-02",
+            "partido": "MDB",
+            "votos": 11240,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002620022,
+            "nome": "Assunção RR-15-04",
+            "partido": "MDB",
+            "votos": 6310,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002620023,
+            "nome": "Ribeiro RR-15-05",
+            "partido": "MDB",
+            "votos": 4020,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002620024,
+            "nome": "Nóbrega RR-15-06",
+            "partido": "MDB",
+            "votos": 2890,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002620025,
+            "nome": "Araújo RR-15-07",
+            "partido": "MDB",
+            "votos": 1450,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "13",
+        "sigla": "PT/PC do B/PV",
+        "nome": "Federação Brasil da Esperança",
+        "tipo": "federacao",
+        "componentes": ["PT", "PC do B", "PV"],
+        "sigla_lider": "PT",
+        "votos_nominais": 25460,
+        "votos_legenda": 4120,
+        "votos_validos": 29580,
+        "pct_votos": 11.40275,
+        "quociente_partidario": 0,
+        "cadeiras": 1,
+        "cadeiras_projetadas": 1,
+        "votos_projetados": 48216,
+        "corte": {
+          "ultimo_eleito": 10002620011,
+          "primeiro_fora": 10002620012,
+          "diferenca": 9550,
+          "primeiro_fora_abaixo_piso_10": true
+        },
+        "total_candidatos": 9,
+        "candidatos": [
+          {
+            "sqcand": 10002620010,
+            "nome": "Conceição RR-13-01",
+            "partido": "PT",
+            "numero": 1301,
+            "votos": 28940,
+            "rank": 1,
+            "pct_validos": null,
+            "destino": "sub_judice"
+          },
+          {
+            "sqcand": 10002620011,
+            "nome": "Gonçalves RR-13-02",
+            "partido": "PT",
+            "numero": 1302,
+            "votos": 12650,
+            "rank": 2,
+            "pct_validos": 4.87643,
+            "parcial": "sobra",
+            "indefinido": true,
+            "projecao": "sobra",
+            "projecao_apertada": true
+          },
+          {
+            "sqcand": 10002620012,
+            "nome": "Magalhães RR-13-03",
+            "partido": "PC do B",
+            "numero": 6501,
+            "votos": 3100,
+            "rank": 3,
+            "pct_validos": 1.19501
+          },
+          {
+            "sqcand": 10002620013,
+            "nome": "Brandão RR-13-04",
+            "partido": "PV",
+            "numero": 4301,
+            "votos": 2980,
+            "rank": 4,
+            "pct_validos": 1.14876
+          },
+          {
+            "sqcand": 10002620014,
+            "nome": "Assunção RR-13-05",
+            "partido": "PT",
+            "numero": 1303,
+            "votos": 2410,
+            "rank": 5,
+            "pct_validos": 0.92903
+          },
+          {
+            "sqcand": 10002620015,
+            "nome": "Ribeiro RR-13-06",
+            "partido": "PT",
+            "numero": 1304,
+            "votos": 2215,
+            "rank": 6,
+            "pct_validos": 0.85386
+          },
+          {
+            "sqcand": 10002620016,
+            "nome": "Nóbrega RR-13-07",
+            "partido": "PC do B",
+            "numero": 6502,
+            "votos": 1320,
+            "rank": 7,
+            "pct_validos": 0.50885
+          },
+          {
+            "sqcand": 10002620017,
+            "nome": "Araújo RR-13-08",
+            "partido": "PV",
+            "numero": 4302,
+            "votos": 690,
+            "rank": 8,
+            "pct_validos": 0.26599
+          },
+          {
+            "sqcand": 10002620018,
+            "nome": "Conceição RR-13-09",
+            "partido": "PT",
+            "numero": 1305,
+            "votos": 95,
+            "rank": 9,
+            "pct_validos": 0.03662
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002620011,
+            "nome": "Gonçalves RR-13-02",
+            "partido": "PT",
+            "votos": 12650,
+            "ordem": 1,
+            "indefinido": true
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002620012,
+            "nome": "Magalhães RR-13-03",
+            "partido": "PC do B",
+            "votos": 3100,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002620013,
+            "nome": "Brandão RR-13-04",
+            "partido": "PV",
+            "votos": 2980,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002620014,
+            "nome": "Assunção RR-13-05",
+            "partido": "PT",
+            "votos": 2410,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002620015,
+            "nome": "Ribeiro RR-13-06",
+            "partido": "PT",
+            "votos": 2215,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002620016,
+            "nome": "Nóbrega RR-13-07",
+            "partido": "PC do B",
+            "votos": 1320,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "10",
+        "sigla": "REPUBLICANOS",
+        "nome": "Republicanos",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "REPUBLICANOS",
+        "votos_nominais": 13935,
+        "votos_legenda": 640,
+        "votos_validos": 14575,
+        "pct_votos": 5.6185,
+        "quociente_partidario": 0,
+        "cadeiras": 0,
+        "cadeiras_projetadas": 0,
+        "votos_projetados": 23320,
+        "total_candidatos": 5,
+        "candidatos": [
+          {
+            "sqcand": 10002620037,
+            "nome": "Brandão RR-10-01",
+            "partido": "REPUBLICANOS",
+            "numero": 1001,
+            "votos": 6120,
+            "rank": 1,
+            "pct_validos": 2.35919
+          },
+          {
+            "sqcand": 10002620038,
+            "nome": "Assunção RR-10-02",
+            "partido": "REPUBLICANOS",
+            "numero": 1002,
+            "votos": 3810,
+            "rank": 2,
+            "pct_validos": 1.46871
+          },
+          {
+            "sqcand": 10002620039,
+            "nome": "Ribeiro RR-10-03",
+            "partido": "REPUBLICANOS",
+            "numero": 1003,
+            "votos": 2275,
+            "rank": 3,
+            "pct_validos": 0.87699
+          },
+          {
+            "sqcand": 10002620040,
+            "nome": "Nóbrega RR-10-04",
+            "partido": "REPUBLICANOS",
+            "numero": 1004,
+            "votos": 1190,
+            "rank": 4,
+            "pct_validos": 0.45873
+          },
+          {
+            "sqcand": 10002620041,
+            "nome": "Araújo RR-10-05",
+            "partido": "REPUBLICANOS",
+            "numero": 1005,
+            "votos": 540,
+            "rank": 5,
+            "pct_validos": 0.20816
+          }
+        ],
+        "eleitos": [],
+        "suplentes": [
+          {
+            "sqcand": 10002620037,
+            "nome": "Brandão RR-10-01",
+            "partido": "REPUBLICANOS",
+            "votos": 6120,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002620038,
+            "nome": "Assunção RR-10-02",
+            "partido": "REPUBLICANOS",
+            "votos": 3810,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002620039,
+            "nome": "Ribeiro RR-10-03",
+            "partido": "REPUBLICANOS",
+            "votos": 2275,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002620040,
+            "nome": "Nóbrega RR-10-04",
+            "partido": "REPUBLICANOS",
+            "votos": 1190,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002620041,
+            "nome": "Araújo RR-10-05",
+            "partido": "REPUBLICANOS",
+            "votos": 540,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "50",
+        "sigla": "PSOL/REDE",
+        "nome": "Federação PSOL REDE",
+        "tipo": "federacao",
+        "componentes": ["PSOL", "REDE"],
+        "sigla_lider": "PSOL",
+        "votos_nominais": 7265,
+        "votos_legenda": 1205,
+        "votos_validos": 8470,
+        "pct_votos": 3.26509,
+        "quociente_partidario": 0,
+        "cadeiras": 0,
+        "cadeiras_projetadas": 0,
+        "votos_projetados": 13552,
+        "total_candidatos": 4,
+        "candidatos": [
+          {
+            "sqcand": 10002620042,
+            "nome": "Assunção RR-50-01",
+            "partido": "PSOL",
+            "numero": 5001,
+            "votos": 3950,
+            "rank": 1,
+            "pct_validos": 1.52268
+          },
+          {
+            "sqcand": 10002620043,
+            "nome": "Ribeiro RR-50-02",
+            "partido": "REDE",
+            "numero": 1801,
+            "votos": 2120,
+            "rank": 2,
+            "pct_validos": 0.81724
+          },
+          {
+            "sqcand": 10002620044,
+            "nome": "Nóbrega RR-50-03",
+            "partido": "PSOL",
+            "numero": 5002,
+            "votos": 880,
+            "rank": 3,
+            "pct_validos": 0.33923
+          },
+          {
+            "sqcand": 10002620045,
+            "nome": "Araújo RR-50-04",
+            "partido": "REDE",
+            "numero": 1802,
+            "votos": 315,
+            "rank": 4,
+            "pct_validos": 0.12143
+          }
+        ],
+        "eleitos": [],
+        "suplentes": [
+          {
+            "sqcand": 10002620042,
+            "nome": "Assunção RR-50-01",
+            "partido": "PSOL",
+            "votos": 3950,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002620043,
+            "nome": "Ribeiro RR-50-02",
+            "partido": "REDE",
+            "votos": 2120,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002620044,
+            "nome": "Nóbrega RR-50-03",
+            "partido": "PSOL",
+            "votos": 880,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002620045,
+            "nome": "Araújo RR-50-04",
+            "partido": "REDE",
+            "votos": 315,
+            "ordem": 4
+          }
+        ]
+      }
+    ],
+    "vagas_nao_preenchidas": 0,
+    "empates_indeterminados": [],
+    "regras": {
+      "quociente_eleitoral": 32426,
+      "votos_validos": 259411,
+      "lugares_a_preencher": 8,
+      "piso_candidato": 3243,
+      "piso_agremiacao_sobras": 25941,
+      "piso_candidato_sobras": 6486
+    },
+    "projecao": {
+      "estado": "liberada",
+      "pct_minimo": 25,
+      "zonas_apuradas": 13,
+      "zonas_total": 16
+    },
+    "conferencia": {
+      "estado": "confere",
+      "boletim_dado_ts": "2026-10-04T23:30:04Z",
+      "totalizacao_final": false,
+      "comparou": ["eleitorado", "algoritmo"],
+      "divergencias": []
+    },
+    "mais_votados": [
+      {
+        "cod": "22",
+        "sqcand": 10002620001
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002620010
+      },
+      {
+        "cod": "15",
+        "sqcand": 10002620019
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002620002
+      },
+      {
+        "cod": "44",
+        "sqcand": 10002620028
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002620011
+      },
+      {
+        "cod": "15",
+        "sqcand": 10002620020
+      },
+      {
+        "cod": "44",
+        "sqcand": 10002620029
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002620003
+      },
+      {
+        "cod": "15",
+        "sqcand": 10002620021
+      }
+    ]
+  },
+  "SP": {
+    "ts": "2026-10-04T23:41:07.312Z",
+    "dado_ts": "2026-10-04T23:36:55Z",
+    "pares_atrasados": 3,
+    "cargo": 6,
+    "turno": 1,
+    "contrato": 2,
+    "uf": "SP",
+    "pct_apurado": 18.71204,
+    "lugares_a_preencher": 70,
+    "quociente_eleitoral": 62284,
+    "quociente_eleitoral_tse": null,
+    "totalizacao_final": false,
+    "divergencias": [],
+    "agremiacoes": [
+      {
+        "cod": "22",
+        "sigla": "PL",
+        "nome": "Partido Liberal",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PL",
+        "votos_nominais": 1460475,
+        "votos_legenda": 59768,
+        "votos_validos": 1520243,
+        "pct_votos": 34.86897,
+        "quociente_partidario": 24,
+        "cadeiras": 25,
+        "cadeiras_ci95": [20, 25],
+        "corte": {
+          "ultimo_eleito": 10002630025,
+          "primeiro_fora": 10002630026,
+          "diferenca": 599
+        },
+        "puxadores": [
+          {
+            "sqcand": 10002630001,
+            "quocientes": 3,
+            "excedente": 2
+          },
+          {
+            "sqcand": 10002630002,
+            "quocientes": 2,
+            "excedente": 1
+          }
+        ],
+        "total_candidatos": 71,
+        "candidatos": [
+          {
+            "sqcand": 10002630001,
+            "nome": "Araújo SP-22-01",
+            "partido": "PL",
+            "numero": 2201,
+            "votos": 189224,
+            "rank": 1,
+            "pct_validos": 4.34013,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630002,
+            "nome": "Conceição SP-22-02",
+            "partido": "PL",
+            "numero": 2202,
+            "votos": 136316,
+            "rank": 2,
+            "pct_validos": 3.1266,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630003,
+            "nome": "Gonçalves SP-22-03",
+            "partido": "PL",
+            "numero": 2203,
+            "votos": 105154,
+            "rank": 3,
+            "pct_validos": 2.41186,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630004,
+            "nome": "Magalhães SP-22-04",
+            "partido": "PL",
+            "numero": 2204,
+            "votos": 84827,
+            "rank": 4,
+            "pct_validos": 1.94563,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630005,
+            "nome": "Brandão SP-22-05",
+            "partido": "PL",
+            "numero": 2205,
+            "votos": 70623,
+            "rank": 5,
+            "pct_validos": 1.61984,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630006,
+            "nome": "Assunção SP-22-06",
+            "partido": "PL",
+            "numero": 2206,
+            "votos": 60194,
+            "rank": 6,
+            "pct_validos": 1.38064,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630007,
+            "nome": "Ribeiro SP-22-07",
+            "partido": "PL",
+            "numero": 2207,
+            "votos": 52243,
+            "rank": 7,
+            "pct_validos": 1.19827,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630008,
+            "nome": "Nóbrega SP-22-08",
+            "partido": "PL",
+            "numero": 2208,
+            "votos": 46002,
+            "rank": 8,
+            "pct_validos": 1.05512,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630009,
+            "nome": "Araújo SP-22-09",
+            "partido": "PL",
+            "numero": 2209,
+            "votos": 40985,
+            "rank": 9,
+            "pct_validos": 0.94005,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630010,
+            "nome": "Conceição SP-22-10",
+            "partido": "PL",
+            "numero": 2210,
+            "votos": 36874,
+            "rank": 10,
+            "pct_validos": 0.84576,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630011,
+            "nome": "Gonçalves SP-22-11",
+            "partido": "PL",
+            "numero": 2211,
+            "votos": 33450,
+            "rank": 11,
+            "pct_validos": 0.76722,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630012,
+            "nome": "Magalhães SP-22-12",
+            "partido": "PL",
+            "numero": 2212,
+            "votos": 30559,
+            "rank": 12,
+            "pct_validos": 0.70091,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630013,
+            "nome": "Brandão SP-22-13",
+            "partido": "PL",
+            "numero": 2213,
+            "votos": 28089,
+            "rank": 13,
+            "pct_validos": 0.64426,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630014,
+            "nome": "Assunção SP-22-14",
+            "partido": "PL",
+            "numero": 2214,
+            "votos": 25956,
+            "rank": 14,
+            "pct_validos": 0.59534,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630015,
+            "nome": "Ribeiro SP-22-15",
+            "partido": "PL",
+            "numero": 2215,
+            "votos": 24098,
+            "rank": 15,
+            "pct_validos": 0.55272,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630016,
+            "nome": "Nóbrega SP-22-16",
+            "partido": "PL",
+            "numero": 2216,
+            "votos": 22466,
+            "rank": 16,
+            "pct_validos": 0.51529,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630017,
+            "nome": "Araújo SP-22-17",
+            "partido": "PL",
+            "numero": 2217,
+            "votos": 21023,
+            "rank": 17,
+            "pct_validos": 0.48219,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630018,
+            "nome": "Conceição SP-22-18",
+            "partido": "PL",
+            "numero": 2218,
+            "votos": 19738,
+            "rank": 18,
+            "pct_validos": 0.45272,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630019,
+            "nome": "Gonçalves SP-22-19",
+            "partido": "PL",
+            "numero": 2219,
+            "votos": 18589,
+            "rank": 19,
+            "pct_validos": 0.42637,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630020,
+            "nome": "Magalhães SP-22-20",
+            "partido": "PL",
+            "numero": 2220,
+            "votos": 17554,
+            "rank": 20,
+            "pct_validos": 0.40263,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630021,
+            "nome": "Brandão SP-22-21",
+            "partido": "PL",
+            "numero": 2221,
+            "votos": 16619,
+            "rank": 21,
+            "pct_validos": 0.38118,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630022,
+            "nome": "Assunção SP-22-22",
+            "partido": "PL",
+            "numero": 2222,
+            "votos": 15770,
+            "rank": 22,
+            "pct_validos": 0.36171,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630023,
+            "nome": "Ribeiro SP-22-23",
+            "partido": "PL",
+            "numero": 2223,
+            "votos": 14995,
+            "rank": 23,
+            "pct_validos": 0.34393,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630024,
+            "nome": "Nóbrega SP-22-24",
+            "partido": "PL",
+            "numero": 2224,
+            "votos": 14287,
+            "rank": 24,
+            "pct_validos": 0.32769,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630025,
+            "nome": "Araújo SP-22-25",
+            "partido": "PL",
+            "numero": 2225,
+            "votos": 13637,
+            "rank": 25,
+            "pct_validos": 0.31278,
+            "parcial": "sobra",
+            "indefinido": true
+          },
+          {
+            "sqcand": 10002630026,
+            "nome": "Conceição SP-22-26",
+            "partido": "PL",
+            "numero": 2226,
+            "votos": 13038,
+            "rank": 26,
+            "pct_validos": 0.29905
+          },
+          {
+            "sqcand": 10002630027,
+            "nome": "Gonçalves SP-22-27",
+            "partido": "PL",
+            "numero": 2227,
+            "votos": 12485,
+            "rank": 27,
+            "pct_validos": 0.28636
+          },
+          {
+            "sqcand": 10002630028,
+            "nome": "Magalhães SP-22-28",
+            "partido": "PL",
+            "numero": 2228,
+            "votos": 11972,
+            "rank": 28,
+            "pct_validos": 0.2746
+          },
+          {
+            "sqcand": 10002630029,
+            "nome": "Brandão SP-22-29",
+            "partido": "PL",
+            "numero": 2229,
+            "votos": 11497,
+            "rank": 29,
+            "pct_validos": 0.2637
+          },
+          {
+            "sqcand": 10002630030,
+            "nome": "Assunção SP-22-30",
+            "partido": "PL",
+            "numero": 2230,
+            "votos": 11054,
+            "rank": 30,
+            "pct_validos": 0.25354
+          },
+          {
+            "sqcand": 10002630031,
+            "nome": "Ribeiro SP-22-31",
+            "partido": "PL",
+            "numero": 2231,
+            "votos": 10641,
+            "rank": 31,
+            "pct_validos": 0.24407
+          },
+          {
+            "sqcand": 10002630032,
+            "nome": "Nóbrega SP-22-32",
+            "partido": "PL",
+            "numero": 2232,
+            "votos": 10255,
+            "rank": 32,
+            "pct_validos": 0.23521
+          },
+          {
+            "sqcand": 10002630033,
+            "nome": "Araújo SP-22-33",
+            "partido": "PL",
+            "numero": 2233,
+            "votos": 9893,
+            "rank": 33,
+            "pct_validos": 0.22691
+          },
+          {
+            "sqcand": 10002630034,
+            "nome": "Conceição SP-22-34",
+            "partido": "PL",
+            "numero": 2234,
+            "votos": 9554,
+            "rank": 34,
+            "pct_validos": 0.21913
+          },
+          {
+            "sqcand": 10002630035,
+            "nome": "Gonçalves SP-22-35",
+            "partido": "PL",
+            "numero": 2235,
+            "votos": 9235,
+            "rank": 35,
+            "pct_validos": 0.21182
+          },
+          {
+            "sqcand": 10002630036,
+            "nome": "Magalhães SP-22-36",
+            "partido": "PL",
+            "numero": 2236,
+            "votos": 8935,
+            "rank": 36,
+            "pct_validos": 0.20494
+          },
+          {
+            "sqcand": 10002630037,
+            "nome": "Brandão SP-22-37",
+            "partido": "PL",
+            "numero": 2237,
+            "votos": 8652,
+            "rank": 37,
+            "pct_validos": 0.19845
+          },
+          {
+            "sqcand": 10002630038,
+            "nome": "Assunção SP-22-38",
+            "partido": "PL",
+            "numero": 2238,
+            "votos": 8385,
+            "rank": 38,
+            "pct_validos": 0.19232
+          },
+          {
+            "sqcand": 10002630039,
+            "nome": "Ribeiro SP-22-39",
+            "partido": "PL",
+            "numero": 2239,
+            "votos": 8132,
+            "rank": 39,
+            "pct_validos": 0.18652
+          },
+          {
+            "sqcand": 10002630040,
+            "nome": "Nóbrega SP-22-40",
+            "partido": "PL",
+            "numero": 2240,
+            "votos": 7893,
+            "rank": 40,
+            "pct_validos": 0.18104
+          },
+          {
+            "sqcand": 10002630041,
+            "nome": "Araújo SP-22-41",
+            "partido": "PL",
+            "numero": 2241,
+            "votos": 7666,
+            "rank": 41,
+            "pct_validos": 0.17583
+          },
+          {
+            "sqcand": 10002630042,
+            "nome": "Conceição SP-22-42",
+            "partido": "PL",
+            "numero": 2242,
+            "votos": 7450,
+            "rank": 42,
+            "pct_validos": 0.17088
+          },
+          {
+            "sqcand": 10002630043,
+            "nome": "Gonçalves SP-22-43",
+            "partido": "PL",
+            "numero": 2243,
+            "votos": 7245,
+            "rank": 43,
+            "pct_validos": 0.16617
+          },
+          {
+            "sqcand": 10002630044,
+            "nome": "Magalhães SP-22-44",
+            "partido": "PL",
+            "numero": 2244,
+            "votos": 7050,
+            "rank": 44,
+            "pct_validos": 0.1617
+          },
+          {
+            "sqcand": 10002630045,
+            "nome": "Brandão SP-22-45",
+            "partido": "PL",
+            "numero": 2245,
+            "votos": 6865,
+            "rank": 45,
+            "pct_validos": 0.15746
+          },
+          {
+            "sqcand": 10002630046,
+            "nome": "Assunção SP-22-46",
+            "partido": "PL",
+            "numero": 2246,
+            "votos": 6688,
+            "rank": 46,
+            "pct_validos": 0.1534
+          },
+          {
+            "sqcand": 10002630047,
+            "nome": "Ribeiro SP-22-47",
+            "partido": "PL",
+            "numero": 2247,
+            "votos": 6519,
+            "rank": 47,
+            "pct_validos": 0.14952
+          },
+          {
+            "sqcand": 10002630048,
+            "nome": "Nóbrega SP-22-48",
+            "partido": "PL",
+            "numero": 2248,
+            "votos": 6357,
+            "rank": 48,
+            "pct_validos": 0.14581
+          },
+          {
+            "sqcand": 10002630049,
+            "nome": "Araújo SP-22-49",
+            "partido": "PL",
+            "numero": 2249,
+            "votos": 6203,
+            "rank": 49,
+            "pct_validos": 0.14227
+          },
+          {
+            "sqcand": 10002630050,
+            "nome": "Conceição SP-22-50",
+            "partido": "PL",
+            "numero": 2250,
+            "votos": 6055,
+            "rank": 50,
+            "pct_validos": 0.13888
+          },
+          {
+            "sqcand": 10002630051,
+            "nome": "Gonçalves SP-22-51",
+            "partido": "PL",
+            "numero": 2251,
+            "votos": 5913,
+            "rank": 51,
+            "pct_validos": 0.13562
+          },
+          {
+            "sqcand": 10002630052,
+            "nome": "Magalhães SP-22-52",
+            "partido": "PL",
+            "numero": 2252,
+            "votos": 5778,
+            "rank": 52,
+            "pct_validos": 0.13253
+          },
+          {
+            "sqcand": 10002630053,
+            "nome": "Brandão SP-22-53",
+            "partido": "PL",
+            "numero": 2253,
+            "votos": 5647,
+            "rank": 53,
+            "pct_validos": 0.12952
+          },
+          {
+            "sqcand": 10002630054,
+            "nome": "Assunção SP-22-54",
+            "partido": "PL",
+            "numero": 2254,
+            "votos": 5522,
+            "rank": 54,
+            "pct_validos": 0.12666
+          },
+          {
+            "sqcand": 10002630055,
+            "nome": "Ribeiro SP-22-55",
+            "partido": "PL",
+            "numero": 2255,
+            "votos": 5402,
+            "rank": 55,
+            "pct_validos": 0.1239
+          },
+          {
+            "sqcand": 10002630056,
+            "nome": "Nóbrega SP-22-56",
+            "partido": "PL",
+            "numero": 2256,
+            "votos": 5287,
+            "rank": 56,
+            "pct_validos": 0.12126
+          },
+          {
+            "sqcand": 10002630057,
+            "nome": "Araújo SP-22-57",
+            "partido": "PL",
+            "numero": 2257,
+            "votos": 5175,
+            "rank": 57,
+            "pct_validos": 0.1187
+          },
+          {
+            "sqcand": 10002630058,
+            "nome": "Conceição SP-22-58",
+            "partido": "PL",
+            "numero": 2258,
+            "votos": 5068,
+            "rank": 58,
+            "pct_validos": 0.11624
+          },
+          {
+            "sqcand": 10002630059,
+            "nome": "Gonçalves SP-22-59",
+            "partido": "PL",
+            "numero": 2259,
+            "votos": 4965,
+            "rank": 59,
+            "pct_validos": 0.11388
+          },
+          {
+            "sqcand": 10002630060,
+            "nome": "Magalhães SP-22-60",
+            "partido": "PL",
+            "numero": 2260,
+            "votos": 4866,
+            "rank": 60,
+            "pct_validos": 0.11161
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002630001,
+            "nome": "Araújo SP-22-01",
+            "partido": "PL",
+            "votos": 189224,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630002,
+            "nome": "Conceição SP-22-02",
+            "partido": "PL",
+            "votos": 136316,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630003,
+            "nome": "Gonçalves SP-22-03",
+            "partido": "PL",
+            "votos": 105154,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630004,
+            "nome": "Magalhães SP-22-04",
+            "partido": "PL",
+            "votos": 84827,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630005,
+            "nome": "Brandão SP-22-05",
+            "partido": "PL",
+            "votos": 70623,
+            "ordem": 5
+          },
+          {
+            "sqcand": 10002630006,
+            "nome": "Assunção SP-22-06",
+            "partido": "PL",
+            "votos": 60194,
+            "ordem": 6
+          },
+          {
+            "sqcand": 10002630007,
+            "nome": "Ribeiro SP-22-07",
+            "partido": "PL",
+            "votos": 52243,
+            "ordem": 7
+          },
+          {
+            "sqcand": 10002630008,
+            "nome": "Nóbrega SP-22-08",
+            "partido": "PL",
+            "votos": 46002,
+            "ordem": 8
+          },
+          {
+            "sqcand": 10002630009,
+            "nome": "Araújo SP-22-09",
+            "partido": "PL",
+            "votos": 40985,
+            "ordem": 9
+          },
+          {
+            "sqcand": 10002630010,
+            "nome": "Conceição SP-22-10",
+            "partido": "PL",
+            "votos": 36874,
+            "ordem": 10
+          },
+          {
+            "sqcand": 10002630011,
+            "nome": "Gonçalves SP-22-11",
+            "partido": "PL",
+            "votos": 33450,
+            "ordem": 11
+          },
+          {
+            "sqcand": 10002630012,
+            "nome": "Magalhães SP-22-12",
+            "partido": "PL",
+            "votos": 30559,
+            "ordem": 12
+          },
+          {
+            "sqcand": 10002630013,
+            "nome": "Brandão SP-22-13",
+            "partido": "PL",
+            "votos": 28089,
+            "ordem": 13
+          },
+          {
+            "sqcand": 10002630014,
+            "nome": "Assunção SP-22-14",
+            "partido": "PL",
+            "votos": 25956,
+            "ordem": 14
+          },
+          {
+            "sqcand": 10002630015,
+            "nome": "Ribeiro SP-22-15",
+            "partido": "PL",
+            "votos": 24098,
+            "ordem": 15
+          },
+          {
+            "sqcand": 10002630016,
+            "nome": "Nóbrega SP-22-16",
+            "partido": "PL",
+            "votos": 22466,
+            "ordem": 16
+          },
+          {
+            "sqcand": 10002630017,
+            "nome": "Araújo SP-22-17",
+            "partido": "PL",
+            "votos": 21023,
+            "ordem": 17
+          },
+          {
+            "sqcand": 10002630018,
+            "nome": "Conceição SP-22-18",
+            "partido": "PL",
+            "votos": 19738,
+            "ordem": 18
+          },
+          {
+            "sqcand": 10002630019,
+            "nome": "Gonçalves SP-22-19",
+            "partido": "PL",
+            "votos": 18589,
+            "ordem": 19
+          },
+          {
+            "sqcand": 10002630020,
+            "nome": "Magalhães SP-22-20",
+            "partido": "PL",
+            "votos": 17554,
+            "ordem": 20
+          },
+          {
+            "sqcand": 10002630021,
+            "nome": "Brandão SP-22-21",
+            "partido": "PL",
+            "votos": 16619,
+            "ordem": 21
+          },
+          {
+            "sqcand": 10002630022,
+            "nome": "Assunção SP-22-22",
+            "partido": "PL",
+            "votos": 15770,
+            "ordem": 22
+          },
+          {
+            "sqcand": 10002630023,
+            "nome": "Ribeiro SP-22-23",
+            "partido": "PL",
+            "votos": 14995,
+            "ordem": 23
+          },
+          {
+            "sqcand": 10002630024,
+            "nome": "Nóbrega SP-22-24",
+            "partido": "PL",
+            "votos": 14287,
+            "ordem": 24
+          },
+          {
+            "sqcand": 10002630025,
+            "nome": "Araújo SP-22-25",
+            "partido": "PL",
+            "votos": 13637,
+            "ordem": 25,
+            "indefinido": true
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002630026,
+            "nome": "Conceição SP-22-26",
+            "partido": "PL",
+            "votos": 13038,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630027,
+            "nome": "Gonçalves SP-22-27",
+            "partido": "PL",
+            "votos": 12485,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630028,
+            "nome": "Magalhães SP-22-28",
+            "partido": "PL",
+            "votos": 11972,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630029,
+            "nome": "Brandão SP-22-29",
+            "partido": "PL",
+            "votos": 11497,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630030,
+            "nome": "Assunção SP-22-30",
+            "partido": "PL",
+            "votos": 11054,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "13",
+        "sigla": "PT/PC do B/PV",
+        "nome": "Federação Brasil da Esperança",
+        "tipo": "federacao",
+        "componentes": ["PT", "PC do B", "PV"],
+        "sigla_lider": "PT",
+        "votos_nominais": 1001707,
+        "votos_legenda": 73346,
+        "votos_validos": 1075053,
+        "pct_votos": 24.65789,
+        "quociente_partidario": 17,
+        "cadeiras": 18,
+        "cadeiras_ci95": [15, 19],
+        "corte": {
+          "ultimo_eleito": 10002630089,
+          "primeiro_fora": 10002630090,
+          "diferenca": 884
+        },
+        "total_candidatos": 40,
+        "candidatos": [
+          {
+            "sqcand": 10002630072,
+            "nome": "Conceição SP-13-01",
+            "partido": "PT",
+            "numero": 1301,
+            "votos": 119288,
+            "rank": 1,
+            "pct_validos": 2.73604,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630073,
+            "nome": "Gonçalves SP-13-02",
+            "partido": "PT",
+            "numero": 1302,
+            "votos": 90921,
+            "rank": 2,
+            "pct_validos": 2.0854,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630074,
+            "nome": "Magalhães SP-13-03",
+            "partido": "PC do B",
+            "numero": 6501,
+            "votos": 73141,
+            "rank": 3,
+            "pct_validos": 1.67759,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630075,
+            "nome": "Brandão SP-13-04",
+            "partido": "PV",
+            "numero": 4301,
+            "votos": 60995,
+            "rank": 4,
+            "pct_validos": 1.39901,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630076,
+            "nome": "Assunção SP-13-05",
+            "partido": "PT",
+            "numero": 1303,
+            "votos": 52195,
+            "rank": 5,
+            "pct_validos": 1.19717,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630077,
+            "nome": "Ribeiro SP-13-06",
+            "partido": "PT",
+            "numero": 1304,
+            "votos": 45537,
+            "rank": 6,
+            "pct_validos": 1.04446,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630078,
+            "nome": "Nóbrega SP-13-07",
+            "partido": "PC do B",
+            "numero": 6502,
+            "votos": 40332,
+            "rank": 7,
+            "pct_validos": 0.92507,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630079,
+            "nome": "Araújo SP-13-08",
+            "partido": "PV",
+            "numero": 4302,
+            "votos": 36156,
+            "rank": 8,
+            "pct_validos": 0.82929,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630080,
+            "nome": "Conceição SP-13-09",
+            "partido": "PT",
+            "numero": 1305,
+            "votos": 32734,
+            "rank": 9,
+            "pct_validos": 0.7508,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630081,
+            "nome": "Gonçalves SP-13-10",
+            "partido": "PT",
+            "numero": 1306,
+            "votos": 29881,
+            "rank": 10,
+            "pct_validos": 0.68536,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630082,
+            "nome": "Magalhães SP-13-11",
+            "partido": "PC do B",
+            "numero": 6503,
+            "votos": 27468,
+            "rank": 11,
+            "pct_validos": 0.63002,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630083,
+            "nome": "Brandão SP-13-12",
+            "partido": "PV",
+            "numero": 4303,
+            "votos": 25402,
+            "rank": 12,
+            "pct_validos": 0.58263,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630084,
+            "nome": "Assunção SP-13-13",
+            "partido": "PT",
+            "numero": 1307,
+            "votos": 23614,
+            "rank": 13,
+            "pct_validos": 0.54162,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630085,
+            "nome": "Ribeiro SP-13-14",
+            "partido": "PT",
+            "numero": 1308,
+            "votos": 22051,
+            "rank": 14,
+            "pct_validos": 0.50577,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630086,
+            "nome": "Nóbrega SP-13-15",
+            "partido": "PC do B",
+            "numero": 6504,
+            "votos": 20675,
+            "rank": 15,
+            "pct_validos": 0.47421,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630087,
+            "nome": "Araújo SP-13-16",
+            "partido": "PV",
+            "numero": 4304,
+            "votos": 19453,
+            "rank": 16,
+            "pct_validos": 0.44618,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630088,
+            "nome": "Conceição SP-13-17",
+            "partido": "PT",
+            "numero": 1309,
+            "votos": 18363,
+            "rank": 17,
+            "pct_validos": 0.42118,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630089,
+            "nome": "Gonçalves SP-13-18",
+            "partido": "PT",
+            "numero": 1310,
+            "votos": 17383,
+            "rank": 18,
+            "pct_validos": 0.3987,
+            "parcial": "sobra",
+            "indefinido": true
+          },
+          {
+            "sqcand": 10002630090,
+            "nome": "Magalhães SP-13-19",
+            "partido": "PC do B",
+            "numero": 6505,
+            "votos": 16499,
+            "rank": 19,
+            "pct_validos": 0.37843
+          },
+          {
+            "sqcand": 10002630091,
+            "nome": "Brandão SP-13-20",
+            "partido": "PV",
+            "numero": 4305,
+            "votos": 15697,
+            "rank": 20,
+            "pct_validos": 0.36003
+          },
+          {
+            "sqcand": 10002630092,
+            "nome": "Assunção SP-13-21",
+            "partido": "PT",
+            "numero": 1311,
+            "votos": 14966,
+            "rank": 21,
+            "pct_validos": 0.34327
+          },
+          {
+            "sqcand": 10002630093,
+            "nome": "Ribeiro SP-13-22",
+            "partido": "PT",
+            "numero": 1312,
+            "votos": 14297,
+            "rank": 22,
+            "pct_validos": 0.32792
+          },
+          {
+            "sqcand": 10002630094,
+            "nome": "Nóbrega SP-13-23",
+            "partido": "PC do B",
+            "numero": 6506,
+            "votos": 13683,
+            "rank": 23,
+            "pct_validos": 0.31384
+          },
+          {
+            "sqcand": 10002630095,
+            "nome": "Araújo SP-13-24",
+            "partido": "PV",
+            "numero": 4306,
+            "votos": 13118,
+            "rank": 24,
+            "pct_validos": 0.30088
+          },
+          {
+            "sqcand": 10002630096,
+            "nome": "Conceição SP-13-25",
+            "partido": "PT",
+            "numero": 1313,
+            "votos": 12596,
+            "rank": 25,
+            "pct_validos": 0.28891
+          },
+          {
+            "sqcand": 10002630097,
+            "nome": "Gonçalves SP-13-26",
+            "partido": "PT",
+            "numero": 1314,
+            "votos": 12111,
+            "rank": 26,
+            "pct_validos": 0.27778
+          },
+          {
+            "sqcand": 10002630098,
+            "nome": "Magalhães SP-13-27",
+            "partido": "PC do B",
+            "numero": 6507,
+            "votos": 11662,
+            "rank": 27,
+            "pct_validos": 0.26748
+          },
+          {
+            "sqcand": 10002630099,
+            "nome": "Brandão SP-13-28",
+            "partido": "PV",
+            "numero": 4307,
+            "votos": 11243,
+            "rank": 28,
+            "pct_validos": 0.25787
+          },
+          {
+            "sqcand": 10002630100,
+            "nome": "Assunção SP-13-29",
+            "partido": "PT",
+            "numero": 1315,
+            "votos": 10852,
+            "rank": 29,
+            "pct_validos": 0.24891
+          },
+          {
+            "sqcand": 10002630101,
+            "nome": "Ribeiro SP-13-30",
+            "partido": "PT",
+            "numero": 1316,
+            "votos": 10486,
+            "rank": 30,
+            "pct_validos": 0.24051
+          },
+          {
+            "sqcand": 10002630102,
+            "nome": "Nóbrega SP-13-31",
+            "partido": "PC do B",
+            "numero": 6508,
+            "votos": 10143,
+            "rank": 31,
+            "pct_validos": 0.23264
+          },
+          {
+            "sqcand": 10002630103,
+            "nome": "Araújo SP-13-32",
+            "partido": "PV",
+            "numero": 4308,
+            "votos": 9821,
+            "rank": 32,
+            "pct_validos": 0.22526
+          },
+          {
+            "sqcand": 10002630104,
+            "nome": "Conceição SP-13-33",
+            "partido": "PT",
+            "numero": 1317,
+            "votos": 9517,
+            "rank": 33,
+            "pct_validos": 0.21829
+          },
+          {
+            "sqcand": 10002630105,
+            "nome": "Gonçalves SP-13-34",
+            "partido": "PT",
+            "numero": 1318,
+            "votos": 9231,
+            "rank": 34,
+            "pct_validos": 0.21173
+          },
+          {
+            "sqcand": 10002630106,
+            "nome": "Magalhães SP-13-35",
+            "partido": "PC do B",
+            "numero": 6509,
+            "votos": 8961,
+            "rank": 35,
+            "pct_validos": 0.20553
+          },
+          {
+            "sqcand": 10002630107,
+            "nome": "Brandão SP-13-36",
+            "partido": "PV",
+            "numero": 4309,
+            "votos": 8706,
+            "rank": 36,
+            "pct_validos": 0.19968
+          },
+          {
+            "sqcand": 10002630108,
+            "nome": "Assunção SP-13-37",
+            "partido": "PT",
+            "numero": 1319,
+            "votos": 8465,
+            "rank": 37,
+            "pct_validos": 0.19416
+          },
+          {
+            "sqcand": 10002630109,
+            "nome": "Ribeiro SP-13-38",
+            "partido": "PT",
+            "numero": 1320,
+            "votos": 8235,
+            "rank": 38,
+            "pct_validos": 0.18888
+          },
+          {
+            "sqcand": 10002630110,
+            "nome": "Nóbrega SP-13-39",
+            "partido": "PC do B",
+            "numero": 6510,
+            "votos": 8018,
+            "rank": 39,
+            "pct_validos": 0.1839
+          },
+          {
+            "sqcand": 10002630111,
+            "nome": "Araújo SP-13-40",
+            "partido": "PV",
+            "numero": 4310,
+            "votos": 7811,
+            "rank": 40,
+            "pct_validos": 0.17916
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002630072,
+            "nome": "Conceição SP-13-01",
+            "partido": "PT",
+            "votos": 119288,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630073,
+            "nome": "Gonçalves SP-13-02",
+            "partido": "PT",
+            "votos": 90921,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630074,
+            "nome": "Magalhães SP-13-03",
+            "partido": "PC do B",
+            "votos": 73141,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630075,
+            "nome": "Brandão SP-13-04",
+            "partido": "PV",
+            "votos": 60995,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630076,
+            "nome": "Assunção SP-13-05",
+            "partido": "PT",
+            "votos": 52195,
+            "ordem": 5
+          },
+          {
+            "sqcand": 10002630077,
+            "nome": "Ribeiro SP-13-06",
+            "partido": "PT",
+            "votos": 45537,
+            "ordem": 6
+          },
+          {
+            "sqcand": 10002630078,
+            "nome": "Nóbrega SP-13-07",
+            "partido": "PC do B",
+            "votos": 40332,
+            "ordem": 7
+          },
+          {
+            "sqcand": 10002630079,
+            "nome": "Araújo SP-13-08",
+            "partido": "PV",
+            "votos": 36156,
+            "ordem": 8
+          },
+          {
+            "sqcand": 10002630080,
+            "nome": "Conceição SP-13-09",
+            "partido": "PT",
+            "votos": 32734,
+            "ordem": 9
+          },
+          {
+            "sqcand": 10002630081,
+            "nome": "Gonçalves SP-13-10",
+            "partido": "PT",
+            "votos": 29881,
+            "ordem": 10
+          },
+          {
+            "sqcand": 10002630082,
+            "nome": "Magalhães SP-13-11",
+            "partido": "PC do B",
+            "votos": 27468,
+            "ordem": 11
+          },
+          {
+            "sqcand": 10002630083,
+            "nome": "Brandão SP-13-12",
+            "partido": "PV",
+            "votos": 25402,
+            "ordem": 12
+          },
+          {
+            "sqcand": 10002630084,
+            "nome": "Assunção SP-13-13",
+            "partido": "PT",
+            "votos": 23614,
+            "ordem": 13
+          },
+          {
+            "sqcand": 10002630085,
+            "nome": "Ribeiro SP-13-14",
+            "partido": "PT",
+            "votos": 22051,
+            "ordem": 14
+          },
+          {
+            "sqcand": 10002630086,
+            "nome": "Nóbrega SP-13-15",
+            "partido": "PC do B",
+            "votos": 20675,
+            "ordem": 15
+          },
+          {
+            "sqcand": 10002630087,
+            "nome": "Araújo SP-13-16",
+            "partido": "PV",
+            "votos": 19453,
+            "ordem": 16
+          },
+          {
+            "sqcand": 10002630088,
+            "nome": "Conceição SP-13-17",
+            "partido": "PT",
+            "votos": 18363,
+            "ordem": 17
+          },
+          {
+            "sqcand": 10002630089,
+            "nome": "Gonçalves SP-13-18",
+            "partido": "PT",
+            "votos": 17383,
+            "ordem": 18,
+            "indefinido": true
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002630090,
+            "nome": "Magalhães SP-13-19",
+            "partido": "PC do B",
+            "votos": 16499,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630091,
+            "nome": "Brandão SP-13-20",
+            "partido": "PV",
+            "votos": 15697,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630092,
+            "nome": "Assunção SP-13-21",
+            "partido": "PT",
+            "votos": 14966,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630093,
+            "nome": "Ribeiro SP-13-22",
+            "partido": "PT",
+            "votos": 14297,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630094,
+            "nome": "Nóbrega SP-13-23",
+            "partido": "PC do B",
+            "votos": 13683,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "50",
+        "sigla": "PSOL/REDE",
+        "nome": "Federação PSOL REDE",
+        "tipo": "federacao",
+        "componentes": ["PSOL", "REDE"],
+        "sigla_lider": "PSOL",
+        "votos_nominais": 409050,
+        "votos_legenda": 19344,
+        "votos_validos": 428394,
+        "pct_votos": 9.82583,
+        "quociente_partidario": 6,
+        "cadeiras": 7,
+        "corte": {
+          "ultimo_eleito": 10002630166,
+          "primeiro_fora": 10002630167,
+          "diferenca": 2872
+        },
+        "total_candidatos": 12,
+        "candidatos": [
+          {
+            "sqcand": 10002630160,
+            "nome": "Ribeiro SP-50-01",
+            "partido": "PSOL",
+            "numero": 5001,
+            "votos": 104718,
+            "rank": 1,
+            "pct_validos": 2.40186,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630161,
+            "nome": "Nóbrega SP-50-02",
+            "partido": "REDE",
+            "numero": 1801,
+            "votos": 67617,
+            "rank": 2,
+            "pct_validos": 1.55089,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630162,
+            "nome": "Araújo SP-50-03",
+            "partido": "PSOL",
+            "numero": 5002,
+            "votos": 48772,
+            "rank": 3,
+            "pct_validos": 1.11866,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630163,
+            "nome": "Conceição SP-50-04",
+            "partido": "REDE",
+            "numero": 1802,
+            "votos": 37573,
+            "rank": 4,
+            "pct_validos": 0.86179,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630164,
+            "nome": "Gonçalves SP-50-05",
+            "partido": "PSOL",
+            "numero": 5003,
+            "votos": 30238,
+            "rank": 5,
+            "pct_validos": 0.69355,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630165,
+            "nome": "Magalhães SP-50-06",
+            "partido": "REDE",
+            "numero": 1803,
+            "votos": 25105,
+            "rank": 6,
+            "pct_validos": 0.57582,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630166,
+            "nome": "Brandão SP-50-07",
+            "partido": "PSOL",
+            "numero": 5004,
+            "votos": 21335,
+            "rank": 7,
+            "pct_validos": 0.48935,
+            "parcial": "sobra",
+            "indefinido": true
+          },
+          {
+            "sqcand": 10002630167,
+            "nome": "Assunção SP-50-08",
+            "partido": "REDE",
+            "numero": 1804,
+            "votos": 18463,
+            "rank": 8,
+            "pct_validos": 0.42348
+          },
+          {
+            "sqcand": 10002630168,
+            "nome": "Ribeiro SP-50-09",
+            "partido": "PSOL",
+            "numero": 5005,
+            "votos": 16211,
+            "rank": 9,
+            "pct_validos": 0.37182
+          },
+          {
+            "sqcand": 10002630169,
+            "nome": "Nóbrega SP-50-10",
+            "partido": "REDE",
+            "numero": 1805,
+            "votos": 14402,
+            "rank": 10,
+            "pct_validos": 0.33033
+          },
+          {
+            "sqcand": 10002630170,
+            "nome": "Araújo SP-50-11",
+            "partido": "PSOL",
+            "numero": 5006,
+            "votos": 12923,
+            "rank": 11,
+            "pct_validos": 0.29641
+          },
+          {
+            "sqcand": 10002630171,
+            "nome": "Conceição SP-50-12",
+            "partido": "REDE",
+            "numero": 1806,
+            "votos": 11693,
+            "rank": 12,
+            "pct_validos": 0.2682
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002630160,
+            "nome": "Ribeiro SP-50-01",
+            "partido": "PSOL",
+            "votos": 104718,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630161,
+            "nome": "Nóbrega SP-50-02",
+            "partido": "REDE",
+            "votos": 67617,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630162,
+            "nome": "Araújo SP-50-03",
+            "partido": "PSOL",
+            "votos": 48772,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630163,
+            "nome": "Conceição SP-50-04",
+            "partido": "REDE",
+            "votos": 37573,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630164,
+            "nome": "Gonçalves SP-50-05",
+            "partido": "PSOL",
+            "votos": 30238,
+            "ordem": 5
+          },
+          {
+            "sqcand": 10002630165,
+            "nome": "Magalhães SP-50-06",
+            "partido": "REDE",
+            "votos": 25105,
+            "ordem": 6
+          },
+          {
+            "sqcand": 10002630166,
+            "nome": "Brandão SP-50-07",
+            "partido": "PSOL",
+            "votos": 21335,
+            "ordem": 7,
+            "indefinido": true
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002630167,
+            "nome": "Assunção SP-50-08",
+            "partido": "REDE",
+            "votos": 18463,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630168,
+            "nome": "Ribeiro SP-50-09",
+            "partido": "PSOL",
+            "votos": 16211,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630169,
+            "nome": "Nóbrega SP-50-10",
+            "partido": "REDE",
+            "votos": 14402,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630170,
+            "nome": "Araújo SP-50-11",
+            "partido": "PSOL",
+            "votos": 12923,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630171,
+            "nome": "Conceição SP-50-12",
+            "partido": "REDE",
+            "votos": 11693,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "10",
+        "sigla": "REPUBLICANOS",
+        "nome": "Republicanos",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "REPUBLICANOS",
+        "votos_nominais": 320182,
+        "votos_legenda": 14942,
+        "votos_validos": 335124,
+        "pct_votos": 7.68655,
+        "quociente_partidario": 5,
+        "cadeiras": 5,
+        "corte": {
+          "ultimo_eleito": 10002630128,
+          "primeiro_fora": 10002630129,
+          "diferenca": 3383
+        },
+        "total_candidatos": 12,
+        "candidatos": [
+          {
+            "sqcand": 10002630124,
+            "nome": "Magalhães SP-10-01",
+            "partido": "REPUBLICANOS",
+            "numero": 1001,
+            "votos": 62806,
+            "rank": 1,
+            "pct_validos": 1.44055,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630125,
+            "nome": "Brandão SP-10-02",
+            "partido": "REPUBLICANOS",
+            "numero": 1002,
+            "votos": 46554,
+            "rank": 2,
+            "pct_validos": 1.06778,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630126,
+            "nome": "Assunção SP-10-03",
+            "partido": "REPUBLICANOS",
+            "numero": 1003,
+            "votos": 36888,
+            "rank": 3,
+            "pct_validos": 0.84608,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630127,
+            "nome": "Ribeiro SP-10-04",
+            "partido": "REPUBLICANOS",
+            "numero": 1004,
+            "votos": 30493,
+            "rank": 4,
+            "pct_validos": 0.6994,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630128,
+            "nome": "Nóbrega SP-10-05",
+            "partido": "REPUBLICANOS",
+            "numero": 1005,
+            "votos": 25956,
+            "rank": 5,
+            "pct_validos": 0.59534,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630129,
+            "nome": "Araújo SP-10-06",
+            "partido": "REPUBLICANOS",
+            "numero": 1006,
+            "votos": 22573,
+            "rank": 6,
+            "pct_validos": 0.51774
+          },
+          {
+            "sqcand": 10002630130,
+            "nome": "Conceição SP-10-07",
+            "partido": "REPUBLICANOS",
+            "numero": 1007,
+            "votos": 19956,
+            "rank": 7,
+            "pct_validos": 0.45772
+          },
+          {
+            "sqcand": 10002630131,
+            "nome": "Gonçalves SP-10-08",
+            "partido": "REPUBLICANOS",
+            "numero": 1008,
+            "votos": 17872,
+            "rank": 8,
+            "pct_validos": 0.40992
+          },
+          {
+            "sqcand": 10002630132,
+            "nome": "Magalhães SP-10-09",
+            "partido": "REPUBLICANOS",
+            "numero": 1009,
+            "votos": 16175,
+            "rank": 9,
+            "pct_validos": 0.371
+          },
+          {
+            "sqcand": 10002630133,
+            "nome": "Brandão SP-10-10",
+            "partido": "REPUBLICANOS",
+            "numero": 1010,
+            "votos": 14766,
+            "rank": 10,
+            "pct_validos": 0.33868
+          },
+          {
+            "sqcand": 10002630134,
+            "nome": "Assunção SP-10-11",
+            "partido": "REPUBLICANOS",
+            "numero": 1011,
+            "votos": 13579,
+            "rank": 11,
+            "pct_validos": 0.31145
+          },
+          {
+            "sqcand": 10002630135,
+            "nome": "Ribeiro SP-10-12",
+            "partido": "REPUBLICANOS",
+            "numero": 1012,
+            "votos": 12564,
+            "rank": 12,
+            "pct_validos": 0.28817
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002630124,
+            "nome": "Magalhães SP-10-01",
+            "partido": "REPUBLICANOS",
+            "votos": 62806,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630125,
+            "nome": "Brandão SP-10-02",
+            "partido": "REPUBLICANOS",
+            "votos": 46554,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630126,
+            "nome": "Assunção SP-10-03",
+            "partido": "REPUBLICANOS",
+            "votos": 36888,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630127,
+            "nome": "Ribeiro SP-10-04",
+            "partido": "REPUBLICANOS",
+            "votos": 30493,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630128,
+            "nome": "Nóbrega SP-10-05",
+            "partido": "REPUBLICANOS",
+            "votos": 25956,
+            "ordem": 5
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002630129,
+            "nome": "Araújo SP-10-06",
+            "partido": "REPUBLICANOS",
+            "votos": 22573,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630130,
+            "nome": "Conceição SP-10-07",
+            "partido": "REPUBLICANOS",
+            "votos": 19956,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630131,
+            "nome": "Gonçalves SP-10-08",
+            "partido": "REPUBLICANOS",
+            "votos": 17872,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630132,
+            "nome": "Magalhães SP-10-09",
+            "partido": "REPUBLICANOS",
+            "votos": 16175,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630133,
+            "nome": "Brandão SP-10-10",
+            "partido": "REPUBLICANOS",
+            "votos": 14766,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "44",
+        "sigla": "UNIÃO",
+        "nome": "União Brasil",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "UNIÃO",
+        "votos_nominais": 271970,
+        "votos_legenda": 13206,
+        "votos_validos": 285176,
+        "pct_votos": 6.54092,
+        "quociente_partidario": 4,
+        "cadeiras": 4,
+        "corte": {
+          "ultimo_eleito": 10002630115,
+          "primeiro_fora": 10002630116,
+          "diferenca": 3934
+        },
+        "total_candidatos": 12,
+        "candidatos": [
+          {
+            "sqcand": 10002630112,
+            "nome": "Gonçalves SP-44-01",
+            "partido": "UNIÃO",
+            "numero": 4401,
+            "votos": 54808,
+            "rank": 1,
+            "pct_validos": 1.2571,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630113,
+            "nome": "Magalhães SP-44-02",
+            "partido": "UNIÃO",
+            "numero": 4402,
+            "votos": 39994,
+            "rank": 2,
+            "pct_validos": 0.91732,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630114,
+            "nome": "Brandão SP-44-03",
+            "partido": "UNIÃO",
+            "numero": 4403,
+            "votos": 31396,
+            "rank": 3,
+            "pct_validos": 0.72011,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630115,
+            "nome": "Assunção SP-44-04",
+            "partido": "UNIÃO",
+            "numero": 4404,
+            "votos": 25793,
+            "rank": 4,
+            "pct_validos": 0.5916,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630116,
+            "nome": "Ribeiro SP-44-05",
+            "partido": "UNIÃO",
+            "numero": 4405,
+            "votos": 21859,
+            "rank": 5,
+            "pct_validos": 0.50137
+          },
+          {
+            "sqcand": 10002630117,
+            "nome": "Nóbrega SP-44-06",
+            "partido": "UNIÃO",
+            "numero": 4406,
+            "votos": 18947,
+            "rank": 6,
+            "pct_validos": 0.43458
+          },
+          {
+            "sqcand": 10002630118,
+            "nome": "Araújo SP-44-07",
+            "partido": "UNIÃO",
+            "numero": 4407,
+            "votos": 16708,
+            "rank": 7,
+            "pct_validos": 0.38322
+          },
+          {
+            "sqcand": 10002630119,
+            "nome": "Conceição SP-44-08",
+            "partido": "UNIÃO",
+            "numero": 4408,
+            "votos": 14933,
+            "rank": 8,
+            "pct_validos": 0.34251
+          },
+          {
+            "sqcand": 10002630120,
+            "nome": "Gonçalves SP-44-09",
+            "partido": "UNIÃO",
+            "numero": 4409,
+            "votos": 13492,
+            "rank": 9,
+            "pct_validos": 0.30946
+          },
+          {
+            "sqcand": 10002630121,
+            "nome": "Magalhães SP-44-10",
+            "partido": "UNIÃO",
+            "numero": 4410,
+            "votos": 12300,
+            "rank": 10,
+            "pct_validos": 0.28212
+          },
+          {
+            "sqcand": 10002630122,
+            "nome": "Brandão SP-44-11",
+            "partido": "UNIÃO",
+            "numero": 4411,
+            "votos": 11297,
+            "rank": 11,
+            "pct_validos": 0.25911
+          },
+          {
+            "sqcand": 10002630123,
+            "nome": "Assunção SP-44-12",
+            "partido": "UNIÃO",
+            "numero": 4412,
+            "votos": 10443,
+            "rank": 12,
+            "pct_validos": 0.23953
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002630112,
+            "nome": "Gonçalves SP-44-01",
+            "partido": "UNIÃO",
+            "votos": 54808,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630113,
+            "nome": "Magalhães SP-44-02",
+            "partido": "UNIÃO",
+            "votos": 39994,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630114,
+            "nome": "Brandão SP-44-03",
+            "partido": "UNIÃO",
+            "votos": 31396,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630115,
+            "nome": "Assunção SP-44-04",
+            "partido": "UNIÃO",
+            "votos": 25793,
+            "ordem": 4
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002630116,
+            "nome": "Ribeiro SP-44-05",
+            "partido": "UNIÃO",
+            "votos": 21859,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630117,
+            "nome": "Nóbrega SP-44-06",
+            "partido": "UNIÃO",
+            "votos": 18947,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630118,
+            "nome": "Araújo SP-44-07",
+            "partido": "UNIÃO",
+            "votos": 16708,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630119,
+            "nome": "Conceição SP-44-08",
+            "partido": "UNIÃO",
+            "votos": 14933,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630120,
+            "nome": "Gonçalves SP-44-09",
+            "partido": "UNIÃO",
+            "votos": 13492,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "55",
+        "sigla": "PSD",
+        "nome": "Partido Social Democrático",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PSD",
+        "votos_nominais": 267148,
+        "votos_legenda": 12648,
+        "votos_validos": 279796,
+        "pct_votos": 6.41752,
+        "quociente_partidario": 4,
+        "cadeiras": 4,
+        "corte": {
+          "ultimo_eleito": 10002630151,
+          "primeiro_fora": 10002630152,
+          "diferenca": 3726
+        },
+        "total_candidatos": 12,
+        "candidatos": [
+          {
+            "sqcand": 10002630148,
+            "nome": "Assunção SP-55-01",
+            "partido": "PSD",
+            "numero": 5501,
+            "votos": 52018,
+            "rank": 1,
+            "pct_validos": 1.19311,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630149,
+            "nome": "Ribeiro SP-55-02",
+            "partido": "PSD",
+            "numero": 5502,
+            "votos": 38593,
+            "rank": 2,
+            "pct_validos": 0.88519,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630150,
+            "nome": "Nóbrega SP-55-03",
+            "partido": "PSD",
+            "numero": 5503,
+            "votos": 30643,
+            "rank": 3,
+            "pct_validos": 0.70284,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630151,
+            "nome": "Araújo SP-55-04",
+            "partido": "PSD",
+            "numero": 5504,
+            "votos": 25392,
+            "rank": 4,
+            "pct_validos": 0.5824,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630152,
+            "nome": "Conceição SP-55-05",
+            "partido": "PSD",
+            "numero": 5505,
+            "votos": 21666,
+            "rank": 5,
+            "pct_validos": 0.49694
+          },
+          {
+            "sqcand": 10002630153,
+            "nome": "Gonçalves SP-55-06",
+            "partido": "PSD",
+            "numero": 5506,
+            "votos": 18887,
+            "rank": 6,
+            "pct_validos": 0.4332
+          },
+          {
+            "sqcand": 10002630154,
+            "nome": "Magalhães SP-55-07",
+            "partido": "PSD",
+            "numero": 5507,
+            "votos": 16735,
+            "rank": 7,
+            "pct_validos": 0.38384
+          },
+          {
+            "sqcand": 10002630155,
+            "nome": "Brandão SP-55-08",
+            "partido": "PSD",
+            "numero": 5508,
+            "votos": 15020,
+            "rank": 8,
+            "pct_validos": 0.34451
+          },
+          {
+            "sqcand": 10002630156,
+            "nome": "Assunção SP-55-09",
+            "partido": "PSD",
+            "numero": 5509,
+            "votos": 13621,
+            "rank": 9,
+            "pct_validos": 0.31242
+          },
+          {
+            "sqcand": 10002630157,
+            "nome": "Ribeiro SP-55-10",
+            "partido": "PSD",
+            "numero": 5510,
+            "votos": 12458,
+            "rank": 10,
+            "pct_validos": 0.28574
+          },
+          {
+            "sqcand": 10002630158,
+            "nome": "Nóbrega SP-55-11",
+            "partido": "PSD",
+            "numero": 5511,
+            "votos": 11477,
+            "rank": 11,
+            "pct_validos": 0.26324
+          },
+          {
+            "sqcand": 10002630159,
+            "nome": "Araújo SP-55-12",
+            "partido": "PSD",
+            "numero": 5512,
+            "votos": 10638,
+            "rank": 12,
+            "pct_validos": 0.244
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002630148,
+            "nome": "Assunção SP-55-01",
+            "partido": "PSD",
+            "votos": 52018,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630149,
+            "nome": "Ribeiro SP-55-02",
+            "partido": "PSD",
+            "votos": 38593,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630150,
+            "nome": "Nóbrega SP-55-03",
+            "partido": "PSD",
+            "votos": 30643,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630151,
+            "nome": "Araújo SP-55-04",
+            "partido": "PSD",
+            "votos": 25392,
+            "ordem": 4
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002630152,
+            "nome": "Conceição SP-55-05",
+            "partido": "PSD",
+            "votos": 21666,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630153,
+            "nome": "Gonçalves SP-55-06",
+            "partido": "PSD",
+            "votos": 18887,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630154,
+            "nome": "Magalhães SP-55-07",
+            "partido": "PSD",
+            "votos": 16735,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630155,
+            "nome": "Brandão SP-55-08",
+            "partido": "PSD",
+            "votos": 15020,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630156,
+            "nome": "Assunção SP-55-09",
+            "partido": "PSD",
+            "votos": 13621,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "15",
+        "sigla": "MDB",
+        "nome": "Movimento Democrático Brasileiro",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "MDB",
+        "votos_nominais": 228237,
+        "votos_legenda": 11656,
+        "votos_validos": 239893,
+        "pct_votos": 5.50229,
+        "quociente_partidario": 3,
+        "cadeiras": 4,
+        "corte": {
+          "ultimo_eleito": 10002630139,
+          "primeiro_fora": 10002630140,
+          "diferenca": 3189
+        },
+        "total_candidatos": 12,
+        "candidatos": [
+          {
+            "sqcand": 10002630136,
+            "nome": "Brandão SP-15-01",
+            "partido": "MDB",
+            "numero": 1501,
+            "votos": 44950,
+            "rank": 1,
+            "pct_validos": 1.03099,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630137,
+            "nome": "Assunção SP-15-02",
+            "partido": "MDB",
+            "numero": 1502,
+            "votos": 33051,
+            "rank": 2,
+            "pct_validos": 0.75807,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630138,
+            "nome": "Ribeiro SP-15-03",
+            "partido": "MDB",
+            "numero": 1503,
+            "votos": 26134,
+            "rank": 3,
+            "pct_validos": 0.59942,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630139,
+            "nome": "Nóbrega SP-15-04",
+            "partido": "MDB",
+            "numero": 1504,
+            "votos": 21611,
+            "rank": 4,
+            "pct_validos": 0.49568,
+            "parcial": "sobra",
+            "indefinido": true
+          },
+          {
+            "sqcand": 10002630140,
+            "nome": "Araújo SP-15-05",
+            "partido": "MDB",
+            "numero": 1505,
+            "votos": 18422,
+            "rank": 5,
+            "pct_validos": 0.42254
+          },
+          {
+            "sqcand": 10002630141,
+            "nome": "Conceição SP-15-06",
+            "partido": "MDB",
+            "numero": 1506,
+            "votos": 16054,
+            "rank": 6,
+            "pct_validos": 0.36822
+          },
+          {
+            "sqcand": 10002630142,
+            "nome": "Gonçalves SP-15-07",
+            "partido": "MDB",
+            "numero": 1507,
+            "votos": 14225,
+            "rank": 7,
+            "pct_validos": 0.32627
+          },
+          {
+            "sqcand": 10002630143,
+            "nome": "Magalhães SP-15-08",
+            "partido": "MDB",
+            "numero": 1508,
+            "votos": 12770,
+            "rank": 8,
+            "pct_validos": 0.2929
+          },
+          {
+            "sqcand": 10002630144,
+            "nome": "Brandão SP-15-09",
+            "partido": "MDB",
+            "numero": 1509,
+            "votos": 11585,
+            "rank": 9,
+            "pct_validos": 0.26572
+          },
+          {
+            "sqcand": 10002630145,
+            "nome": "Assunção SP-15-10",
+            "partido": "MDB",
+            "numero": 1510,
+            "votos": 10601,
+            "rank": 10,
+            "pct_validos": 0.24315
+          },
+          {
+            "sqcand": 10002630146,
+            "nome": "Ribeiro SP-15-11",
+            "partido": "MDB",
+            "numero": 1511,
+            "votos": 9772,
+            "rank": 11,
+            "pct_validos": 0.22413
+          },
+          {
+            "sqcand": 10002630147,
+            "nome": "Nóbrega SP-15-12",
+            "partido": "MDB",
+            "numero": 1512,
+            "votos": 9062,
+            "rank": 12,
+            "pct_validos": 0.20785
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002630136,
+            "nome": "Brandão SP-15-01",
+            "partido": "MDB",
+            "votos": 44950,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630137,
+            "nome": "Assunção SP-15-02",
+            "partido": "MDB",
+            "votos": 33051,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630138,
+            "nome": "Ribeiro SP-15-03",
+            "partido": "MDB",
+            "votos": 26134,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630139,
+            "nome": "Nóbrega SP-15-04",
+            "partido": "MDB",
+            "votos": 21611,
+            "ordem": 4,
+            "indefinido": true
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002630140,
+            "nome": "Araújo SP-15-05",
+            "partido": "MDB",
+            "votos": 18422,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630141,
+            "nome": "Conceição SP-15-06",
+            "partido": "MDB",
+            "votos": 16054,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630142,
+            "nome": "Gonçalves SP-15-07",
+            "partido": "MDB",
+            "votos": 14225,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630143,
+            "nome": "Magalhães SP-15-08",
+            "partido": "MDB",
+            "votos": 12770,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630144,
+            "nome": "Brandão SP-15-09",
+            "partido": "MDB",
+            "votos": 11585,
+            "ordem": 5
+          }
+        ]
+      },
+      {
+        "cod": "40",
+        "sigla": "PSB",
+        "nome": "Partido Socialista Brasileiro",
+        "tipo": "partido",
+        "componentes": [],
+        "sigla_lider": "PSB",
+        "votos_nominais": 188321,
+        "votos_legenda": 7874,
+        "votos_validos": 196195,
+        "pct_votos": 4.50002,
+        "quociente_partidario": 3,
+        "cadeiras": 3,
+        "corte": {
+          "ultimo_eleito": 10002630174,
+          "primeiro_fora": 10002630175,
+          "diferenca": 3834
+        },
+        "total_candidatos": 12,
+        "candidatos": [
+          {
+            "sqcand": 10002630172,
+            "nome": "Nóbrega SP-40-01",
+            "partido": "PSB",
+            "numero": 4001,
+            "votos": 38006,
+            "rank": 1,
+            "pct_validos": 0.87172,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630173,
+            "nome": "Araújo SP-40-02",
+            "partido": "PSB",
+            "numero": 4002,
+            "votos": 27541,
+            "rank": 2,
+            "pct_validos": 0.63169,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630174,
+            "nome": "Conceição SP-40-03",
+            "partido": "PSB",
+            "numero": 4003,
+            "votos": 21594,
+            "rank": 3,
+            "pct_validos": 0.49529,
+            "parcial": "qp"
+          },
+          {
+            "sqcand": 10002630175,
+            "nome": "Gonçalves SP-40-04",
+            "partido": "PSB",
+            "numero": 4004,
+            "votos": 17760,
+            "rank": 4,
+            "pct_validos": 0.40735
+          },
+          {
+            "sqcand": 10002630176,
+            "nome": "Magalhães SP-40-05",
+            "partido": "PSB",
+            "numero": 4005,
+            "votos": 15082,
+            "rank": 5,
+            "pct_validos": 0.34593
+          },
+          {
+            "sqcand": 10002630177,
+            "nome": "Brandão SP-40-06",
+            "partido": "PSB",
+            "numero": 4006,
+            "votos": 13106,
+            "rank": 6,
+            "pct_validos": 0.30061
+          },
+          {
+            "sqcand": 10002630178,
+            "nome": "Assunção SP-40-07",
+            "partido": "PSB",
+            "numero": 4007,
+            "votos": 11587,
+            "rank": 7,
+            "pct_validos": 0.26576
+          },
+          {
+            "sqcand": 10002630179,
+            "nome": "Ribeiro SP-40-08",
+            "partido": "PSB",
+            "numero": 4008,
+            "votos": 10384,
+            "rank": 8,
+            "pct_validos": 0.23817
+          },
+          {
+            "sqcand": 10002630180,
+            "nome": "Nóbrega SP-40-09",
+            "partido": "PSB",
+            "numero": 4009,
+            "votos": 9407,
+            "rank": 9,
+            "pct_validos": 0.21576
+          },
+          {
+            "sqcand": 10002630181,
+            "nome": "Araújo SP-40-10",
+            "partido": "PSB",
+            "numero": 4010,
+            "votos": 8599,
+            "rank": 10,
+            "pct_validos": 0.19723
+          },
+          {
+            "sqcand": 10002630182,
+            "nome": "Conceição SP-40-11",
+            "partido": "PSB",
+            "numero": 4011,
+            "votos": 7918,
+            "rank": 11,
+            "pct_validos": 0.18161
+          },
+          {
+            "sqcand": 10002630183,
+            "nome": "Gonçalves SP-40-12",
+            "partido": "PSB",
+            "numero": 4012,
+            "votos": 7337,
+            "rank": 12,
+            "pct_validos": 0.16828
+          }
+        ],
+        "eleitos": [
+          {
+            "sqcand": 10002630172,
+            "nome": "Nóbrega SP-40-01",
+            "partido": "PSB",
+            "votos": 38006,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630173,
+            "nome": "Araújo SP-40-02",
+            "partido": "PSB",
+            "votos": 27541,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630174,
+            "nome": "Conceição SP-40-03",
+            "partido": "PSB",
+            "votos": 21594,
+            "ordem": 3
+          }
+        ],
+        "suplentes": [
+          {
+            "sqcand": 10002630175,
+            "nome": "Gonçalves SP-40-04",
+            "partido": "PSB",
+            "votos": 17760,
+            "ordem": 1
+          },
+          {
+            "sqcand": 10002630176,
+            "nome": "Magalhães SP-40-05",
+            "partido": "PSB",
+            "votos": 15082,
+            "ordem": 2
+          },
+          {
+            "sqcand": 10002630177,
+            "nome": "Brandão SP-40-06",
+            "partido": "PSB",
+            "votos": 13106,
+            "ordem": 3
+          },
+          {
+            "sqcand": 10002630178,
+            "nome": "Assunção SP-40-07",
+            "partido": "PSB",
+            "votos": 11587,
+            "ordem": 4
+          },
+          {
+            "sqcand": 10002630179,
+            "nome": "Ribeiro SP-40-08",
+            "partido": "PSB",
+            "votos": 10384,
+            "ordem": 5
+          }
+        ]
+      }
+    ],
+    "vagas_nao_preenchidas": 0,
+    "empates_indeterminados": [],
+    "regras": {
+      "quociente_eleitoral": 62284,
+      "votos_validos": 4359874,
+      "lugares_a_preencher": 70,
+      "piso_candidato": 6229,
+      "piso_agremiacao_sobras": 49828,
+      "piso_candidato_sobras": 12457
+    },
+    "projecao": {
+      "estado": "aguardando",
+      "motivo": "pct_minimo",
+      "pct_minimo": 25,
+      "zonas_apuradas": 388,
+      "zonas_total": 1011
+    },
+    "conferencia": {
+      "estado": "sem_dado_tse",
+      "boletim_dado_ts": null,
+      "totalizacao_final": false,
+      "comparou": [],
+      "divergencias": []
+    },
+    "mais_votados": [
+      {
+        "cod": "22",
+        "sqcand": 10002630001
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002630002
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002630072
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002630003
+      },
+      {
+        "cod": "50",
+        "sqcand": 10002630160
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002630073
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002630004
+      },
+      {
+        "cod": "13",
+        "sqcand": 10002630074
+      },
+      {
+        "cod": "22",
+        "sqcand": 10002630005
+      },
+      {
+        "cod": "50",
+        "sqcand": 10002630161
+      }
+    ],
+    "lista": {
+      "restantes": 11
+    }
+  }
+}

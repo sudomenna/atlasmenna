@@ -1,0 +1,115 @@
+{
+  "SP": {
+    "ts": "2026-10-04T23:41:07.312Z",
+    "cargo": 6,
+    "turno": 1,
+    "contrato": 2,
+    "uf": "SP",
+    "agremiacoes": [
+      {
+        "cod": "22",
+        "candidatos": [
+          {
+            "sqcand": 10002630061,
+            "nome": "Brandão SP-22-61",
+            "partido": "PL",
+            "numero": 2261,
+            "votos": 4770,
+            "rank": 61,
+            "pct_validos": 0.10941
+          },
+          {
+            "sqcand": 10002630062,
+            "nome": "Assunção SP-22-62",
+            "partido": "PL",
+            "numero": 2262,
+            "votos": 4678,
+            "rank": 62,
+            "pct_validos": 0.1073
+          },
+          {
+            "sqcand": 10002630063,
+            "nome": "Ribeiro SP-22-63",
+            "partido": "PL",
+            "numero": 2263,
+            "votos": 4588,
+            "rank": 63,
+            "pct_validos": 0.10523
+          },
+          {
+            "sqcand": 10002630064,
+            "nome": "Nóbrega SP-22-64",
+            "partido": "PL",
+            "numero": 2264,
+            "votos": 4502,
+            "rank": 64,
+            "pct_validos": 0.10326
+          },
+          {
+            "sqcand": 10002630065,
+            "nome": "Araújo SP-22-65",
+            "partido": "PL",
+            "numero": 2265,
+            "votos": 4419,
+            "rank": 65,
+            "pct_validos": 0.10136
+          },
+          {
+            "sqcand": 10002630066,
+            "nome": "Conceição SP-22-66",
+            "partido": "PL",
+            "numero": 2266,
+            "votos": 4338,
+            "rank": 66,
+            "pct_validos": 0.0995
+          },
+          {
+            "sqcand": 10002630067,
+            "nome": "Gonçalves SP-22-67",
+            "partido": "PL",
+            "numero": 2267,
+            "votos": 4260,
+            "rank": 67,
+            "pct_validos": 0.09771
+          },
+          {
+            "sqcand": 10002630068,
+            "nome": "Magalhães SP-22-68",
+            "partido": "PL",
+            "numero": 2268,
+            "votos": 4184,
+            "rank": 68,
+            "pct_validos": 0.09597
+          },
+          {
+            "sqcand": 10002630069,
+            "nome": "Brandão SP-22-69",
+            "partido": "PL",
+            "numero": 2269,
+            "votos": 4111,
+            "rank": 69,
+            "pct_validos": 0.09429
+          },
+          {
+            "sqcand": 10002630070,
+            "nome": "Assunção SP-22-70",
+            "partido": "PL",
+            "numero": 2270,
+            "votos": 4040,
+            "rank": 70,
+            "pct_validos": 0.09266
+          },
+          {
+            "sqcand": 10002630071,
+            "nome": "Ribeiro SP-22-71",
+            "partido": "PL",
+            "numero": 2271,
+            "votos": 3971,
+            "rank": 71,
+            "pct_validos": 0.09108
+          }
+        ]
+      }
+    ]
+  }
+}

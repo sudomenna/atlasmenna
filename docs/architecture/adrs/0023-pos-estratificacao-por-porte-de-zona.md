@@ -22,6 +22,16 @@ peso a priori de cada estrato exatamente como este ADR definiu.
 
 Este ADR **não supersede o ADR-0021** — é continuação direta dele. O método permanece "extrapolação do apurado por zona, sem 2022"; o que muda é *como as zonas apuradas são agregadas dentro do bootstrap de uma UF*, em resposta ao risco que o próprio ADR-0021 já havia nomeado como central e deixado, deliberadamente, sem solução: "o bootstrap não vê" o viés de composição.
 
+### Nota 2026-09-29 — estratos estendidos ao cargo 6 (ADR-0063)
+
+**Nota 2026-09-29 ([ADR-0063](0063-projecao-deputado-federal-trava-25-e-interruptor-edge-config.md)).**
+Os estratos por porte de zona (tercis de `te`, UF com ≥ 12 zonas, mesma hierarquia de fallback)
+passam a servir também à projeção de Deputado Federal — lá, além de ponderar o ponto, definem de
+quais zonas apuradas cada zona **sem boletim** herda a intensidade de voto na imputação do estado
+inteiro. Nada do que este ADR decide muda. A ressalva epistêmica abaixo (ordem de chegada sintética;
+resíduo *dentro* dos estratos) vale integralmente para o cargo 6 e é o núcleo do risco de "voto de
+reduto" registrado no ADR-0063.
+
 ## Contexto
 
 O ADR-0021 estabeleceu a extrapolação por regra de três por zona (`k = te/esi`) como método de projeção de candidatos, com incerteza vinda de bootstrap não-paramétrico sobre as zonas já apuradas de cada UF. Naquele ADR, a seção de Consequências já registrava, como negativa central e não mitigada: *"o viés de composição em baixa apuração é o risco metodológico central desta mudança, e o bootstrap não o vê — reamostrar zonas já apuradas não corrige o fato de que as primeiras zonas a apurar podem ter perfil sistematicamente diferente do restante da UF"*. A mitigação prevista ali era só RF-018 (inflação de CI abaixo de 5% apurado) e o rótulo obrigatório de transparência — nenhuma correção estrutural do próprio estimador.

@@ -42,6 +42,17 @@ posterior.
 > eleitoral e segue vindo do dado do TSE. Fato do total nacional registrado em
 > `api/model/cargos.py::TOTAL_CADEIRAS`/`VAGAS_EM_DISPUTA_2026` (2026-09-19).
 
+> **Nota 2026-09-29 — emenda escopada à entrada do algoritmo ([ADR-0064](0064-destino-do-voto-proporcional-segue-o-dvt-do-tse.md)).**
+> Onde o pseudocódigo abaixo diz "votos nominais a candidatos regularmente inscritos" e "votos de
+> legenda", a entrada passa a ser derivada do `dvt` que o TSE publica por candidatura: só `Válido` (ou
+> campo ausente) é voto nominal do candidato; `Válido (legenda)` conta para o partido; `Anulado` e
+> `Anulado sub judice` ficam fora de QE e QP; a legenda efetiva é o total válido do partido
+> (`tvtn + tvtl`) menos os nominais elegíveis. **O algoritmo — quociente truncado, fases 1 a 3,
+> art. 12-A, a distinção `vagasObtidas` × `cadeiras` — não muda**, e sem `dvt` a saída é bit-idêntica
+> à anterior (o golden de 2022, que é de votos válidos, segue em 511/513). Diferente do majoritário
+> ([ADR-0053](0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md)), onde sub judice continua
+> contando, porque nos dois cargos vale o que o TSE marca.
+
 ## Contexto
 
 O SalaCofre projeta Deputado Federal (cargo TSE 6) desde o ADR-0026, que decidiu ingestão em

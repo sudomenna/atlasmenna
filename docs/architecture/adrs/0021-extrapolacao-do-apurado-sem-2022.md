@@ -26,6 +26,16 @@ unidade de ingestão e a unidade do estimador são, de propósito, desacopladas.
 
 Este ADR **versiona a constituição § 8 para a versão 1.2** (o preâmbulo da constituição, `docs/constitution.md:11`, exige justificativa em ADR + atualização versionada para mudar um princípio).
 
+### Nota 2026-09-29 — método estendido ao cargo 6 (ADR-0063)
+
+**Nota 2026-09-29 ([ADR-0063](0063-projecao-deputado-federal-trava-25-e-interruptor-edge-config.md)).**
+O método deste ADR — extrapolação do apurado por zona, `k = te/esi`, razão de somas por chave — passa
+a valer também para o cargo 6 (Deputado Federal), com duas diferenças que **não** alteram o método:
+a zona conta como apurada com `esi > 0 ∧ vv > 0` (não `vvc`) e a projeção cobre o **estado inteiro**,
+com imputação das zonas sem boletim a partir das apuradas do mesmo estrato de tamanho. Nada do que
+este ADR decide muda; o ADR-0063 supera o D9 do design da spec 017 ("no cargo 6 não há projeção de
+voto"). O texto abaixo segue descrevendo o cargo majoritário.
+
 ## Contexto
 
 Hoje candidatos são projetados por **swing vs. 2022** (`swing_c(z) = p_c(z,t) − p_c^2022(z)`, spec 002 RF-011/012/013): 2022 é a âncora de todo o cálculo, via mapeamento de coligação 2026→2022 ("K-1", ADR-0015). Esse mapeamento **nunca ficou operacional** — o K-1 (`swing.resolve_k1_tier`, `party_mapping`, `pre_election_polls`, coluna `model_fallback_tier`) é código morto, não chamado por `api/model/project.py` em produção. Ao mesmo tempo, `historical_results.pct_validos` está `NULL` para todas as linhas gravadas — a tabela tem `votos INT NOT NULL` (`schema.ts:41`) mas nunca populou o percentual que o swing precisaria; esse gap é o bloqueador `fix-pct_validos-null-in-historical_results` no `ship_blocked_on` da spec 002.

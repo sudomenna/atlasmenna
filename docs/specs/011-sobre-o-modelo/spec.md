@@ -85,6 +85,17 @@ Com a introdução de suporte multi-turno ([ADR-0014](../../architecture/adrs/00
 
 A página ganha **um parágrafo** com link para `/sobre-as-etiquetas` (RF-252, [spec 025](../025-visoes-editoriais/spec.md); constituição 1.6 § 8), na seção 6 (Limitações), logo depois da lista de limitações: as etiquetas editoriais são classificação do AtlasMenna, com fonte e data, e não entram no modelo. **Nenhum `<h2>` novo** — o teste de estrutura (`tests/integration/sobre-o-modelo-page.test.tsx`) segue travando oito. A limitação 03 ("nenhum ajuste editorial") continua verdadeira: o modelo não lê etiqueta.
 
+### Spec 026 — a projeção de Deputado Federal (2026-09-29)
+
+A página explica a **projeção de deputado** (RF-266, [spec 026](../026-deputado-listas-projecao/spec.md), ADR-0063) **dentro da seção 5, "Cadeiras"** (`#sec-cadeiras`, `app/sobre-o-modelo/page.tsx:586`), sem `<h2>` novo — o teste de estrutura segue travando oito. O que muda:
+
+- A frase de abertura da seção ("não passa pela regra de três das seções anteriores… **nada é esticado para o fim da noite**") deixa de ser verdade e é reescrita: o número de cadeiras continua sendo a conta sobre o voto já apurado, e **ao lado** dele passa a existir a projeção — a regra de três zona a zona da seção 2 aplicada a cada candidato e a cada legenda, com as zonas sem boletim imputadas pelas apuradas de tamanho parecido, e depois a mesma distribuição de cadeiras.
+- Um parágrafo sobre a **trava**: a projeção de um estado só aparece com 25% do eleitorado apurado, duas zonas com boletim, as vagas publicadas e o eleitorado das zonas que lemos fechando com o do TSE; e o interruptor que a desliga sem deploy.
+- Uma limitação nova na seção 6, como item numerado da mesma lista (`S.limitationItem`, depois do último número existente): **voto de reduto mal imputado** — a 25% apurado, um candidato forte num lugar que ainda não reportou é subestimado; é por isso que a projeção é "não oficial" e marca "apertada" a vaga que ainda pode mudar.
+- O parágrafo sobre o que a faixa **não** mede continua verdadeiro para a parcial e ganha uma frase: a faixa da projeção, quando existir, também não mede o erro da imputação.
+
+A frase da seção 5 é da frente U da spec 026 (tasks U8); o texto final passa pelo `constitution-guard` (§ 8).
+
 ## Cross-refs
 
 - Design: [./design.md](./design.md)

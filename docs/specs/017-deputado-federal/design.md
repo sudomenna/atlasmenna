@@ -324,6 +324,13 @@ dividem. O drill-down **tem** de ir para o Blob.
 
 ## D9 — O número central é voto apurado, não voto projetado (estado de 12/09)
 
+> 🔴 **Superado em 2026-09-29** pela [spec 026](../026-deputado-listas-projecao/spec.md) e pelo
+> ADR-0063 dela (projeção de deputado com trava de 25% e interruptor no Edge Config). O número
+> central **continua** sendo o voto apurado (`cadeiras`, `bancada`); o que deixa de valer é "a
+> projeção não existe": ela passa a existir em campos próprios, rotulada "projeção · não
+> oficial". Contrato em [design 026 § 2](../026-deputado-listas-projecao/design.md). O texto
+> abaixo fica como registro.
+
 ⚠️ **Escopo, não defeito.** As cadeiras que saem hoje são a aritmética do
 ADR-0027 sobre o que **já foi contado** — "como ficaria a bancada se a apuração
 parasse agora". Não são projeção.
@@ -360,6 +367,10 @@ a tela **não pode assumir 513 cedo**. A checagem entra no protocolo do simulado
 `nv` presente nos 27 envelopes de cargo 6 no primeiro ciclo, e Σ `nv` == 513.
 
 ## D10 — `composition` e `insights` no cargo 6
+
+> **Emendado em 2026-09-29** ([spec 026](../026-deputado-listas-projecao/spec.md), ADR-0063): o
+> valor não muda, a razão sim. `bancada` continua sendo só voto contado, então `composition`
+> segue `{0, 0, 1}`; a projeção vive fora dela, em campos próprios.
 
 `composition` = `{pre_election: 0, model: 0, actual_results: 1}`. Decorre de D9:
 não há prior nem modelo por trás do número, só voto contado. (Hoje o campo não

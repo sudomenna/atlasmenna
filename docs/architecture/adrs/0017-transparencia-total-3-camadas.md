@@ -3,7 +3,7 @@ id: ADR-0017
 title: Todos os candidatos do 1T visíveis em 3 camadas fixas, sem collapsible
 status: accepted
 date: 2026-05-17
-amended_by: [ADR-0029, ADR-0034] # 0029: formato de linha das Camadas 2/3; 0034: distingue colapso visual (D21) de remoção de nós
+amended_by: [ADR-0029, ADR-0034, ADR-0065] # 0029: formato de linha das Camadas 2/3; 0034: distingue colapso visual (D21) de remoção de nós; 0065: emenda escopada às listas proporcionais (faixas 20/60/61+)
 ---
 
 # ADR-0017 — Todos os candidatos do 1T visíveis em 3 camadas fixas, sem collapsible
@@ -19,6 +19,17 @@ Aceito (parcialmente superado por [ADR-0018](0018-termometros-hero-1t.md) no mod
 > **Nota 2026-09-08 (ADR-0029).** As linhas de candidato das Camadas 2 e 3 adotam o formato visual do componente `CandidateRow` do kit Atlas Menna (parcial e projeção lado a lado, com delta), em vez do formato comprimido pct+IC anterior. A regra central deste ADR — todas as camadas sempre no DOM, sem collapsible — é reafirmada e usada explicitamente para **rejeitar** o botão "Mostrar todos os N candidatos" presente no componente equivalente do kit (`ResultPanel`), que violaria esta regra se copiado sem revisão.
 
 > **Nota 2026-09-10 (D21, [ADR-0034](0034-resultpanel-colapso-visual-corte-fora-do-kit.md)).** A permanência "sempre no DOM" ganha uma segunda camada de precisão: o botão "Todos os N candidatos" do painel de resultado (`<CandidateListCollapse>`, `components/blocks/CandidateListCollapse.tsx`) não remove nenhuma linha excedente — clipa via `height: 0; overflow: hidden` (`components/blocks/ResultPanel.module.css:44-47`), a mesma mecânica de `sr-only`. A proibição deste ADR sempre mirou a REMOÇÃO de nós (`display:none`, `hidden`, `<details>`), nunca o colapso visual que preserva a árvore de acessibilidade e a busca da página — medido no navegador em 2026-09-09 (11 linhas com `display:list-item` computado, a 11ª alcançável pela árvore de acessibilidade). Ver ADR-0034 para o levantamento completo.
+
+> **Nota 2026-09-29 (emenda escopada, [ADR-0065](0065-listas-proporcionais-em-tres-faixas.md)).** A
+> proibição de collapsible e a justificativa deste ADR foram escritas para as ~11 candidaturas de uma
+> corrida majoritária. Para a lista de candidaturas **por agremiação em eleição proporcional**
+> (`/uf/[sigla]/deputado-federal`, dezenas de linhas por legenda), o ADR-0065 admite três faixas: as
+> posições 1–20 visíveis; 21–60 no documento, recortadas por CSS e mantidas no DOM (a mecânica do
+> D21 acima) com botão; e 61 em diante **fora do documento**, buscadas por clique. `<details>` **continua
+> proibido**, e a ordem segue o voto contado, nunca escolha do produto. Fora dessa lista — Camadas 1 a 3
+> das corridas majoritárias e tudo o que este ADR decide para elas — nada muda. A terceira faixa é a
+> única parte que foge da letra da regra "todas as camadas sempre no DOM"; ver o ADR-0065 para o custo
+> assumido.
 
 ## Contexto
 
