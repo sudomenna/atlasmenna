@@ -21,6 +21,22 @@ source: PRD.md § 6.1
 | RNF-007c | Bundle JS total da home (above-the-fold + chunks lazy) | <500KB gzipped |
 | RNF-008 | Tempo de renderização do mapa inicial (após first paint) | <1.5s |
 
+### Teto do documento HTML — global e exceção nomeada
+
+O portão de peso do documento (`tests/e2e/perf-budget.spec.ts`) mede o corpo do HTML de cada rota
+(markup + payload RSC embutido) contra um **teto global de 300 KiB** (`BUDGET_DOCUMENT_BYTES`). O
+teto global **não muda** por rota: uma rota que precise de mais ganha uma **exceção nomeada**, com
+decisão registrada em ADR, e ela vale só para aquela rota (`TETO_DOCUMENTO_POR_ROTA`).
+
+| Rota | Teto do documento | Por quê | Decisão |
+|---|---|---|---|
+| *(todas as demais)* | **300 KiB** | teto global; `/`, a maior, mediu 212,2 KiB em 21/09 | o próprio spec de peso (`BUDGET_DOCUMENT_BYTES`, com a medição e o porquê de não apertar) |
+| `/uf/SP/deputado-federal` | **480 KiB** (≈ 70 KiB gzip) | pior caso do produto: 70 vagas, dezenas de agremiações, até 60 candidatos por agremiação no documento (listas em três faixas); medido **com o Blob servido** (`build:e2e`/`start:e2e`) | [ADR-0065](../architecture/adrs/0065-listas-proporcionais-em-tres-faixas.md) D5 (decisão do dono, 29/09) |
+
+⚠️ Os 480 KiB são **escolha, não medida da noite** (ADR-0065, negativas): se o medido ficar longe, o
+teto se revê por ADR, não por edição do spec de peso. As demais UFs de Deputado Federal ficam no teto
+global. RNF-002 (LCP) continua sendo a métrica de autoridade; o teto de bytes é proxy.
+
 ## Como atingir
 
 - Edge Config como read store ([ADR-0001](../architecture/adrs/0001-edge-config-no-read-path.md))

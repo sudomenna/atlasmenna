@@ -136,6 +136,64 @@ describe("DeputadoConferencia — a frase vem do que foi comparado (RF-269)", ()
     expect(t).toContain("No resto do que comparamos, o quociente eleitoral e as cadeiras");
   });
 
+  it("🔴 AP: divergência de ELEITORADO não é 'pequena diferença' — a tela diz que é estrutural, com o tamanho", () => {
+    const d = doc(conferenciaDe("AP"));
+    const frase = (d.querySelector("[data-testid='uf-conferencia']")?.textContent ?? "").replace(
+      /\s+/g,
+      " ",
+    );
+    expect(frase).not.toContain("não indicam erro");
+    expect(frase).not.toContain("pequenas diferenças");
+    expect(frase).toContain("é estrutural");
+    expect(frase).toContain("uma zona eleitoral do estado que não buscamos no TSE");
+    // A magnitude: 19,5% e os 122.461 eleitores (628.071 − 505.610) que faltam.
+    expect(frase).toContain("19,5% abaixo");
+    expect(frase).toContain("122.461 eleitores a menos");
+  });
+
+  it("🔴 votos válidos divergentes (com totalização final) também são estruturais — nunca 'não indicam erro'", () => {
+    const t = texto(
+      <DeputadoConferencia
+        conferencia={{
+          estado: "diverge",
+          boletim_dado_ts: "2026-10-05T02:00:00Z",
+          totalizacao_final: true,
+          comparou: ["eleitorado", "algoritmo", "eleitos", "votos_validos"],
+          divergencias: [
+            { o_que: "votos_validos", nosso: 980, tse: 1000, detalhe: "", diferenca_pct: -2 },
+          ],
+        }}
+        divergenciasV1={[]}
+        totalizacaoFinal={true}
+        titleId="c"
+      />,
+    );
+    expect(t).toContain("já é a totalização final");
+    expect(t).toContain("é estrutural");
+    expect(t).toContain("2,0% abaixo do total do TSE (20 votos a menos)");
+    expect(t).not.toContain("não indicam erro");
+  });
+
+  it("sem divergência estrutural e antes da totalização final: 'pequenas diferenças… não indicam erro' continua", () => {
+    const sp = texto(conferenciaDe("SP"));
+    expect(sp).toContain("pequenas diferenças são esperadas e não indicam erro");
+    expect(sp).not.toContain("estrutural");
+    // Divergência só da conta (quociente), sem eleitorado: a frase de
+    // andamento continua — essa pode mesmo ser do momento do boletim.
+    const qe = texto(
+      <DeputadoConferencia
+        conferencia={undefined}
+        divergenciasV1={[
+          { o_que: "quociente_eleitoral", nosso: 210_400, tse: 210_401, detalhe: "x" },
+        ]}
+        totalizacaoFinal={false}
+        titleId="c"
+      />,
+    );
+    expect(qe).toContain("não indicam erro");
+    expect(qe).not.toContain("estrutural");
+  });
+
   it("AC `diverge` com `tf`: quantos eleitos só nossos e só do TSE, por NOME; cadeiras pela sigla", () => {
     const d = doc(conferenciaDe("AC"));
     const eleitos = d.querySelector("[data-o-que='eleitos']")?.textContent ?? "";
@@ -428,6 +486,13 @@ describe("DeputadoMetodologia estendido (RF-266)", () => {
       " ",
     );
     expect(mov).toContain("O que está movendo a projeção · não oficial");
+    // O PARÁGRAFO diz "não oficial" ele mesmo — não só o título (§ 1, § 8).
+    const par = d.querySelector("[data-testid='dep-movendo'] p")?.textContent ?? "";
+    expect(par).toContain("não oficial");
+    // Sem a faixa da projeção (adiada, ADR-0063 D8 emendado): diz que é pontual.
+    expect(par.replace(/\s+/g, " ")).toContain(
+      "As cadeiras da projeção são um número pontual: a faixa delas ainda não é calculada, e a faixa que aparece ao lado de cada bancada é a da parcial.",
+    );
     expect(mov).toContain("37,6% do eleitorado de RR ainda não foi apurado");
     expect(mov).toContain("imputado nas 3 zonas sem boletim");
     expect(mov).toContain("UNIÃO, 2 cadeiras na parcial e 1 na projeção");
@@ -435,6 +500,38 @@ describe("DeputadoMetodologia estendido (RF-266)", () => {
     // "e nada mais": PL e PT batem entre parcial e projeção e não são citados.
     expect(mov).not.toContain("PL,");
     expect(mov).not.toContain("PT/PC do B/PV,");
+  });
+
+  it("capa (national): bloco compacto só com o interruptor ligado E algum estado com selo", () => {
+    const capa = (ligado: boolean, ufs: { sigla: string; estado: string }[]) =>
+      doc(
+        <DeputadoMetodologia
+          pctApurado={40}
+          cadenciaMinutos={30}
+          temDado
+          temIntervalo
+          interruptorLigado={ligado}
+          projecaoPorUf={ufs}
+        />,
+      );
+    const ufs = [
+      { sigla: "RR", estado: "liberada" },
+      { sigla: "SP", estado: "aguardando" },
+    ];
+    expect(capa(false, ufs).querySelector("[data-testid='dep-movendo']")).toBeNull();
+    expect(capa(true, []).querySelector("[data-testid='dep-movendo']")).toBeNull();
+    const t = (
+      capa(true, ufs).querySelector("[data-testid='dep-movendo'] p")?.textContent ?? ""
+    ).replace(/\s+/g, " ");
+    expect(t).toContain("A projeção, que é não oficial, está liberada em 1 de 27 estados (RR)");
+    expect(t).toContain("Nos demais, o selo de cada estado diz por que ela ainda não aparece.");
+    const nenhuma = (
+      capa(true, [{ sigla: "SP", estado: "aguardando" }]).querySelector(
+        "[data-testid='dep-movendo'] p",
+      )?.textContent ?? ""
+    ).replace(/\s+/g, " ");
+    expect(nenhuma).toContain("ainda não está liberada em nenhum estado");
+    expect(nenhuma).toContain("não oficial");
   });
 
   it("SP aguardando + ligada: o estado da trava, e nenhum 'o que está movendo'", () => {

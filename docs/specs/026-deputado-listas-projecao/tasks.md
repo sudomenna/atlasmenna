@@ -40,49 +40,55 @@ proporcional) e **ADR-0065** (listas em três faixas); números a preencher.
 
 ## T — dados em TypeScript (entra primeiro)
 
-- [ ] T1. `lib/blob/deputado-uf.ts`: tipos v2 do design § 2.2–2.5 (`DeputadoUfLinha`,
+- [x] T1. `lib/blob/deputado-uf.ts`: tipos v2 do design § 2.2–2.5 (`DeputadoUfLinha`,
       `DeputadoUfAgremiacaoV2`, `DeputadoUfDetailV2`, `DeputadoUfLista`, `DeputadoRegras`,
       `DeputadoProjecaoUf`, `DeputadoConferencia`), `dado_ts`/`pares_atrasados` declarados;
       `readDeputadoUfLista`; `maisVotadosDaUf` (RF-276, RF-270).
 - [ ] T1.9. Trocar os `as unknown as` de `tests/unit/contrato/deputado-v2-fixtures.test.ts` por
       `satisfies` contra os tipos novos — o teste passa a provar a forma.
-- [ ] T2. `lib/blob/paths.ts`: `deputadoUfListaBlobPathname` (mesma validação de sigla).
-- [ ] T3. `lib/edge-config/types.ts`: `EdgeDeputadoDestaque`, `EdgeDeputadoPuxador`,
+      **Coberto por equivalente (conferido em 29/09):** os tipos do teste passaram a ser DERIVADOS
+      dos reais (`lib/blob/deputado-uf.ts`, `lib/edge-config/types.ts`) e a forma é provada em
+      runtime pelo leitor tolerante; o `as unknown as` ficou porque o TypeScript alarga os literais do
+      JSON importado e `satisfies` sobre o JSON cru não compila (nota no topo do arquivo).
+- [x] T2. `lib/blob/paths.ts`: `deputadoUfListaBlobPathname` (mesma validação de sigla).
+- [x] T3. `lib/edge-config/types.ts`: `EdgeDeputadoDestaque`, `EdgeDeputadoPuxador`,
       `mais_votados?`, `puxadores?`, `por_uf[].projecao?` (RF-271, RF-273).
-- [ ] T4. `lib/edge-config/keys.ts` (`INTERRUPTOR_PROJECAO_DEP_KEY`) + `reader.ts`
+- [x] T4. `lib/edge-config/keys.ts` (`INTERRUPTOR_PROJECAO_DEP_KEY`) + `reader.ts`
       (`readInterruptorProjecao`, falha fechada, nunca lança) (RF-265).
-- [ ] T5. `lib/edge-config/writer.ts::writeDeputadoProjection`: separa `lista_restante`, grava
+- [x] T5. `lib/edge-config/writer.ts::writeDeputadoProjection`: separa `lista_restante`, grava
       `deputado/uf-lista/<UF>.json` antes do objeto da UF, só se houver linha; `warn` acima de 3,5 MB
-      de corpo (design § 2.1, § 2.5).
-- [ ] T6. Teste da rota `app/api/internal/edge-write/route.ts`: campo v2 dentro de `payload`,
+      de corpo (design § 2.1, § 2.5). (O aviso de 3,5 MB mora na rota,
+      `app/api/internal/edge-write/route.ts::AVISO_CORPO_BYTES`, e no Python,
+      `project.py::AVISO_CORPO_EDGE_WRITE_BYTES` — não no writer.)
+- [x] T6. Teste da rota `app/api/internal/edge-write/route.ts`: campo v2 dentro de `payload`,
       `payload.por_uf[i]` e `payloads_uf[UF]` chega; o mesmo no topo some sem erro (RF-276).
-- [ ] T7. Rota `app/(dep)/uf/[sigla]/deputado-federal/lista/route.ts` (`revalidate = 60`,
+- [x] T7. Rota `app/(dep)/uf/[sigla]/deputado-federal/lista/route.ts` (`revalidate = 60`,
       `Cache-Control: public, s-maxage=60, stale-while-revalidate=300`, 200/404/502) (RF-260).
-- [ ] T8. `lib/tse/ingest-handler.ts`: lê o interruptor e manda `projecao_dep` no POST do modelo
+- [x] T8. `lib/tse/ingest-handler.ts`: lê o interruptor e manda `projecao_dep` no POST do modelo
       (design § 2.11) (RF-265).
-- [ ] T9. `scripts/interruptor-projecao.ts` + `pnpm dep:projecao` (mostra, confirma, `--ensaio`)
+- [x] T9. `scripts/interruptor-projecao.ts` + `pnpm dep:projecao` (mostra, confirma, `--ensaio`)
       (RF-265).
-- [ ] T10. `scripts/edge-config-falso.ts` serve o Blob (`/deputado/uf/…`, `/deputado/uf-lista/…`) e
+- [x] T10. `scripts/edge-config-falso.ts` serve o Blob (`/deputado/uf/…`, `/deputado/uf-lista/…`) e
       a chave do interruptor; `build:e2e`/`start:e2e` com `BLOB_PUBLIC_BASE_URL` apontado para ele
       (RF-277).
-- [ ] T11. Texto "sem deploy" sobre `TSE_DEPUTADO_GRANULARIDADE` corrigido em
+- [x] T11. Texto "sem deploy" sobre `TSE_DEPUTADO_GRANULARIDADE` corrigido em
       `docs/operations/runbook.md:870` e `vercel.ts:184` (RF-265).
 
 ## P — modelo (Python)
 
 ### P1 — as três correções (qua 30/09, noite)
 
-- [ ] P1.1. `deputado.py`: `_DESTINO_PROPORCIONAL` (quatro valores, sem default), `Candidato` só
+- [x] P1.1. `deputado.py`: `_DESTINO_PROPORCIONAL` (quatro valores, sem default), `Candidato` só
       para `Válido`, legenda = Σ `par.tvtl`, `destino` na identidade; `dvt` ausente no arquivo ⇒
       caminho de hoje (design § 7) (RF-268).
-- [ ] P1.2. Invariante Σ (nominais válidos + legenda) == `v.vv` por arquivo: `error` + alerta, sem
+- [x] P1.2. Invariante Σ (nominais válidos + legenda) == `v.vv` por arquivo: `error` + alerta, sem
       abortar; teste com os EA20 reais de `tests/fixtures/tse/2026-sim/dep/` (RF-268).
-- [ ] P1.3. Golden de 2022 inalterado (511/513) e teste de bit-identidade com `dvt` ausente (RF-268).
-- [ ] P1.4. `project.py` (ramo proporcional): `pct_apurado` = Σ `e.esi` ÷ `max(e.te agregado, Σ e.te)`,
+- [x] P1.3. Golden de 2022 inalterado (511/513) e teste de bit-identidade com `dvt` ausente (RF-268).
+- [x] P1.4. `project.py` (ramo proporcional): `pct_apurado` = Σ `e.esi` ÷ `max(e.te agregado, Σ e.te)`,
       no lugar do `max` de `:7923`; alimenta `_marcar_indefinidas` (RF-275).
-- [ ] P1.5. Conferência (design § 2.8): as quatro comparações, `comparou`, `diferenca_pct`, estado;
+- [x] P1.5. Conferência (design § 2.8): as quatro comparações, `comparou`, `diferenca_pct`, estado;
       `quociente_eleitoral_tse` volta a vir do agregado; `CHAVES_DE_DIVERGENCIA` ampliado (RF-269).
-- [ ] P1.6. `st` por `sqcand` do agregado com `tf = "s"` → `tse` (tabela fechada) (RF-267).
+- [x] P1.6. `st` por `sqcand` do agregado com `tf = "s"` → `tse` (tabela fechada) (RF-267).
 
 ### P2 — projeção (qui 01/10, 13h)
 

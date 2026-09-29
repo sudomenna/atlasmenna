@@ -114,7 +114,8 @@
 /* O foco programático na primeira linha nova (RF-260) precisa ser visível
  * mesmo quando o navegador não aplica `:focus-visible` a foco por script —
  * mesmo anel do `:focus-visible` global (`app/globals.css`). */
-.lista > li:focus {
+.lista > li:focus,
+.lista:focus {
   outline: 2px solid var(--accent-text);
   outline-offset: 2px;
 }

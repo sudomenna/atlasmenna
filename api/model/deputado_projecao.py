@@ -105,7 +105,8 @@ from api.model.deputado import EntradaProporcional
 PCT_MINIMO_PADRAO = 25
 
 #: Teto do `pct_minimo` do interruptor. Acima disso a projeção nunca abriria —
-#: é valor inválido, não trava "muito alta".
+#: é valor inválido, não trava "muito alta", e é IGNORADO (vale o piso), como
+#: todo `pct_minimo` inválido (ADR-0063 D4; `interruptor_do_corpo`).
 PCT_MINIMO_TETO = 100
 
 #: Mínimo de zonas apuradas (ADR-0063: o mesmo mínimo com que o bootstrap do
@@ -157,43 +158,49 @@ def interruptor_do_corpo(bruto: Any) -> Interruptor:
     """`ProjectRequest.projecao_dep` → `Interruptor`. Nunca lança.
 
     Falha fechada (ADR-0063 decisão 4; RF-265): ausente, não-objeto e
-    `ligada` que não é exatamente `true` desligam. `pct_minimo`:
+    `ligada` que não é exatamente `true` desligam. `pct_minimo` — a MESMA
+    regra do leitor TS (`lib/edge-config/reader.ts::interpretarInterruptor`)
+    e do design 026 § 2.10, alinhados em 29/09:
 
       - ausente → 25;
-      - número inteiro entre 25 e 100 → ele;
-      - número menor que 25 → **ignorado**, vale 25 (o piso só sobe; ADR-0063
-        "Detalhes" 2), com `aviso` para o log;
-      - maior que 100, não inteiro, booleano ou não numérico → o interruptor
-        inteiro é inválido e fica **desligado** (a chave com valor absurdo
-        não é uma trava alta, é um dado que não entendemos).
+      - número finito entre 25 e 100 → ele, arredondado para CIMA se vier
+        decimal (o TS já manda `ceil`; `ceil` erra para o lado de travar mais,
+        nunca menos);
+      - menor que 25, maior que 100, não numérico, booleano, `null`, NaN ou
+        infinito → **ignorado**: vale 25, com `aviso` para o log, e `ligada`
+        fica como veio. ADR-0063 D4: "valor menor que 25 ou inválido é
+        ignorado, com log". Até 29/09 os inválidos desligavam o interruptor
+        INTEIRO aqui, enquanto o TS só ignorava o `pct_minimo` — a tela e o
+        modelo discordavam sobre a mesma chave.
 
     Por que não validar isso no Pydantic (`Field(ge=25, le=100)`, como o
     rascunho do design § 2.11): um valor fora da faixa derrubaria o corpo
     INTEIRO com 400, e o ciclo deixaria de publicar até a parcial — uma chave
-    de projeção malformada apagaria a Câmara da tela. Aqui ela só apaga a
-    projeção (constituição § 7).
+    de projeção malformada apagaria a Câmara da tela. Aqui ela no máximo
+    deixa a trava no piso (constituição § 7).
     """
     if bruto is None:
         return DESLIGADO
     if not isinstance(bruto, Mapping):
         return Interruptor(False, PCT_MINIMO_PADRAO, "invalido", aviso="nao_e_objeto")
 
-    pct_bruto = bruto.get("pct_minimo")
     pct = PCT_MINIMO_PADRAO
     aviso: str | None = None
-    if pct_bruto is not None:
+    if "pct_minimo" in bruto:
+        pct_bruto = bruto["pct_minimo"]
         # `bool` é subclasse de `int` em Python — `True` não é 1% aqui.
-        if isinstance(pct_bruto, bool) or not isinstance(pct_bruto, (int, float)):
-            return Interruptor(False, PCT_MINIMO_PADRAO, "invalido", aviso="pct_minimo_nao_numerico")
-        if not math.isfinite(pct_bruto) or pct_bruto != int(pct_bruto):
-            return Interruptor(False, PCT_MINIMO_PADRAO, "invalido", aviso="pct_minimo_nao_inteiro")
-        valor = int(pct_bruto)
-        if valor > PCT_MINIMO_TETO:
-            return Interruptor(False, PCT_MINIMO_PADRAO, "invalido", aviso="pct_minimo_acima_de_100")
-        if valor < PCT_MINIMO_PADRAO:
+        if (
+            isinstance(pct_bruto, bool)
+            or not isinstance(pct_bruto, (int, float))
+            or not math.isfinite(pct_bruto)
+        ):
+            aviso = "pct_minimo_invalido_ignorado"
+        elif pct_bruto < PCT_MINIMO_PADRAO:
             aviso = "pct_minimo_abaixo_de_25_ignorado"
+        elif pct_bruto > PCT_MINIMO_TETO:
+            aviso = "pct_minimo_acima_de_100_ignorado"
         else:
-            pct = valor
+            pct = math.ceil(pct_bruto)
 
     ligada = bruto.get("ligada") is True
     return Interruptor(ligada=ligada, pct_minimo=pct, origem="corpo", aviso=aviso)

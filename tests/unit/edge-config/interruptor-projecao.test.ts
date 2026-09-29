@@ -38,6 +38,7 @@ import {
   _reiniciarAvisosDoInterruptor,
   interpretarInterruptor,
   readInterruptorProjecao,
+  TIMEOUT_INTERRUPTOR_MS,
   TRAVA_PROJECAO_DEP_PCT,
 } from "@/lib/edge-config/reader";
 
@@ -116,7 +117,18 @@ describe("interpretarInterruptor — a regra inteira, pura", () => {
     expect(
       interpretarInterruptor({ estado: "ok", valor: { ligada: true, pct_minimo: 25 } }).pct_minimo,
     ).toBe(25);
-    for (const pct of [10, 24.9, 101, -1, "40", Number.NaN]) {
+    for (const pct of [
+      10,
+      24.9,
+      101,
+      500,
+      -1,
+      "40",
+      Number.NaN,
+      Number.POSITIVE_INFINITY,
+      null,
+      true,
+    ]) {
       expect(
         interpretarInterruptor({ estado: "ok", valor: { ligada: true, pct_minimo: pct } }),
         String(pct),
@@ -174,6 +186,47 @@ describe("readInterruptorProjecao — leitura real (SDK mockado)", () => {
     delete process.env.EDGE_CONFIG;
     expect(await readInterruptorProjecao()).toMatchObject({ ligada: false, origem: "ausente" });
     expect(getMock).not.toHaveBeenCalled();
+  });
+
+  it("🔴 TEMPO ESGOTADO (o SDK não responde nem lança) ⇒ DESLIGADA em 2 s, com `logError`", async () => {
+    // ADR-0063 D4 lista "tempo esgotado" entre as leituras que desligam. Sem
+    // o teto, um Edge Config mudo prenderia o render e o ciclo de ingestão.
+    vi.useFakeTimers();
+    try {
+      getMock.mockReturnValue(new Promise(() => {}));
+      let resolvido: unknown = null;
+      const leitura = readInterruptorProjecao().then((r) => {
+        resolvido = r;
+      });
+      await vi.advanceTimersByTimeAsync(TIMEOUT_INTERRUPTOR_MS - 1);
+      expect(resolvido).toBeNull();
+      await vi.advanceTimersByTimeAsync(1);
+      await leitura;
+      expect(resolvido).toEqual({ ligada: false, pct_minimo: 25, origem: "falha" });
+      expect(logErrorMock).toHaveBeenCalledTimes(1);
+      expect(logErrorMock.mock.calls[0]?.[1]).toMatchObject({
+        fn: "readInterruptorProjecao",
+        tempoEsgotado: true,
+      });
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("leitura que responde a tempo não deixa timer pendurado (um por render seria vazamento)", async () => {
+    vi.useFakeTimers();
+    try {
+      getMock.mockResolvedValue({ ligada: true });
+      expect(await readInterruptorProjecao()).toMatchObject({ ligada: true, origem: "chave" });
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("o teto é 2 s — curto perto do ciclo de 60 s, largo perto da leitura típica", () => {
+    expect(TIMEOUT_INTERRUPTOR_MS).toBe(2_000);
   });
 
   it("`pct_minimo` abaixo do piso: liga, ignora a trava e avisa", async () => {

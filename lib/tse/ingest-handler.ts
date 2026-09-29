@@ -39,7 +39,7 @@
 import type { NextRequest } from "next/server";
 import { after, NextResponse } from "next/server";
 import { type CargoTse, cargoInfo, rpsMaxParaCargos } from "@/lib/config/cargos";
-import { readInterruptorProjecao } from "@/lib/edge-config/reader";
+import { readInterruptorProjecao, TRAVA_PROJECAO_DEP_PCT } from "@/lib/edge-config/reader";
 import type { AcompanhamentoPrevious } from "@/lib/tse/acompanhamento";
 import { detectChangedUfs } from "@/lib/tse/acompanhamento";
 import { alertasDoCiclo, notifySlack } from "@/lib/tse/alerts";
@@ -243,8 +243,16 @@ export interface ProjecaoDepNoPost {
 }
 
 export async function lerProjecaoDepParaOModelo(): Promise<ProjecaoDepNoPost> {
-  const lido = await readInterruptorProjecao();
-  return { ligada: lido.ligada, pct_minimo: Math.ceil(lido.pct_minimo) };
+  // `readInterruptorProjecao` já não lança e tem teto de tempo
+  // (`TIMEOUT_INTERRUPTOR_MS`, 2 s): o `await` do ciclo espera no máximo isso,
+  // e tempo esgotado chega aqui como desligado. O `try` é a segunda cinta — o
+  // ciclo de ingestão nunca pode parar por causa do interruptor da projeção.
+  try {
+    const lido = await readInterruptorProjecao();
+    return { ligada: lido.ligada, pct_minimo: Math.ceil(lido.pct_minimo) };
+  } catch {
+    return { ligada: false, pct_minimo: TRAVA_PROJECAO_DEP_PCT };
+  }
 }
 
 /**

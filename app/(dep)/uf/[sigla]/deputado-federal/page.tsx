@@ -249,7 +249,12 @@ function intervaloDeCadeiras(agr: DeputadoUfAgremiacao): string | null {
   return lo === hi ? `${lo}` : `${lo} a ${hi}`;
 }
 
-/** RF-127 emendado (ADR-0063 D8) — a faixa da projeção, quando medida. */
+/**
+ * RF-127 emendado (ADR-0063 D8) — a faixa da projeção, quando medida. Hoje o
+ * ciclo não a calcula (adiada, emenda ao D8 de 29/09): o campo vem ausente e o
+ * número projetado sai como "projeção pontual". Nunca cai para a faixa da
+ * parcial.
+ */
 function intervaloProjetado(agr: DeputadoUfAgremiacao): string | null {
   const ci = agr.cadeiras_projetadas_ci95;
   if (!ci) return null;
@@ -745,25 +750,45 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
                         </span>
                         {/* RF-263 — cadeiras projetadas: só com a projeção
                             VISÍVEL, e a frase inteira num elemento com "não
-                            oficial" (RF-266). A parcial, ao lado, não muda. */}
+                            oficial" (RF-266). A parcial, ao lado, não muda.
+
+                            🔴 ADR-0063 D8 (emenda 29/09): a faixa da PROJEÇÃO
+                            (`cadeiras_projetadas_ci95`) foi adiada — o ciclo
+                            não a calcula. Sem ela, o número projetado sai
+                            rotulado como PONTUAL, e a faixa que aparece na
+                            coluna da direita é a da PARCIAL, com esse nome
+                            visível: lida ao lado do número projetado sem
+                            rótulo, ela passava por intervalo da projeção. */}
                         {projetadas !== undefined ? (
                           <span
                             data-testid="uf-cadeiras-projetadas"
                             style={{ font: "var(--type-data)", color: "var(--accent-text)" }}
                           >
-                            {projetadas} {projetadas === 1 ? "cadeira" : "cadeiras"} na projeção ·
-                            não oficial
-                            {faixaProjetada ? ` (faixa provável: ${faixaProjetada})` : ""}
+                            {faixaProjetada
+                              ? `${projetadas} ${projetadas === 1 ? "cadeira" : "cadeiras"} na projeção · não oficial (faixa provável da projeção: ${faixaProjetada})`
+                              : `${projetadas} ${projetadas === 1 ? "cadeira" : "cadeiras"} · projeção pontual · não oficial`}
                           </span>
                         ) : null}
                       </span>
+                      {/* A faixa da PARCIAL (RF-127), com o nome VISÍVEL —
+                          não só para o leitor de tela. Com a projeção na tela,
+                          um "12 a 15 cadeiras" sem rótulo ao lado de "13
+                          cadeiras · projeção" se lê como a faixa da projeção,
+                          que não existe (ADR-0063 D8, emenda). */}
                       <span
                         className="text-right"
                         style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
                       >
-                        <span className="sr-only">
-                          {intervalo ? "faixa provável na parcial: " : "faixa não disponível "}
-                        </span>
+                        {intervalo ? (
+                          <span
+                            data-testid="uf-intervalo-rotulo"
+                            style={{ display: "block", fontSize: "var(--text-xs)" }}
+                          >
+                            faixa da parcial{" "}
+                          </span>
+                        ) : (
+                          <span className="sr-only">faixa não disponível </span>
+                        )}
                         <span data-testid="uf-intervalo">
                           {intervalo ? `${intervalo} cadeiras` : "—"}
                         </span>
@@ -895,6 +920,7 @@ export default async function UFDeputadoFederalPage({ params }: UFDeputadoPagePr
         interruptorLigado={interruptor.ligada}
         interruptorOrigem={interruptor.origem}
         movendo={movendo}
+        temFaixaProjetada={agremiacoes.some((a) => a.cadeiras_projetadas_ci95 !== undefined)}
       />
 
       <Footer />

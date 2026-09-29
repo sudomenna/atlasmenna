@@ -27,6 +27,7 @@ import {
   bitsDasMarcas,
   codigoDoDestino,
   destinoDoCodigo,
+  destinoSemPercentual,
   fraseCorte,
   fraseCorteCabecalho,
   fraseEstadoProjecao,
@@ -330,7 +331,7 @@ describe("paraLinhaCompacta — a tupla (design § 8.3)", () => {
     expect(t[L.DESTINO]).toBe(0);
   });
 
-  it("RF-261 — com destino, o % sai `null` mesmo que o dado traga número; e nunca marca", () => {
+  it("RF-261 — anulado e sub judice: o % sai `null` mesmo que o dado traga número; e nunca marca", () => {
     const t = paraLinhaCompacta(
       linha({ destino: "sub_judice", pct_validos: 3.5, parcial: "qp" }),
       ABERTO,
@@ -338,6 +339,24 @@ describe("paraLinhaCompacta — a tupla (design § 8.3)", () => {
     expect(t[L.PCT]).toBeNull();
     expect(t[L.MARCAS]).toBe(0);
     expect(t[L.DESTINO]).toBe(3);
+    const a = paraLinhaCompacta(linha({ destino: "anulado", pct_validos: 3.5 }), ABERTO);
+    expect(a[L.PCT]).toBeNull();
+    expect(a[L.DESTINO]).toBe(2);
+  });
+
+  it('🔴 ADR-0064 (emenda 29/09) — "Válido (legenda)": o % sai NUMÉRICO, como o contrato publica; nunca marca', () => {
+    const t = paraLinhaCompacta(
+      linha({ destino: "valido_legenda", pct_validos: 2.25125, parcial: "qp" }),
+      ABERTO,
+    );
+    expect(t[L.PCT]).toBe(2.25125);
+    expect(t[L.MARCAS]).toBe(0);
+    expect(t[L.DESTINO]).toBe(1);
+    // Só anulado e sub judice ficam sem %.
+    expect(destinoSemPercentual(codigoDoDestino("valido_legenda"))).toBe(false);
+    expect(destinoSemPercentual(codigoDoDestino("anulado"))).toBe(true);
+    expect(destinoSemPercentual(codigoDoDestino("sub_judice"))).toBe(true);
+    expect(destinoSemPercentual(0)).toBe(false);
   });
 
   it("RF-261 — sem `numero` a tupla leva `null`, nunca `undefined`", () => {

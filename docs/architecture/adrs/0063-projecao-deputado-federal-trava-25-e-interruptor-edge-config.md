@@ -232,6 +232,21 @@ cadeiras marcadas como apertadas, reaproveitando a definição de `_marcar_indef
 (`api/model/deputado_payload.py:249`). O número central sozinho nunca é publicado. O intervalo da
 parcial, que já existe, não é retirado.
 
+> **Emenda 2026-09-29 (implementação) — faixa da projeção ADIADA; decisão do dono pendente.** O
+> bootstrap de `cadeiras_projetadas_ci95` (tasks 026, P2.5) custou ~10,5 s nas 27 UFs, o mesmo do
+> bootstrap da parcial; os dois juntos (~21 s locais) deixariam o ciclo de Deputado perto do
+> `maxDuration` de 60 s da função do modelo. O orquestrador adiou o campo para depois de 04/10 — ele
+> é opcional no contrato (design 026 § 2.3) e sai **ausente**. Enquanto isso, a regra "número central
+> nunca sozinho" é cumprida **pelo rótulo**, não pela faixa: na tela da UF o número projetado sai como
+> "N cadeiras · projeção pontual · não oficial", e a faixa que já existia ao lado de cada bancada — a
+> da **parcial** — passou a levar o nome **visível** "faixa da parcial" (antes o nome era só para
+> leitor de tela, e um "12 a 15 cadeiras" ao lado de "13 cadeiras na projeção" se lia como a faixa da
+> projeção). A faixa da parcial **nunca** é apresentada como se fosse a da projeção. Isso é um desvio
+> assumido do texto desta decisão; **o dono decide depois** entre (a) aceitar o rótulo "pontual" como
+> cumprimento suficiente até o 2º turno, (b) exigir a faixa (voltando ao orçamento de tempo do ciclo)
+> ou (c) esconder o número projetado de cadeiras enquanto não houver faixa. Código:
+> `app/(dep)/uf/[sigla]/deputado-federal/page.tsx` (`intervaloProjetado`, `uf-intervalo-rotulo`).
+
 ## Consequências
 
 **Positivas**:

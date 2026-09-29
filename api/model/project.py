@@ -7604,6 +7604,30 @@ def _relogio_do_ciclo(
 #: de corpo da função Vercel é 4,5 MB; o writer TS avisa no mesmo número.
 AVISO_CORPO_EDGE_WRITE_BYTES = 3_500_000
 
+#: Tempo máximo (s) de cada operação de socket do POST `/api/internal/edge-write`
+#: — conexão, envio do corpo e espera da resposta (é o `timeout` do `urlopen`).
+#:
+#: Era 10 s, calibrado quando o corpo tinha dezenas de KB e o endpoint só
+#: escrevia ~28 chaves do Global Config em paralelo (~1–3 s). Com a spec 026 o
+#: ciclo de Deputado manda 1,9–2,5 MB (medido em 29/09 com o tamanho de 2022:
+#: 2,51 MB no pior caso de nome, 1,90 MB realista; serializar leva ~20 ms, então
+#: o tempo é todo de rede e de trabalho do endpoint), e o endpoint, antes de
+#: responder, valida esse corpo e grava o Global Config e até ~55 objetos no
+#: Blob (27 UFs + as listas 61+, cada UF gravando lista e objeto em sequência,
+#: `lib/edge-config/writer.ts::writeDeputadoUfDetails`). Com um cold start do
+#: endpoint Node no meio, 10 s cortava uma escrita que ia dar certo — e a
+#: projeção do ciclo sumia com "edge-write network error" no log.
+#:
+#: 25 s porque: (a) fica ABAIXO do `maxDuration = 30` do próprio endpoint
+#: (`app/api/internal/edge-write/route.ts`) — esperar mais que ele não traria
+#: resposta nenhuma; (b) cabe no `maxDuration = 60` desta função
+#: (`vercel.ts`, `api/model/project.py`) depois do cálculo do cargo 6 (~10,5 s
+#: do bootstrap da parcial nas 27 UFs, medido na frente P). O tempo esgotado
+#: continua best-effort: loga e segue, e o próximo ciclo republica. O servidor
+#: não é cancelado quando o cliente desiste — a escrita pode completar mesmo
+#: assim.
+TIMEOUT_EDGE_WRITE_S = 25
+
 
 def corpo_edge_write(
     payload: dict[str, Any],
@@ -7701,9 +7725,8 @@ def post_edge_write(
     )
 
     try:
-        # 10s timeout: writeProjection escreve ~28 chaves em paralelo (~1-3s
-        # típico); 10s deixa margem para cold-start do endpoint Node.
-        with urllib.request.urlopen(req, timeout=10) as response:
+        # Ver `TIMEOUT_EDGE_WRITE_S` — por que 25 s, e não os 10 de antes.
+        with urllib.request.urlopen(req, timeout=TIMEOUT_EDGE_WRITE_S) as response:
             status = response.status
             if status < 200 or status >= 300:
                 _log(
@@ -8227,13 +8250,18 @@ def _do_project_proporcional(
     # Normalizado com falha fechada: ausente ou malformado ⇒ desligado.
     interruptor = interruptor_do_corpo(req.projecao_dep)
     if interruptor.origem == "invalido" or interruptor.aviso is not None:
+        # Dois casos, duas frases: o objeto inteiro malformado desliga; um
+        # `pct_minimo` inválido só é ignorado (a trava fica no piso de 25) e o
+        # `ligada` segue como veio — ADR-0063 D4, a mesma regra do leitor TS.
         _log(
             "warn",
-            "interruptor da projeção de deputado malformado — "
-            + ("desligado" if not interruptor.ligada else "pct_minimo ignorado"),
+            "interruptor da projeção de deputado malformado — desligado"
+            if interruptor.origem == "invalido"
+            else f"interruptor da projeção de deputado: pct_minimo ignorado — trava em {interruptor.pct_minimo}",
             cargo=req.cargo,
             turno=req.turno,
             origem=interruptor.origem,
+            ligada=interruptor.ligada,
             aviso=interruptor.aviso,
         )
     log_projecao_ufs: list[dict[str, Any]] = []

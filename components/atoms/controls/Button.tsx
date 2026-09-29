@@ -58,6 +58,14 @@ export interface ButtonProps {
   /** `id` do elemento cujo estado este botão controla. */
   "aria-controls"?: string;
   /**
+   * Indisponível SEM sair da ordem de foco — ao contrário de `disabled`, que
+   * tira o foco do botão e o joga no `<body>` quando o botão tem o foco. Quem
+   * passa `aria-disabled` também ignora o clique (o atributo não bloqueia
+   * nada sozinho). Entrou com o "mostrar todos" da lista de Deputado (spec
+   * 026): desabilitar durante a busca perdia o foco do leitor de teclado.
+   */
+  "aria-disabled"?: boolean;
+  /**
    * Sobrescreve o `data-testid` do átomo (default `"button"`).
    *
    * Existe pelo mesmo motivo do passthrough de `aria-*` logo acima: a
@@ -115,6 +123,7 @@ export function Button({
   "aria-label": ariaLabel,
   "aria-expanded": ariaExpanded,
   "aria-controls": ariaControls,
+  "aria-disabled": ariaDisabled,
   "data-testid": testId = "button",
   className,
   style,
@@ -127,12 +136,14 @@ export function Button({
       aria-label={ariaLabel}
       aria-expanded={ariaExpanded}
       aria-controls={ariaControls}
+      aria-disabled={ariaDisabled || undefined}
       data-testid={testId}
       data-variant={variant}
       data-size={size}
       className={[
         "inline-flex select-none items-center justify-center whitespace-nowrap rounded-sm",
         "disabled:cursor-not-allowed disabled:opacity-45 disabled:brightness-100",
+        "aria-disabled:cursor-not-allowed aria-disabled:opacity-45 aria-disabled:brightness-100",
         VARIANT_HOVER[variant],
         className,
       ]

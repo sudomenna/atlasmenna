@@ -426,6 +426,8 @@ set -a; . ./.env.local; set +a; pnpm sim:full   # gerador + série + formataçã
 pnpm dev:sim                                    # sobe a tela com a fixture
 ```
 
+🔴 Desde 29/09 `dev:sim`/`dev:pre`/`dev:sim-velho` declaram vazias as mesmas 14 chaves de escrita do `start:e2e` (o `next dev` carregava as de produção do `.env.local`); a lista é travada por `tests/unit/scripts/dev-fixture-sem-credencial.test.ts`.
+
 `sim:full` (criado em 20/09) encadeia as três etapas na ordem e formata no fim
 — o gerador emite JSON que o `biome` reprova, então sem a formatação o
 pre-commit barra. O banco é lido **só** pelo primeiro passo, e **só com

@@ -29,8 +29,18 @@
  *   - Slack alerting (T20 — `lib/tse/alerts.ts` will consume this logger
  *     as its emission backbone).
  *   - Sampling / rate limiting (Vercel does this server-side).
- *   - PII redaction (TSE EA20 contains no PII; broader rule lives in the
- *     privacy NFR).
+ *   - PII redaction — and that puts the rule on the CALLERS. ⚠️ Until
+ *     2026-09-29 this line said "TSE EA20 contains no PII". False: the EA20
+ *     `cand` element carries `dt`, the candidate's date of birth (EA20
+ *     dictionary, `tse_docs/txt/tse-ea20-arquivo-de-resultado-unificado.txt:797`;
+ *     `lib/tse/ea20-schema.ts`, `CandidatoSchema.dt`). The raw envelope is
+ *     kept as received in `snapshots.payload` (constitution § 1 — the official
+ *     data is never altered); `dt` is read in memory only, for the age
+ *     tie-break of the proportional seat count (`api/model/deputado.py::
+ *     _nascimento`), and nothing derived from it publishes it (payload, Blob,
+ *     pages). This logger redacts nothing, so never pass a raw EA20 envelope,
+ *     a `par`/`cand` object or a snapshot row in `ctx` — log counts, codes,
+ *     URLs and hashes. Broader rule: constitution § 5 and `docs/nfr/security.md`.
  */
 
 import { serialiseCause } from "./errors";

@@ -1460,8 +1460,14 @@ def construir_payload_deputado(
         # os templates da corrida proporcional existirem; lista vazia é a
         # ausência honesta, e a tela já sabe lidar com ela.
         "insights": [],
-        # Cadeira de Deputado não é estimativa de modelo: é a aritmética do
-        # ADR-0027 sobre o voto já apurado. `actual_results: 1` é o que isso é.
+        # `composition` descreve a BANCADA deste payload, que é a parcial: a
+        # aritmética do ADR-0027 sobre o voto já apurado — `actual_results: 1`
+        # é o que ela é. A projeção de Deputado (ADR-0063, que superou o § D9
+        # do design 017) existe, mas é outro número: por UF, no Blob e em
+        # `por_uf[].projecao`, nunca somada numa bancada nacional. Design 026,
+        # D10 revisto: o valor ficou, o porquê mudou — e o ADR-0063 D1 proíbe
+        # declarar `model: 0` sobre número que o modelo produziu; aqui não há
+        # nenhum.
         "composition": {"pre_election": 0.0, "model": 0.0, "actual_results": 1.0},
     }
     return payload, detalhes

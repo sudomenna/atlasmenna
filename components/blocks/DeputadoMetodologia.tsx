@@ -9,24 +9,30 @@
  * `<ForecastTransparency>` desenha duas barras, "Modelo" e "Apuração", com
  * `pctModel = 100 − pctApurado` (`components/blocks/ForecastTransparency.tsx`).
  * Com 71,4% apurado ele imprime **"Modelo 28,6%"**. No cargo 6 isso é falso, e
- * não por arredondamento: o design 017 § D10 fixa
- * `composition = {pre_election: 0, model: 0, actual_results: 1}` porque, hoje,
- * o número de cadeiras é a aritmética do ADR-0027 sobre o voto **já contado** —
- * não há prior, não há extrapolação, não há modelo (§ D9). A tela estaria
- * atribuindo 28,6% do resultado a um modelo que não rodou.
+ * não por arredondamento: a BANCADA (a parcial) é a aritmética do ADR-0027
+ * sobre o voto **já contado**, e `composition` segue
+ * `{pre_election: 0, model: 0, actual_results: 1}` (design 026, D10 revisto: o
+ * valor ficou, o porquê mudou). A tela estaria atribuindo 28,6% do resultado a
+ * um modelo que não fez aquele número.
+ *
+ * ⚠️ Até 29/09 este cabeçalho dizia "não há modelo (§ D9)". O § D9 do design
+ * 017 foi SUPERADO pelo ADR-0063: a projeção de Deputado existe, por UF, com
+ * trava de 25% e interruptor. Ela é outro número — não entra na bancada nem em
+ * `composition` —, e este bloco a descreve à parte (seção 2026-09-29 abaixo).
  *
  * O mesmo componente rotula a seção "O que está movendo o forecast" e afirma
- * "Esta projeção é feita no nível do estado". As duas frases são verdadeiras
- * nas outras rotas e falsas nesta. Editá-lo para servir aos dois casos
- * ampliaria o alcance da mudança para Presidente, Governador e Senador, que já
- * estão no ar; este bloco resolve sem tocar em nada que já funciona.
+ * "Esta projeção é feita no nível do estado". Aqui o bloco equivalente tem
+ * texto próprio ("o que está movendo a projeção", sempre com "não oficial").
+ * Editar o compartilhado para servir aos dois casos ampliaria o alcance da
+ * mudança para Presidente, Governador e Senador, que já estão no ar.
  *
  * ## O que continua sendo dito, porque é verdade
  *
- * Constituição § 8 pede que o leitor saiba de onde vem o número. Aqui: que
- * **não é projeção** (§ D9 é literal — "a tela não pode chamar isso de
- * projeção"), o percentual apurado **quando ele foi medido** (`temDado`), o
- * que a faixa de cadeiras mede — e o que ela **não** mede — e a cadência.
+ * Constituição § 8 pede que o leitor saiba de onde vem o número. Aqui: que a
+ * **parcial não é projeção** (o que o § D9 do design 017 dizia da tela inteira
+ * vale hoje só para a parcial), o percentual apurado **quando ele foi medido**
+ * (`temDado`), o que a faixa de cadeiras mede — e o que ela **não** mede — e a
+ * cadência.
  *
  * ⚠️ **2026-09-13.** Este parágrafo afirmava a granularidade de UF sem
  * condição ("lemos o boletim que o TSE publica por estado, e não os de cada
@@ -49,7 +55,14 @@
  * para o cargo 6 — **método, valores da trava, estado do interruptor e
  * limitações** — e, com a projeção liberada na UF, o "o que está movendo a
  * projeção", que diz a fração de eleitorado estimada e as agremiações cuja
- * cadeira projetada difere da parcial, e nada mais (RF-266).
+ * cadeira projetada difere da parcial, e nada mais (RF-266). O parágrafo desse
+ * bloco diz "não oficial" ELE MESMO — não só o título: quem cita o parágrafo
+ * leva o rótulo junto (constituição § 1).
+ *
+ * Na CAPA (`variant="national"`), com o interruptor ligado e o selo de projeção
+ * de algum estado na tela, o bloco também aparece, compacto: em quantos estados
+ * a projeção está liberada, o que a separa da parcial e onde ver o detalhe —
+ * a capa não soma projeções nem lê o Blob (RF-271).
  *
  * A frase "não são uma projeção" **fica**, agora sobre a PARCIAL — que continua
  * não sendo projeção. E o ramo sem dado (`temDado = false`) fica **byte a
@@ -81,6 +94,9 @@ export interface AgremiacaoMovendo {
  * pode SUBIR este número, nunca baixar.
  */
 const PCT_MINIMO_PADRAO = 25;
+
+/** Unidades da federação — geografia, não número da eleição. */
+const TOTAL_UFS = 27;
 
 export interface DeputadoMetodologiaProps {
   /** Percentual apurado da abrangência (0–100). */
@@ -153,6 +169,19 @@ export interface DeputadoMetodologiaProps {
   movendo?: readonly AgremiacaoMovendo[];
   /** Nacional: o `pct_minimo` publicado (o de qualquer UF — é o mesmo). Ausente ⇒ 25. */
   pctMinimo?: number;
+  /**
+   * UF: a faixa das cadeiras PROJETADAS (`cadeiras_projetadas_ci95`) veio em
+   * alguma agremiação. Hoje não vem (adiada, ADR-0063 D8 emendado): o bloco
+   * diz que o número projetado é pontual e que a faixa na tela é a da parcial.
+   */
+  temFaixaProjetada?: boolean;
+  /**
+   * Nacional: o estado da projeção de cada UF que publicou um (`por_uf[].projecao`,
+   * já com o interruptor aplicado). Com o interruptor ligado e ao menos uma
+   * UF aqui, a capa mostra os selos — e este bloco mostra o "o que está
+   * movendo a projeção" compacto (constituição § 8).
+   */
+  projecaoPorUf?: readonly { sigla: string; estado: string }[];
 }
 
 export function DeputadoMetodologia({
@@ -167,8 +196,17 @@ export function DeputadoMetodologia({
   uf,
   movendo,
   pctMinimo,
+  temFaixaProjetada = false,
+  projecaoPorUf,
 }: DeputadoMetodologiaProps) {
   const visivel = variant === "uf" && ehProjecaoVisivel(projecao, interruptorLigado);
+  // Capa: o bloco aparece exatamente quando os selos aparecem — interruptor
+  // ligado e ao menos um estado com estado de projeção publicado.
+  const selosNaCapa =
+    variant === "national" && interruptorLigado && (projecaoPorUf?.length ?? 0) > 0;
+  const liberadas = selosNaCapa
+    ? (projecaoPorUf ?? []).filter((u) => u.estado === "liberada").map((u) => u.sigla)
+    : [];
   const piso = projecao?.pct_minimo ?? pctMinimo ?? PCT_MINIMO_PADRAO;
   return (
     <Panel
@@ -272,7 +310,8 @@ export function DeputadoMetodologia({
             </h3>
             <p className="max-w-prose" style={PARAGRAFO}>
               {formatPercent(Math.max(0, 100 - pctApurado))} do eleitorado de {uf ?? "este estado"}{" "}
-              ainda não foi apurado, e o voto dele entra por estimativa
+              ainda não foi apurado, e o voto dele entra na projeção — que é não oficial — por
+              estimativa
               {projecao.zonas_total > projecao.zonas_apuradas
                 ? ` — imputado nas ${projecao.zonas_total - projecao.zonas_apuradas} zonas sem boletim`
                 : ""}
@@ -291,6 +330,28 @@ export function DeputadoMetodologia({
               ) : (
                 "A projeção dá a cada agremiação as mesmas cadeiras da parcial."
               )}
+              {temFaixaProjetada
+                ? null
+                : " As cadeiras da projeção são um número pontual: a faixa delas ainda não é calculada, e a faixa que aparece ao lado de cada bancada é a da parcial."}
+            </p>
+          </section>
+        ) : null}
+
+        {/* Capa — o mesmo § 8, compacto, só quando os selos de projeção estão
+          na tela. A capa não lê o Blob (RF-271) nem soma projeções: diz onde
+          ela está liberada, o que a move, e aponta para a página do estado. */}
+        {selosNaCapa ? (
+          <section aria-labelledby="dep-movendo-heading" data-testid="dep-movendo">
+            <h3
+              id="dep-movendo-heading"
+              style={{ margin: "0 0 var(--space-1)", font: "var(--type-label)", fontWeight: 600 }}
+            >
+              O que está movendo a projeção · não oficial
+            </h3>
+            <p className="max-w-prose" style={PARAGRAFO}>
+              {liberadas.length > 0
+                ? `A projeção, que é não oficial, está liberada em ${liberadas.length} de ${TOTAL_UFS} estados (${liberadas.join(", ")}). Em cada um, o voto das zonas eleitorais ainda sem boletim entra por estimativa, a partir das zonas já apuradas de tamanho parecido — é isso que a separa da parcial. Quais agremiações ganham ou perdem cadeira com ela está na página de cada estado.${liberadas.length < TOTAL_UFS ? " Nos demais, o selo de cada estado diz por que ela ainda não aparece." : ""}`
+                : "A projeção, que é não oficial, ainda não está liberada em nenhum estado: o selo de cada um, na lista acima, diz o que falta. Quando liberar, o voto das zonas eleitorais ainda sem boletim entra por estimativa, a partir das zonas já apuradas de tamanho parecido."}
             </p>
           </section>
         ) : null}

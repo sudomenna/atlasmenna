@@ -352,6 +352,15 @@ export function destinoDoCodigo(codigo: number): DestinoDeputado | null {
   return DESTINO_DO_CODIGO[codigo] ?? null;
 }
 
+/**
+ * Destinos cujos votos ficam FORA da conta — a linha não tem %. "Válido
+ * (legenda)" não está aqui: o voto é válido (conta para a agremiação) e o %
+ * dele é publicado numérico (ADR-0064, emenda de 29/09).
+ */
+export function destinoSemPercentual(codigo: CodigoDestino | number): boolean {
+  return codigo === CODIGO_DESTINO.anulado || codigo === CODIGO_DESTINO.sub_judice;
+}
+
 // ---------------------------------------------------------------------------
 // A tupla compacta (design § 8.3) — contrato interno da frente U
 // ---------------------------------------------------------------------------
@@ -404,9 +413,13 @@ export interface ExibicaoLinha {
  * Linha do contrato → tupla, com as marcas derivadas por {@link marcasDaLinha}.
  * É a MESMA função no servidor (posições 1–60) e no cliente (61+).
  *
- * `pct_validos` sai `null` sempre que há destino, mesmo que o dado traga um
- * número: a tela nunca mostra % ao lado de voto que não é nominal válido
- * (RF-261; ADR-0064 decisão 5).
+ * `pct_validos` sai `null` para destino **anulado** e **sub judice**, mesmo que
+ * o dado traga um número: esses votos estão fora da conta, e a tela nunca
+ * mostra % ao lado deles (RF-261; ADR-0064 decisão 5). Para **"Válido
+ * (legenda)"** o % sai NUMÉRICO, como o contrato o publica (design 026 § 2.2:
+ * "`null` ⇔ destino anulado ou sub judice"; ADR-0064, emenda de 29/09): o voto
+ * é válido e o percentual é verdadeiro — a linha leva o texto do destino ao
+ * lado, que desfaz a leitura de voto nominal.
  */
 export function paraLinhaCompacta(
   linha: LinhaDeputado,
@@ -428,7 +441,9 @@ export function paraLinhaCompacta(
     partido,
     typeof linha.numero === "number" ? linha.numero : null,
     linha.votos,
-    destino !== 0 || typeof linha.pct_validos !== "number" ? null : linha.pct_validos,
+    destinoSemPercentual(destino) || typeof linha.pct_validos !== "number"
+      ? null
+      : linha.pct_validos,
     bitsDasMarcas(marcasDaLinha(linha, ctx)),
     destino,
   ];

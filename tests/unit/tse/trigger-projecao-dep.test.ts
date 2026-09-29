@@ -31,6 +31,7 @@ vi.mock("@/lib/tse/log", async (importOriginal) => {
   return { ...real, logError: () => {}, logWarn: () => {} };
 });
 
+import { TIMEOUT_INTERRUPTOR_MS } from "@/lib/edge-config/reader";
 import { corpoDoTriggerModel, lerProjecaoDepParaOModelo } from "@/lib/tse/ingest-handler";
 
 let edgeConfigOriginal: string | undefined;
@@ -61,6 +62,25 @@ describe("lerProjecaoDepParaOModelo", () => {
   it("🔴 leitura com falha ⇒ `ligada: false`, sem lançar (o ciclo segue)", async () => {
     getMock.mockRejectedValue(new Error("edge config fora"));
     await expect(lerProjecaoDepParaOModelo()).resolves.toEqual({ ligada: false, pct_minimo: 25 });
+  });
+
+  it("🔴 Edge Config MUDO ⇒ o ciclo espera no máximo o teto e segue com `ligada: false`", async () => {
+    // O `await` desta leitura fica ANTES do disparo do modelo e do marcador
+    // final do lock (`runIngestCycle`, passo 6a). Sem teto, um `get` que nunca
+    // volta prenderia o ciclo inteiro.
+    vi.useFakeTimers();
+    try {
+      getMock.mockReturnValue(new Promise(() => {}));
+      let corpo: unknown = null;
+      const p = lerProjecaoDepParaOModelo().then((r) => {
+        corpo = r;
+      });
+      await vi.advanceTimersByTimeAsync(TIMEOUT_INTERRUPTOR_MS);
+      await p;
+      expect(corpo).toEqual({ ligada: false, pct_minimo: 25 });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("trava subida decimal sai INTEIRA e para CIMA (o campo Python é `int`)", async () => {

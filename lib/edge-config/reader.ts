@@ -533,10 +533,12 @@ export interface InterruptorProjecaoLido {
  *
  * `pct_minimo` só SOBE a trava: entre 25 e 100 vale; abaixo de 25, acima de
  * 100 ou não-numérico é IGNORADO (`pct_minimo_ignorado`, e vale 25) sem mexer
- * em `ligada` — ADR-0063 D4, "ignorado, com log". ⚠️ O design 026 § 2.10 diz
- * "fora disso a chave é INVÁLIDA (⇒ desligada)"; o ADR vence o design, e a
- * divergência está registrada no relatório da frente T. `em`/`por` não saem
- * daqui.
+ * em `ligada` — ADR-0063 D4, "ignorado, com log". É a MESMA regra do lado
+ * Python (`api/model/deputado_projecao.py::interruptor_do_corpo`) e a do design
+ * 026 § 2.10 (alinhados em 29/09). Um valor decimal entre 25 e 100 vale como
+ * veio aqui e sobe para o inteiro de cima no POST do modelo
+ * (`lerProjecaoDepParaOModelo`) — o Python faz o mesmo `ceil` se o receber.
+ * `em`/`por` não saem daqui.
  */
 export function interpretarInterruptor(leitura: LeituraEdge<unknown>): InterruptorProjecaoLido {
   const piso = TRAVA_PROJECAO_DEP_PCT;
@@ -573,6 +575,49 @@ export function interpretarInterruptor(leitura: LeituraEdge<unknown>): Interrupt
   return saida;
 }
 
+/**
+ * Tempo máximo da leitura da chave do interruptor, em ms. Esgotado ⇒ a leitura
+ * é `falha` e a projeção fica DESLIGADA — o ADR-0063 D4 lista "tempo esgotado"
+ * entre as leituras que desligam.
+ *
+ * Por que existe: a leitura roda a cada render das telas de Deputado e UMA vez
+ * por ciclo de ingestão, antes do disparo do modelo
+ * (`lerProjecaoDepParaOModelo`, `lib/tse/ingest-handler.ts`). Sem teto, um
+ * Edge Config que não responde (sem lançar) prende as duas coisas pelo tempo
+ * que o `fetch` do SDK quiser — no ciclo, isso segura o marcador final do
+ * lock e o próximo ciclo. Com o teto, o pior caso é 2 s e a projeção apagada,
+ * o mesmo estado de uma leitura que falhou. 2 s é folga larga sobre a leitura
+ * típica do Edge Config (dezenas de ms) e curta perto do orçamento de 60 s do
+ * ciclo.
+ */
+export const TIMEOUT_INTERRUPTOR_MS = 2_000;
+
+/** O erro de tempo esgotado — distinto no log de uma falha que lançou. */
+export class TempoEsgotadoInterruptor extends Error {
+  constructor(ms: number) {
+    super(`leitura do interruptor-projecao-dep sem resposta em ${ms} ms`);
+    this.name = "TempoEsgotadoInterruptor";
+  }
+}
+
+/**
+ * `get` da chave com teto de tempo. O `setTimeout` é limpo em QUALQUER
+ * desfecho — um timer pendurado por leitura seria um vazamento por render.
+ * `Promise.race` inscreve-se nas duas promessas, então a rejeição tardia do
+ * `get` que perdeu a corrida não vira `unhandledRejection`.
+ */
+async function getComTeto(chave: string, ms: number): Promise<unknown> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const esgotado = new Promise<never>((_, rejeitar) => {
+    timer = setTimeout(() => rejeitar(new TempoEsgotadoInterruptor(ms)), ms);
+  });
+  try {
+    return await Promise.race([get<unknown>(chave), esgotado]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 /** Avisos de uma vez por processo — o read path roda uma vez por leitor. */
 const avisosDoInterruptor = new Set<string>();
 
@@ -592,10 +637,11 @@ export function _reiniciarAvisosDoInterruptor(): void {
  * `interruptor-projecao-dep`). Regra em {@link interpretarInterruptor}: só
  * `ligada === true` lido com sucesso liga; tudo o mais desliga.
  *
- * **Nunca lança.** Chamada a cada render das telas de Deputado e pela rota da
- * lista 61+ — é o que faz "desligar" valer em até ~60 s mesmo com o objeto do
- * Blob ainda carregando as marcas do ciclo anterior (ver
- * `aplicarInterruptorProjecao`, `lib/blob/deputado-uf.ts`).
+ * **Nunca lança, e nunca demora mais que {@link TIMEOUT_INTERRUPTOR_MS}.**
+ * Chamada a cada render das telas de Deputado e pela rota da lista 61+ — é o
+ * que faz "desligar" valer em até ~60 s mesmo com o objeto do Blob ainda
+ * carregando as marcas do ciclo anterior (ver `aplicarInterruptorProjecao`,
+ * `lib/blob/deputado-uf.ts`). Tempo esgotado é `falha` ⇒ desligada.
  *
  * Log: `falha`/`invalida` ⇒ `logError` a cada leitura (é alarme: a projeção
  * sumiu sem ninguém decidir); `ausente` e `pct_minimo` ignorado ⇒ `logWarn`
@@ -611,7 +657,7 @@ export async function readInterruptorProjecao(): Promise<InterruptorProjecaoLido
 
   let leitura: LeituraEdge<unknown>;
   try {
-    const valor = await get<unknown>(interruptorProjecaoDepKey());
+    const valor = await getComTeto(interruptorProjecaoDepKey(), TIMEOUT_INTERRUPTOR_MS);
     leitura = valor === undefined ? { estado: "ausente" } : { estado: "ok", valor };
   } catch (erro) {
     leitura = { estado: "falha", erro };
@@ -622,6 +668,7 @@ export async function readInterruptorProjecao(): Promise<InterruptorProjecaoLido
     logError("global-config read failed", {
       fn: "readInterruptorProjecao",
       efeito: "projeção de Deputado DESLIGADA (falha fechada, ADR-0063)",
+      tempoEsgotado: leitura.erro instanceof TempoEsgotadoInterruptor,
       erro: leitura.erro instanceof Error ? leitura.erro.message : String(leitura.erro),
     });
   } else if (lido.origem === "invalida") {

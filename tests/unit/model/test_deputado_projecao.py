@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import pathlib
 import random
 from fractions import Fraction
@@ -179,12 +180,23 @@ def _votos_projetados(zonas: list[ZonaProjecao], estratos: dict[int, int] | None
         ({"ligada": True, "pct_minimo": 25.0}, True, 25, "corpo"),
         # O piso só sobe (ADR-0063): abaixo de 25 é ignorado, não desliga.
         ({"ligada": True, "pct_minimo": 10}, True, 25, "corpo"),
-        # Absurdo ⇒ inválido ⇒ desligado.
-        ({"ligada": True, "pct_minimo": 101}, False, 25, "invalido"),
-        ({"ligada": True, "pct_minimo": 30.5}, False, 25, "invalido"),
-        ({"ligada": True, "pct_minimo": True}, False, 25, "invalido"),
-        ({"ligada": True, "pct_minimo": "30"}, False, 25, "invalido"),
-        ({"ligada": True, "pct_minimo": float("nan")}, False, 25, "invalido"),
+        # Decimal entre 25 e 100 sobe para o inteiro de cima — o mesmo `ceil`
+        # que o ciclo TS aplica antes do POST (`lerProjecaoDepParaOModelo`).
+        ({"ligada": True, "pct_minimo": 30.5}, True, 31, "corpo"),
+        ({"ligada": True, "pct_minimo": 99.01}, True, 100, "corpo"),
+        # 🔴 Inválido ⇒ IGNORADO (vale 25) e `ligada` PRESERVADO — ADR-0063 D4,
+        # a mesma regra do leitor TS. Até 29/09 estes desligavam o interruptor
+        # inteiro aqui, enquanto a tela os ignorava.
+        ({"ligada": True, "pct_minimo": 101}, True, 25, "corpo"),
+        ({"ligada": True, "pct_minimo": 500}, True, 25, "corpo"),
+        ({"ligada": True, "pct_minimo": True}, True, 25, "corpo"),
+        ({"ligada": True, "pct_minimo": "30"}, True, 25, "corpo"),
+        ({"ligada": True, "pct_minimo": None}, True, 25, "corpo"),
+        ({"ligada": True, "pct_minimo": float("nan")}, True, 25, "corpo"),
+        ({"ligada": True, "pct_minimo": float("inf")}, True, 25, "corpo"),
+        # …e o inválido nunca LIGA quem veio desligado.
+        ({"ligada": False, "pct_minimo": 500}, False, 25, "corpo"),
+        ({"pct_minimo": 40}, False, 40, "corpo"),
         ([True], False, 25, "invalido"),
         ("ligada", False, 25, "invalido"),
     ],
@@ -199,6 +211,57 @@ def test_interruptor_abaixo_de_25_deixa_aviso_para_o_log() -> None:
         "pct_minimo_abaixo_de_25_ignorado"
     )
     assert interruptor_do_corpo({"ligada": True, "pct_minimo": 30}).aviso is None
+
+
+@pytest.mark.parametrize(
+    ("pct", "aviso"),
+    [
+        (101, "pct_minimo_acima_de_100_ignorado"),
+        (100.2, "pct_minimo_acima_de_100_ignorado"),
+        (24.9, "pct_minimo_abaixo_de_25_ignorado"),
+        (True, "pct_minimo_invalido_ignorado"),
+        ("30", "pct_minimo_invalido_ignorado"),
+        (None, "pct_minimo_invalido_ignorado"),
+        (float("nan"), "pct_minimo_invalido_ignorado"),
+    ],
+)
+def test_interruptor_pct_invalido_e_ignorado_com_aviso(pct: Any, aviso: str) -> None:
+    """Todo `pct_minimo` ignorado deixa o `aviso` que vai para o log do ciclo
+    (ADR-0063 D4, "ignorado, com log") — e nunca mexe em `ligada`."""
+    i = interruptor_do_corpo({"ligada": True, "pct_minimo": pct})
+    assert (i.ligada, i.pct_minimo, i.origem, i.aviso) == (True, 25, "corpo", aviso)
+
+
+@pytest.mark.parametrize(
+    "valor",
+    [
+        {"ligada": True},
+        {"ligada": False},
+        {"ligada": "true"},
+        {"ligada": True, "pct_minimo": 10},
+        {"ligada": True, "pct_minimo": 40},
+        {"ligada": True, "pct_minimo": 40.2},
+        {"ligada": True, "pct_minimo": 101},
+        {"ligada": True, "pct_minimo": "40"},
+        {"ligada": True, "pct_minimo": None},
+        {"ligada": False, "pct_minimo": 500},
+    ],
+)
+def test_interruptor_python_e_ts_concordam(valor: dict[str, Any]) -> None:
+    """A tabela da regra TS (`interpretarInterruptor` + o `ceil` de
+    `lerProjecaoDepParaOModelo`) escrita à mão: para a mesma chave, o modelo e a
+    tela têm de chegar ao mesmo `ligada` e à mesma trava efetiva."""
+    ligada_ts = valor.get("ligada") is True
+    pct = valor.get("pct_minimo", 25)
+    valido = (
+        not isinstance(pct, bool)
+        and isinstance(pct, (int, float))
+        and math.isfinite(pct)
+        and 25 <= pct <= 100
+    )
+    pct_ts = math.ceil(pct) if valido else 25
+    i = interruptor_do_corpo(valor)
+    assert (i.ligada, i.pct_minimo) == (ligada_ts, pct_ts)
 
 
 # ===========================================================================
@@ -1157,12 +1220,27 @@ def test_ciclo_com_interruptor_ligado_libera_e_loga_a_diferenca(ciclo) -> None:
 
 def test_ciclo_pct_minimo_absurdo_nao_derruba_o_corpo(ciclo) -> None:
     """Um `Field(ge=25, le=100)` daria 400 no corpo inteiro e apagaria a
-    parcial; aqui a chave inválida só desliga a projeção."""
+    parcial; aqui o `pct_minimo` inválido é só IGNORADO (ADR-0063 D4): a trava
+    fica no piso de 25, o interruptor segue ligado como a tela o lê, e o
+    ciclo avisa no log."""
     (_payload, detalhes), logs = ciclo(
         _sp_tres_zonas(), {"projecao_dep": {"ligada": True, "pct_minimo": 500}}, {"SP": 60_000}
     )
+    assert detalhes["SP"]["projecao"]["estado"] == "liberada"
+    assert detalhes["SP"]["projecao"]["pct_minimo"] == 25
+    avisos = [(lvl, msg, c) for lvl, msg, c in logs if msg.startswith("interruptor da projeção")]
+    assert len(avisos) == 1
+    lvl, msg, c = avisos[0]
+    assert lvl == "warn" and "pct_minimo ignorado" in msg
+    assert c["aviso"] == "pct_minimo_acima_de_100_ignorado" and c["ligada"] is True
+
+
+def test_ciclo_interruptor_nao_objeto_desliga_com_aviso(ciclo) -> None:
+    (_payload, detalhes), logs = ciclo(_sp_tres_zonas(), {"projecao_dep": [True]}, {"SP": 60_000})
     assert detalhes["SP"]["projecao"]["motivo"] == "interruptor"
-    assert any(msg.startswith("interruptor da projeção") for _l, msg, _c in logs)
+    assert any(
+        msg == "interruptor da projeção de deputado malformado — desligado" for _l, msg, _c in logs
+    )
 
 
 def test_ciclo_erro_no_calculo_vira_indisponivel_e_a_parcial_sai(ciclo, monkeypatch: pytest.MonkeyPatch) -> None:

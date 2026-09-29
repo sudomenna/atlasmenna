@@ -59,9 +59,11 @@ export interface DestinoDeputadoTextoProps {
 }
 
 /**
- * O texto que ocupa o lugar do % quando o voto não é nominal válido (RF-261):
- * "votos para a legenda", "votos anulados", "sub judice — fora da conta".
- * Nunca "0,00%" e nunca marca de eleito ao lado (ADR-0064 decisão 5).
+ * O texto do destino quando o voto não é nominal válido (RF-261): "votos para a
+ * legenda", "votos anulados", "sub judice — fora da conta". Em anulado e sub
+ * judice ele ocupa o lugar do %; em "Válido (legenda)" vai AO LADO do %, que é
+ * verdadeiro (ADR-0064, emenda de 29/09). Nunca "0,00%" e nunca marca de eleito
+ * ao lado (ADR-0064 decisão 5).
  */
 export function DestinoDeputadoTexto({ destino }: DestinoDeputadoTextoProps) {
   return (
@@ -130,10 +132,11 @@ export function LegendaMarcas({
       )}
       {temDestino ? (
         <li>
-          Sem percentual e sem marca: <DestinoDeputadoTexto destino="valido_legenda" /> (o voto
-          conta para a agremiação, não para o nome), <DestinoDeputadoTexto destino="anulado" /> e{" "}
-          <DestinoDeputadoTexto destino="sub_judice" /> — como o TSE marca cada candidatura. Os
-          votos aparecem; nenhum deles entra na conta de cadeiras em nome do candidato.
+          Sem marca: <DestinoDeputadoTexto destino="valido_legenda" /> (o voto é válido e conta para
+          a agremiação, não para o nome — o percentual aparece ao lado),{" "}
+          <DestinoDeputadoTexto destino="anulado" /> e <DestinoDeputadoTexto destino="sub_judice" />{" "}
+          (fora da conta, sem percentual) — como o TSE marca cada candidatura. Os votos aparecem;
+          nenhum deles entra na conta de cadeiras em nome do candidato.
         </li>
       ) : null}
     </ul>

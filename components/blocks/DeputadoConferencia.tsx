@@ -24,6 +24,11 @@
  *                         (e a diferença em %, quando o produtor a mede);
  *   - `sem_dado_tse` .... diz que não houve com o que comparar — nunca "bate".
  *
+ * "Pequenas diferenças são esperadas e não indicam erro" só sai quando NÃO há
+ * divergência de `eleitorado` nem de `votos_validos`: essas duas são
+ * estruturais (a nossa soma não alcança o boletim — uma zona que não
+ * buscamos, por exemplo), e a tela diz isso, com o tamanho.
+ *
  * Objeto v1 (sem `conferencia`, RF-276): só `divergencias` do v1. Com
  * divergência, elas aparecem; sem, o texto é o neutro — nunca o "batem" antigo.
  *
@@ -169,6 +174,56 @@ function linhaDivergencia(
   );
 }
 
+/**
+ * Divergências ESTRUTURAIS: `eleitorado` (Σ `e.te` das zonas × `e.te` do
+ * agregado — o eleitorado não muda durante a contagem) e `votos_validos` (só
+ * comparado com totalização final). Nenhuma das duas se explica pelo andamento
+ * da apuração: é a nossa soma que não alcança o que o boletim do TSE conta —
+ * por exemplo, uma zona que não buscamos (o caso do AP no simulado: −19,5%).
+ */
+const CHAVES_ESTRUTURAIS: ReadonlySet<string> = new Set(["eleitorado", "votos_validos"]);
+
+/** "o eleitorado das zonas que lemos está 19,5% abaixo do do boletim do TSE (122.461 eleitores a menos)". */
+function descricaoEstrutural(d: DivergenciaParaTela): string {
+  const mag = magnitude(d);
+  const falta = Math.abs(d.nosso - d.tse);
+  const sentido = d.nosso < d.tse ? "a menos" : "a mais";
+  if (d.o_que === "eleitorado") {
+    const unidade = falta === 1 ? "eleitor" : "eleitores";
+    return mag
+      ? `o eleitorado das zonas que lemos está ${mag} do que o boletim do TSE registra (${formatVotes(falta)} ${unidade} ${sentido})`
+      : `o eleitorado das zonas que lemos soma ${formatVotes(d.nosso)}, contra ${formatVotes(d.tse)} do boletim do TSE`;
+  }
+  const unidade = falta === 1 ? "voto" : "votos";
+  return mag
+    ? `os votos válidos somados das zonas estão ${mag} do total do TSE (${formatVotes(falta)} ${unidade} ${sentido})`
+    : `os votos válidos somados das zonas são ${formatVotes(d.nosso)}, contra ${formatVotes(d.tse)} do total do TSE`;
+}
+
+/**
+ * A frase depois do resumo. "Pequenas diferenças são esperadas e não indicam
+ * erro" é verdade para o quociente e as cadeiras enquanto o boletim não é a
+ * totalização final — e FALSA diante de uma divergência estrutural: um
+ * eleitorado 19,5% menor não é "pequena diferença" nem passa com o avanço da
+ * contagem. Com ela, a tela diz que é estrutural, e o tamanho.
+ */
+function fraseDoBoletim(
+  divergencias: readonly DivergenciaParaTela[],
+  totalizacaoFinal: boolean,
+): string {
+  const estruturais = divergencias.filter((d) => CHAVES_ESTRUTURAIS.has(d.o_que));
+  const doBoletim = totalizacaoFinal
+    ? "Este boletim já é a totalização final do estado."
+    : "Este boletim ainda não é a totalização final do estado.";
+  if (estruturais.length === 0) {
+    return totalizacaoFinal
+      ? doBoletim
+      : "Este boletim ainda não é a totalização final do estado — até lá, pequenas diferenças são esperadas e não indicam erro.";
+  }
+  const partes = listarEmTexto(estruturais.map(descricaoEstrutural));
+  return `${doBoletim} Mas ${partes}: essa diferença não vem do andamento da apuração e não some sozinha — é estrutural, e o caso típico é uma zona eleitoral do estado que não buscamos no TSE, cujo eleitorado e cujos votos ficam fora da nossa soma.`;
+}
+
 const TEXTO: React.CSSProperties = {
   margin: 0,
   font: "var(--type-body-sm)",
@@ -229,10 +284,7 @@ export function DeputadoConferencia({
           data-estado={conferencia?.estado ?? "v1"}
           style={TEXTO}
         >
-          {frase}{" "}
-          {totalizacaoFinal
-            ? "Este boletim já é a totalização final do estado."
-            : "Este boletim ainda não é a totalização final do estado — até lá, pequenas diferenças são esperadas e não indicam erro."}
+          {frase} {fraseDoBoletim(divergencias, totalizacaoFinal)}
         </p>
 
         {divergencias.length > 0 ? (

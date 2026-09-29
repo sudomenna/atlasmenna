@@ -179,11 +179,24 @@ export function DeputadoListaAgremiacao({
     ordenarPorRank(linhasIniciais),
   );
   const [busca, setBusca] = useState<EstadoBusca>({ fase: "ociosa" });
-  /** `sqcand` da primeira linha nova — recebe o foco depois da busca. */
-  const [focoEm, setFocoEm] = useState<number | null>(null);
+  /**
+   * Quem recebe o foco depois da busca: o `sqcand` da primeira linha nova, ou
+   * `"lista"` — a própria `<ol>` — quando a busca não acrescentou ninguém.
+   *
+   * 🔴 O botão "mostrar todos" SAI do documento quando a busca termina (não há
+   * mais o que buscar). Com o foco nele e sem linha nova para recebê-lo, o
+   * foco caía no `<body>` e o leitor de teclado voltava ao topo da página. A
+   * lista é o alvo estável: é o que o botão controla (`aria-controls`) e ela
+   * nunca sai do documento.
+   */
+  const [focoEm, setFocoEm] = useState<number | "lista" | null>(null);
 
   useEffect(() => {
     if (focoEm === null) return;
+    if (focoEm === "lista") {
+      listaRef.current?.focus();
+      return;
+    }
     listaRef.current?.querySelector<HTMLLIElement>('li[tabindex="-1"]')?.focus();
   }, [focoEm]);
 
@@ -194,6 +207,10 @@ export function DeputadoListaAgremiacao({
       : 0;
 
   async function mostrarTodos() {
+    // Durante a busca o botão fica `aria-disabled`, e não `disabled`:
+    // `disabled` tira o foco do botão que o tem e o joga no `<body>`. O
+    // atributo não bloqueia nada sozinho — este `return` é que ignora o clique.
+    if (busca.fase === "buscando") return;
     setAberta(true);
     setBusca({ fase: "buscando" });
     try {
@@ -208,7 +225,7 @@ export function DeputadoListaAgremiacao({
       setLinhas(unidas);
       setBusca({ fase: "pronta", chegaram: acrescentadas.length, tsLista: lista.ts });
       const primeira = [...acrescentadas].sort((a, b) => a[L.RANK] - b[L.RANK])[0];
-      setFocoEm(primeira ? primeira[L.SQCAND] : null);
+      setFocoEm(primeira ? primeira[L.SQCAND] : "lista");
     } catch {
       setBusca({ fase: "erro" });
     }
@@ -227,7 +244,9 @@ export function DeputadoListaAgremiacao({
     busca.fase === "buscando"
       ? "Carregando os demais candidatos…"
       : busca.fase === "pronta"
-        ? `${busca.chegaram} ${busca.chegaram === 1 ? "candidato carregado" : "candidatos carregados"}.`
+        ? busca.chegaram === 0
+          ? `Nenhum candidato a mais de ${sigla} para mostrar.`
+          : `${busca.chegaram} ${busca.chegaram === 1 ? "candidato carregado" : "candidatos carregados"}.`
         : busca.fase === "erro"
           ? "Não conseguimos carregar os demais candidatos agora. As posições que já estavam na página continuam aqui."
           : "";
@@ -265,6 +284,9 @@ export function DeputadoListaAgremiacao({
           {formatVotes(l[L.VOTOS])}
           {destino ? (
             <small>
+              {/* "Válido (legenda)": o % é verdadeiro e vem numérico (ADR-0064,
+                  emenda); anulado e sub judice chegam com `pct` nulo. */}
+              {pct !== null ? `${formatPercent(pct, 2)} · ` : null}
               <DestinoDeputadoTexto destino={destino} />
             </small>
           ) : pct !== null ? (
@@ -304,6 +326,9 @@ export function DeputadoListaAgremiacao({
         data-collapsed={aberta ? "false" : "true"}
         aria-busy={buscando || undefined}
         aria-label={`Candidatos de ${sigla} em ${uf}, por votos apurados`}
+        // Alvo de foco só quando a busca não trouxe linha (ver `focoEm`); fora
+        // da ordem de tabulação sempre.
+        tabIndex={focoEm === "lista" ? -1 : undefined}
       >
         {itens}
       </ol>
@@ -334,7 +359,7 @@ export function DeputadoListaAgremiacao({
               variant="ghost"
               size="md"
               aria-controls={listaId}
-              disabled={buscando}
+              aria-disabled={buscando}
               onClick={mostrarTodos}
               data-testid="dep-mostrar-todos"
             >

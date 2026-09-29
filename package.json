@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "dev:pre": "FIXTURE_VARIANT=pre next dev",
-    "dev:sim": "FIXTURE_VARIANT=sim next dev",
-    "dev:sim-velho": "FIXTURE_VARIANT=sim-velho next dev",
+    "dev:pre": "FIXTURE_VARIANT=pre DATABASE_URL=\"\" DATABASE_URL_UNPOOLED=\"\" POSTGRES_URL=\"\" POSTGRES_URL_NON_POOLING=\"\" POSTGRES_PRISMA_URL=\"\" POSTGRES_URL_NO_SSL=\"\" PGPASSWORD=\"\" POSTGRES_PASSWORD=\"\" BLOB_READ_WRITE_TOKEN=\"\" EDGE_CONFIG_TOKEN=\"\" CRON_SECRET=\"\" MODEL_SECRET=\"\" VERCEL_DEPLOY_HOOK_URL=\"\" EDGE_CONFIG_ID=\"\" next dev",
+    "dev:sim": "FIXTURE_VARIANT=sim DATABASE_URL=\"\" DATABASE_URL_UNPOOLED=\"\" POSTGRES_URL=\"\" POSTGRES_URL_NON_POOLING=\"\" POSTGRES_PRISMA_URL=\"\" POSTGRES_URL_NO_SSL=\"\" PGPASSWORD=\"\" POSTGRES_PASSWORD=\"\" BLOB_READ_WRITE_TOKEN=\"\" EDGE_CONFIG_TOKEN=\"\" CRON_SECRET=\"\" MODEL_SECRET=\"\" VERCEL_DEPLOY_HOOK_URL=\"\" EDGE_CONFIG_ID=\"\" next dev",
+    "dev:sim-velho": "FIXTURE_VARIANT=sim-velho DATABASE_URL=\"\" DATABASE_URL_UNPOOLED=\"\" POSTGRES_URL=\"\" POSTGRES_URL_NON_POOLING=\"\" POSTGRES_PRISMA_URL=\"\" POSTGRES_URL_NO_SSL=\"\" PGPASSWORD=\"\" POSTGRES_PASSWORD=\"\" BLOB_READ_WRITE_TOKEN=\"\" EDGE_CONFIG_TOKEN=\"\" CRON_SECRET=\"\" MODEL_SECRET=\"\" VERCEL_DEPLOY_HOOK_URL=\"\" EDGE_CONFIG_ID=\"\" next dev",
     "prepare": "git config core.hooksPath .githooks || true",
     "build": "next build",
     "start": "next start",

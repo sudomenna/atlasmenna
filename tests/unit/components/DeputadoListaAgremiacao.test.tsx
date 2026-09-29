@@ -33,6 +33,7 @@ import {
   paraLinhaCompacta,
   projecaoVisivel,
 } from "@/lib/utils/deputado-marcas";
+import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import contratoLista from "@/tests/fixtures/contrato/deputado-uf-lista.json" with { type: "json" };
@@ -216,7 +217,18 @@ describe("DeputadoListaAgremiacao — o documento antes do clique (RF-260)", () 
     const rr = estatico(props("RR", "15"));
     const anulado = linhasDoc(rr).find((l) => l.dataset.rank === "3");
     expect(anulado?.textContent).toContain("votos anulados");
+    expect(anulado?.textContent).not.toMatch(/\d%/);
     expect(rr.body.textContent).not.toContain("0,00%");
+  });
+
+  it('🔴 RF-261 / ADR-0064 (emenda) — "Válido (legenda)": o % aparece NUMÉRICO, com o destino ao lado', () => {
+    // O voto é válido e o % é verdadeiro; `—` e a ausência de % são só de
+    // anulado e sub judice. Fixture de contrato: RR/UNIÃO, 4º, 2,25125%.
+    const rr = estatico(props("RR", "44"));
+    const legenda = linhasDoc(rr).find((l) => l.dataset.rank === "4");
+    expect(legenda?.textContent).toContain(`${formatPercent(2.25125, 2)} · votos para a legenda`);
+    expect(legenda?.textContent).not.toContain("—");
+    expect(legenda?.querySelector("[data-marca]")).toBeNull();
   });
 
   it("🔴 M31 — nenhum 'eleito' solto em lista nenhuma da fixture", () => {
@@ -438,8 +450,55 @@ describe("DeputadoListaAgremiacao — cliques (RF-260)", () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(1);
     expect(lista("13").querySelector("[role='status']")?.textContent).toBe(
-      "0 candidatos carregados.",
+      "Nenhum candidato a mais de PT/PC do B/PV para mostrar.",
     );
+  });
+
+  it("🔴 busca que NÃO acrescenta linha: o foco vai para a lista, nunca para o <body>", async () => {
+    // O botão "mostrar todos" sai do documento quando a busca termina. Com o
+    // foco nele e nenhuma linha nova para recebê-lo, o foco caía no <body> —
+    // o leitor de teclado voltava ao topo da página sem aviso.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => resposta(LISTA_SP)),
+    );
+    await montar(props("SP", "13", true, { totalCandidatos: 45 }));
+    const botao = lista("13").querySelector<HTMLButtonElement>("[data-testid='dep-mostrar-todos']");
+    botao?.focus();
+    expect(document.activeElement).toBe(botao);
+    await act(async () => botao?.click());
+    await esperar(() => lista("13").querySelector("[data-testid='dep-mostrar-todos']") === null);
+
+    const ol = lista("13").querySelector("ol");
+    expect(document.activeElement).not.toBe(document.body);
+    expect(document.activeElement).toBe(ol);
+    expect(ol?.getAttribute("tabindex")).toBe("-1");
+    expect(lista("13").querySelector("[role='status']")?.textContent).toMatch(
+      /^Nenhum candidato a mais/,
+    );
+  });
+
+  it("🔴 durante a busca o botão fica `aria-disabled` (não `disabled`): o foco fica nele e o clique é ignorado", async () => {
+    let soltar: (r: Response) => void = () => {};
+    const fetchSpy = vi.fn(() => new Promise<Response>((r) => (soltar = r)));
+    vi.stubGlobal("fetch", fetchSpy);
+    await montar(props("SP", "22"));
+    const botao = lista().querySelector<HTMLButtonElement>("[data-testid='dep-mostrar-todos']");
+    botao?.focus();
+    await act(async () => botao?.click());
+    await esperar(() => lista().querySelector("ol")?.getAttribute("aria-busy") === "true");
+
+    expect(botao?.disabled).toBe(false);
+    expect(botao?.getAttribute("aria-disabled")).toBe("true");
+    expect(document.activeElement).toBe(botao);
+    // Segundo clique durante a busca: nada acontece.
+    await act(async () => botao?.click());
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(lista().querySelector("[role='status']")?.textContent).toMatch(/Carregando/);
+
+    await act(async () => soltar(resposta(LISTA_SP)));
+    await esperar(() => linhasDoc(lista()).length === 71);
+    expect(document.activeElement).toBe(lista().querySelector("li[data-rank='61']"));
   });
 
   it("erro: mensagem + 'tentar de novo', as 60 ficam; o erro não vai para o cache", async () => {

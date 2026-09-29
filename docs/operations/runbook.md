@@ -1476,10 +1476,27 @@ que está no Blob antes de mostrar (`aplicarInterruptorProjecao`,
 `lib/blob/deputado-uf.ts`); o alvo é sumir em **até ~60 s** (cache da página e
 do CDN) — medida pendente, é o ensaio de 03/10. Confira na página de SP.
 
+⚠️ **O que some e o que fica ao desligar.** Some a projeção **das páginas**: no
+próximo render de cada uma (ISR, `revalidate = 60`, então em até ~60 s mais o
+cache do CDN). **Não** some, até o próximo ciclo do modelo de Deputado (volta
+completa do cargo em até **30 min**, ADR-0036), do **arquivo JSON público do
+Blob** de cada UF (`deputado/uf/<UF>.json`): quem abrir o arquivo direto, sem
+passar pela página, ainda vê os campos de projeção (`projecao` com `estado`
+`liberada`, `cadeiras_projetadas`, `votos_projetados`, `projecao`/
+`projecao_apertada` por linha) do último ciclo ligado. O ciclo seguinte, já com
+a chave desligada, regrava o arquivo sem esses campos. A lista 61+
+(`deputado/uf-lista/<UF>.json` e a rota `/uf/<UF>/deputado-federal/lista`)
+nunca carrega dado de projeção (ADR-0065 D1) e não muda.
+
 Subir a trava sem desligar (ex.: se o replay mostrar que 25% é cedo):
 `pnpm dep:projecao --pct 40 --confirmar <id>`. O interruptor **só sobe** a
-trava: um `pct_minimo` abaixo de 25 é ignorado (com aviso no log) — o piso de
-25% só muda por ADR. `--sem-pct` volta à trava do modelo.
+trava: um `pct_minimo` abaixo de 25, acima de 100 ou não numérico é ignorado
+(com aviso no log, na página e no modelo — a trava fica em 25 e o `ligada` não
+muda) — o piso de 25% só muda por ADR. `--sem-pct` volta à trava do modelo.
+
+A leitura da chave tem teto de **2 s**: sem resposta nesse tempo, a página e o
+ciclo tratam a projeção como desligada (falha fechada, ADR-0063 D4) e seguem —
+o ciclo de ingestão nunca espera mais que isso pelo interruptor.
 
 ### O store errado — a trava do script
 

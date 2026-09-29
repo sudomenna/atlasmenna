@@ -1472,17 +1472,50 @@ describe("spec 026 — /uf/[sigla]/deputado-federal", () => {
     ).toBe(8);
     const mdb = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='15']");
     expect(mdb?.querySelector("[data-testid='uf-cadeiras-projetadas']")?.textContent).toBe(
-      "2 cadeiras na projeção · não oficial",
+      "2 cadeiras · projeção pontual · não oficial",
     );
     const pl = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='22']");
     expect(pl?.querySelector("[data-testid='uf-cadeiras-projetadas']")?.textContent).toBe(
-      "4 cadeiras na projeção · não oficial (faixa provável: 2 a 4)",
+      "4 cadeiras na projeção · não oficial (faixa provável da projeção: 2 a 4)",
     );
     expect(doc.querySelector("[data-testid='uf-projecao-estado']")?.textContent).toContain(
       "Projeção liberada · não oficial",
     );
     const movendo = doc.querySelector("[data-testid='dep-movendo']")?.textContent ?? "";
     expect(movendo).toContain("MDB, 1 cadeira na parcial e 2 na projeção");
+  });
+
+  it("🔴 ADR-0063 D8 (emenda) — a faixa da PARCIAL nunca aparece como faixa da projeção", async () => {
+    // Sem `cadeiras_projetadas_ci95` (adiada), o número projetado é PONTUAL e
+    // a faixa ao lado leva o nome "faixa da parcial" VISÍVEL — antes o nome
+    // era só `sr-only`, e "13 cadeiras na projeção" ao lado de "12 a 15
+    // cadeiras" se lia como o intervalo da projeção.
+    readDeputadoProjectionMock.mockResolvedValue(nacional());
+    const d = v2("RR");
+    const semFaixaProjetada = {
+      ...d,
+      agremiacoes: d.agremiacoes.map((a) => {
+        const { cadeiras_projetadas_ci95: _ci, ...resto } = a as typeof a & {
+          cadeiras_projetadas_ci95?: [number, number];
+        };
+        return { ...resto, cadeiras_ci95: [1, 3] as [number, number] };
+      }),
+    };
+    readDeputadoUfDetailMock.mockResolvedValue(ok(semFaixaProjetada));
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const doc = await render(UFDeputadoFederalPage(paramsDe("RR")));
+    const pl = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='22']");
+    const projetada =
+      pl?.querySelector("[data-testid='uf-cadeiras-projetadas']")?.textContent ?? "";
+    expect(projetada).toBe("4 cadeiras · projeção pontual · não oficial");
+    expect(projetada).not.toMatch(/faixa/);
+    expect(projetada).not.toContain("1 a 3");
+    // A faixa da parcial: rótulo VISÍVEL (não `sr-only`) junto do número.
+    const rotulo = pl?.querySelector("[data-testid='uf-intervalo-rotulo']");
+    expect(rotulo?.textContent?.trim()).toBe("faixa da parcial");
+    expect(rotulo?.closest(".sr-only")).toBeNull();
+    expect(rotulo?.className ?? "").not.toContain("sr-only");
+    expect(pl?.querySelector("[data-testid='uf-intervalo']")?.textContent).toBe("1 a 3 cadeiras");
   });
 
   it("🔴 M28 — RR: a ordem das linhas é a mesma com o interruptor ligado e desligado", async () => {
@@ -1654,5 +1687,33 @@ describe("spec 026 — /deputado-federal (capa)", () => {
     expect(doc.querySelector("[data-testid='dep-mais-votados-pais']")).toBeNull();
     expect(doc.querySelector("[data-testid='dep-puxadores-pais']")).toBeNull();
     expect(doc.querySelector("[data-testid='corrida-projecao']")).toBeNull();
+    // Sem selo na tela, sem o bloco do § 8 da projeção na capa.
+    expect(doc.querySelector("[data-testid='dep-movendo']")).toBeNull();
+  });
+
+  it("🔴 constituição § 8 — com selo de projeção na capa, o 'o que está movendo a projeção · não oficial' aparece", async () => {
+    // Interruptor desligado: nenhum selo, nenhum bloco.
+    readDeputadoProjectionMock.mockResolvedValue(payloadV2());
+    const desligado = await render(DeputadoFederalPage());
+    expect(desligado.querySelector("[data-testid='corrida-projecao']")).toBeNull();
+    expect(desligado.querySelector("[data-testid='dep-movendo']")).toBeNull();
+
+    // Ligado: os selos aparecem — e o bloco junto, com "não oficial" no
+    // TÍTULO e no PARÁGRAFO (quem cita um leva o rótulo).
+    readInterruptorProjecaoMock.mockResolvedValue(LIGADO);
+    const ligado = await render(DeputadoFederalPage());
+    expect(ligado.querySelector("[data-testid='corrida-projecao']")).not.toBeNull();
+    const bloco = ligado.querySelector("[data-testid='dep-movendo']");
+    expect(bloco?.querySelector("h3")?.textContent).toBe(
+      "O que está movendo a projeção · não oficial",
+    );
+    const paragrafo = (bloco?.querySelector("p")?.textContent ?? "").replace(/\s+/g, " ");
+    expect(paragrafo).toContain("não oficial");
+    // AC (100%, totalização final) e RR são as UFs liberadas da fixture nacional
+    // de contrato; SP aguarda e AP está indisponível.
+    expect(paragrafo).toMatch(/liberada em 2 de 27 estados \(AC, RR\)/);
+    // O bloco vive dentro da metodologia (o § 8 da capa) e nunca soma projeções.
+    expect(bloco?.closest("[data-testid='dep-metodologia']")).not.toBeNull();
+    expect(paragrafo).not.toMatch(/bancada nacional projetada|\d+ cadeiras na projeção/);
   });
 });

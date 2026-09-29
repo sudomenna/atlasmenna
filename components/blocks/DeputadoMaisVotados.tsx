@@ -88,8 +88,16 @@ export function DeputadoMaisVotados({ escopo, uf, linhas, titleId }: DeputadoMai
                 </span>
                 <span>
                   {formatVotes(l.votos)}
-                  {l.destino !== undefined ? (
+                  {l.destino !== undefined && l.destino !== "valido_legenda" ? (
                     <small>
+                      <DestinoDeputadoTexto destino={l.destino} />
+                    </small>
+                  ) : l.destino === "valido_legenda" && l.pct_validos !== null ? (
+                    // ADR-0064 (emenda 29/09): o voto de legenda é válido — o % aparece,
+                    // sempre com o destino ao lado, que desfaz a leitura de voto nominal.
+                    <small>
+                      {formatPercent(l.pct_validos, 2)}
+                      {noPais ? ` dos válidos de ${l.uf}` : null} ·{" "}
                       <DestinoDeputadoTexto destino={l.destino} />
                     </small>
                   ) : l.pct_validos !== null ? (

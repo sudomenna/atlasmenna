@@ -356,7 +356,7 @@ chave. Nenhuma bancada nacional projetada (spec § Fora).
 ```ts
 interface InterruptorProjecaoDep {
   ligada: boolean;
-  /** 25 ≤ pct_minimo ≤ 100. Fora disso a chave é INVÁLIDA (⇒ desligada). Ausente ⇒ 25. */
+  /** 25 ≤ pct_minimo ≤ 100 sobe a trava. Fora disso, ou não numérico, é IGNORADO (vale 25), com log; `ligada` fica como veio. Ausente ⇒ 25. */
   pct_minimo?: number;
   /** ISO 8601 de quando foi gravada. */
   em?: string;
@@ -368,7 +368,21 @@ interface InterruptorProjecaoDep {
 - Constante em `lib/edge-config/keys.ts`: `INTERRUPTOR_PROJECAO_DEP_KEY = "interruptor-projecao-dep"`.
 - `readInterruptorProjecao()` em `lib/edge-config/reader.ts` devolve
   `{ ligada: boolean; pct_minimo: number; origem: "chave" | "ausente" | "invalida" | "falha" }` —
-  `ligada` só é `true` com `origem: "chave"`. Nunca lança.
+  `ligada` só é `true` com `origem: "chave"`. Nunca lança, e tem teto de tempo de **2 s**
+  (`TIMEOUT_INTERRUPTOR_MS`): tempo esgotado é `falha` ⇒ desligada (ADR-0063 D4 lista "tempo
+  esgotado" entre as leituras que desligam). O teto vale para o render e para o ciclo de ingestão,
+  que espera esta leitura antes de disparar o modelo.
+- **Regra da chave — a mesma nos dois lados** (TS `interpretarInterruptor`, Python
+  `deputado_projecao.interruptor_do_corpo`; alinhados em 29/09, ADR-0063 D4 "ignorado, com log"):
+  - valor que não é objeto, ou `ligada` que não é o booleano `true` ⇒ **desligada**. No TS, `ligada`
+    não booleano é `origem: "invalida"` (log em `error`); `{ligada: false}` é `chave` (desligada pela
+    operação);
+  - `pct_minimo` entre 25 e 100 ⇒ vale (decimal sobe para o inteiro de cima no POST do modelo e,
+    se chegar decimal ao Python, lá também — `ceil` erra para travar mais);
+  - `pct_minimo` abaixo de 25, acima de 100, não numérico, booleano, `null`, NaN ⇒ **ignorado**: a
+    trava fica em 25, `ligada` **não muda**, e sai um aviso no log (`pct_minimo_ignorado` no TS,
+    `aviso` no Python). Até 29/09 o Python desligava o interruptor inteiro nesses casos enquanto a
+    tela só ignorava o `pct_minimo` — o modelo e a página discordavam sobre a mesma chave.
 - Começa **ligada** na virada (decisão do dono, plano de 29/09) — ausente ⇒ desligada, então alguém
   precisa gravá-la: é o passo do runbook de 03/10.
 - `scripts/interruptor-projecao.ts` (`pnpm dep:projecao [--ligar|--desligar] [--pct N] [--ensaio]`):
@@ -393,6 +407,11 @@ class ProjecaoDep(BaseModel):
     ligada: bool
     pct_minimo: int = Field(default=25, ge=25, le=100)
 ```
+
+> **Como ficou (29/09).** O campo entrou como `projecao_dep: Any = None` e é normalizado por
+> `deputado_projecao.interruptor_do_corpo` com a regra do § 2.10, **não** por `Field(ge=25, le=100)`:
+> um valor fora da faixa daria 400 no corpo inteiro e o ciclo deixaria de publicar até a parcial.
+> Ausente ⇒ desligado; `pct_minimo` inválido ⇒ ignorado (25), com `warn` no log do ciclo.
 
 `derive_seed` **não** muda (continua `(cargo, turno, trigger_ts)`): a projeção de deputado é
 determinística e não consome RNG; o bootstrap da faixa (se houver) usa a mesma semente derivada.

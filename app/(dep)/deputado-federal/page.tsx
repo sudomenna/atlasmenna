@@ -773,7 +773,8 @@ export default async function DeputadoFederalPage() {
         <UfBandeirasGrid cargo={CARGO_DEPUTADO} resumos={resumosPorUf(payload, interruptor)} />
       </Panel>
 
-      {/* Seção 4 — constituição § 8 + design 017 § D9. */}
+      {/* Seção 4 — constituição § 8 (método da parcial e, desde o ADR-0063, da
+          projeção por UF, que superou o § D9 do design 017). */}
       <DeputadoMetodologia
         pctApurado={payload.pct_apurado_total}
         cadenciaMinutos={payload.atualizacao_min}
@@ -784,6 +785,12 @@ export default async function DeputadoFederalPage() {
         interruptorLigado={interruptor.ligada}
         interruptorOrigem={interruptor.origem}
         pctMinimo={interruptor.pct_minimo}
+        // Constituição § 8 — com o selo de projeção de algum estado na tela
+        // (interruptor ligado, `resumosPorUf`), o bloco traz o "o que está
+        // movendo a projeção · não oficial" compacto. Mesma condição dos selos.
+        projecaoPorUf={payload.por_uf.flatMap((u) =>
+          u.projecao ? [{ sigla: u.sigla, estado: u.projecao.estado }] : [],
+        )}
       />
 
       <Footer />
