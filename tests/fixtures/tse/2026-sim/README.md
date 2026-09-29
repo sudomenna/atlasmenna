@@ -53,6 +53,17 @@ acima do que `eleitorado-import.ts` calculou do CSV de 2024 (crescimento normal 
 exceto AC (+17%) e AP (+10%), fora dessa faixa — não investigado a fundo, mas tratado como
 plausível (cadastro cresce de forma desigual por UF).
 
+## Subpasta `zonas-faltantes/` — pares que o EA12 lista e `zonas` não tinha (29/09)
+
+`medidas-2026-09-29.json`: medição de AP e PE em produção (**somente `SELECT`**, nenhuma requisição ao
+TSE) — todas as linhas de `zonas` dessas UFs com o peso de `eleitorado` (CSV de 2024) e o `te` do EA20
+oficial de zona mais recente, mais o `te` do EA20 de UF. Alimenta
+`tests/unit/data-pipeline/zonas-faltantes-import.test.ts`. Os dois pares que faltam — Macapá 06050×0014 e
+Fernando de Noronha 30015×0004 — estão no `mun-e021270-cm.json` acima e **não** têm arquivo aqui: o EA20
+de zona deles ainda não foi baixado (o script deriva o `te` pelo agregado; ver `docs/operations/runbook.md`
+§ "Zonas faltantes"). Se forem baixados, os arquivos entram nesta pasta com o nome oficial
+(`ap06050-z0014-c0001-e021270-u.json`) e o script os prefere ao derivado.
+
 ## Para que servem
 
 > ✅ **Desde 18/09 estes arquivos são GUARDA, não só amostra.**

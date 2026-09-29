@@ -29,6 +29,7 @@
     "db:migrate:0009": "node --experimental-strip-types data-pipeline/migrations/0009_projections_pct_atual.ts",
     "db:migrate:0010": "node --experimental-strip-types data-pipeline/migrations/0010_snapshots_nivel.ts",
     "db:eleitorado:df": "node --experimental-strip-types data-pipeline/eleitorado-df-import.ts",
+    "db:zonas:faltantes": "node --experimental-strip-types data-pipeline/zonas-faltantes-import.ts",
     "candidatos:import": "node --experimental-strip-types data-pipeline/candidatos-import.ts",
     "candidatos:publish": "tsx data-pipeline/candidatos-publish.ts",
     "candidatos:fotos": "tsx data-pipeline/candidatos-fotos-import.ts",
