@@ -42,14 +42,20 @@
  * (ADR-0012) — não é o código numérico do TSE.
  *
  * Mapeamento para o código do TSE (`lib/edge-config/types.ts`):
- * `pres` = 1, `gov` = 3, `sen` = 5, `dep` = 6.
+ * `pres` = 1, `gov` = 3, `sen` = 5, `dep` = 6, `est` = 7, `dis` = 8.
+ *
+ * `est` (Deputado Estadual, 26 Assembleias) e `dis` (Deputado Distrital,
+ * Câmara Legislativa do DF) entraram em 2026-09-29 (spec 027, ADR-0066). São
+ * tokens DISTINTOS de `dep` de propósito: o mesmo token para os três cargos
+ * proporcionais faria SP estadual gravar por cima de SP federal
+ * (`projection-current-dep-t1`) — chave válida, conteúdo de outra casa.
  *
  * Os dois tipos `Cargo` do repositório continuam **deliberadamente separados**
  * (ADR-0026 item 2, ADR-0028 item 2): este nomeia chaves, o numérico espelha o
  * TSE. Não fundir; a conversão explícita entre os dois é `cargoToken`
  * (`lib/edge-config/keys.ts`).
  */
-export type Cargo = "pres" | "gov" | "sen" | "dep";
+export type Cargo = "pres" | "gov" | "sen" | "dep" | "est" | "dis";
 
 /** Turno eleitoral. */
 export type Turno = 1 | 2;

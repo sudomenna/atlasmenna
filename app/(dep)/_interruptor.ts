@@ -20,7 +20,7 @@ import {
 } from "@/lib/edge-config/reader";
 
 export async function lerInterruptorDaTela(emSimulacao: boolean): Promise<InterruptorProjecaoLido> {
-  if (!emSimulacao) return readInterruptorProjecao();
+  if (!emSimulacao) return readInterruptorProjecao(6);
   const valor = simulacaoInterruptorProjecao();
   return interpretarInterruptor(
     valor === undefined ? { estado: "ausente" } : { estado: "ok", valor },

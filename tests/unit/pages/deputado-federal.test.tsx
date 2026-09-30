@@ -100,8 +100,8 @@ vi.mock("@/lib/blob/candidatos", () => ({
 }));
 
 vi.mock("@/lib/edge-config/reader", () => ({
-  readDeputadoProjection: () => readDeputadoProjectionMock(),
-  readInterruptorProjecao: () => readInterruptorProjecaoMock(),
+  readDeputadoProjection: (cargo: number) => readDeputadoProjectionMock(cargo),
+  readInterruptorProjecao: (cargo: number) => readInterruptorProjecaoMock(cargo),
   readProjection: vi.fn(async () => null),
   readNationalProjection: vi.fn(async () => null),
   readArchivedProjection: vi.fn(async () => null),
@@ -113,7 +113,10 @@ vi.mock("@/lib/edge-config/reader", () => ({
 // determinismo que um dos testes mede. Só a leitura é substituída.
 vi.mock("@/lib/blob/deputado-uf", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/lib/blob/deputado-uf")>();
-  return { ...real, readDeputadoUfDetail: (sigla: string) => readDeputadoUfDetailMock(sigla) };
+  return {
+    ...real,
+    readDeputadoUfDetail: (cargo: number, sigla: string) => readDeputadoUfDetailMock(cargo, sigla),
+  };
 });
 
 function parse(markup: string): Document {
@@ -839,7 +842,11 @@ describe("/uf/[sigla]/deputado-federal (T-12)", () => {
     await render(UFDeputadoFederalPage(PARAMS_SP));
 
     expect(readDeputadoProjectionMock).toHaveBeenCalledTimes(1);
-    expect(readDeputadoUfDetailMock).toHaveBeenCalledWith("SP");
+    // Spec 027 (RF-279): a tela FEDERAL pede o cargo 6 explicitamente — os
+    // leitores não têm default, e SP federal ≠ SP estadual.
+    expect(readDeputadoProjectionMock).toHaveBeenCalledWith(6);
+    expect(readDeputadoUfDetailMock).toHaveBeenCalledWith(6, "SP");
+    expect(readInterruptorProjecaoMock).toHaveBeenCalledWith(6);
   });
 
   it("(q) RF-129: Blob fora do ar → detalhe indisponível COM motivo, e o resumo sobrevive", async () => {

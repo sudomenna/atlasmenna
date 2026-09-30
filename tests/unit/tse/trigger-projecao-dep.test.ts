@@ -50,18 +50,18 @@ afterEach(() => {
 describe("lerProjecaoDepParaOModelo", () => {
   it("chave `{ligada: true}` ⇒ ligada com a trava do modelo (25)", async () => {
     getMock.mockResolvedValue({ ligada: true });
-    expect(await lerProjecaoDepParaOModelo()).toEqual({ ligada: true, pct_minimo: 25 });
+    expect(await lerProjecaoDepParaOModelo(6)).toEqual({ ligada: true, pct_minimo: 25 });
     expect(getMock).toHaveBeenCalledWith("interruptor-projecao-dep");
   });
 
   it("🔴 chave ausente ⇒ `ligada: false` (falha fechada até a virada gravar)", async () => {
     getMock.mockResolvedValue(undefined);
-    expect(await lerProjecaoDepParaOModelo()).toEqual({ ligada: false, pct_minimo: 25 });
+    expect(await lerProjecaoDepParaOModelo(6)).toEqual({ ligada: false, pct_minimo: 25 });
   });
 
   it("🔴 leitura com falha ⇒ `ligada: false`, sem lançar (o ciclo segue)", async () => {
     getMock.mockRejectedValue(new Error("edge config fora"));
-    await expect(lerProjecaoDepParaOModelo()).resolves.toEqual({ ligada: false, pct_minimo: 25 });
+    await expect(lerProjecaoDepParaOModelo(6)).resolves.toEqual({ ligada: false, pct_minimo: 25 });
   });
 
   it("🔴 Edge Config MUDO ⇒ o ciclo espera no máximo o teto e segue com `ligada: false`", async () => {
@@ -72,7 +72,7 @@ describe("lerProjecaoDepParaOModelo", () => {
     try {
       getMock.mockReturnValue(new Promise(() => {}));
       let corpo: unknown = null;
-      const p = lerProjecaoDepParaOModelo().then((r) => {
+      const p = lerProjecaoDepParaOModelo(6).then((r) => {
         corpo = r;
       });
       await vi.advanceTimersByTimeAsync(TIMEOUT_INTERRUPTOR_MS);
@@ -85,7 +85,7 @@ describe("lerProjecaoDepParaOModelo", () => {
 
   it("trava subida decimal sai INTEIRA e para CIMA (o campo Python é `int`)", async () => {
     getMock.mockResolvedValue({ ligada: true, pct_minimo: 40.2 });
-    expect(await lerProjecaoDepParaOModelo()).toEqual({ ligada: true, pct_minimo: 41 });
+    expect(await lerProjecaoDepParaOModelo(6)).toEqual({ ligada: true, pct_minimo: 41 });
   });
 });
 
@@ -102,6 +102,40 @@ describe("corpoDoTriggerModel", () => {
   it("os majoritários não levam o campo — e o corpo deles não muda", () => {
     for (const cargo of [1, 3, 5]) {
       expect(corpoDoTriggerModel(cargo, 1, "t", dep)).toEqual({ cargo, turno: 1, trigger_ts: "t" });
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spec 027 RF-287 — as assembleias (7 e 8) levam o campo, pela chave DELAS
+// ---------------------------------------------------------------------------
+
+describe("spec 027 — projecao_dep nos cargos 7 e 8", () => {
+  it.each([
+    7, 8,
+  ] as const)("cargo %s lê `interruptor-projecao-est`, nunca a do federal", async (cargo) => {
+    getMock.mockImplementation(async (chave: string) =>
+      chave === "interruptor-projecao-dep" ? { ligada: true } : undefined,
+    );
+    // Federal LIGADO, assembleias AUSENTE ⇒ o modelo das assembleias recebe DESLIGADA.
+    expect(await lerProjecaoDepParaOModelo(cargo)).toEqual({ ligada: false, pct_minimo: 25 });
+    expect(getMock.mock.calls.map((c) => c[0])).toEqual(["interruptor-projecao-est"]);
+  });
+
+  it.each([7, 8] as const)("cargo %s leva `projecao_dep` no corpo do POST", (cargo) => {
+    const est = { ligada: true, pct_minimo: 30 };
+    expect(corpoDoTriggerModel(cargo, 1, "t", est)).toEqual({
+      cargo,
+      turno: 1,
+      trigger_ts: "t",
+      projecao_dep: est,
+    });
+  });
+
+  it("um número fora da tabela não leva o campo (lido da tabela, não de uma lista)", () => {
+    const dep = { ligada: true, pct_minimo: 25 };
+    for (const cargo of [2, 4, 9, 99]) {
+      expect(corpoDoTriggerModel(cargo, 1, "t", dep)).not.toHaveProperty("projecao_dep");
     }
   });
 });

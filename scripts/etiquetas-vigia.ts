@@ -102,7 +102,7 @@ async function main(): Promise<void> {
     [gov, sen, dep] = await Promise.all([
       readProjection({ cargo: "gov", turno: turnoGov }),
       readProjection({ cargo: "sen", turno: 1 }),
-      readDeputadoProjection(),
+      readDeputadoProjection(6),
     ]);
   } catch (err) {
     console.log(

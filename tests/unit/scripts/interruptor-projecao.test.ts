@@ -56,7 +56,10 @@ function apiFalsa(opts: {
   valor?: unknown;
   falharPatch?: boolean;
   falharMeta?: boolean;
+  /** A chave que este store "tem". Default: a do federal. */
+  chave?: string;
 }) {
+  const chave = opts.chave ?? "interruptor-projecao-dep";
   const estado: { valor: unknown } = { valor: opts.valor };
   const chamadas: Chamada[] = [];
   const fetchFalso = vi.fn(async (url: string, init?: RequestInit) => {
@@ -68,9 +71,9 @@ function apiFalsa(opts: {
       if (opts.falharMeta) return new Response("{}", { status: 500 });
       return Response.json({ id: opts.id, slug: opts.slug, sizeInBytes: 2 });
     }
-    if (u.pathname === `/v1/edge-config/${opts.id}/item/interruptor-projecao-dep`) {
+    if (u.pathname === `/v1/edge-config/${opts.id}/item/${chave}`) {
       if (estado.valor === undefined) return new Response("{}", { status: 404 });
-      return Response.json({ key: "interruptor-projecao-dep", value: estado.valor });
+      return Response.json({ key: chave, value: estado.valor });
     }
     if (u.pathname === `/v1/edge-config/${opts.id}/items` && metodo === "PATCH") {
       if (opts.falharPatch) return new Response("boom", { status: 500 });
@@ -149,6 +152,9 @@ describe("interpretarArgs", () => {
       ["--confirmar"], // sem o id
       ["--confirmar", "sim"],
       ["--apagar"],
+      ["--cargo"], // sem o nome
+      ["--cargo", "municipal"],
+      ["--cargo", "6"], // pelo NOME, não pelo código
     ]) {
       expect(interpretarArgs(argv), argv.join(" ")).toHaveProperty("erro");
     }
@@ -156,7 +162,7 @@ describe("interpretarArgs", () => {
 });
 
 describe("montarValor", () => {
-  const base: ArgsInterruptor = { acao: "status", semPct: false, ensaio: false };
+  const base: ArgsInterruptor = { acao: "status", cargo: 6, semPct: false, ensaio: false };
   const agora = AGORA.toISOString();
   it("ligar/desligar gravam a decisão, com auditoria", () => {
     const ausente = { ligada: false, pct_minimo: 25, origem: "ausente" as const };
@@ -274,7 +280,9 @@ describe("executar — o store certo, ou nada", () => {
         },
       ],
     });
-    expect(d.linhas.join("\n")).toMatch(/Gravado e conferido: LIGADA/);
+    expect(d.linhas.join("\n")).toMatch(
+      /Gravado e conferido em interruptor-projecao-dep \(ecfg_\w+\): LIGADA/,
+    );
     // O token nunca é impresso.
     expect(d.linhas.join("\n")).not.toContain("segredo-do-token");
   });
@@ -348,5 +356,84 @@ describe("ambiente — lista BRANCA", () => {
       for (const k of Object.keys(process.env)) if (!(k in antes)) delete process.env[k];
       Object.assign(process.env, antes);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Spec 027 RF-287 — `--cargo estadual`: o interruptor das ASSEMBLEIAS
+// ---------------------------------------------------------------------------
+
+describe("--cargo — qual interruptor (spec 027 RF-287)", () => {
+  it("sem --cargo é o federal (6); estadual e distrital são a MESMA chave", () => {
+    expect(interpretarArgs([])).toMatchObject({ cargo: 6 });
+    expect(interpretarArgs(["--cargo", "federal"])).toMatchObject({ cargo: 6 });
+    expect(interpretarArgs(["--cargo", "estadual"])).toMatchObject({ cargo: 7 });
+    expect(interpretarArgs(["--cargo=Distrital"])).toMatchObject({ cargo: 8 });
+  });
+
+  it("🔴 --cargo estadual lê e grava `interruptor-projecao-est` — e NUNCA toca a do federal", async () => {
+    const api = apiFalsa({
+      id: PRODUCAO,
+      slug: "salacofre-edge-config",
+      chave: "interruptor-projecao-est",
+    });
+    const d = deps(
+      ["--cargo", "estadual", "--ligar", "--por", "dono", "--confirmar", PRODUCAO],
+      api,
+    );
+    expect(await executar(d)).toBe(0);
+
+    const [patch] = patches(api);
+    expect(patch?.corpo).toEqual({
+      items: [
+        {
+          operation: "upsert",
+          key: "interruptor-projecao-est",
+          value: { ligada: true, em: AGORA.toISOString(), por: "dono" },
+        },
+      ],
+    });
+    // Asserção NEGATIVA: nenhuma chamada — leitura ou escrita — na chave federal.
+    expect(api.chamadas.some((c) => c.caminho.includes("interruptor-projecao-dep"))).toBe(false);
+    expect(JSON.stringify(api.chamadas)).not.toContain("interruptor-projecao-dep");
+  });
+
+  it("a saída diz o NOME da chave e o store antes de qualquer confirmação", async () => {
+    const api = apiFalsa({
+      id: PRODUCAO,
+      slug: "salacofre-edge-config",
+      chave: "interruptor-projecao-est",
+    });
+    const d = deps(["--cargo", "distrital", "--desligar"], api);
+    expect(await executar(d)).toBe(0);
+    expect(patches(api)).toHaveLength(0);
+    const texto = d.linhas.join("\n");
+    expect(texto).toContain(`Store alvo: ${PRODUCAO}`);
+    expect(texto).toContain("Chave: interruptor-projecao-est");
+    expect(texto).toMatch(/ASSEMBLEIAS/);
+    // O comando exato para gravar menciona a chave e o store.
+    expect(d.linhas.at(-1)).toContain("interruptor-projecao-est");
+    expect(d.linhas.at(-1)).toContain(`--confirmar ${PRODUCAO}`);
+  });
+
+  it("o federal continua dizendo a SUA chave (a outra metade da mesma trava)", async () => {
+    const api = apiFalsa({ id: PRODUCAO, slug: "salacofre-edge-config" });
+    const d = deps([], api);
+    expect(await executar(d)).toBe(0);
+    expect(d.linhas.join("\n")).toContain("Chave: interruptor-projecao-dep");
+    expect(d.linhas.join("\n")).not.toContain("interruptor-projecao-est");
+  });
+
+  it("a trava do store de ensaio vale igual para a chave das assembleias", async () => {
+    const api = apiFalsa({
+      id: ENSAIO,
+      slug: "salacofre-edge-config-preview",
+      chave: "interruptor-projecao-est",
+    });
+    const d = deps(["--cargo", "estadual", "--desligar", "--confirmar", ENSAIO], api, {
+      EDGE_CONFIG: `https://edge-config.vercel.com/${ENSAIO}?token=leitura`,
+    });
+    expect(await executar(d)).toBe(3);
+    expect(patches(api)).toHaveLength(0);
   });
 });

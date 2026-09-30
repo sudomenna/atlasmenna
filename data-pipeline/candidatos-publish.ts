@@ -424,7 +424,8 @@ function parseListaCargos(raw: string): CargoTse[] {
   for (const item of raw.split(",")) {
     const s = item.trim();
     if (!s) continue;
-    // Código numérico do TSE (1/3/5/6) ou token de chave (pres/gov/sen/dep).
+    // Código numérico do TSE (1/3/5/6/7/8) ou token de chave
+    // (pres/gov/sen/dep/est/dis).
     // Lookup explícito nos dois casos — nada de `?? "pres"`, que é como um
     // valor não reconhecido viraria Presidente em silêncio.
     const n = Number(s);

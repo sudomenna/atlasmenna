@@ -19,7 +19,20 @@
  *   pnpm dep:projecao --ligar --sem-pct --confirmar ecfg_…  # volta à trava do modelo (25%)
  *   pnpm dep:projecao --ensaio --desligar --confirmar ecfg_…  # SÓ no store de ensaio
  *   ... --por "plantao-noite"                      # quem mexeu (auditoria; nunca publicado)
+ *   pnpm dep:projecao --cargo estadual ...         # a chave das ASSEMBLEIAS (7 e 8)
  * ```
+ *
+ * ## `--cargo` — qual interruptor (spec 027 RF-287, 2026-09-29)
+ *
+ * São DOIS interruptores: `interruptor-projecao-dep` (Deputado Federal) e
+ * `interruptor-projecao-est` (Deputado Estadual E Distrital — uma chave só
+ * para as 27 casas estaduais). Sem `--cargo`, o script opera o FEDERAL, como
+ * sempre operou e como o runbook documenta. `--cargo estadual` (ou
+ * `distrital`, que é a mesma chave) opera o das assembleias; `--cargo
+ * federal` é o explícito do padrão. Toda saída diz o NOME da chave junto do
+ * store — o "store errado" tem agora um irmão, a "chave errada", e a
+ * confirmação digitada só protege contra o primeiro se o operador vir o
+ * segundo.
  *
  * ---------------------------------------------------------------------------
  * 🔴 Por que o script existe, em vez de editar a chave no painel da Vercel
@@ -70,7 +83,8 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { interruptorProjecaoDepKey } from "@/lib/edge-config/keys";
+import type { CargoProporcional } from "@/lib/config/cargos";
+import { interruptorProjecaoKey } from "@/lib/edge-config/keys";
 import {
   type InterruptorProjecaoLido,
   interpretarInterruptor,
@@ -116,8 +130,28 @@ export function classificarStore(id: string, slug: string | null): PapelStore {
 // Argumentos
 // ---------------------------------------------------------------------------
 
+/**
+ * `--cargo` → o cargo cujo interruptor se opera. `estadual` e `distrital` dão
+ * a MESMA chave (`interruptor-projecao-est`); o cargo guardado é o 7 para o
+ * texto dizer "assembleias". Sem `--cargo`, o federal (6).
+ */
+const CARGO_POR_NOME: Readonly<Record<string, CargoProporcional>> = {
+  federal: 6,
+  estadual: 7,
+  distrital: 8,
+};
+
+/** O que a chave governa, para o operador ler antes de confirmar. */
+export function descreverAlvoDoInterruptor(cargo: CargoProporcional): string {
+  return cargo === 6
+    ? "projeção de Deputado FEDERAL"
+    : "projeção das ASSEMBLEIAS — Deputado Estadual E Distrital (uma chave só)";
+}
+
 export interface ArgsInterruptor {
   acao: "status" | "ligar" | "desligar" | "ajustar";
+  /** `--cargo federal|estadual|distrital` — qual interruptor. Sem a flag: 6. */
+  cargo: CargoProporcional;
   /** `--pct N` — trava em % apurado; só SOBE (25–100). */
   pct?: number;
   /** `--sem-pct` — remove o `pct_minimo` (volta à trava do modelo). */
@@ -132,6 +166,7 @@ export interface ArgsInterruptor {
 export function interpretarArgs(argv: readonly string[]): ArgsInterruptor | { erro: string } {
   const args: ArgsInterruptor = {
     acao: "status",
+    cargo: 6,
     semPct: false,
     ensaio: false,
   };
@@ -159,6 +194,19 @@ export function interpretarArgs(argv: readonly string[]): ArgsInterruptor | { er
           };
         }
         args.confirmar = bruto;
+        break;
+      }
+      case "--cargo": {
+        const bruto = valor()?.trim().toLowerCase();
+        const cargo = bruto !== undefined ? CARGO_POR_NOME[bruto] : undefined;
+        if (cargo === undefined) {
+          return {
+            erro:
+              `--cargo precisa de federal, estadual ou distrital (recebido: ${bruto ?? "nada"}). ` +
+              "Estadual e distrital são a MESMA chave (interruptor-projecao-est).",
+          };
+        }
+        args.cargo = cargo;
         break;
       }
       case "--ensaio":
@@ -318,8 +366,9 @@ async function lerChave(
   deps: Dependencias,
   id: string,
   token: string,
+  chave: string,
 ): Promise<LeituraDaChave | { erroHttp: string }> {
-  const url = vercelApiUrl(`/v1/edge-config/${id}/item/${interruptorProjecaoDepKey()}`);
+  const url = vercelApiUrl(`/v1/edge-config/${id}/item/${chave}`);
   let res: Response;
   try {
     res = await deps.fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -357,8 +406,8 @@ export async function executar(deps: Dependencias): Promise<number> {
   if ("erro" in args) {
     out(`✖ ${args.erro}`);
     out(
-      "Uso: pnpm dep:projecao [--ligar|--desligar] [--pct N|--sem-pct] [--por R] " +
-        "[--confirmar <id do store>] [--ensaio]",
+      "Uso: pnpm dep:projecao [--cargo federal|estadual] [--ligar|--desligar] " +
+        "[--pct N|--sem-pct] [--por R] [--confirmar <id do store>] [--ensaio]",
     );
     return 64;
   }
@@ -390,6 +439,7 @@ export async function executar(deps: Dependencias): Promise<number> {
     return 1;
   }
 
+  const chave = interruptorProjecaoKey(args.cargo);
   const papel = classificarStore(id, slug);
   const rotulo: Record<PapelStore, string> = {
     producao: "PRODUÇÃO — o store que o site público lê",
@@ -397,6 +447,7 @@ export async function executar(deps: Dependencias): Promise<number> {
     desconhecido: "DESCONHECIDO — não é nenhum dos dois stores registrados no runbook",
   };
   out(`Store alvo: ${id} (${slug ?? "sem nome"}) — ${rotulo[papel]}`);
+  out(`Chave: ${chave} — ${descreverAlvoDoInterruptor(args.cargo)}`);
 
   // 2. A trava do store errado — vale também para só LER: um "está ligada"
   //    lido no store de ensaio é a mesma mentira que um desligar gravado lá.
@@ -417,9 +468,9 @@ export async function executar(deps: Dependencias): Promise<number> {
   }
 
   // 3. O estado atual.
-  const atual = await lerChave(deps, id, token);
+  const atual = await lerChave(deps, id, token, chave);
   if ("erroHttp" in atual) {
-    out(`✖ não consegui ler a chave ${interruptorProjecaoDepKey()}: ${atual.erroHttp}`);
+    out(`✖ não consegui ler a chave ${chave}: ${atual.erroHttp}`);
     return 1;
   }
   out(`Estado atual: ${descreverEstado(atual)}`);
@@ -433,7 +484,7 @@ export async function executar(deps: Dependencias): Promise<number> {
   }
   out(`Valor a gravar: ${JSON.stringify(valor)}`);
   if (args.confirmar === undefined) {
-    out(`Nada gravado. Para gravar em ${id}, repita com --confirmar ${id}`);
+    out(`Nada gravado. Para gravar ${chave} em ${id}, repita com --confirmar ${id}`);
     return 0;
   }
   if (args.confirmar !== id) {
@@ -450,7 +501,7 @@ export async function executar(deps: Dependencias): Promise<number> {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        items: [{ operation: "upsert", key: interruptorProjecaoDepKey(), value: valor }],
+        items: [{ operation: "upsert", key: chave, value: valor }],
       }),
     });
     if (!res.ok) {
@@ -464,7 +515,7 @@ export async function executar(deps: Dependencias): Promise<number> {
   }
 
   // 6. Relê e confere.
-  const depois = await lerChave(deps, id, token);
+  const depois = await lerChave(deps, id, token, chave);
   if (
     "erroHttp" in depois ||
     depois.lido.origem !== "chave" ||
@@ -478,11 +529,14 @@ export async function executar(deps: Dependencias): Promise<number> {
     );
     return 1;
   }
-  out(`✔ Gravado e conferido: ${descreverEstado(depois)}`);
+  out(`✔ Gravado e conferido em ${chave} (${id}): ${descreverEstado(depois)}`);
   out(
     valor.ligada
-      ? "LIGAR é lento: a projeção só aparece quando o modelo rodar o próximo ciclo de " +
+      ? args.cargo === 6
+        ? "LIGAR é lento: a projeção só aparece quando o modelo rodar o próximo ciclo de " +
           "Deputado (volta completa de 30 min) com a trava aberta."
+        : "LIGAR é lento: a projeção das assembleias só aparece quando o modelo rodar o " +
+          "próximo ciclo delas com a trava aberta."
       : "DESLIGAR é rápido: a tela deixa de mostrar a projeção em até ~60 s (cache das " +
           "páginas e do CDN) — confira na página.",
   );

@@ -47,7 +47,8 @@
  *   projection-archive-<cargo>-t<turno>      projection-archive-pres-t1
  *   projection-current                       (alias dinâmico legado, S04)
  *   projection-uf-<SIGLA>                    (alias legado por UF, S04)
- *   interruptor-projecao-dep                 (interruptor da projeção de Deputado, spec 026)
+ *   interruptor-projecao-dep                 (interruptor da projeção de Deputado Federal, spec 026)
+ *   interruptor-projecao-est                 (interruptor das assembleias — cargos 7 E 8, spec 027)
  * ```
  *
  * A **decisão de fundo do ADR-0012 permanece intacta**: chaves nomeadas por
@@ -69,6 +70,7 @@
  */
 
 import type { Cargo, Turno } from "@/lib/config/calendar";
+import type { CargoProporcional } from "@/lib/config/cargos";
 
 // ---------------------------------------------------------------------------
 // O padrão documentado
@@ -231,12 +233,23 @@ export function legacyUfAliasKey(sigla: string): string {
 
 /**
  * Nome da chave do interruptor (design 026 § 2.10). Constante, e não
- * construída a partir de cargo:
- * existe UMA projeção com trava e interruptor (a do cargo 6). Se um dia houver
- * outra, ela ganha a própria chave aqui — não um parâmetro que abra a porta
- * para uma chave que ninguém lê.
+ * construída a partir de cargo: cada interruptor tem o seu NOME escrito aqui,
+ * por extenso — não um parâmetro que abra a porta para uma chave que ninguém
+ * lê. Desde 2026-09-29 são DOIS (ver {@link INTERRUPTOR_PROJECAO_EST_KEY}).
  */
 export const INTERRUPTOR_PROJECAO_DEP_KEY = "interruptor-projecao-dep";
+
+/**
+ * Interruptor da projeção das **assembleias** — Deputado Estadual (7) E
+ * Deputado Distrital (8), uma chave só para os dois (spec 027 RF-287,
+ * ADR-0066). Decisão do dono: a projeção das casas estaduais liga e desliga
+ * junto, e separada da federal — ligar a federal não liga as assembleias.
+ *
+ * Mesma regra da chave do federal: falha fechada nos dois sentidos, AUSENTE =
+ * desligada. Escrita por `pnpm dep:projecao --cargo estadual`
+ * (`scripts/interruptor-projecao.ts`). O modelo Python lê a MESMA string.
+ */
+export const INTERRUPTOR_PROJECAO_EST_KEY = "interruptor-projecao-est";
 
 /**
  * Chave do interruptor da projeção de Deputado Federal:
@@ -260,6 +273,35 @@ export const INTERRUPTOR_PROJECAO_DEP_KEY = "interruptor-projecao-dep";
  */
 export function interruptorProjecaoDepKey(): string {
   return assertValidGlobalConfigKey(INTERRUPTOR_PROJECAO_DEP_KEY, "interruptorProjecaoDepKey");
+}
+
+/** Chave do interruptor das assembleias: `interruptor-projecao-est` (cargos 7 e 8). */
+export function interruptorProjecaoEstKey(): string {
+  return assertValidGlobalConfigKey(INTERRUPTOR_PROJECAO_EST_KEY, "interruptorProjecaoEstKey");
+}
+
+/**
+ * A chave do interruptor que governa a projeção deste cargo proporcional:
+ * 6 → `interruptor-projecao-dep`; 7 e 8 → `interruptor-projecao-est`.
+ *
+ * O `cargo` é obrigatório e o `switch` não tem `default` que escolha: um cargo
+ * proporcional novo sem interruptor decidido é erro de compilação (`never`) e,
+ * se escapar por um `as`, lança — nunca cai na chave do federal. É o conversor
+ * de cargo com default silencioso que este repositório já pagou três vezes; a
+ * versão dele aqui ligaria a projeção das assembleias pelo interruptor federal.
+ */
+export function interruptorProjecaoKey(cargo: CargoProporcional): string {
+  switch (cargo) {
+    case 6:
+      return interruptorProjecaoDepKey();
+    case 7:
+    case 8:
+      return interruptorProjecaoEstKey();
+    default: {
+      const naoCoberto: never = cargo;
+      throw new Error(`[keys] cargo sem interruptor de projeção: ${String(naoCoberto)}`);
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------

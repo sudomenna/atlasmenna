@@ -22,7 +22,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { CARGOS_TSE, type CargoTse } from "@/lib/config/cargos";
+import { CARGOS_TSE, type CargoTse, parseCargoSegment } from "@/lib/config/cargos";
 import {
   avaliarFrescorDado,
   CADENCIA_SEGUNDOS,
@@ -192,6 +192,10 @@ describe("limiar de dado parado — por cargo, derivado da cadência (ADR-0038 D
     expect(limiarDadoParadoSegundos(6)).toBe(5400);
     expect(limiarDadoParadoSegundos(6)).not.toBe(limiarDadoParadoSegundos(5));
     expect(limiarDadoParadoSegundos(6)).not.toBe(limiarDadoParadoSegundos(1));
+    // Spec 027 Fase 1: as assembleias leem um resumo por casa numa invocação só
+    // (sem fatia), a cada 5 min — o limiar é o do Senador, não o do federal.
+    expect(limiarDadoParadoSegundos(7)).toBe(900);
+    expect(limiarDadoParadoSegundos(8)).toBe(900);
   });
 
   it("(b) dispara ALÉM do limiar, não aquém — e o limiar exato ainda é tolerado", () => {
@@ -294,11 +298,12 @@ describe("a cadência da tabela bate com os crons reais de `vercel.ts` (ADR-0038
     const m = cron.path.match(/^\/api\/ingest\/([a-z-]+)(?:\/(\d+))?$/);
     if (!m) continue;
 
-    const slug = m[1] as string;
-    const cargo = { presidente: 1, governador: 3, senador: 5, "deputado-federal": 6 }[slug] as
-      | CargoTse
-      | undefined;
-    if (!cargo) continue;
+    // Pelo `parseCargoSegment` da tabela canônica — o mesmo que a rota usa —,
+    // e não por um mapa de slugs escrito aqui: o mapa à mão ignorava em
+    // silêncio qualquer cargo novo (spec 027 acrescentou 7 e 8).
+    const cargo = parseCargoSegment(m[1] as string);
+    expect(cargo, cron.path).not.toBeNull();
+    if (cargo === null) continue;
 
     const periodo = periodoEmMinutos(cron.schedule.split(" ")[0] as string);
     const anterior = observado.get(cargo);
@@ -311,14 +316,20 @@ describe("a cadência da tabela bate com os crons reais de `vercel.ts` (ADR-0038
     fatias.get(cargo)?.add(m[2] ?? "unica");
   }
 
-  it("(a) os quatro cargos aparecem nos crons", () => {
-    expect([...observado.keys()].sort()).toEqual([1, 3, 5, 6]);
+  it("(a) os seis cargos aparecem nos crons", () => {
+    expect([...observado.keys()].sort()).toEqual([1, 3, 5, 6, 7, 8]);
+    expect([...observado.keys()].sort()).toEqual([...CARGOS_TSE].sort());
   });
 
-  it("(b) Presidente, Governador e Senador: a cadência é o próprio período do cron", () => {
+  it("(b) Presidente, Governador, Senador e as assembleias: a cadência é o próprio período do cron", () => {
     expect(observado.get(1)).toBe(CADENCIA_SEGUNDOS[1] / 60);
     expect(observado.get(3)).toBe(CADENCIA_SEGUNDOS[3] / 60);
     expect(observado.get(5)).toBe(CADENCIA_SEGUNDOS[5] / 60);
+    // Spec 027 Fase 1: 7 e 8 sem fatia, um resumo por casa a cada 5 min.
+    expect(observado.get(7)).toBe(CADENCIA_SEGUNDOS[7] / 60);
+    expect(observado.get(8)).toBe(CADENCIA_SEGUNDOS[8] / 60);
+    expect(fatias.get(7)?.size).toBe(1);
+    expect(fatias.get(8)?.size).toBe(1);
   });
 
   it("(c) Deputado Federal: a cadência é a VOLTA COMPLETA das 6 fatias, não o intervalo entre elas", () => {

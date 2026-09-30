@@ -159,14 +159,35 @@ describe("/candidatos — entrada inválida degrada fechado (RF-147)", () => {
     expect(doc.querySelector("[data-testid='candidatos-filtro-invalido']")).not.toBeNull();
   });
 
-  it("(f) `?cargo=7` (Deputado Estadual) → a rota não revela cargo fora do produto", async () => {
-    const { doc, markup } = await render({ cargo: "7" });
+  it("(f) `?cargo=2` (Vice-Presidente) → a rota não revela cargo fora do produto", async () => {
+    // Até 29/09 o exemplo era `?cargo=7`; desde a spec 027 o 7 é do produto.
+    const { doc, markup } = await render({ cargo: "2" });
 
     expect(readCandidatosUfMock).not.toHaveBeenCalled();
     expect(doc.querySelector("[data-testid='candidatos-filtro-invalido']")).not.toBeNull();
     // Asserção NEGATIVA: nem o rótulo do cargo que não cobrimos aparece.
-    expect(markup).not.toContain("Estadual");
-    expect(markup).not.toContain("Distrital");
+    expect(markup).not.toContain("Vice");
+  });
+
+  it.each([
+    { cargo: "7", uf: "SP", token: "est", rotulo: "Deputado Estadual" },
+    { cargo: "8", uf: "DF", token: "dis", rotulo: "Deputado Distrital" },
+    { cargo: "deputado-estadual", uf: "RJ", token: "est", rotulo: "Deputado Estadual" },
+  ] as const)("(f2) RF-288: `?cargo=$cargo&uf=$uf` é aceito e lê a fatia `$token` — nunca a do federal", async ({
+    cargo,
+    uf,
+    token,
+    rotulo,
+  }) => {
+    readCandidatosUfMock.mockResolvedValue(ok(slice({ uf, cargo: token })));
+    const { doc, markup } = await render({ cargo, uf });
+
+    expect(doc.querySelector("[data-testid='candidatos-filtro-invalido']")).toBeNull();
+    // O token é o da casa pedida — a trava que separa SP estadual de SP federal.
+    expect(readCandidatosUfMock).toHaveBeenCalledWith(uf, token);
+    expect(readCandidatosUfMock).not.toHaveBeenCalledWith(uf, "dep");
+    // O seletor oferece a casa, com o rótulo da tabela canônica.
+    expect(markup).toContain(rotulo);
   });
 });
 

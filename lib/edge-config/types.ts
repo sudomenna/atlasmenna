@@ -55,17 +55,17 @@
  *     não admite dois-pontos. Nenhuma chave é montada à mão — todas vêm de
  *     `lib/edge-config/keys.ts`, que também valida.
  */
-import type { CargoTse } from "@/lib/config/cargos";
+import type { CargoProporcional, CargoTse } from "@/lib/config/cargos";
 
 // ---------------------------------------------------------------------------
 // Enums / unions (mantêm-se "magic-number-free" no resto do código)
 // ---------------------------------------------------------------------------
 
-/** Cargo TSE — só os 2 que o SalaCofre cobre (eleição geral 2026). */
+/** Cargo TSE — os que o SalaCofre cobre (eleição geral 2026; 7 e 8 desde a spec 027). */
 // Reexporta o tipo canônico (`lib/config/cargos.ts`) em vez de redeclará-lo:
 // até 2026-09-11 esta linha era `1 | 3` e vivia dessincronizada de
 // `lib/tse/targets.ts`, que tinha a mesma união repetida 12 vezes.
-export type Cargo = CargoTse; // 1 = Presidente, 3 = Governador, 5 = Senador, 6 = Deputado Federal
+export type Cargo = CargoTse; // 1 Presidente, 3 Governador, 5 Senador, 6/7/8 Deputado Federal/Estadual/Distrital
 
 /** Turno eleitoral. */
 export type Turno = 1 | 2;
@@ -2013,7 +2013,13 @@ export interface UfPayloadInput extends EdgePayloadUf {
  * A consequência é que o read path precisa distinguir o cargo. A trava está
  * em `lib/edge-config/reader.ts`: `readProjection` só aceita cargo
  * majoritário (`CargoMajoritario`), então `readProjection({ cargo: "dep" })`
- * não compila. Quem quer este payload chama `readDeputadoProjection()`.
+ * não compila. Quem quer este payload chama `readDeputadoProjection(cargo)`.
+ *
+ * Desde 2026-09-29 (spec 027) o MESMO envelope serve os três proporcionais:
+ * 6 (Câmara dos Deputados, `projection-current-dep-t1`), 7 (as 26
+ * Assembleias, `projection-current-est-t1`) e 8 (Câmara Legislativa do DF,
+ * `projection-current-dis-t1`). O `cargo` é o discriminante que decide a chave
+ * — por isso ele é `CargoProporcional`, e não mais o literal `6`.
  *
  * ## A visão nacional é soma nossa, não um agregado do TSE (design 017, D3)
  *
@@ -2048,13 +2054,17 @@ export interface EdgePayloadDeputado {
    * sinal nenhum — 27 unidades não acusam cobertura parcial.
    */
   pares_atrasados?: number | null;
-  /** Discriminante do payload. Sempre 6 — é o que separa este tipo de `EdgePayload`. */
-  cargo: 6;
+  /**
+   * Discriminante do payload — 6, 7 ou 8 (`CargoProporcional`). Decide a chave
+   * de Global Config e o prefixo do Blob (`writeDeputadoProjection`), e é o que
+   * separa este tipo de `EdgePayload`.
+   */
+  cargo: CargoProporcional;
   /** Deputado Federal é turno único (`temSegundoTurno: false`). */
   turno: 1;
-  /** % apurado somado sobre as 27 UFs (0–100). */
+  /** % apurado somado sobre as UFs do cargo (27; 26 no estadual; só o DF no distrital) (0–100). */
   pct_apurado_total: number;
-  /** UFs com pelo menos um boletim (0–27). */
+  /** UFs com pelo menos um boletim (0 até o nº de UFs do cargo — `ufsDoCargo`). */
   ufs_apuradas: number;
   /**
    * RF-128 — cadência do cron deste cargo, em minutos, **declarada pelo
@@ -2456,6 +2466,18 @@ export interface DeputadoDivergencia {
  * RF-269 — a Conferência de verdade (design § 2.8). A frase "batem com o TSE"
  * só existe com `estado: "confere"`, e nomeia o horário do boletim.
  */
+/**
+ * Uma comparação que a Conferência NÃO pôde fazer neste ciclo, e por quê
+ * (spec 027, design § 3.2). Hoje o único motivo é `granularidade_uf`: com o
+ * cargo lido pelo resumo da UF (Fase 1 das assembleias), não há zonas para
+ * somar eleitorado nem votos válidos por conta própria — e a comparação sai
+ * como "não comparado", **nunca** como "confere" (RF-269 da 026 vale igual).
+ */
+export interface DeputadoNaoComparado {
+  comparacao: "eleitorado" | "votos_validos";
+  motivo: "granularidade_uf";
+}
+
 export interface DeputadoConferencia {
   estado: "confere" | "diverge" | "sem_dado_tse";
   /** Hora do boletim do agregado comparado. `null` sem agregado. */
@@ -2465,6 +2487,12 @@ export interface DeputadoConferencia {
   /** O que foi DE FATO comparado neste ciclo. A frase da tela sai daqui. */
   comparou: DeputadoComparacao[];
   divergencias: DeputadoDivergencia[];
+  /**
+   * Spec 027 (design § 3.2) — o que NÃO foi comparado, com o motivo. Opcional
+   * e aditivo: ausente num objeto anterior à spec 027 (ou quando tudo foi
+   * comparado). O leitor descarta SÓ este campo se ele vier malformado.
+   */
+  nao_comparou?: DeputadoNaoComparado[];
 }
 
 /**

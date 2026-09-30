@@ -270,6 +270,31 @@ describe("writeDeputadoProjection — a chave", () => {
 
     expect(keysWritten(mock)).toEqual(["projection-current-dep-t1"]);
   });
+
+  it.each([
+    { cargo: 7, chave: "projection-current-est-t1" },
+    { cargo: 8, chave: "projection-current-dis-t1" },
+  ] as const)("spec 027 RF-279: payload de cargo $cargo grava em $chave — e não na do federal", async ({
+    cargo,
+    chave,
+  }) => {
+    const mock = mockVercelApi();
+    await writeDeputadoProjection(payloadDeputado({ cargo }));
+    expect(keysWritten(mock)).toEqual([chave]);
+    expect(keysWritten(mock)).not.toContain("projection-current-dep-t1");
+  });
+
+  it("🔴 payload de cargo que não é proporcional LANÇA antes de gravar qualquer coisa", async () => {
+    // A rota chama o escritor com `any`; o tipo não protege ali. Sem esta
+    // trava, um cargo 1 viraria `projection-current-pres-t1` com o envelope
+    // proporcional — a agulha presidencial sobrescrita pela Câmara.
+    const mock = mockVercelApi();
+    await expect(
+      writeDeputadoProjection(payloadDeputado({ cargo: 1 as unknown as 6 })),
+    ).rejects.toThrow(/não é proporcional/);
+    expect(keysWritten(mock)).toEqual([]);
+    expect(putJsonMock).not.toHaveBeenCalled();
+  });
 });
 
 // ---------------------------------------------------------------------------

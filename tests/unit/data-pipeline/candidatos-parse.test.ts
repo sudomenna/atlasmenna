@@ -281,12 +281,15 @@ describe("mapearCandidato — o recorte de colunas (RF-140, constituição § 5)
 // ---------------------------------------------------------------------------
 
 describe("unirCandidaturas — descarte de cargo fora do produto", () => {
+  // Até 29/09 os exemplos de "fora do produto" eram 7 e 8; desde a spec 027
+  // (RF-288) eles são do produto, e o papel passou para 9/10 (suplentes de
+  // Senador) e 2 (vice) — que continuam existindo no CSV do TSE.
   const principais = [
     linhaPrincipal({ SQ_CANDIDATO: "1", CD_CARGO: "1", SG_UF: "BR" }),
     linhaPrincipal({ SQ_CANDIDATO: "2", CD_CARGO: "6" }),
-    linhaPrincipal({ SQ_CANDIDATO: "3", CD_CARGO: "7" }),
-    linhaPrincipal({ SQ_CANDIDATO: "4", CD_CARGO: "7" }),
-    linhaPrincipal({ SQ_CANDIDATO: "5", CD_CARGO: "8" }),
+    linhaPrincipal({ SQ_CANDIDATO: "3", CD_CARGO: "9" }),
+    linhaPrincipal({ SQ_CANDIDATO: "4", CD_CARGO: "9" }),
+    linhaPrincipal({ SQ_CANDIDATO: "5", CD_CARGO: "10" }),
     linhaPrincipal({ SQ_CANDIDATO: "6", CD_CARGO: "2" }),
   ];
   const complementares = ["1", "2", "3", "4", "5", "6"].map((sq) =>
@@ -294,13 +297,13 @@ describe("unirCandidaturas — descarte de cargo fora do produto", () => {
   );
 
   // MUTAÇÃO ALVO: descartar em silêncio (sem incrementar o contador).
-  it("descarta 7, 8 e 2 e CONTA cada descarte por código de cargo", () => {
+  it("descarta 9, 10 e 2 e CONTA cada descarte por código de cargo", () => {
     const r = unirCandidaturas(principais, H_PRINCIPAL, complementares, H_COMPLEMENTAR);
     expect(r.linhas.map((l) => l.cargo)).toEqual([1, 6]);
     expect([...r.descartadosPorCargo.entries()].sort((a, b) => a[0] - b[0])).toEqual([
       [2, 1],
-      [7, 2],
-      [8, 1],
+      [9, 2],
+      [10, 1],
     ]);
     expect(r.lidas).toBe(6);
   });
@@ -309,7 +312,35 @@ describe("unirCandidaturas — descarte de cargo fora do produto", () => {
     const semPar = complementares.filter((c) => c[0] !== "3");
     const r = unirCandidaturas(principais, H_PRINCIPAL, semPar, H_COMPLEMENTAR);
     expect(r.linhas).toHaveLength(2);
-    expect(r.descartadosPorCargo.get(7)).toBe(2);
+    expect(r.descartadosPorCargo.get(9)).toBe(2);
+  });
+
+  it("RF-288: Deputado Estadual (7) e Distrital (8) ENTRAM — e deixam de ser descartados", () => {
+    const comAssembleias = [
+      ...principais,
+      linhaPrincipal({ SQ_CANDIDATO: "20", CD_CARGO: "7", SG_UF: "SP" }),
+      linhaPrincipal({ SQ_CANDIDATO: "21", CD_CARGO: "8", SG_UF: "DF" }),
+    ];
+    const r = unirCandidaturas(
+      comAssembleias,
+      H_PRINCIPAL,
+      [...complementares, ...["20", "21"].map((sq) => linhaComplementar({ SQ_CANDIDATO: sq }))],
+      H_COMPLEMENTAR,
+    );
+    expect(r.linhas.map((l) => l.cargo)).toEqual([1, 6, 7, 8]);
+    // Asserção NEGATIVA: nem 7 nem 8 aparecem no contador de descarte.
+    expect(r.descartadosPorCargo.has(7)).toBe(false);
+    expect(r.descartadosPorCargo.has(8)).toBe(false);
+  });
+
+  it("RF-288: um cargo 7 sem par no complementar DERRUBA — agora ele é do produto", () => {
+    const comEstadual = [
+      ...principais,
+      linhaPrincipal({ SQ_CANDIDATO: "20", CD_CARGO: "7", SG_UF: "SP" }),
+    ];
+    expect(() =>
+      unirCandidaturas(comEstadual, H_PRINCIPAL, complementares, H_COMPLEMENTAR),
+    ).toThrowError(/Join quebrado/);
   });
 
   it("mas um cargo DO produto sem par derruba", () => {
@@ -324,7 +355,7 @@ describe("unirCandidaturas — descarte de cargo fora do produto", () => {
       cargo: 1,
     });
     expect(r.linhas).toHaveLength(1);
-    expect(r.descartadosPorFiltro).toBe(1); // o cargo 6; 7/8/2 caem por cargo
+    expect(r.descartadosPorFiltro).toBe(1); // o cargo 6; 9/10/2 caem por cargo
   });
 
   it("partidos saem do universo INTEIRO, antes do filtro de cargo", () => {
@@ -451,7 +482,7 @@ async function lerFixture(path: string): Promise<string[][]> {
 }
 
 describe("fixture real do TSE (42 linhas de 12/09/2026)", () => {
-  it("passa pelo parser inteiro e produz só os quatro cargos do produto", async () => {
+  it("passa pelo parser inteiro e produz só os cargos do produto (7 e 8 incluídos, RF-288)", async () => {
     const [hA, hB] = await Promise.all([
       readCsvHeader(FIXTURE_PRINCIPAL),
       readCsvHeader(FIXTURE_COMPLEMENTAR),
@@ -464,9 +495,10 @@ describe("fixture real do TSE (42 linhas de 12/09/2026)", () => {
     expect(b).toHaveLength(42);
 
     const r = unirCandidaturas(a, hA, b, hB);
-    expect(new Set(r.linhas.map((l) => l.cargo))).toEqual(new Set([1, 3, 5, 6]));
-    // Cargos 2, 7 e 8 entraram na fixture de propósito e são descartados E contados.
-    expect([...r.descartadosPorCargo.keys()].sort((x, y) => x - y)).toEqual([2, 7, 8]);
+    // Desde a spec 027 (RF-288) os cargos 7 e 8 são do produto: as linhas deles
+    // na fixture passam a entrar. O 2 (vice) continua descartado E contado.
+    expect(new Set(r.linhas.map((l) => l.cargo))).toEqual(new Set([1, 3, 5, 6, 7, 8]));
+    expect([...r.descartadosPorCargo.keys()].sort((x, y) => x - y)).toEqual([2]);
     expect(r.linhas.length + [...r.descartadosPorCargo.values()].reduce((x, y) => x + y, 0)).toBe(
       42,
     );

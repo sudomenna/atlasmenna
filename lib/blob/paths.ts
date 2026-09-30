@@ -67,6 +67,7 @@
  */
 
 import type { Cargo, Turno } from "@/lib/config/calendar";
+import { type CargoProporcional, cargoExisteNaUf, cargoInfo } from "@/lib/config/cargos";
 
 // ---------------------------------------------------------------------------
 // Segmentos
@@ -188,10 +189,70 @@ export function ufDetailBlobPathname(sigla: string, cargo: Cargo, turno: Turno):
 }
 
 /**
- * Drill-down por UF de Deputado Federal (ADR-0026).
+ * O primeiro segmento do caminho de Blob de um cargo proporcional (spec 027
+ * RF-279, ADR-0066):
  *
- * `deputado/uf/<SIGLA>.json` — sem cargo nem turno: Deputado se decide em turno
- * único e não divide caminho com nenhuma outra corrida.
+ *   6 → `deputado`            (Deputado Federal — INALTERADO desde 2026-09-12)
+ *   7 → `deputado-estadual`   (26 Assembleias)
+ *   8 → `deputado-distrital`  (Câmara Legislativa do DF)
+ *
+ * 🔴 Sem cargo no caminho, o objeto de SP estadual seria gravado em
+ * `deputado/uf/SP.json` — POR CIMA do de SP federal, com JSON válido e sem
+ * erro. O federal fica onde sempre esteve: renomear o prefixo dele obrigaria a
+ * republicar os 27 objetos e a mudar o servidor falso dos portões às vésperas
+ * de 04/10, por nada.
+ *
+ * `switch` sem `default` que escolha: um cargo proporcional novo sem prefixo
+ * decidido é erro de compilação (`never`) e, se escapar por um `as`, lança.
+ *
+ * Exportado para o escritor nomear as falhas no log pelo MESMO prefixo do
+ * caminho (`deputado/uf-lista/SP` para o federal, como antes da spec 027).
+ */
+export function prefixoBlobDeputado(
+  cargo: CargoProporcional,
+  context = "prefixoBlobDeputado",
+): string {
+  switch (cargo) {
+    case 6:
+      return "deputado";
+    case 7:
+      return "deputado-estadual";
+    case 8:
+      return "deputado-distrital";
+    default: {
+      const naoCoberto: never = cargo;
+      throw new Error(
+        `cargo sem caminho de Blob de Deputado (origem: ${context}): ${String(naoCoberto)}`,
+      );
+    }
+  }
+}
+
+/**
+ * Valida que a corrida do cargo existe na UF (`ufsDoCargo`) antes de montar o
+ * caminho: `deputado-distrital/uf/SP.json` e `deputado-estadual/uf/DF.json` não
+ * são objetos que existam — montar um deles é erro de quem chamou, e lançar
+ * aqui impede tanto a gravação quanto a leitura de um endereço fantasma
+ * (spec 027 RF-278).
+ */
+function siglaDoCargo(cargo: CargoProporcional, sigla: string, context: string): string {
+  const uf = normaliseSigla(sigla, context);
+  if (!cargoExisteNaUf(cargo, uf)) {
+    throw new Error(
+      `UF sem corrida de ${cargoInfo(cargo).label} (origem: ${context}): "${uf}" — ` +
+        `ver ufsDoCargo em lib/config/cargos.ts.`,
+    );
+  }
+  return uf;
+}
+
+/**
+ * Drill-down por UF de um cargo proporcional (ADR-0026; spec 027 RF-279).
+ *
+ * `<prefixo>/uf/<SIGLA>.json` — `deputado/uf/SP.json` (federal),
+ * `deputado-estadual/uf/SP.json`, `deputado-distrital/uf/DF.json`. Sem turno:
+ * os três se decidem em turno único. O cargo é **obrigatório, sem default**
+ * (ver {@link prefixoBlobDeputado}).
  *
  * Nasceu antes do consumidor, e de propósito: o ADR-0032 exige que os dois
  * recursos saiam do mesmo esquema, e um construtor que nasce junto do
@@ -205,16 +266,20 @@ export function ufDetailBlobPathname(sigla: string, cargo: Cargo, turno: Turno):
  * ~6.110 alvos), varrida em 6 fatias a cada 5 min — **volta completa em 30
  * min**, não mais 15.
  */
-export function deputadoUfBlobPathname(sigla: string): string {
-  const uf = normaliseSigla(sigla, "deputadoUfBlobPathname");
-  return blobPathname(["deputado", "uf", uf], "deputadoUfBlobPathname");
+export function deputadoUfBlobPathname(cargo: CargoProporcional, sigla: string): string {
+  const ctx = "deputadoUfBlobPathname";
+  const prefixo = prefixoBlobDeputado(cargo, ctx);
+  const uf = siglaDoCargo(cargo, sigla, ctx);
+  return blobPathname([prefixo, "uf", uf], ctx);
 }
 
 /**
- * Lista RESTANTE de candidaturas de Deputado Federal de uma UF — os ranks
+ * Lista RESTANTE de candidaturas de um cargo proporcional numa UF — os ranks
  * **61 em diante** de cada agremiação (spec 026 RF-260, ADR-0065).
  *
- * `deputado/uf-lista/<SIGLA>.json` — ex. `deputado/uf-lista/SP.json`.
+ * `<prefixo>/uf-lista/<SIGLA>.json` — ex. `deputado/uf-lista/SP.json` (federal,
+ * inalterado), `deputado-estadual/uf-lista/SP.json`,
+ * `deputado-distrital/uf-lista/DF.json` (spec 027 RF-279). Cargo obrigatório.
  *
  * Objeto próprio, e não mais um campo de `deputado/uf/<SIGLA>.json`, porque a
  * página não os usa no primeiro render: os 60 primeiros de cada agremiação já
@@ -228,9 +293,11 @@ export function deputadoUfBlobPathname(sigla: string): string {
  * `deputado/uf/`, o prefixo `deputado/uf/SP` casaria os dois objetos, e quem
  * listar o store por prefixo passaria a ver dois recursos onde havia um.
  */
-export function deputadoUfListaBlobPathname(sigla: string): string {
-  const uf = normaliseSigla(sigla, "deputadoUfListaBlobPathname");
-  return blobPathname(["deputado", "uf-lista", uf], "deputadoUfListaBlobPathname");
+export function deputadoUfListaBlobPathname(cargo: CargoProporcional, sigla: string): string {
+  const ctx = "deputadoUfListaBlobPathname";
+  const prefixo = prefixoBlobDeputado(cargo, ctx);
+  const uf = siglaDoCargo(cargo, sigla, ctx);
+  return blobPathname([prefixo, "uf-lista", uf], ctx);
 }
 
 // ---------------------------------------------------------------------------

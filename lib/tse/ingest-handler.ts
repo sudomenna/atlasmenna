@@ -38,7 +38,7 @@
 
 import type { NextRequest } from "next/server";
 import { after, NextResponse } from "next/server";
-import type { CargoTse } from "@/lib/config/cargos";
+import { type CargoProporcional, type CargoTse, isCargoProporcional } from "@/lib/config/cargos";
 import { readInterruptorProjecao, TRAVA_PROJECAO_DEP_PCT } from "@/lib/edge-config/reader";
 import type { AcompanhamentoPrevious } from "@/lib/tse/acompanhamento";
 import { detectChangedUfs } from "@/lib/tse/acompanhamento";
@@ -225,7 +225,14 @@ function protectionBypassHeader(): Record<string, string> {
 
 /**
  * `projecao_dep` do corpo do POST do modelo (design 026 § 2.11, ADR-0063 D4):
- * o estado do interruptor da projeção de Deputado, lido UMA vez por ciclo.
+ * o estado do interruptor da projeção de um cargo PROPORCIONAL, lido UMA vez
+ * por ciclo.
+ *
+ * Desde 2026-09-29 (spec 027 RF-287) vale para os três proporcionais, e o
+ * cargo decide QUAL chave: 6 → `interruptor-projecao-dep`; 7 e 8 →
+ * `interruptor-projecao-est` (`interruptorProjecaoKey`). O nome do campo no
+ * POST continua `projecao_dep` — é contrato com o Python, e "dep" ali quer
+ * dizer "deputado", não o token do cargo 6.
  *
  * O Python não lê o Edge Config — recebe o estado aqui e o registra no log do
  * ciclo (`dep_projecao`), o que torna a projeção reproduzível. Falha fechada
@@ -242,13 +249,15 @@ export interface ProjecaoDepNoPost {
   pct_minimo: number;
 }
 
-export async function lerProjecaoDepParaOModelo(): Promise<ProjecaoDepNoPost> {
+export async function lerProjecaoDepParaOModelo(
+  cargo: CargoProporcional,
+): Promise<ProjecaoDepNoPost> {
   // `readInterruptorProjecao` já não lança e tem teto de tempo
   // (`TIMEOUT_INTERRUPTOR_MS`, 2 s): o `await` do ciclo espera no máximo isso,
   // e tempo esgotado chega aqui como desligado. O `try` é a segunda cinta — o
   // ciclo de ingestão nunca pode parar por causa do interruptor da projeção.
   try {
-    const lido = await readInterruptorProjecao();
+    const lido = await readInterruptorProjecao(cargo);
     return { ligada: lido.ligada, pct_minimo: Math.ceil(lido.pct_minimo) };
   } catch {
     return { ligada: false, pct_minimo: TRAVA_PROJECAO_DEP_PCT };
@@ -256,8 +265,9 @@ export async function lerProjecaoDepParaOModelo(): Promise<ProjecaoDepNoPost> {
 }
 
 /**
- * O corpo do POST ao modelo. `projecao_dep` só no cargo 6 — nos majoritários
- * não há projeção com trava, e o campo não tem referente.
+ * O corpo do POST ao modelo. `projecao_dep` só nos cargos proporcionais (6, 7,
+ * 8 — `isCargoProporcional`, lido da tabela) — nos majoritários não há
+ * projeção com trava, e o campo não tem referente.
  */
 export function corpoDoTriggerModel(
   cargo: number,
@@ -269,7 +279,7 @@ export function corpoDoTriggerModel(
     cargo,
     turno,
     trigger_ts: triggerTs,
-    ...(cargo === 6 && projecaoDep ? { projecao_dep: projecaoDep } : {}),
+    ...(isCargoProporcional(cargo) && projecaoDep ? { projecao_dep: projecaoDep } : {}),
   };
 }
 
@@ -934,12 +944,25 @@ export async function runIngestCycle(
         }
       }
 
-      // Spec 026 — o interruptor da projeção de Deputado vai no corpo do POST
-      // do cargo 6, lido uma vez por ciclo. Nunca lança (falha ⇒ desligado).
-      const projecaoDep = activeCargos.includes(6) ? await lerProjecaoDepParaOModelo() : undefined;
+      // Spec 026/027 — o interruptor da projeção vai no corpo do POST de cada
+      // cargo PROPORCIONAL (6, 7, 8), lido uma vez por ciclo e pela chave DO
+      // cargo (6 → dep; 7/8 → est). Nunca lança (falha ⇒ desligado).
+      const projecaoPorCargo = new Map<CargoTse, ProjecaoDepNoPost>();
+      for (const cargo of activeCargos) {
+        if (isCargoProporcional(cargo)) {
+          projecaoPorCargo.set(cargo, await lerProjecaoDepParaOModelo(cargo));
+        }
+      }
 
       for (const cargo of activeCargos) {
-        triggerModel({ baseUrl, cargo, turno, triggerTs, modelSecret, projecaoDep });
+        triggerModel({
+          baseUrl,
+          cargo,
+          turno,
+          triggerTs,
+          modelSecret,
+          projecaoDep: projecaoPorCargo.get(cargo),
+        });
       }
       modelTriggered = [...activeCargos];
       logInfo("model-trigger dispatched", {

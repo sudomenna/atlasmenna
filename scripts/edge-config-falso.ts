@@ -149,8 +149,11 @@ import {
 
 const DIR_SIMULACAO = path.join(process.cwd(), "tests", "fixtures", "simulacao");
 
-/** Cargo da chave → nome-base do arquivo em `tests/fixtures/simulacao/`. */
-const ARQUIVO_NACIONAL: Record<Cargo, string> = {
+/**
+ * Cargo da chave → nome-base do arquivo em `tests/fixtures/simulacao/`.
+ * `est`/`dis` (spec 027) ficam de fora até a frente S gerar as fixtures deles.
+ */
+const ARQUIVO_NACIONAL: Record<Exclude<Cargo, "est" | "dis">, string> = {
   pres: "presidente",
   gov: "governador",
   sen: "senador",
@@ -268,14 +271,14 @@ export function montarBlobs(opts: Pick<OpcoesChaves, "dir"> = {}): Map<string, u
   const porUf = lerJson(dir, "deputado-uf");
   if (!ehObjeto(porUf)) throw new Error("deputado-uf.json não é um mapa UF → detalhe");
   for (const [sigla, detalhe] of Object.entries(porUf)) {
-    blobs.set(deputadoUfBlobPathname(sigla), detalhe);
+    blobs.set(deputadoUfBlobPathname(6, sigla), detalhe);
   }
 
   const listas = lerJsonOpcional(dir, "deputado-uf-lista");
   if (listas !== undefined) {
     if (!ehObjeto(listas)) throw new Error("deputado-uf-lista.json não é um mapa UF → lista");
     for (const [sigla, lista] of Object.entries(listas)) {
-      blobs.set(deputadoUfListaBlobPathname(sigla), lista);
+      blobs.set(deputadoUfListaBlobPathname(6, sigla), lista);
     }
   }
 

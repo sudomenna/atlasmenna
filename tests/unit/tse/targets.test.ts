@@ -395,8 +395,14 @@ describe("getActiveCargos", () => {
   });
 
   it("ignora tokens inválidos individuais mantendo os válidos", () => {
-    vi.stubEnv("TSE_CARGOS", "1,7");
+    // `2` (vice) — o `7` deixou de ser inválido com a spec 027.
+    vi.stubEnv("TSE_CARGOS", "1,2");
     expect(getActiveCargos()).toEqual([1]);
+  });
+
+  it("RF-285: 7 e 8 são cargos válidos em TSE_CARGOS (a chave de desligamento os reconhece)", () => {
+    vi.stubEnv("TSE_CARGOS", "1,3,5,6,7,8");
+    expect(getActiveCargos()).toEqual([1, 3, 5, 6, 7, 8]);
   });
 });
 

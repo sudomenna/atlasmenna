@@ -247,6 +247,42 @@ const config: VercelProjectConfig = {
       path: "/api/ingest/deputado-federal/6",
       schedule: "25,55 12-19 * * *",
     },
+    // ── Deputado Estadual (7) e Distrital (8) — spec 027 Fase 1, ADR-0067 ──
+    //
+    // Um arquivo-RESUMO por casa (`granularidade: "uf"` em
+    // `lib/config/cargos.ts`): 26 alvos para o 7 (as UFs sem o DF), 1 para o 8
+    // (só o DF), a 1 rps cada (`rpsMax: 1`) — ~26 s e ~1 s por ciclo. A cada
+    // 5 min, nas duas janelas: apuração (20-23,0-7 UTC) e simulado (12-19 UTC —
+    // SEM a hora 20, que já é da apuração: duas entradas do mesmo caminho no
+    // mesmo minuto dobrariam a taxa, porque a trava anti-sobreposição não é
+    // atômica).
+    //
+    // Em minutos DESLOCADOS das fatias do 6 e do Senador (que ocupam todos os
+    // múltiplos de 5): o 7 nos minutos 2, 7, 12, …; o 8 nos 3, 8, 13, …. Não
+    // muda o pior caso agregado (um ciclo de Senador ou de uma fatia do 6 dura
+    // ~4 min e ainda está no ar — por isso ele é 82, e não 80, em
+    // `piorCasoAgregadoRps`), mas espalha o início das invocações. Lista
+    // explícita em vez de `2-59/5`: é a forma que este arquivo já usa e que o
+    // teste de cadência (`dado-freshness.test.ts`) sabe ler.
+    //
+    // Sem fatia (a rota `/api/ingest/[cargo]/[fatia]` aceita só o 6). Se a
+    // Fase 2 subir, o 7 vira zona fatiada e estas entradas mudam.
+    {
+      path: "/api/ingest/deputado-estadual",
+      schedule: "2,7,12,17,22,27,32,37,42,47,52,57 20-23,0-7 * * *",
+    },
+    {
+      path: "/api/ingest/deputado-distrital",
+      schedule: "3,8,13,18,23,28,33,38,43,48,53,58 20-23,0-7 * * *",
+    },
+    {
+      path: "/api/ingest/deputado-estadual",
+      schedule: "2,7,12,17,22,27,32,37,42,47,52,57 12-19 * * *",
+    },
+    {
+      path: "/api/ingest/deputado-distrital",
+      schedule: "3,8,13,18,23,28,33,38,43,48,53,58 12-19 * * *",
+    },
     {
       path: "/api/ingest",
       schedule: "0 12 * * *",

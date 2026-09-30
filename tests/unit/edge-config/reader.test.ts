@@ -370,7 +370,7 @@ describe("leitura que falha × chave que não existe", () => {
 
     expect(await readUfProjection("SP", { cargo: "pres" })).toBeNull();
     expect(await readArchivedProjection({ cargo: "pres", turno: 1 })).toBeNull();
-    expect(await readDeputadoProjection()).toBeNull();
+    expect(await readDeputadoProjection(6)).toBeNull();
 
     expect(logErrorMock).toHaveBeenCalledTimes(3);
     const fns = logErrorMock.mock.calls.map((c) => (c[1] as Record<string, unknown>).fn as string);

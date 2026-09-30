@@ -58,7 +58,14 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { CARGOS_TSE, type CargoTse, cargoInfo, isCargoTse } from "@/lib/config/cargos";
+import {
+  CARGOS_PROPORCIONAIS,
+  CARGOS_TSE,
+  type CargoProporcional,
+  type CargoTse,
+  cargoInfo,
+  isCargoTse,
+} from "@/lib/config/cargos";
 import { FASE_PRE_ELEICAO } from "@/lib/config/fase";
 import { GLOBAL_CONFIG_KEY_PATTERN } from "@/lib/edge-config/keys";
 import { writeDeputadoProjection, writeProjection } from "@/lib/edge-config/writer";
@@ -292,9 +299,10 @@ const deputadoPorUfRowSchema = z
   .passthrough();
 
 /**
- * Cada valor de `payloads_uf`, no ramo de cargo 6, é um `DeputadoUfDetail`
- * destinado ao **Blob** (`deputado/uf/<SIGLA>.json`, RF-129) — não um
- * `EdgePayloadUf` de Global Config.
+ * Cada valor de `payloads_uf`, no ramo proporcional, é um `DeputadoUfDetail`
+ * destinado ao **Blob** (`deputado/uf/<SIGLA>.json` no federal;
+ * `deputado-estadual/…` e `deputado-distrital/…` desde a spec 027 — RF-129,
+ * RF-279) — não um `EdgePayloadUf` de Global Config.
  *
  * `uf` é validado aqui, na borda, pelo mesmo motivo que `por_uf[].sigla`: ela
  * entra literalmente no caminho do blob, e é o único componente do caminho que
@@ -339,7 +347,17 @@ const deputadoBodySchema = z.object({
       dado_ts: dadoTsSchema,
       pares_atrasados: paresAtrasadosSchema,
       fase: faseSchema,
-      cargo: z.literal(6),
+      // Spec 027 (RF-279): os TRÊS proporcionais — 6, 7 e 8 —, derivados da
+      // tabela canônica (`CARGOS_PROPORCIONAIS`). Era `z.literal(6)` até
+      // 2026-09-29, e um corpo de cargo 7 voltava 400. O cargo daqui decide a
+      // chave e o prefixo do Blob em `writeDeputadoProjection`.
+      cargo: z.union(
+        CARGOS_PROPORCIONAIS.map((cd) => z.literal(cd)) as unknown as [
+          z.ZodLiteral<CargoProporcional>,
+          z.ZodLiteral<CargoProporcional>,
+          ...z.ZodLiteral<CargoProporcional>[],
+        ],
+      ),
       // Turno único (`temSegundoTurno: false`). Um `2` aqui é payload
       // malformado, não uma corrida que existe.
       turno: z.literal(1),

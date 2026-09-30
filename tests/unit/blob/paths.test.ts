@@ -56,23 +56,23 @@ describe("esquema de caminho", () => {
   });
 
   it("Deputado (ADR-0026) sai do MESMO construtor de base — não de um segundo padrão", () => {
-    expect(deputadoUfBlobPathname("SP")).toBe("deputado/uf/SP.json");
+    expect(deputadoUfBlobPathname(6, "SP")).toBe("deputado/uf/SP.json");
   });
 
   it("spec 026: a lista 61+ tem caminho PRÓPRIO, fora do prefixo do objeto da UF", () => {
-    expect(deputadoUfListaBlobPathname("SP")).toBe("deputado/uf-lista/SP.json");
-    expect(deputadoUfListaBlobPathname("sp")).toBe("deputado/uf-lista/SP.json");
+    expect(deputadoUfListaBlobPathname(6, "SP")).toBe("deputado/uf-lista/SP.json");
+    expect(deputadoUfListaBlobPathname(6, "sp")).toBe("deputado/uf-lista/SP.json");
     // `deputado/uf/SP` não pode casar os dois recursos.
-    expect(deputadoUfListaBlobPathname("SP").startsWith("deputado/uf/SP")).toBe(false);
-    expect(() => deputadoUfListaBlobPathname("S")).toThrow(/sigla/);
-    expect(() => deputadoUfListaBlobPathname("../SP")).toThrow();
+    expect(deputadoUfListaBlobPathname(6, "SP").startsWith("deputado/uf/SP")).toBe(false);
+    expect(() => deputadoUfListaBlobPathname(6, "S")).toThrow(/sigla/);
+    expect(() => deputadoUfListaBlobPathname(6, "../SP")).toThrow();
   });
 
   it("nenhum caminho carrega dois-pontos — a URL sairia percent-encoded", () => {
     const caminhos = [
       ufDetailBlobPathname("SP", "pres", 1),
       ufDetailBlobPathname("MG", "gov", 2),
-      deputadoUfBlobPathname("BA"),
+      deputadoUfBlobPathname(6, "BA"),
     ];
     for (const c of caminhos) {
       expect(c).not.toContain(":");
@@ -111,7 +111,7 @@ describe("extensão de arquivo (ADR-0041 item 2)", () => {
     // ADR-0041 prometeu ("preserva os três chamadores existentes byte a byte").
     expect(ufDetailBlobPathname("SP", "pres", 1)).toBe("municipios/uf/SP/pres/t1.json");
     expect(ufDetailBlobPathname("MG", "gov", 2)).toBe("municipios/uf/MG/gov/t2.json");
-    expect(deputadoUfBlobPathname("BA")).toBe("deputado/uf/BA.json");
+    expect(deputadoUfBlobPathname(6, "BA")).toBe("deputado/uf/BA.json");
   });
 
   it("aceita extensão explícita com ponto", () => {

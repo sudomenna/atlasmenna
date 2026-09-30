@@ -101,7 +101,7 @@ describe("readDeputadoUfDetail — degradação com motivo (RF-129)", () => {
   it("200 com objeto válido → ok, na URL determinística e sem cargo/turno no caminho", async () => {
     const spy = mockFetch(async () => new Response(JSON.stringify(detalhe()), { status: 200 }));
 
-    const result = await readDeputadoUfDetail("SP");
+    const result = await readDeputadoUfDetail(6, "SP");
 
     // Deputado se decide em turno único e não divide caminho com nenhuma
     // outra corrida — por isso `deputado/uf/SP.json` e não
@@ -114,20 +114,20 @@ describe("readDeputadoUfDetail — degradação com motivo (RF-129)", () => {
 
   it("sigla em minúscula resolve para o mesmo caminho canônico", async () => {
     const spy = mockFetch(async () => new Response(JSON.stringify(detalhe()), { status: 200 }));
-    await readDeputadoUfDetail("sp");
+    await readDeputadoUfDetail(6, "sp");
     expect(spy).toHaveBeenCalledWith(URL_SP, { next: { revalidate: 60 } });
   });
 
   it("404 → not_found, e o acessor coalesce para vazio", async () => {
     mockFetch(async () => new Response("", { status: 404 }));
-    const result = await readDeputadoUfDetail("SP");
+    const result = await readDeputadoUfDetail(6, "SP");
     expect(result).toEqual({ status: "unavailable", reason: "not_found", url: URL_SP });
     expect(agremiacoesFrom(result)).toEqual([]);
   });
 
   it("5xx → fetch_error", async () => {
     mockFetch(async () => new Response("boom", { status: 503 }));
-    expect(await readDeputadoUfDetail("SP")).toMatchObject({
+    expect(await readDeputadoUfDetail(6, "SP")).toMatchObject({
       status: "unavailable",
       reason: "fetch_error",
     });
@@ -137,7 +137,7 @@ describe("readDeputadoUfDetail — degradação com motivo (RF-129)", () => {
     mockFetch(async () => {
       throw new Error("ECONNRESET");
     });
-    expect(await readDeputadoUfDetail("SP")).toMatchObject({
+    expect(await readDeputadoUfDetail(6, "SP")).toMatchObject({
       status: "unavailable",
       reason: "fetch_error",
     });
@@ -145,7 +145,7 @@ describe("readDeputadoUfDetail — degradação com motivo (RF-129)", () => {
 
   it("JSON inválido → invalid", async () => {
     mockFetch(async () => new Response("não é json", { status: 200 }));
-    expect(await readDeputadoUfDetail("SP")).toMatchObject({
+    expect(await readDeputadoUfDetail(6, "SP")).toMatchObject({
       status: "unavailable",
       reason: "invalid",
     });
@@ -153,7 +153,7 @@ describe("readDeputadoUfDetail — degradação com motivo (RF-129)", () => {
 
   it("blob de OUTRA UF → invalid (o objeto é autodescritivo por isto)", async () => {
     mockFetch(async () => new Response(JSON.stringify(detalhe("RJ")), { status: 200 }));
-    expect(await readDeputadoUfDetail("SP")).toMatchObject({
+    expect(await readDeputadoUfDetail(6, "SP")).toMatchObject({
       status: "unavailable",
       reason: "invalid",
     });
@@ -164,7 +164,7 @@ describe("readDeputadoUfDetail — degradação com motivo (RF-129)", () => {
     delete process.env.BLOB_READ_WRITE_TOKEN;
     const spy = mockFetch(async () => new Response("", { status: 200 }));
 
-    expect(await readDeputadoUfDetail("SP")).toEqual({
+    expect(await readDeputadoUfDetail(6, "SP")).toEqual({
       status: "unavailable",
       reason: "not_configured",
       url: null,
@@ -173,7 +173,7 @@ describe("readDeputadoUfDetail — degradação com motivo (RF-129)", () => {
   });
 
   it("sigla malformada → invalid, sem lançar", async () => {
-    expect(await readDeputadoUfDetail("SPP")).toEqual({
+    expect(await readDeputadoUfDetail(6, "SPP")).toEqual({
       status: "unavailable",
       reason: "invalid",
       url: null,

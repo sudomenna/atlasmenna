@@ -167,6 +167,7 @@ describe("separarListaRestante — pura", () => {
     const { detalhe: d, lista } = separarListaRestante(
       detalhe("sp", { lista_restante: [{ cod: "22", candidatos: [LINHA_61] }] }),
       "2026-10-05T01:00:00.000Z",
+      6,
     );
     expect(d).not.toHaveProperty("lista_restante");
     expect(JSON.stringify(d)).not.toContain("SENTINELA-DA-FAIXA-3");
@@ -183,11 +184,14 @@ describe("separarListaRestante — pura", () => {
   });
 
   it("sem o campo (produtor v1) ⇒ `null`; sem NENHUMA linha ⇒ `null` (design § 2.5)", () => {
-    expect(separarListaRestante(detalhe("SP"), "t").lista).toBeNull();
-    expect(separarListaRestante(detalhe("SP", { lista_restante: [] }), "t").lista).toBeNull();
+    expect(separarListaRestante(detalhe("SP"), "t", 6).lista).toBeNull();
+    expect(separarListaRestante(detalhe("SP", { lista_restante: [] }), "t", 6).lista).toBeNull();
     expect(
-      separarListaRestante(detalhe("SP", { lista_restante: [{ cod: "22", candidatos: [] }] }), "t")
-        .lista,
+      separarListaRestante(
+        detalhe("SP", { lista_restante: [{ cod: "22", candidatos: [] }] }),
+        "t",
+        6,
+      ).lista,
     ).toBeNull();
   });
 
@@ -196,7 +200,7 @@ describe("separarListaRestante — pura", () => {
       ...detalhe("SP"),
       lista_restante: "lixo",
     } as unknown as DeputadoUfDetailComTransporte;
-    const { detalhe: d, lista } = separarListaRestante(bruto, "t");
+    const { detalhe: d, lista } = separarListaRestante(bruto, "t", 6);
     expect(lista).toBeNull();
     expect(d).not.toHaveProperty("lista_restante");
     expect(logWarnMock).toHaveBeenCalledTimes(1);

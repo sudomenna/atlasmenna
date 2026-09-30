@@ -582,17 +582,29 @@ describe("guard do consumidor — `readCandidatosUf` aceita o que este produtor 
     expect(res.reason).toBe("invalid");
   });
 
-  it("cada um dos quatro cargos passa pelo guard sob o seu próprio token", async () => {
-    for (const [cargo, token] of [
-      [1, "pres"],
-      [3, "gov"],
-      [5, "sen"],
-      [6, "dep"],
+  it("cada um dos seis cargos passa pelo guard sob o seu próprio token", async () => {
+    // 7 e 8 (spec 027 RF-288): `est` e `dis`. O distrital só existe no DF.
+    for (const [uf, cargo, token] of [
+      ["SP", 1, "pres"],
+      ["SP", 3, "gov"],
+      ["SP", 5, "sen"],
+      ["SP", 6, "dep"],
+      ["SP", 7, "est"],
+      ["DF", 8, "dis"],
     ] as const) {
-      servir(montarFatia("SP", cargo, [linha({ cargo })], GERADO_TS));
-      const res = await readCandidatosUf("SP", token);
+      servir(montarFatia(uf, cargo, [linha({ cargo, uf })], GERADO_TS));
+      const res = await readCandidatosUf(uf, token);
       expect(res.status, token).toBe("ok");
     }
+  });
+
+  it("RF-288: SP estadual e SP federal são fatias DIFERENTES — uma não responde pela outra", async () => {
+    // O caminho sai do token (`candidatos/uf/SP/est.json` × `.../dep.json`);
+    // o leitor ainda confere o `cargo` do corpo. Servir a fatia do 6 no pedido
+    // do `est` tem de ser `invalid`, nunca `ok`.
+    servir(montarFatia("SP", 6, [linha({ cargo: 6 })], GERADO_TS));
+    const res = await readCandidatosUf("SP", "est");
+    expect(res.status).toBe("unavailable");
   });
 });
 
@@ -601,9 +613,10 @@ describe("guard do consumidor — `readCandidatosUf` aceita o que este produtor 
 // ---------------------------------------------------------------------------
 
 describe("CLI", () => {
-  it("sem flags, publica os quatro cargos e todas as UFs", () => {
+  it("sem flags, publica os seis cargos e todas as UFs", () => {
     const cli = parseCli([]);
-    expect(cli.cargos).toEqual([1, 3, 5, 6]);
+    // 7 e 8 desde 2026-09-29 (spec 027 RF-288).
+    expect(cli.cargos).toEqual([1, 3, 5, 6, 7, 8]);
     expect(cli.ufs).toBeNull();
     expect(cli.dryRun).toBe(false);
   });
@@ -612,13 +625,18 @@ describe("CLI", () => {
     expect(parseCli(["--uf", "sp,rj"]).ufs).toEqual(["SP", "RJ"]);
     expect(parseCli(["--cargo", "5,6"]).cargos).toEqual([5, 6]);
     expect(parseCli(["--cargo", "sen,dep"]).cargos).toEqual([5, 6]);
+    // RF-288: as assembleias, por código e por token.
+    expect(parseCli(["--cargo", "7,8"]).cargos).toEqual([7, 8]);
+    expect(parseCli(["--cargo", "est,dis"]).cargos).toEqual([7, 8]);
     expect(parseCli(["--dry-run"]).dryRun).toBe(true);
   });
 
-  it("cargo fora dos quatro cobertos LANÇA — não cai num default", () => {
-    // Cargo 7 (Deputado Estadual) existe no TSE e está fora do produto.
+  it("cargo fora dos cobertos LANÇA — não cai num default", () => {
+    // Cargo 2 (Vice-Presidente) existe no TSE e está fora do produto — desde a
+    // spec 027 o 7 (Deputado Estadual) é coberto e deixou de servir de exemplo.
     // Mutação alvo: `?? 1` ou um `default:` que o mandasse para Presidente.
-    expect(() => parseCli(["--cargo", "7"])).toThrow(/não reconhece/);
+    expect(() => parseCli(["--cargo", "2"])).toThrow(/não reconhece/);
+    expect(() => parseCli(["--cargo", "9"])).toThrow(/não reconhece/);
     expect(() => parseCli(["--cargo", "estadual"])).toThrow(/não reconhece/);
     expect(() => parseCli(["--uf", "SAO"])).toThrow(/não reconhece/);
     expect(() => parseCli(["--que-flag-e-essa"])).toThrow(/Flag desconhecida/);

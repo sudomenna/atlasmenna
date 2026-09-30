@@ -16,6 +16,12 @@
  * os quatro em sincronia, sem nada que forçasse a sincronia. Este módulo é a
  * fonte única; os outros passam a derivar dele.
  *
+ * Desde 2026-09-29 (spec 027, ADR-0066) a tabela cobre SEIS cargos: os quatro
+ * de antes mais Deputado Estadual (7, 26 Assembleias) e Deputado Distrital (8,
+ * Câmara Legislativa do DF). O que é novo além das linhas: a abrangência por
+ * cargo (`ufsDoCargo` — o 7 não existe no DF, o 8 só existe lá) e o tipo
+ * `CargoProporcional`, derivado das linhas com `proporcional: true`.
+ *
  * ## O que NÃO muda
  *
  * Os **dois tipos `Cargo`** continuam separados de propósito (ADR-0026 item 2,
@@ -33,13 +39,38 @@ import type { Cargo as CargoToken } from "@/lib/config/calendar";
  * Código numérico do cargo, como o TSE publica (campo `cd` em `carg[]` do EA20,
  * e o `-c<cargo4>` no nome do arquivo).
  *
- * 1 = Presidente · 3 = Governador · 5 = Senador · 6 = Deputado Federal.
+ * 1 = Presidente · 3 = Governador · 5 = Senador · 6 = Deputado Federal ·
+ * 7 = Deputado Estadual · 8 = Deputado Distrital.
  *
- * Os códigos 2 (Vice-Presidente), 4 (Vice-Governador) e 7/8 (Deputado Estadual /
- * Distrital) existem no TSE e **não** são cobertos: vice não tem votação própria,
- * e as assembleias estaduais estão fora do escopo do produto.
+ * Os códigos 2 (Vice-Presidente) e 4 (Vice-Governador) existem no TSE e **não**
+ * são cobertos: vice não tem votação própria.
+ *
+ * **7 e 8 entraram em 2026-09-29** (spec 027, ADR-0066). Até então as
+ * assembleias estavam declaradas "fora do escopo do produto"; o dono pediu a
+ * apuração das 26 Assembleias Legislativas (cargo 7) e da Câmara Legislativa do
+ * DF (cargo 8, cargo SEPARADO no TSE) para 04/10. Moram na mesma eleição do
+ * TSE que o federal (estadual, `21272`), com o mesmo leiaute "Proporcional | UF".
+ * O que os distingue do 6 aqui é a abrangência (`ufsDoCargo`): o 7 não existe
+ * no DF e o 8 só existe no DF.
  */
-export type CargoTse = 1 | 3 | 5 | 6;
+export type CargoTse = 1 | 3 | 5 | 6 | 7 | 8;
+
+/**
+ * Onde a corrida deste cargo acontece — quais UFs têm arquivo dele no TSE
+ * (spec 027 RF-278, ADR-0066).
+ *
+ *   - `"todas-as-ufs"` — as 27 (Presidente, Governador, Senador, Deputado
+ *     Federal; o DF elege governador, senadores e deputados federais);
+ *   - `"ufs-sem-df"`   — as 26 UFs com Assembleia Legislativa (cargo 7): o DF
+ *     não tem deputado **estadual**;
+ *   - `"so-df"`        — só o DF (cargo 8, a Câmara Legislativa).
+ *
+ * Existe porque, sem ela, a enumeração de alvos pediria ao TSE o arquivo do
+ * cargo 8 para as 26 UFs que não o têm (e o do 7 para o DF): endereços que não
+ * existem, a cada rodada — 404 que também conta para o bloqueio de IP
+ * (constituição § 1).
+ */
+export type Abrangencia = "todas-as-ufs" | "ufs-sem-df" | "so-df";
 
 /**
  * Qual das DUAS eleições do pleito 2026 cobre este cargo (parâmetros
@@ -62,7 +93,8 @@ export interface CargoInfo {
    * Eleição (no sentido do pleito 2026, ver `Eleicao`) a que este cargo
    * pertence — determina qual código de eleição resolver
    * (`getCodEleicaoDoCargo`, `lib/tse/targets.ts`). Presidente é o único
-   * cargo `"federal"`; os outros três são `"estadual"`. Campo obrigatório
+   * cargo `"federal"`; todos os outros são `"estadual"` (inclusive o Deputado
+   * FEDERAL e os cargos 7/8 — o nome da eleição é do TSE, não da casa). Campo obrigatório
    * de propósito: não há valor "neutro" que sirva de default seguro — um
    * cargo estadual lido como federal (ou vice-versa) busca o EA20 do CÓDIGO
    * DE ELEIÇÃO ERRADO, um 404 sistemático que não é óbvio de diagnosticar.
@@ -79,8 +111,9 @@ export interface CargoInfo {
    * o Senado renova **2/3** em 2026, o que são **2 vagas por UF** (54 no total)
    * — não 1, apesar de o kit de UI rotular "1 vaga"
    * (ver `docs/architecture/adrs/0029-home-mobile-first-mapa-primeiro-fiel-ao-kit.md`).
-   * Deputado Federal é proporcional: o nº de cadeiras varia por UF (8 a 70), então
-   * fica `null` aqui e vem da tabela de bancadas.
+   * Os três cargos proporcionais (6, 7, 8) ficam `null`: o nº de cadeiras varia
+   * por UF (federal 8 a 70; assembleias 24 a 94; distrital 24) e vem do próprio
+   * arquivo do TSE (`carg[].nv`, RF-124), nunca desta tabela.
    */
   readonly vagasPorUf: number | null;
   /** `true` quando a disputa admite 2º turno. Senador e Deputado são turno único. */
@@ -91,8 +124,15 @@ export interface CargoInfo {
    * agregado nacional deles é soma nossa.
    */
   readonly temArquivoBr: boolean;
-  /** `true` quando o cargo é proporcional (votos viram cadeiras via quociente). */
+  /**
+   * `true` quando o cargo é proporcional (votos viram cadeiras via quociente).
+   * É deste campo que derivam `CargoProporcional`, `isCargoProporcional` e o
+   * `CargoMajoritario` do leitor (`lib/edge-config/reader.ts`) — nunca de uma
+   * lista de códigos repetida em outro arquivo.
+   */
   readonly proporcional: boolean;
+  /** Quais UFs têm esta corrida — ver {@link Abrangencia} e {@link ufsDoCargo}. */
+  readonly abrangencia: Abrangencia;
   /**
    * Granularidade de ingestão **padrão** deste cargo (ADR-0026 item 1).
    *
@@ -125,8 +165,23 @@ export interface CargoInfo {
    * (`lib/tse/targets.ts::getGranularidade`, documentado em
    * `docs/operations/runbook.md` § Variáveis de ambiente).
    *
+   * **Deputado Estadual (7) e Distrital (8) nascem em `"uf"` (2026-09-29,
+   * Fase 1 da spec 027, ADR-0067).** Um arquivo-resumo por casa — 26 alvos
+   * para o 7, 1 (o DF) para o 8, sem arquivo `br-` —, o que entrega cadeiras
+   * por partido na parcial, listas, marcas e Conferência sem tocar no ritmo do
+   * federal. A Fase 2 (zona fatiada, intercalada com o 6) é outra entrega; se
+   * ela subir, é aqui que o 7 muda para `"zona"`. Em `"uf"` o fatiamento e o
+   * agregado aditivo do RF-199 não se aplicam (`listIngestTargets`).
+   *
+   * `TSE_DEPUTADO_GRANULARIDADE` (a chave de emergência que nasceu para o
+   * cargo 6) vale desde 2026-09-29 para os TRÊS proporcionais — ver
+   * `getGranularidade`, `lib/tse/targets.ts`.
+   *
    * `TSE_GRANULARIDADE` no ambiente sobrepõe isto para TODOS os cargos —
-   * é escotilha de diagnóstico, não configuração de produção.
+   * é escotilha de diagnóstico, não configuração de produção. ⚠️ Com ela em
+   * `zona`, os cargos 7/8 passam a varrer zona a zona **sem fatia** (a rota
+   * fatiada aceita só o 6): ~6.110 alvos a 1 rps não cabem em 300 s. O vigia
+   * do dia D (`pnpm vigia:armado --modo dia-d`) já reprova a variável.
    */
   readonly granularidade: "uf" | "zona";
   /**
@@ -153,14 +208,22 @@ export interface CargoInfo {
    * bloqueia o IP por 10 minutos. O default de 40 tinha sido calibrado para
    * DOIS cargos (2 x 40 = 80) e não sobreviveu à entrada de Senador e Deputado.
    *
-   * Calibragem atual — pior caso agregado **80 rps**, 20% abaixo do teto:
+   * Calibragem atual — pior caso agregado **82 rps** (Fase 1 da spec 027,
+   * ADR-0067), 18% abaixo do teto:
    *
-   *   | cargo      | alvos | rps | duração do ciclo                        |
-   *   |------------|-------|-----|------------------------------------------|
-   *   | Presidente | 6.110 |  25 | ~244 s                                   |
-   *   | Governador | 6.110 |  25 | ~244 s                                   |
-   *   | Senador    | 6.110 |  25 | ~244 s                                   |
-   *   | Deputado   | 6.110 |   5 | ~1.222 s inteiro; ~204 s POR FATIA (÷6)  |
+   *   | cargo               | alvos | rps | duração do ciclo                        |
+   *   |---------------------|-------|-----|------------------------------------------|
+   *   | Presidente          | 6.110 |  25 | ~244 s                                   |
+   *   | Governador          | 6.110 |  25 | ~244 s                                   |
+   *   | Senador             | 6.110 |  25 | ~244 s                                   |
+   *   | Deputado Federal    | 6.110 |   5 | ~1.222 s inteiro; ~204 s POR FATIA (÷6)  |
+   *   | Deputado Estadual   |    26 |   1 | ~26 s (um resumo por Assembleia)         |
+   *   | Deputado Distrital  |     1 |   1 | ~1 s (o resumo do DF)                    |
+   *
+   * Os dois cargos das assembleias somam +2 ao agregado, não +27: o teto é de
+   * TAXA, e cada um tem o seu processo a 1 rps. Era 80 até 2026-09-29; o
+   * ADR-0036 já recusou 85, e a Fase 2 (7 intercalado na faixa de 5 rps do 6)
+   * volta a 81.
    *
    * Os pesados caíram de 35 para 25 rps em 2026-09-11, quando Senador passou a
    * ser ingerido por zona (decisão do usuário — ver `granularidade`): três
@@ -184,8 +247,19 @@ export interface CargoInfo {
 /**
  * Tabela canônica. A ordem é a de exibição nas abas
  * (`components/layout/CargoTabs.tsx`), não a numérica do TSE.
+ *
+ * `as const`, e não uma anotação `readonly CargoInfo[]`: a anotação apagaria
+ * os literais de cada linha, e é deles que `CargoProporcional` é DERIVADO (as
+ * linhas com `proporcional: true`). Assim acrescentar um cargo proporcional
+ * aqui já o põe no tipo — não há uma segunda lista de códigos para esquecer de
+ * atualizar. A forma de cada linha (`CargoInfo`) é travada logo abaixo, por
+ * atribuição tipada.
+ *
+ * ⚠️ O fim da tabela é o texto literal `] as const;` — o espelho Python
+ * (`tests/unit/model/test_cargos_sync.py`) localiza a tabela por ele. Não
+ * trocar por `] as const satisfies …`.
  */
-export const CARGOS: readonly CargoInfo[] = [
+export const CARGOS = [
   {
     cd: 1,
     eleicao: "federal",
@@ -196,6 +270,7 @@ export const CARGOS: readonly CargoInfo[] = [
     temSegundoTurno: true,
     temArquivoBr: true,
     proporcional: false,
+    abrangencia: "todas-as-ufs",
     granularidade: "zona",
     rpsMax: 25,
   },
@@ -209,6 +284,7 @@ export const CARGOS: readonly CargoInfo[] = [
     temSegundoTurno: true,
     temArquivoBr: false,
     proporcional: false,
+    abrangencia: "todas-as-ufs",
     granularidade: "zona",
     rpsMax: 25,
   },
@@ -222,6 +298,7 @@ export const CARGOS: readonly CargoInfo[] = [
     temSegundoTurno: false,
     temArquivoBr: false,
     proporcional: false,
+    abrangencia: "todas-as-ufs",
     granularidade: "zona",
     rpsMax: 25,
   },
@@ -235,13 +312,76 @@ export const CARGOS: readonly CargoInfo[] = [
     temSegundoTurno: false,
     temArquivoBr: false,
     proporcional: true,
+    abrangencia: "todas-as-ufs",
     granularidade: "zona",
     rpsMax: 5,
   },
+  // Spec 027 (ADR-0066/0067) — Fase 1: um resumo por casa, 1 rps cada.
+  {
+    cd: 7,
+    eleicao: "estadual",
+    token: "est",
+    slug: "deputado-estadual",
+    label: "Deputado Estadual",
+    vagasPorUf: null,
+    temSegundoTurno: false,
+    temArquivoBr: false,
+    proporcional: true,
+    abrangencia: "ufs-sem-df",
+    granularidade: "uf",
+    rpsMax: 1,
+  },
+  {
+    cd: 8,
+    eleicao: "estadual",
+    token: "dis",
+    slug: "deputado-distrital",
+    label: "Deputado Distrital",
+    vagasPorUf: null,
+    temSegundoTurno: false,
+    temArquivoBr: false,
+    proporcional: true,
+    abrangencia: "so-df",
+    granularidade: "uf",
+    rpsMax: 1,
+  },
 ] as const;
+
+/**
+ * Trava de FORMA da tabela: cada linha tem de ser um `CargoInfo` (campo que
+ * falta ou com tipo errado reprova no `tsc`). Faz o papel de um `satisfies`
+ * sem mudar o texto `] as const;` que o espelho Python procura.
+ */
+const _formaDaTabela: readonly CargoInfo[] = CARGOS;
+
+/** Uma linha da tabela, com os literais preservados. */
+type LinhaDaTabela = (typeof CARGOS)[number];
+
+/**
+ * Os cargos proporcionais — `6 | 7 | 8` —, **derivados** da tabela (as linhas
+ * com `proporcional: true`), não listados à mão. Spec 027 (ADR-0066).
+ *
+ * É o tipo que as funções de gravação e leitura do Deputado exigem SEM default
+ * (`deputadoUfBlobPathname(cargo, uf)`, `readDeputadoProjection(cargo)`, …):
+ * este repositório já pagou três vezes por conversor de cargo que escolhia
+ * sozinho, e com três casas proporcionais o default "6" gravaria SP estadual
+ * por cima de SP federal.
+ */
+export type CargoProporcional = Extract<LinhaDaTabela, { readonly proporcional: true }>["cd"];
+
+/** Os tokens de chave dos cargos proporcionais — `"dep" | "est" | "dis"`, derivados. */
+export type CargoTokenProporcional = Extract<
+  LinhaDaTabela,
+  { readonly proporcional: true }
+>["token"];
 
 /** Todos os códigos cobertos, na ordem da tabela. */
 export const CARGOS_TSE: readonly CargoTse[] = CARGOS.map((c) => c.cd);
+
+/** Os códigos proporcionais, na ordem da tabela (`[6, 7, 8]`). */
+export const CARGOS_PROPORCIONAIS: readonly CargoProporcional[] = CARGOS.filter(
+  (c): c is Extract<LinhaDaTabela, { readonly proporcional: true }> => c.proporcional,
+).map((c) => c.cd);
 
 const POR_CD = new Map<number, CargoInfo>(CARGOS.map((c) => [c.cd, c]));
 const POR_TOKEN = new Map<string, CargoInfo>(CARGOS.map((c) => [c.token, c]));
@@ -250,6 +390,89 @@ const POR_SLUG = new Map<string, CargoInfo>(CARGOS.map((c) => [c.slug, c]));
 /** Type guard — `true` se o número é um cargo coberto. */
 export function isCargoTse(n: number): n is CargoTse {
   return POR_CD.has(n);
+}
+
+/**
+ * Type guard — `true` se o número é um cargo coberto E proporcional (6, 7, 8).
+ * Lê o campo `proporcional` da tabela; nunca uma lista de códigos à parte.
+ */
+export function isCargoProporcional(n: number): n is CargoProporcional {
+  return POR_CD.get(n)?.proporcional === true;
+}
+
+// ---------------------------------------------------------------------------
+// UFs por cargo — spec 027 RF-278 (ADR-0066)
+// ---------------------------------------------------------------------------
+
+/**
+ * As 27 UFs da eleição (26 estados + DF), na ordem que `lib/tse/targets.ts`
+ * sempre usou para os alvos de UF. Morava lá como `TODAS_UFS`, privada; veio
+ * para cá em 2026-09-29 porque o conjunto de UFs passou a depender do cargo, e
+ * quem responde "qual cargo existe onde" é esta tabela.
+ */
+export const UFS_DA_ELEICAO: readonly string[] = Object.freeze([
+  "AC",
+  "AL",
+  "AP",
+  "AM",
+  "BA",
+  "CE",
+  "DF",
+  "ES",
+  "GO",
+  "MA",
+  "MT",
+  "MS",
+  "MG",
+  "PA",
+  "PB",
+  "PR",
+  "PE",
+  "PI",
+  "RJ",
+  "RN",
+  "RS",
+  "RO",
+  "RR",
+  "SC",
+  "SP",
+  "SE",
+  "TO",
+]);
+
+const UFS_SEM_DF: readonly string[] = Object.freeze(UFS_DA_ELEICAO.filter((uf) => uf !== "DF"));
+const SO_DF: readonly string[] = Object.freeze(["DF"]);
+
+/**
+ * As UFs em que a corrida deste cargo existe — lidas da `abrangencia` da
+ * tabela. Presidente/Governador/Senador/Deputado Federal: as 27; Deputado
+ * Estadual (7): as 26 sem o DF; Deputado Distrital (8): só `["DF"]`.
+ *
+ * Quem enumera alvos no TSE (`lib/tse/targets.ts`) e quem monta caminho de
+ * Blob por cargo (`lib/blob/paths.ts`) filtram por aqui: o 8 nunca pede SP e o
+ * 7 nunca pede o DF (spec 027 RF-278). Sem `default`: uma abrangência nova não
+ * coberta pelo `switch` é erro de compilação (`never`) e, se escapar por um
+ * `as`, lança.
+ */
+export function ufsDoCargo(cd: CargoTse): readonly string[] {
+  const abrangencia = cargoInfo(cd).abrangencia;
+  switch (abrangencia) {
+    case "todas-as-ufs":
+      return UFS_DA_ELEICAO;
+    case "ufs-sem-df":
+      return UFS_SEM_DF;
+    case "so-df":
+      return SO_DF;
+    default: {
+      const naoCoberta: never = abrangencia;
+      throw new Error(`[cargos] abrangência não coberta: ${String(naoCoberta)} (cargo ${cd})`);
+    }
+  }
+}
+
+/** `true` se a corrida do cargo existe na UF (sigla em qualquer caixa). */
+export function cargoExisteNaUf(cd: CargoTse, sigla: string): boolean {
+  return ufsDoCargo(cd).includes(sigla.toUpperCase());
 }
 
 /** Metadados do cargo, ou `undefined` se não for coberto. */
@@ -269,9 +492,9 @@ export function cargoInfo(cd: CargoTse): CargoInfo {
  * pelos consumidores: o `?? 1` nunca disparava para os três majoritários, mas é
  * exatamente o default silencioso de conversor de cargo que este repositório já
  * pagou três vezes — um cargo novo sem `vagasPorUf` passaria a marcar só o líder
- * como eleito, sem erro. Cargo proporcional (Deputado Federal, `vagasPorUf:
- * null`) não tem "corrida de N vagas por UF": pedir isso dele é erro de
- * programação, e lança.
+ * como eleito, sem erro. Cargo proporcional (Deputado Federal, Estadual ou
+ * Distrital, `vagasPorUf: null`) não tem "corrida de N vagas por UF": pedir
+ * isso dele é erro de programação, e lança.
  */
 export function vagasDaCorrida(cd: CargoTse): number {
   const vagas = cargoInfo(cd).vagasPorUf;
@@ -296,7 +519,7 @@ export function cargoFromToken(token: CargoToken): CargoTse {
 /**
  * Eleição (federal/estadual, ver `Eleicao`) a que este cargo pertence —
  * lê direto da tabela canônica, sem ternário nem `??`: Presidente (1) é
- * `"federal"`, os outros três são `"estadual"`. Usado por
+ * `"federal"`, todos os outros (3, 5, 6, 7, 8) são `"estadual"`. Usado por
  * `lib/tse/targets.ts::getCodEleicaoDoCargo` para resolver qual dos dois
  * códigos de eleição do pleito 2026 (`21270` federal, `21272` estadual)
  * corresponde a um cargo.
@@ -331,6 +554,11 @@ export function parseCargoSegment(raw: string): CargoTse | null {
  * IP, com bloqueio de
  * 10 minutos, e a constituição § 1 exige margem **bem abaixo** disso, não
  * "exatamente no limite".
+ *
+ * Os crons das assembleias (7 e 8) disparam em minutos deslocados dos de 5 em
+ * 5, mas isso NÃO os tira da soma: um ciclo de Senador ou de uma fatia do 6
+ * dura ~4 min e ainda está no ar quando o 7/8 começa. Daí 82 na Fase 1
+ * (ADR-0067), e não 80.
  */
 export function piorCasoAgregadoRps(): number {
   return CARGOS.reduce((acc, c) => acc + c.rpsMax, 0);

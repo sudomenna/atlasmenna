@@ -34,6 +34,7 @@
  * resumo.
  */
 
+import { type CargoProporcional, isCargoProporcional } from "@/lib/config/cargos";
 import type { InterruptorProjecaoLido } from "@/lib/edge-config/reader";
 import type {
   DeputadoConferencia,
@@ -63,6 +64,7 @@ export type {
   DeputadoDivergencia,
   DeputadoDivergenciaChave,
   DeputadoMarcaTse,
+  DeputadoNaoComparado,
   DeputadoProjecaoEstado,
   DeputadoProjecaoMotivo,
   DeputadoProjecaoUf,
@@ -188,10 +190,9 @@ export interface DeputadoUfAgremiacao {
 export type DeputadoUfAgremiacaoV2 = DeputadoUfAgremiacao;
 
 /**
- * O JSON gravado em `deputado/uf/<SIGLA>.json`.
- *
- * Sem cargo nem turno no caminho: Deputado se decide em turno único e não
- * divide caminho com nenhuma outra corrida (`deputadoUfBlobPathname`).
+ * O JSON gravado em `<prefixo>/uf/<SIGLA>.json` — `deputado/` (federal),
+ * `deputado-estadual/`, `deputado-distrital/` (`deputadoUfBlobPathname`, spec
+ * 027 RF-279). Sem turno no caminho: os três se decidem em turno único.
  */
 export interface DeputadoUfDetail {
   /**
@@ -201,7 +202,11 @@ export interface DeputadoUfDetail {
    * separadamente (mesma razão de `UfDetailBlob.ts`).
    */
   ts: string;
-  cargo: 6;
+  /**
+   * 6, 7 ou 8 (spec 027). Redundante com o caminho, como `uf` — e o leitor
+   * confere os DOIS: um objeto de cargo diferente do pedido é `invalid`.
+   */
+  cargo: CargoProporcional;
   turno: 1;
   /**
    * Sigla de 2 letras maiúsculas. Redundante com o caminho, e é o ponto: um
@@ -275,9 +280,20 @@ export interface DeputadoUfDetail {
 
   /** Versão do contrato. Ausente ⇒ v1 (design 026 § 2.4). */
   contrato?: 2;
+  /**
+   * Spec 027 (design § 3.2) — de onde vieram os números desta UF: `"uf"` = o
+   * resumo da UF publicado pelo TSE (Fase 1 das assembleias, sem zonas);
+   * `"zona"` = soma das zonas. AUSENTE num objeto anterior ao campo ⇒ a tela
+   * não afirma granularidade nenhuma. Em `"uf"` a `projecao` também vem
+   * ausente (não há projeção em modo resumo).
+   */
+  granularidade?: "uf" | "zona";
   /** RF-274 — ausente sem QE (sem `nv` ou sem voto). */
   regras?: DeputadoRegras;
-  /** RF-264 — presente em todo objeto v2. */
+  /**
+   * RF-264 — presente em todo objeto v2 de cargo lido por zona. AUSENTE em
+   * modo resumo (`granularidade: "uf"`, spec 027): não há projeção sem zonas.
+   */
   projecao?: DeputadoProjecaoUf;
   /** RF-269 — presente em todo objeto v2. `divergencias` (v1, topo) === `conferencia.divergencias`. */
   conferencia?: DeputadoConferencia;
@@ -330,20 +346,39 @@ export type DeputadoUfDetailResult =
   | { status: "ok"; detail: DeputadoUfDetail; url: string }
   | { status: "unavailable"; reason: DeputadoUfUnavailableReason; url: string | null };
 
+/**
+ * O `cargo` do objeto bate com o pedido? Ausente passa (objetos anteriores ao
+ * campo); presente e diferente reprova — é a detecção, no LEITOR, de um objeto
+ * de outra casa servido no caminho desta (spec 027 RF-279). O caminho já é
+ * separado por cargo; esta é a segunda trava, a que não depende do escritor.
+ */
+function cargoConfere(valor: unknown, esperado: CargoProporcional): boolean {
+  return valor === undefined || valor === esperado;
+}
+
 /** Guard estrutural mínimo — o shape canônico é {@link DeputadoUfDetail}. */
-function isDeputadoUfDetail(value: unknown, expectedUf: string): value is DeputadoUfDetail {
+function isDeputadoUfDetail(
+  value: unknown,
+  expectedUf: string,
+  expectedCargo: CargoProporcional,
+): value is DeputadoUfDetail {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Partial<DeputadoUfDetail>;
   return (
     typeof v.ts === "string" &&
     typeof v.uf === "string" &&
     v.uf.toUpperCase() === expectedUf.toUpperCase() &&
+    cargoConfere(v.cargo, expectedCargo) &&
     Array.isArray(v.agremiacoes)
   );
 }
 
 /**
- * Lê o detalhe de Deputado Federal de UMA UF do Blob, no servidor.
+ * Lê o detalhe de UM cargo proporcional numa UF do Blob, no servidor — `6`
+ * (Deputado Federal, `deputado/uf/<SIGLA>.json`), `7` (Estadual) ou `8`
+ * (Distrital). **Cargo obrigatório, sem default** (spec 027 RF-279): SP
+ * federal e SP estadual são objetos diferentes, e um default leria um no lugar
+ * do outro.
  *
  * **Nunca lança.** O caller recebe sempre um {@link DeputadoUfDetailResult} e
  * decide o texto do estado indisponível — o bloco correspondente continua no
@@ -353,8 +388,8 @@ function isDeputadoUfDetail(value: unknown, expectedUf: string): value is Deputa
  *
  * ```ts
  * const [nacional, detalhe] = await Promise.all([
- *   readDeputadoProjection(),
- *   readDeputadoUfDetail(sigla),
+ *   readDeputadoProjection(6),
+ *   readDeputadoUfDetail(6, sigla),
  * ]);
  * ```
  *
@@ -362,12 +397,19 @@ function isDeputadoUfDetail(value: unknown, expectedUf: string): value is Deputa
  * desabilita o Data Cache do Next para esse `fetch`, trocando uma proteção de
  * latência por uma ida à origem a cada request na noite da apuração.
  */
-export async function readDeputadoUfDetail(sigla: string): Promise<DeputadoUfDetailResult> {
+export async function readDeputadoUfDetail(
+  cargo: CargoProporcional,
+  sigla: string,
+): Promise<DeputadoUfDetailResult> {
+  if (!isCargoProporcional(cargo)) {
+    return { status: "unavailable", reason: "invalid", url: null };
+  }
   let url: string | null;
   try {
-    url = blobUrlFor(deputadoUfBlobPathname(sigla));
+    url = blobUrlFor(deputadoUfBlobPathname(cargo, sigla));
   } catch {
-    // Sigla malformada — mesma degradação de qualquer outra falha de leitura.
+    // Sigla malformada, ou UF sem a corrida deste cargo (o 8 fora do DF) —
+    // mesma degradação de qualquer outra falha de leitura.
     return { status: "unavailable", reason: "invalid", url: null };
   }
 
@@ -390,7 +432,9 @@ export async function readDeputadoUfDetail(sigla: string): Promise<DeputadoUfDet
     return { status: "unavailable", reason: "invalid", url };
   }
 
-  if (!isDeputadoUfDetail(body, sigla)) return { status: "unavailable", reason: "invalid", url };
+  if (!isDeputadoUfDetail(body, sigla, cargo)) {
+    return { status: "unavailable", reason: "invalid", url };
+  }
 
   return { status: "ok", detail: sanearDeputadoUfDetail(body), url };
 }
@@ -619,6 +663,22 @@ export function projecaoValida(v: unknown): v is DeputadoProjecaoUf {
   );
 }
 
+/** Os valores aceitos de `granularidade` (spec 027, design § 3.2). */
+const GRANULARIDADES: ReadonlySet<string> = new Set(["uf", "zona"]);
+
+/** `conferencia.nao_comparou` (spec 027): lista de `{comparacao, motivo}` conhecidos. */
+function naoComparouValido(v: unknown): boolean {
+  return (
+    Array.isArray(v) &&
+    v.every(
+      (item) =>
+        ehObjeto(item) &&
+        (item.comparacao === "eleitorado" || item.comparacao === "votos_validos") &&
+        item.motivo === "granularidade_uf",
+    )
+  );
+}
+
 function conferenciaValida(v: unknown): v is DeputadoConferencia {
   return (
     ehObjeto(v) &&
@@ -720,9 +780,20 @@ export function sanearDeputadoUfDetail(detail: DeputadoUfDetail): DeputadoUfDeta
     descartar("pares_atrasados");
   }
   if ("contrato" in bruto && !ehNumero(bruto.contrato)) descartar("contrato");
+  if ("granularidade" in bruto && !GRANULARIDADES.has(bruto.granularidade as string)) {
+    descartar("granularidade");
+  }
   if ("regras" in bruto && !regrasValidas(bruto.regras)) descartar("regras");
   if ("projecao" in bruto && !projecaoValida(bruto.projecao)) descartar("projecao");
   if ("conferencia" in bruto && !conferenciaValida(bruto.conferencia)) descartar("conferencia");
+  // Spec 027: `nao_comparou` malformado sai SOZINHO — a Conferência continua
+  // (o que foi comparado segue valendo); só a lista do que não foi some.
+  const conf = saida.conferencia;
+  if (ehObjeto(conf) && "nao_comparou" in conf && !naoComparouValido(conf.nao_comparou)) {
+    const { nao_comparou: _descartado, ...semNaoComparou } = conf;
+    saida.conferencia = semNaoComparou;
+    avisarDescarte("conferencia.nao_comparou", uf);
+  }
   if ("mais_votados" in bruto) {
     if (Array.isArray(bruto.mais_votados)) {
       const refs = bruto.mais_votados.filter(
@@ -799,14 +870,15 @@ export interface DeputadoUfListaAgremiacao {
 }
 
 /**
- * `deputado/uf-lista/<SIGLA>.json` (design § 2.5). Mesma autodescrição do
- * objeto da UF (`ts`, `uf`): um CDN que sirva o objeto errado precisa poder
- * ser detectado.
+ * `<prefixo>/uf-lista/<SIGLA>.json` (design § 2.5; prefixo por cargo desde a
+ * spec 027). Mesma autodescrição do objeto da UF (`ts`, `uf`, `cargo`): um CDN
+ * que sirva o objeto errado precisa poder ser detectado.
  */
 export interface DeputadoUfLista {
   /** O MESMO carimbo do objeto da UF no ciclo. */
   ts: string;
-  cargo: 6;
+  /** O cargo da chamada de escrita (`payload.cargo`), nunca um literal. */
+  cargo: CargoProporcional;
   turno: 1;
   contrato: 2;
   uf: string;
@@ -842,12 +914,17 @@ export type DeputadoUfListaResult =
   | { status: "ok"; lista: DeputadoUfLista; url: string }
   | { status: "unavailable"; reason: DeputadoUfUnavailableReason; url: string | null };
 
-function isDeputadoUfLista(value: unknown, expectedUf: string): value is DeputadoUfLista {
+function isDeputadoUfLista(
+  value: unknown,
+  expectedUf: string,
+  expectedCargo: CargoProporcional,
+): value is DeputadoUfLista {
   return (
     ehObjeto(value) &&
     typeof value.ts === "string" &&
     typeof value.uf === "string" &&
     value.uf.toUpperCase() === expectedUf.toUpperCase() &&
+    cargoConfere(value.cargo, expectedCargo) &&
     Array.isArray(value.agremiacoes)
   );
 }
@@ -871,14 +948,20 @@ export function sanearDeputadoUfLista(lista: DeputadoUfLista): DeputadoUfLista {
 }
 
 /**
- * Lê a lista 61+ de UMA UF do Blob, no servidor. Mesmo contrato de
- * {@link readDeputadoUfDetail}: nunca lança, devolve o motivo, mesma
- * revalidação de 60 s.
+ * Lê a lista 61+ de UM cargo proporcional numa UF do Blob, no servidor. Mesmo
+ * contrato de {@link readDeputadoUfDetail}: cargo obrigatório, nunca lança,
+ * devolve o motivo, mesma revalidação de 60 s.
  */
-export async function readDeputadoUfLista(sigla: string): Promise<DeputadoUfListaResult> {
+export async function readDeputadoUfLista(
+  cargo: CargoProporcional,
+  sigla: string,
+): Promise<DeputadoUfListaResult> {
+  if (!isCargoProporcional(cargo)) {
+    return { status: "unavailable", reason: "invalid", url: null };
+  }
   let url: string | null;
   try {
-    url = blobUrlFor(deputadoUfListaBlobPathname(sigla));
+    url = blobUrlFor(deputadoUfListaBlobPathname(cargo, sigla));
   } catch {
     return { status: "unavailable", reason: "invalid", url: null };
   }
@@ -902,7 +985,9 @@ export async function readDeputadoUfLista(sigla: string): Promise<DeputadoUfList
     return { status: "unavailable", reason: "invalid", url };
   }
 
-  if (!isDeputadoUfLista(body, sigla)) return { status: "unavailable", reason: "invalid", url };
+  if (!isDeputadoUfLista(body, sigla, cargo)) {
+    return { status: "unavailable", reason: "invalid", url };
+  }
 
   return { status: "ok", lista: sanearDeputadoUfLista(body), url };
 }

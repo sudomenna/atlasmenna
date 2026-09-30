@@ -39,6 +39,12 @@ import { get } from "@vercel/edge-config";
 
 import { type Cargo, currentPresidentialTurno, type Turno } from "@/lib/config/calendar";
 import {
+  type CargoProporcional,
+  type CargoTokenProporcional,
+  cargoToken,
+  isCargoProporcional,
+} from "@/lib/config/cargos";
+import {
   archiveProjectionKey,
   currentProjectionKey,
   DEPRECATED_COLON_CURRENT_ALIAS_KEY,
@@ -46,7 +52,7 @@ import {
   deprecatedColonCurrentProjectionKey,
   deprecatedColonLegacyUfAliasKey,
   deprecatedColonUfProjectionKey,
-  interruptorProjecaoDepKey,
+  interruptorProjecaoKey,
   LEGACY_CURRENT_ALIAS_KEY,
   legacyUfAliasKey,
   ufProjectionKey,
@@ -72,8 +78,15 @@ import { logError, logWarn } from "@/lib/tse/log";
  * tipado como `EdgePayload`".
  *
  * Quem quer o payload de Deputado chama {@link readDeputadoProjection}.
+ *
+ * **Derivado de `proporcional`** (2026-09-29, spec 027): era
+ * `Exclude<Cargo, "dep">`, escrito quando só o 6 era proporcional. Com `est` e
+ * `dis` no tipo de token, aquela forma passaria a aceitar as assembleias como
+ * majoritárias — `readProjection({ cargo: "est" })` compilaria e leria o
+ * payload proporcional tipado como `EdgePayload`. Agora quem tira os
+ * proporcionais é a tabela (`CargoTokenProporcional`, `lib/config/cargos.ts`).
  */
-export type CargoMajoritario = Exclude<Cargo, "dep">;
+export type CargoMajoritario = Exclude<Cargo, CargoTokenProporcional>;
 
 /**
  * O resultado de uma leitura do Global Config, com **"não existe" e "falhou"
@@ -439,8 +452,16 @@ export async function readUfProjection(
 }
 
 /**
- * Lê o payload nacional de **Deputado Federal** — chave
- * `projection-current-dep-t1` (design 017 § D1, ADR-0012).
+ * Lê o payload nacional de um cargo **proporcional** — `6` → chave
+ * `projection-current-dep-t1` (design 017 § D1, ADR-0012); `7` →
+ * `projection-current-est-t1`; `8` → `projection-current-dis-t1` (spec 027
+ * RF-279, ADR-0066).
+ *
+ * 🔴 `cargo` é **obrigatório, sem default** (2026-09-29). Com três casas
+ * proporcionais, um default `6` faria a capa estadual mostrar a Câmara dos
+ * Deputados com forma válida — o conversor de cargo com default silencioso que
+ * este repositório já pagou três vezes. Um número fora dos proporcionais
+ * (vindo de um `as`) lança em vez de ler a chave de outro cargo.
  *
  * Função separada, e não um ramo de `readProjection`, porque o tipo de retorno
  * é outro: `EdgePayloadDeputado` não tem `national`, tem `bancada`. Ver
@@ -454,7 +475,7 @@ export async function readUfProjection(
  * cargo, então não há nada para o qual degradar — uma leitura a mais no
  * caminho de miss seria custo sem contrapartida.
  *
- * Não recebe `turno`: Deputado Federal é turno único
+ * Não recebe `turno`: os três proporcionais são turno único
  * (`temSegundoTurno: false` em `lib/config/cargos.ts`). Um parâmetro de turno
  * aqui só abriria a porta para uma chave `-t2` que nunca é escrita.
  *
@@ -463,12 +484,18 @@ export async function readUfProjection(
  * a página renderiza a estrutura inteira com "aguardando apuração"
  * (constituição § 3 e § 7).
  */
-export async function readDeputadoProjection(): Promise<EdgePayloadDeputado | null> {
+export async function readDeputadoProjection(
+  cargo: CargoProporcional,
+): Promise<EdgePayloadDeputado | null> {
+  if (!isCargoProporcional(cargo)) {
+    throw new Error(`readDeputadoProjection: cargo ${String(cargo)} não é proporcional`);
+  }
   if (!process.env.EDGE_CONFIG) return null;
 
-  return resolver(await getFirst<EdgePayloadDeputado>(() => [currentProjectionKey("dep", 1)]), {
+  const token = cargoToken(cargo);
+  return resolver(await getFirst<EdgePayloadDeputado>(() => [currentProjectionKey(token, 1)]), {
     fn: "readDeputadoProjection",
-    cargo: "dep",
+    cargo: token,
     turno: 1,
   });
 }
@@ -633,9 +660,14 @@ export function _reiniciarAvisosDoInterruptor(): void {
 }
 
 /**
- * Lê o interruptor da projeção de Deputado Federal (chave
- * `interruptor-projecao-dep`). Regra em {@link interpretarInterruptor}: só
- * `ligada === true` lido com sucesso liga; tudo o mais desliga.
+ * Lê o interruptor da projeção de um cargo proporcional — `6` → chave
+ * `interruptor-projecao-dep`; `7` e `8` → `interruptor-projecao-est` (spec 027
+ * RF-287; `interruptorProjecaoKey`, `lib/edge-config/keys.ts`). Regra em
+ * {@link interpretarInterruptor}: só `ligada === true` lido com sucesso liga;
+ * tudo o mais desliga — para QUALQUER cargo.
+ *
+ * `cargo` obrigatório, sem default: o interruptor federal NÃO liga as
+ * assembleias, e um default `6` faria exatamente isso.
  *
  * **Nunca lança, e nunca demora mais que {@link TIMEOUT_INTERRUPTOR_MS}.**
  * Chamada a cada render das telas de Deputado e pela rota da lista 61+ — é o
@@ -652,42 +684,65 @@ export function _reiniciarAvisosDoInterruptor(): void {
  * existe" (`if (value)`). Aqui só `undefined` é ausência — um `false` cru
  * gravado à mão no painel é INVÁLIDO, e o operador precisa ver isso.
  */
-export async function readInterruptorProjecao(): Promise<InterruptorProjecaoLido> {
+export async function readInterruptorProjecao(
+  cargo: CargoProporcional,
+): Promise<InterruptorProjecaoLido> {
+  // Falha FECHADA também aqui: um número fora dos proporcionais (por um `as`)
+  // não escolhe chave nenhuma — desliga, com alarme. Nunca lança (contrato).
+  let chave: string;
+  try {
+    chave = interruptorProjecaoKey(cargo);
+  } catch (erro) {
+    logError("interruptor de projeção sem chave para o cargo — projeção DESLIGADA", {
+      fn: "readInterruptorProjecao",
+      cargo,
+      erro: erro instanceof Error ? erro.message : String(erro),
+    });
+    return interpretarInterruptor({ estado: "falha", erro });
+  }
   if (!process.env.EDGE_CONFIG) return interpretarInterruptor({ estado: "ausente" });
 
   let leitura: LeituraEdge<unknown>;
   try {
-    const valor = await getComTeto(interruptorProjecaoDepKey(), TIMEOUT_INTERRUPTOR_MS);
+    const valor = await getComTeto(chave, TIMEOUT_INTERRUPTOR_MS);
     leitura = valor === undefined ? { estado: "ausente" } : { estado: "ok", valor };
   } catch (erro) {
     leitura = { estado: "falha", erro };
   }
 
   const lido = interpretarInterruptor(leitura);
+  const comoLigar =
+    chave === interruptorProjecaoKey(6)
+      ? "pnpm dep:projecao --ligar --confirmar (passo da virada, 03/10)"
+      : "pnpm dep:projecao --cargo estadual --ligar --confirmar";
   if (leitura.estado === "falha") {
     logError("global-config read failed", {
       fn: "readInterruptorProjecao",
-      efeito: "projeção de Deputado DESLIGADA (falha fechada, ADR-0063)",
+      chave,
+      efeito: "projeção DESLIGADA (falha fechada, ADR-0063)",
       tempoEsgotado: leitura.erro instanceof TempoEsgotadoInterruptor,
       erro: leitura.erro instanceof Error ? leitura.erro.message : String(leitura.erro),
     });
   } else if (lido.origem === "invalida") {
-    logError("interruptor-projecao-dep inválido — projeção de Deputado DESLIGADA", {
+    logError(`${chave} inválido — projeção DESLIGADA`, {
       fn: "readInterruptorProjecao",
+      chave,
       valor: String(JSON.stringify(leitura.estado === "ok" ? leitura.valor : null)).slice(0, 200),
     });
   } else if (lido.origem === "ausente") {
-    avisarUmaVez("ausente", () =>
-      logWarn("interruptor-projecao-dep ausente — projeção de Deputado DESLIGADA", {
+    avisarUmaVez(`${chave}:ausente`, () =>
+      logWarn(`${chave} ausente — projeção DESLIGADA`, {
         fn: "readInterruptorProjecao",
-        comoLigar: "pnpm dep:projecao --ligar --confirmar (passo da virada, 03/10)",
+        chave,
+        comoLigar,
       }),
     );
   }
   if (lido.pct_minimo_ignorado) {
-    avisarUmaVez("pct_minimo", () =>
-      logWarn("interruptor-projecao-dep: pct_minimo ignorado (só sobe a trava, 25–100)", {
+    avisarUmaVez(`${chave}:pct_minimo`, () =>
+      logWarn(`${chave}: pct_minimo ignorado (só sobe a trava, 25–100)`, {
         fn: "readInterruptorProjecao",
+        chave,
         piso: TRAVA_PROJECAO_DEP_PCT,
       }),
     );

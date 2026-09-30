@@ -103,12 +103,19 @@ import {
 import {
   deputadoUfBlobPathname,
   deputadoUfListaBlobPathname,
+  prefixoBlobDeputado,
   ufDetailBlobPathname,
 } from "@/lib/blob/paths";
 import { splitUfPayload, type UfDetailBlob } from "@/lib/blob/uf-detail";
 import { putJson } from "@/lib/blob/write";
 import type { Cargo, Turno } from "@/lib/config/calendar";
-import { type CargoTse, cargoInfo, cargoToken } from "@/lib/config/cargos";
+import {
+  type CargoProporcional,
+  type CargoTse,
+  cargoInfo,
+  cargoToken,
+  isCargoProporcional,
+} from "@/lib/config/cargos";
 import {
   assertValidGlobalConfigKey,
   currentProjectionKey,
@@ -1227,14 +1234,27 @@ async function writeUfDetails(details: readonly UfDetailBlob[]): Promise<BlobWri
 }
 
 // ---------------------------------------------------------------------------
-// Deputado Federal — spec 017 / design 017 § D1, D5, D6
+// Cargos proporcionais — spec 017 / design 017 § D1, D5, D6; spec 027
 // ---------------------------------------------------------------------------
 
 /**
- * Materializa a projeção de **Deputado Federal**:
+ * Materializa a projeção de um cargo **proporcional** — Deputado Federal (6),
+ * Estadual (7) ou Distrital (8):
  *
- *   - 1 chave nacional `projection-current-dep-t1` no Global Config (D5);
- *   - N objetos `deputado/uf/<SIGLA>.json` no Vercel Blob (D6, RF-129).
+ *   - 1 chave nacional `projection-current-<dep|est|dis>-t1` no Global Config (D5);
+ *   - N objetos `<deputado|deputado-estadual|deputado-distrital>/uf/<SIGLA>.json`
+ *     no Vercel Blob (D6, RF-129), mais as listas 61+ em `…/uf-lista/`.
+ *
+ * ## O cargo sai do PAYLOAD, e decide tudo (spec 027 RF-279)
+ *
+ * Chave e prefixo do Blob derivam de `payload.cargo`, validado como
+ * proporcional (senão lança — nenhum default escolhe o federal). Até
+ * 2026-09-29 a chave era `currentProjectionKey(cargoToken(6), 1)` e o caminho
+ * `deputado/uf/<SIGLA>`, fixos: um payload de SP estadual teria gravado por
+ * cima de SP federal, nas duas pontas, com sucesso. E cada objeto de UF que
+ * declare um `cargo` DIFERENTE do payload é recusado (falha daquela UF, com
+ * `error`), para que um produtor que misture casas não publique uma UF no
+ * endereço da outra.
  *
  * ## Por que é uma função separada e não um ramo de `writeProjection`
  *
@@ -1271,10 +1291,19 @@ export async function writeDeputadoProjection(
   payload: EdgePayloadDeputado,
   detalhes?: Record<string, DeputadoUfDetailComTransporte>,
 ): Promise<void> {
+  // O cargo vem do payload e é validado aqui, na fronteira: a rota de escrita
+  // chama com `any`, e o tipo não protege ali. Sem default.
+  const cargo: unknown = payload.cargo;
+  if (typeof cargo !== "number" || !isCargoProporcional(cargo)) {
+    throw new Error(
+      `writeDeputadoProjection: cargo ${String(cargo)} não é proporcional — ` +
+        `use writeProjection() para os majoritários.`,
+    );
+  }
   // Turno único (`temSegundoTurno: false`): a chave é sempre `-t1`. Não sai
   // de `payload.turno` para que um payload malformado com `turno: 2` não
   // inaugure uma chave que nenhum leitor consulta.
-  const nationalKey = currentProjectionKey(cargoToken(6), 1);
+  const nationalKey = currentProjectionKey(cargoToken(cargo), 1);
   const nationalJson = JSON.stringify(payload);
 
   // Deputado usa o PISO de `limiarNacionalBytes`, sem excedente, e o zero é
@@ -1311,7 +1340,7 @@ export async function writeDeputadoProjection(
 
   // Blob em paralelo com o Global Config — os dois read paths são
   // independentes e serializá-los só somaria latência ao ciclo.
-  const blobWrites = writeDeputadoUfDetails(Object.values(detalhes ?? {}));
+  const blobWrites = writeDeputadoUfDetails(cargo, Object.values(detalhes ?? {}));
 
   let failure: WriteFailure | null = null;
   try {
@@ -1330,6 +1359,7 @@ export async function writeDeputadoProjection(
   }
 
   logInfo("global-config deputado projection written", {
+    cargo,
     namedKey: nationalKey,
     nationalBytes: nationalJson.length,
     ufs: payload.por_uf.length,
@@ -1367,6 +1397,7 @@ interface DeputadoBlobWriteSummary extends BlobWriteSummary {
 export function separarListaRestante(
   bruto: DeputadoUfDetailComTransporte,
   carimbo: string,
+  cargo: CargoProporcional,
 ): { detalhe: DeputadoUfDetail; lista: DeputadoUfLista | null } {
   const { lista_restante, ...detalhe } = bruto;
   const uf = bruto.uf.toUpperCase();
@@ -1378,10 +1409,12 @@ export function separarListaRestante(
   }
   const temLinha = agremiacoes?.some((a) => a.candidatos.length > 0) ?? false;
   return {
-    detalhe: { ...detalhe, ts: carimbo, uf },
+    // `cargo` carimbado como `ts`/`uf`: o objeto sai autodescritivo mesmo se o
+    // produtor não mandou o campo, e o leitor confere (spec 027 RF-279).
+    detalhe: { ...detalhe, ts: carimbo, uf, cargo },
     lista:
       agremiacoes !== null && temLinha
-        ? { ts: carimbo, cargo: 6, turno: 1, contrato: 2, uf, agremiacoes }
+        ? { ts: carimbo, cargo, turno: 1, contrato: 2, uf, agremiacoes }
         : null,
   };
 }
@@ -1412,9 +1445,15 @@ async function gravarObjeto(key: string, lista: boolean, gravar: () => ReturnTyp
 }
 
 /**
- * Publica o detalhe de cada UF de Deputado Federal no Blob — best-effort, UFs
- * em paralelo, a mesma política por chave do Global Config: uma UF com
- * problema transitório não cancela as outras 26.
+ * Publica o detalhe de cada UF de UM cargo proporcional no Blob — best-effort,
+ * UFs em paralelo, a mesma política por chave do Global Config: uma UF com
+ * problema transitório não cancela as outras.
+ *
+ * `cargo` é o do payload (validado em `writeDeputadoProjection`) e decide o
+ * prefixo dos caminhos (`deputadoUfBlobPathname(cargo, uf)`). Um objeto de UF
+ * cujo `cargo` declarado difere dele é recusado como falha daquela UF — nunca
+ * gravado no endereço de outra casa (spec 027 RF-279). E uma UF sem a corrida
+ * do cargo (o 8 fora do DF) também falha: o construtor de caminho lança.
  *
  * **Nunca lança.** Falhas voltam no sumário e são logadas como `error`.
  *
@@ -1435,6 +1474,7 @@ async function gravarObjeto(key: string, lista: boolean, gravar: () => ReturnTyp
  * tenha linha 61+ (na prática, só SP).
  */
 async function writeDeputadoUfDetails(
+  cargo: CargoProporcional,
   details: readonly DeputadoUfDetailComTransporte[],
 ): Promise<DeputadoBlobWriteSummary> {
   const summary: DeputadoBlobWriteSummary = {
@@ -1447,16 +1487,34 @@ async function writeDeputadoUfDetails(
   if (details.length === 0) return summary;
 
   const carimbo = new Date().toISOString();
+  // O mesmo prefixo do caminho (`deputado`, `deputado-estadual`,
+  // `deputado-distrital`) nomeia as falhas no log — o federal fica idêntico ao
+  // de antes da spec 027, que é o que o runbook manda vigiar.
+  const rotulo = prefixoBlobDeputado(cargo);
 
   const porUf = await Promise.all(
     details.map(async (bruto): Promise<GravacaoBlob[]> => {
+      const ufBruta = String((bruto as { uf?: unknown }).uf);
+      const cargoDeclarado = (bruto as { cargo?: unknown }).cargo;
+      if (cargoDeclarado !== undefined && cargoDeclarado !== cargo) {
+        return [
+          {
+            key: `${rotulo}/uf/${ufBruta}`,
+            lista: false,
+            ok: false,
+            message:
+              `objeto da UF declara cargo ${String(cargoDeclarado)}, payload é do cargo ` +
+              `${cargo} — NÃO gravado (seria o endereço de outra casa)`,
+          },
+        ];
+      }
       let separado: ReturnType<typeof separarListaRestante>;
       try {
-        separado = separarListaRestante(bruto, carimbo);
+        separado = separarListaRestante(bruto, carimbo, cargo);
       } catch (err) {
         return [
           {
-            key: `deputado/uf/${String((bruto as { uf?: unknown }).uf)}`,
+            key: `${rotulo}/uf/${ufBruta}`,
             lista: false,
             ok: false,
             message: err instanceof Error ? err.message : String(err),
@@ -1467,14 +1525,14 @@ async function writeDeputadoUfDetails(
       const feitas: GravacaoBlob[] = [];
       if (lista) {
         feitas.push(
-          await gravarObjeto(`deputado/uf-lista/${lista.uf}`, true, () =>
-            putJson(deputadoUfListaBlobPathname(lista.uf), lista),
+          await gravarObjeto(`${rotulo}/uf-lista/${lista.uf}`, true, () =>
+            putJson(deputadoUfListaBlobPathname(cargo, lista.uf), lista),
           ),
         );
       }
       feitas.push(
-        await gravarObjeto(`deputado/uf/${detalhe.uf}`, false, () =>
-          putJson(deputadoUfBlobPathname(detalhe.uf), detalhe),
+        await gravarObjeto(`${rotulo}/uf/${detalhe.uf}`, false, () =>
+          putJson(deputadoUfBlobPathname(cargo, detalhe.uf), detalhe),
         ),
       );
       return feitas;
@@ -1495,6 +1553,7 @@ async function writeDeputadoUfDetails(
 
   if (summary.failures.length > 0) {
     logError("blob deputado uf write failures", {
+      cargo,
       failed: summary.failures.length,
       total: gravacoes.length,
       ufs: details.length,

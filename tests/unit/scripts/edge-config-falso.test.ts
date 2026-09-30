@@ -221,7 +221,10 @@ describe("montarBlobs — o CDN do Blob, a partir das fixtures", () => {
 
   it("serve o detalhe de Deputado das 27 UFs, no caminho que o leitor monta", () => {
     for (const sigla of ["SP", "RR", "DF"]) {
-      const d = blobs.get(deputadoUfBlobPathname(sigla)) as { uf?: string; agremiacoes?: unknown };
+      const d = blobs.get(deputadoUfBlobPathname(6, sigla)) as {
+        uf?: string;
+        agremiacoes?: unknown;
+      };
       expect(d?.uf).toBe(sigla);
       expect(Array.isArray(d?.agremiacoes)).toBe(true);
     }
@@ -233,20 +236,23 @@ describe("montarBlobs — o CDN do Blob, a partir das fixtures", () => {
   it("a lista 61+ só é servida quando a fixture existe — nunca inventada", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "falso-blob-"));
     fs.writeFileSync(path.join(dir, "deputado-uf.json"), JSON.stringify({ SP: { uf: "SP" } }));
-    expect([...montarBlobs({ dir }).keys()]).toEqual([deputadoUfBlobPathname("SP")]);
+    expect([...montarBlobs({ dir }).keys()]).toEqual([deputadoUfBlobPathname(6, "SP")]);
 
     fs.writeFileSync(
       path.join(dir, "deputado-uf-lista.json"),
       JSON.stringify({ SP: { uf: "SP", agremiacoes: [] } }),
     );
     const comLista = montarBlobs({ dir });
-    expect(comLista.get(deputadoUfListaBlobPathname("SP"))).toEqual({ uf: "SP", agremiacoes: [] });
+    expect(comLista.get(deputadoUfListaBlobPathname(6, "SP"))).toEqual({
+      uf: "SP",
+      agremiacoes: [],
+    });
   });
 });
 
 describe("responder — o Blob é público e vem antes do 401", () => {
   const chaves = new Map<string, unknown>();
-  const blobs = new Map<string, unknown>([[deputadoUfBlobPathname("SP"), { uf: "SP" }]]);
+  const blobs = new Map<string, unknown>([[deputadoUfBlobPathname(6, "SP"), { uf: "SP" }]]);
 
   it("objeto conhecido → 200, SEM exigir Authorization (o CDN real não exige)", () => {
     const r = responder(chaves, ID, "GET", `${PREFIXO_BLOB}deputado/uf/SP.json`, undefined, blobs);
@@ -266,7 +272,7 @@ describe("responder — o Blob é público e vem antes do 401", () => {
     const antes = process.env.BLOB_PUBLIC_BASE_URL;
     process.env.BLOB_PUBLIC_BASE_URL = "http://127.0.0.1:3101/blob";
     try {
-      const url = new URL(blobUrlFor(deputadoUfBlobPathname("SP")) as string);
+      const url = new URL(blobUrlFor(deputadoUfBlobPathname(6, "SP")) as string);
       expect(responder(chaves, ID, "GET", url.pathname, undefined, blobs).status).toBe(200);
     } finally {
       if (antes === undefined) delete process.env.BLOB_PUBLIC_BASE_URL;

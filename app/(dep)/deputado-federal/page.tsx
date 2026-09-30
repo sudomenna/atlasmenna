@@ -321,7 +321,7 @@ export default async function DeputadoFederalPage() {
     resultadoEleitoral(
       () => simulacaoDeputadoNacional(),
       async () =>
-        (await readDeputadoProjection()) ??
+        (await readDeputadoProjection(6)) ??
         (process.env.NODE_ENV === "development"
           ? (depFixture as unknown as EdgePayloadDeputado)
           : null),

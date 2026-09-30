@@ -38,10 +38,12 @@ import { eq } from "drizzle-orm";
 import {
   CARGOS_TSE,
   type CargoTse,
+  cargoExisteNaUf,
   cargoInfo,
   type Eleicao,
   eleicaoDoCargo,
   isCargoTse,
+  ufsDoCargo,
 } from "@/lib/config/cargos";
 import { db, schema } from "@/lib/db";
 
@@ -396,6 +398,8 @@ export function getActiveCargos(): Array<CargoTse> {
   // qualquer `TSE_MAX_RPS`/`maxDuration` permitido comporta numa invocação só.
   // Quem quer 5/6 pede pelo segmento de rota (`/api/ingest/senador`,
   // `/api/ingest/deputado-federal/<fatia>`), e aí `filterCargos` honra o pedido.
+  // O mesmo vale para 7/8 (spec 027): `/api/ingest/deputado-estadual` e
+  // `/api/ingest/deputado-distrital`, crons próprios — não entram aqui.
   const DEFAULT_CARGOS = "1,3";
   const raw = (process.env.TSE_CARGOS ?? DEFAULT_CARGOS).trim() || DEFAULT_CARGOS;
 
@@ -472,15 +476,25 @@ export function getGranularidade(cargo?: CargoTse): TseGranularidade {
   // continua sobrepondo TUDO — é escotilha de diagnóstico, e por isso vem antes.
   const envRaw = process.env.TSE_GRANULARIDADE?.trim().toLowerCase();
 
-  // Interruptor de emergência ESPECÍFICO do cargo 6 (2026-09-13): reverte só
-  // Deputado Federal a `uf` — e, por consequência, à cadência de fato de antes
-  // (o fatiamento em `listIngestTargets` só se aplica a granularidade "zona",
-  // então em "uf" cada uma das 6 invocações por ciclo devolve o agregado
-  // completo de 27 UFs) — sem tocar Presidente/Governador/Senador e sem
-  // deploy. Diferente de `TSE_GRANULARIDADE`, que é global. Documentado em
-  // docs/operations/runbook.md § Variáveis de ambiente.
+  // Interruptor de emergência dos cargos PROPORCIONAIS. Nasceu (2026-09-13)
+  // específico do cargo 6: reverte Deputado Federal a `uf` — e, por
+  // consequência, à cadência de fato de antes (o fatiamento em
+  // `listIngestTargets` só se aplica a granularidade "zona", então em "uf" cada
+  // uma das 6 invocações por ciclo devolve o agregado completo de 27 UFs) —
+  // sem tocar Presidente/Governador/Senador. Diferente de `TSE_GRANULARIDADE`,
+  // que é global. Documentado em docs/operations/runbook.md § Variáveis de
+  // ambiente. ⚠️ Exige novo deploy (variável de ambiente, ADR-0063 D4).
+  //
+  // Desde 2026-09-29 (spec 027) vale para TODO cargo proporcional (6, 7 e 8 —
+  // `cargoInfo(c).proporcional`, lido da tabela). O nome fica, por ser o que o
+  // runbook e o vigia conhecem. Na Fase 1 os cargos 7/8 já estão em `uf`, e
+  // `=uf` não muda nada neles; quando a Fase 2 puser o 7 em zona fatiada, a
+  // mesma chave reverte os dois deputados juntos — que é o que se quer num
+  // incidente do pipeline fatiado, que é um só para os dois.
   const overrideDeputadoRaw =
-    cargo === 6 ? process.env.TSE_DEPUTADO_GRANULARIDADE?.trim().toLowerCase() : undefined;
+    cargo !== undefined && cargoInfo(cargo).proporcional
+      ? process.env.TSE_DEPUTADO_GRANULARIDADE?.trim().toLowerCase()
+      : undefined;
 
   const padraoDoCargo = cargo !== undefined ? cargoInfo(cargo).granularidade : "zona";
   // Precedência: TSE_DEPUTADO_GRANULARIDADE (específica do cargo 6) >
@@ -507,38 +521,11 @@ export function getGranularidade(cargo?: CargoTse): TseGranularidade {
 /** Sentinel de zona/município para targets de nível "uf"/"br" — ver nota em `getGranularidade`. */
 const SENTINEL_ZONA_OU_MUNICIPIO = 0;
 
-/** Lista estática das 27 UFs (26 estados + DF) — usada em granularidade "uf"
- *  para não depender de uma consulta a `zonas` (a tabela `zonas` é
- *  populada por zona real e não tem uma linha "resumo" por UF). */
-const TODAS_UFS = [
-  "AC",
-  "AL",
-  "AP",
-  "AM",
-  "BA",
-  "CE",
-  "DF",
-  "ES",
-  "GO",
-  "MA",
-  "MT",
-  "MS",
-  "MG",
-  "PA",
-  "PB",
-  "PR",
-  "PE",
-  "PI",
-  "RJ",
-  "RN",
-  "RS",
-  "RO",
-  "RR",
-  "SC",
-  "SP",
-  "SE",
-  "TO",
-] as const;
+// A lista estática das 27 UFs que morava aqui (`TODAS_UFS`) foi para
+// `lib/config/cargos.ts` em 2026-09-29 (`UFS_DA_ELEICAO`/`ufsDoCargo`): desde a
+// spec 027 o conjunto de UFs de um cargo depende do cargo (o 7 não existe no
+// DF, o 8 só existe lá), e quem responde isso é a tabela canônica. Continua
+// estática — granularidade "uf" não consulta `zonas`.
 
 // ---------------------------------------------------------------------------
 // Whitelist parser (env preview)
@@ -943,16 +930,41 @@ function filterCargos(
  * UMA VEZ por cargo, cada vez com o código certo.
  */
 function buildPreviewTargetsUf(codEleicao: string, baseUrl: string, cargo: CargoTse): Target[] {
-  const whitelist = parseWhitelist(process.env.TSE_TARGETS_WHITELIST).filter(
-    (entry) => entry.cargo === cargo,
-  );
+  const whitelist = whitelistDoCargo(cargo);
   return whitelist.map(({ uf }) => buildUfTarget(uf, cargo, codEleicao, baseUrl));
 }
 
 /**
- * Produção, granularidade "uf" (opt-in): 27 UFs para ESTE cargo + 1 BR
- * quando o cargo é Presidente (único cargo com arquivo de abrangência
- * Brasil, EA20 § 2 tabela de cargos).
+ * As entradas da whitelist de preview para ESTE cargo, só nas UFs em que a
+ * corrida dele existe (`ufsDoCargo`, spec 027 RF-278). Um `DF:7` ou `SP:8`
+ * digitado no ambiente seria um endereço que o TSE não publica — 404 a cada
+ * rodada, que conta para o bloqueio de IP (constituição § 1). Sai com `warn`,
+ * como qualquer outro token inválido da whitelist.
+ */
+function whitelistDoCargo(cargo: CargoTse): Array<{ uf: string; cargo: CargoTse }> {
+  const doCargo = parseWhitelist(process.env.TSE_TARGETS_WHITELIST).filter(
+    (entry) => entry.cargo === cargo,
+  );
+  const validas = doCargo.filter((entry) => cargoExisteNaUf(cargo, entry.uf));
+  for (const entry of doCargo) {
+    if (!validas.includes(entry)) {
+      console.warn(
+        `[targets] TSE_TARGETS_WHITELIST: "${entry.uf}:${cargo}" — o cargo ${cargo} não existe ` +
+          `nessa UF (${cargoInfo(cargo).label}). Token ignorado.`,
+      );
+    }
+  }
+  return validas;
+}
+
+/**
+ * Produção, granularidade "uf": um alvo por UF EM QUE O CARGO EXISTE
+ * (`ufsDoCargo` — 27 para os cargos 1/3/5/6, 26 sem o DF para o 7, só o DF
+ * para o 8; spec 027 RF-278) + 1 BR quando o cargo é Presidente (único cargo
+ * com arquivo de abrangência Brasil, EA20 § 2 tabela de cargos).
+ *
+ * É o modo PADRÃO dos cargos 7/8 na Fase 1 (ADR-0067) e, para os demais, o
+ * agregado aditivo do RF-199 somado aos alvos de zona.
  *
  * `cargo` é obrigatório pelo mesmo motivo de `buildPreviewTargetsUf` acima —
  * ver o comentário lá.
@@ -960,7 +972,7 @@ function buildPreviewTargetsUf(codEleicao: string, baseUrl: string, cargo: Cargo
 function buildProductionTargetsUf(codEleicao: string, baseUrl: string, cargo: CargoTse): Target[] {
   const targets: Target[] = [];
 
-  for (const uf of TODAS_UFS) {
+  for (const uf of ufsDoCargo(cargo)) {
     targets.push(buildUfTarget(uf, cargo, codEleicao, baseUrl));
   }
 
@@ -980,9 +992,7 @@ async function buildPreviewTargetsZona(
   baseUrl: string,
   cargo: CargoTse,
 ): Promise<Target[]> {
-  const whitelist = parseWhitelist(process.env.TSE_TARGETS_WHITELIST).filter(
-    (entry) => entry.cargo === cargo,
-  );
+  const whitelist = whitelistDoCargo(cargo);
 
   const targets: Target[] = [];
 
@@ -1028,19 +1038,27 @@ async function buildPreviewTargetsZona(
  * varrer aqui uma lista de cargos publicaria os demais sob o código errado.
  * Quem decide o conjunto de cargos do ciclo é `listIngestTargets`
  * (`filterCargos`), chamando esta função uma vez por cargo.
+ *
+ * Só as zonas das UFs em que o cargo EXISTE (`ufsDoCargo`, spec 027 RF-278):
+ * a tabela `zonas` não depende de cargo e tem as ~6.110 do país, mas o cargo 8
+ * só tem arquivo no DF e o 7 não tem no DF. Sem este filtro, um cargo 8 em
+ * zona pediria ~6.090 endereços que não existem por rodada. O filtro é em
+ * JavaScript, não num `WHERE`, de propósito: a consulta continua a mesma para
+ * todo cargo, e a regra fica num lugar só (a tabela de cargos).
  */
 async function buildProductionTargetsZona(
   codEleicao: string,
   baseUrl: string,
   cargo: CargoTse,
 ): Promise<Target[]> {
-  const zonas = await db
+  const todas = await db
     .select({
       codZona: schema.zonas.codZona,
       codMunicipioTse: schema.zonas.codMunicipioTse,
       uf: schema.zonas.uf,
     })
     .from(schema.zonas);
+  const zonas = todas.filter((z) => cargoExisteNaUf(cargo, z.uf));
 
   const targets: Target[] = [];
 

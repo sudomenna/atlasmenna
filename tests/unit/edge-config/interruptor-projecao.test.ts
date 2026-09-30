@@ -149,7 +149,7 @@ describe("interpretarInterruptor — a regra inteira, pura", () => {
 describe("readInterruptorProjecao — leitura real (SDK mockado)", () => {
   it("lê a chave certa e liga com `{ligada: true}`", async () => {
     getMock.mockResolvedValue({ ligada: true });
-    expect(await readInterruptorProjecao()).toEqual({
+    expect(await readInterruptorProjecao(6)).toEqual({
       ligada: true,
       pct_minimo: 25,
       origem: "chave",
@@ -160,16 +160,16 @@ describe("readInterruptorProjecao — leitura real (SDK mockado)", () => {
 
   it("🔴 o SDK lança ⇒ DESLIGADA, com `logError`, e nunca propaga", async () => {
     getMock.mockRejectedValue(new Error("ECONNRESET"));
-    expect(await readInterruptorProjecao()).toMatchObject({ ligada: false, origem: "falha" });
+    expect(await readInterruptorProjecao(6)).toMatchObject({ ligada: false, origem: "falha" });
     expect(logErrorMock).toHaveBeenCalledTimes(1);
     expect(logErrorMock.mock.calls[0]?.[1]).toMatchObject({ fn: "readInterruptorProjecao" });
   });
 
   it("chave ausente (`undefined`) ⇒ DESLIGADA, com UM aviso por processo", async () => {
     getMock.mockResolvedValue(undefined);
-    expect(await readInterruptorProjecao()).toMatchObject({ ligada: false, origem: "ausente" });
-    await readInterruptorProjecao();
-    await readInterruptorProjecao();
+    expect(await readInterruptorProjecao(6)).toMatchObject({ ligada: false, origem: "ausente" });
+    await readInterruptorProjecao(6);
+    await readInterruptorProjecao(6);
     expect(logWarnMock).toHaveBeenCalledTimes(1);
     expect(logErrorMock).not.toHaveBeenCalled();
   });
@@ -178,13 +178,13 @@ describe("readInterruptorProjecao — leitura real (SDK mockado)", () => {
     // `getFirst` trataria `false` como "não existe". A leitura do interruptor
     // não pode passar por ele.
     getMock.mockResolvedValue(false);
-    expect(await readInterruptorProjecao()).toMatchObject({ ligada: false, origem: "invalida" });
+    expect(await readInterruptorProjecao(6)).toMatchObject({ ligada: false, origem: "invalida" });
     expect(logErrorMock).toHaveBeenCalledTimes(1);
   });
 
   it("sem Global Config configurado ⇒ DESLIGADA, sem tentar ler", async () => {
     delete process.env.EDGE_CONFIG;
-    expect(await readInterruptorProjecao()).toMatchObject({ ligada: false, origem: "ausente" });
+    expect(await readInterruptorProjecao(6)).toMatchObject({ ligada: false, origem: "ausente" });
     expect(getMock).not.toHaveBeenCalled();
   });
 
@@ -195,7 +195,7 @@ describe("readInterruptorProjecao — leitura real (SDK mockado)", () => {
     try {
       getMock.mockReturnValue(new Promise(() => {}));
       let resolvido: unknown = null;
-      const leitura = readInterruptorProjecao().then((r) => {
+      const leitura = readInterruptorProjecao(6).then((r) => {
         resolvido = r;
       });
       await vi.advanceTimersByTimeAsync(TIMEOUT_INTERRUPTOR_MS - 1);
@@ -218,7 +218,7 @@ describe("readInterruptorProjecao — leitura real (SDK mockado)", () => {
     vi.useFakeTimers();
     try {
       getMock.mockResolvedValue({ ligada: true });
-      expect(await readInterruptorProjecao()).toMatchObject({ ligada: true, origem: "chave" });
+      expect(await readInterruptorProjecao(6)).toMatchObject({ ligada: true, origem: "chave" });
       expect(vi.getTimerCount()).toBe(0);
     } finally {
       vi.useRealTimers();
@@ -231,7 +231,7 @@ describe("readInterruptorProjecao — leitura real (SDK mockado)", () => {
 
   it("`pct_minimo` abaixo do piso: liga, ignora a trava e avisa", async () => {
     getMock.mockResolvedValue({ ligada: true, pct_minimo: 10 });
-    expect(await readInterruptorProjecao()).toEqual({
+    expect(await readInterruptorProjecao(6)).toEqual({
       ligada: true,
       pct_minimo: 25,
       origem: "chave",

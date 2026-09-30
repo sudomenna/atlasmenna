@@ -60,6 +60,13 @@ import { formatTimeHMS } from "@/lib/utils/format";
  * | 1 Presidente / 3 Governador | todo minuto                       | 60 s     |
  * | 5 Senador                   | passo de 5                        | 300 s    |
  * | 6 Deputado Federal          | 6 fatias, cada uma `0,30`…`25,55` | 1.800 s  |
+ * | 7 Deputado Estadual         | `2,7,…,57` (de 5 em 5)            | 300 s    |
+ * | 8 Deputado Distrital        | `3,8,…,58` (de 5 em 5)            | 300 s    |
+ *
+ * 7 e 8 (spec 027 Fase 1, ADR-0067) leem um resumo por casa numa invocação
+ * só — sem fatia —, então a cadência do dado é o próprio período do cron. Se
+ * a Fase 2 fatiar o 7 junto com o 6, esta linha passa a ser a volta completa,
+ * como a do 6.
  *
  * Presidente e Governador a 60 s vêm do ADR-0011; Senador a 5 min, do ADR-0026
  * item 1 (nota (b)).
@@ -79,6 +86,8 @@ export const CADENCIA_SEGUNDOS: Readonly<Record<CargoTse, number>> = {
   3: 60,
   5: 300,
   6: 1800,
+  7: 300,
+  8: 300,
 };
 
 /**

@@ -24,8 +24,8 @@
 // ─── O ZIP tem MAIS fotos do que a tabela tem linhas, e isso é normal ───────
 //
 // O TSE empacota a foto de **toda** candidatura registrada na UF — inclusive
-// vice, suplente de senador e deputado estadual/distrital. `candidatos` só
-// guarda os quatro cargos do produto (1, 3, 5, 6; ver `CARGOS_PRODUTO`). Logo
+// vice e suplente de senador. `candidatos` só guarda os cargos do produto
+// (1, 3, 5, 6, e desde 29/09 também 7 e 8; ver `CARGOS_PRODUTO`). Logo
 // "foto sem linha na tabela" é, em massa, **cargo fora do produto — não
 // anomalia**, e o resumo diz isso com todas as letras para que ninguém leia o
 // número como alarme.

@@ -256,14 +256,14 @@ describe("leitura do Blob (v2)", () => {
     const d = { ...rr(), uf: "SP" };
     (d.agremiacoes[0]?.candidatos?.[0] as unknown as Record<string, unknown>).parcial = "QP";
     mockFetch(async () => new Response(JSON.stringify(d), { status: 200 }));
-    const r = await readDeputadoUfDetail("SP");
+    const r = await readDeputadoUfDetail(6, "SP");
     if (r.status !== "ok") throw new Error(r.reason);
     expect(r.detail.agremiacoes[0]?.candidatos?.[0]).not.toHaveProperty("parcial");
   });
 
   it("lista: caminho próprio, mesma revalidação de 60 s", async () => {
     const spy = mockFetch(async () => new Response(JSON.stringify(lista()), { status: 200 }));
-    const r = await readDeputadoUfLista("sp");
+    const r = await readDeputadoUfLista(6, "sp");
     expect(spy).toHaveBeenCalledWith(`${BASE}/deputado/uf-lista/SP.json`, {
       next: { revalidate: 60 },
     });
@@ -273,32 +273,32 @@ describe("leitura do Blob (v2)", () => {
 
   it("lista: 404 → not_found; 5xx e rede → fetch_error; lixo e UF trocada → invalid", async () => {
     mockFetch(async () => new Response("nope", { status: 404 }));
-    expect(await readDeputadoUfLista("SP")).toMatchObject({ reason: "not_found" });
+    expect(await readDeputadoUfLista(6, "SP")).toMatchObject({ reason: "not_found" });
     vi.restoreAllMocks();
 
     mockFetch(async () => new Response("x", { status: 503 }));
-    expect(await readDeputadoUfLista("SP")).toMatchObject({ reason: "fetch_error" });
+    expect(await readDeputadoUfLista(6, "SP")).toMatchObject({ reason: "fetch_error" });
     vi.restoreAllMocks();
 
     mockFetch(async () => {
       throw new TypeError("fetch failed");
     });
-    expect(await readDeputadoUfLista("SP")).toMatchObject({ reason: "fetch_error" });
+    expect(await readDeputadoUfLista(6, "SP")).toMatchObject({ reason: "fetch_error" });
     vi.restoreAllMocks();
 
     mockFetch(async () => new Response("{nao-json", { status: 200 }));
-    expect(await readDeputadoUfLista("SP")).toMatchObject({ reason: "invalid" });
+    expect(await readDeputadoUfLista(6, "SP")).toMatchObject({ reason: "invalid" });
     vi.restoreAllMocks();
 
     mockFetch(async () => new Response(JSON.stringify(lista("RJ")), { status: 200 }));
-    expect(await readDeputadoUfLista("SP")).toMatchObject({ reason: "invalid" });
+    expect(await readDeputadoUfLista(6, "SP")).toMatchObject({ reason: "invalid" });
   });
 
   it("lista: sem Blob configurado → not_configured, sem tentar a rede", async () => {
     delete process.env.BLOB_PUBLIC_BASE_URL;
     delete process.env.BLOB_READ_WRITE_TOKEN;
     const spy = mockFetch(async () => new Response("{}"));
-    expect(await readDeputadoUfLista("SP")).toMatchObject({ reason: "not_configured" });
+    expect(await readDeputadoUfLista(6, "SP")).toMatchObject({ reason: "not_configured" });
     expect(spy).not.toHaveBeenCalled();
   });
 
@@ -308,7 +308,7 @@ describe("leitura do Blob (v2)", () => {
     l.agremiacoes[0]?.candidatos.push({ sqcand: 63 });
     (l.agremiacoes as unknown[]).push({ candidatos: [] });
     mockFetch(async () => new Response(JSON.stringify(l), { status: 200 }));
-    const r = await readDeputadoUfLista("SP");
+    const r = await readDeputadoUfLista(6, "SP");
     if (r.status !== "ok") throw new Error(r.reason);
     expect(r.lista.agremiacoes).toHaveLength(1);
     expect(r.lista.agremiacoes[0]?.candidatos).toHaveLength(n);

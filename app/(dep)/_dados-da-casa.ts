@@ -114,7 +114,7 @@ export async function lerDadosDaCasa(cargo: CargoDeputado, sigla: string): Promi
   const [[nacionalLido, detalheLido], interruptor] = await Promise.all([
     emSimulacao
       ? Promise.resolve([null, SEM_DETALHE_REMOTO] as const)
-      : Promise.all([readDeputadoProjection(), readDeputadoUfDetail(sigla)]),
+      : Promise.all([readDeputadoProjection(cargo), readDeputadoUfDetail(cargo, sigla)]),
     lerInterruptorDaTela(emSimulacao),
   ]);
 
@@ -155,7 +155,7 @@ export async function lerListaDaCasa(
   sigla: string,
 ): Promise<DeputadoUfListaResult> {
   exigirLeitor(cargo, "lerListaDaCasa");
-  if (!simulacaoLigada()) return readDeputadoUfLista(sigla);
+  if (!simulacaoLigada()) return readDeputadoUfLista(cargo, sigla);
   const daSimulacao = simulacaoDeputadoUfLista(sigla);
   return daSimulacao
     ? { status: "ok", lista: sanearDeputadoUfLista(daSimulacao), url: "fixture://simulacao" }

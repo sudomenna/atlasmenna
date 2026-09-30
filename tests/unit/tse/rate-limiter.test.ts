@@ -11,7 +11,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CARGOS, cargoInfo, piorCasoAgregadoRps } from "@/lib/config/cargos";
+import { CARGOS, cargoInfo, piorCasoAgregadoRps, ufsDoCargo } from "@/lib/config/cargos";
 import {
   createTokenBucket,
   getTseRateLimiter,
@@ -118,7 +118,17 @@ describe("getTseRateLimiter", () => {
   // Era 40 até 2026-09-11, quando o teto virou por cargo (ADR-0026).
   it("sem cargo, usa o teto conservador quando TSE_MAX_RPS está ausente (§ 1)", async () => {
     vi.stubEnv("TSE_MAX_RPS", "");
-    const conservador = Math.min(...CARGOS.map((c) => c.rpsMax));
+    // O teto sem cargo é o do cargo LEVE de fan-out (Deputado Federal, 5 rps),
+    // e não o mínimo da tabela: desde a spec 027 as assembleias (7/8) estão a
+    // 1 rps, mas leem no máximo 26 resumos por ciclo — não são referência para
+    // uma chamada que não sabe quantos alvos tem (ADR-0067).
+    const conservador = cargoInfo(6).rpsMax;
+    expect(conservador).toBe(5);
+    expect(conservador).toBeLessThan(
+      Math.min(
+        ...CARGOS.filter((c) => c.granularidade === "zona" && c.cd !== 6).map((c) => c.rpsMax),
+      ),
+    );
     const { rajada, taxa } = await medirBucket(getTseRateLimiter());
 
     // Desde 2026-10-03 a rajada é fixa (2); a taxa é medida pelo tempo.
@@ -145,7 +155,7 @@ describe("getTseRateLimiter", () => {
   // — sem notar que o que o TSE mede é a soma dos quatro. Foi exatamente assim
   // que o pico chegou a 160 rps em 2026-09-11, ao dar 40 aos cargos novos.
   // -------------------------------------------------------------------------
-  it("os QUATRO cargos em paralelo não passam de 80 rps agregados (RF-010.3 item 2)", () => {
+  it("os SEIS cargos em paralelo não passam de 82 rps agregados (RF-010.3 item 2, ADR-0067)", () => {
     // Reescrito em 2026-09-11. A versão anterior travava `2 × default = 80` com
     // um default único de 40 — correto enquanto existiam DOIS cargos. Com
     // Senador e Deputado (ADR-0026), os quatro crons de `vercel.ts` coincidem
@@ -158,7 +168,10 @@ describe("getTseRateLimiter", () => {
     // avança o tempo do outro e a taxa medida sai artificialmente baixa — seria
     // um teste que sempre passa. Cada bucket já é testado individualmente; o
     // que protege aqui é travar o número.
-    const TETO_AGREGADO_RPS = 80; // RF-010.3 item 2
+    //
+    // 2026-09-29 (spec 027 Fase 1, ADR-0067): Deputado Estadual e Distrital
+    // entram a 1 rps cada — 80 → 82. O ADR-0036 já recusou 85.
+    const TETO_AGREGADO_RPS = 82; // RF-010.3 item 2, emendado pelo ADR-0067
     const TETO_TSE_RPS = 100; // limite documentado, nunca alcançar
 
     expect(piorCasoAgregadoRps()).toBeLessThanOrEqual(TETO_AGREGADO_RPS);
@@ -174,6 +187,18 @@ describe("getTseRateLimiter", () => {
       expect(taxa, `cargo ${info.cd} (${info.label})`).toBe(info.rpsMax);
       expect(rajada, `cargo ${info.cd}: rajada`).toBe(TSE_BURST_INICIAL);
     }
+  });
+
+  it("RF-285: o ciclo de resumo das assembleias (7/8, em UF) cabe no maxDuration a 1 rps", () => {
+    // 26 resumos (7) e 1 (8) por invocação, a 1 rps: ~26 s e ~1 s — muito
+    // abaixo dos 300 s. É por isso que 1 rps basta na Fase 1 (ADR-0067).
+    const MAX_DURATION_S = 300;
+    for (const info of CARGOS.filter((c) => c.granularidade === "uf")) {
+      const duracao = ufsDoCargo(info.cd).length / info.rpsMax;
+      expect(duracao, `cargo ${info.cd}`).toBeLessThan(MAX_DURATION_S / 10);
+    }
+    expect(ufsDoCargo(7).length / cargoInfo(7).rpsMax).toBe(26);
+    expect(ufsDoCargo(8).length / cargoInfo(8).rpsMax).toBe(1);
   });
 
   it("o ciclo pesado cabe no maxDuration com o teto do seu cargo (por invocação)", () => {

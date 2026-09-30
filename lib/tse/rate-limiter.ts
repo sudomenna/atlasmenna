@@ -174,8 +174,10 @@ export function createTokenBucket(opts: TokenBucketOptions): TokenBucket {
  * cargo só descreve o código quando cada cargo tem o seu bucket, com o teto
  * dele.
  *
- * A calibragem atual mantém o pior caso agregado em **80 rps**
- * (25 + 25 + 25 + 5 = `piorCasoAgregadoRps()`), 20% abaixo do teto documentado.
+ * A calibragem atual mantém o pior caso agregado em **82 rps**
+ * (25 + 25 + 25 + 5 + 1 + 1 = `piorCasoAgregadoRps()`), 18% abaixo do teto
+ * documentado. Era 80 até 2026-09-29; os dois `+1` são Deputado Estadual e
+ * Distrital na Fase 1 da spec 027 (ADR-0067), um resumo por casa a 1 rps.
  * A constituição § 1 exige teto "**bem abaixo** do limite documentado", e é
  * essa folga — não o valor por invocação isolado — que satisfaz o texto: ela é
  * o que sobra para retry, para o HEAD do `tse-watch`, para o 304 (que conta) e
@@ -273,7 +275,8 @@ let bucketSemCargo: TokenBucket | null = null;
  * A constituição § 1 exige "bem abaixo".
  *
  * O que o TSE vê no IP é a soma dos tetos por cargo: 25+25+25+5 = **80 rps** no
- * pior caso (`piorCasoAgregadoRps()`), inalterado pelo ADR-0036 — é justamente
+ * pior caso (`piorCasoAgregadoRps()`; **82** desde a spec 027, com 7 e 8 a 1 rps
+ * cada — ADR-0067), inalterado pelo ADR-0036 — é justamente
  * por manter o cargo 6 em 5 rps que a varredura dele precisa ser fatiada, e não
  * o contrário. Essa soma supõe um bucket independente POR CARGO, que é o que
  * este módulo entrega desde o ADR-0068. Ela NÃO cobre duas instâncias do MESMO

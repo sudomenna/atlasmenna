@@ -38,14 +38,20 @@ import type { CargoTse } from "../lib/config/cargos.ts";
 
 /**
  * Cargos cobertos pelo produto — espelha `CargoTse` de `lib/config/cargos.ts`
- * (1 Presidente · 3 Governador · 5 Senador · 6 Deputado Federal).
+ * (1 Presidente · 3 Governador · 5 Senador · 6 Deputado Federal · 7 Deputado
+ * Estadual · 8 Deputado Distrital).
+ *
+ * 7 e 8 entraram em 2026-09-29 (spec 027 RF-288): a reimportação do dono em
+ * 02–03/10 passa a trazer as ~11.276 candidaturas das 26 Assembleias e da
+ * Câmara Legislativa, publicadas em `candidatos/uf/<SIGLA>/est.json` e
+ * `candidatos/uf/DF/dis.json` (`candidatosUfBlobPathname`, pelo token).
  *
  * O import de tipo acima existe para que a lista aqui **não possa** divergir
  * do canônico sem o typecheck acusar. Os demais códigos do CSV — 2 e 4 (vices,
- * sem votação própria), 7/8 (Deputado Estadual/Distrital) e 9/10 (suplentes de
- * Senador) — são descartados **e contados** (nunca em silêncio).
+ * sem votação própria) e 9/10 (suplentes de Senador) — são descartados **e
+ * contados** (nunca em silêncio).
  */
-export const CARGOS_PRODUTO: readonly CargoTse[] = [1, 3, 5, 6];
+export const CARGOS_PRODUTO: readonly CargoTse[] = [1, 3, 5, 6, 7, 8];
 
 /** Ano do pleito coberto por esta importação. */
 export const ANO_PLEITO = 2026;

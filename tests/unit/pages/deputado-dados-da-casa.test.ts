@@ -26,8 +26,8 @@ const readDeputadoUfListaMock = vi.fn();
 const readCandidatosUfMock = vi.fn();
 
 vi.mock("@/lib/edge-config/reader", () => ({
-  readDeputadoProjection: () => readDeputadoProjectionMock(),
-  readInterruptorProjecao: () => readInterruptorProjecaoMock(),
+  readDeputadoProjection: (...a: unknown[]) => readDeputadoProjectionMock(...a),
+  readInterruptorProjecao: (...a: unknown[]) => readInterruptorProjecaoMock(...a),
   interpretarInterruptor: () => ({ ligada: false, pct_minimo: 25, origem: "ausente" }),
 }));
 
@@ -35,8 +35,8 @@ vi.mock("@/lib/blob/deputado-uf", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/lib/blob/deputado-uf")>();
   return {
     ...real,
-    readDeputadoUfDetail: (sigla: string) => readDeputadoUfDetailMock(sigla),
-    readDeputadoUfLista: (sigla: string) => readDeputadoUfListaMock(sigla),
+    readDeputadoUfDetail: (...a: unknown[]) => readDeputadoUfDetailMock(...a),
+    readDeputadoUfLista: (...a: unknown[]) => readDeputadoUfListaMock(...a),
   };
 });
 
@@ -81,8 +81,8 @@ afterEach(() => {
 describe("cargo 6 — os leitores de sempre, com a UF pedida", () => {
   it("lerDadosDaCasa lê resumo, detalhe da UF e interruptor, em paralelo", async () => {
     const dados = await lerDadosDaCasa(6, "SP");
-    expect(readDeputadoProjectionMock).toHaveBeenCalledTimes(1);
-    expect(readDeputadoUfDetailMock).toHaveBeenCalledWith("SP");
+    expect(readDeputadoProjectionMock).toHaveBeenCalledWith(6);
+    expect(readDeputadoUfDetailMock).toHaveBeenCalledWith(6, "SP");
     expect(readInterruptorProjecaoMock).toHaveBeenCalledTimes(1);
     expect(dados.nacional).toBeNull();
     expect(dados.detalhe).toEqual(INDISPONIVEL);
@@ -91,7 +91,7 @@ describe("cargo 6 — os leitores de sempre, com a UF pedida", () => {
 
   it("lerListaDaCasa e a grade de candidaturas pedem a UF e o token do federal", async () => {
     await lerListaDaCasa(6, "RR");
-    expect(readDeputadoUfListaMock).toHaveBeenCalledWith("RR");
+    expect(readDeputadoUfListaMock).toHaveBeenCalledWith(6, "RR");
     await lerCandidaturasAguardando(6, "SP");
     expect(readCandidatosUfMock).toHaveBeenCalledWith("SP", "dep");
   });
