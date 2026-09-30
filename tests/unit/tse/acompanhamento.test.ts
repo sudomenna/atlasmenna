@@ -61,6 +61,7 @@ describe("detectChangedUfs", () => {
     );
 
     const signals = await detectChangedUfs({
+      cargo: 1,
       codEleicao: COD_ELEICAO,
       ufs: ["SP", "RJ"],
       previous: null,
@@ -78,11 +79,17 @@ describe("detectChangedUfs", () => {
       vi.fn(async () => new Response(body, { status: 200 })),
     );
 
-    const first = await detectChangedUfs({ codEleicao: COD_ELEICAO, ufs: ["SP"], previous: null });
+    const first = await detectChangedUfs({
+      cargo: 1,
+      codEleicao: COD_ELEICAO,
+      ufs: ["SP"],
+      previous: null,
+    });
     const firstHash = first[0]?.hash;
     expect(firstHash).not.toBeNull();
 
     const second = await detectChangedUfs({
+      cargo: 1,
       codEleicao: COD_ELEICAO,
       ufs: ["SP"],
       previous: { etag: null, hashes: { SP: firstHash as string } },
@@ -102,8 +109,14 @@ describe("detectChangedUfs", () => {
       }),
     );
 
-    const first = await detectChangedUfs({ codEleicao: COD_ELEICAO, ufs: ["SP"], previous: null });
+    const first = await detectChangedUfs({
+      cargo: 1,
+      codEleicao: COD_ELEICAO,
+      ufs: ["SP"],
+      previous: null,
+    });
     const second = await detectChangedUfs({
+      cargo: 1,
       codEleicao: COD_ELEICAO,
       ufs: ["SP"],
       previous: { etag: null, hashes: { SP: first[0]?.hash as string } },
@@ -119,6 +132,7 @@ describe("detectChangedUfs", () => {
     );
 
     const signals = await detectChangedUfs({
+      cargo: 1,
       codEleicao: COD_ELEICAO,
       ufs: ["SP", "RJ"],
       previous: { etag: '"abc"', hashes: { SP: "hash-sp", RJ: "hash-rj" } },
@@ -137,6 +151,7 @@ describe("detectChangedUfs", () => {
     );
 
     const signals = await detectChangedUfs({
+      cargo: 1,
       codEleicao: COD_ELEICAO,
       ufs: ["SP", "RJ", "MG"],
       previous: { etag: null, hashes: {} },
@@ -154,6 +169,7 @@ describe("detectChangedUfs", () => {
     );
 
     const signals = await detectChangedUfs({
+      cargo: 1,
       codEleicao: COD_ELEICAO,
       ufs: ["SP"],
       previous: null,
@@ -169,6 +185,7 @@ describe("detectChangedUfs", () => {
     );
 
     const signals = await detectChangedUfs({
+      cargo: 1,
       codEleicao: COD_ELEICAO,
       ufs: ["SP"],
       previous: null,
@@ -184,6 +201,7 @@ describe("detectChangedUfs", () => {
     );
 
     const signals = await detectChangedUfs({
+      cargo: 1,
       codEleicao: COD_ELEICAO,
       ufs: ["SP", "AC"], // AC não está no EA14 sintético
       previous: null,

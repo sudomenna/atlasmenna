@@ -111,7 +111,7 @@ describe("fetchEA20 — 200 fresh", () => {
   it("returns kind:fresh with parsed data when response is valid EA20", async () => {
     mockFetchOnce({ status: 200, body: FIXTURE_SP_Z1_TEXT });
 
-    const result = await fetchEA20({ url: TEST_URL });
+    const result = await fetchEA20({ cargo: 1, url: TEST_URL });
 
     expect(result.kind).toBe("fresh");
     if (result.kind !== "fresh") return; // narrow for TS
@@ -123,7 +123,7 @@ describe("fetchEA20 — 200 fresh", () => {
   it("hash is a 64-char lowercase hex string (SHA-256)", async () => {
     mockFetchOnce({ status: 200, body: FIXTURE_SP_Z1_TEXT });
 
-    const result = await fetchEA20({ url: TEST_URL });
+    const result = await fetchEA20({ cargo: 1, url: TEST_URL });
     if (result.kind !== "fresh") throw new Error("expected fresh");
 
     expect(result.hash).toMatch(/^[0-9a-f]{64}$/);
@@ -137,8 +137,8 @@ describe("fetchEA20 — 200 fresh", () => {
       .mockResolvedValueOnce(new Response(FIXTURE_SP_Z1_TEXT, { status: 200 }));
     vi.stubGlobal("fetch", mockFn);
 
-    const r1 = await fetchEA20({ url: TEST_URL });
-    const r2 = await fetchEA20({ url: TEST_URL });
+    const r1 = await fetchEA20({ cargo: 1, url: TEST_URL });
+    const r2 = await fetchEA20({ cargo: 1, url: TEST_URL });
 
     if (r1.kind !== "fresh" || r2.kind !== "fresh") throw new Error("expected both fresh");
     expect(r1.hash).toBe(r2.hash);
@@ -152,8 +152,8 @@ describe("fetchEA20 — 200 fresh", () => {
       .mockResolvedValueOnce(new Response(fixture2Text, { status: 200 }));
     vi.stubGlobal("fetch", mockFn);
 
-    const r1 = await fetchEA20({ url: TEST_URL });
-    const r2 = await fetchEA20({ url: TEST_URL });
+    const r1 = await fetchEA20({ cargo: 1, url: TEST_URL });
+    const r2 = await fetchEA20({ cargo: 1, url: TEST_URL });
 
     if (r1.kind !== "fresh" || r2.kind !== "fresh") throw new Error("expected both fresh");
     expect(r1.hash).not.toBe(r2.hash);
@@ -168,7 +168,7 @@ describe("fetchEA20 — ETag handling", () => {
       headers: { ETag: '"abc-123"' },
     });
 
-    const result = await fetchEA20({ url: TEST_URL });
+    const result = await fetchEA20({ cargo: 1, url: TEST_URL });
     if (result.kind !== "fresh") throw new Error("expected fresh");
 
     // ETag value must be preserved verbatim including surrounding double-quotes.
@@ -178,7 +178,7 @@ describe("fetchEA20 — ETag handling", () => {
   it("sends If-None-Match when etag is provided", async () => {
     const mockFn = mockFetchOnce({ status: 304 });
 
-    await fetchEA20({ url: TEST_URL, etag: '"abc-123"' });
+    await fetchEA20({ cargo: 1, url: TEST_URL, etag: '"abc-123"' });
 
     const [, init] = mockFn.mock.calls[0] as [string, RequestInit];
     const headers = init?.headers as Record<string, string>;
@@ -188,7 +188,7 @@ describe("fetchEA20 — ETag handling", () => {
   it("does NOT send If-None-Match when etag is absent", async () => {
     const mockFn = mockFetchOnce({ status: 200, body: FIXTURE_SP_Z1_TEXT });
 
-    await fetchEA20({ url: TEST_URL });
+    await fetchEA20({ cargo: 1, url: TEST_URL });
 
     const [, init] = mockFn.mock.calls[0] as [string, RequestInit];
     const headers = init?.headers as Record<string, string>;
@@ -198,7 +198,7 @@ describe("fetchEA20 — ETag handling", () => {
   it("does NOT send If-None-Match when etag is null", async () => {
     const mockFn = mockFetchOnce({ status: 200, body: FIXTURE_SP_Z1_TEXT });
 
-    await fetchEA20({ url: TEST_URL, etag: null });
+    await fetchEA20({ cargo: 1, url: TEST_URL, etag: null });
 
     const [, init] = mockFn.mock.calls[0] as [string, RequestInit];
     const headers = init?.headers as Record<string, string>;
@@ -208,7 +208,7 @@ describe("fetchEA20 — ETag handling", () => {
   it("does NOT send If-None-Match when etag is undefined", async () => {
     const mockFn = mockFetchOnce({ status: 200, body: FIXTURE_SP_Z1_TEXT });
 
-    await fetchEA20({ url: TEST_URL, etag: undefined });
+    await fetchEA20({ cargo: 1, url: TEST_URL, etag: undefined });
 
     const [, init] = mockFn.mock.calls[0] as [string, RequestInit];
     const headers = init?.headers as Record<string, string>;
@@ -218,7 +218,7 @@ describe("fetchEA20 — ETag handling", () => {
   it("does NOT send If-None-Match when etag is empty string", async () => {
     const mockFn = mockFetchOnce({ status: 200, body: FIXTURE_SP_Z1_TEXT });
 
-    await fetchEA20({ url: TEST_URL, etag: "" });
+    await fetchEA20({ cargo: 1, url: TEST_URL, etag: "" });
 
     const [, init] = mockFn.mock.calls[0] as [string, RequestInit];
     const headers = init?.headers as Record<string, string>;
@@ -234,7 +234,7 @@ describe("fetchEA20 — 304 Not Modified", () => {
   it("returns kind:not_modified for 304 response", async () => {
     mockFetchOnce({ status: 304 });
 
-    const result = await fetchEA20({ url: TEST_URL, etag: '"abc-123"' });
+    const result = await fetchEA20({ cargo: 1, url: TEST_URL, etag: '"abc-123"' });
 
     expect(result).toStrictEqual({ kind: "not_modified" });
   });
@@ -242,7 +242,7 @@ describe("fetchEA20 — 304 Not Modified", () => {
   it("sends If-None-Match header when etag provided on 304 path", async () => {
     const mockFn = mockFetchOnce({ status: 304 });
 
-    await fetchEA20({ url: TEST_URL, etag: '"abc-123"' });
+    await fetchEA20({ cargo: 1, url: TEST_URL, etag: '"abc-123"' });
 
     const [, init] = mockFn.mock.calls[0] as [string, RequestInit];
     const headers = init?.headers as Record<string, string>;
@@ -257,11 +257,12 @@ describe("fetchEA20 — 304 Not Modified", () => {
   // de requisições do ciclo passa a mentir e o gate quebra aqui.
   it("consome token do rate limiter mesmo quando a resposta é 304 (RF-010.4)", async () => {
     resetTseRateLimiter();
-    const bucket = getTseRateLimiter();
+    // O bucket é o do CARGO passado a fetchEA20 (ADR-0068), aqui o 1.
+    const bucket = getTseRateLimiter(1);
     const acquiredAntes = bucket.stats.acquired;
 
     mockFetchOnce({ status: 304 });
-    const result = await fetchEA20({ url: TEST_URL, etag: '"abc-123"' });
+    const result = await fetchEA20({ cargo: 1, url: TEST_URL, etag: '"abc-123"' });
 
     expect(result).toStrictEqual({ kind: "not_modified" });
     expect(bucket.stats.acquired).toBe(acquiredAntes + 1);
@@ -276,7 +277,7 @@ describe("fetchEA20 — 404 Not Found", () => {
   it("returns kind:not_found for 404 response (does not throw)", async () => {
     mockFetchOnce({ status: 404 });
 
-    const result = await fetchEA20({ url: TEST_URL });
+    const result = await fetchEA20({ cargo: 1, url: TEST_URL });
 
     expect(result).toStrictEqual({ kind: "not_found" });
   });
@@ -290,7 +291,7 @@ describe("fetchEA20 — 5xx throws TSEError", () => {
   it("throws TSEError with correct status, url and bodySample on 500", async () => {
     mockFetchOnce({ status: 500, body: "Internal Error" });
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) =>
         err instanceof TSEError &&
         err.status === 500 &&
@@ -304,7 +305,7 @@ describe("fetchEA20 — 5xx throws TSEError", () => {
     const longBody = "x".repeat(600);
     mockFetchOnce({ status: 503, body: longBody });
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) =>
         err instanceof TSEError &&
         // BODY_SAMPLE_MAX_LEN=500; truncated string appends '…[truncated]' (13 chars)
@@ -318,7 +319,7 @@ describe("fetchEA20 — network error", () => {
     const fetchMock = vi.fn().mockRejectedValueOnce(new TypeError("fetch failed"));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) => err instanceof IngestError && err.reason === "network",
     );
   });
@@ -327,7 +328,7 @@ describe("fetchEA20 — network error", () => {
     const fetchMock = vi.fn().mockRejectedValueOnce(new Error("ENOTFOUND resultados.tse.jus.br"));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) => err instanceof IngestError && err.reason === "network",
     );
   });
@@ -344,7 +345,7 @@ describe("fetchEA20 — timeout", () => {
     const fetchMock = vi.fn().mockRejectedValueOnce(timeoutErr);
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) => err instanceof IngestError && err.reason === "timeout",
     );
   });
@@ -354,7 +355,7 @@ describe("fetchEA20 — timeout", () => {
     const fetchMock = vi.fn().mockRejectedValueOnce(abortErr);
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) => err instanceof IngestError && err.reason === "timeout",
     );
   });
@@ -364,7 +365,7 @@ describe("fetchEA20 — parse errors", () => {
   it("throws IngestError reason:parse when body is invalid JSON", async () => {
     mockFetchOnce({ status: 200, body: "not json {{" });
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) => err instanceof IngestError && err.reason === "parse",
     );
   });
@@ -374,7 +375,7 @@ describe("fetchEA20 — parse errors", () => {
     // which client.ts wraps as IngestError('parse', ...).
     mockFetchOnce({ status: 200, body: "{}" });
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) => err instanceof IngestError && err.reason === "parse",
     );
   });
@@ -384,7 +385,7 @@ describe("fetchEA20 — User-Agent + Accept headers", () => {
   it("always sends the required User-Agent on every request", async () => {
     const mockFn = mockFetchOnce({ status: 200, body: FIXTURE_SP_Z1_TEXT });
 
-    await fetchEA20({ url: TEST_URL });
+    await fetchEA20({ cargo: 1, url: TEST_URL });
 
     const [, init] = mockFn.mock.calls[0] as [string, RequestInit];
     const headers = init?.headers as Record<string, string>;
@@ -404,7 +405,7 @@ describe("fetchEA20 — User-Agent + Accept headers", () => {
   it("always sends Accept: application/json", async () => {
     const mockFn = mockFetchOnce({ status: 200, body: FIXTURE_SP_Z1_TEXT });
 
-    await fetchEA20({ url: TEST_URL });
+    await fetchEA20({ cargo: 1, url: TEST_URL });
 
     const [, init] = mockFn.mock.calls[0] as [string, RequestInit];
     const headers = init?.headers as Record<string, string>;
@@ -420,7 +421,7 @@ describe("fetchEA20 — 429 rate limited", () => {
   it("throws TSEError(429) with retryAfterMs computed from Retry-After: 2 (seconds)", async () => {
     mockFetchOnce({ status: 429, body: "rate limited", headers: { "Retry-After": "2" } });
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) => err instanceof TSEError && err.status === 429 && err.retryAfterMs === 2000,
     );
   });
@@ -428,7 +429,7 @@ describe("fetchEA20 — 429 rate limited", () => {
   it("TSEError(503) also computes retryAfterMs from Retry-After", async () => {
     mockFetchOnce({ status: 503, body: "service unavailable", headers: { "Retry-After": "5" } });
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) => err instanceof TSEError && err.status === 503 && err.retryAfterMs === 5000,
     );
   });
@@ -438,7 +439,7 @@ describe("fetchEA20 — 429 rate limited", () => {
     // mas o schema HTTP permite) não deve confundir o retry.
     mockFetchOnce({ status: 500, body: "internal error", headers: { "Retry-After": "9" } });
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) =>
         err instanceof TSEError && err.status === 500 && err.retryAfterMs === undefined,
     );
@@ -447,7 +448,7 @@ describe("fetchEA20 — 429 rate limited", () => {
   it("retryAfterMs is undefined when Retry-After header is absent", async () => {
     mockFetchOnce({ status: 429, body: "rate limited" });
 
-    await expect(fetchEA20({ url: TEST_URL })).rejects.toSatisfy(
+    await expect(fetchEA20({ cargo: 1, url: TEST_URL })).rejects.toSatisfy(
       (err: unknown) =>
         err instanceof TSEError && err.status === 429 && err.retryAfterMs === undefined,
     );

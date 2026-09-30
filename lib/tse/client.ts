@@ -24,6 +24,7 @@
  * ops visibility into 404/429/304 volume without per-request log noise.
  */
 
+import type { CargoTse } from "@/lib/config/cargos";
 import { type EA20, EA20Schema, KNOWN_EA20_AMBIENTES } from "./ea20-schema";
 import { IngestError, TSEError } from "./errors";
 import { logDebug, logWarn } from "./log";
@@ -180,6 +181,11 @@ function parseRetryAfterMs(headerValue: string | null): number | undefined {
  * Fetch a single EA20 zone-result file from the TSE CDN.
  *
  * @param opts.url   - Canonical EA20 URL (built by lib/tse/targets.ts).
+ * @param opts.cargo - Cargo do alvo (`Target.cargo`). OBRIGATÓRIO no tipo: é ele
+ *                     que escolhe o bucket de taxa (`getTseRateLimiter(cargo)`,
+ *                     ADR-0068). Sem ele a requisição cairia num bucket de 5 rps
+ *                     fora da conta do pior caso agregado — esquecer o cargo
+ *                     tem de ser erro de compilação, não um default silencioso.
  * @param opts.etag  - Last known ETag for this (url). When truthy, the request
  *                     includes `If-None-Match` and the TSE CDN may respond 304.
  *                     Falsy values (null, undefined, empty string) are treated
@@ -197,13 +203,15 @@ function parseRetryAfterMs(headerValue: string | null): number | undefined {
  */
 export async function fetchEA20(opts: {
   url: string;
+  cargo: CargoTse;
   etag?: string | null;
 }): Promise<FetchEA20Result> {
   // RF-001 hardening (2026-09-05): respeita o limite de 100 req/s/IP do TSE
   // ANTES de cada tentativa — inclusive retries (withRetry chama fetchEA20
   // de novo a cada tentativa, então colocar o acquire() aqui cobre "antes de
-  // cada tentativa" sem precisar duplicar a lógica em retry.ts).
-  await getTseRateLimiter().acquire();
+  // cada tentativa" sem precisar duplicar a lógica em retry.ts). O bucket é o
+  // do CARGO do alvo (ADR-0068): o teto de um cargo nunca é decidido por outro.
+  await getTseRateLimiter(opts.cargo).acquire();
 
   // Build request headers
   const headers: Record<string, string> = {

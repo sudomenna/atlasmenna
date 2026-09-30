@@ -137,9 +137,10 @@ export interface CargoInfo {
    * MESMO minuto — a cadência de 5 minutos (Senador, e cada fatia de Deputado
    * Federal desde o ADR-0036) cai sobre a de 1 minuto de Presidente e
    * Governador **a cada múltiplo de 5**, não só nos minutos 0/15/30/45 como
-   * quando Deputado era um cron único de 15 em 15 min. Cada invocação tem seu
-   * (o rate limiter é singleton **de processo**, e o Fluid Compute isola
-   * instâncias), então o que o TSE vê no IP é a **soma**.
+   * quando Deputado era um cron único de 15 em 15 min. Cada cargo tem o seu
+   * bucket dentro do processo (ADR-0068 — até 30/09 era um singleton de
+   * processo, e a premissa "o Fluid Compute isola instâncias" era falsa), então
+   * o que o TSE vê no IP é a **soma** dos tetos por cargo.
    *
    * As 6 fatias do cargo 6 são **intercaladas** em `vercel.ts` (fatia 1 nos
    * minutos 0 e 30, fatia 2 em 5 e 35, ..., fatia 6 em 25 e 55), de modo que
@@ -343,6 +344,10 @@ export function piorCasoAgregadoRps(): number {
  * ao IP é a de um processo só, então ele pode usar o maior teto entre os cargos
  * que cobre — não a soma, e não o menor (que arrastaria o fan-out pesado a
  * 1.222 s, muito além do `maxDuration`).
+ *
+ * ⚠️ Sem chamador em produção desde 2026-09-30 (ADR-0068): o ciclo genérico
+ * deixou de usar um bucket só — cada alvo paga no bucket do SEU cargo, no teto
+ * do cargo. Fica exportada, inalterada, só para não ampliar o escopo da emenda.
  */
 export function rpsMaxParaCargos(cargos: readonly CargoTse[]): number {
   if (cargos.length === 0) return Math.min(...CARGOS.map((c) => c.rpsMax));

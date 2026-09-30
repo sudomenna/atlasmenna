@@ -19,6 +19,15 @@ em que este ADR foi escrito: migration `data-pipeline/migrations/0006_pares_muni
 `lib/db/schema.ts:59-193`, `api/model/zona_merge.py` (novo), `lib/tse/ingest-handler.ts` (novo,
 extraído de `app/api/ingest/route.ts`), `app/api/ingest/[cargo]/route.ts` (novo), `vercel.ts:83-135`.
 
+> **Nota 2026-09-30 ([ADR-0068](0068-limitador-de-taxa-do-tse-por-cargo.md)).** A premissa de D3 e da
+> emenda do teto de 40 — "Fluid Compute isola instâncias por invocação concorrente, cada uma com seu
+> próprio rate limiter singleton" — **é falsa**: o Fluid Compute reaproveita instâncias e roda
+> invocações concorrentes na mesma, de modo que o singleton de processo compartilhava (e congelava, na
+> taxa do primeiro cargo a chegar) um bucket entre cargos. O ADR-0068 troca o singleton por **um bucket
+> por cargo**; só então o pior caso agregado como soma dos tetos por cargo passa a descrever o código. O
+> teto de 100 rps/IP, o lock por cargo e a pendência do limitador coordenado entre instâncias seguem como
+> aqui definidos.
+
 Este ADR também emenda pontualmente o ADR-0012 (D3, precedente de namespacing por corrida — ver nota
 aplicada ao seu `## Status`), o ADR-0020 (D3, RF-010.3 recalibrado para dois processos concorrentes),
 o ADR-0032 (D2, a soma exata de município deixa de depender de `zonas`) e o ADR-0033 (D3, nota de

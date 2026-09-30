@@ -31,7 +31,7 @@ describe("tse-mock-server + fetchEA20", () => {
     mock = await startMockServer();
     base = `http://127.0.0.1:${mock.port}`;
 
-    const result = await fetchEA20({ url: ea20Url(base, "sp", "0001") });
+    const result = await fetchEA20({ cargo: 1, url: ea20Url(base, "sp", "0001") });
 
     expect(result.kind).toBe("fresh");
     if (result.kind !== "fresh") throw new Error("unreachable");
@@ -44,11 +44,15 @@ describe("tse-mock-server + fetchEA20", () => {
     mock = await startMockServer();
     base = `http://127.0.0.1:${mock.port}`;
 
-    const first = await fetchEA20({ url: ea20Url(base, "sp", "0001") });
+    const first = await fetchEA20({ cargo: 1, url: ea20Url(base, "sp", "0001") });
     expect(first.kind).toBe("fresh");
     if (first.kind !== "fresh") throw new Error("unreachable");
 
-    const second = await fetchEA20({ url: ea20Url(base, "sp", "0001"), etag: first.etag });
+    const second = await fetchEA20({
+      cargo: 1,
+      url: ea20Url(base, "sp", "0001"),
+      etag: first.etag,
+    });
     expect(second.kind).toBe("not_modified");
   });
 
@@ -56,7 +60,7 @@ describe("tse-mock-server + fetchEA20", () => {
     mock = await startMockServer();
     base = `http://127.0.0.1:${mock.port}`;
 
-    const result = await fetchEA20({ url: ea20Url(base, "sp", "9999") });
+    const result = await fetchEA20({ cargo: 1, url: ea20Url(base, "sp", "9999") });
     expect(result.kind).toBe("not_found");
   });
 
@@ -78,7 +82,7 @@ describe("tse-mock-server + fetchEA20", () => {
     base = `http://127.0.0.1:${mock.port}`;
     const url = ea20Url(base, "sp", "0001");
 
-    const result = await withRetry(() => fetchEA20({ url }), { attempts: 8, baseMs: 1 });
+    const result = await withRetry(() => fetchEA20({ cargo: 1, url }), { attempts: 8, baseMs: 1 });
     expect(result.kind === "fresh" || result.kind === "not_found").toBe(true);
   }, 15_000);
 });

@@ -38,7 +38,7 @@
 
 import type { NextRequest } from "next/server";
 import { after, NextResponse } from "next/server";
-import { type CargoTse, cargoInfo, rpsMaxParaCargos } from "@/lib/config/cargos";
+import type { CargoTse } from "@/lib/config/cargos";
 import { readInterruptorProjecao, TRAVA_PROJECAO_DEP_PCT } from "@/lib/edge-config/reader";
 import type { AcompanhamentoPrevious } from "@/lib/tse/acompanhamento";
 import { detectChangedUfs } from "@/lib/tse/acompanhamento";
@@ -61,8 +61,8 @@ import { getActiveCargos, listIngestTargets } from "@/lib/tse/targets";
 
 // ---------------------------------------------------------------------------
 // Estado de gating EA14 (acompanhamento) — módulo-level, reaproveitado entre
-// invocações pelo Fluid Compute (mesmo padrão do rate limiter singleton em
-// lib/tse/rate-limiter.ts). Guarda o ETag do último EA14 200 + o hash por UF
+// invocações pelo Fluid Compute (mesmo padrão dos buckets por cargo em
+// lib/tse/rate-limiter.ts, ADR-0068). Guarda o ETag do último EA14 200 + o hash por UF
 // do ciclo anterior, para que `detectChangedUfs` possa enviar `If-None-Match`
 // e comparar hashes sem precisar de uma tabela nova no Postgres.
 //
@@ -137,7 +137,7 @@ function extractProvidedSecret(req: NextRequest): string | null {
  * de ambiente só chega a um deployment novo (corrigido em 29/09, ADR-0063
  * D4). Note que concorrência e taxa são controles
  * ORTOGONAIS: este semáforo limita quantas requisições ficam simultaneamente
- * em voo; `getTseRateLimiter()` (lib/tse/rate-limiter.ts) limita quantas
+ * em voo; `getTseRateLimiter(cargo)` (lib/tse/rate-limiter.ts) limita quantas
  * SAEM por segundo (RF-010.3 — limite de 100 req/s/IP do TSE, agora dividido
  * em até 50 rps por invocação de cargo). Um CONCURRENCY alto com
  * TSE_MAX_RPS baixo apenas faz mais requisições esperarem na fila do rate
@@ -560,21 +560,27 @@ export async function runIngestCycle(
   }
 
   // Zera os contadores de client stats (429/404/304) e captura o
-  // `waitedMs` acumulado do rate limiter ANTES do ciclo — o rate limiter é
-  // um singleton do processo (Fluid Compute reutiliza instâncias), então
-  // reportamos o DELTA deste ciclo, não o total acumulado desde o boot.
+  // `waitedMs` acumulado do rate limiter ANTES do ciclo — os buckets vivem no
+  // processo (o Fluid Compute reaproveita instâncias e multiplexa invocações
+  // nelas), então reportamos o DELTA deste ciclo, não o total acumulado desde
+  // o boot.
   resetClientStats();
-  // Fixa a taxa do bucket ANTES do primeiro fetch: `getTseRateLimiter` é
-  // singleton de processo e congela o valor na primeira chamada, então quem
-  // chama primeiro decide. Num ciclo por cargo a taxa é a daquele cargo
-  // (`lib/config/cargos.ts`, `rpsMax`); no ciclo genérico, a maior entre os
-  // cargos cobertos — ele os percorre sequencialmente com um bucket só.
-  const cargosDoBucket = cargoDoCiclo !== undefined ? [cargoDoCiclo] : getActiveCargos();
-  const rpsDoCiclo = rpsMaxParaCargos(cargosDoBucket);
-  const limiter = getTseRateLimiter(
-    cargoDoCiclo ?? cargosDoBucket.find((c) => cargoInfo(c).rpsMax === rpsDoCiclo),
-  );
-  const waitedMsBefore = limiter.stats.waitedMs;
+  // Cada alvo paga no bucket do SEU cargo (ADR-0068): `fetchEA20` e
+  // `detectChangedUfs` recebem o cargo e escolhem o bucket, então nada aqui
+  // "fixa a taxa" do ciclo — quem chega primeiro à instância não decide a taxa
+  // de ninguém. Num ciclo por cargo o bucket é o daquele cargo; no ciclo
+  // genérico (`/api/ingest`, vários cargos em sequência) há um bucket por cargo
+  // coberto, cada um no teto dele (`lib/config/cargos.ts`, `rpsMax`) — antes,
+  // um bucket só na MAIOR taxa levava os alvos do cargo 6 a 25 rps.
+  //
+  // `waitedMs` do ciclo = soma dos deltas dos buckets dos cargos que ele toca
+  // (um só, no ciclo por cargo).
+  const cargosDoBucket = [
+    ...new Set<CargoTse>(cargoDoCiclo !== undefined ? [cargoDoCiclo] : getActiveCargos()),
+  ];
+  const esperaDosBuckets = (): number =>
+    cargosDoBucket.reduce((acc, c) => acc + getTseRateLimiter(c).stats.waitedMs, 0);
+  const waitedMsBefore = esperaDosBuckets();
 
   // --------------------------------------------------------------------------
   // 4. Resolve targets — filtrados por cargo quando `opts.cargo` está setado.
@@ -632,12 +638,17 @@ export async function runIngestCycle(
     // (`/api/ingest` com `TSE_CARGOS=1,3`) toca dois arquivos; um ciclo por
     // cargo toca um só. A chave do "mudou?" passa a ser (eleição, UF): a
     // mesma UF pode ter mudado no pleito estadual e não no federal.
-    const ufsPorEleicao = new Map<string, Set<string>>();
+    //
+    // Cada eleição leva junto o cargo que paga a requisição do EA14 dela
+    // (ADR-0068): o do primeiro alvo. Num ciclo por cargo é o cargo do ciclo; no
+    // genérico, um cargo da eleição lida — sempre um dos que o ciclo já cobre.
+    // Mora no mesmo registro das UFs para que não exista eleição sem cargo.
+    const ufsPorEleicao = new Map<string, { cargo: CargoTse; ufs: Set<string> }>();
     for (const t of targets) {
       if (t.nivel === "br") continue;
-      const set = ufsPorEleicao.get(t.codEleicao) ?? new Set<string>();
-      set.add(t.uf);
-      ufsPorEleicao.set(t.codEleicao, set);
+      const entrada = ufsPorEleicao.get(t.codEleicao) ?? { cargo: t.cargo, ufs: new Set<string>() };
+      entrada.ufs.add(t.uf);
+      ufsPorEleicao.set(t.codEleicao, entrada);
     }
 
     if (ufsPorEleicao.size > 0) {
@@ -645,12 +656,13 @@ export async function runIngestCycle(
         const changedPorEleicao = new Set<string>();
         let ufsAnalisadas = 0;
 
-        for (const [codEleicao, ufsSet] of ufsPorEleicao) {
+        for (const [codEleicao, { cargo: cargoDaLeitura, ufs: ufsSet }] of ufsPorEleicao) {
           const ufsNoCiclo = [...ufsSet];
           ufsAnalisadas += ufsNoCiclo.length;
 
           const anterior = acompanhamentoState.get(codEleicao) ?? null;
           const signals = await detectChangedUfs({
+            cargo: cargoDaLeitura,
             codEleicao,
             ufs: ufsNoCiclo,
             previous: anterior,
@@ -734,7 +746,9 @@ export async function runIngestCycle(
       // -----------------------------------------------------------------------
       let result: Awaited<ReturnType<typeof fetchEA20>>;
       try {
-        result = await withRetry(() => fetchEA20({ url: target.url, etag: lastEtag }));
+        result = await withRetry(() =>
+          fetchEA20({ url: target.url, cargo: target.cargo, etag: lastEtag }),
+        );
       } catch (err) {
         logError("fetchEA20 falhou após retries — target pulado", {
           url: target.url,
@@ -940,7 +954,7 @@ export async function runIngestCycle(
   // waitedMs do rate limiter — ver comentário no passo 3b sobre por que é
   // um delta e não o total acumulado do processo.
   const clientStatsSnapshot = getClientStats();
-  const waitedMs = limiter.stats.waitedMs - waitedMsBefore;
+  const waitedMs = esperaDosBuckets() - waitedMsBefore;
 
   try {
     await logIngestRun({

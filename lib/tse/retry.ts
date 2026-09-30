@@ -30,7 +30,7 @@
  * valor via `TSEError.retryAfterMs` (parseado em client.ts), usando
  * `max(backoffPadrão, retryAfterMs)` como delay real, sempre limitado por
  * `RETRY_MAX_DELAY_MS` (15s) para não travar um único target por tempo
- * demais dentro do orçamento de `maxDuration`. `getTseRateLimiter()` em
+ * demais dentro do orçamento de `maxDuration`. `getTseRateLimiter(cargo)` em
  * client.ts já limita a TAXA de saída — este retry trata o caso em que,
  * mesmo respeitando a taxa configurada, o TSE ainda respondeu 429 (ex.:
  * outro processo no mesmo IP, ou o limite real sendo mais apertado que

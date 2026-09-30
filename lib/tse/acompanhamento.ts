@@ -24,6 +24,7 @@
  */
 
 import { z } from "zod";
+import type { CargoTse } from "@/lib/config/cargos";
 import { USER_AGENT } from "./client";
 import { logDebug, logWarn } from "./log";
 import { getTseRateLimiter } from "./rate-limiter";
@@ -146,6 +147,13 @@ async function sha256Hex(text: string): Promise<string> {
  * Fail-open: qualquer exceção (rede, timeout, parse Zod) resulta em TODAS as
  * `ufs` solicitadas retornando `changed: true` — nunca falha o chamador.
  *
+ * @param args.cargo       - Obrigatório: cargo do ciclo que faz a leitura. O EA14 é
+ *                          um arquivo por ELEIÇÃO, não por cargo, mas a requisição
+ *                          é paga no bucket de taxa de um cargo (ADR-0068) — o do
+ *                          ciclo que a pede (num ciclo por cargo, o dele; no
+ *                          genérico, o de um cargo da eleição lida). Sem cargo a
+ *                          leitura cairia num bucket de 5 rps fora do pior caso
+ *                          agregado; por isso é erro de compilação esquecê-lo.
  * @param args.codEleicao - Obrigatório: o EA14 é UM POR ELEIÇÃO (federal vs
  *                          estadual). Use `getCodEleicaoDoCargo(cargo)` do ciclo.
  * @param args.ufs         - Siglas de UF (maiúsculas ou minúsculas) para as quais
@@ -155,6 +163,7 @@ async function sha256Hex(text: string): Promise<string> {
  * @param args.baseUrl     - Override de host (testes / mock local).
  */
 export async function detectChangedUfs(args: {
+  cargo: CargoTse;
   codEleicao: string;
   ufs: string[];
   previous: AcompanhamentoPrevious | null;
@@ -177,7 +186,7 @@ export async function detectChangedUfs(args: {
 
   let res: Response;
   try {
-    await getTseRateLimiter().acquire();
+    await getTseRateLimiter(args.cargo).acquire();
     const headers: Record<string, string> = {
       Accept: "application/json",
       "Accept-Encoding": "gzip",

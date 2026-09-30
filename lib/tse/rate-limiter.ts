@@ -17,13 +17,15 @@
  * Design:
  *   - `createTokenBucket` é a implementação pura, testável com relógio e
  *     sleep injetados (sem `setTimeout` real nos testes).
- *   - `getTseRateLimiter()` é o singleton usado em produção, lendo
+ *   - `getTseRateLimiter(cargo)` devolve o bucket **daquele cargo** dentro do
+ *     processo (ADR-0068): um mapa `cargo → bucket`, criado sob demanda, lendo
  *     `TSE_MAX_RPS` do ambiente quando definida; senão o `rpsMax` do cargo
  *     (`lib/config/cargos.ts`: 25 para Presidente, Governador e Senador;
  *     5 para Deputado Federal — os quatro em granularidade zona, 6.110 alvos
  *     cada, sendo que o cargo 6 varre em 6 fatias desde o ADR-0036). Clamp
  *     1..50 — nunca deixamos configurar acima do limite documentado do TSE
- *     por engano.
+ *     por engano. Sem cargo, um bucket próprio no default seguro; nunca o de
+ *     um cargo.
  *   - Chamadas concorrentes a `acquire()` são serializadas via uma cadeia de
  *     Promises (`chain`), garantindo que a N-ésima chamada simultânea espere
  *     o tempo cumulativo correto em vez de todas computarem a mesma espera
@@ -137,7 +139,7 @@ export function createTokenBucket(opts: TokenBucketOptions): TokenBucket {
 }
 
 // ---------------------------------------------------------------------------
-// Singleton — getTseRateLimiter
+// Buckets por cargo — getTseRateLimiter (ADR-0068)
 // ---------------------------------------------------------------------------
 
 /** Limite documentado pelo TSE é 100 req/s/IP, com bloqueio de 10 min
@@ -155,12 +157,21 @@ export function createTokenBucket(opts: TokenBucketOptions): TokenBucket {
  * não informa cargo. Mudar qualquer um desses números é mudar `cargos.ts`,
  * não este arquivo.
  *
- * Por que por cargo. CADA invocação de `/api/ingest/[cargo]` roda num rate
- * limiter de PROCESSO separado (o Fluid Compute isola instâncias por invocação
- * concorrente) e os buckets NÃO se coordenam, então o que o TSE vê no IP é a
- * SOMA. Não são mais dois cargos: são **quatro**, com crons próprios em
- * `vercel.ts` que podem cair no mesmo minuto. Com o default único de 40 o pior
- * caso era 4 × 40 = **160 rps**, acima do teto do TSE — medido em 2026-09-11.
+ * Por que por cargo. Os buckets de instâncias DIFERENTES não se coordenam, e o
+ * que o TSE vê no IP é a SOMA de tudo que está no ar. Não são mais dois
+ * cargos: são **quatro**, com crons próprios em `vercel.ts` que podem cair no
+ * mesmo minuto. Com o default único de 40 o pior caso era 4 × 40 = **160 rps**,
+ * acima do teto do TSE — medido em 2026-09-11.
+ *
+ * ⚠️ Correção de 2026-09-30 (ADR-0068): este comentário dizia que o Fluid
+ * Compute "isola instâncias por invocação concorrente", logo cada invocação
+ * teria o seu bucket. **Não isola.** O Fluid Compute REAPROVEITA instâncias e
+ * multiplexa invocações concorrentes na mesma — então um singleton de processo
+ * era um bucket compartilhado por tudo que caísse na instância, com a taxa de
+ * quem chegou primeiro (Presidente e Governador concorrentes dividiam 25 rps).
+ * Por isso o bucket agora é por CARGO dentro do processo: a soma dos tetos por
+ * cargo só descreve o código quando cada cargo tem o seu bucket, com o teto
+ * dele.
  *
  * A calibragem atual mantém o pior caso agregado em **80 rps**
  * (25 + 25 + 25 + 5 = `piorCasoAgregadoRps()`), 20% abaixo do teto documentado.
@@ -197,20 +208,44 @@ const TSE_MAX_RPS_FLOOR = 1;
  * o valor seguro sem saber quem mais está no ar. Ver `getTseRateLimiter`. */
 const TSE_MAX_RPS_DEFAULT = 5;
 
-let singleton: TokenBucket | null = null;
+/** Um bucket por cargo dentro do processo (ADR-0068). Nunca uma chamada de um
+ * cargo decide a taxa de outro. */
+const bucketsPorCargo = new Map<CargoTse, TokenBucket>();
+
+/** Bucket das chamadas SEM cargo (diagnóstico, script avulso). Próprio, no
+ * default seguro — nunca compartilhado com o de um cargo. Nenhum caminho de
+ * produção o usa (ver `getTseRateLimiter`). */
+let bucketSemCargo: TokenBucket | null = null;
 
 /**
- * getTseRateLimiter — bucket do processo para as chamadas ao CDN do TSE.
+ * getTseRateLimiter — bucket de taxa das chamadas ao CDN do TSE **de um cargo**.
  *
  * `cargo` define o teto **padrão** (`lib/config/cargos.ts`, campo `rpsMax`):
  * 25 rps para Presidente, Governador e Senador (6.110 alvos cada) e 5 rps para
  * Deputado Federal — que desde o ADR-0036 (13/09) também pede 6.110, mas
  * **fatiado em 6 invocações** de ~1.019 alvos, ~204 s cada. `TSE_MAX_RPS` no
- * ambiente sobrepõe para todos — é a escotilha de janela supervisionada.
+ * ambiente sobrepõe para todos — é a escotilha de janela supervisionada, e vale
+ * POR BUCKET.
+ *
+ * ## Semântica (ADR-0068)
+ *
+ *   - **Mesmo cargo, mesma instância → mesmo bucket.** Invocações concorrentes
+ *     do mesmo cargo dividem o teto do cargo: o teto vale por IP, não por
+ *     invocação. É o comportamento seguro.
+ *   - **Cargos diferentes não se afetam.** Quem chega primeiro à instância não
+ *     decide a taxa de ninguém: criar o bucket do cargo 6 (5 rps) antes do do
+ *     cargo 1 não muda os 25 rps do Presidente.
+ *   - **Sem cargo** (`undefined`: `tse-watch`, diagnóstico) → bucket próprio em
+ *     `TSE_MAX_RPS_DEFAULT`. ⚠️ **Nenhum caminho de produção pode usar este
+ *     bucket**: ele não entra em `piorCasoAgregadoRps()`, e um chamador de cron
+ *     que o usasse somaria +5 rps à conta (80 → 85). Por isso `fetchEA20` e
+ *     `detectChangedUfs` recebem `cargo` OBRIGATÓRIO no tipo, e
+ *     `tests/unit/tse/rate-limiter-por-cargo.test.ts` varre o código de
+ *     produção atrás de chamadas sem argumento.
  *
  * ## Por que o teto é por cargo (2026-09-11)
  *
- * Até hoje o default era **40 para todos**, calibrado quando existiam DOIS
+ * Até então o default era **40 para todos**, calibrado quando existiam DOIS
  * cargos: pior caso 2 x 40 = 80 rps, 20% abaixo do teto documentado de 100.
  * Com a entrada de Senador e Deputado (ADR-0026), os quatro crons de
  * `vercel.ts` passam a coincidir — à época nos minutos 0, 15, 30 e 45 (cadências
@@ -219,47 +254,65 @@ let singleton: TokenBucket | null = null;
  * caso medido virou **160 rps**, acima do teto, que bloqueia o IP por 10 min.
  * A constituição § 1 exige "bem abaixo".
  *
- * Cada invocação tem seu próprio bucket (singleton **de processo**; o Fluid
- * Compute isola instâncias), então o que o TSE vê no IP é a soma: 25+25+25+5 =
- * **80 rps** no pior caso (`piorCasoAgregadoRps()`), inalterado pelo ADR-0036 —
- * é justamente por manter o cargo 6 em 5 rps que a varredura dele precisa ser
- * fatiada, e não o contrário.
+ * O que o TSE vê no IP é a soma dos tetos por cargo: 25+25+25+5 = **80 rps** no
+ * pior caso (`piorCasoAgregadoRps()`), inalterado pelo ADR-0036 — é justamente
+ * por manter o cargo 6 em 5 rps que a varredura dele precisa ser fatiada, e não
+ * o contrário. Essa soma supõe um bucket independente POR CARGO, que é o que
+ * este módulo entrega desde o ADR-0068. Ela NÃO cobre duas instâncias do MESMO
+ * cargo ao mesmo tempo (buckets de instâncias diferentes não se coordenam) —
+ * quem evita isso é o lock anti-overlap de `ingest-handler.ts`.
  *
- * A pendência do limitador **coordenado** entre invocações (contador
+ * A pendência do limitador **coordenado** entre instâncias (contador
  * compartilhado) continua aberta: buckets independentes garantem a média, não
  * o pico instantâneo. Decidir depois do simulado 1, com `rateLimited` medido.
  */
 export function getTseRateLimiter(cargo?: CargoTse): TokenBucket {
-  if (singleton) return singleton;
+  if (cargo === undefined) {
+    if (!bucketSemCargo) {
+      bucketSemCargo = createTokenBucket({ ratePerSec: taxaEfetiva(TSE_MAX_RPS_DEFAULT) });
+    }
+    return bucketSemCargo;
+  }
 
-  // Ausente/vazio/não-numérico → cai no default do cargo ANTES do clamp. Um
-  // valor numérico explícito — mesmo 0 ou negativo — é clampado em vez de
-  // ignorado: "TSE_MAX_RPS=0" é uma configuração inválida, não uma ausência
-  // de configuração, então o resultado é o floor (1), não o default.
+  const existente = bucketsPorCargo.get(cargo);
+  if (existente) return existente;
+
+  const criado = createTokenBucket({ ratePerSec: taxaEfetiva(cargoInfo(cargo).rpsMax) });
+  bucketsPorCargo.set(cargo, criado);
+  return criado;
+}
+
+/**
+ * taxaEfetiva — teto de um bucket: `TSE_MAX_RPS` do ambiente quando definida,
+ * senão o `padrao` (o `rpsMax` do cargo, ou o default sem cargo), sempre com
+ * clamp em [1, 50].
+ *
+ * Ausente/vazio/não-numérico → cai no padrão ANTES do clamp. Um valor numérico
+ * explícito — mesmo 0 ou negativo — é clampado em vez de ignorado:
+ * "TSE_MAX_RPS=0" é uma configuração inválida, não uma ausência de
+ * configuração, então o resultado é o floor (1), não o padrão.
+ */
+function taxaEfetiva(padrao: number): number {
+  let ratePerSec = padrao;
   const raw = process.env.TSE_MAX_RPS;
-  // Sem cargo (tse-watch, diagnóstico, chamadas avulsas) fica no teto dos
-  // cargos leves: é o valor seguro quando não se sabe quem mais está no ar.
-  let ratePerSec = cargo !== undefined ? cargoInfo(cargo).rpsMax : TSE_MAX_RPS_DEFAULT;
   if (raw !== undefined && raw.trim() !== "") {
     const parsed = Number(raw.trim());
     if (Number.isFinite(parsed)) {
       ratePerSec = parsed;
     }
   }
-
-  ratePerSec = Math.min(TSE_MAX_RPS_CEILING, Math.max(TSE_MAX_RPS_FLOOR, ratePerSec));
-
-  singleton = createTokenBucket({ ratePerSec });
-  return singleton;
+  return Math.min(TSE_MAX_RPS_CEILING, Math.max(TSE_MAX_RPS_FLOOR, ratePerSec));
 }
 
 /**
- * resetTseRateLimiter — descarta o singleton atual.
+ * resetTseRateLimiter — descarta TODOS os buckets (o de cada cargo e o sem
+ * cargo).
  *
  * Uso: testes que precisam de um bucket "limpo" (burst cheio de novo) entre
  * casos, e trocas de `TSE_MAX_RPS` em runtime (ex.: escalonar a taxa entre
  * as janelas do simulado — ver Fase 4 do plano de prontidão TSE).
  */
 export function resetTseRateLimiter(): void {
-  singleton = null;
+  bucketsPorCargo.clear();
+  bucketSemCargo = null;
 }
