@@ -21,6 +21,33 @@ export const TZ = "America/Sao_Paulo";
 const LOCALE = "pt-BR";
 
 /**
+ * `Intl.NumberFormat` em cache de módulo, uma instância por combinação de
+ * casas decimais.
+ *
+ * `Number.prototype.toLocaleString(locale, opções)` é, pela ECMA-402,
+ * exatamente `new Intl.NumberFormat(locale, opções).format(x)` — só que
+ * construindo o formatador (resolução de locale, dados de CLDR) a CADA
+ * chamada. Na página de UF de Deputado de SP são ~2.000 chamadas na
+ * hidratação (votos e % de ~1.000 linhas), medidas em ~83 ms de CPU com
+ * lentidão 4× (auditoria G6 da spec 026, 30/09). Mesmo algoritmo, mesmo
+ * texto: a saída é idêntica byte a byte (`tests/unit/lib/format.test.ts`).
+ */
+const FORMATADORES = new Map<string, Intl.NumberFormat>();
+
+function formatador(minimo: number | undefined, maximo: number | undefined): Intl.NumberFormat {
+  const chave = `${minimo ?? ""}:${maximo ?? ""}`;
+  let f = FORMATADORES.get(chave);
+  if (!f) {
+    const opcoes: Intl.NumberFormatOptions = {};
+    if (minimo !== undefined) opcoes.minimumFractionDigits = minimo;
+    if (maximo !== undefined) opcoes.maximumFractionDigits = maximo;
+    f = new Intl.NumberFormat(LOCALE, opcoes);
+    FORMATADORES.set(chave, f);
+  }
+  return f;
+}
+
+/**
  * Formata um percentual em 0–100 com 1 casa decimal por default.
  * `decimals` permite forçar 0 para headers grandes (ex. "53%").
  *
@@ -35,10 +62,7 @@ export function formatPercent(value: number, decimals = 1): string {
   const rounded = Number(clamped.toFixed(decimals));
   return decimals === 0
     ? `${Math.round(rounded)}%`
-    : `${rounded.toLocaleString(LOCALE, {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      })}%`;
+    : `${formatador(decimals, decimals).format(rounded)}%`;
 }
 
 /**
@@ -117,7 +141,7 @@ export function formatPercentTrim(value: number, decimals = 1): string {
   const factor = 10 ** decimals;
   const rounded = Math.round(value * factor) / factor;
   const sign = rounded < 0 ? "−" : "";
-  const abs = Math.abs(rounded).toLocaleString(LOCALE, { maximumFractionDigits: decimals });
+  const abs = formatador(undefined, decimals).format(Math.abs(rounded));
   return `${sign}${abs}%`;
 }
 
@@ -130,7 +154,7 @@ export function formatPercentTrim(value: number, decimals = 1): string {
  */
 export function formatVotes(votes: number): string {
   if (Number.isNaN(votes) || !Number.isFinite(votes)) return "—";
-  return Math.round(votes).toLocaleString(LOCALE);
+  return formatador(undefined, undefined).format(Math.round(votes));
 }
 
 /**
@@ -145,13 +169,13 @@ export function formatVotesCompact(votes: number): string {
   const abs = Math.abs(votes);
   if (abs >= 1_000_000) {
     const m = votes / 1_000_000;
-    return `${m.toLocaleString(LOCALE, { maximumFractionDigits: 1 })} mi`;
+    return `${formatador(undefined, 1).format(m)} mi`;
   }
   if (abs >= 1_000) {
     const k = Math.round(votes / 1_000);
-    return `${k.toLocaleString(LOCALE)} mil`;
+    return `${formatador(undefined, undefined).format(k)} mil`;
   }
-  return votes.toLocaleString(LOCALE);
+  return formatador(undefined, undefined).format(votes);
 }
 
 /**
@@ -160,14 +184,9 @@ export function formatVotesCompact(votes: number): string {
  */
 export function formatCI(lower: number, upper: number, decimals = 1): string {
   if (Number.isNaN(lower) || Number.isNaN(upper)) return "—";
-  const lo = lower.toLocaleString(LOCALE, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-  const up = upper.toLocaleString(LOCALE, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
+  const f = formatador(decimals, decimals);
+  const lo = f.format(lower);
+  const up = f.format(upper);
   return `[${lo}; ${up}]`;
 }
 
@@ -199,9 +218,6 @@ export function formatTimeHMS(iso: string): string {
 export function formatPp(value: number, decimals = 1): string {
   if (Number.isNaN(value)) return "—";
   const sign = value > 0 ? "+" : value < 0 ? "−" : "";
-  const abs = Math.abs(value).toLocaleString(LOCALE, {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
+  const abs = formatador(decimals, decimals).format(Math.abs(value));
   return `${sign}${abs} pp`;
 }

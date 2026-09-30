@@ -1,12 +1,18 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, type Page, test } from "@playwright/test";
 import {
   cascaVaziaNoDocumento,
   esperarMapaMontado,
   esperarRedeOciosa,
   instalarProjecaoLocal,
 } from "./_apoio-local";
-import { isencaoPorSimbolo, TEXTO_DO_LADRILHO_DOS_PALANQUES } from "./_isencoes-axe";
+import {
+  CSS_LISTAS_DEPUTADO_VISIVEIS,
+  isencaoAgremiacaoDeputadoPulada,
+  isencaoPorSimbolo,
+  SELETOR_AGREMIACAO_DEPUTADO,
+  TEXTO_DO_LADRILHO_DOS_PALANQUES,
+} from "./_isencoes-axe";
 
 // `/uf/SP/senador` entra por exigência do RF-176(e): é a ÚNICA rota com
 // `vagas=2` e, por isso, a única que renderiza o destaque por espessura e a
@@ -62,6 +68,59 @@ import { isencaoPorSimbolo, TEXTO_DO_LADRILHO_DOS_PALANQUES } from "./_isencoes-
 // de suíte de teste foi o que publicou resultado eleitoral inventado no site
 // público em 2026-09-14. Use `pnpm start:e2e` ou o site publicado.
 // ---------------------------------------------------------------------------
+/** O resultado do axe — tipo tirado do próprio `AxeBuilder` (o `axe-core` não é dependência direta). */
+type AxeResults = Awaited<ReturnType<AxeBuilder["analyze"]>>;
+
+/**
+ * Os nós de `color-contrast` que o axe deixou em `incomplete` e que NENHUMA
+ * isenção deste arquivo cobre (ver as notas das isenções no corpo do teste).
+ * `comIsencaoContentVisibility` liga a quinta isenção — desligada na prova.
+ */
+async function indecididosInesperadosDe(
+  page: Page,
+  results: AxeResults,
+  comIsencaoContentVisibility: boolean,
+): Promise<{ inesperados: string[]; isentosPorContentVisibility: number }> {
+  const nos = results.incomplete.filter((v) => v.id === "color-contrast").flatMap((v) => v.nodes);
+  const dentroDeAgremiacao: boolean[] = await page.evaluate(
+    ({ alvos, seletor }) =>
+      alvos.map((alvo) => {
+        try {
+          return document.querySelector(alvo)?.closest(seletor) != null;
+        } catch {
+          return false;
+        }
+      }),
+    { alvos: nos.map((n) => String(n.target[0] ?? "")), seletor: SELETOR_AGREMIACAO_DEPUTADO },
+  );
+  let isentosPorContentVisibility = 0;
+  const inesperados = nos
+    .filter((n, i) => {
+      const alvo = String(n.target[0] ?? "");
+      const motivos = n.any.map((c) =>
+        String((c.data as { messageKey?: string })?.messageKey ?? ""),
+      );
+      if (isencaoPorSimbolo(alvo, motivos)) return false;
+      if (
+        comIsencaoContentVisibility &&
+        isencaoAgremiacaoDeputadoPulada(dentroDeAgremiacao[i] === true, motivos)
+      ) {
+        isentosPorContentVisibility++;
+        return false;
+      }
+      return true;
+    })
+    .map((n) => String(n.target[0] ?? ""))
+    .filter(
+      (alvo) =>
+        !/^text[[.]/.test(alvo) &&
+        !TEXTO_DO_LADRILHO_DOS_PALANQUES.test(alvo) &&
+        !alvo.includes("top-bar-brand") &&
+        !alvo.includes("candidate-avatar-fallback"),
+    );
+  return { inesperados, isentosPorContentVisibility };
+}
+
 const ROUTES = [
   "/",
   "/uf/SP",
@@ -226,26 +285,21 @@ for (const route of ROUTES) {
         // Isento SÓ com esse motivo e SÓ nessa classe (`isencaoPorSimbolo`); a
         // cor dele é a da lista da legenda (`--text-primary` sobre o cartão),
         // presa no mesmo teste do vitest.
-        const contrasteIndeciso = results.incomplete.filter((v) => v.id === "color-contrast");
-        const indecididosInesperados = contrasteIndeciso.flatMap((v) =>
-          v.nodes
-            .filter(
-              (n) =>
-                !isencaoPorSimbolo(
-                  String(n.target[0] ?? ""),
-                  n.any.map((c) => String((c.data as { messageKey?: string })?.messageKey ?? "")),
-                ),
-            )
-            .map((n) => String(n.target[0] ?? ""))
-            .filter(
-              (alvo) =>
-                !/^text[[.]/.test(alvo) &&
-                !TEXTO_DO_LADRILHO_DOS_PALANQUES.test(alvo) &&
-                !alvo.includes("top-bar-brand") &&
-                !alvo.includes("candidate-avatar-fallback"),
-            ),
-        );
-
+        //
+        // 🔴 A QUINTA isenção — `content-visibility: auto` nas listas de
+        // Deputado Federal (`/uf/SP/deputado-federal`), EXCEÇÃO CONHECIDA por
+        // decisão do dono em 30/09 (auditoria G6 da spec 026: velocidade acima
+        // da árvore de acessibilidade fora da tela). A agremiação longe da tela
+        // é pulada pelo navegador, e o axe não decide o contraste dos nós dela
+        // nem do cabeçalho colado nela (quatro motivos, medidos:
+        // `MOTIVOS_CONTENT_VISIBILITY`). Isenta SÓ esses motivos e SÓ dentro do
+        // bloco de uma agremiação — conferido no navegador por `closest()`, não
+        // pelo texto do seletor (`isencaoAgremiacaoDeputadoPulada`, com teste
+        // no vitest) — e SÓ COM PROVA: logo abaixo, o axe roda de novo com o
+        // `content-visibility` desligado, e aí nenhum desses nós pode ficar
+        // indecidido nem virar violação.
+        const { inesperados: indecididosInesperados, isentosPorContentVisibility } =
+          await indecididosInesperadosDe(page, results, true);
         await test
           .info()
           .attach(`axe-${route.replace(/\//g, "_")}-${viewport.name}-${theme}.json`, {
@@ -290,6 +344,36 @@ for (const route of ROUTES) {
             `"0 violações" acima não cobre nenhum deles:\n` +
             JSON.stringify(indecididosInesperados, null, 2),
         ).toEqual([]);
+
+        // A PROVA da quinta isenção: com as agremiações todas montadas, o
+        // contraste que o axe não decidiu acima passa a ser medido — e tem de
+        // passar, sem isenção de `content-visibility` nenhuma.
+        if (isentosPorContentVisibility > 0) {
+          // Segunda passada do axe com ~1.000 linhas montadas: no WebKit ela
+          // sozinha passa dos 30 s padrão (medido em 30/09).
+          test.info().setTimeout(test.info().timeout + 90_000);
+          await page.addStyleTag({ content: CSS_LISTAS_DEPUTADO_VISIVEIS });
+          await page.evaluate(
+            () =>
+              new Promise<void>((r) =>
+                requestAnimationFrame(() => requestAnimationFrame(() => r())),
+              ),
+          );
+          const prova = await new AxeBuilder({ page })
+            .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+            .analyze();
+          expect(
+            prova.violations,
+            `com o content-visibility DESLIGADO (prova da isenção de ${isentosPorContentVisibility} nós):\n` +
+              JSON.stringify(prova.violations, null, 2),
+          ).toEqual([]);
+          const { inesperados } = await indecididosInesperadosDe(page, prova, false);
+          expect(
+            inesperados,
+            "com o content-visibility DESLIGADO, o axe ainda não decide o contraste destes nós:\n" +
+              JSON.stringify(inesperados, null, 2),
+          ).toEqual([]);
+        }
       });
     }
   }

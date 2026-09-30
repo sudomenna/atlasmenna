@@ -151,8 +151,15 @@ proporcional) e **ADR-0065** (listas em três faixas); números a preencher.
 - [x] U8. `/sobre-o-modelo` seção 5: parágrafos da projeção de deputado; oito `<h2>` (RF-266).
 - [x] U9. Reescrever (m5), (t5), (t), (c3) em `tests/unit/pages/deputado-federal.test.tsx`; (m6) fica.
 - [x] U10. v1 renderiza (`tests/fixtures/blob/dep-uf.json`) (RF-276).
-- [ ] U11. e2e: `/uf/SP/deputado-federal` em `tests/e2e/perf-budget.spec.ts` com teto próprio de
+- [x] U11. e2e: `/uf/SP/deputado-federal` em `tests/e2e/perf-budget.spec.ts` com teto próprio de
       480 KiB e em `tests/e2e/a11y-audit.spec.ts`, lista aberta e fechada, 375 px (RF-277).
+      **Fechado em 30/09 (correção da auditoria G6):** teto revisto para 560 KiB e estendido a RJ e
+      MG, capa 320 KiB (decisões do dono, emenda ao ADR-0065); `tests/e2e/deputado-listas.spec.ts`
+      traz todas as listas à tela, fechadas e abertas (21–60), a 375 e 320 px — zero rolagem
+      horizontal e zero violação do axe (e, com o `content-visibility` desligado, contraste de todas
+      as linhas decidido); `a11y-audit.spec.ts` isenta o contraste indecidido das agremiações puladas
+      (exceção conhecida do `content-visibility`, decisão do dono) só com a prova do axe repetido
+      com o `content-visibility` desligado.
 
 ## G — portões (sex 02/10 até 18h)
 

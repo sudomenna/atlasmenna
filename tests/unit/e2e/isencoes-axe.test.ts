@@ -7,7 +7,14 @@
 
 import { describe, expect, it } from "vitest";
 
-import { isencaoPorSimbolo, TEXTO_DO_LADRILHO_DOS_PALANQUES as R } from "@/tests/e2e/_isencoes-axe";
+import {
+  CSS_LISTAS_DEPUTADO_VISIVEIS,
+  isencaoPorSimbolo,
+  isencaoAgremiacaoDeputadoPulada as isenta,
+  TEXTO_DO_LADRILHO_DOS_PALANQUES as R,
+  SELETOR_AGREMIACAO_DEPUTADO,
+  SELETOR_LISTA_DEPUTADO,
+} from "@/tests/e2e/_isencoes-axe";
 
 describe("TEXTO_DO_LADRILHO_DOS_PALANQUES", () => {
   it("casa com os seletores medidos (sigla e código, com e sem atributos)", () => {
@@ -49,5 +56,40 @@ describe("isencaoPorSimbolo — o '≠' da legenda, e só com o motivo `nonBmp`"
     expect(isencaoPorSimbolo(ALVO, [])).toBe(false);
     expect(isencaoPorSimbolo("p.PalanquesMapa-module__x__legendaTexto", ["nonBmp"])).toBe(false);
     expect(isencaoPorSimbolo(".Outro-module__x__codigoLegenda", ["nonBmp"])).toBe(false);
+  });
+});
+
+describe("isencaoAgremiacaoDeputadoPulada — content-visibility nas listas de Deputado (30/09)", () => {
+  it("isenta nó DENTRO de uma agremiação com os quatro motivos medidos, sozinhos ou juntos", () => {
+    for (const m of [
+      "bgOverlap",
+      "elmPartiallyObscured",
+      "elmPartiallyObscuring",
+      "shortTextContent",
+    ]) {
+      expect(isenta(true, [m]), m).toBe(true);
+    }
+    expect(isenta(true, ["bgOverlap", "elmPartiallyObscuring"])).toBe(true);
+  });
+
+  it("🔴 fora da agremiação, motivo estranho (mesmo misturado) ou motivo nenhum ⇒ NÃO isenta", () => {
+    expect(isenta(false, ["bgOverlap"])).toBe(false);
+    expect(isenta(false, ["elmPartiallyObscuring"])).toBe(false);
+    expect(isenta(true, ["bgImage"])).toBe(false);
+    expect(isenta(true, ["nonBmp"])).toBe(false);
+    expect(isenta(true, ["pseudoContent"])).toBe(false);
+    expect(isenta(true, ["bgOverlap", "bgGradient"])).toBe(false);
+    expect(isenta(true, [])).toBe(false);
+  });
+
+  it("os seletores são os `data-testid` do componente e da página — não classe com hash", () => {
+    expect(SELETOR_LISTA_DEPUTADO).toBe('[data-testid="dep-lista-agremiacao"]');
+    expect(SELETOR_AGREMIACAO_DEPUTADO).toBe(
+      '[data-testid="uf-agremiacao"], [data-testid="dep-regras"]',
+    );
+    // A prova desliga o content-visibility exatamente no elemento que o tem.
+    expect(CSS_LISTAS_DEPUTADO_VISIVEIS).toBe(
+      '[data-testid="dep-lista-agremiacao"]{content-visibility:visible !important}',
+    );
   });
 });

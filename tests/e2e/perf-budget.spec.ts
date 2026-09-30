@@ -121,6 +121,12 @@ const ROUTES = [
   "/uf/SP/senador",
   "/deputado-federal",
   "/uf/SP/deputado-federal",
+  // RJ e MG entraram em 2026-09-30 (auditoria G6 da spec 026): são o 2º e o
+  // 3º maiores documentos de Deputado (441 e 440 KiB medidos), e a nota que
+  // dizia que "as demais UFs ficam no teto global" de 300 KiB era falsa —
+  // nenhuma delas era medida, e as duas passavam 45% do global.
+  "/uf/RJ/deputado-federal",
+  "/uf/MG/deputado-federal",
   "/senador",
   "/sobre-as-etiquetas",
 ] as const;
@@ -176,18 +182,34 @@ const ROTAS_COM_MAPA = new Set<string>(["/", "/uf/SP", "/uf/SP/governador", "/uf
 const BUDGET_DOCUMENT_BYTES = 300 * KIB;
 
 /**
+ * Teto de documento das páginas de UF de Deputado Federal — **560 KiB**,
+ * decisão do dono em 30/09 (emenda ao ADR-0065 D5, auditoria G6 da spec 026),
+ * mantidas as 60 linhas por agremiação no documento. Medido com a fixture do
+ * simulado e o Blob servido (`build:e2e`/`start:e2e`), antes dos cortes de
+ * 30/09: SP 532.994 B (520,5 KiB) · RJ 453.476 B (442,8) · MG 451.813 B
+ * (441,2) · RS 360 · BA 353 · PR 332 · PE 321 KiB. Os 480 KiB de 29/09 eram
+ * escolha, não medida (ADR-0065, negativas), e SP os passava em 8%.
+ */
+const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
+
+/**
  * Tetos de documento PRÓPRIOS de uma rota — exceção nomeada, nunca
  * afrouxamento do teto global acima, que não muda.
  *
- * `/uf/SP/deputado-federal` — **480 KiB** (≈ 70 KiB gzip), decisão do dono em
- * 29/09 (plano da spec 026; ADR-0065 D5; design 026 § 10). SP é o pior caso do
- * produto: 70 vagas, dezenas de agremiações, 60 linhas por agremiação no
- * documento. ⚠️ O número é ESCOLHA, não medida da noite (ADR-0065, negativas):
- * se o medido ficar longe dele, o teto se revê por ADR, não por edição deste
- * arquivo.
+ * - `/uf/{SP,RJ,MG}/deputado-federal` — {@link TETO_DOCUMENTO_DEPUTADO_UF}.
+ *   SP é o pior caso do produto (70 vagas, dezenas de agremiações, 60 linhas
+ *   por agremiação); RJ e MG são os seguintes, e as demais UFs medem menos
+ *   que eles. ⚠️ Rever o número é por ADR, não por edição deste arquivo.
+ * - `/deputado-federal` (capa) — **320 KiB**, decisão do dono em 30/09 (mesma
+ *   emenda): mediu 315.242 B (307,8 KiB), 2,6% acima do global, com o
+ *   hemiciclo de 513 cadeiras, os mais votados do país, os puxadores e o selo
+ *   por UF.
  */
 const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> = {
-  "/uf/SP/deputado-federal": 480 * KIB,
+  "/deputado-federal": 320 * KIB,
+  "/uf/SP/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
+  "/uf/RJ/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
+  "/uf/MG/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
 };
 
 function tetoDoDocumento(route: (typeof ROUTES)[number]): number {
@@ -198,7 +220,7 @@ function tetoDoDocumento(route: (typeof ROUTES)[number]): number {
  * Frases de "detalhe do Blob indisponível" da página de UF de Deputado
  * (`MOTIVO_INDISPONIVEL`, `app/(dep)/uf/[sigla]/deputado-federal/page.tsx`).
  * Com o Blob servido pelo falso, nenhuma pode aparecer: se aparecer, o teto
- * de 480 KiB passaria medindo a página SEM a parte que ele existe para medir.
+ * de 560 KiB passaria medindo a página SEM a parte que ele existe para medir.
  */
 const DETALHE_DEPUTADO_INDISPONIVEL = [
   "O armazenamento do detalhe não está configurado",
@@ -527,7 +549,7 @@ test.describe("perf budget (RNF-007a/b/c)", () => {
         `${route} veio com a casca "sem dados" — o .next não saiu do \`pnpm build:e2e\`?`,
       ).toEqual([]);
 
-      if (route === "/uf/SP/deputado-federal") {
+      if (/^\/uf\/[A-Z]{2}\/deputado-federal$/.test(route)) {
         const html = corpo.toString("utf8");
         expect(
           DETALHE_DEPUTADO_INDISPONIVEL.filter((f) => html.includes(f)),

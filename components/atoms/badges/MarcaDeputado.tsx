@@ -42,8 +42,8 @@ export function MarcaDeputado({ marca }: MarcaDeputadoProps) {
     <>
       <span className={`${styles.marca} ${CLASSE[marca.tipo]}`} data-marca={marca.tipo}>
         {t.principal}
-        {t.via ? <span className={styles.detalhe}>· {t.via}</span> : null}
-        {t.apertada ? <span className={styles.detalhe}>· {t.apertada}</span> : null}
+        {t.via ? <span className={styles.detalhe}>{`· ${t.via}`}</span> : null}
+        {t.apertada ? <span className={styles.detalhe}>{`· ${t.apertada}`}</span> : null}
       </span>
       {t.citacaoTse ? (
         <span className={styles.citacao} data-citacao-tse="">

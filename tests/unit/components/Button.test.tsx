@@ -117,6 +117,20 @@ describe("<Button />", () => {
     expect(b?.getAttribute("aria-controls")).toBe("lista-cands");
   });
 
+  it("(f2) wrap: rótulo quebra, altura vira MÍNIMA (44px) e nunca passa do contêiner", () => {
+    const b = btn(parse(<Button wrap>Mostrar todos os 71 candidatos de PT/PC do B/PV</Button>));
+    expect(b?.className).toContain("whitespace-normal");
+    expect(b?.className).not.toContain("whitespace-nowrap");
+    expect(b?.style.minHeight).toBe("var(--tap-min)");
+    expect(b?.style.height).toBe("");
+    expect(b?.style.maxWidth).toBe("100%");
+    // Sem `wrap`, nada muda para os demais botões do produto.
+    const n = btn(parse(<Button>Ver</Button>));
+    expect(n?.className).toContain("whitespace-nowrap");
+    expect(n?.style.height).toBe("var(--tap-min)");
+    expect(n?.style.minHeight).toBe("");
+  });
+
   it("(i) o arquivo NÃO é Client Component — hover é CSS, não useState", () => {
     const src = codeOf("components/atoms/controls/Button.tsx");
     expect(src).not.toContain('"use client"');

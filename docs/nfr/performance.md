@@ -31,11 +31,16 @@ decisão registrada em ADR, e ela vale só para aquela rota (`TETO_DOCUMENTO_POR
 | Rota | Teto do documento | Por quê | Decisão |
 |---|---|---|---|
 | *(todas as demais)* | **300 KiB** | teto global; `/`, a maior, mediu 212,2 KiB em 21/09 | o próprio spec de peso (`BUDGET_DOCUMENT_BYTES`, com a medição e o porquê de não apertar) |
-| `/uf/SP/deputado-federal` | **480 KiB** (≈ 70 KiB gzip) | pior caso do produto: 70 vagas, dezenas de agremiações, até 60 candidatos por agremiação no documento (listas em três faixas); medido **com o Blob servido** (`build:e2e`/`start:e2e`) | [ADR-0065](../architecture/adrs/0065-listas-proporcionais-em-tres-faixas.md) D5 (decisão do dono, 29/09) |
+| `/uf/SP/deputado-federal`, `/uf/RJ/deputado-federal`, `/uf/MG/deputado-federal` | **560 KiB** | páginas de UF de Deputado com até 60 candidatos por agremiação no documento (listas em três faixas); medido **com o Blob servido** (`build:e2e`/`start:e2e`) e a fixture do simulado em 30/09, antes dos cortes do dia: SP 520,5 · RJ 442,8 · MG 441,2 KiB | [ADR-0065](../architecture/adrs/0065-listas-proporcionais-em-tres-faixas.md) D5 + emenda de 30/09 (decisão do dono) |
+| `/deputado-federal` (capa) | **320 KiB** | hemiciclo de 513 cadeiras, mais votados do país, puxadores e selo por UF; mediu 307,8 KiB em 30/09 | [ADR-0065](../architecture/adrs/0065-listas-proporcionais-em-tres-faixas.md), emenda de 30/09 (decisão do dono) |
 
-⚠️ Os 480 KiB são **escolha, não medida da noite** (ADR-0065, negativas): se o medido ficar longe, o
-teto se revê por ADR, não por edição do spec de peso. As demais UFs de Deputado Federal ficam no teto
-global. RNF-002 (LCP) continua sendo a métrica de autoridade; o teto de bytes é proxy.
+⚠️ **As demais UFs de Deputado Federal NÃO estão no portão.** Até 30/09 este parágrafo dizia que elas
+"ficam no teto global" — era falso: só SP era medida, e RJ e MG passavam 45% dos 300 KiB globais. O
+portão mede as três maiores (SP, RJ, MG); as outras medem menos que elas (RS 360, BA 353, PR 332, PE 321
+KiB em 30/09 — todas **acima** do global, abaixo dos 560) e ficam cobertas por construção, não por
+asserção. O teto de 480 KiB de 29/09 era escolha, não medida, e SP o passava em 8%; os 560 KiB vieram
+da medição. Rever o número é por ADR, não por edição do spec de peso. RNF-002 (LCP) continua sendo a
+métrica de autoridade; o teto de bytes é proxy.
 
 ## Como atingir
 

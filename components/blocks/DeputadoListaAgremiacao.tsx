@@ -11,7 +11,9 @@
  *   2. 21–60 (e toda linha com marca que o produtor tenha posto no objeto) —
  *      no documento, recortadas por CSS até o leitor pedir ("ver mais"). Nenhum
  *      nó sai do DOM, da árvore de acessibilidade ou da busca da página
- *      (ADR-0034 D21, ADR-0065 D1);
+ *      (ADR-0034 D21, ADR-0065 D1) — com UMA exceção declarada, a do
+ *      `content-visibility: auto` nas agremiações longe da tela (decisão do
+ *      dono, 30/09; ver o CSS Module);
  *   3. 61 em diante ......... fora do documento; buscadas UMA vez por aba e por
  *      UF na rota `GET /uf/<UF>/deputado-federal/lista`, só no clique.
  *
@@ -272,7 +274,9 @@ export function DeputadoListaAgremiacao({
         data-f={rank > FAIXA_VISIVEL ? "" : undefined}
         tabIndex={focoEm === l[L.SQCAND] ? -1 : undefined}
       >
-        <span>{rank}º</span>
+        {/* Texto montado como UMA string: `{rank}º` sairia `21<!-- -->º` no
+            HTML — 8 bytes × ~1.000 linhas no documento de SP (G6, 30/09). */}
+        <span>{`${rank}º`}</span>
         <span>
           <b>{l[L.NOME]}</b>
           {meta ? <small>{meta}</small> : null}
@@ -341,23 +345,31 @@ export function DeputadoListaAgremiacao({
       {naFaixa2 > 0 || restantes > 0 ? (
         <div className={styles.acoes}>
           {naFaixa2 > 0 ? (
+            // Padrão "disclosure" da APG: o RÓTULO é estável e o estado vai só
+            // no `aria-expanded` (e, para quem vê, na seta que gira — desenhada
+            // em CSS, sem glifo: um "▾" em texto cai no `incomplete` do axe
+            // com o motivo `nonBmp`, "só símbolo").
+            // Trocar o texto para "Mostrar menos" E virar o `aria-expanded`
+            // dava ao leitor de tela dois sinais que se contradiziam ("mostrar
+            // menos, recolhido"). Auditoria G6 da spec 026, 30/09.
             <Button
               variant="secondary"
               size="md"
+              wrap
+              className={styles.botao}
               aria-controls={listaId}
               aria-expanded={aberta}
               onClick={() => setAberta((v) => !v)}
               data-testid="dep-ver-mais"
             >
-              {aberta
-                ? "Mostrar menos"
-                : `Ver mais ${naFaixa2} ${naFaixa2 === 1 ? "candidato" : "candidatos"} de ${sigla}`}
+              {`Mais ${naFaixa2} ${naFaixa2 === 1 ? "candidato" : "candidatos"} de ${sigla}`}
             </Button>
           ) : null}
           {restantes > 0 ? (
             <Button
               variant="ghost"
               size="md"
+              wrap
               aria-controls={listaId}
               aria-disabled={buscando}
               onClick={mostrarTodos}

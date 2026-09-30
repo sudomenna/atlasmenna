@@ -44,6 +44,19 @@ export interface ButtonProps {
   disabled?: boolean;
   /** Estica para 100% da largura do contêiner. */
   full?: boolean;
+  /**
+   * Deixa o rótulo QUEBRAR em mais de uma linha (default: não quebra).
+   *
+   * O átomo nasceu com `whitespace-nowrap` e altura fixa de 44 px — certo para
+   * rótulos curtos, errado para rótulo que carrega dado: "Mostrar todos os 71
+   * candidatos de PT/PC do B/PV" media 366 px e, sem quebra, empurrava a
+   * página de 375 para 382 px de largura (rolagem horizontal, WCAG 1.4.10;
+   * auditoria G6 da spec 026, 30/09). Com `wrap`, a altura vira MÍNIMA
+   * (continua `--tap-min`), o texto quebra centralizado e o botão nunca passa
+   * da largura do contêiner. Opt-in de propósito: os demais botões do produto
+   * não mudam de desenho.
+   */
+  wrap?: boolean;
   type?: "button" | "submit" | "reset";
   onClick?: MouseEventHandler<HTMLButtonElement>;
   /** Obrigatório quando o botão é só ícone (sem `children` textual). */
@@ -118,6 +131,7 @@ export function Button({
   children,
   disabled = false,
   full = false,
+  wrap = false,
   type = "button",
   onClick,
   "aria-label": ariaLabel,
@@ -141,7 +155,8 @@ export function Button({
       data-variant={variant}
       data-size={size}
       className={[
-        "inline-flex select-none items-center justify-center whitespace-nowrap rounded-sm",
+        "inline-flex select-none items-center justify-center rounded-sm",
+        wrap ? "whitespace-normal text-center" : "whitespace-nowrap",
         "disabled:cursor-not-allowed disabled:opacity-45 disabled:brightness-100",
         "aria-disabled:cursor-not-allowed aria-disabled:opacity-45 aria-disabled:brightness-100",
         VARIANT_HOVER[variant],
@@ -151,8 +166,17 @@ export function Button({
         .join(" ")}
       style={{
         gap: "var(--space-2)",
-        height: size === "sm" ? 32 : "var(--tap-min)",
-        padding: size === "sm" ? "0 var(--space-3)" : "0 var(--space-4)",
+        ...(wrap
+          ? {
+              minHeight: size === "sm" ? 32 : "var(--tap-min)",
+              maxWidth: "100%",
+              padding:
+                size === "sm" ? "var(--space-1) var(--space-3)" : "var(--space-2) var(--space-4)",
+            }
+          : {
+              height: size === "sm" ? 32 : "var(--tap-min)",
+              padding: size === "sm" ? "0 var(--space-3)" : "0 var(--space-4)",
+            }),
         border: "1px solid transparent",
         font: "var(--type-label)",
         fontSize: size === "sm" ? "var(--text-xs)" : "var(--text-sm)",

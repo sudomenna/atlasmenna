@@ -168,7 +168,9 @@ describe("DeputadoListaAgremiacao — o documento antes do clique (RF-260)", () 
     const ver = doc.querySelector("[data-testid='dep-ver-mais']");
     expect(ver?.getAttribute("aria-expanded")).toBe("false");
     expect(ver?.getAttribute("aria-controls")).toBe(ol?.id);
-    expect(ver?.textContent).toBe("Ver mais 40 candidatos de PL");
+    // Rótulo estável (padrão disclosure da APG): o estado vai só no
+    // `aria-expanded`; a seta é CSS (pseudo-elemento), fora do nome e do texto.
+    expect(ver?.textContent).toBe("Mais 40 candidatos de PL");
     const todos = doc.querySelector("[data-testid='dep-mostrar-todos']");
     expect(todos?.textContent).toBe("Mostrar todos os 71 candidatos de PL");
     // Região viva existe antes de ter texto — senão o anúncio se perde.
@@ -385,7 +387,8 @@ describe("DeputadoListaAgremiacao — cliques (RF-260)", () => {
     await act(async () => ver?.click());
     expect(ver?.getAttribute("aria-expanded")).toBe("true");
     expect(lista().querySelector("ol")?.getAttribute("data-collapsed")).toBe("false");
-    expect(ver?.textContent).toBe("Mostrar menos");
+    // O rótulo NÃO muda — só o `aria-expanded` (padrão disclosure da APG).
+    expect(ver?.textContent).toBe("Mais 40 candidatos de PL");
     await act(async () => ver?.click());
     expect(ver?.getAttribute("aria-expanded")).toBe("false");
     expect(linhasDoc(lista())).toHaveLength(60);

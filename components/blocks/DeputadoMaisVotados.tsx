@@ -61,8 +61,11 @@ export function DeputadoMaisVotados({ escopo, uf, linhas, titleId }: DeputadoMai
             ? "Os 10 candidatos com mais votos apurados no país, de todas as agremiações. O percentual de cada um é sobre os votos válidos do estado dele — é lá que a cadeira é disputada."
             : `Os 10 candidatos com mais votos apurados em ${uf ?? ""}, de todas as agremiações. O percentual é sobre os votos válidos de ${uf ?? ""}.`}
         </p>
+        {/* Nome acessível = o título do painel ("Mais votados em SP"): o
+            leitor que pula de lista em lista sabe qual é esta (G6, 30/09). */}
         <ol
           className={styles.lista}
+          aria-labelledby={titleId}
           data-testid={noPais ? "dep-mais-votados-pais" : "dep-mais-votados-uf"}
         >
           {linhas.map((l, i) => {
@@ -78,7 +81,7 @@ export function DeputadoMaisVotados({ escopo, uf, linhas, titleId }: DeputadoMai
               .join(" · ");
             return (
               <li key={`${l.uf}:${l.sqcand}`} data-rank={i + 1} data-uf={l.uf}>
-                <span>{i + 1}º</span>
+                <span>{`${i + 1}º`}</span>
                 <span>
                   <b>{nome}</b>
                   <small>{quem}</small>

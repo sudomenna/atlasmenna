@@ -12,6 +12,30 @@ amends: 0017
 
 Aceito (2026-09-29) — plano aprovado pelo dono.
 
+> **Emenda 2026-09-30 (decisões do dono sobre a auditoria G6 da spec 026).**
+>
+> 1. **Tetos de documento revistos pela medição.** Os ≈ 480 KiB do D5 eram escolha, e a auditoria
+>    mediu `/uf/SP/deputado-federal` em **532.994 B (520,5 KiB)** — 8% acima —, com a fixture do
+>    simulado e o Blob servido (`build:e2e`/`start:e2e`). Mediu também as outras UFs, que a nota do
+>    RNF dizia estarem "no teto global" de 300 KiB e não eram medidas: RJ **453.476 B (442,8 KiB)**,
+>    MG **451.813 B (441,2 KiB)**, RS 360, BA 353, PR 332, PE 321 KiB; e a capa `/deputado-federal`
+>    em **315.242 B (307,8 KiB)**. Decisão: **manter as 60 linhas por agremiação** no documento e
+>    adotar **560 KiB** para toda página de UF de Deputado — o portão mede SP, RJ e MG — e
+>    **320 KiB** para a capa, ambos exceções nomeadas em `tests/e2e/perf-budget.spec.ts`
+>    (`TETO_DOCUMENTO_POR_ROTA`) e em `docs/nfr/performance.md`. O teto global de 300 KiB não muda.
+> 2. **`content-visibility: auto` fica, como exceção conhecida.** Velocidade acima da árvore de
+>    acessibilidade fora da tela: uma agremiação longe da tela, pulada pelo navegador, só entra na
+>    árvore de acessibilidade à medida que o leitor se aproxima dela. Isto contradiz a letra do D1
+>    ("nenhum nó sai da árvore de acessibilidade") para as listas **longe da tela** — o texto
+>    continua no DOM e na busca da página. O axe também não decide o contraste das agremiações
+>    puladas (motivos `bgOverlap`, `elmPartiallyObscuring`, `elmPartiallyObscured` e
+>    `shortTextContent`, medidos em 30/09 — com o `content-visibility` desligado, a mesma página cai
+>    para zero). O portão de acessibilidade isenta só esses motivos, só dentro do bloco de uma
+>    agremiação (e do painel de regras logo depois da última), e **só com prova**: repete o axe com o `content-visibility` desligado e exige zero
+>    violação e zero indecidido sem a isenção (`tests/e2e/_isencoes-axe.ts`,
+>    `tests/e2e/a11y-audit.spec.ts`); as listas trazidas à tela e abertas, a 375 e 320 px, passam em
+>    `tests/e2e/deputado-listas.spec.ts`. A conferir com VoiceOver e NVDA no bug bash.
+
 **Emenda escopada ao [ADR-0017](0017-transparencia-total-3-camadas.md).** O ADR-0017 proíbe
 collapsible — `display:none`, `hidden`, `<details>` — e foi escrito para as ~11 candidaturas de uma
 corrida majoritária. Esta emenda vale **só** para a lista de candidaturas por agremiação numa eleição
@@ -127,7 +151,8 @@ faltam, o suficiente para o botão dizer o número e sumir quando é zero. As du
 vez de fingir um instante só, porque a fronteira 60/61 pode ter mudado entre os dois ciclos.
 
 **5. Peso: teto próprio para uma rota, não afrouxamento do global.** `/uf/SP/deputado-federal` tem teto
-de documento de **≈ 480 KiB** (decisão do dono; ~70 KiB gzip), medido no e2e **com o Blob servido** —
+de documento de **≈ 480 KiB** (decisão do dono; ~70 KiB gzip — **revisto para 560 KiB, e estendido a RJ
+e MG, na emenda de 30/09**; a capa ganhou 320 KiB), medido no e2e **com o Blob servido** —
 o servidor falso serve também o Blob, e `BLOB_PUBLIC_BASE_URL` aponta para ele em `build:e2e` e
 `start:e2e`; o portão que achar a casca vazia reprova. O teto global de 300 KiB **não muda**; a rota
 entra na lista de peso com o seu. Dois mecanismos seguram o número: **tuplas compactas** — o componente

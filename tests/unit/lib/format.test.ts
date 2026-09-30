@@ -42,6 +42,7 @@ import {
   formatPercentTrim,
   formatPp,
   formatVotes,
+  formatVotesCompact,
 } from "@/lib/utils/format";
 
 /* =========================================================================
@@ -235,5 +236,59 @@ describe("o resto de lib/utils/format.ts fala pt-BR", () => {
     expect(formatPercent(-3, 1)).toBe("0,0%");
     expect(formatPercent(53.4, 0)).toBe("53%");
     expect(formatPercent(Number.NaN)).toBe("—");
+  });
+});
+
+/* =========================================================================
+ * 2026-09-30 (auditoria G6 da spec 026): os formatadores passaram a usar
+ * `Intl.NumberFormat` em cache de módulo em vez de `toLocaleString` por valor
+ * (~83 ms de hidratação a 4× de CPU em /uf/SP/deputado-federal). A troca só
+ * vale se a saída for IDÊNTICA — aqui ela é conferida contra a forma antiga,
+ * escrita por extenso, numa varredura com os arredondamentos traiçoeiros
+ * (0,15 · 0,35 · 99,95), `-0`, milhar e valores fora da faixa. Na troca, uma
+ * varredura de 3,5 milhões de comparações (-20 a 1.200 em passos de 0,007 +
+ * 20 mil valores sorteados, 0 a 3 casas) deu zero diferença; esta é a versão
+ * que cabe na suíte.
+ * ====================================================================== */
+describe("formatadores em cache — saída idêntica à de `toLocaleString`", () => {
+  const L = "pt-BR";
+  const casas = (d: number) => ({ minimumFractionDigits: d, maximumFractionDigits: d });
+  const valores: number[] = [0, -0, 0.15, 0.35, 0.85, 99.95, 100, 101, -5, -0.4, 1234.5, 1e9];
+  for (let i = -2000; i <= 120000; i += 97) valores.push(i / 100);
+
+  it("formatPercent, formatPercentTrim, formatPp e formatCI, com 0 a 3 casas", () => {
+    for (const v of valores) {
+      for (const d of [0, 1, 2, 3]) {
+        const c = Number(Math.max(0, Math.min(100, v)).toFixed(d));
+        expect(formatPercent(v, d)).toBe(
+          d === 0 ? `${Math.round(c)}%` : `${c.toLocaleString(L, casas(d))}%`,
+        );
+        const r = Math.round(v * 10 ** d) / 10 ** d;
+        expect(formatPercentTrim(v, d)).toBe(
+          `${r < 0 ? "−" : ""}${Math.abs(r).toLocaleString(L, { maximumFractionDigits: d })}%`,
+        );
+        expect(formatPp(v, d)).toBe(
+          `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString(L, casas(d))} pp`,
+        );
+        expect(formatCI(v, v + 1, d)).toBe(
+          `[${v.toLocaleString(L, casas(d))}; ${(v + 1).toLocaleString(L, casas(d))}]`,
+        );
+      }
+    }
+  });
+
+  it("formatVotes e formatVotesCompact", () => {
+    for (const base of valores) {
+      const v = base * 1000;
+      expect(formatVotes(v)).toBe(Math.round(v).toLocaleString(L));
+      const a = Math.abs(v);
+      expect(formatVotesCompact(v)).toBe(
+        a >= 1e6
+          ? `${(v / 1e6).toLocaleString(L, { maximumFractionDigits: 1 })} mi`
+          : a >= 1e3
+            ? `${Math.round(v / 1e3).toLocaleString(L)} mil`
+            : v.toLocaleString(L),
+      );
+    }
   });
 });

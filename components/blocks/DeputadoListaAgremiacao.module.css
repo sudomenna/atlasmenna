@@ -24,8 +24,22 @@
 
 /* `content-visibility` por agremiação (RNF-002/RNF-003): o navegador pula o
  * layout e a pintura das agremiações fora da tela. O `auto` guarda a altura
- * medida depois da primeira pintura, para a rolagem não saltar. O conteúdo
- * continua acessível e buscável.
+ * medida depois da primeira pintura, para a rolagem não saltar.
+ *
+ * ⚠️ EXCEÇÃO CONHECIDA E DECLARADA — decisão do dono em 30/09 (auditoria G6
+ * da spec 026): velocidade acima da árvore de acessibilidade fora da tela.
+ * O texto continua no DOM e a busca da página (Ctrl+F) o acha, mas uma
+ * agremiação PULADA pelo navegador não está pronta na árvore de
+ * acessibilidade: ela entra (e ganha layout) à medida que o leitor se
+ * aproxima dela ao rolar ou navegar. Isto contradiz a letra do ADR-0065 D1
+ * ("nenhum nó sai da árvore de acessibilidade") para as listas LONGE da
+ * tela. Pelo mesmo motivo o axe não decide o contraste dessas agremiações, e
+ * o portão de acessibilidade as isenta — só dentro de uma agremiação, só com
+ * os quatro motivos medidos, e só com a prova de que, com o
+ * `content-visibility` desligado, o contraste passa
+ * (`tests/e2e/_isencoes-axe.ts`, `a11y-audit.spec.ts`). A conferir com
+ * VoiceOver e NVDA no bug bash: navegação por cabeçalhos (um `<h3>` por
+ * agremiação) e leitura contínua até o fim da página.
  *
  * 🔴 Só o eixo de BLOCO (`contain-intrinsic-block-size`). A forma curta
  * `contain-intrinsic-size: auto 42rem` vale para os DOIS eixos: fora da tela a
@@ -132,6 +146,25 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+/* A seta do "mais N candidatos" (disclosure): aponta para baixo fechada, para
+ * cima aberta. O estado vem do `aria-expanded` — a mesma fonte que o leitor de
+ * tela lê —, então a seta nunca desmente o atributo. Desenhada com borda num
+ * pseudo-elemento VAZIO: não é texto, não entra no nome acessível nem no axe
+ * (um glifo "▾" caía em `incomplete` com o motivo `nonBmp`). Sem transição:
+ * nada a respeitar em `prefers-reduced-motion`. */
+.botao::before {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border-inline: 0.3125rem solid transparent;
+  border-top: 0.375rem solid currentColor;
+}
+
+.botao[aria-expanded="true"]::before {
+  transform: rotate(180deg);
 }
 
 .status {
