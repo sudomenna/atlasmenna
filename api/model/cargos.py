@@ -20,16 +20,25 @@ quebra o teste antes de chegar ao ar.
 
 ## O que o modelo lê daqui
 
-Dois campos, e só:
-
   - `vagas_por_uf` — quantos eleitos a UF entrega. É o `vagas` de
     `p_vitoria.p_eleito` (RF-103): 1 para Presidente/Governador, **2** para
-    Senador em 2026 (renovação de 2/3 → 54 vagas), `None` para Deputado
-    Federal, que é proporcional e tem bancada variável por UF.
+    Senador em 2026 (renovação de 2/3 → 54 vagas), `None` para os três
+    proporcionais (Deputado Federal, Estadual e Distrital), cuja bancada varia
+    por UF e vem do `carg[].nv` do TSE (RF-124).
   - `granularidade` — `"zona"` ou `"uf"` (ADR-0026 item 1). Vai para
     `metodo.granularidade` no payload (RF-102): é a diferença que a tela de
     Senador precisa declarar ao leitor, porque a projeção dele NÃO é zona a
-    zona como a de Presidente e Governador.
+    zona como a de Presidente e Governador. Nos cargos 7/8 (spec 027, Fase 1)
+    diz ao ciclo proporcional que o modelo recebe SÓ o agregado de cada UF —
+    `project.py::zonas_para_o_modelo` deixa de tratar isso como anomalia.
+  - `proporcional` — o desvio para `_do_project_proporcional` (`project.py::
+    _e_proporcional`). 🔴 Cargo fora da tabela cai CALADO no ramo majoritário:
+    foi por isso que os cargos 7/8 entraram aqui antes de qualquer outra coisa
+    (spec 027 RF-278).
+  - `abrangencia` — QUAIS UFs elegem o cargo (spec 027 RF-278, ADR-0066). O
+    Deputado Estadual (7) existe em 26 UFs — o DF não tem Assembleia
+    Legislativa, tem Câmara Legislativa, que é o cargo 8, Deputado Distrital,
+    e só existe no DF. Ver `ufs_do_cargo`.
 
 Constituição § 9: nenhum I/O, tabela estática e funções puras — igual ao
 módulo TS que este espelha.
@@ -40,6 +49,22 @@ from __future__ import annotations
 from typing import Literal, TypedDict
 
 Granularidade = Literal["uf", "zona"]
+
+#: Em quais UFs o cargo é disputado (spec 027 RF-278, ADR-0066). Os mesmos três
+#: valores, com a mesma grafia, de `CargoInfo.abrangencia` em
+#: `lib/config/cargos.ts` — o teste de sincronia os confronta.
+Abrangencia = Literal["todas-as-ufs", "ufs-sem-df", "so-df"]
+
+#: As 27 unidades da federação, em ordem alfabética de sigla. **Sem `ZZ`** (o
+#: exterior): `ZZ` não é UF — é a circunscrição dos eleitores no exterior, que
+#: votam só para Presidente, e o agregado nacional desse cargo sai do arquivo
+#: `br` do TSE, não da soma das UFs. Sem `BR` pelo mesmo motivo (ver
+#: `project.py::_snapshots_por_uf`).
+UFS_BRASIL: tuple[str, ...] = (
+    "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT",
+    "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP",
+    "TO",
+)  # fmt: skip
 
 
 class CargoInfo(TypedDict):
@@ -59,6 +84,7 @@ class CargoInfo(TypedDict):
     tem_arquivo_br: bool
     proporcional: bool
     granularidade: Granularidade
+    abrangencia: Abrangencia
 
 
 CARGOS: tuple[CargoInfo, ...] = (
@@ -72,6 +98,7 @@ CARGOS: tuple[CargoInfo, ...] = (
         "tem_arquivo_br": True,
         "proporcional": False,
         "granularidade": "zona",
+        "abrangencia": "todas-as-ufs",
     },
     {
         "cd": 3,
@@ -83,6 +110,7 @@ CARGOS: tuple[CargoInfo, ...] = (
         "tem_arquivo_br": False,
         "proporcional": False,
         "granularidade": "zona",
+        "abrangencia": "todas-as-ufs",
     },
     {
         "cd": 5,
@@ -94,6 +122,7 @@ CARGOS: tuple[CargoInfo, ...] = (
         "tem_arquivo_br": False,
         "proporcional": False,
         "granularidade": "zona",
+        "abrangencia": "todas-as-ufs",
     },
     {
         "cd": 6,
@@ -105,6 +134,37 @@ CARGOS: tuple[CargoInfo, ...] = (
         "tem_arquivo_br": False,
         "proporcional": True,
         "granularidade": "zona",
+        "abrangencia": "todas-as-ufs",
+    },
+    # Spec 027 (ADR-0066) — as assembleias. Mesma eleição do TSE que o
+    # Deputado Federal (21272), mesmo leiaute "Proporcional | UF", mesma lei
+    # (CE arts. 106–109): `cadeiras.py` serve sem mudança. A diferença que
+    # importa ao modelo é a ABRANGÊNCIA — o DF não elege deputado estadual
+    # (CF art. 32 § 3º: elege distrital, cargo 8) — e a granularidade da
+    # Fase 1: o agregado de cada casa (`"uf"`), sem zonas.
+    {
+        "cd": 7,
+        "token": "est",
+        "slug": "deputado-estadual",
+        "label": "Deputado Estadual",
+        "vagas_por_uf": None,
+        "tem_segundo_turno": False,
+        "tem_arquivo_br": False,
+        "proporcional": True,
+        "granularidade": "uf",
+        "abrangencia": "ufs-sem-df",
+    },
+    {
+        "cd": 8,
+        "token": "dis",
+        "slug": "deputado-distrital",
+        "label": "Deputado Distrital",
+        "vagas_por_uf": None,
+        "tem_segundo_turno": False,
+        "tem_arquivo_br": False,
+        "proporcional": True,
+        "granularidade": "uf",
+        "abrangencia": "so-df",
     },
 )
 
@@ -129,7 +189,19 @@ _POR_CD: dict[int, CargoInfo] = {c["cd"]: c for c in CARGOS}
 #: repositório ainda descreviam o desfecho como "não confirmado" e derivavam
 #: o total do runtime por causa disso; a premissa morreu, a decisão de ler o
 #: número **por UF** do TSE não (RF-124 — ver `VAGAS_EM_DISPUTA_2026`).
-TOTAL_CADEIRAS: dict[int, int] = {5: 81, 6: 513}
+#:
+#: **Assembleias (spec 027 RF-280, ADR-0066): 1.035 deputados estaduais nas 26
+#: Assembleias Legislativas e 24 distritais na Câmara Legislativa do DF.** A
+#: regra é a CF art. 27, caput (e art. 32 § 3º para o DF): três vezes a
+#: bancada federal da UF até 36; acima disso, +1 por deputado federal além de
+#: 12. Com as 513 de 2026 dá SP 94, MG 77, RJ 70, BA 63, RS 55, PR 54, PE 49,
+#: CE 46, MA 42, GO 41, PA 41, SC 40, PB 36, ES 30, PI 30, AL 27 e 24 nas dez
+#: restantes (e no DF) — a mesma distribuição de 2022, porque a da Câmara não
+#: mudou. Como no 513, o número **por UF** continua vindo do `carg[].nv` do
+#: TSE (RF-124); a lista acima é CONFERÊNCIA, e mora num teste
+#: (`tests/unit/model/test_deputado_estadual.py`), não aqui — uma segunda
+#: tabela por UF no código seria a tentação de usá-la no lugar do dado.
+TOTAL_CADEIRAS: dict[int, int] = {5: 81, 6: 513, 7: 1035, 8: 24}
 
 #: Cadeiras que a eleição de 2026 renova, por cargo. **54** para o Senado —
 #: 2 por UF × 27 — e **513** para a Câmara, que renova **integralmente**. Essa
@@ -149,7 +221,12 @@ TOTAL_CADEIRAS: dict[int, int] = {5: 81, 6: 513}
 #: número **por UF**, que segue saindo do dado publicado pelo TSE; o total
 #: nacional é fato fixo, **conferido** contra a soma quando as 27 UFs tiverem
 #: publicado o seu `carg[].nv` (`deputado_payload.conferir_total_de_cadeiras`).
-VAGAS_EM_DISPUTA_2026: dict[int, int] = {5: 54, 6: 513}
+#:
+#: As assembleias (7, 8) renovam integralmente, como a Câmara: repetem
+#: `TOTAL_CADEIRAS`. E a lição do 513 vale para elas com mais força ainda —
+#: com duas casas pequenas no ar a soma diria "48 cadeiras em disputa" contra
+#: as 1.035 que existem (spec 027 RF-280).
+VAGAS_EM_DISPUTA_2026: dict[int, int] = {5: 54, 6: 513, 7: 1035, 8: 24}
 
 
 # ---------------------------------------------------------------------------
@@ -188,11 +265,18 @@ ATUALIZACAO_MIN_DEPUTADO = 30
 #: Cargo desconhecido fica FORA do dicionário de propósito: sem cadência
 #: declarada não há limiar honesto a aplicar, e `cadencia_segundos` devolve
 #: `None` em vez de um default que alarmaria no ritmo errado.
+#:
+#: Cargos 7/8 (spec 027 Fase 1, ADR-0067): um arquivo-resumo por casa (26 + o
+#: DF), buscados inteiros a cada disparo de 5 min — sem fatia, a volta
+#: completa É o disparo. Na Fase 2 (zonas intercaladas com as do cargo 6) o 7
+#: passa para a volta das fatias, e este número muda junto com o do 6.
 CADENCIA_SEGUNDOS: dict[int, int] = {
     1: 60,  # Presidente — ADR-0011 (cadência de 60s)
     3: 60,  # Governador — ADR-0011, mesmo cron
     5: 300,  # Senador — ADR-0026 nota (b): 5 min, mantidos na volta para zona
     6: ATUALIZACAO_MIN_DEPUTADO * 60,  # Deputado — ADR-0036: 6 fatias × 5 min
+    7: 300,  # Deputado Estadual — spec 027 Fase 1: resumo das 26 UFs a cada 5 min
+    8: 300,  # Deputado Distrital — spec 027 Fase 1: resumo do DF a cada 5 min
 }
 
 
@@ -227,9 +311,9 @@ def cargo_info(cd: int) -> CargoInfo | None:
 
 
 def vagas_por_uf(cd: int, default: int = 1) -> int:
-    """Vagas em disputa por UF. `default` cobre cargo desconhecido e o
-    proporcional (Deputado Federal, `vagas_por_uf = None`), cuja bancada vem
-    de tabela própria e não desta."""
+    """Vagas em disputa por UF. `default` cobre cargo desconhecido e os
+    proporcionais (6, 7, 8 — `vagas_por_uf = None`), cuja bancada por UF vem
+    do `carg[].nv` do TSE (RF-124) e não desta tabela."""
     info = cargo_info(cd)
     if info is None:
         return default
@@ -251,8 +335,8 @@ def votos_por_eleitor(cd: int) -> int | None:
 
     - Majoritário: `vagas_por_uf` — cada vaga é um voto (Senado: 2 em 2026;
       Presidente/Governador: 1).
-    - Proporcional (Deputado Federal): **1** — voto único, na legenda ou no
-      nome. Não é `vagas_por_uf` (que é `None` ali, e seria o tamanho da
+    - Proporcional (Deputado Federal, Estadual e Distrital): **1** — voto
+      único, na legenda ou no nome. Não é `vagas_por_uf` (que é `None` ali, e seria o tamanho da
       bancada, não o número de votos).
 
     🔴 **`None`, nunca um palpite**, para cargo desconhecido ou majoritário sem
@@ -282,3 +366,40 @@ def granularidade(cd: int, default: Granularidade = "zona") -> Granularidade:
     """Granularidade de ingestão do cargo (ADR-0026 item 1)."""
     info = cargo_info(cd)
     return info["granularidade"] if info is not None else default
+
+
+def ufs_do_cargo(cd: int) -> tuple[str, ...]:
+    """As UFs em que o cargo é disputado, em ordem alfabética (spec 027 RF-278).
+
+    - `"todas-as-ufs"` (1, 3, 5, 6) → as 27 de `UFS_BRASIL`;
+    - `"ufs-sem-df"` (7, Deputado Estadual) → 26, sem o DF;
+    - `"so-df"` (8, Deputado Distrital) → só `("DF",)`.
+
+    É o universo do "aguardando" do cargo: quantas UFs a casa tem
+    (`ufs_aguardando`), sobre quais o `% apurado` nacional é ponderado, e
+    quando o sino do RF-124 (soma dos `carg[].nv` × tamanho da casa) pode
+    tocar. Derivar esse universo de quem já apurou faria `ufs_aguardando` valer
+    zero a noite inteira — e fixá-lo em 27 para todo cargo faria o Distrital
+    aguardar 26 estados que nunca vão chegar, e o `% apurado` do DF a 100%
+    sair ~1,5% (o DF pesaria contra o eleitorado do país inteiro).
+
+    Tupla vazia para cargo fora da tabela: nenhum universo declarado. O ramo
+    proporcional só roda para cargo da tabela (`project.py::_e_proporcional`),
+    e `test_deputado_estadual.py` confere que todo proporcional tem abrangência.
+
+    `ZZ` (exterior) não entra em cargo nenhum: não é UF (ver `UFS_BRASIL`).
+    """
+    info = cargo_info(cd)
+    if info is None:
+        return ()
+    abrangencia = info["abrangencia"]
+    if abrangencia == "todas-as-ufs":
+        return UFS_BRASIL
+    if abrangencia == "ufs-sem-df":
+        return tuple(uf for uf in UFS_BRASIL if uf != "DF")
+    if abrangencia == "so-df":
+        return ("DF",)
+    # Valor fora do `Literal` — só por edição errada da tabela. Estourar é
+    # melhor que devolver um universo inventado (o default silencioso que
+    # esta base já pagou três vezes).
+    raise ValueError(f"abrangência desconhecida para o cargo {cd}: {abrangencia!r}")

@@ -139,9 +139,13 @@ def test_votos_por_eleitor_por_cargo() -> None:
     assert cargos.votos_por_eleitor(3) == 1
     # Proporcional: voto único, NÃO o tamanho da bancada.
     assert cargos.votos_por_eleitor(6) == 1
+    # Spec 027 — as Assembleias e a Câmara Legislativa: também voto único.
+    assert cargos.votos_por_eleitor(7) == 1
+    assert cargos.votos_por_eleitor(8) == 1
 
 
-@pytest.mark.parametrize("cd", [0, 2, 4, 7, 91, 99])
+# O 7 saiu desta lista em 2026-09-29 (spec 027: Deputado Estadual coberto).
+@pytest.mark.parametrize("cd", [0, 2, 4, 9, 91, 99])
 def test_cargo_desconhecido_nao_tem_fator(cd: int) -> None:
     assert cargos.votos_por_eleitor(cd) is None
 

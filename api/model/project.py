@@ -77,13 +77,14 @@ import numpy as np
 from pydantic import BaseModel, Field, ValidationError
 
 from api.model.cargos import (
-    ATUALIZACAO_MIN_DEPUTADO,
     Granularidade,
+    cadencia_segundos,
     cargo_info,
     granularidade as cargo_granularidade,
     total_cadeiras as cargo_total_cadeiras,
     vagas_em_disputa as cargo_vagas_em_disputa,
     vagas_por_uf as cargo_vagas_por_uf,
+    ufs_do_cargo,
     votos_por_eleitor as cargo_votos_por_eleitor,
 )
 from api.model.cadeiras import distribuir_cadeiras
@@ -241,7 +242,8 @@ class ProjectRequest(BaseModel):
         le=99,
         description=(
             "Código do cargo no TSE: 1=Presidente, 3=Governador, 5=Senador, "
-            "6=Deputado Federal (tabela canônica em `lib/config/cargos.ts`, "
+            "6=Deputado Federal, 7=Deputado Estadual, 8=Deputado Distrital "
+            "(tabela canônica em `lib/config/cargos.ts`, "
             "espelhada em `api/model/cargos.py`). A faixa 1..99 é deliberada: "
             "um cargo fora da tabela não é recusado na borda, degrada para o "
             "comportamento default (1 vaga, granularidade de zona) — o ciclo "
@@ -256,7 +258,10 @@ class ProjectRequest(BaseModel):
     # DESLIGADO (falha fechada). Tipado `Any` DE PROPÓSITO, e normalizado por
     # `deputado_projecao.interruptor_do_corpo`: um `Field(ge=25, le=100)`
     # aqui transformaria uma chave malformada em 400 no corpo INTEIRO, e o
-    # ciclo deixaria de publicar até a parcial. Só o cargo 6 o lê.
+    # ciclo deixaria de publicar até a parcial. Só os cargos proporcionais o
+    # leem. Spec 027: o NOME do campo não muda para os cargos 7/8 — o ciclo TS
+    # manda nele o estado de `interruptor-projecao-est` (um interruptor só para
+    # as 27 casas estaduais, ADR-0066); ausente ⇒ desligado, igual.
     projecao_dep: Any = None
 
 
@@ -2667,6 +2672,8 @@ def particionar_por_nivel(
 def zonas_para_o_modelo(
     zonas: list[LatestSnapshot],
     agregados: list[LatestSnapshot],
+    *,
+    cargo: int | None = None,
 ) -> list[LatestSnapshot]:
     """O que o MODELO consome, com a válvula do modo `uf`.
 
@@ -2681,17 +2688,34 @@ def zonas_para_o_modelo(
     como hoje. É a lição da "rede de segurança de mão única": a guarda nova
     tornou alcançável a direção inversa que ninguém tinha considerado.
 
-    O caso é logado em `warn` porque em produção é anômalo — a
-    granularidade padrão dos 4 cargos é `zona` e `TSE_GRANULARIDADE` é
-    proibida no dia D (`scripts/vigia-armado.ts`).
+    O caso é logado em `warn` quando o cargo é configurado em `zona`
+    (`api/model/cargos.py::granularidade` — os cargos 1, 3, 5 e 6, e o
+    default de `cargo=None`/desconhecido): ali ele é anômalo em produção, e
+    `TSE_GRANULARIDADE` é proibida no dia D (`scripts/vigia-armado.ts`).
+
+    🔴 **Spec 027 (Fase 1, RF-285): para cargo configurado em `"uf"` — os
+    Deputados Estadual (7) e Distrital (8) — este é o caminho NORMAL**, não
+    diagnóstico: a ingestão busca só o arquivo-resumo de cada casa, e o
+    agregado da UF é tudo o que o modelo recebe. Loga `info`, não `warn`: um
+    aviso que toca em todo ciclo saudável é o aviso que ninguém lê na noite
+    em que ele importa. O que muda a jusante por a "zona" ser o próprio
+    agregado (a Conferência não compara o agregado consigo mesmo) é decidido
+    em `_do_project_proporcional`, pelo `nivel` de cada linha — não por aqui.
     """
     if zonas or not agregados:
         return zonas
     ufs_agregadas = {str(s.get("uf") or "").strip().upper() for s in agregados}
+    em_resumo = cargo is not None and cargo_granularidade(cargo) == "uf"
     _log(
-        "warn",
-        "nenhum snapshot de nivel=zona; agregados tratados como zonas "
-        "(modo granularidade=uf?)",
+        "info" if em_resumo else "warn",
+        (
+            "cargo configurado em resumo (granularidade=uf): o agregado de cada "
+            "UF é a entrada do modelo"
+            if em_resumo
+            else "nenhum snapshot de nivel=zona; agregados tratados como zonas "
+            "(modo granularidade=uf?)"
+        ),
+        cargo=cargo,
         n_agregados=len(agregados),
         ufs=sorted(u for u in ufs_agregadas if u),
     )
@@ -4122,11 +4146,16 @@ CARGOS_COM_CORRIDA: tuple[int, ...] = (1, 3, 5)
 #: Presidente (1) tem uma corrida só e publica por candidatura.
 CARGOS_CORRIDA_POR_PARTIDO: tuple[int, ...] = (3, 5)
 
-#: Cargos cujo `EdgePayloadUf` (ou, no 6, `DeputadoUfDetail`) publica
-#: `votacao` — spec 021 RF-192 emendado em 2026-09-26 (noite): o painel
-#: "Votação" entrou nas QUATRO telas de UF. O 6 publica contagens (e projeção,
-#: quando houver participação da UF), nunca corrida — `CARGOS_COM_CORRIDA`.
-CARGOS_COM_VOTACAO_UF: tuple[int, ...] = (1, 3, 5, 6)
+#: Cargos cujo `EdgePayloadUf` (ou, nos proporcionais, `DeputadoUfDetail`)
+#: publica `votacao` — spec 021 RF-192 emendado em 2026-09-26 (noite): o painel
+#: "Votação" entrou nas QUATRO telas de UF. Os proporcionais publicam contagens
+#: (e projeção, quando houver participação da UF), nunca corrida —
+#: `CARGOS_COM_CORRIDA`. Spec 027: 7 e 8 entram pela mesma porta do 6 — o
+#: painel lê o agregado da UF, que é exatamente o que a Fase 1 ingere. Fora
+#: daqui, `build_votacao_uf_payloads` devolve `{}` em silêncio e a tela da
+#: assembleia ficaria sem o painel; `test_deputado_estadual.py` confere que
+#: todo cargo proporcional da tabela está aqui.
+CARGOS_COM_VOTACAO_UF: tuple[int, ...] = (1, 3, 5, 6, 7, 8)
 
 #: `cand[].dvt` do EA20 → `EdgeDestinoVoto` (spec 022 RF-209,
 #: `tse_docs/txt/tse-ea20-arquivo-de-resultado-unificado.txt:790-806`).
@@ -5379,14 +5408,15 @@ def compute_national(
 
     Raises:
         CargoProporcionalError: cargo com `proporcional: true` em
-            `lib/config/cargos.ts` (hoje, o 6 — Deputado Federal).
+            `lib/config/cargos.ts` (6, 7 e 8 — Deputado Federal, Estadual e
+            Distrital).
     """
     if _e_proporcional(cargo):
         raise CargoProporcionalError(
             f"cargo {cargo} é proporcional — `compute_national` agrega por número "
             "de urna, que se repete entre UFs e partidos nesta corrida. A visão "
-            "nacional do Deputado Federal é a bancada somada das 27 UFs "
-            "(`api/model/deputado_payload.py`), não um agregado de candidatos."
+            f"nacional de {_rotulo_do_cargo(cargo)} é a bancada somada das UFs do "
+            "cargo (`api/model/deputado_payload.py`), não um agregado de candidatos."
         )
 
     _empty_outros: tuple[np.ndarray, int] = (np.zeros(0, dtype=np.float64), 0)
@@ -7756,15 +7786,114 @@ def post_edge_write(
 
 
 #: `ATUALIZACAO_MIN_DEPUTADO` (=30) mudou para `api/model/cargos.py` em
-#: 2026-09-13 (ADR-0038 D3) e continua importado no topo deste módulo — o nome
-#: e o uso em `construir_payload_deputado` não mudaram. Foi para lá porque o
-#: limiar de alarme de dado parado precisa derivar dela sem que `dado_ts.py`
-#: importe `project.py` (a seta aponta para cá, não daqui).
+#: 2026-09-13 (ADR-0038 D3), e desde a spec 027 (29/09) não é mais lido aqui:
+#: o `atualizacao_min` do payload proporcional sai da cadência DO CARGO
+#: (`atualizacao_min_do_cargo`) — 30 min no 6, 5 min nos 7/8 da Fase 1.
+#:
+#: `UFS_DA_ELEICAO = 27` morreu no mesmo dia, pelo mesmo motivo: "quantas
+#: circunscrições a casa tem" é fato do CARGO (`cargos.ufs_do_cargo`) — 27 para
+#: a Câmara, 26 para as Assembleias, 1 para a Câmara Legislativa do DF. Fixo em
+#: 27, o Distrital ficaria "aguardando" 26 estados que nunca chegam, e o sino do
+#: RF-124 das Assembleias nunca tocaria (ele espera 27 `nv` publicados). O que
+#: NÃO mudou: o universo continua não derivado de quem já apurou — senão
+#: `ufs_aguardando` valeria zero a noite inteira.
 
-#: UFs da eleição. Não é configuração nem contagem do ciclo: é quantas
-#: circunscrições a Câmara tem. Derivar de quem já apurou faria
-#: `ufs_aguardando` valer zero a noite inteira, e a soma "fecharia" mentindo.
-UFS_DA_ELEICAO = 27
+
+def _rotulo_do_cargo(cargo: int) -> str:
+    """`label` da tabela de cargos, para texto de log e de alerta.
+
+    Cargo fora da tabela vira `"cargo <n>"` — nunca "Deputado Federal": um
+    alerta que nomeia a casa errada manda o operador olhar a tela errada na
+    noite da apuração.
+    """
+    info = cargo_info(cargo)
+    return info["label"] if info is not None else f"cargo {cargo}"
+
+
+def atualizacao_min_do_cargo(cargo: int) -> int:
+    """`atualizacao_min` do payload proporcional (RF-128), em minutos.
+
+    DERIVADO de `cargos.CADENCIA_SEGUNDOS` (ADR-0038 D3: um número só por
+    cargo). 30 no cargo 6 (6 fatias × 5 min, ADR-0036) — bit a bit o
+    `ATUALIZACAO_MIN_DEPUTADO` de antes —, 5 nos 7/8 da Fase 1 (spec 027).
+
+    Estoura para cargo sem cadência declarada, em vez de publicar a do
+    Deputado Federal: a tela escreve "atualiza a cada N minutos" com este
+    número, e o limiar de dado parado sai da mesma cadência. O ramo
+    proporcional só roda para cargo da tabela, e `test_deputado_estadual.py`
+    confere que todo proporcional declara a sua.
+    """
+    cadencia = cadencia_segundos(cargo)
+    if cadencia is None:
+        raise ValueError(f"cargo {cargo} sem cadência declarada em api/model/cargos.py")
+    return cadencia // 60
+
+
+def pct_apurado_nacional_proporcional(
+    pct_by_uf: Mapping[str, float],
+    eleitorado_total_by_uf: Mapping[str, int],
+    ufs_do_cargo_: Iterable[str],
+) -> float:
+    """`% apurado` nacional de um cargo proporcional, ponderado pelo eleitorado
+    das UFs **do cargo** (spec 027 RF-278).
+
+    Itera as UFs do cargo, presentes ou não: uma UF que ainda não apurou nada
+    entra no DENOMINADOR com peso cheio, senão o número nacional infla
+    justamente no começo da noite (mesma armadilha documentada em
+    `build_edge_payload`). UF presente FORA do cargo não conta — não deveria
+    existir (`_dentro_da_abrangencia` já a retirou do ciclo).
+
+    🔴 Até 2026-09-29 o universo era o da tabela `eleitorado` inteira. Para o
+    Distrital isso é o país todo: o DF a 100% sairia **~1,5%**. E a tabela
+    também guarda `ZZ` (o exterior, filtrado com `uf <> 'ZZ'` em
+    `data-pipeline/zonas-import.ts`), que não vota para deputado de casa
+    nenhuma — com ela no denominador, nem a Câmara chegaria a 100%.
+
+    Sem eleitorado conhecido para nenhuma UF do cargo (banco sem seed,
+    ambiente de teste), cai para média simples sobre as UFs do cargo, com a
+    ausente contando 0. Menos preciso, jamais inflado.
+    """
+    universo = set(ufs_do_cargo_)
+    pct_num = 0.0
+    pct_den = 0.0
+    # Ordem fixa (constituição § 6): a soma em ponto flutuante não pode
+    # depender da ordem de iteração de um `set`.
+    for sigla in sorted(universo):
+        peso = eleitorado_total_by_uf.get(sigla, 0)
+        if peso > 0:
+            pct_num += pct_by_uf.get(sigla, 0.0) * peso
+            pct_den += peso
+    if pct_den > 0:
+        return pct_num / pct_den
+    presentes = [v for u, v in pct_by_uf.items() if u in universo]
+    return sum(presentes) / max(len(universo), len(presentes), 1)
+
+
+def _dentro_da_abrangencia(
+    snapshots: list[LatestSnapshot], ufs_do_cargo_: Iterable[str]
+) -> tuple[list[LatestSnapshot], list[str]]:
+    """`(linhas da abrangência do cargo, UFs fora dela)` — spec 027 RF-278.
+
+    A ingestão só pede ao TSE as UFs do cargo (`lib/tse/targets.ts`,
+    `ufsDoCargo`); esta é a SEGUNDA guarda, do lado do modelo. Uma linha de
+    cargo 7 no DF (ou de cargo 8 em SP) é dado que não deveria existir, e se
+    entrasse somaria a bancada de uma casa que não é a do cargo — a soma
+    nacional das Assembleias passaria de 1.035 sem erro nenhum.
+
+    `BR` e sigla vazia passam intocados: não são UF, e o tratamento deles já
+    mora adiante (`_snapshots_por_uf`, `_agregados_de_uf`), exatamente como
+    antes desta guarda — no cargo 6, com as 27 UFs, ela não retira nada.
+    """
+    universo = set(ufs_do_cargo_)
+    dentro: list[LatestSnapshot] = []
+    fora: set[str] = set()
+    for s in snapshots:
+        sigla = str(s.get("uf") or "").strip().upper()
+        if sigla and sigla != "BR" and sigla not in universo:
+            fora.add(sigla)
+            continue
+        dentro.append(s)
+    return dentro, sorted(fora)
 
 
 def _entradas_por_zona(
@@ -7916,9 +8045,9 @@ def _registrar_conferencia(
     )
     _alert_slack(
         "error",
-        "conferência de Deputado Federal diverge do TSE com totalização final — "
-        "a conta sobre o agregado da UF (quociente, cadeiras, eleitos) ou a "
-        "cobertura de eleitorado das zonas lidas não batem com o TSE",
+        f"conferência de {_rotulo_do_cargo(cargo)} diverge do TSE com totalização "
+        "final — a conta sobre o agregado da UF (quociente, cadeiras, eleitos) ou "
+        "a cobertura de eleitorado das zonas lidas não batem com o TSE",
         cargo=cargo,
         turno=turno,
         uf=uf,
@@ -8079,7 +8208,8 @@ def _projecao_da_uf(
 def _do_project_proporcional(
     req: ProjectRequest, t0: int
 ) -> tuple[int, dict[str, Any]]:
-    """Ciclo do cargo proporcional — Deputado Federal (spec 017, design D5/D6).
+    """Ciclo do cargo proporcional — Deputado Federal, Estadual e Distrital
+    (spec 017, design D5/D6; spec 027 para os cargos 7/8).
 
     É um caminho separado do majoritário, e não um `if` dentro dele, porque
     quase nada do outro se aplica: não há líder da corrida, não há duelo, não há
@@ -8127,7 +8257,37 @@ def _do_project_proporcional(
     `cadeiras_bootstrap` confere essa igualdade linha a linha antes de publicar
     qualquer faixa. Destruir a decomposição para obter a soma (ou vice-versa)
     deixaria os dois números descrevendo corridas diferentes na mesma tela.
+
+    ## Cargos 7/8 — a Fase 1 da spec 027 (resumo)
+
+    Deputado Estadual (7) e Distrital (8) entram aqui pelo mesmo desvio
+    (`_e_proporcional`) e com a mesma aritmética. O que é do CARGO sai da
+    tabela (`api/model/cargos.py`): as UFs em que ele existe
+    (`ufs_do_cargo` — 26 sem o DF; só o DF), o tamanho fixo da casa
+    (1.035 / 24), a cadência (5 min) e o rótulo nos alertas. Na Fase 1 a
+    ingestão grava só o agregado de cada casa, e `zonas_para_o_modelo` o
+    entrega como a "zona" da UF: uma linha por UF. Daí três consequências,
+    todas deliberadas:
+
+      - sem intervalo de cadeiras (uma unidade de reamostragem — RF-127 omite);
+      - sem projeção: nem calculada, nem estado de trava — o objeto da UF sai
+        com `granularidade: "uf"` e SEM `projecao` (design 027 § 3.2);
+      - a Conferência NÃO compara o agregado consigo mesmo: eleitorado e votos
+        válidos "das zonas" são o próprio agregado, e a comparação sairia
+        "confere" por construção. `conferir_agregado_da_uf(parcial_do_agregado=
+        True)` os deixa de fora de `comparou` e os DECLARA em `nao_comparou`;
+        a conta (quociente, cadeiras) e os eleitos, que comparam a NOSSA
+        aritmética com a do TSE, seguem.
+
+    Quem decide "resumo" é o `nivel` das linhas de cada UF (todas agregadas),
+    não o `cargo_granularidade` configurado: é o que de fato aconteceu com os
+    números publicados. No cargo 6 as linhas são de zona (ou sem `nivel`, que
+    vale zona) e nada disto muda.
     """
+    ufs_cargo = ufs_do_cargo(req.cargo)
+    # Antes de abrir o banco: cargo proporcional sem cadência declarada é
+    # tabela incompleta, e estoura aqui em vez de depois do cálculo inteiro.
+    atualizacao_min = atualizacao_min_do_cargo(req.cargo)
     with _open_conn() as conn:
         # Uma linha por (uf, município, zona) — o caminho NORMAL desde o
         # ADR-0036. Só o interruptor de emergência
@@ -8141,13 +8301,32 @@ def _do_project_proporcional(
         snapshots = fetch_snapshots(
             conn, req.cargo, req.turno, agora=_instante_do_gatilho(req.trigger_ts)
         )
+        # Spec 027 RF-278 — só as UFs em que o cargo existe. No cargo 6 (27
+        # UFs) não retira nada; ver `_dentro_da_abrangencia`.
+        snapshots, ufs_fora = _dentro_da_abrangencia(snapshots, ufs_cargo)
+        if ufs_fora:
+            _log(
+                "error",
+                "linhas de UF fora da abrangência do cargo — descartadas do ciclo",
+                cargo=req.cargo,
+                turno=req.turno,
+                ufs=ufs_fora,
+            )
+            _alert_slack(
+                "error",
+                f"{_rotulo_do_cargo(req.cargo)}: snapshots de UF em que o cargo não "
+                "existe (a ingestão pediu endereço errado ao TSE?) — descartados",
+                cargo=req.cargo,
+                turno=req.turno,
+                ufs=ufs_fora,
+            )
         # Spec 021 — mesma separação do ciclo majoritário, e pelo mesmo
         # motivo: o agregado de nível "uf" tem `cod_zona = 0` e entraria na
         # guarda de sanidade (`check_zona_merge_sanity`) e no
         # `_entradas_por_zona` como uma "zona" do tamanho do estado —
         # multiplicando a bancada. Ver `particionar_por_nivel`.
         zonas_prop, agregados = particionar_por_nivel(snapshots)
-        snapshots = zonas_para_o_modelo(zonas_prop, agregados)
+        snapshots = zonas_para_o_modelo(zonas_prop, agregados, cargo=req.cargo)
         try:
             eleitorado = fetch_eleitorado(conn, ano=2026)
         except Exception as exc:  # noqa: BLE001 — pesa o pct, não decide cadeira
@@ -8188,8 +8367,8 @@ def _do_project_proporcional(
             _alert_slack(
                 "error",
                 "zona_merge_sanity (proporcional): possível multiplicação de "
-                "votos de Deputado Federal (premissa da fatia por município "
-                "pode estar violada) — ver logs do ciclo para UF/zona/razão",
+                f"votos de {_rotulo_do_cargo(req.cargo)} (premissa da fatia por "
+                "município pode estar violada) — ver logs do ciclo para UF/zona/razão",
                 cargo=req.cargo,
                 turno=req.turno,
                 n_violacoes=n_violacoes_pares,
@@ -8329,6 +8508,16 @@ def _do_project_proporcional(
             )
         )
         n_com_eleitorado, eleitorado_lido, _esi = eleitorado_das_linhas(linhas)
+        # Spec 027 RF-285 — a parcial desta UF saiu do PRÓPRIO agregado do TSE
+        # (Fase 1 dos cargos 7/8: nenhuma linha de zona, só o resumo)? Então
+        # "eleitorado das zonas lidas × `e.te` do agregado" e "válidos das
+        # zonas × `v.vv`" comparariam o arquivo com ele mesmo. Decidido pelo
+        # `nivel` declarado na ingestão (`nivel_do_snapshot`), nunca pelo
+        # sentinela `cod_zona = 0`, que o interruptor de emergência do cargo 6
+        # também produz com nível de zona.
+        parcial_do_agregado = all(
+            nivel_do_snapshot(linha) in NIVEIS_AGREGADOS for linha in linhas
+        )
         if len(linhas) > 1:
             _log(
                 "info",
@@ -8419,6 +8608,7 @@ def _do_project_proporcional(
             eleitorado_lido=eleitorado_lido if n_com_eleitorado > 0 else None,
             validos_lidos=entrada.votos_validos_tse,
             resultado_parcial=resultado,
+            parcial_do_agregado=parcial_do_agregado,
         )
         divergencias_por_uf[sigla] = [
             normalizar_divergencia(d) for d in conferencia.divergencias
@@ -8426,16 +8616,23 @@ def _do_project_proporcional(
         _registrar_conferencia(conferencia, cargo=req.cargo, turno=req.turno, uf=sigla)
 
         # Spec 026 RF-263/RF-264 — a trava e, se liberada, a projeção.
-        estado_projecao, projecao, log_projecao = _projecao_da_uf(
-            sigla=sigla,
-            interruptor=interruptor,
-            entrada=entrada,
-            zonas=zonas_da_projecao(pares),
-            resultado=resultado,
-            pct_apurado=pct_apurado,
-            te_agregado=agregado_da_uf[1]["eleitores_aptos"] if agregado_da_uf else None,
-        )
-        log_projecao_ufs.append(log_projecao)
+        # Spec 027 RF-285 (design § 3.2): em resumo NÃO há projeção — nem
+        # estado de trava. Um agregado só não é base de imputação zona a zona,
+        # e publicar "aguardando 2 zonas" para uma casa que nesta fase nunca
+        # terá zonas seria prometer o que não vem. O objeto sai sem `projecao`.
+        estado_projecao: EstadoProjecao | None = None
+        projecao: ProjecaoUf | None = None
+        if not parcial_do_agregado:
+            estado_projecao, projecao, log_projecao = _projecao_da_uf(
+                sigla=sigla,
+                interruptor=interruptor,
+                entrada=entrada,
+                zonas=zonas_da_projecao(pares),
+                resultado=resultado,
+                pct_apurado=pct_apurado,
+                te_agregado=agregado_da_uf[1]["eleitores_aptos"] if agregado_da_uf else None,
+            )
+            log_projecao_ufs.append(log_projecao)
 
         ufs.append(
             UfProporcional(
@@ -8447,6 +8644,7 @@ def _do_project_proporcional(
                 conferencia=conferencia,
                 projecao_estado=estado_projecao,
                 projecao=projecao,
+                granularidade="uf" if parcial_do_agregado else "zona",
             )
         )
 
@@ -8468,27 +8666,12 @@ def _do_project_proporcional(
         ufs=log_projecao_ufs,
     )
 
-    # pct_apurado nacional ponderado pelo eleitorado, iterando pela UNIÃO das
-    # UFs conhecidas e das presentes — uma UF que ainda não apurou nada precisa
-    # entrar no DENOMINADOR com peso cheio, senão o número nacional infla
-    # justamente no começo da noite (mesma armadilha documentada em
-    # `build_edge_payload`).
-    pct_num = 0.0
-    pct_den = 0.0
-    pct_by_uf = {d.uf: d.pct_apurado for d in ufs}
-    for sigla in set(eleitorado_total_by_uf) | set(pct_by_uf):
-        peso = eleitorado_total_by_uf.get(sigla, 0)
-        if peso > 0:
-            pct_num += pct_by_uf.get(sigla, 0.0) * peso
-            pct_den += peso
-    if pct_den > 0:
-        pct_apurado_total = pct_num / pct_den
-    else:
-        # Sem a tabela `eleitorado` (banco sem seed, ambiente de teste) o peso
-        # some, mas o número não pode sumir junto: cai para média simples sobre
-        # as UFs da eleição, com a UF ausente contando 0. Menos preciso,
-        # jamais inflado.
-        pct_apurado_total = sum(pct_by_uf.values()) / max(UFS_DA_ELEICAO, len(pct_by_uf))
+    # pct_apurado nacional ponderado pelo eleitorado das UFs DO CARGO (spec
+    # 027 RF-278), com a UF ausente pesando cheio no denominador. Ver
+    # `pct_apurado_nacional_proporcional`.
+    pct_apurado_total = pct_apurado_nacional_proporcional(
+        {d.uf: d.pct_apurado for d in ufs}, eleitorado_total_by_uf, ufs_cargo
+    )
 
     # RF-127 — a faixa da bancada. Soma de RÉPLICAS das UFs, nunca soma das
     # faixas delas (ver `cadeiras_bootstrap.intervalo_nacional`).
@@ -8513,16 +8696,16 @@ def _do_project_proporcional(
     #
     # A soma não foi descartada: virou o sino do RF-124, cujo critério de
     # aceitação é "quando o valor de uma UF diverge do que o TSE publica, o
-    # ciclo registra erro e aciona alerta". Só toca com as **27** UFs tendo
-    # publicado `carg[].nv` — com menos, divergir é o estado normal do começo
-    # da noite, e um alarme que toca 26 vezes às 18h é um alarme que ninguém
-    # olha às 21h.
+    # ciclo registra erro e aciona alerta". Só toca com TODAS as UFs do cargo
+    # tendo publicado `carg[].nv` (27 na Câmara, 26 nas Assembleias, 1 no DF —
+    # spec 027) — com menos, divergir é o estado normal do começo da noite, e
+    # um alarme que toca 26 vezes às 18h é um alarme que ninguém olha às 21h.
     #
     # Não aborta o ciclo (constituição § 7): o denominador suspeito é de uma UF,
     # e apagar a bancada inteira por causa dele seria pior que publicá-la com
     # ruído no log.
     divergencia_do_total = conferir_total_de_cadeiras(
-        ufs=ufs, cargo=req.cargo, ufs_conhecidas=max(UFS_DA_ELEICAO, len(ufs))
+        ufs=ufs, cargo=req.cargo, ufs_conhecidas=len(ufs_cargo)
     )
     if divergencia_do_total is not None:
         _log(
@@ -8536,9 +8719,11 @@ def _do_project_proporcional(
         )
         _alert_slack(
             "error",
-            "as 27 UFs publicaram `carg[].nv` e a soma não fecha com o tamanho "
-            "da Câmara — o denominador do quociente eleitoral de ao menos uma "
-            "UF está errado (RF-124)",
+            f"{_rotulo_do_cargo(req.cargo)}: a soma dos `carg[].nv` publicados "
+            f"pelo TSE ({divergencia_do_total.tse}) não fecha com o tamanho da "
+            f"casa ({divergencia_do_total.nosso}) — o denominador do quociente "
+            "eleitoral de ao menos uma UF está errado (RF-124); o total publicado "
+            "segue o TSE",
             cargo=req.cargo,
             turno=req.turno,
             esperado=divergencia_do_total.nosso,
@@ -8552,8 +8737,8 @@ def _do_project_proporcional(
         ts_iso=ts_iso,
         cargo=req.cargo,
         turno=req.turno,
-        atualizacao_min=ATUALIZACAO_MIN_DEPUTADO,
-        ufs_conhecidas=max(UFS_DA_ELEICAO, len(ufs)),
+        atualizacao_min=atualizacao_min,
+        ufs_conhecidas=len(ufs_cargo),
         pct_apurado_total=pct_apurado_total,
         cadeiras_ci95_nacional=cadeiras_ci95_nacional,
         # ADR-0038 D1/D2 — o relógio do dado, nacional e por UF. `ts_iso`
@@ -8662,7 +8847,7 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
             # do tamanho do estado inteiro: cada voto contado duas vezes, uma
             # pelas zonas reais e outra pelo agregado que as resume.
             raw_zonas, agregados = particionar_por_nivel(raw_snapshots)
-            raw_snapshots = zonas_para_o_modelo(raw_zonas, agregados)
+            raw_snapshots = zonas_para_o_modelo(raw_zonas, agregados, cargo=req.cargo)
             # ADR-0038 D1/D2 — o relógio do dado sai daqui, do PRÉ-merge, e não
             # de `snapshots`: `merge_pairs_into_zonas` preserva `dg`/`hg` só do
             # par dominante de cada zona (`zona_merge.py:52`, metadado de

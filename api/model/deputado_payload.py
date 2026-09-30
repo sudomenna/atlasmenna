@@ -23,11 +23,13 @@ pode ser enganada pelo payload.
 de sobras, com a margem para a próxima agremiação menor que a fatia de votos
 ainda não apurada, sai com `indefinido: true`. Ver `_marcar_indefinidas`.
 
-**4. Derivar o tamanho da Câmara do que já apurou** (2026-09-19). `total_cadeiras`
-é fato fixo — 513, `cargos.TOTAL_CADEIRAS` — e não a soma dos
-`lugares_a_preencher` das UFs presentes, que com três estados no ar diria "26
-cadeiras em disputa". A soma continua medida, como **conferência**:
-`conferir_total_de_cadeiras`.
+**4. Derivar o tamanho da casa do que já apurou** (2026-09-19). Enquanto falta
+UF, `total_cadeiras` é fato fixo — 513 na Câmara, 1.035 nas Assembleias, 24 no
+DF, `cargos.TOTAL_CADEIRAS` — e não a soma dos `lugares_a_preencher` das UFs
+presentes, que com três estados no ar diria "26 cadeiras em disputa". Com TODAS
+as UFs do cargo publicadas, é a soma — o dado do TSE (RF-124), que o simulado
+de 29/09 mostrou poder divergir do fato (DF com `nv = 28`) —, e a divergência é
+alarmada por `conferir_total_de_cadeiras`. Ver `_bancada_nacional`.
 
 ## As duas metades de RF-127, e por que são duas
 
@@ -59,7 +61,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from fractions import Fraction
-from typing import Any
+from typing import Any, Literal
 
 from api.model.cadeiras import Agremiacao, ResultadoCadeiras
 from api.model.cargos import (
@@ -219,14 +221,25 @@ def conferencia_payload(conferencia: ConferenciaTse) -> dict[str, Any]:
     interno. `comparou` é o que foi DE FATO comparado — a frase "batem com o
     TSE" só existe com `"algoritmo"` ali. `divergencias` sai normalizado
     (`CHAVES_DE_DIVERGENCIA`), igual ao campo v1 do topo.
+
+    `nao_comparou` (spec 027 design § 3.2, aditivo): `[{comparacao, motivo}]`
+    do que uma UF lida por zona compararia e esta não comparou — só em resumo
+    (Fase 1 dos cargos 7/8). Ausente quando vazio, que é sempre o caso do
+    cargo 6: o objeto dele sai como antes.
     """
-    return {
+    saida: dict[str, Any] = {
         "estado": conferencia.estado,
         "boletim_dado_ts": conferencia.boletim_dado_ts,
         "totalizacao_final": conferencia.totalizacao_final,
         "comparou": list(conferencia.comparou),
         "divergencias": [normalizar_divergencia(d) for d in conferencia.divergencias],
     }
+    if conferencia.nao_comparou:
+        saida["nao_comparou"] = [
+            {"comparacao": comparacao, "motivo": motivo}
+            for comparacao, motivo in conferencia.nao_comparou
+        ]
+    return saida
 
 
 @dataclass(frozen=True)
@@ -264,6 +277,12 @@ class UfProporcional:
     #: RF-127 emendado (ADR-0063 decisão 8) — `{cod: (baixo, alto)}` das
     #: cadeiras PROJETADAS. `None` quando não medida; nunca `[n, n]`.
     cadeiras_projetadas_ci95: dict[str, tuple[int, int]] | None = None
+    #: Spec 027 design § 3.2 — de onde saiu a parcial desta UF: `"zona"` (a
+    #: soma dos pares município×zona, o normal do cargo 6) ou `"uf"` (o
+    #: próprio agregado do TSE — a Fase 1 dos cargos 7/8). Vai ao objeto da UF
+    #: como `granularidade`. `"uf"` publica o objeto v2 SEM `projecao` (não
+    #: calculada, RF-285). `None` (chamador antigo) omite o campo.
+    granularidade: Literal["uf", "zona"] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -763,7 +782,10 @@ def construir_detalhe_uf(
     entrada = dados.entrada
     resultado = dados.resultado
     conferencia = dados.conferencia
-    v2 = dados.projecao_estado is not None
+    # v2 = o ciclo passou o estado da projeção (026) ou a granularidade (027).
+    # Em resumo (`"uf"`) não há estado de projeção — ela não é calculada — e o
+    # objeto continua v2 (listas, regras, mais votados).
+    v2 = dados.projecao_estado is not None or dados.granularidade is not None
 
     # A totalização da UF é final quando as zonas somadas OU o agregado do TSE
     # dizem que é: `tf == "s"` no agregado é a palavra do TSE sobre a UF
@@ -915,6 +937,7 @@ def construir_detalhe_uf(
         "cargo": cargo,
         "turno": turno,
         **({"contrato": CONTRATO_V2} if v2 else {}),
+        **({"granularidade": dados.granularidade} if dados.granularidade is not None else {}),
         "uf": dados.uf,
         "pct_apurado": round(float(dados.pct_apurado), 5),
         "lugares_a_preencher": entrada.lugares_a_preencher,
@@ -1150,20 +1173,28 @@ def conferir_total_de_cadeiras(
 ) -> Divergencia | None:
     """RF-124 — a soma das vagas publicadas bate com o tamanho da casa?
 
-    `total_cadeiras` do payload **não** é mais esta soma (ver
-    `_bancada_nacional`): é fato fixo, 513 para a Câmara. Mas a soma continua
-    sendo medida, porque ela é a única leitura independente que temos do
+    `total_cadeiras` do payload só é esta soma quando todas as UFs do cargo a
+    publicaram; antes disso é o fato fixo (`_bancada_nacional`). Em qualquer
+    caso a soma é medida, porque ela é a única leitura independente que temos do
     denominador de cada UF — e o critério de aceitação do RF-124 é literalmente
     "quando o valor de uma UF diverge do que o TSE publica, o ciclo registra
     erro e aciona alerta". Errar o `carg[].nv` de uma UF corrompe o quociente
     eleitoral dela inteiro; a soma nacional é o sino que toca quando isso
     acontece.
 
-    **Só conclusiva com as 27 UFs publicadas.** Com menos, a divergência é
-    esperada — é o começo da noite, não um defeito —, e alarmar ali seria o
-    alarme que ninguém olha às 21h porque tocou 26 vezes às 18h. `None`
-    significa "nada a reportar", e é o retorno em três situações distintas:
-    cargo sem tamanho de casa declarado, UFs de menos, ou soma que fecha.
+    **Só conclusiva com TODAS as UFs do cargo publicadas** (`ufs_conhecidas`:
+    27 na Câmara, 26 nas Assembleias, 1 no DF — spec 027). Com menos, a soma
+    MENOR que a casa é esperada — é o começo da noite, não um defeito —, e
+    alarmar ali seria o alarme que ninguém olha às 21h porque tocou 26 vezes
+    às 18h. `None` significa "nada a reportar", e é o retorno em três
+    situações distintas: cargo sem tamanho de casa declarado, UFs de menos com
+    soma que ainda cabe na casa, ou soma que fecha.
+
+    A única exceção à regra das UFs de menos é a soma que JÁ PASSOU da casa
+    (spec 027, 29/09): UF que falta só pode somar mais, então passar do
+    tamanho com UFs faltando é divergência conclusiva — e é exatamente o caso
+    em que `_bancada_nacional` publica a soma no lugar do fato fixo (ver lá),
+    que não pode acontecer calado.
 
     Devolve `Divergencia` — o mesmo tipo de `deputado.conferir_contra_tse` — e
     **não** loga nem alerta: este módulo é puro (constituição § 9). Quem chama
@@ -1179,10 +1210,9 @@ def conferir_total_de_cadeiras(
         for d in ufs
         if d.entrada.lugares_a_preencher is not None
     ]
-    if len(publicadas) < ufs_conhecidas:
-        return None
-
     soma = sum(publicadas)
+    if len(publicadas) < ufs_conhecidas and soma <= esperado:
+        return None
     if soma == esperado:
         return None
 
@@ -1242,12 +1272,14 @@ def _bancada_nacional(
     ordem: list[str] = []
 
     soma_publicada = 0
+    n_publicadas = 0
     cadeiras_atribuidas = 0
     ufs_calculadas = 0
 
     for dados, detalhe in detalhes_ordenados:
         if detalhe["lugares_a_preencher"] is not None:
             soma_publicada += int(detalhe["lugares_a_preencher"])
+            n_publicadas += 1
         if dados.resultado is not None:
             ufs_calculadas += 1
         # Votos nominais por componente, SOMADOS país afora — o insumo do
@@ -1347,11 +1379,29 @@ def _bancada_nacional(
     # `conferir_total_de_cadeiras` acima.
     #
     # Cargo fora de `TOTAL_CADEIRAS` cai na soma, que é o único número
-    # disponível. Não é um default silencioso: `construir_payload_deputado` só
-    # é chamada para o cargo 6, e um cargo proporcional novo sem fato declarado
-    # deve entrar no dicionário antes de chegar aqui.
+    # disponível. Não é um default silencioso: todo cargo proporcional da
+    # tabela declara o seu (6, 7, 8 — `test_deputado_estadual.py` confere), e
+    # um novo deve entrar no dicionário antes de chegar aqui.
+    #
+    # 🔴 **Quando o TSE publica outro tamanho (spec 027, 29/09).** O simulado
+    # serviu o DF (cargo 8) com `nv = 28`, e a Câmara Legislativa tem 24. Com o
+    # fato fixo sozinho, a tela escreveria "24 cadeiras" ao lado de 28
+    # distribuídas — "aguardando −4". A regra (decisão do orquestrador):
+    #   - TODAS as UFs do cargo publicaram `nv` ⇒ o total é a SOMA publicada.
+    #     É o dado do TSE (RF-124), é o que as cadeiras distribuídas somam, e a
+    #     divergência contra o fato já é alarmada (`conferir_total_de_cadeiras`,
+    #     no ciclo). Soma igual ao fato ⇒ o mesmo número de antes, bit a bit.
+    #   - Faltam UFs ⇒ o fato fixo (a lição de 19/09: nada de total que cresce
+    #     durante a noite), mas nunca MENOR que a soma já publicada — UF que
+    #     falta só soma mais, então passar do fato com UFs faltando já é
+    #     divergência conclusiva (e `conferir_total_de_cadeiras` a alarma). É
+    #     `max` entre dois totais, não um `max(0, …)` sobre o "aguardando": os
+    #     números continuam fechando, e o que diverge grita no log.
     fato = cadeiras_da_casa(cargo)
-    total = fato if fato is not None else soma_publicada
+    if fato is None or n_publicadas >= ufs_conhecidas:
+        total = soma_publicada
+    else:
+        total = max(fato, soma_publicada)
 
     return {
         "total_cadeiras": total,
@@ -1385,9 +1435,16 @@ def construir_payload_deputado(
     a bancada é a soma das 27 corridas (D3), e recalculá-la de outra fonte
     abriria espaço para os dois números divergirem na mesma tela.
 
-    `ufs_conhecidas` é quantas UFs a eleição tem (27), vinda de quem chamou —
-    não é contada a partir das UFs presentes, senão `ufs_aguardando` seria
-    sempre zero e o leitor concluiria que a bancada já fechou.
+    `ufs_conhecidas` é quantas UFs o CARGO tem — 27 na Câmara, 26 nas
+    Assembleias, 1 no DF (`cargos.ufs_do_cargo`, spec 027) —, vinda de quem
+    chamou. Não é contada a partir das UFs presentes, senão `ufs_aguardando`
+    seria sempre zero e o leitor concluiria que a bancada já fechou.
+
+    ⚠️ A soma nacional por agremiação (`bancada.por_agremiacao`) reconcilia por
+    `agr[].n`. O simulado de 29/09 mostrou que esse número é da agremiação
+    NAQUELE cargo e UF, não do partido (`tests/fixtures/tse/2026-sim/dep-est/
+    README.md`, surpresa 2) — pendência registrada na spec 026, não resolvida
+    aqui.
 
     `cadeiras_ci95_nacional` (RF-127) é a faixa da bancada, já agregada por
     `cadeiras_bootstrap.intervalo_nacional`. `None` — o default — publica o

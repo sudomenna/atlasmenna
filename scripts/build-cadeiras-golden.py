@@ -1,10 +1,43 @@
-"""Gera `tests/fixtures/model/cadeiras-golden-2022.json` (spec 017 RF-126).
+"""Gera o golden de cadeiras de 2022 de um cargo proporcional (spec 017 RF-126;
+spec 027 RF-290 para as assembleias).
 
 Roda offline, sobre dois datasets abertos do TSE que ficam em `build/`
-(git-ignored, ~8,3 GB somados). A fixture resultante tem ~0,23 MB e é o que o
-teste commitado lê — `tests/unit/model/test_cadeiras_golden_2022.py`.
+(git-ignored, ~8,3 GB somados). A fixture resultante é o que o teste commitado
+lê. `--cargo` é OBRIGATÓRIO desde 2026-09-29 — um default escolheria em
+silêncio a casa errada:
 
-    .venv-model/bin/python3.14 scripts/build-cadeiras-golden.py
+    .venv-model/bin/python3.14 scripts/build-cadeiras-golden.py --cargo 6
+
+| `--cargo` | casa | saída | total esperado |
+|---|---|---|---|
+| 6 | Câmara dos Deputados | `tests/fixtures/model/cadeiras-golden-2022.json` (a de sempre, ~0,23 MB) | 513 |
+| 7 | 26 Assembleias Legislativas | `tests/fixtures/model/cadeiras-golden-2022-c7.json` | 1.035 |
+| 8 | Câmara Legislativa do DF | `tests/fixtures/model/cadeiras-golden-2022-c8.json` | 24 |
+
+O total esperado sai de `api/model/cargos.py::TOTAL_CADEIRAS` (o mesmo fato que
+o payload publica), e as UFs esperadas de `ufs_do_cargo` — o 7 não existe no
+DF, o 8 só existe no DF. Com `--cargo 6` a saída é byte a byte a de antes do
+parâmetro: mesmo caminho, mesma nota, mesma forma (o teste
+`test_deputado_estadual.py::test_golden_script_*` roda o script sobre CSVs em
+miniatura e confere isso).
+
+## 🔴 O que falta para o 7 e o 8 (29/09)
+
+**Os golden das assembleias NÃO foram gerados**, e nenhum teste os lê ainda. Os
+dois datasets de 2022 não estão em `build/` desta máquina, e o CDN do TSE
+recusa robô (ver "Duas armadilhas", 2). O caminho:
+
+1. o dono baixa no navegador, de
+   https://dadosabertos.tse.jus.br/dataset/resultados-2022, os conjuntos
+   `votacao_candidato_munzona_2022` e `votacao_partido_munzona_2022` (os
+   mesmos arquivos por UF servem aos três cargos: o CSV traz `CD_CARGO`) e os
+   descompacta em `build/tse-archives/<nome do conjunto>/`;
+2. roda `--cargo 7` e `--cargo 8` (exit 0 = total e UFs conferem; 2 = não);
+3. só então nasce o teste do golden das assembleias, espelho de
+   `tests/unit/model/test_cadeiras_golden_2022.py` — com a meta do federal
+   (as divergências contra o resultado oficial listadas e explicadas uma a uma,
+   como as 2 de 511/513), e SEM `skip` quando a fixture falta: um golden que
+   pula em silêncio é um golden que ninguém percebe que não roda.
 
 ## De onde vem cada campo
 
@@ -37,42 +70,57 @@ não a recalculada — e um golden contra ela passaria com um algoritmo errado.
 
 from __future__ import annotations
 
+import argparse
 import collections
 import csv
-import glob
 import json
 import pathlib
 import sys
 
-CARGO = "6"
+RAIZ = pathlib.Path(__file__).resolve().parents[1]
+if str(RAIZ) not in sys.path:
+    sys.path.insert(0, str(RAIZ))
+
+from api.model.cargos import CARGOS, total_cadeiras, ufs_do_cargo  # noqa: E402
+
 TURNO = "1"
 NULO = ("-1", "", "#NULO#")
 DIR_CAND = pathlib.Path("build/tse-archives/votacao_candidato_munzona_2022")
 DIR_PART = pathlib.Path("build/tse-archives/votacao_partido_munzona_2022")
-SAIDA = pathlib.Path("tests/fixtures/model/cadeiras-golden-2022.json")
+
+#: Cargos proporcionais da tabela canônica — os únicos com golden de cadeiras.
+CARGOS_PROPORCIONAIS: tuple[int, ...] = tuple(c["cd"] for c in CARGOS if c["proporcional"])
 
 
-def _legenda_por_partido(uf: str) -> dict[str, int]:
+def saida_do_cargo(cargo: int) -> pathlib.Path:
+    """Caminho da fixture. O 6 mantém o nome de antes do parâmetro — o teste
+    e a documentação do federal apontam para ele."""
+    if cargo == 6:
+        return pathlib.Path("tests/fixtures/model/cadeiras-golden-2022.json")
+    return pathlib.Path(f"tests/fixtures/model/cadeiras-golden-2022-c{cargo}.json")
+
+
+def _legenda_por_partido(uf: str, cargo: str) -> dict[str, int]:
     """Votos de legenda por número de partido. ⚠️ arquivo da UF, nunca `_BR`."""
     fonte = DIR_PART / f"votacao_partido_munzona_2022_{uf}.csv"
     total: dict[str, int] = collections.defaultdict(int)
     with fonte.open(encoding="latin-1", newline="") as fh:
         for r in csv.DictReader(fh, delimiter=";"):
-            if r["CD_CARGO"] == CARGO and r["NR_TURNO"] == TURNO:
+            if r["CD_CARGO"] == cargo and r["NR_TURNO"] == TURNO:
                 total[r["NR_PARTIDO"]] += int(r["QT_VOTOS_LEGENDA_VALIDOS"] or 0)
     return total
 
 
-def _uf(caminho: pathlib.Path) -> dict | None:
+def _uf(caminho: pathlib.Path, cargo: str) -> dict | None:
     uf = caminho.stem[-2:]
-    legenda = _legenda_por_partido(uf)
+    legenda = _legenda_por_partido(uf, cargo)
 
     votos: dict[str, int] = collections.defaultdict(int)
     meta: dict[str, dict[str, str]] = {}
     geracao = ""
     with caminho.open(encoding="latin-1", newline="") as fh:
         for r in csv.DictReader(fh, delimiter=";"):
-            if r["CD_CARGO"] != CARGO or r["NR_TURNO"] != TURNO:
+            if r["CD_CARGO"] != cargo or r["NR_TURNO"] != TURNO:
                 continue
             geracao = geracao or r["DT_GERACAO"]
             sq = r["SQ_CANDIDATO"]
@@ -112,7 +160,24 @@ def _uf(caminho: pathlib.Path) -> dict | None:
     }
 
 
-def main() -> int:
+def _argumentos(argv: list[str] | None) -> argparse.Namespace:
+    ap = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
+    ap.add_argument(
+        "--cargo",
+        type=int,
+        required=True,
+        choices=CARGOS_PROPORCIONAIS,
+        help="código TSE do cargo proporcional: 6 (federal), 7 (estadual), 8 (distrital)",
+    )
+    return ap.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    cargo = _argumentos(argv).cargo
+    esperado_total = total_cadeiras(cargo)
+    esperadas_ufs = set(ufs_do_cargo(cargo))
+    saida = saida_do_cargo(cargo)
+
     if not DIR_CAND.exists() or not DIR_PART.exists():
         print(f"[golden] datasets ausentes em {DIR_CAND} / {DIR_PART}", file=sys.stderr)
         print("[golden] baixe em https://dadosabertos.tse.jus.br/dataset/resultados-2022", file=sys.stderr)
@@ -123,15 +188,15 @@ def main() -> int:
     for caminho in sorted(DIR_CAND.glob("*_2022_??.csv")):
         if caminho.stem.endswith("_BR"):
             continue
-        dados = _uf(caminho)
+        dados = _uf(caminho, str(cargo))
         if dados is None:
             continue
         geracoes.add(dados.pop("_geracao"))
         ufs[caminho.stem[-2:]] = dados
 
     vagas = sum(u["vagas"] for u in ufs.values())
-    SAIDA.parent.mkdir(parents=True, exist_ok=True)
-    SAIDA.write_text(
+    saida.parent.mkdir(parents=True, exist_ok=True)
+    saida.write_text(
         json.dumps(
             {
                 "_nota": (
@@ -145,12 +210,23 @@ def main() -> int:
         ),
         encoding="utf-8",
     )
-    print(f"[golden] {len(ufs)} UFs · {vagas} vagas · {SAIDA.stat().st_size / 1024:.0f} KB")
+    print(
+        f"[golden] cargo {cargo} · {len(ufs)} UFs · {vagas} vagas · "
+        f"{saida.stat().st_size / 1024:.0f} KB → {saida}"
+    )
     print(f"[golden] DT_GERACAO dos CSVs do TSE: {sorted(geracoes)}")
-    if vagas != 513:
-        print(f"[golden] ⚠️ esperado 513 vagas, veio {vagas}", file=sys.stderr)
-        return 2
-    return 0
+    falhou = False
+    if vagas != esperado_total:
+        print(f"[golden] ⚠️ esperado {esperado_total} vagas, veio {vagas}", file=sys.stderr)
+        falhou = True
+    if set(ufs) != esperadas_ufs:
+        print(
+            f"[golden] ⚠️ UFs do cargo {cargo}: faltam {sorted(esperadas_ufs - set(ufs))}, "
+            f"sobram {sorted(set(ufs) - esperadas_ufs)}",
+            file=sys.stderr,
+        )
+        falhou = True
+    return 2 if falhou else 0
 
 
 if __name__ == "__main__":

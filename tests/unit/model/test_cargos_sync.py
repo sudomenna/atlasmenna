@@ -57,6 +57,8 @@ def _parse_ts() -> list[dict[str, object]]:
                 "tem_arquivo_br": _campo(corpo, "temArquivoBr") == "true",
                 "proporcional": _campo(corpo, "proporcional") == "true",
                 "granularidade": _campo(corpo, "granularidade"),
+                # Spec 027 RF-278 (ADR-0066) — quais UFs elegem o cargo.
+                "abrangencia": _campo(corpo, "abrangencia"),
             }
         )
     return out
@@ -94,6 +96,7 @@ EQUIVALENCIA = {
     "temArquivoBr": "tem_arquivo_br",
     "proporcional": "proporcional",
     "granularidade": "granularidade",
+    "abrangencia": "abrangencia",
 }
 
 
@@ -125,7 +128,11 @@ def test_o_parser_enxerga_a_tabela_ts():
     a lista vem vazia e TODAS as comparações abaixo passariam por vacuidade."""
     ts = _parse_ts()
     assert len(ts) >= 4
-    assert [c["cd"] for c in ts] == [1, 3, 5, 6]
+    # Spec 027 (29/09): Deputado Estadual (7) e Distrital (8). Este teste só
+    # fecha depois que a frente TypeScript acrescentar as duas linhas (e o
+    # campo `abrangencia`) em `lib/config/cargos.ts` — ver o relatório da
+    # frente P.
+    assert [c["cd"] for c in ts] == [1, 3, 5, 6, 7, 8]
 
 
 def test_espelho_python_bate_campo_a_campo_com_o_ts():
@@ -168,6 +175,19 @@ def test_cargo_desconhecido_degrada_para_o_default():
     assert cargo_info(99) is None
     assert vagas_por_uf(99) == 1
     assert granularidade(99) == "zona"
+
+
+@pytest.mark.parametrize(
+    ("cd", "abrangencia"),
+    [(1, "todas-as-ufs"), (3, "todas-as-ufs"), (5, "todas-as-ufs"), (6, "todas-as-ufs"),
+     (7, "ufs-sem-df"), (8, "so-df")],
+)  # fmt: skip
+def test_abrangencia_de_cada_cargo(cd: int, abrangencia: str):
+    """Spec 027 RF-278 — o DF não tem Assembleia Legislativa (CF art. 32 § 3º):
+    elege deputado DISTRITAL, que é outro cargo no TSE (8)."""
+    info = cargo_info(cd)
+    assert info is not None
+    assert info["abrangencia"] == abrangencia
 
 
 def test_deputado_federal_nao_finge_ter_bancada_fixa():

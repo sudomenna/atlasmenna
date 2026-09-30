@@ -1079,6 +1079,12 @@ EstadoConferencia = Literal["confere", "diverge", "sem_dado_tse"]
 #: `"algoritmo"` ali dentro.
 COMPARACOES = ("eleitorado", "algoritmo", "eleitos", "votos_validos")
 
+#: Por que uma comparação NÃO foi feita (spec 027 design § 3.2) — conjunto
+#: FECHADO, contrato com a tela. `"granularidade_uf"`: a parcial da UF saiu do
+#: próprio agregado (Fase 1 dos cargos 7/8), e comparar "a soma das zonas" com
+#: o agregado seria comparar o arquivo consigo mesmo.
+MOTIVO_NAO_COMPAROU_GRANULARIDADE_UF = "granularidade_uf"
+
 
 @dataclass(frozen=True)
 class ConferenciaTse:
@@ -1113,6 +1119,12 @@ class ConferenciaTse:
     #: `COMPARACOES` (spec 026 design § 2.8). Toda divergência pertence a uma
     #: comparação daqui; `confere` exige `"algoritmo"`.
     comparou: tuple[str, ...] = ()
+    #: Spec 027 design § 3.2 — `(comparação, motivo)` do que seria comparado
+    #: numa UF lida por zona e aqui NÃO foi, na ordem de `COMPARACOES`. Só em
+    #: resumo (`parcial_do_agregado`): `eleitorado` sempre que há agregado;
+    #: `votos_validos` só com `tf = "s"` (é quando a comparação seria feita).
+    #: Vazio ⇒ o campo sai ausente do payload.
+    nao_comparou: tuple[tuple[str, str], ...] = ()
 
 
 def _boletim_dado_ts(payload: Any) -> str | None:
@@ -1174,6 +1186,7 @@ def conferir_agregado_da_uf(
     eleitorado_lido: int | None = None,
     validos_lidos: int | None = None,
     resultado_parcial: ResultadoCadeiras | None = None,
+    parcial_do_agregado: bool = False,
 ) -> ConferenciaTse:
     """A conferência de verdade contra o arquivo agregado da UF (RF-269).
 
@@ -1210,6 +1223,15 @@ def conferir_agregado_da_uf(
       - `votos_validos` — `validos_lidos` (Σ `v.vv` das zonas que somamos,
         medido por quem chama) contra o `v.vv` do agregado.
 
+    **`parcial_do_agregado=True`** (spec 027 RF-285 — Fase 1 dos cargos 7/8,
+    em que a ingestão grava só o resumo de cada casa): a parcial publicada saiu
+    DESTE MESMO arquivo, não de uma soma de zonas. As duas comparações que
+    medem "a nossa soma × o agregado" — `eleitorado` e `votos_validos` —
+    comparariam o arquivo com ele mesmo e dariam "bate" por construção; ficam
+    FORA de `comparou` (não comparadas), sejam quais forem `eleitorado_lido` e
+    `validos_lidos`. `algoritmo` e `eleitos` seguem: comparam a NOSSA
+    aritmética com a do TSE, e isso continua sendo informação.
+
     `comparou` diz quais comparações foram feitas, na ordem de `COMPARACOES`.
     `estado`: `diverge` se qualquer uma acusar; `confere` se a conta
     (`"algoritmo"`) foi conferida e nada acusou; `sem_dado_tse` se não houve
@@ -1227,6 +1249,18 @@ def conferir_agregado_da_uf(
 
     divergencias: list[Divergencia] = []
     comparou: list[str] = []
+
+    # Spec 027 RF-285 — sem soma de zonas, não há o que comparar com o
+    # agregado: o "lido" SERIA o agregado (ver o docstring). O que deixou de
+    # ser comparado é DECLARADO (`nao_comparou`, design 027 § 3.2): a tela diz
+    # "não comparado nesta fase", nunca cala nem afirma "confere".
+    nao_comparou: list[tuple[str, str]] = []
+    if parcial_do_agregado:
+        eleitorado_lido = None
+        validos_lidos = None
+        nao_comparou.append(("eleitorado", MOTIVO_NAO_COMPAROU_GRANULARIDADE_UF))
+        if tf:
+            nao_comparou.append(("votos_validos", MOTIVO_NAO_COMPAROU_GRANULARIDADE_UF))
 
     e_raiz = raiz.get("e") if isinstance(raiz.get("e"), dict) else {}
     eleitorado_tse = _int_ou_none(e_raiz.get("te"))
@@ -1297,6 +1331,7 @@ def conferir_agregado_da_uf(
         motivo=motivo,
         entrada=entrada,
         comparou=tuple(comparou),
+        nao_comparou=tuple(nao_comparou),
     )
 
 

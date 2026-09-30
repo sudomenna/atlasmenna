@@ -569,5 +569,7 @@ def test_deputado_uf_sem_agregado_omite_a_uf() -> None:
 
 
 def test_cargo_fora_da_lista_nao_publica_votacao_de_uf() -> None:
+    # Até 2026-09-29 o exemplo era o cargo 7; a spec 027 o pôs na lista (o
+    # painel "Votação" das Assembleias). O 2 (Vice-Presidente) segue fora.
     sp = _snap("SP", _ea20(3, [(13, "PT", 10, "Válido")]))
-    assert build_votacao_uf_payloads([sp], 7) == {}
+    assert build_votacao_uf_payloads([sp], 2) == {}

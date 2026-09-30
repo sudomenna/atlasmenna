@@ -1846,7 +1846,12 @@ def test_ciclo_com_as_27_fora_de_513_alarma_e_nao_aborta(
     assert status == 200, "o ciclo abortou por causa do alarme"
     assert resposta["computed"] is True
     payload, _detalhes = publicados[0]
-    assert payload["bancada"]["total_cadeiras"] == 513
+    # Spec 027 (29/09, decisão do orquestrador): com as 27 UFs publicadas o
+    # total é a SOMA do TSE (RF-124), não o fato fixo — até aqui a tela diria
+    # "513 cadeiras" com 514 distribuídas ("aguardando −1"). O alarme abaixo é
+    # o que diz que o dado diverge do tamanho da Câmara.
+    assert payload["bancada"]["total_cadeiras"] == 514
+    assert payload["bancada"]["cadeiras_atribuidas"] <= payload["bancada"]["total_cadeiras"]
 
     erros = [
         m
