@@ -113,7 +113,11 @@ export interface DeputadoUfCandidato {
 
 /** Uma agremiação (partido isolado ou federação) dentro de uma UF. */
 export interface DeputadoUfAgremiacao {
-  /** `agr[].n`. Chave de reconciliação com a bancada nacional. */
+  /**
+   * Chave nacional da agremiação (nº do partido ou `"fed:<nº>"`) — a MESMA de
+   * `EdgeAgremiacaoBancada.cod`. Não é o `agr[].n` do EA20 (design 017 D3,
+   * emenda de 2026-09-29).
+   */
   cod: string;
   sigla: string;
   nome: string;
@@ -788,7 +792,7 @@ export const DEPUTADO_RANK_MAXIMO_NA_PAGINA = 60;
 
 /** As linhas 61+ de UMA agremiação. */
 export interface DeputadoUfListaAgremiacao {
-  /** `agr[].n` — o mesmo `cod` da agremiação no objeto da UF. */
+  /** O mesmo `cod` da agremiação no objeto da UF (chave nacional, não `agr[].n`). */
   cod: string;
   /** Rank asc. */
   candidatos: DeputadoUfLinha[];

@@ -328,29 +328,38 @@ def test_sigla_da_federacao_vem_de_fed_porque_agr_nao_tem_sigla() -> None:
     """`agr[]` publica `n`, `nm`, `tp` e `com` — **não** `sg`.
 
     O design 017 (D4) supunha `agr[].sg`; o dicionário oficial não o tem. A
-    sigla da federação sai de `carg[].fed[]` com o mesmo número — é o único uso
-    de `fed[]`, e mesmo esse é só identidade: voto e candidato continuam
-    chegando exclusivamente por `agr[]`.
+    sigla da federação sai de `carg[].fed[]` — é identidade (e chave, ver
+    `chave_agremiacao`): voto e candidato continuam chegando exclusivamente
+    por `agr[]`.
+
+    ⚠️ 2026-09-29: o casamento é pelo número DA FEDERAÇÃO (`par[].nfed` =
+    `fed[].n`), não pelo `agr[].n`. Este teste tinha os dois iguais (`"99"`);
+    no dado real nunca são (`agr[].n` é o id da inscrição na UF, oito dígitos
+    no simulado), e a sigla de `fed[]` não era encontrada.
     """
     env = _envelope(
         [
             {
-                "n": "99",
+                "n": "60139975",
                 "nm": "Federação Brasil da Esperança",
                 "tp": "f",
                 "par": [
-                    {"n": "13", "sg": "PT", "nm": "Partido A", "cand": [_cand(1, "1310", 10)]},
-                    {"n": "65", "sg": "PCdoB", "nm": "Partido B", "cand": [_cand(2, "6510", 5)]},
+                    {"n": "13", "sg": "PT", "nm": "Partido A", "nfed": "101",
+                     "cand": [_cand(1, "1310", 10)]},
+                    {"n": "65", "sg": "PCdoB", "nm": "Partido B", "nfed": "101",
+                     "cand": [_cand(2, "6510", 5)]},
                 ],
             }
         ]
     )
     env["carg"][0]["fed"] = [
-        {"n": "99", "nm": "Federação Brasil da Esperança", "sg": "FE BRASIL",
+        {"n": "101", "nm": "Federação Brasil da Esperança", "sg": "FE BRASIL",
          "com": "PT/PCdoB", "npar": ["13", "65"]}
     ]
 
-    ident = extrair_entrada_proporcional(env).identidade_agremiacoes["99"]
+    identidades = extrair_entrada_proporcional(env).identidade_agremiacoes
+    assert list(identidades) == ["fed:101"], "a chave é o número da federação, não o agr[].n"
+    ident = identidades["fed:101"]
 
     assert ident.sigla == "FE BRASIL"
     assert ident.tipo == "federacao"

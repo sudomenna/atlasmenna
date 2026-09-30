@@ -72,7 +72,37 @@ linhas por UF ficam corretas e a linha nacional, inválida.
 
 **Decisão**: `cargo=6` **não passa** por `compute_national`. A visão nacional do
 Deputado é a **bancada** — soma de `cadeiras` por agremiação sobre as 27 UFs, com
-as agremiações reconciliadas por `cod` (o `agr[].n`, estável nacionalmente).
+as agremiações reconciliadas por `cod`, a chave **nacional** da agremiação (ver a
+emenda abaixo).
+
+⚠️ **Emenda de 2026-09-29 — `agr[].n` NÃO é estável nacionalmente.** Este
+parágrafo dizia "reconciliadas por `cod` (o `agr[].n`, estável nacionalmente)", e
+o código seguia: "o PT é 13 em toda UF". O dicionário do EA20 define `agr[].n`
+como "número da agremiação … conforme inscrição no Sistema de Candidaturas"
+(`tse_docs/txt/tse-ea20-arquivo-de-resultado-unificado.txt:674-676`) — o id da
+**inscrição** daquela agremiação naquela circunscrição. Nos EA20 reais do simulado
+(`tests/fixtures/tse/2026-sim/dep/{rr,ap}/m3-final-tf/`), RR e AP têm 21
+agremiações em comum e **nenhum** `agr[].n` igual (o "P 9969" é `60140151` em RR e
+`60138197` em AP; `par[].n` é `73` nos dois). A bancada nacional listava cada
+partido uma vez por UF, sem somar cadeira nenhuma, e tudo o que o nacional chaveia
+por `cod` (`sigla_lider`, `cadeiras_ci95`, `lider`, `mais_votados[].cod`,
+`puxadores[].cod`) herdava o erro.
+
+A chave passa a ser (`api/model/deputado.py::chave_agremiacao`):
+
+| `agr[].tp` | `cod` | Por que é nacional |
+|---|---|---|
+| `"i"` — partido isolado | `par[].n` — o número do partido (`"13"`) | é o número que o partido registra no TSE, o mesmo em toda UF |
+| `"f"` — federação | `"fed:" + fed[].n` (`"fed:101"`), o número da **própria federação**, apontado por `par[].nfed` (ou, sem `nfed`, pelo `fed[].npar` que casar sem ambiguidade) | a federação tem abrangência nacional (Lei 9.096 art. 11-A) e um número só: `100`–`104` no cadastro real de 2026, iguais nas UFs conferidas. **Não** a lista dos componentes: o `par[]` de um componente sem candidato na UF "pode ser suprimido" (dicionário, elemento `par`) — a mesma federação sairia com duas chaves |
+| `"c"` — coligação (anomalia) | `"coligacao:" + agr[].n`, como antes | nunca é somada nem exibida |
+
+O prefixo `fed:` torna as duas famílias disjuntas por construção (hoje a lei já
+as separa — partido tem 2 dígitos, federação 3 —, mas a garantia não depende
+disso). Quando a regra não resolve sem ambiguidade (`par[]` ausente ou
+contraditório), a chave degrada para `agr[].n`: certa dentro da UF, separada no
+nacional — degradação declarada, nunca uma escolha entre números. A chave vale
+igual no objeto da UF e no nacional: o `cod` de uma linha de UF é o `cod` da linha
+nacional correspondente.
 
 Isso é agregação, não estimativa — mesma natureza de `EdgeComposicaoVagas` do
 Senador, e a tela precisa dizer isso: o número é soma nossa das 27 corridas, não
@@ -101,7 +131,10 @@ Campos de origem no EA20: `agr[].nm`, `agr[].tp`, `agr[].par[].sg` (componentes)
 existe**. O EA20 publica em `agr[]` apenas `n`, `nm`, `tp` e `com`. A sigla é
 derivada:
 
-- federação (`tp == "f"`) → `carg[].fed[].sg`, casando pelo número;
+- federação (`tp == "f"`) → `carg[].fed[].sg`, casando pelo número **da
+  federação** — `par[].nfed` = `fed[].n` (emenda de 2026-09-29: casava pelo
+  `agr[].n`, que no dado real nunca coincide com `fed[].n`; a sigla de `fed[]`
+  nunca era encontrada e a federação saía com o `agr[].nm` no lugar);
 - partido isolado (`tp == "i"`) → `par[0].sg`.
 
 Isso significa que `fed[]` **é** percorrida — mas **só para identidade**, nunca
@@ -144,7 +177,7 @@ interface EdgeBancadaNacional {
 }
 
 interface EdgeAgremiacaoBancada {
-  cod: string;                 // `agr[].n`
+  cod: string;                 // chave nacional: nº do partido ("13") ou "fed:<fed[].n>" (D3, emenda 29/09) — NÃO `agr[].n`
   sigla: string;
   nome: string;
   tipo: "partido" | "federacao";
@@ -222,7 +255,7 @@ interface DeputadoUfDetail {
 }
 
 interface DeputadoUfAgremiacao {
-  cod: string;
+  cod: string;                 // a MESMA chave nacional de D5 (D3, emenda 29/09)
   sigla: string;
   nome: string;
   tipo: "partido" | "federacao";

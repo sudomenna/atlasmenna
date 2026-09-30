@@ -257,15 +257,17 @@ def test_voto_de_legenda_sai_separado_do_nominal() -> None:
 
 
 def test_federacao_sai_com_sigla_propria_e_partidos_componentes() -> None:
-    """A sigla NÃO existe em `agr[]` — vem de `carg[].fed[]` pelo mesmo número."""
+    """A sigla NÃO existe em `agr[]` — vem de `carg[].fed[]`, casada pelo
+    número da federação (`par[].nfed` = `fed[].n`; 2026-09-29: nunca pelo
+    `agr[].n`, que no dado real é outro número)."""
     env = _envelope(
         [
             _agr_federacao(
-                "99",
+                "250001800310",
                 "Federação Brasil da Esperança",
                 [
-                    _partido("13", "PT", 200, [_cand(1, "ANA", 3000)]),
-                    _partido("65", "PCdoB", 100, [_cand(2, "BRUNO", 500)]),
+                    _partido("13", "PT", 200, [_cand(1, "ANA", 3000)]) | {"nfed": "101"},
+                    _partido("65", "PCdoB", 100, [_cand(2, "BRUNO", 500)]) | {"nfed": "101"},
                 ],
             ),
             _agr_partido("20", "PB", 0, [_cand(3, "CARLA", 1200)]),
@@ -273,7 +275,7 @@ def test_federacao_sai_com_sigla_propria_e_partidos_componentes() -> None:
         nv="2",
         fed=[
             {
-                "n": "99",
+                "n": "101",
                 "nm": "Federação Brasil da Esperança",
                 "sg": "FE BRASIL",
                 "com": "PT/PCdoB",
@@ -284,7 +286,7 @@ def test_federacao_sai_com_sigla_propria_e_partidos_componentes() -> None:
     _, detalhes = _payload([_uf("SP", env)])
     agremiacoes = detalhes["SP"]["agremiacoes"]
 
-    fed = next(a for a in agremiacoes if a["cod"] == "99")
+    fed = next(a for a in agremiacoes if a["cod"] == "fed:101")
     assert fed["tipo"] == "federacao"
     assert fed["sigla"] == "FE BRASIL"
     assert fed["componentes"] == ["PT", "PCdoB"], "partidos componentes ilegíveis"

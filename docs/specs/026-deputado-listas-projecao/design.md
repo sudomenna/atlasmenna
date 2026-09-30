@@ -332,7 +332,7 @@ interface EdgeDeputadoDestaque {
   sqcand: number;
   nome: string;
   partido: string;
-  cod: string;        // agremiação
+  cod: string;        // agremiação — chave NACIONAL, resolve em bancada.por_agremiacao (emenda 29/09 abaixo)
   sigla: string;      // agremiação
   numero?: number;
   votos: number;
@@ -350,6 +350,15 @@ interface EdgeDeputadoPuxador extends EdgeDeputadoDestaque {
 
 `bancada` não muda (continua a parcial). Custo: +~8 KB, chegando a ~19 KiB dos 75 KiB do orçamento da
 chave. Nenhuma bancada nacional projetada (spec § Fora).
+
+⚠️ **Emenda de 2026-09-29 — o `cod` da agremiação é a chave nacional, não o `agr[].n`.** Até esta data
+o `cod` era o `agr[].n` do EA20, sob a premissa (design 017 D3) de que ele seria estável no país. Não
+é: é o id da inscrição da agremiação **naquela UF**, e nos EA20 reais de RR e AP nenhum coincide. O
+`cod` de `mais_votados[]`, `puxadores[]`, `por_uf[].lider` e de cada agremiação do objeto da UF e da
+lista 61+ passa a ser a chave de `api/model/deputado.py::chave_agremiacao` — o número do partido
+(`"13"`) ou `"fed:" + fed[].n` (`"fed:101"`) — e **resolve sempre** contra uma linha de
+`bancada.por_agremiacao`. Regra completa e evidência no design 017, D3 (emenda da mesma data). O
+formato continua `string`; nenhum consumidor TS interpreta o `cod` além de igualdade.
 
 ### 2.10 Chave do interruptor — `interruptor-projecao-dep`
 

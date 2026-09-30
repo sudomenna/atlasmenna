@@ -4099,9 +4099,18 @@ export function distribuirCadeiras(
  * A reconciliação nacional, que casa por `cod`, então via **duas agremiações**
  * e a tela mostrava "PSDB/CIDADANIA" duas vezes, com 29 e 9 cadeiras.
  *
- * O `cod` é a identidade da agremiação (`agr[].n` no EA20, estável
- * nacionalmente). Derivá-lo de um recorte estadual é o mesmo erro de categoria
- * que o ADR-0042 documenta para `sqcand`.
+ * O `cod` é a identidade NACIONAL da agremiação. Derivá-lo de um recorte
+ * estadual é o mesmo erro de categoria que o ADR-0042 documenta para `sqcand`.
+ *
+ * ⚠️ 2026-09-29: a frase que estava aqui — "`agr[].n` no EA20, estável
+ * nacionalmente" — é FALSA. `agr[].n` é o id da inscrição da agremiação na UF
+ * e muda de estado para estado; em produção o `cod` sai de
+ * `api/model/deputado.py::chave_agremiacao` (nº do partido, ou `"fed:<nº da
+ * federação>"`). Este gerador já era estável por construção (chave global por
+ * sigla), por isso não herdou o defeito — só o formato da federação difere: aqui
+ * é o menor número entre os componentes, lá `fed:<n>`. Nada no TS interpreta o
+ * `cod`, e o simulado não passa pelo Python; alinhar o formato exige o número da
+ * federação no cadastro e regenerar a fixture (`pnpm sim:full`, lê o banco).
  */
 export function codPorAgremiacao(dados: DadosSimulacao): Record<string, string> {
   const menor = new Map<string, number>();

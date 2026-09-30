@@ -36,8 +36,8 @@ from api.model.deputado import (
     DESTINO_SUB_JUDICE,
     DESTINO_VALIDO,
     DESTINO_VALIDO_LEGENDA,
-    PREFIXO_COLIGACAO,
     anomalias_de_leitura,
+    chave_agremiacao,
     combinar_entradas,
     conferir_agregado_da_uf,
     destino_proporcional,
@@ -444,7 +444,12 @@ def test_rr_candidatura_valido_legenda_vota_para_o_partido() -> None:
 def _referencia_pre_adr_b(payload: Any, cargo: int = 6) -> list[Agremiacao]:
     """O laço de `extrair_entrada_proporcional` como estava em `239c7a9`,
     reduzido ao que chega a `distribuir_cadeiras`. Congelado aqui de propósito:
-    é a régua da bit-identidade, não código de produção."""
+    é a régua da bit-identidade, não código de produção.
+
+    Uma exceção, e só uma: a CHAVE da agremiação. Em `239c7a9` ela era
+    `agr[].n`, que não é estável entre UFs (2026-09-29, `chave_agremiacao`).
+    A régua mede voto, legenda e candidato — o nome da linha segue a regra
+    vigente, senão toda comparação aqui falharia por rótulo e não por voto."""
 
     def _i(raw: Any, default: int = 0) -> int:
         if raw is None:
@@ -472,12 +477,15 @@ def _referencia_pre_adr_b(payload: Any, cargo: int = 6) -> list[Agremiacao]:
     for carg in raiz.get("carg") or []:
         if _i(carg.get("cd"), -1) != cargo:
             continue
+        federacoes = {
+            str(f.get("n", "")).strip(): f
+            for f in carg.get("fed") or []
+            if isinstance(f, dict) and str(f.get("n", "")).strip()
+        }
         for agr in carg.get("agr") or []:
-            tipo = str(agr.get("tp", "")).strip().lower()
-            numero = str(agr.get("n", "")).strip()
-            if not numero:
+            cod = chave_agremiacao(agr, federacoes)
+            if cod is None:
                 continue
-            cod = f"{PREFIXO_COLIGACAO}{numero}" if tipo == "c" else numero
             cands: list[Candidato] = []
             leg_par = 0
             for par in agr.get("par") or []:

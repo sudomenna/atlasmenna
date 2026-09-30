@@ -1207,10 +1207,19 @@ def _bancada_nacional(
 ) -> dict[str, Any]:
     """`EdgeBancadaNacional` (D5) — soma de 27 corridas, não um modelo nacional.
 
-    As agremiações são reconciliadas por `cod` (`agr[].n`), que é estável no país
-    inteiro: o PT é 13 em toda UF. A identidade (sigla, nome, composição) vem da
-    primeira UF em ordem alfabética que a publicou — se uma UF vier sem rótulo, a
-    seguinte completa, mas nenhuma sobrescreve a anterior.
+    As agremiações são reconciliadas por `cod`, que é a chave NACIONAL de
+    `deputado.chave_agremiacao`: o número do partido isolado (`"13"`) ou o
+    número da federação (`"fed:101"`). ⚠️ Até 2026-09-29 o `cod` era o
+    `agr[].n`, sob a premissa "o PT é 13 em toda UF" — falsa: `agr[].n` é o id
+    da inscrição da agremiação na UF, diferente em cada estado, e esta soma
+    listava cada partido uma vez por UF, sem somar cadeira nenhuma. Tudo o que
+    é chaveado por `cod` no nacional (`sigla_lider` via `componentes_br`,
+    `cadeiras_ci95`, `lider`, `mais_votados[].cod`, `puxadores[].cod`) herda a
+    mesma chave e resolve contra `por_agremiacao`.
+
+    A identidade (sigla, nome, composição) vem da primeira UF em ordem
+    alfabética que a publicou — se uma UF vier sem rótulo, a seguinte completa,
+    mas nenhuma sobrescreve a anterior.
 
     **`sigla_lider` nacional é a soma das 27 UFs**, não a moda dos líderes
     estaduais (ADR-0024). Contar "em quantos estados cada componente lidera"

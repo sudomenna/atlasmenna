@@ -2165,7 +2165,13 @@ export interface EdgeBancadaNacional {
  * desde a EC 97/2017.
  */
 export interface EdgeAgremiacaoBancada {
-  /** `agr[].n` — o número da agremiação, estável nacionalmente. É a chave de reconciliação entre UFs. */
+  /**
+   * Chave NACIONAL da agremiação — a de reconciliação entre UFs: o número do
+   * partido isolado (`"13"`) ou `"fed:<nº da federação>"` (`"fed:101"`). Opaca:
+   * compare por igualdade, não interprete. ⚠️ NÃO é o `agr[].n` do EA20, que é
+   * o id da inscrição na UF e muda de estado para estado (design 017 D3,
+   * emenda de 2026-09-29; `api/model/deputado.py::chave_agremiacao`).
+   */
   cod: string;
   sigla: string;
   nome: string;

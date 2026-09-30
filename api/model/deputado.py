@@ -22,6 +22,11 @@ federação aparece ali como `agr[].tp == "f"` — que é exatamente a unidade d
 agregação que o art. 6º-A da Lei 9.504 manda usar. Percorrer `fed[]` atrás de
 candidatos devolveria lista vazia.
 
+⚠️ **2026-09-29 — `agr[].n` NÃO é estável entre UFs.** É o id da inscrição da
+agremiação naquela circunscrição. A chave que casa as UFs na bancada nacional
+é o número do partido (isolado) ou o `fed[].n` da federação, que o `par[].nfed`
+aponta — `chave_agremiacao`.
+
 ## Os três números que o TSE publica e que ninguém lia
 
 `carg[].qe`, `carg[].nv` e `agr[].vag` são, respectivamente, o quociente
@@ -99,6 +104,12 @@ CARGO_DEPUTADO_FEDERAL = 6
 #: dado em cargo proporcional (ADR-0027, caso de borda 7). Exportado porque o
 #: caller precisa detectá-la sem reconstruir a string.
 PREFIXO_COLIGACAO = "coligacao:"
+
+#: Prefixo do `cod` de uma FEDERAÇÃO: `fed:<fed[].n>` (2026-09-29, ver
+#: `chave_agremiacao`). O prefixo torna a chave disjunta por construção do
+#: número de partido isolado — hoje a lei já garante (partido tem 2 dígitos, a
+#: federação observada tem 3), mas a garantia não pode depender disso.
+PREFIXO_FEDERACAO = "fed:"
 
 
 # ---------------------------------------------------------------------------
@@ -186,6 +197,116 @@ def _raiz(payload: Any) -> dict[str, Any] | None:
     if isinstance(abr, list) and abr and isinstance(abr[0], dict):
         return abr[0]
     return payload
+
+
+# ---------------------------------------------------------------------------
+# A chave da agremiação — estável no país inteiro (2026-09-29)
+# ---------------------------------------------------------------------------
+
+
+def _numero_texto(raw: Any) -> str:
+    """Campo numérico do EA20 como texto (`"13"`), `""` quando ausente."""
+    return "" if raw is None else str(raw).strip()
+
+
+def _unico(valores: Any) -> str | None:
+    """O único valor não vazio da sequência; `None` se nenhum ou mais de um.
+
+    Mais de um é dado contraditório (dois números de partido numa agremiação
+    isolada, dois `nfed` numa federação). Escolher um seria adivinhar — quem
+    chama cai no caminho degradado, que é declarado.
+    """
+    distintos = {v for v in valores if v}
+    return next(iter(distintos)) if len(distintos) == 1 else None
+
+
+def numero_da_federacao(
+    agr: dict[str, Any], federacoes: dict[str, dict[str, Any]]
+) -> str | None:
+    """`fed[].n` da federação que esta `agr[]` (`tp == "f"`) representa.
+
+    Duas fontes, nesta ordem:
+
+      1. `par[].nfed` — "número da federação da qual o partido faz parte"
+         (dicionário, elemento `par`). Todo `par[]` federado o traz; nas 135
+         agremiações de federação dos envelopes reais do simulado (cargos 1,
+         3, 5 e 6), sempre presente e sempre casando com um `fed[].n`.
+      2. `carg[].fed[].npar` — o dicionário de federações lista os números dos
+         partidos componentes: a federação cujo `npar` contém um dos `par[].n`
+         desta agremiação. Só se exatamente uma casar.
+
+    `None` quando nenhuma resolve sem ambiguidade.
+    """
+    pars = [p for p in agr.get("par") or [] if isinstance(p, dict)]
+    nfed = _unico(_numero_texto(p.get("nfed")) for p in pars)
+    if nfed is not None:
+        return nfed
+    numeros_par = {_numero_texto(p.get("n")) for p in pars} - {""}
+    if not numeros_par:
+        return None
+    casadas = [
+        numero
+        for numero, fed in federacoes.items()
+        if isinstance(fed.get("npar"), list)
+        and numeros_par & {_numero_texto(x) for x in fed["npar"]}
+    ]
+    return casadas[0] if len(casadas) == 1 else None
+
+
+def chave_agremiacao(
+    agr: dict[str, Any], federacoes: dict[str, dict[str, Any]]
+) -> str | None:
+    """O `cod` da agremiação — a MESMA chave em todas as UFs.
+
+    ## Por que não `agr[].n`
+
+    Até 2026-09-29 o `cod` era `agr[].n`, sob a premissa de que ele seria o
+    número do partido ("o PT é 13 em toda UF"). **Não é.** O dicionário diz
+    "número da agremiação … conforme inscrição no Sistema de Candidaturas"
+    (`tse-ea20-arquivo-de-resultado-unificado.txt:674-676`): é o id da
+    INSCRIÇÃO daquela agremiação naquela circunscrição. Nos envelopes reais do
+    simulado, RR e AP têm 21 agremiações em comum e **nenhum** `agr[].n` igual
+    (o "P 9969" é `60140151` em RR e `60138197` em AP; `par[].n` é `73` nos
+    dois), e o cadastro real de 2026 tem o mesmo padrão (o sequencial da
+    agremiação, `SQ_COLIGACAO`, do PT é outro em cada uma das cinco UFs
+    conferidas). Dentro de uma UF ele é estável, e por
+    isso tudo o que é da UF funcionava; a bancada nacional, que casa as UFs por
+    `cod`, listava cada partido uma vez por estado, sem somar nada.
+
+    ## A regra
+
+      - `tp == "i"` (partido isolado) → o número do partido, `par[].n` (`"13"`).
+        Nacional por lei: é o número que o partido registra no TSE.
+      - `tp == "f"` (federação) → `fed:<fed[].n>` (`"fed:101"`), o número da
+        própria federação (`numero_da_federacao`). A federação tem abrangência
+        nacional (Lei 9.096 art. 11-A) e um número só — `100`–`104` no cadastro
+        real de 2026, o mesmo nas UFs conferidas. **Não** a lista dos partidos
+        componentes: o `par[]` de um componente sem candidato na UF "pode ser
+        suprimido" (dicionário, elemento `par`), e a mesma federação sairia com
+        duas chaves — nos envelopes majoritários do simulado, 67 de 67
+        federações vêm com componente suprimido.
+      - `tp == "c"` (coligação, anomalia no proporcional) → `coligacao:<agr[].n>`,
+        como sempre: nunca é somada nem exibida.
+
+    Quando a regra não resolve sem ambiguidade (`par[]` ausente ou
+    contraditório, federação sem `nfed` nem `npar` que case), a chave cai em
+    `agr[].n` — correta dentro da UF, e a agremiação sai **separada** no
+    nacional. Degradação declarada, nunca uma escolha arbitrária entre números.
+
+    `None` sem `agr[].n` (a agremiação é ignorada, como sempre foi).
+    """
+    numero = _numero_texto(agr.get("n"))
+    if not numero:
+        return None
+    tipo = str(agr.get("tp", "")).strip().lower()
+    if tipo == "c":
+        return f"{PREFIXO_COLIGACAO}{numero}"
+    if tipo == "f":
+        federacao = numero_da_federacao(agr, federacoes)
+        return f"{PREFIXO_FEDERACAO}{federacao}" if federacao is not None else numero
+    pars = [p for p in agr.get("par") or [] if isinstance(p, dict)]
+    partido = _unico(_numero_texto(p.get("n")) for p in pars)
+    return partido if partido is not None else numero
 
 
 # ---------------------------------------------------------------------------
@@ -496,9 +617,11 @@ def extrair_entrada_proporcional(
                 continue
             tipo = str(agr.get("tp", "")).strip().lower()
             numero = str(agr.get("n", "")).strip()
-            if not numero:
+            # A chave é NACIONAL (`chave_agremiacao`), não o `agr[].n` — que é
+            # o id da inscrição NESTA UF e não casa entre estados.
+            cod = chave_agremiacao(agr, federacoes)
+            if cod is None:
                 continue
-            cod = f"{PREFIXO_COLIGACAO}{numero}" if tipo == "c" else numero
 
             candidatos: list[Candidato] = []
             legenda_dos_partidos = 0
@@ -565,12 +688,21 @@ def extrair_entrada_proporcional(
                     )
                 )
 
+            # `fed[]` casa pelo número DA FEDERAÇÃO (`par[].nfed`), não pelo
+            # `agr[].n`: no dado real os dois nunca coincidem, e até
+            # 2026-09-29 a sigla de `fed[].sg` nunca era encontrada — a
+            # federação saía com o `agr[].nm` no lugar da sigla.
+            numero_fed = numero_da_federacao(agr, federacoes) if tipo == "f" else None
             identidade_agr[cod] = _identidade_agremiacao(
                 cod=cod,
                 tipo_bruto=tipo,
                 agr=agr,
                 siglas_par=siglas_par,
-                fed=federacoes.get(numero),
+                fed=(
+                    federacoes.get(numero_fed)
+                    if numero_fed is not None
+                    else federacoes.get(numero)
+                ),
             )
 
             if not tem_destino:
