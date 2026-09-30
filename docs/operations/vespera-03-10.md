@@ -156,6 +156,17 @@ publica a lista sem fotos, sem erro nenhum na tela.
       "conserte" o número neste passo. Os **pesos** (`--pesos-oficiais`, arquivo do TSE) não mudam
       este número: mexem só em `eleitorado`.
 
+- [ ] **2.5. Recife zona 1 (PE 25313×0001) — decidir com a lista oficial da eleição real** (decisão
+      do dono em 30/09). Em 29/09 o par foi removido de `zonas` como "fantasma" porque o EA12 do
+      **simulado** não o lista; em 30/09 o cadastro oficial de 2026 (`perfil_eleitorado_2026.zip`)
+      mostrou **117.216 eleitores** nele. Peça ao Claude: conferir se o EA12 da eleição **real**
+      (config publicada com os números 6257/6259) lista Recife 0001.
+      - **Se listar:** reinserir o par em `zonas` (o `desfazerSql` de
+        `build/zonas-backup-20260929T181107Z.json` tem a linha) e gravar os pesos oficiais de PE:
+        `pnpm db:zonas:faltantes --pesos-oficiais build/tse-archives/perfil_eleitorado_2026_AP-PE-DF.csv --uf PE --col-qt QT_ELEITORES` (simulação; depois `--escrever`). O 2.4 passa a esperar **6134**.
+      - **Se não listar:** nada muda; PE fica com os pesos de 2024 (Σ −2,6% do oficial).
+      AP e DF já estão com os pesos oficiais desde 30/09 (backup `build/zonas-backup-20260930T172318Z.json`).
+
 ---
 
 ## Parte 3 — 03/10 depois das 17h: a prova de verdade
