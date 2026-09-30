@@ -71,6 +71,7 @@ function agremiacao(i: number, n: number): DeputadoListaAgremiacaoProps {
     linhas,
     totalCandidatos: n + 11,
     haListaRestante: true,
+    rotaLista: "/uf/SP/deputado-federal/lista",
     corte: {
       ultimoEleito: linhas[22]?.[1] ?? 0,
       primeiroFora: 0,

@@ -21,10 +21,13 @@
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { DeputadoRegras as RegrasDados } from "@/lib/blob/deputado-uf";
 import { formatVotes } from "@/lib/utils/format";
+import { TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
 
 export interface DeputadoRegrasProps {
   uf: string;
   regras: RegrasDados | undefined;
+  /** Spec 027 — "o estado" · "o Distrito Federal". Ausente ⇒ o termo dos estados. */
+  territorio?: TermoDoTerritorio;
   titleId: string;
 }
 
@@ -35,7 +38,12 @@ const TEXTO: React.CSSProperties = {
   textWrap: "pretty",
 };
 
-export function DeputadoRegras({ uf, regras, titleId }: DeputadoRegrasProps) {
+export function DeputadoRegras({
+  uf,
+  regras,
+  territorio = TERMO_ESTADO,
+  titleId,
+}: DeputadoRegrasProps) {
   return (
     <Panel
       kicker="Como as cadeiras são distribuídas"
@@ -103,8 +111,9 @@ export function DeputadoRegras({ uf, regras, titleId }: DeputadoRegrasProps) {
         </div>
       ) : (
         <p className="max-w-prose" style={TEXTO} data-testid="dep-regras-aguardando">
-          As regras com os números de {uf} aparecem aqui quando o TSE publicar quantas cadeiras o
-          estado elege e houver votos apurados — o quociente eleitoral depende das duas coisas.
+          As regras com os números de {uf} aparecem aqui quando o TSE publicar quantas cadeiras{" "}
+          {territorio.o} elege e houver votos apurados — o quociente eleitoral depende das duas
+          coisas.
         </p>
       )}
     </Panel>

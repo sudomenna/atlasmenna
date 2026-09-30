@@ -30,23 +30,19 @@
 
 import type { CSSProperties } from "react";
 
-import {
-  type CargoDeputado,
-  hrefDaCasa,
-  rotuloCargo,
-  ufTemCasa,
-} from "@/lib/utils/casa-legislativa";
+import type { CargoProporcional } from "@/lib/config/cargos";
+import { hrefDaCasa, rotuloCargo, ufTemCasa } from "@/lib/utils/casa-legislativa";
 
 export interface SeletorDeputadoProps {
   /** O cargo desta página. */
-  atual: CargoDeputado;
+  atual: CargoProporcional;
   /** Sigla da UF da página; ausente na capa. */
   uf?: string | null;
   className?: string;
 }
 
 /** "Federal", "Estadual", "Distrital" — o rótulo curto, sem "Deputado". */
-function rotuloCurto(cargo: CargoDeputado): string {
+function rotuloCurto(cargo: CargoProporcional): string {
   return rotuloCargo(cargo).replace(/^Deputado\s+/, "");
 }
 
@@ -78,10 +74,10 @@ export function SeletorDeputado({ atual, uf, className }: SeletorDeputadoProps) 
   }
   // O segundo item: distrital no DF, estadual em qualquer outro lugar
   // (inclusive a capa, onde as 27 casas moram juntas).
-  const outro: CargoDeputado = sigla === "DF" ? 8 : 7;
-  const opcoes: readonly CargoDeputado[] = [6, outro];
+  const outro: CargoProporcional = sigla === "DF" ? 8 : 7;
+  const opcoes: readonly CargoProporcional[] = [6, outro];
   // Na capa, a página das assembleias é a mesma para o 7 e o 8.
-  const ehAtual = (cargo: CargoDeputado) =>
+  const ehAtual = (cargo: CargoProporcional) =>
     cargo === atual || (sigla === null && cargo === 7 && atual === 8);
 
   return (

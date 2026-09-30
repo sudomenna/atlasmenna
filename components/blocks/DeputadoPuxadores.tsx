@@ -24,7 +24,8 @@ import type {
   DeputadoPuxador as DeputadoPuxadorAgremiacao,
   EdgeDeputadoPuxador,
 } from "@/lib/blob/deputado-uf";
-import { type CargoDeputado, rotuloCargo } from "@/lib/utils/casa-legislativa";
+import type { CargoProporcional } from "@/lib/config/cargos";
+import { rotuloCargo } from "@/lib/utils/casa-legislativa";
 import { formatVotes } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -50,26 +51,36 @@ export interface DeputadoPuxadoresProps {
    * Obrigatório, sem default: um default de federal rotularia os puxadores das
    * assembleias como "Deputado Federal · Brasil".
    */
-  cargo: CargoDeputado;
+  cargo: CargoProporcional;
+  /** Spec 027 — o rótulo do kicker por cima do do cargo (a capa das 27 casas). */
+  rotulo?: string;
   /** Ausente (payload anterior à spec 026) ⇒ o painel não aparece. `[]` ⇒ aparece e diz "nenhum ainda". */
   puxadores: readonly EdgeDeputadoPuxador[] | undefined;
   titleId: string;
 }
 
 /** O painel da capa: os maiores excedentes do país. */
-export function DeputadoPuxadores({ cargo, puxadores, titleId }: DeputadoPuxadoresProps) {
+export function DeputadoPuxadores({ cargo, rotulo, puxadores, titleId }: DeputadoPuxadoresProps) {
   if (!puxadores) return null;
+  // No DF a casa não é de um estado: "o quociente do estado" viraria falso
+  // para o distrital (spec 027, RF-284).
+  const doLugar = cargo === 6 ? "do estado" : "do estado (ou do Distrito Federal)";
+  const doSeuLugar = cargo === 6 ? "do seu estado" : "do seu estado (ou do Distrito Federal)";
   return (
-    <Panel kicker={`${rotuloCargo(cargo)} · Brasil`} title="Puxadores de voto" titleId={titleId}>
+    <Panel
+      kicker={`${rotulo ?? rotuloCargo(cargo)} · Brasil`}
+      title="Puxadores de voto"
+      titleId={titleId}
+    >
       <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>
         <p className={styles.legendaColunas}>
-          Candidatos com votos para mais de uma cadeira: pelo menos duas vezes o quociente eleitoral
-          do estado. O excedente soma para a agremiação e ajuda a eleger colegas de lista — não
+          Candidatos com votos para mais de uma cadeira: pelo menos duas vezes o quociente eleitoral{" "}
+          {doLugar}. O excedente soma para a agremiação e ajuda a eleger colegas de lista — não
           elege nome nenhum por si.
         </p>
         {puxadores.length === 0 ? (
           <p className={styles.legendaColunas} data-testid="dep-puxadores-vazio">
-            Nenhum candidato chegou a duas vezes o quociente eleitoral do seu estado com os votos
+            Nenhum candidato chegou a duas vezes o quociente eleitoral {doSeuLugar} com os votos
             apurados até agora.
           </p>
         ) : (

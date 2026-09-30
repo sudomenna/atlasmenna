@@ -20,7 +20,7 @@ import { DeputadoPuxadores } from "@/components/blocks/DeputadoPuxadores";
 import { UfBandeirasGrid } from "@/components/blocks/UfBandeirasGrid";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import type { EdgeDeputadoDestaque, EdgeDeputadoPuxador } from "@/lib/blob/deputado-uf";
-import { ufsDaCasa } from "@/lib/utils/casa-legislativa";
+import { ufsDoCargo } from "@/lib/utils/casa-legislativa";
 
 function parse(node: React.ReactElement): Document {
   return new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
@@ -104,7 +104,7 @@ describe("grades de UF — `ufs` e `hrefPorUf` (a grade das 27 casas)", () => {
       [...doc.querySelectorAll("[data-testid='corrida-uf']")].map((a) => a.getAttribute("data-uf")),
     ).toEqual(["AC", "BA", "SP"]);
     // As 26 assembleias: o DF fica fora.
-    const est = parse(<UfBandeirasGrid cargo={6} ufs={ufsDaCasa(7)} />);
+    const est = parse(<UfBandeirasGrid cargo={6} ufs={ufsDoCargo(7)} />);
     expect(est.querySelectorAll("[data-testid='corrida-uf']")).toHaveLength(26);
     expect(est.querySelector("[data-uf='DF']")).toBeNull();
   });
@@ -121,7 +121,7 @@ describe("grades de UF — `ufs` e `hrefPorUf` (a grade das 27 casas)", () => {
       "/uf/RJ/deputado-federal",
     );
 
-    const est = parse(<UfLinksGrid cargo={6} ufs={ufsDaCasa(7)} />);
+    const est = parse(<UfLinksGrid cargo={6} ufs={ufsDoCargo(7)} />);
     expect(est.querySelectorAll("[data-testid='uf-links-grid-item']")).toHaveLength(26);
     expect(est.querySelector("[data-sigla='DF']")).toBeNull();
   });

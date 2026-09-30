@@ -80,6 +80,7 @@ import {
   ZONAS_MINIMAS_PROJECAO,
 } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatPercentTrim } from "@/lib/utils/format";
+import { TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
 
 /** Uma agremiação cuja cadeira projetada difere da parcial — o "o que está movendo". */
 export interface AgremiacaoMovendo {
@@ -182,6 +183,22 @@ export interface DeputadoMetodologiaProps {
    * movendo a projeção" compacto (constituição § 8).
    */
   projecaoPorUf?: readonly { sigla: string; estado: string }[];
+  /**
+   * Spec 027 (RF-284) — "estado" · "Distrito Federal" nas frases da página de
+   * UF. Ausente ⇒ o termo dos estados (o texto de antes).
+   */
+  territorio?: TermoDoTerritorio;
+  /**
+   * Spec 027 (RF-285) — o objeto desta tela foi calculado pelo RESUMO da UF
+   * (`granularidade: "uf"`), não zona a zona: não há projeção nenhuma, nem
+   * como possibilidade, qualquer que seja o interruptor. A frase do
+   * interruptor ("ligada no site; só aparece quando…") prometeria uma projeção
+   * que este ciclo não calcula — no lugar dela, o bloco diz isso.
+   *
+   * Decidido pelo OBJETO, não pelo cargo: o federal em emergência
+   * (`TSE_DEPUTADO_GRANULARIDADE=uf`) cai no mesmo caso, com a mesma frase.
+   */
+  modoResumo?: boolean;
 }
 
 export function DeputadoMetodologia({
@@ -198,7 +215,10 @@ export function DeputadoMetodologia({
   pctMinimo,
   temFaixaProjetada = false,
   projecaoPorUf,
+  territorio = TERMO_ESTADO,
+  modoResumo = false,
 }: DeputadoMetodologiaProps) {
+  const t = territorio;
   const visivel = variant === "uf" && ehProjecaoVisivel(projecao, interruptorLigado);
   // Capa: o bloco aparece exatamente quando os selos aparecem — interruptor
   // ligado e ao menos um estado com estado de projeção publicado.
@@ -245,7 +265,7 @@ export function DeputadoMetodologia({
             </>
           ) : (
             <>
-              Neste momento lemos o boletim que o TSE publica por estado, e não os de cada zona
+              Neste momento lemos o boletim que o TSE publica {t.porUnidade}, e não os de cada zona
               eleitoral — e sem as zonas não há como medir o quanto o número balança, por isso não
               há intervalo ao lado das bancadas.
             </>
@@ -268,21 +288,23 @@ export function DeputadoMetodologia({
             cada candidato e de cada legenda zona a zona: a zona que já tem boletim é esticada até o
             tamanho do seu eleitorado; a zona sem boletim recebe o voto das zonas apuradas de
             tamanho parecido. Sobre esse voto estimado aplicamos a mesma distribuição de cadeiras da
-            parcial. Ela só aparece num estado com {formatPercentTrim(piso)} do eleitorado apurado,
-            ao menos {ZONAS_MINIMAS_PROJECAO} zonas com boletim, as cadeiras do estado publicadas
-            pelo TSE e o eleitorado das zonas que lemos fechando com o do TSE. A ordem das listas
-            nunca muda por causa dela: é sempre a do voto apurado.{" "}
-            {interruptorLigado
-              ? "A projeção está ligada no site; em cada estado, só aparece quando essas condições se cumprem."
-              : interruptorOrigem === "invalida" || interruptorOrigem === "falha"
-                ? "Neste momento não foi possível ler o interruptor da projeção, e por segurança ela fica desligada: nenhuma marca nem número dela aparece."
-                : "Neste momento a projeção está desligada no site: nenhuma marca nem número dela aparece, qualquer que seja a apuração."}
+            parcial. Ela só aparece {t.num} com {formatPercentTrim(piso)} do eleitorado apurado, ao
+            menos {ZONAS_MINIMAS_PROJECAO} zonas com boletim, as cadeiras {t.doTerritorio}{" "}
+            publicadas pelo TSE e o eleitorado das zonas que lemos fechando com o do TSE. A ordem
+            das listas nunca muda por causa dela: é sempre a do voto apurado.{" "}
+            {modoResumo
+              ? `Nesta noite, porém, este cargo é lido pelo resumo que o TSE publica ${t.porUnidade}, e não zona a zona — e sem as zonas não há projeção a calcular: só a parcial aparece, qualquer que seja o interruptor.`
+              : interruptorLigado
+                ? `A projeção está ligada no site; ${t.emCada}, só aparece quando essas condições se cumprem.`
+                : interruptorOrigem === "invalida" || interruptorOrigem === "falha"
+                  ? "Neste momento não foi possível ler o interruptor da projeção, e por segurança ela fica desligada: nenhuma marca nem número dela aparece."
+                  : "Neste momento a projeção está desligada no site: nenhuma marca nem número dela aparece, qualquer que seja a apuração."}
             {variant === "uf" && interruptorLigado && projecao && uf ? (
               <>
                 {" "}
                 Em {uf}: {formatPercent(pctApurado)} do eleitorado apurado e{" "}
                 {projecao.zonas_apuradas} de {projecao.zonas_total} zonas com boletim.{" "}
-                {fraseEstadoProjecao(projecao, pctApurado)}
+                {fraseEstadoProjecao(projecao, pctApurado, t)}
               </>
             ) : null}
             {variant === "national" ? (
@@ -309,9 +331,8 @@ export function DeputadoMetodologia({
               O que está movendo a projeção · não oficial
             </h3>
             <p className="max-w-prose" style={PARAGRAFO}>
-              {formatPercent(Math.max(0, 100 - pctApurado))} do eleitorado de {uf ?? "este estado"}{" "}
-              ainda não foi apurado, e o voto dele entra na projeção — que é não oficial — por
-              estimativa
+              {formatPercent(Math.max(0, 100 - pctApurado))} do eleitorado de {uf ?? t.este} ainda
+              não foi apurado, e o voto dele entra na projeção — que é não oficial — por estimativa
               {projecao.zonas_total > projecao.zonas_apuradas
                 ? ` — imputado nas ${projecao.zonas_total - projecao.zonas_apuradas} zonas sem boletim`
                 : ""}

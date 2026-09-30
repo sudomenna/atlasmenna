@@ -32,6 +32,20 @@
  * Objeto v1 (sem `conferencia`, RF-276): só `divergencias` do v1. Com
  * divergência, elas aparecem; sem, o texto é o neutro — nunca o "batem" antigo.
  *
+ * ## Modo resumo (spec 027, design § 6) — "não comparado"
+ *
+ * Quando o cargo é lido pelo resumo da UF, e não zona a zona, "as zonas que
+ * lemos" SÃO o agregado: comparar o eleitorado ou os votos válidos delas com o
+ * do agregado daria igual sempre, e a frase seria falsa pela forma. O produtor
+ * não faz essas duas comparações e as lista em `conferencia.nao_comparou`.
+ * Cada item vira uma linha "não comparado", com o motivo — nunca entra no
+ * "conferimos", que continua saindo SÓ de `comparou`. A ausência em
+ * `comparou` não basta para escrever "não comparado": ela também acontece
+ * sem agregado nenhum, e aí o texto certo é o de "sem boletim".
+ *
+ * Textos de território (spec 027, RF-284): "do estado" vira "do Distrito
+ * Federal" na Câmara Legislativa, pelo `territorio`.
+ *
  * Server Component, zero JS.
  */
 
@@ -41,6 +55,7 @@ import type {
   DeputadoConferencia as ConferenciaDados,
 } from "@/lib/blob/deputado-uf";
 import { formatPercent, formatTimeHMS, formatVotes } from "@/lib/utils/format";
+import { TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
 
 /** Uma divergência como chega — v1 (`o_que` livre) ou v2 (conjunto fechado, com `diferenca_pct`). */
 export interface DivergenciaParaTela {
@@ -62,6 +77,8 @@ export interface DeputadoConferenciaProps {
   siglaPorCod?: ReadonlyMap<string, string>;
   /** `sqcand` → nome, para a divergência de eleitos nomear pessoas, e não números. */
   nomePorSqcand?: ReadonlyMap<number, string>;
+  /** Spec 027 — "do estado" · "do Distrito Federal". Ausente ⇒ o termo dos estados. */
+  territorio?: TermoDoTerritorio;
   titleId: string;
 }
 
@@ -210,19 +227,26 @@ function descricaoEstrutural(d: DivergenciaParaTela): string {
 function fraseDoBoletim(
   divergencias: readonly DivergenciaParaTela[],
   totalizacaoFinal: boolean,
+  t: TermoDoTerritorio,
 ): string {
   const estruturais = divergencias.filter((d) => CHAVES_ESTRUTURAIS.has(d.o_que));
   const doBoletim = totalizacaoFinal
-    ? "Este boletim já é a totalização final do estado."
-    : "Este boletim ainda não é a totalização final do estado.";
+    ? `Este boletim já é a totalização final ${t.doTerritorio}.`
+    : `Este boletim ainda não é a totalização final ${t.doTerritorio}.`;
   if (estruturais.length === 0) {
     return totalizacaoFinal
       ? doBoletim
-      : "Este boletim ainda não é a totalização final do estado — até lá, pequenas diferenças são esperadas e não indicam erro.";
+      : `Este boletim ainda não é a totalização final ${t.doTerritorio} — até lá, pequenas diferenças são esperadas e não indicam erro.`;
   }
   const partes = listarEmTexto(estruturais.map(descricaoEstrutural));
-  return `${doBoletim} Mas ${partes}: essa diferença não vem do andamento da apuração e não some sozinha — é estrutural, e o caso típico é uma zona eleitoral do estado que não buscamos no TSE, cujo eleitorado e cujos votos ficam fora da nossa soma.`;
+  return `${doBoletim} Mas ${partes}: essa diferença não vem do andamento da apuração e não some sozinha — é estrutural, e o caso típico é uma zona eleitoral ${t.doTerritorio} que não buscamos no TSE, cujo eleitorado e cujos votos ficam fora da nossa soma.`;
 }
+
+/** O que cada comparação NÃO feita em modo resumo deixou de conferir (design § 6). */
+const O_QUE_NAO_COMPAROU: Readonly<Record<"eleitorado" | "votos_validos", string>> = {
+  eleitorado: "Eleitorado das zonas contra o do boletim",
+  votos_validos: "Votos válidos somados das zonas contra o total do TSE",
+};
 
 const TEXTO: React.CSSProperties = {
   margin: 0,
@@ -237,12 +261,19 @@ export function DeputadoConferencia({
   totalizacaoFinal,
   siglaPorCod,
   nomePorSqcand,
+  territorio = TERMO_ESTADO,
   titleId,
 }: DeputadoConferenciaProps) {
+  const t = territorio;
   const divergencias: readonly DivergenciaParaTela[] = conferencia
     ? conferencia.divergencias
     : divergenciasV1;
   const comparou = conferencia?.comparou ?? [];
+  // Só as comparações conhecidas: um item fora do contrato já foi descartado
+  // pelo leitor do Blob; aqui a guarda é só de tipo.
+  const naoComparou = (conferencia?.nao_comparou ?? []).filter(
+    (n) => n.comparacao in O_QUE_NAO_COMPAROU,
+  );
   const boletim = conferencia?.boletim_dado_ts ?? null;
   const horaBoletim = boletim ? formatTimeHMS(boletim) : null;
   const doBoletim = horaBoletim ? `o boletim do TSE das ${horaBoletim}` : "o boletim do TSE";
@@ -269,10 +300,9 @@ export function DeputadoConferencia({
     frase = `Conferimos com ${doBoletim}: ${listarEmTexto(comparou.map((c) => O_QUE_BATEU[c]))}.`;
   } else if (comparou.length > 0) {
     // Comparou alguma coisa, mas não a conta de cadeiras — diz só o que comparou.
-    frase = `Com ${doBoletim} conferimos só isto: ${listarEmTexto(comparou.map((c) => O_QUE_BATEU[c]))}. A conta de cadeiras ainda não pôde ser comparada — o TSE só publica o quociente depois da primeira totalização do estado —, então não dizemos que ela bate.`;
+    frase = `Com ${doBoletim} conferimos só isto: ${listarEmTexto(comparou.map((c) => O_QUE_BATEU[c]))}. A conta de cadeiras ainda não pôde ser comparada — o TSE só publica o quociente depois da primeira totalização ${t.doTerritorio} —, então não dizemos que ela bate.`;
   } else {
-    frase =
-      "Ainda não há boletim do TSE com que comparar a nossa conta neste estado, então não dizemos que os números batem. A comparação aparece aqui quando o TSE publicar o quociente eleitoral da primeira totalização.";
+    frase = `Ainda não há boletim do TSE com que comparar a nossa conta ${t.neste}, então não dizemos que os números batem. A comparação aparece aqui quando o TSE publicar o quociente eleitoral da primeira totalização.`;
   }
 
   return (
@@ -284,8 +314,35 @@ export function DeputadoConferencia({
           data-estado={conferencia?.estado ?? "v1"}
           style={TEXTO}
         >
-          {frase} {fraseDoBoletim(divergencias, totalizacaoFinal)}
+          {frase} {fraseDoBoletim(divergencias, totalizacaoFinal, t)}
         </p>
+
+        {/* Spec 027 (design § 6) — o que o modo resumo NÃO comparou, com o
+            motivo. Nunca somado ao "conferimos" acima. */}
+        {naoComparou.length > 0 ? (
+          <ul
+            data-testid="uf-nao-comparado"
+            style={{
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+              display: "grid",
+              gap: "var(--space-2)",
+            }}
+          >
+            {naoComparou.map((n) => (
+              <li
+                key={n.comparacao}
+                data-comparacao={n.comparacao}
+                style={{ ...TEXTO, fontSize: "var(--text-xs)", color: "var(--text-muted)" }}
+              >
+                <strong>{O_QUE_NAO_COMPAROU[n.comparacao]}</strong>: não comparado — este cargo é
+                lido pelo resumo que o TSE publica {t.porUnidade} nesta noite, e não zona a zona.
+                Comparar o resumo com ele mesmo daria igual sempre, então não dizemos que bate.
+              </li>
+            ))}
+          </ul>
+        ) : null}
 
         {divergencias.length > 0 ? (
           <ul

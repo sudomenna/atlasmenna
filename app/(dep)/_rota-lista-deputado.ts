@@ -32,7 +32,8 @@
 
 import { NextResponse } from "next/server";
 
-import { type CargoDeputado, ufTemCasa } from "@/lib/utils/casa-legislativa";
+import type { CargoProporcional } from "@/lib/config/cargos";
+import { ufTemCasa } from "@/lib/utils/casa-legislativa";
 
 import { lerListaDaCasa } from "./_dados-da-casa";
 
@@ -45,7 +46,7 @@ function erro(status: 404 | 502, corpo: Record<string, unknown>): Response {
 
 /** A resposta de `GET /uf/<SIGLA>/<slug do cargo>/lista`, a partir da sigla CRUA dos `params`. */
 export async function responderListaDeputado(
-  cargo: CargoDeputado,
+  cargo: CargoProporcional,
   siglaBruta: string,
 ): Promise<Response> {
   const sigla = siglaBruta.toUpperCase();

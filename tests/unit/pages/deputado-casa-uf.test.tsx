@@ -219,8 +219,11 @@ describe("rota e metadata por cargo (casca fina)", () => {
     expect(fed.title).toBe("Deputado Federal SP — Apuração 2026 | AtlasMenna");
     expect(fed.alternates?.canonical).toBe("/uf/SP/deputado-federal");
 
+    // Spec 027 (RF-284, frente U-b): nas assembleias o título nomeia a CASA.
     const est = metadataDaPaginaUf(7, "SP");
-    expect(est.title).toBe("Deputado Estadual SP — Apuração 2026 | AtlasMenna");
+    expect(est.title).toBe(
+      "Deputado Estadual SP — Assembleia Legislativa de São Paulo · Apuração 2026 | AtlasMenna",
+    );
     expect(est.alternates?.canonical).toBe("/uf/SP/deputado-estadual");
 
     const dis = metadataDaPaginaUf(8, "DF");

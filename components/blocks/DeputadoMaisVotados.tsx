@@ -27,7 +27,8 @@
 import { DestinoDeputadoTexto, MarcaDeputado } from "@/components/atoms/badges/MarcaDeputado";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { EdgeDeputadoDestaque } from "@/lib/blob/deputado-uf";
-import { type CargoDeputado, rotuloCargo } from "@/lib/utils/casa-legislativa";
+import type { CargoProporcional } from "@/lib/config/cargos";
+import { rotuloCargo } from "@/lib/utils/casa-legislativa";
 import { marcasDosBits } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -43,7 +44,14 @@ export interface LinhaMaisVotados extends EdgeDeputadoDestaque {
 
 export interface DeputadoMaisVotadosProps {
   /** O cargo da tela (6 · 7 · 8) — dá o rótulo do kicker. Obrigatório, sem default. */
-  cargo: CargoDeputado;
+  cargo: CargoProporcional;
+  /**
+   * Spec 027 — o rótulo do kicker por cima do do cargo. A capa das
+   * assembleias une o estadual e o distrital numa lista só, e o kicker diz
+   * isso ("Deputados estaduais e distritais") em vez de chamar um distrital de
+   * "Deputado Estadual".
+   */
+  rotulo?: string;
   escopo: "uf" | "pais";
   /** Obrigatório com `escopo="uf"`: dá nome ao painel e à base do %. */
   uf?: string;
@@ -54,6 +62,7 @@ export interface DeputadoMaisVotadosProps {
 
 export function DeputadoMaisVotados({
   cargo,
+  rotulo: rotuloDado,
   escopo,
   uf,
   linhas,
@@ -62,7 +71,7 @@ export function DeputadoMaisVotados({
   if (!linhas || linhas.length === 0) return null;
   const noPais = escopo === "pais";
   const titulo = noPais ? "Mais votados do país" : `Mais votados em ${uf ?? ""}`;
-  const rotulo = rotuloCargo(cargo);
+  const rotulo = rotuloDado ?? rotuloCargo(cargo);
 
   return (
     <Panel
@@ -73,7 +82,7 @@ export function DeputadoMaisVotados({
       <div className="flex flex-col" style={{ gap: "var(--space-2)" }}>
         <p className={styles.legendaColunas}>
           {noPais
-            ? "Os 10 candidatos com mais votos apurados no país, de todas as agremiações. O percentual de cada um é sobre os votos válidos do estado dele — é lá que a cadeira é disputada."
+            ? `Os 10 candidatos com mais votos apurados no país, de todas as agremiações. O percentual de cada um é sobre os votos válidos ${cargo === 6 ? "do estado dele" : "da unidade dele — o estado, ou o Distrito Federal"} — é lá que a cadeira é disputada.`
             : `Os 10 candidatos com mais votos apurados em ${uf ?? ""}, de todas as agremiações. O percentual é sobre os votos válidos de ${uf ?? ""}.`}
         </p>
         {/* Nome acessível = o título do painel ("Mais votados em SP"): o

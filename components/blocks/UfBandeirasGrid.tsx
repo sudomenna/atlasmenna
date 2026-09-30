@@ -87,6 +87,12 @@ export interface UfBandeirasGridProps {
    * Sigla ausente daqui ⇒ o destino padrão.
    */
   hrefPorUf?: Readonly<Record<string, string>>;
+  /**
+   * Spec 027 — o nome acessível da grade, por cima do padrão "Corridas de
+   * {cargo} por unidade federativa". A grade das 27 casas mistura dois cargos
+   * (26 Assembleias e a Câmara Legislativa do DF) e precisa dizer isso.
+   */
+  ariaLabel?: string;
   className?: string;
 }
 
@@ -105,6 +111,7 @@ export function UfBandeirasGrid({
   resumos,
   ufs: siglas,
   hrefPorUf,
+  ariaLabel,
   className,
 }: UfBandeirasGridProps) {
   const filtro = siglas ? new Set(siglas.map((s) => s.toUpperCase())) : null;
@@ -113,7 +120,7 @@ export function UfBandeirasGrid({
 
   return (
     <nav
-      aria-label={`Corridas de ${info.label} por unidade federativa`}
+      aria-label={ariaLabel ?? `Corridas de ${info.label} por unidade federativa`}
       className={className}
       data-testid="uf-bandeiras-grid"
     >

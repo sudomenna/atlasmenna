@@ -14,8 +14,9 @@
  *      (ADR-0034 D21, ADR-0065 D1) — com UMA exceção declarada, a do
  *      `content-visibility: auto` nas agremiações longe da tela (decisão do
  *      dono, 30/09; ver o CSS Module);
- *   3. 61 em diante ......... fora do documento; buscadas UMA vez por aba e por
- *      UF na rota `GET /uf/<UF>/deputado-federal/lista`, só no clique.
+ *   3. 61 em diante ......... fora do documento; buscadas UMA vez por aba, por
+ *      cargo e por UF na rota `GET /uf/<UF>/<slug do cargo>/lista` (a
+ *      {@link DeputadoListaAgremiacaoProps.rotaLista}), só no clique.
  *
  * ## Por que cliente, e por que tuplas
  *
@@ -82,6 +83,15 @@ export interface DeputadoListaAgremiacaoProps {
   totalCandidatos?: number;
   /** `detail.lista.restantes > 0` — a UF tem lista 61+ publicada. */
   haListaRestante: boolean;
+  /**
+   * Spec 027 (design § 7.3) — o endereço da lista 61+ DESTA casa nesta UF
+   * (`/uf/SP/deputado-federal/lista`, `/uf/SP/deputado-estadual/lista`), ou
+   * `null` quando a casa não tem rota de lista (a Câmara Legislativa do DF: 24
+   * cadeiras, nenhuma agremiação passa de 60 candidaturas) — e então nunca há
+   * botão "mostrar todos". Montado pelo servidor (`rotaListaDaCasa`); este
+   * componente não conhece cargo.
+   */
+  rotaLista: string | null;
   /** Linha de corte da parcial (RF-272). `null` sem corte ou com totalização final. */
   corte?: CorteCompacto | null;
   /** Para derivar as marcas das linhas que chegam pela rota 61+ — mesma precedência. */
@@ -96,14 +106,21 @@ export interface DeputadoListaAgremiacaoProps {
 }
 
 // ---------------------------------------------------------------------------
-// A busca da faixa 3 — uma vez por aba, por UF (RF-260)
+// A busca da faixa 3 — uma vez por aba, por casa e por UF (RF-260, spec 027)
 // ---------------------------------------------------------------------------
 
 /**
- * Cache em memória por UF. Guarda a PROMESSA, para que duas agremiações da
- * mesma UF clicadas em sequência (ou um segundo clique durante a busca)
- * dividam uma requisição só. Falha sai do cache — "tentar de novo" busca de
- * verdade.
+ * Cache em memória por ROTA — isto é, por cargo e por UF: a rota é
+ * `/uf/<UF>/<slug do cargo>/lista`. Guarda a PROMESSA, para que duas
+ * agremiações da mesma casa clicadas em sequência (ou um segundo clique durante
+ * a busca) dividam uma requisição só. Falha sai do cache — "tentar de novo"
+ * busca de verdade.
+ *
+ * 🔴 Spec 027: até 30/09 a chave era só a UF, e a URL tinha
+ * `deputado-federal` fixo. Com a Assembleia Legislativa de SP ao lado da
+ * bancada de SP na Câmara, na mesma aba, a chave só por UF faria a segunda
+ * lista aberta ser a PRIMEIRA — os candidatos a deputado federal dentro da
+ * página da Assembleia, com cara de dado certo.
  */
 const cacheListas = new Map<string, Promise<DeputadoUfLista>>();
 
@@ -123,20 +140,19 @@ function ehLista(corpo: unknown, uf: string): corpo is DeputadoUfLista {
   );
 }
 
-function buscarLista(uf: string): Promise<DeputadoUfLista> {
-  const chave = uf.toUpperCase();
-  const emCache = cacheListas.get(chave);
+function buscarLista(rota: string, uf: string): Promise<DeputadoUfLista> {
+  const emCache = cacheListas.get(rota);
   if (emCache) return emCache;
   const promessa = (async () => {
-    const resposta = await fetch(`/uf/${chave}/deputado-federal/lista`);
+    const resposta = await fetch(rota);
     if (!resposta.ok) throw new Error(`lista 61+: HTTP ${resposta.status}`);
     const corpo: unknown = await resposta.json();
-    if (!ehLista(corpo, chave)) throw new Error("lista 61+: corpo fora do contrato");
+    if (!ehLista(corpo, uf)) throw new Error("lista 61+: corpo fora do contrato");
     return corpo;
   })();
-  cacheListas.set(chave, promessa);
+  cacheListas.set(rota, promessa);
   promessa.catch(() => {
-    if (cacheListas.get(chave) === promessa) cacheListas.delete(chave);
+    if (cacheListas.get(rota) === promessa) cacheListas.delete(rota);
   });
   return promessa;
 }
@@ -166,6 +182,7 @@ export function DeputadoListaAgremiacao({
   linhas: linhasIniciais,
   totalCandidatos,
   haListaRestante,
+  rotaLista,
   corte,
   totalizacaoFinal,
   projecaoVisivel,
@@ -204,7 +221,10 @@ export function DeputadoListaAgremiacao({
 
   const naFaixa2 = linhas.filter((l) => l[L.RANK] > FAIXA_VISIVEL).length;
   const restantes =
-    haListaRestante && typeof totalCandidatos === "number" && busca.fase !== "pronta"
+    rotaLista !== null &&
+    haListaRestante &&
+    typeof totalCandidatos === "number" &&
+    busca.fase !== "pronta"
       ? Math.max(0, totalCandidatos - linhas.length)
       : 0;
 
@@ -212,12 +232,12 @@ export function DeputadoListaAgremiacao({
     // Durante a busca o botão fica `aria-disabled`, e não `disabled`:
     // `disabled` tira o foco do botão que o tem e o joga no `<body>`. O
     // atributo não bloqueia nada sozinho — este `return` é que ignora o clique.
-    if (busca.fase === "buscando") return;
+    if (busca.fase === "buscando" || rotaLista === null) return;
     setAberta(true);
     setBusca({ fase: "buscando" });
     try {
       const [lista, exibicao] = await Promise.all([
-        buscarLista(uf),
+        buscarLista(rotaLista, uf),
         funcoesDeExibicao(mostrarPartido),
       ]);
       const daAgremiacao = lista.agremiacoes.find((a) => a.cod === cod)?.candidatos ?? [];

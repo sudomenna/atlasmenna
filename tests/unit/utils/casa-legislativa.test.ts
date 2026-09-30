@@ -21,7 +21,7 @@ import {
   rotuloCargo,
   slugDoCargo,
   termoDoTerritorio,
-  ufsDaCasa,
+  ufsDoCargo,
   ufTemCasa,
 } from "@/lib/utils/casa-legislativa";
 
@@ -83,13 +83,13 @@ describe("RF-284 — nomeDaCasa, as 27 UFs", () => {
   });
 });
 
-describe("ufsDaCasa — em que UFs cada cargo tem corrida", () => {
+describe("ufsDoCargo — em que UFs cada cargo tem corrida", () => {
   it("federal: as 27; estadual: as 26 sem o DF; distrital: só o DF", () => {
-    expect([...ufsDaCasa(6)].sort()).toEqual(TODAS_27);
-    expect(ufsDaCasa(7)).toHaveLength(26);
-    expect(ufsDaCasa(7)).not.toContain("DF");
-    expect([...ufsDaCasa(7)].sort()).toEqual(Object.keys(ASSEMBLEIAS).sort());
-    expect(ufsDaCasa(8)).toEqual(["DF"]);
+    expect([...ufsDoCargo(6)].sort()).toEqual(TODAS_27);
+    expect(ufsDoCargo(7)).toHaveLength(26);
+    expect(ufsDoCargo(7)).not.toContain("DF");
+    expect([...ufsDoCargo(7)].sort()).toEqual(Object.keys(ASSEMBLEIAS).sort());
+    expect(ufsDoCargo(8)).toEqual(["DF"]);
   });
 
   it("ufTemCasa normaliza a caixa e recusa sigla com espaço", () => {
@@ -121,6 +121,11 @@ describe("rótulo, slug, território", () => {
       este: "o Distrito Federal",
       deste: "do Distrito Federal",
       doTerritorio: "do Distrito Federal",
+      o: "o Distrito Federal",
+      num: "no Distrito Federal",
+      neste: "no Distrito Federal",
+      emCada: "no Distrito Federal",
+      porUnidade: "para o Distrito Federal",
     });
     for (const uf of Object.keys(ASSEMBLEIAS)) {
       expect(termoDoTerritorio(uf).deste, uf).toBe("deste estado");

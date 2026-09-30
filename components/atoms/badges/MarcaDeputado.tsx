@@ -23,6 +23,8 @@ import {
   textoDaMarca,
 } from "@/lib/utils/deputado-marcas";
 
+import { TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
+
 import styles from "./MarcaDeputado.module.css";
 
 const CLASSE: Record<Marca["tipo"], string | undefined> = {
@@ -84,6 +86,8 @@ export interface LegendaMarcasProps {
   semPercentual?: boolean;
   /** Sigla da UF, para a base do percentual (constituição § 8). */
   uf: string;
+  /** Spec 027 — "o estado" · "o Distrito Federal". Ausente ⇒ o termo dos estados. */
+  territorio?: TermoDoTerritorio;
 }
 
 /**
@@ -97,6 +101,7 @@ export function LegendaMarcas({
   temDestino = false,
   semPercentual = false,
   uf,
+  territorio = TERMO_ESTADO,
 }: LegendaMarcasProps) {
   return (
     <ul className={styles.legenda} data-testid="dep-legenda-marcas">
@@ -108,9 +113,9 @@ export function LegendaMarcas({
       )}
       {totalizacaoFinal ? (
         <li>
-          <MarcaDeputado marca={{ tipo: "tse", rotulo: "eleito" }} /> o TSE totalizou o estado e
-          publicou este candidato na lista dos eleitos. É o resultado oficial, e por isso substitui
-          as marcas da nossa conta em todas as linhas.
+          <MarcaDeputado marca={{ tipo: "tse", rotulo: "eleito" }} /> o TSE totalizou {territorio.o}{" "}
+          e publicou este candidato na lista dos eleitos. É o resultado oficial, e por isso
+          substitui as marcas da nossa conta em todas as linhas.
         </li>
       ) : (
         <>
@@ -124,8 +129,8 @@ export function LegendaMarcas({
           {projecaoVisivel ? (
             <li>
               <MarcaDeputado marca={{ tipo: "projecao", via: "qp", apertada: false }} /> quem
-              ocuparia a cadeira na nossa estimativa do resultado final do estado. Não é resultado
-              do TSE; "apertada" marca a vaga que ainda pode mudar de mão.
+              ocuparia a cadeira na nossa estimativa do resultado final {territorio.doTerritorio}.
+              Não é resultado do TSE; "apertada" marca a vaga que ainda pode mudar de mão.
             </li>
           ) : null}
         </>

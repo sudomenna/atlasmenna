@@ -104,16 +104,18 @@ import {
   ordenarAgremiacoes,
   sanearDeputadoUfDetail,
 } from "@/lib/blob/deputado-uf";
+import type { CargoProporcional } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
 import type { EdgeDeputadoUfRow } from "@/lib/edge-config/types";
 import {
-  type CargoDeputado,
   localDaDisputa,
+  nomeDaCasa,
+  rotaListaDaCasa,
   rotuloCargo,
   slugDoCargo,
   type TermoDoTerritorio,
   termoDoTerritorio,
-  ufsDaCasa,
+  ufsDoCargo,
   ufTemCasa,
 } from "@/lib/utils/casa-legislativa";
 import {
@@ -135,17 +137,33 @@ import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import { lerCandidaturasAguardando, lerDadosDaCasa } from "./_dados-da-casa";
 
 /** `generateStaticParams` do cargo: uma rota por UF que tem a casa (27 · 26 · só o DF). */
-export function paramsEstaticosDaCasa(cargo: CargoDeputado): Array<{ sigla: string }> {
-  return ufsDaCasa(cargo).map((sigla) => ({ sigla }));
+export function paramsEstaticosDaCasa(cargo: CargoProporcional): Array<{ sigla: string }> {
+  return ufsDoCargo(cargo).map((sigla) => ({ sigla }));
 }
 
-/** `generateMetadata` do cargo — puro, sem leitura. */
-export function metadataDaPaginaUf(cargo: CargoDeputado, siglaBruta: string): Metadata {
+/**
+ * `generateMetadata` do cargo — puro, sem leitura.
+ *
+ * Spec 027 (RF-284): nas assembleias o `<title>` e a descrição nomeiam a CASA
+ * ("Assembleia Legislativa de São Paulo", "Câmara Legislativa do Distrito
+ * Federal"). O federal fica como sempre foi — a casa dele é uma só para o
+ * país, e o título fala da bancada da UF.
+ *
+ * Sigla fora das UFs da casa (a página vai redirecionar ou dar 404): metadado
+ * vazio, em vez de montar um nome de casa que não existe.
+ */
+export function metadataDaPaginaUf(cargo: CargoProporcional, siglaBruta: string): Metadata {
   const sigla = siglaBruta.toUpperCase();
+  if (!ufTemCasa(cargo, sigla)) return {};
   const rotulo = rotuloCargo(cargo);
   const url = `/uf/${sigla}/${slugDoCargo(cargo)}`;
-  const title = `${rotulo} ${sigla} — Apuração 2026 | AtlasMenna`;
-  const description = `Apuração da eleição de ${rotulo} em ${sigla} (2026): cadeiras por partido e federação com os votos já contados, votos de legenda e eleitos, em tempo real.`;
+  const casa = cargo === 6 ? null : nomeDaCasa(cargo, sigla);
+  const title = casa
+    ? `${rotulo} ${sigla} — ${casa} · Apuração 2026 | AtlasMenna`
+    : `${rotulo} ${sigla} — Apuração 2026 | AtlasMenna`;
+  const description = casa
+    ? `Apuração da eleição de ${rotulo} em ${sigla} (2026) para a ${casa}: cadeiras por partido e federação com os votos já contados, votos de legenda e eleitos na parcial.`
+    : `Apuração da eleição de ${rotulo} em ${sigla} (2026): cadeiras por partido e federação com os votos já contados, votos de legenda e eleitos, em tempo real.`;
   return {
     alternates: { canonical: url },
     title,
@@ -265,7 +283,7 @@ function corteCompacto(agr: DeputadoUfAgremiacao, totalizacaoFinal: boolean): Co
  * `renderToStaticMarkup`, que não aceita componente assíncrono.
  */
 export async function renderPaginaUfDeputado(
-  cargo: CargoDeputado,
+  cargo: CargoProporcional,
   siglaBruta: string,
 ): Promise<React.ReactElement> {
   const sigla = siglaBruta.toUpperCase();
@@ -390,7 +408,9 @@ export async function renderPaginaUfDeputado(
   // ele desligado a projeção não existe na tela fora da metodologia (RF-265),
   // nem como aviso de estado.
   const fraseProjecao =
-    detail && interruptor.ligada ? fraseEstadoProjecao(detail.projecao, detail.pct_apurado) : null;
+    detail && interruptor.ligada
+      ? fraseEstadoProjecao(detail.projecao, detail.pct_apurado, territorio)
+      : null;
 
   // ── Os relógios desta tela — ADR-0038 D1 ──
   //
@@ -596,6 +616,7 @@ export async function renderPaginaUfDeputado(
             {/* Uma legenda só para o painel inteiro (spec 026 § Telas item 5). */}
             <LegendaMarcas
               uf={sigla}
+              territorio={territorio}
               projecaoVisivel={visivel}
               totalizacaoFinal={ctx.totalizacaoFinal}
               temDestino={temDestino}
@@ -777,6 +798,7 @@ export async function renderPaginaUfDeputado(
                         linhas={linhas}
                         totalCandidatos={agr.total_candidatos}
                         haListaRestante={(detail.lista?.restantes ?? 0) > 0}
+                        rotaLista={rotaListaDaCasa(cargo, sigla)}
                         corte={corte}
                         totalizacaoFinal={ctx.totalizacaoFinal}
                         projecaoVisivel={visivel}
@@ -829,7 +851,12 @@ export async function renderPaginaUfDeputado(
           não tem `regras`, e o RF-276 manda o bloco não aparecer (em vez de
           dizer "aguardando" sobre um dado que o objeto nunca carregaria). */}
       {detail && v2 ? (
-        <DeputadoRegras uf={sigla} regras={detail.regras} titleId="regras-heading" />
+        <DeputadoRegras
+          uf={sigla}
+          regras={detail.regras}
+          territorio={territorio}
+          titleId="regras-heading"
+        />
       ) : null}
 
       {/* Seção 3 — conferência contra o TSE (RF-269). Constituição § 8:
@@ -843,6 +870,7 @@ export async function renderPaginaUfDeputado(
           totalizacaoFinal={detail.totalizacao_final}
           siglaPorCod={new Map(detail.agremiacoes.map((a) => [a.cod, a.sigla] as const))}
           nomePorSqcand={nomePorSqcand}
+          territorio={territorio}
           titleId="conferencia-heading"
         />
       ) : null}
@@ -868,6 +896,10 @@ export async function renderPaginaUfDeputado(
         interruptorOrigem={interruptor.origem}
         movendo={movendo}
         temFaixaProjetada={agremiacoes.some((a) => a.cadeiras_projetadas_ci95 !== undefined)}
+        territorio={territorio}
+        // Spec 027 (RF-285) — pelo objeto, não pelo cargo: em modo resumo o
+        // ciclo não calcula projeção, e o bloco não promete uma.
+        modoResumo={detail?.granularidade === "uf"}
       />
 
       <Footer />

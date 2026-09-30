@@ -93,6 +93,7 @@ function props(
     linhas,
     totalCandidatos: a.total_candidatos,
     haListaRestante: (d.lista?.restantes ?? 0) > 0,
+    rotaLista: `/uf/${uf}/deputado-federal/lista`,
     corte:
       a.corte && !d.totalizacao_final
         ? {
@@ -350,7 +351,7 @@ describe("DeputadoListaAgremiacao — cliques (RF-260)", () => {
       root.render(
         <>
           {listas.map((p) => (
-            <DeputadoListaAgremiacao key={p.cod} {...p} />
+            <DeputadoListaAgremiacao key={`${p.rotaLista}:${p.cod}`} {...p} />
           ))}
         </>,
       );
@@ -455,6 +456,46 @@ describe("DeputadoListaAgremiacao — cliques (RF-260)", () => {
     expect(lista("13").querySelector("[role='status']")?.textContent).toBe(
       "Nenhum candidato a mais de PT/PC do B/PV para mostrar.",
     );
+  });
+
+  it("🔴 spec 027 (M5) — SP federal e depois SP estadual, na mesma aba: DUAS requisições, cada uma na rota da sua casa", async () => {
+    // O cache em memória é por rota (cargo + UF), nunca só por UF: com a chave
+    // só-UF, a segunda lista aberta seria a PRIMEIRA — os candidatos a
+    // deputado federal dentro da página da Assembleia Legislativa.
+    const fetchSpy = vi.fn(async (_url: string) => resposta(LISTA_SP));
+    vi.stubGlobal("fetch", fetchSpy);
+    await montar(
+      props("SP", "22"),
+      props("SP", "22", true, { rotaLista: "/uf/SP/deputado-estadual/lista" }),
+    );
+    const [federal, estadual] = [
+      ...container.querySelectorAll<HTMLElement>("[data-testid='dep-lista-agremiacao']"),
+    ];
+
+    await act(async () =>
+      federal?.querySelector<HTMLButtonElement>("[data-testid='dep-mostrar-todos']")?.click(),
+    );
+    await esperar(() => linhasDoc(federal as HTMLElement).length === 71);
+    await act(async () =>
+      estadual?.querySelector<HTMLButtonElement>("[data-testid='dep-mostrar-todos']")?.click(),
+    );
+    await esperar(() => linhasDoc(estadual as HTMLElement).length === 71);
+
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls.map((c) => c[0])).toEqual([
+      "/uf/SP/deputado-federal/lista",
+      "/uf/SP/deputado-estadual/lista",
+    ]);
+  });
+
+  it("spec 027 — casa sem rota de lista (`rotaLista: null`, o distrital): nunca há 'mostrar todos'", async () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    await montar(props("SP", "22", true, { rotaLista: null }));
+    expect(lista().querySelector("[data-testid='dep-mostrar-todos']")).toBeNull();
+    // A faixa 21–60 continua: "ver mais" não depende da rota.
+    expect(lista().querySelector("[data-testid='dep-ver-mais']")).not.toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("🔴 busca que NÃO acrescenta linha: o foco vai para a lista, nunca para o <body>", async () => {

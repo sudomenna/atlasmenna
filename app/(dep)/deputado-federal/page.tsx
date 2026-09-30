@@ -89,11 +89,11 @@ import type { Metadata } from "next";
 
 import { DadoParadoBanner } from "@/components/atoms/banners/DadoParadoBanner";
 import { FasePreEleicaoBanner } from "@/components/atoms/banners/FasePreEleicaoBanner";
-import { VoteBar, type VoteBarSegment } from "@/components/atoms/bars/VoteBar";
 import { Figure } from "@/components/atoms/data/Figure";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import { Camara2027Panel } from "@/components/blocks/Camara2027Panel";
 import { CamaraHemiciclo } from "@/components/blocks/CamaraHemiciclo";
+import { DeputadoBancadaPanel } from "@/components/blocks/DeputadoBancadaPanel";
 import { DeputadoMaisVotados } from "@/components/blocks/DeputadoMaisVotados";
 import { DeputadoMetodologia } from "@/components/blocks/DeputadoMetodologia";
 import { DeputadoPuxadores } from "@/components/blocks/DeputadoPuxadores";
@@ -112,11 +112,9 @@ import {
   simulacaoLigada,
 } from "@/lib/dev/simulacao";
 import { readDeputadoProjection } from "@/lib/edge-config/reader";
-import type { EdgeAgremiacaoBancada, EdgePayloadDeputado } from "@/lib/edge-config/types";
+import type { EdgePayloadDeputado } from "@/lib/edge-config/types";
 import { lerEtiquetas } from "@/lib/etiquetas/leitor";
 import { ordenarBancada } from "@/lib/utils/bancada";
-import { formatPercent, formatVotes } from "@/lib/utils/format";
-import { colorForParty, textForParty } from "@/lib/utils/party-color";
 import depFixture from "@/tests/fixtures/edge-config/dep-current.json" with { type: "json" };
 
 import { lerInterruptorDaTela } from "../_interruptor";
@@ -170,132 +168,14 @@ export const metadata: Metadata = {
  * regra divergiriam.
  */
 
-/**
- * "PT, PCdoB e PV" — RF-122: a federação tem identidade própria, **e** os
- * partidos que a compõem precisam estar legíveis. Vazio quando é partido
- * isolado.
+/*
+ * `listarComponentes`, `corDaAgremiacao`, `corIdentidadeDaAgremiacao`,
+ * `segmentosDaBancada` e `intervaloDeCadeiras` moraram aqui até a spec 027 e
+ * foram, com o painel "Quem fica com as cadeiras", para
+ * `components/blocks/DeputadoBancadaPanel.tsx` — com a história de cada
+ * decisão (cor de identidade × cor de preenchimento, faixa `[n, n]`, segmento
+ * "aguardando").
  */
-function listarComponentes(componentes: readonly string[]): string {
-  if (componentes.length === 0) return "";
-  if (componentes.length === 1) return componentes[0] as string;
-  return `${componentes.slice(0, -1).join(", ")} e ${componentes[componentes.length - 1]}`;
-}
-
-/**
- * Cor da agremiação — ADR-0024: token por sigla, **nunca** a cor oficial do
- * partido (constituição § 2, ΔE76 ≥ 10 garantido pelo gerador).
- *
- * **Um caminho só, sem ramo por `tipo`.** O ADR-0024 linha 41 manda a federação
- * usar a cor do partido-líder, e o payload passou a declarar quem é ele
- * (`sigla_lider`, design 017 § D5/D6, 2026-09-12). Em partido isolado o campo
- * vale a própria `sigla` — então perguntar `tipo` aqui seria reintroduzir uma
- * bifurcação que o contrato já eliminou, e ela é justamente onde o caso
- * "federação" voltaria a divergir sem ninguém notar.
- *
- * Até 12/09 federação caía em `--party-outros` porque o líder não existia no
- * payload. O fallback **continua**, agora só para o que ele sempre quis cobrir:
- * sigla sem token em `app/tokens-party.css` (partido novo, envelope degradado,
- * campo ausente) resolve para `--party-outros` dentro de `colorForParty`. Sigla
- * nova nunca vira cor ausente nem erro visual.
- */
-function corDaAgremiacao(agr: EdgeAgremiacaoBancada): string {
-  return colorForParty(agr.sigla_lider);
-}
-
-/**
- * Cor da agremiação como **marcador de identidade** — o ponto de 10×10 da
- * lista, a bolinha de cadeira do hemiciclo. A cor aqui diz *quem*, não
- * *quanto*.
- *
- * 🔴 **Não é a mesma função acima, e a diferença é um piso de contraste.** A
- * tabela de remédios do RNF-035 (`docs/nfr/accessibility.md`) separa os dois
- * casos:
- *
- *   - **marcador de identidade** (ponto, quadradinho, linha de gráfico) →
- *     `textForParty`. O elemento não tem extensão a perder; o que ele precisa é
- *     ser distinguível, e o piso de 3:1 do WCAG SC 1.4.11 vale.
- *   - **preenchimento com extensão** (segmento do `<VoteBar>`) → a cor-base
- *     mais `DATA_FILL_STROKE`, que é o que a barra já faz. Trocar a cor ali não
- *     resolveria o problema real, que é *onde o dado acaba*.
- *
- * O ponto de 10×10 desta tela **ficou de fora da correção de 18/09** — um
- * `grep textForParty` não achava este arquivo. As cores-base reprovam o piso
- * em tema claro (PSOL 2,08, PSB 2,19, `outros` 2,39, NOVO 2,72), e o PSOL é o
- * líder da federação PSOL-Rede: nesta tela, especificamente, aquele ponto
- * aparece em toda apuração. A variante `-text` passa 3:1 nas 4 superfícies, nos
- * 2 temas, nos 31 partidos, e em 17 deles **é** a cor base — para a maioria,
- * nenhum pixel muda.
- */
-function corIdentidadeDaAgremiacao(agr: EdgeAgremiacaoBancada): string {
-  return textForParty(agr.sigla_lider);
-}
-
-/**
- * Segmentos da barra de bancada: cada agremiação ocupa a fração das cadeiras
- * **publicadas** que ela conquistou, e o resto vira um segmento "aguardando"
- * explícito.
- *
- * Sem esse último segmento a barra pareceria cheia com 463 de 513 cadeiras
- * distribuídas, e o leitor concluiria que a Câmara já está formada.
- */
-function segmentosDaBancada(payload: EdgePayloadDeputado): VoteBarSegment[] {
-  const total = payload.bancada.total_cadeiras;
-  if (total <= 0) return [];
-
-  const segmentos: VoteBarSegment[] = ordenarBancada(payload.bancada.por_agremiacao)
-    .filter((a) => a.cadeiras > 0)
-    .map((a) => ({
-      id: a.cod,
-      // 🔴 Sigla inteira — exceção do dono para a home de Deputados
-      // (2026-09-19). O `<VoteBar>` desenha estes `label` sob a barra
-      // (`showLabels` default), então passar `siglaExibicao(a.sigla)` aqui
-      // abreviaria exatamente a tela que o dono mandou não abreviar.
-      label: a.sigla,
-      pct: (a.cadeiras * 100) / total,
-      color: corDaAgremiacao(a),
-    }));
-
-  const aguardando = Math.max(0, total - payload.bancada.cadeiras_atribuidas);
-  if (aguardando > 0) {
-    segmentos.push({
-      id: "aguardando",
-      label: "aguardando apuração",
-      pct: (aguardando * 100) / total,
-      color: "var(--surface-sunken)",
-    });
-  }
-  return segmentos;
-}
-
-/**
- * RF-127 — o texto da contagem de cadeiras de uma agremiação.
- *
- * `cadeiras_ci95` é **opcional no contrato** (design 017 § D7), e desde 2026-09-13
- * a razão da opcionalidade mudou — a redação anterior deste bloco ficou obsoleta
- * no mesmo dia e sobreviveu até 18/09.
- *
- * O que **já não** vale: não é mais verdade que "o custo não foi medido" nem que
- * o bootstrap "não existe". As duas coisas foram resolvidas:
- *
- *   - **Custo medido em 2026-09-12** (design 017 § D7): 11,0 s para 1.000
- *     resamples × 27 UFs, contra `maxDuration` de 60 s — cabe com folga, mesmo
- *     supondo o Python da Vercel 3× mais lento. O custo nunca foi o obstáculo.
- *   - **O bootstrap por agremiação entrou em `2bcee57`** (13/09):
- *     `api/model/cadeiras_bootstrap.py`, ligado em `api/model/project.py:5607`
- *     (`cadeiras_ci95=intervalo.por_agremiacao …`). A spec 017 passou a
- *     `shipped` no mesmo dia.
- *
- * O que **continua** valendo, e é de propósito: o campo segue opcional. Quando a
- * faixa não tem largura, o que chega é o ponto central — e é isso que o
- * `lo === hi` abaixo desenha. 🔴 Não "consertar" publicando largura zero: uma
- * faixa `[n, n]` na tela afirma precisão que a amostra não sustenta.
- */
-function intervaloDeCadeiras(agr: EdgeAgremiacaoBancada): string | null {
-  const ci = agr.cadeiras_ci95;
-  if (!ci) return null;
-  const [lo, hi] = ci;
-  return lo === hi ? `${lo}` : `${lo} a ${hi}`;
-}
 
 // ---------------------------------------------------------------------------
 // Página
@@ -326,7 +206,7 @@ export default async function DeputadoFederalPage() {
           ? (depFixture as unknown as EdgePayloadDeputado)
           : null),
     ),
-    lerInterruptorDaTela(simulacaoLigada()),
+    lerInterruptorDaTela(CARGO_DEPUTADO, simulacaoLigada()),
   ]);
 
   if (!payloadLido) return <AguardandoNacional />;
@@ -334,8 +214,6 @@ export default async function DeputadoFederalPage() {
 
   const bancada = payload.bancada;
   const agremiacoes = ordenarBancada(bancada.por_agremiacao);
-  const segmentos = segmentosDaBancada(payload);
-  const aguardandoCadeiras = Math.max(0, bancada.total_cadeiras - bancada.cadeiras_atribuidas);
 
   // ADR-0038 D4. É nesta trilha que a diferença entre os dois relógios é maior:
   // o modelo roda e carimba `ts` muito mais vezes do que a varredura de 6
@@ -480,206 +358,53 @@ export default async function DeputadoFederalPage() {
           Presidente). Vive em `/uf/[sigla]/deputado-federal`, com o dado DA
           UF. */}
 
-      {/* Seção 2 — a bancada. RF-122, RF-125.1, RF-127, RF-130. */}
-      <Panel kicker="Bancada apurada" title="Quem fica com as cadeiras" titleId="bancada-heading">
-        <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
-          {/* Sem `marker`: não existe "maioria" a marcar. 257 de 513 é maioria
-              simples da Câmara, mas nada nesta eleição se decide nela — e um
-              traço em 50% sugeriria o contrário.
-              `showLabels={false}`: o `<VoteBar>` rotula, por default, o
-              primeiro e o segundo segmento — desenho de duelo majoritário.
-              Numa bancada de onze agremiações isso imprimiria dois nomes
-              arbitrários. A lista abaixo nomeia todas. */}
-          <VoteBar
-            ariaLabel={`Bancada de ${bancada.total_cadeiras} cadeiras, com os votos já apurados: ${agremiacoes
-              .filter((a) => a.cadeiras > 0)
-              .map((a) => `${a.sigla} ${a.cadeiras}`)
-              .join(", ")}${
-              aguardandoCadeiras > 0 ? `, ${aguardandoCadeiras} aguardando apuração` : ""
-            }`}
-            marker={null}
-            segments={segmentos}
-            showLabels={false}
-          />
-
-          {/* O `id` é o alvo do `aria-describedby` do hemiciclo, no painel
-              acima — é esta lista que serve de equivalente textual do gráfico
-              (constituição § 4). Não renomear sem mexer lá. */}
-          <ul
-            id="bancada-agremiacoes"
-            data-testid="bancada-agremiacoes"
-            style={{ listStyle: "none", margin: 0, padding: 0, display: "grid" }}
-          >
-            {agremiacoes.map((agr) => {
-              const intervalo = intervaloDeCadeiras(agr);
-              const componentes = listarComponentes(agr.componentes);
-              return (
-                <li
-                  key={agr.cod}
-                  data-testid="bancada-linha"
-                  data-cod={agr.cod}
-                  className="grid items-baseline"
-                  style={{
-                    gridTemplateColumns: "3rem minmax(0, 1fr) auto",
-                    columnGap: "var(--space-3)",
-                    padding: "var(--space-3) 0",
-                    borderBottom: "1px solid var(--border-hairline)",
-                  }}
-                >
-                  {/* O rótulo é IRMÃO do número, não filho: `bancada-cadeiras`
-                      precisa continuar valendo exatamente a contagem, porque é
-                      sobre ela que RF-125.1 faz a asserção de que a tela mostra
-                      `cadeiras` e nunca `vagas_obtidas`. Sem isto, o leitor de
-                      tela ouve "89 ... 85 a 93" e adivinha qual é qual — a
-                      distinção existe só na posição visual (WCAG 1.3.1). Achado
-                      do gate de a11y de 13/09; o axe não pega, porque não é
-                      regra técnica. Padrão de `StateResultSheet.tsx:223`. */}
-                  <span style={{ font: "var(--type-figure-sm)", color: "var(--text-primary)" }}>
-                    <span data-testid="bancada-cadeiras">{agr.cadeiras}</span>
-                    <span className="sr-only"> cadeiras conquistadas</span>
-                  </span>
-
-                  <span className="min-w-0 flex flex-col" style={{ gap: "var(--space-1)" }}>
-                    <span className="inline-flex items-center" style={{ gap: "var(--space-2)" }}>
-                      {/* O ponto de cor é redundante com o texto, nunca o
-                          portador único da informação (WCAG 1.4.1) — e usa a
-                          variante `-text`, porque é marcador de IDENTIDADE e
-                          não preenchimento com extensão (RNF-035). Ver
-                          `corIdentidadeDaAgremiacao`. */}
-                      <span
-                        aria-hidden="true"
-                        data-testid="bancada-ponto"
-                        style={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: "50%",
-                          background: corIdentidadeDaAgremiacao(agr),
-                          flex: "none",
-                        }}
-                      />
-                      {/* 🔴 A SIGLA INTEIRA, e isto é a exceção explícita do
-                          dono (2026-09-19): "lugares onde não precisa
-                          abreviar: home de Deputados". Aqui a sigla rotula uma
-                          BANCADA — uma linha por agremiação, largura da coluna
-                          inteira, nada disputando espaço com ela —, não uma
-                          candidatura espremida ao lado de um nome.
-
-                          Nenhum `siglaExibicao(...)` entra neste arquivo. Se
-                          um dia esta linha virar `<PartyTag>`, ela precisa
-                          de `abreviar={false}`: o default do átomo é abreviar,
-                          e sem a prop a exceção evapora em silêncio. O teste
-                          que trava isso é o caso (q) em
-                          `tests/unit/utils/sigla-partido.test.tsx`. */}
-                      <span style={{ font: "var(--type-body-sm)" }}>{agr.sigla}</span>
-                    </span>
-
-                    <span
-                      style={{
-                        font: "var(--type-body-sm)",
-                        fontSize: "var(--text-xs)",
-                        color: "var(--text-muted)",
-                        textWrap: "pretty",
-                      }}
-                    >
-                      {/* RF-122 — a federação é UMA agremiação, e os partidos
-                          que a compõem ficam legíveis. */}
-                      {agr.tipo === "federacao" && componentes.length > 0 ? (
-                        <span data-testid="bancada-federacao">
-                          {agr.nome} — federação de {componentes}.{" "}
-                        </span>
-                      ) : (
-                        <span>{agr.nome}. </span>
-                      )}
-                      {/* RF-130 — legenda separada do nominal. Somá-los sem
-                          dizer esconderia um fato que decide cadeira. */}
-                      <span data-testid="bancada-votos">
-                        {formatVotes(agr.votos_nominais)} votos nominais e{" "}
-                        {formatVotes(agr.votos_legenda)} de legenda ({formatPercent(agr.pct_votos)}{" "}
-                        dos válidos).
-                      </span>
-                      {/* RF-127 — a cadeira decidida em rodada de sobra vai
-                          marcada. É a metade de RF-127 que não depende de o
-                          intervalo existir (design 017 § D7). */}
-                      {agr.cadeiras_indefinidas ? (
-                        <span data-testid="bancada-indefinidas">
-                          {" "}
-                          {agr.cadeiras_indefinidas === 1
-                            ? "1 dessas cadeiras ainda está indefinida — foi decidida em rodada de sobra, por margem apertada."
-                            : `${agr.cadeiras_indefinidas} dessas cadeiras ainda estão indefinidas — foram decididas em rodada de sobra, por margem apertada.`}
-                        </span>
-                      ) : null}
-                    </span>
-                  </span>
-
-                  {/* O rótulo precede o número e fica FORA do `data-testid`, que
-                      continua valendo exatamente o texto visível. E nada aqui usa
-                      `aria-hidden`: o teste (m4) conta `span[aria-hidden]` para
-                      conferir os pontos de cor, e um a mais o quebraria — um
-                      seletor existente é contrato, não detalhe. */}
-                  <span
-                    className="text-right"
-                    style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
-                  >
-                    <span className="sr-only">
-                      {intervalo ? "faixa provável: " : "faixa não disponível "}
-                    </span>
-                    <span data-testid="bancada-intervalo">
-                      {intervalo ? `${intervalo} cadeiras` : "—"}
-                    </span>
-                  </span>
-                </li>
-              );
-            })}
-
-            {aguardandoCadeiras > 0 ? (
-              <li
-                data-testid="bancada-aguardando"
-                className="grid items-baseline"
-                style={{
-                  gridTemplateColumns: "3rem minmax(0, 1fr) auto",
-                  columnGap: "var(--space-3)",
-                  padding: "var(--space-3) 0",
-                }}
-              >
-                <span style={{ font: "var(--type-figure-sm)", color: "var(--text-muted)" }}>
-                  {aguardandoCadeiras}
-                </span>
-                <span style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
-                  cadeiras ainda sem dono — {bancada.ufs_aguardando} de {TOTAL_UFS} estados sem
-                  boletim e vagas que a distribuição ainda não fechou.
-                </span>
-                <span />
-              </li>
-            ) : null}
-          </ul>
-
-          {/* Constituição § 8 — de onde vem o número. Os dois fatos que o
-              leitor não tem como inferir da tela: que o agregado nacional é
-              soma nossa, e que o próprio total de cadeiras é dado publicado,
-              não constante. */}
-          <p
-            className="max-w-prose"
-            data-testid="bancada-nota"
-            style={{
-              margin: 0,
-              font: "var(--type-body-sm)",
-              fontSize: "var(--text-xs)",
-              color: "var(--text-muted)",
-              textWrap: "pretty",
-            }}
-          >
-            Esta contagem é a <strong>soma das {TOTAL_UFS} corridas estaduais</strong> — o TSE não
-            publica um arquivo nacional para este cargo, então não existe um número oficial a
-            reproduzir: o que existe são {TOTAL_UFS} apurações estaduais, e a soma é nossa. Já o
-            total de {bancada.total_cadeiras} cadeiras não é soma nenhuma: é o tamanho da Câmara,
-            fixo desde antes da urna abrir, e todas elas são renovadas nesta eleição. Quantas cada
-            estado elege continua vindo do dado que o TSE publica, e nós conferimos uma coisa contra
-            a outra. Cadeira contada é cadeira com candidato eleito: quando a conta de um partido dá
-            direito a uma vaga que nenhum candidato dele pode ocupar, a vaga vai para as sobras e
-            não aparece aqui.
-          </p>
-        </div>
-      </Panel>
+      {/* Seção 2 — a bancada. RF-122, RF-125.1, RF-127, RF-130. O painel
+          saiu para `<DeputadoBancadaPanel>` na spec 027 (design § 8.4): a capa
+          das assembleias mostra o mesmo painel sobre a soma das 27 casas. */}
+      <DeputadoBancadaPanel
+        kicker="Bancada apurada"
+        title="Quem fica com as cadeiras"
+        titleId="bancada-heading"
+        agremiacoes={agremiacoes}
+        total={bancada.total_cadeiras}
+        atribuidas={bancada.cadeiras_atribuidas}
+        rotuloBarra={`Bancada de ${bancada.total_cadeiras} cadeiras`}
+        fraseAguardando={
+          <>
+            cadeiras ainda sem dono — {bancada.ufs_aguardando} de {TOTAL_UFS} estados sem boletim e
+            vagas que a distribuição ainda não fechou.
+          </>
+        }
+        nota={
+          <>
+            {/* Constituição § 8 — de onde vem o número. Os dois fatos que o
+          leitor não tem como inferir da tela: que o agregado nacional é
+          soma nossa, e que o próprio total de cadeiras é dado publicado,
+          não constante. */}
+            <p
+              className="max-w-prose"
+              data-testid="bancada-nota"
+              style={{
+                margin: 0,
+                font: "var(--type-body-sm)",
+                fontSize: "var(--text-xs)",
+                color: "var(--text-muted)",
+                textWrap: "pretty",
+              }}
+            >
+              Esta contagem é a <strong>soma das {TOTAL_UFS} corridas estaduais</strong> — o TSE não
+              publica um arquivo nacional para este cargo, então não existe um número oficial a
+              reproduzir: o que existe são {TOTAL_UFS} apurações estaduais, e a soma é nossa. Já o
+              total de {bancada.total_cadeiras} cadeiras não é soma nenhuma: é o tamanho da Câmara,
+              fixo desde antes da urna abrir, e todas elas são renovadas nesta eleição. Quantas cada
+              estado elege continua vindo do dado que o TSE publica, e nós conferimos uma coisa
+              contra a outra. Cadeira contada é cadeira com candidato eleito: quando a conta de um
+              partido dá direito a uma vaga que nenhum candidato dele pode ocupar, a vaga vai para
+              as sobras e não aparece aqui.
+            </p>
+          </>
+        }
+      />
 
       {/* Seção 2b — destaques por template (ADR-0005, NUNCA LLM).
           **Hoje a lista vem vazia e isso não é erro** (design 017 § D10): os

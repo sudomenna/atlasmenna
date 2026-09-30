@@ -6,20 +6,24 @@
  * (`_rota-lista-deputado.ts`) não importam leitor nenhum: passam por aqui,
  * sempre com o `cargo` na mão.
  *
- * ## Por que um adaptador, e por que ele RECUSA os cargos 7 e 8 hoje
+ * ## Por que um adaptador, e por que cada cargo tem a SUA fonte
  *
- * Os leitores de hoje não recebem cargo — `readDeputadoProjection()`,
- * `readDeputadoUfDetail(uf)`, `readDeputadoUfLista(uf)` e o interruptor da
- * projeção só conhecem o federal. A frente T troca as assinaturas para
- * `(cargo, uf)`; quando ela entrar, a U-b muda ESTE arquivo e nenhum outro.
+ * Os leitores recebem o cargo desde a frente T — `readDeputadoProjection(cargo)`
+ * lê `projection-current-{dep,est,dis}-t1`, `readDeputadoUfDetail(cargo, uf)`
+ * lê `deputado[-estadual|-distrital]/uf/<UF>.json`. O que ainda NÃO é por
+ * cargo são as duas fontes de desenvolvimento: a simulação
+ * (`lib/dev/simulacao.ts`) e a fixture de `pnpm dev`
+ * (`tests/fixtures/edge-config/dep-current.json`, `tests/fixtures/blob/dep-uf.json`)
+ * — as duas são do FEDERAL. Servi-las como a página da Assembleia Legislativa
+ * de São Paulo poria a bancada de SP na Câmara dos Deputados com cara de dado
+ * certo: o defeito do conversor de enum com default silencioso, que já mandou
+ * payload de Senador para a chave do Presidente.
  *
- * Até lá, pedir o cargo 7 ou 8 aqui LANÇA, em vez de devolver o federal. A
- * alternativa silenciosa — ignorar o cargo e ler o que o leitor sabe ler —
- * poria a bancada de São Paulo na Câmara dos Deputados na página da
- * Assembleia Legislativa de São Paulo, com cara de dado certo. É o defeito do
- * conversor de enum com default silencioso, que já mandou payload de Senador
- * para a chave do Presidente. Um erro na montagem aparece no primeiro teste da
- * U-b; um dado trocado apareceria no ar.
+ * Por isso a tabela {@link FONTES_DEV} é indexada por `CargoProporcional`, sem
+ * ramo de fallback: para 7 e 8 as quatro fontes de desenvolvimento devolvem
+ * `null` até a frente S gerar o simulado das assembleias, e a tela cai no
+ * estado honesto ("aguardando os dados"). Cargo proporcional novo sem linha na
+ * tabela é erro de compilação.
  *
  * As regras de sempre continuam, só mudaram de arquivo (estavam no corpo de
  * `uf/[sigla]/deputado-federal/page.tsx` e de `lista/route.ts`):
@@ -38,11 +42,13 @@ import { CandidaturasAguardando } from "@/components/blocks/CandidaturasAguardan
 import {
   type DeputadoUfDetail,
   type DeputadoUfDetailResult,
+  type DeputadoUfLista,
   type DeputadoUfListaResult,
   readDeputadoUfDetail,
   readDeputadoUfLista,
   sanearDeputadoUfLista,
 } from "@/lib/blob/deputado-uf";
+import type { CargoProporcional } from "@/lib/config/cargos";
 import {
   resultadoEleitoral,
   simulacaoDeputadoNacional,
@@ -52,23 +58,10 @@ import {
 } from "@/lib/dev/simulacao";
 import { type InterruptorProjecaoLido, readDeputadoProjection } from "@/lib/edge-config/reader";
 import type { EdgePayloadDeputado } from "@/lib/edge-config/types";
-import type { CargoDeputado } from "@/lib/utils/casa-legislativa";
 import depUfFixture from "@/tests/fixtures/blob/dep-uf.json" with { type: "json" };
 import depFixture from "@/tests/fixtures/edge-config/dep-current.json" with { type: "json" };
 
 import { lerInterruptorDaTela } from "./_interruptor";
-
-/**
- * Até a frente T: só o cargo 6 tem leitor. Qualquer outro é erro de montagem,
- * nunca "sem dado" nem "o federal serve". Ver o cabeçalho.
- */
-function exigirLeitor(cargo: CargoDeputado, leitura: string): asserts cargo is 6 {
-  if (cargo !== 6) {
-    throw new Error(
-      `[deputado] ${leitura}: ainda não há leitor para o cargo ${cargo} — os leitores com cargo chegam com a frente T (spec 027); não caia no federal`,
-    );
-  }
-}
 
 /** O que a página da UF precisa ler, já com simulação e fixture resolvidas. */
 export interface DadosDaCasaUf {
@@ -103,9 +96,65 @@ function fixtureDetalhe(sigla: string): DeputadoUfDetail | null {
   return mapa[sigla.toUpperCase()] ?? null;
 }
 
+/**
+ * As fontes de DESENVOLVIMENTO de cada cargo — simulação (`pnpm dev:sim`) e
+ * fixture de `pnpm dev`. Ver o cabeçalho: só o federal tem as duas hoje; para
+ * 7 e 8 tudo é `null` até a frente S, e NUNCA o federal.
+ */
+interface FontesDev {
+  simulacaoNacional: () => EdgePayloadDeputado | null;
+  simulacaoUf: (sigla: string) => DeputadoUfDetail | null;
+  simulacaoLista: (sigla: string) => DeputadoUfLista | null;
+  fixtureNacional: () => EdgePayloadDeputado | null;
+  fixtureUf: (sigla: string) => DeputadoUfDetail | null;
+}
+
+const NENHUMA_FONTE_DEV: FontesDev = {
+  simulacaoNacional: () => null,
+  simulacaoUf: () => null,
+  simulacaoLista: () => null,
+  fixtureNacional: () => null,
+  fixtureUf: () => null,
+};
+
+const FONTES_DEV: Readonly<Record<CargoProporcional, FontesDev>> = {
+  6: {
+    simulacaoNacional: () => simulacaoDeputadoNacional(),
+    simulacaoUf: (sigla) => simulacaoDeputadoUf(sigla),
+    simulacaoLista: (sigla) => simulacaoDeputadoUfLista(sigla),
+    fixtureNacional: () => depFixture as unknown as EdgePayloadDeputado,
+    fixtureUf: (sigla) => fixtureDetalhe(sigla),
+  },
+  // Frente S (spec 027 design § 11): o simulado das assembleias ainda não
+  // existe. As fixtures de `pnpm dev` acima são do federal — nunca aqui.
+  7: NENHUMA_FONTE_DEV,
+  8: NENHUMA_FONTE_DEV,
+};
+
+/**
+ * Só o payload NACIONAL de um cargo — para a capa das assembleias
+ * (`/deputado-estadual`), que lê `est` e `dis` e NENHUM Blob de UF (RF-282).
+ * Mesmas regras de {@link lerDadosDaCasa}: simulação ligada ⇒ nenhuma leitura
+ * remota; fixture de `pnpm dev` só com `NODE_ENV=development` e só do cargo
+ * que a tem.
+ */
+export async function lerNacionalDaCasa(
+  cargo: CargoProporcional,
+): Promise<EdgePayloadDeputado | null> {
+  const dev = FONTES_DEV[cargo];
+  const isDev = process.env.NODE_ENV === "development";
+  return resultadoEleitoral(
+    () => dev.simulacaoNacional(),
+    async () => (await readDeputadoProjection(cargo)) ?? (isDev ? dev.fixtureNacional() : null),
+  );
+}
+
 /** Resumo nacional + detalhe da UF + interruptor, para `/uf/<UF>/<slug do cargo>`. */
-export async function lerDadosDaCasa(cargo: CargoDeputado, sigla: string): Promise<DadosDaCasaUf> {
-  exigirLeitor(cargo, "lerDadosDaCasa");
+export async function lerDadosDaCasa(
+  cargo: CargoProporcional,
+  sigla: string,
+): Promise<DadosDaCasaUf> {
+  const dev = FONTES_DEV[cargo];
 
   // Em paralelo, de propósito: a página não espera o Blob para renderizar o
   // resumo (RF-129, ADR-0032 item 3). O interruptor vai junto (RF-265) — e no
@@ -115,15 +164,15 @@ export async function lerDadosDaCasa(cargo: CargoDeputado, sigla: string): Promi
     emSimulacao
       ? Promise.resolve([null, SEM_DETALHE_REMOTO] as const)
       : Promise.all([readDeputadoProjection(cargo), readDeputadoUfDetail(cargo, sigla)]),
-    lerInterruptorDaTela(emSimulacao),
+    lerInterruptorDaTela(cargo, emSimulacao),
   ]);
 
   const isDev = process.env.NODE_ENV === "development";
   const nacional =
     nacionalLido ??
     (await resultadoEleitoral(
-      () => simulacaoDeputadoNacional(),
-      () => (isDev ? (depFixture as unknown as EdgePayloadDeputado) : null),
+      () => dev.simulacaoNacional(),
+      () => (isDev ? dev.fixtureNacional() : null),
     )) ??
     null;
 
@@ -135,8 +184,8 @@ export async function lerDadosDaCasa(cargo: CargoDeputado, sigla: string): Promi
     detalheLido.status === "ok"
       ? null
       : await resultadoEleitoral(
-          () => simulacaoDeputadoUf(sigla),
-          () => (isDev ? fixtureDetalhe(sigla) : null),
+          () => dev.simulacaoUf(sigla),
+          () => (isDev ? dev.fixtureUf(sigla) : null),
         );
   const detalhe: DeputadoUfDetailResult = detalheDev
     ? { status: "ok", detail: detalheDev, url: "fixture://dev" }
@@ -151,12 +200,11 @@ export async function lerDadosDaCasa(cargo: CargoDeputado, sigla: string): Promi
  * produção ganharia da fixture).
  */
 export async function lerListaDaCasa(
-  cargo: CargoDeputado,
+  cargo: CargoProporcional,
   sigla: string,
 ): Promise<DeputadoUfListaResult> {
-  exigirLeitor(cargo, "lerListaDaCasa");
   if (!simulacaoLigada()) return readDeputadoUfLista(cargo, sigla);
-  const daSimulacao = simulacaoDeputadoUfLista(sigla);
+  const daSimulacao = FONTES_DEV[cargo].simulacaoLista(sigla);
   return daSimulacao
     ? { status: "ok", lista: sanearDeputadoUfLista(daSimulacao), url: "fixture://simulacao" }
     : { status: "unavailable", reason: "not_found", url: null };
@@ -164,11 +212,11 @@ export async function lerListaDaCasa(
 
 /**
  * RF-149 (spec 018) — a grade de candidaturas do estado "aguardando dados",
- * lida do Blob de candidatos pelo código do cargo. Mora aqui porque é leitura
- * por cargo: `<CandidaturasAguardando>` só aceita `CargoTse`, que ainda não
- * conhece 7 e 8.
+ * lida do Blob de candidatos pelo código do cargo (token `dep` · `est` · `dis`,
+ * de `cargoToken`). Mora aqui porque é leitura por cargo, e o adaptador é o
+ * único lugar do módulo comum que lê. Identidade de candidato não é resultado
+ * eleitoral: pode vir do Blob real também com a simulação ligada.
  */
-export async function lerCandidaturasAguardando(cargo: CargoDeputado, sigla: string) {
-  exigirLeitor(cargo, "lerCandidaturasAguardando");
+export async function lerCandidaturasAguardando(cargo: CargoProporcional, sigla: string) {
   return CandidaturasAguardando({ cargo, uf: sigla });
 }

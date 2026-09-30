@@ -55,6 +55,7 @@ import type {
   DeputadoVia,
 } from "@/lib/edge-config/types";
 import { formatPercentTrim } from "@/lib/utils/format";
+import { TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
 
 // ---------------------------------------------------------------------------
 // Vocabulário do contrato (design § 2.2) — só o que as marcas leem
@@ -552,16 +553,21 @@ const pct1 = (valor: number): string => formatPercentTrim(valor, 1);
  * Telas, item 2). **Toda** variante traz "projeção" e "não oficial" na mesma
  * frase (RF-266): quem chama a põe num elemento só.
  *
- * `null` quando não há estado publicado (objeto v1) — nada a dizer.
+ * `null` quando não há estado publicado (objeto v1, ou o modo resumo da spec
+ * 027, em que o objeto não traz `projecao`) — nada a dizer.
+ *
+ * `territorio` (spec 027, RF-284): no DF a frase diz "do Distrito Federal", não
+ * "do estado". Ausente ⇒ o termo dos 26 estados — o texto de antes.
  */
 export function fraseEstadoProjecao(
   projecao: ProjecaoUfParaTexto | null | undefined,
   pctApurado: number,
+  territorio: TermoDoTerritorio = TERMO_ESTADO,
 ): string | null {
   if (!projecao) return null;
   const pre = "Projeção · não oficial:";
   if (projecao.estado === "liberada") {
-    return "Projeção liberada · não oficial — estimativa nossa do resultado final do estado, zona a zona.";
+    return `Projeção liberada · não oficial — estimativa nossa do resultado final ${territorio.doTerritorio}, zona a zona.`;
   }
   if (projecao.estado === "aguardando") {
     switch (projecao.motivo) {
@@ -570,7 +576,7 @@ export function fraseEstadoProjecao(
       case "zonas_minimas":
         return `${pre} aparece com ao menos ${ZONAS_MINIMAS_PROJECAO} zonas eleitorais apuradas (agora ${projecao.zonas_apuradas}).`;
       case "sem_vagas":
-        return `${pre} aparece depois que o TSE publicar quantas cadeiras o estado elege.`;
+        return `${pre} aparece depois que o TSE publicar quantas cadeiras ${territorio.o} elege.`;
       default:
         return `${pre} aguardando mais apuração.`;
     }
@@ -579,7 +585,7 @@ export function fraseEstadoProjecao(
     case "interruptor":
       return `${pre} desligada neste cálculo.`;
     case "coligacao":
-      return `${pre} indisponível — o dado deste estado traz coligação, que a lei não admite mais na eleição proporcional.`;
+      return `${pre} indisponível — o dado ${territorio.deste} traz coligação, que a lei não admite mais na eleição proporcional.`;
     case "cobertura":
       return `${pre} indisponível — o eleitorado das zonas que lemos não fecha com o total do TSE (ver a Conferência).`;
     case "erro":
