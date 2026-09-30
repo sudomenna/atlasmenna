@@ -62,7 +62,7 @@ import pathlib
 from typing import Any
 
 from api.model.cadeiras import distribuir_cadeiras
-from api.model.deputado import extrair_entrada_proporcional
+from api.model.deputado import chave_agremiacao, extrair_entrada_proporcional
 from api.model.deputado_payload import _cadeiras_de_fase_1
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2] / "fixtures" / "tse" / "2026-sim"
@@ -94,8 +94,16 @@ def transformar(envelope: dict[str, Any], vagas: int = VAGAS_RR) -> dict[str, An
     entrada = extrair_entrada_proporcional(saida, cargo=CARGO)
     resultado = distribuir_cadeiras(entrada.agremiacoes, vagas)
     carg["qe"] = str(resultado.quociente_eleitoral)
+    # O `cod` é a chave NACIONAL (`chave_agremiacao`, b28e74b), não `agr[].n`
+    # — que é o id da inscrição nesta UF. Mesmo mapa de federações do parser.
+    federacoes = {
+        str(f.get("n", "")).strip(): f
+        for f in carg.get("fed") or []
+        if isinstance(f, dict) and str(f.get("n", "")).strip()
+    }
     for agr in carg["agr"]:
-        agr["vag"] = str(resultado.cadeiras.get(str(agr["n"]), 0))
+        cod = chave_agremiacao(agr, federacoes)
+        agr["vag"] = str(resultado.cadeiras.get(cod, 0) if cod is not None else 0)
 
     if str(saida.get("tf", "")).strip().lower() == "s":
         fase_1 = _cadeiras_de_fase_1(entrada, resultado)
