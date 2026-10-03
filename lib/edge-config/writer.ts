@@ -153,7 +153,7 @@ let teamIdWarningEmitted = false;
  * Monta uma URL da API REST da Vercel anexando `?teamId=` quando
  * `VERCEL_TEAM_ID` está no ambiente.
  *
- * **Por que isto existe.** O token que grava no Global Config do SalaCofre é
+ * **Por que isto existe.** O token que grava no Global Config do AtlasMenna é
  * um token de escopo de TIME (`team_AqxGDYz4Zxs5wUBUDzIpcwBm`), porque o
  * store `ecfg_*` pertence ao time e não à conta pessoal. A API da Vercel
  * resolve o recurso no escopo PESSOAL do dono do token quando `teamId` não

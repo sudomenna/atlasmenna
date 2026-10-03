@@ -437,7 +437,7 @@ export default async function UFPage({ params }: UFPageProps) {
   // credencial Vercel.
   //
   // O portão é `=== "development"`, e não `!== "production"`, desde 2026-09-13.
-  // A forma antiga já barrava produção — o defeito de `salacofre.vercel.app`
+  // A forma antiga já barrava produção — o defeito de `atlasmenna.online`
   // publicando os números da fixture era da HOME, não desta rota —, mas deixava
   // `NODE_ENV=test` passar, e com isso o caminho honesto abaixo nunca era
   // exercitado por um teste que não mockasse o reader. Agora as cinco rotas de

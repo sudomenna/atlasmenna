@@ -4,7 +4,7 @@
  * Helper canônico para resolver cor de **partido/federação** por sigla.
  *
  * Princípios
- *   - Constituição § 2 (v1.3): paleta editorial própria do SalaCofre, uma cor
+ *   - Constituição § 2 (v1.3): paleta editorial própria do AtlasMenna, uma cor
  *     por partido, **ΔE76 ≥ 10** contra o hex oficial do partido (o gerador
  *     aplica um piso de 12, com 2 unidades de folga contra revisão de fonte, e
  *     mede contra **todos** os hexes oficiais documentados — primária,

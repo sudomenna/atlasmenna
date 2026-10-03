@@ -33,9 +33,9 @@
  * ---------------------------------------------------------------------------
  * Medido em 2026-09-18, contra produção:
  *
- *   GET https://salacofre.vercel.app/              → HTTP 200 (HTML)
- *   GET https://salacofre.vercel.app/api/projection → HTTP 403 {"error":"bot_detected"}
- *   GET https://salacofre.vercel.app/api/health     → HTTP 403 {"error":"bot_detected"}
+ *   GET https://atlasmenna.online/              → HTTP 200 (HTML)
+ *   GET https://atlasmenna.online/api/projection → HTTP 403 {"error":"bot_detected"}
+ *   GET https://atlasmenna.online/api/health     → HTTP 403 {"error":"bot_detected"}
  *
  * O Vercel BotID classifica qualquer cliente automatizado como robô, e **todas**
  * as rotas `/api/*` ficam fechadas para um vigia. É a mesma classe de defeito

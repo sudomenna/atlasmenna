@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "descricao": "Hexes OFICIAIS dos partidos — a paleta que cada partido usa em material próprio. NÃO são cores do SalaCofre: são exatamente as cores das quais os tokens --party-* precisam ficar longe (constituição § 2 v1.3, ΔE76 ≥ 10; piso operacional deste repositório: 12).",
+    "descricao": "Hexes OFICIAIS dos partidos — a paleta que cada partido usa em material próprio. NÃO são cores do AtlasMenna: são exatamente as cores das quais os tokens --party-* precisam ficar longe (constituição § 2 v1.3, ΔE76 ≥ 10; piso operacional deste repositório: 12).",
     "consumido_por": "scripts/gen-party-scale.ts (validação) e tests/unit/design-system/party-delta-e.test.ts (gate no CSS commitado)",
     "levantado_em": "2026-09-07",
     "delta_e_floor": 12,

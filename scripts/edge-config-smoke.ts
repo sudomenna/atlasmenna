@@ -10,7 +10,7 @@
  * ---------------------------------------------------------------------------
  * Por que este script existe
  * ---------------------------------------------------------------------------
- * Três decisões de caminho crítico do SalaCofre foram tomadas **sem nenhuma
+ * Três decisões de caminho crítico do AtlasMenna foram tomadas **sem nenhuma
  * confirmação empírica**, porque até 11/09 não havia token de escrita no
  * ambiente e a suíte inteira roda com `fetch` mockado:
  *
@@ -24,7 +24,7 @@
  *   2. **A guarda de tamanho do store** (`measureStore`,
  *      `GLOBAL_CONFIG_STORE_LIMIT_BYTES = 1 MB`) nunca leu um `sizeInBytes`
  *      de verdade. O passo (c) imprime o número real e a distância do limite.
- *   3. **O `teamId` na URL.** O token do SalaCofre é de escopo de TIME e o
+ *   3. **O `teamId` na URL.** O token do AtlasMenna é de escopo de TIME e o
  *      store pertence ao time; sem `?teamId=` a API resolve no escopo pessoal
  *      e devolve 403/404. `vercelApiUrl` (em `lib/edge-config/writer.ts`)
  *      passou a anexá-lo, e este smoke é o único lugar onde isso é provado.

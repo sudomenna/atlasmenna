@@ -52,12 +52,12 @@ export function LiveBadge({ active = true, label, className }: LiveBadgeProps) {
         className="inline-block h-2 w-2 rounded-full"
         style={{
           backgroundColor: dotColor,
-          animation: active ? "salacofre-pulse 1.6s ease-in-out infinite" : undefined,
+          animation: active ? "atlasmenna-pulse 1.6s ease-in-out infinite" : undefined,
         }}
       />
       <span>{text}</span>
       <style>{`
-        @keyframes salacofre-pulse {
+        @keyframes atlasmenna-pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.5; transform: scale(0.85); }
         }

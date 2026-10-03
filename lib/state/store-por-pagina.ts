@@ -75,7 +75,7 @@
  * símbolos), nunca `Symbol()` — ver o § acima. A string leva o nome do projeto
  * para não colidir com nada que a plataforma ou uma dependência penduram lá.
  */
-const CHAVE_REGISTRO = Symbol.for("salacofre/state/registro-de-stores");
+const CHAVE_REGISTRO = Symbol.for("atlasmenna/state/registro-de-stores");
 
 type ComRegistro = Record<symbol, Map<string, unknown> | undefined>;
 

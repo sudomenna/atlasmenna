@@ -2,7 +2,7 @@
  * components/layout/Footer.tsx
  *
  * Footer constitucional § 1 — "Não oficial. Fonte: TSE." precisa estar
- * em TODAS as páginas da SalaCofre.
+ * em TODAS as páginas da AtlasMenna.
  *
  * Server Component puro. Minimal por design — o spec-implementer da spec
  * 003 (home) ou um shared agent pode evoluir com mais links (sobre o

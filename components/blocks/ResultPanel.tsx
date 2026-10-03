@@ -3,7 +3,7 @@
  *
  * O painel de resultado do protótipo do kit
  * (`docs/design-system/atlas-menna/ui_kits/atlas-menna/App.jsx:20-43`),
- * traduzido para o SalaCofre. É o primeiro bloco de conteúdo da home e
+ * traduzido para o AtlasMenna. É o primeiro bloco de conteúdo da home e
  * substitui, ali, o trio `<ApuracaoMeta>` + `<ProjectionThermometers>` +
  * "Composição de Outros" (`<MinorCandidatesList>`): no protótipo os
  * candidatos menores não são um bloco à parte, são linhas da mesma lista.

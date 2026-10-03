@@ -681,7 +681,7 @@ describe("HomePage (integration / smoke)", () => {
  * A home em PRODUÇÃO com o Global Config vazio — o defeito de 13/09
  * ===================================================================
  *
- * Em 13/09/2026 `https://salacofre.vercel.app` (público, sem login) publicava
+ * Em 13/09/2026 `https://atlasmenna.online` (público, sem login) publicava
  * "Candidato PT — 15.240.321 votos — 43,5%" e "23,4% APURADO" com a eleição
  * marcada para 04/10. Eram, byte a byte, os números de
  * `tests/fixtures/edge-config/projection-current.json`: `getInitialPayload()`

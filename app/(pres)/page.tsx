@@ -263,7 +263,7 @@ export const metadata: Metadata = {
  * fixture nunca é lida". **Era falso**, e foi essa premissa que escondeu o
  * defeito: `getInitialPayload()` caía aqui de forma INCONDICIONAL, e enquanto
  * o Global Config de produção estivesse vazio — que é o estado normal até o
- * primeiro boletim de 04/10/2026 — `salacofre.vercel.app` publicava os números
+ * primeiro boletim de 04/10/2026 — `atlasmenna.online` publicava os números
  * desta fixture como se fossem apuração ("Candidato PT — 15.240.321 votos —
  * 43,5%", "23,4% APURADO"). Um site público de eleição inventando resultado é
  * a pior falha que este projeto pode ter (constituição §§ 1 e 8).

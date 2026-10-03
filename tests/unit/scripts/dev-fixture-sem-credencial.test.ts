@@ -7,7 +7,7 @@
  * (`lib/dev/simulacao.ts`), mas o servidor de pé com as credenciais carregadas
  * já publicou resultado inventado no site público uma vez (14/09: `pnpm dev`
  * na 3000 + a suíte chamando `post_edge_write`). Em 29/09 um agente subiu o
- * `dev:sim` pelo `.claude/launch.json` (`salacofre-dev-sim`) com as mesmas
+ * `dev:sim` pelo `.claude/launch.json` (`atlasmenna-dev-sim`) com as mesmas
  * chaves no processo.
  *
  * O conserto é o do `start:e2e`: declarar VAZIAS, no próprio script, as chaves
@@ -79,11 +79,11 @@ describe("scripts de dev com fixture — nenhuma chave de escrita do .env.local"
     expect(dev.has("BLOB_PUBLIC_BASE_URL")).toBe(false);
   });
 
-  it("o launcher do app (`salacofre-dev-sim`) chama o `dev:sim` — o mesmo script travado acima", () => {
+  it("o launcher do app (`atlasmenna-dev-sim`) chama o `dev:sim` — o mesmo script travado acima", () => {
     const launch = JSON.parse(
       fs.readFileSync(path.join(process.cwd(), ".claude/launch.json"), "utf8"),
     ) as { configurations: Array<{ name: string; runtimeArgs?: string[] }> };
-    const sim = launch.configurations.find((c) => c.name === "salacofre-dev-sim");
+    const sim = launch.configurations.find((c) => c.name === "atlasmenna-dev-sim");
     expect(sim?.runtimeArgs).toEqual(["dev:sim"]);
   });
 });

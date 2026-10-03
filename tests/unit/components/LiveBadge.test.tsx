@@ -18,7 +18,7 @@ describe("<LiveBadge />", () => {
     const status = doc.querySelector('[role="status"]');
     expect(status?.textContent).toContain("AO VIVO");
     const dot = doc.querySelector('[data-testid="live-badge-dot"]');
-    expect(dot?.getAttribute("style")).toContain("salacofre-pulse");
+    expect(dot?.getAttribute("style")).toContain("atlasmenna-pulse");
   });
 
   it("(b) active=false → 'OFFLINE' e sem animação", () => {
@@ -26,7 +26,7 @@ describe("<LiveBadge />", () => {
     const status = doc.querySelector('[role="status"]');
     expect(status?.textContent).toContain("OFFLINE");
     const dot = doc.querySelector('[data-testid="live-badge-dot"]');
-    expect(dot?.getAttribute("style") ?? "").not.toContain("salacofre-pulse");
+    expect(dot?.getAttribute("style") ?? "").not.toContain("atlasmenna-pulse");
   });
 
   it("(c) label custom override", () => {

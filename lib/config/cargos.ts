@@ -1,7 +1,7 @@
 /**
  * lib/config/cargos.ts
  *
- * **Mapa único dos cargos cobertos pelo SalaCofre.** Antes de 2026-09-11 esse
+ * **Mapa único dos cargos cobertos pelo AtlasMenna.** Antes de 2026-09-11 esse
  * conhecimento estava espalhado por quatro lugares independentes, todos travados
  * em `1 | 3` e sem relação entre si:
  *

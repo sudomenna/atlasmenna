@@ -4,7 +4,7 @@
  * **Este é o gate que impede uma violação constitucional de chegar em produção.**
  *
  * A constituição § 2 (v1.3) exige ΔE76 ≥ 10 entre cada cor de partido do
- * SalaCofre e o hex oficial documentado daquele partido. O gerador
+ * AtlasMenna e o hex oficial documentado daquele partido. O gerador
  * (`scripts/gen-party-scale.ts`) já falha quando isso quebra — mas o gerador só
  * roda quando alguém o roda. Este teste refaz a conta sobre o **CSS commitado**,
  * a cada `pnpm test`, para que a violação não volte por:

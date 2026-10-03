@@ -707,7 +707,7 @@ describe("UFPage — degradação do detalhe municipal (ADR-0032)", () => {
  * Rota irmã da home na trilha presidencial, e a única outra que tem fixture no
  * caminho de fallback (`synthesizeUfFromNational`, que deriva de
  * `tests/fixtures/edge-config/projection-current.json` — a MESMA fixture cujos
- * números vazaram para `salacofre.vercel.app` pela home em 13/09/2026).
+ * números vazaram para `atlasmenna.online` pela home em 13/09/2026).
  *
  * Esta rota já barrava produção antes da correção (`NODE_ENV !== "production"`),
  * então aqui não havia vazamento. O que os testes abaixo fazem é FIXAR isso:

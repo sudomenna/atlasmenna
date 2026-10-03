@@ -510,7 +510,7 @@ export function hexToLab(hex: string): Lab {
 
 /**
  * ΔE76 (CIE 1976) entre dois hexes — a métrica que a constituição § 2 v1.3
- * exige (≥ 10) entre o hex editorial do SalaCofre e o hex oficial do partido.
+ * exige (≥ 10) entre o hex editorial do AtlasMenna e o hex oficial do partido.
  * Distância euclidiana em Lab, sem correção de percepção; é justamente a
  * simplicidade que a torna auditável ("qualquer agente pode recomputar").
  */

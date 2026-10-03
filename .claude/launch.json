@@ -2,19 +2,19 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "salacofre-dev",
+      "name": "atlasmenna-dev",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev"],
       "port": 3000
     },
     {
-      "name": "salacofre-dev-sim",
+      "name": "atlasmenna-dev-sim",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev:sim"],
       "port": 3000
     },
     {
-      "name": "salacofre-dev-pre",
+      "name": "atlasmenna-dev-pre",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["dev:pre"],
       "port": 3000

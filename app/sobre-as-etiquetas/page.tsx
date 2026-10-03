@@ -85,7 +85,7 @@ export const ENTRADAS_DO_REGISTRO_NA_PAGINA = 50;
 export const PENDENCIAS_POR_VISAO_NA_PAGINA = 10;
 
 /** O repositório público — o mesmo que `/sobre-o-modelo` já cita para os ADRs. */
-const REPOSITORIO = "https://github.com/sudomenna/salacofre";
+const REPOSITORIO = "https://github.com/sudomenna/atlasmenna";
 /**
  * O canal de correção (constituição § 2 (h)): as issues do repositório
  * público — abertas a qualquer pessoa com conta no GitHub, e o registro da

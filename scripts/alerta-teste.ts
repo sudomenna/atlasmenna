@@ -56,7 +56,7 @@ async function main(): Promise<void> {
 
   const msg =
     textoLivre ||
-    `teste de canal — se você está lendo isto, o alarme do SalaCofre funciona (${carimbo})`;
+    `teste de canal — se você está lendo isto, o alarme do AtlasMenna funciona (${carimbo})`;
 
   console.log(`[alerta-teste] enviando… (${carimbo})`);
   await notifySlack({

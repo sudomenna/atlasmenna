@@ -52,7 +52,7 @@ import {
 //
 // Contra o site PUBLICADO, que continua sendo a medição de referência:
 //
-//     PLAYWRIGHT_BASE_URL=https://salacofre.vercel.app npx playwright test \
+//     PLAYWRIGHT_BASE_URL=https://atlasmenna.online npx playwright test \
 //       tests/e2e/a11y-audit.spec.ts
 //
 // Resultado em 2026-09-18: 48/48 verdes (eram 6 rotas então). Exige

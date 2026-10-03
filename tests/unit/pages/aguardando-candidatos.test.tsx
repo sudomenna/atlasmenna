@@ -192,7 +192,7 @@ describe("RF-149 — grade de candidaturas no estado aguardando (home)", () => {
     // 🔴 Este é o ramo que a PRODUÇÃO serve hoje: sem chave no Global Config a
     // home nunca chega ao ramo com payload. O widget entrou primeiro só no
     // outro ramo, e o resultado foi um bloco que passava nos testes e **não
-    // existia no site** — conferido em https://salacofre.vercel.app em
+    // existia no site** — conferido em https://atlasmenna.online em
     // 2026-09-17, com o deploy verde.
     //
     // Mutações que devem derrubá-lo:

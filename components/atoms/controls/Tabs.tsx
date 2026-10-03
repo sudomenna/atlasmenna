@@ -20,7 +20,7 @@ export interface TabsOption {
   href?: string;
   /**
    * S06/F4d (Fase 3) — opção desabilitada (grayed out + tooltip).
-   * Usada pra cargos ainda não cobertos pelo SalaCofre (Senado, Câmara,
+   * Usada pra cargos ainda não cobertos pelo AtlasMenna (Senado, Câmara,
    * Assembleias) que aparecem na navegação como "coming soon".
    *
    * Quando true:

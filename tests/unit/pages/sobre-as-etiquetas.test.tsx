@@ -130,7 +130,7 @@ describe("RF-252 — /sobre-as-etiquetas", () => {
     const { html, doc } = await render();
     const secao = doc.getElementById("sec-correcao")?.parentElement;
     expect(
-      secao?.querySelector("a[href='https://github.com/sudomenna/salacofre/issues']"),
+      secao?.querySelector("a[href='https://github.com/sudomenna/atlasmenna/issues']"),
     ).not.toBeNull();
     expect(secao?.textContent).not.toContain("será publicado");
     expect(html).not.toMatch(/mailto:|@[a-z0-9-]+\.[a-z]{2,}/i);
@@ -158,7 +158,7 @@ describe("RF-252 — /sobre-o-modelo aponta para a metodologia das etiquetas", (
     // O canal de correção existe AQUI também — sem "será publicado" em círculo.
     expect(
       doc.querySelector(
-        "a[data-testid='sobre-o-modelo-canal-correcao'][href='https://github.com/sudomenna/salacofre/issues']",
+        "a[data-testid='sobre-o-modelo-canal-correcao'][href='https://github.com/sudomenna/atlasmenna/issues']",
       ),
     ).not.toBeNull();
     expect(doc.body.textContent).not.toContain("contato de redação serão publicados");

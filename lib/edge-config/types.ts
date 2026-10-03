@@ -61,7 +61,7 @@ import type { CargoProporcional, CargoTse } from "@/lib/config/cargos";
 // Enums / unions (mantêm-se "magic-number-free" no resto do código)
 // ---------------------------------------------------------------------------
 
-/** Cargo TSE — os que o SalaCofre cobre (eleição geral 2026; 7 e 8 desde a spec 027). */
+/** Cargo TSE — os que o AtlasMenna cobre (eleição geral 2026; 7 e 8 desde a spec 027). */
 // Reexporta o tipo canônico (`lib/config/cargos.ts`) em vez de redeclará-lo:
 // até 2026-09-11 esta linha era `1 | 3` e vivia dessincronizada de
 // `lib/tse/targets.ts`, que tinha a mesma união repetida 12 vezes.

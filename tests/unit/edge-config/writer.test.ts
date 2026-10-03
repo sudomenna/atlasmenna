@@ -154,7 +154,7 @@ function mockVercelApi(
         new Response(
           JSON.stringify({
             id: "ecfg_proj",
-            slug: "salacofre",
+            slug: "atlasmenna",
             digest: "abc123",
             sizeInBytes: opts.storeSizeInBytes ?? 40_000,
             itemCount: opts.itemCount ?? 56,
@@ -213,7 +213,7 @@ function captureErrorLines() {
 /**
  * `vercelApiUrl` — escopo de time na URL.
  *
- * O store `ecfg_*` do SalaCofre pertence a um TIME. Um token de escopo de
+ * O store `ecfg_*` do AtlasMenna pertence a um TIME. Um token de escopo de
  * time que chama a API sem `?teamId=` é resolvido no escopo pessoal do dono
  * do token, onde o store não existe: a resposta é 403/404, não um erro de
  * autenticação legível. Como nenhuma das três chamadas do writer jamais

@@ -13,7 +13,7 @@ import { lerEtiquetas } from "@/lib/etiquetas/leitor";
 export const revalidate = 60;
 
 /** O canal público de correção — o mesmo de `/sobre-as-etiquetas` (constituição § 2 (h)). */
-const CANAL_DE_CORRECAO = "https://github.com/sudomenna/salacofre/issues";
+const CANAL_DE_CORRECAO = "https://github.com/sudomenna/atlasmenna/issues";
 
 /**
  * Folha de estilo desta página, em tokens do design system Atlas Menna
@@ -469,7 +469,7 @@ export default async function SobreOModeloPage() {
               auditável, isso vale mais do que a sofisticação de um modelo bayesiano completo. A
               decisão está registrada no{" "}
               <a
-                href="https://github.com/sudomenna/salacofre/blob/main/docs/architecture/adrs/0006-bootstrap-nao-bayesiano.md"
+                href="https://github.com/sudomenna/atlasmenna/blob/main/docs/architecture/adrs/0006-bootstrap-nao-bayesiano.md"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -756,7 +756,7 @@ export default async function SobreOModeloPage() {
                 faixa nacional inteiramente medida de uma que teve estados entrando como constante.
                 A decisão está registrada no{" "}
                 <a
-                  href="https://github.com/sudomenna/salacofre/blob/main/docs/architecture/adrs/0037-uf-sem-faixa-entra-como-constante-no-nacional.md"
+                  href="https://github.com/sudomenna/atlasmenna/blob/main/docs/architecture/adrs/0037-uf-sem-faixa-entra-como-constante-no-nacional.md"
                   target="_blank"
                   rel="noopener noreferrer"
                 >

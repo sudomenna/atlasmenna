@@ -59,7 +59,7 @@ describe("no servidor (sem `window`)", () => {
   it("e NADA é pendurado no `globalThis` — o vazamento entre requisições nem tem onde morar", () => {
     storeUnicaPorPagina("servidor", () => ({ marca: 1 }));
 
-    const chave = Symbol.for("salacofre/state/registro-de-stores");
+    const chave = Symbol.for("atlasmenna/state/registro-de-stores");
     expect(
       (globalThis as unknown as Record<symbol, unknown>)[chave],
       "o registro global existe no servidor — estado de uma visita pode alcançar a seguinte",
