@@ -145,16 +145,24 @@ para a U-a recortou diferente, vale o despacho e esta tabela se ajusta.
 
 ## S — modo simulado (depois de T e da S da 026)
 
-- [ ] S1. `data-pipeline/simulacao-gerar.ts::montarDeputado` por cargo (`:3950`, `:4098`, `:4171`,
-      `:4269`; validadores `:1036`, `:5009`); tamanho das casas da spec; SP estadual com agremiações de
-      95 candidatos (pior caso do portão de peso) (RF-280, RF-289).
-- [ ] S2. O gerador recebe a fase: Fase 1 (`granularidade: "uf"`, sem `projecao`, `nao_comparou`) e
-      Fase 2 (as três saídas da trava) (RF-285, RF-287).
-- [ ] S3. Saídas `deputado-estadual*.json` e `deputado-distrital*.json`; `lib/dev/simulacao.ts` (`:382`,
-      `:448`, `:457`) por cargo.
-- [ ] S4. `scripts/edge-config-falso.ts` serve `projection-current-est-t1`, `-dis-t1`,
-      `interruptor-projecao-est` e os Blobs dos dois prefixos (RF-289).
-- [ ] S5. `pnpm sim:full` **no terminal do dono** (nunca `pnpm sim` sozinho).
+- [x] S1. ~~`data-pipeline/simulacao-gerar.ts::montarDeputado` por cargo~~ — **feito por outro
+      caminho em 03/10**: `data-pipeline/simulacao-assembleias.py` roda o MODELO PYTHON real
+      (`_do_project`) com conexão falsa sobre os EA20 reais de `tests/fixtures/tse/2026-sim/dep-est/`
+      (RR, SP cargo 7; DF cargo 8 com `nv` 24 e listas de 25) e deriva as outras UFs do 7 de SP —
+      sem banco e sem rede (`pnpm sim:full` lê produção). SP no pior caso: 94 lugares, agremiações
+      de 95, nomes de 30 caracteres acentuados (RF-280, RF-289). Validador:
+      `tests/unit/dev/assembleias-fixtures.test.ts` (M39, M40).
+- [~] S2. Fase 1 coberta (`granularidade: "uf"`, sem `projecao`, `nao_comparou`); Fase 2 (as três
+      saídas da trava) NÃO — o gerador não recebe a fase (RF-285, RF-287).
+- [x] S3. Saídas `deputado-estadual{,-uf,-uf-lista}.json` e `deputado-distrital{,-uf}.json`;
+      `lib/dev/simulacao.ts` lê por cargo (`simulacaoAssembleia*`); `app/(dep)/_dados-da-casa.ts`
+      (`FONTES_DEV[7|8]`) e `app/(dep)/_interruptor.ts` (`interruptor-projecao-est.json`) ligados.
+- [x] S4. `scripts/edge-config-falso.ts` serve `projection-current-est-t1`, `-dis-t1`,
+      `interruptor-projecao-est` (desligado salvo fixture) e os Blobs dos dois prefixos (RF-289).
+- [ ] S5. ~~`pnpm sim:full` no terminal do dono~~ — não é preciso para 7/8: o gerador das
+      assembleias não lê banco (`.venv-model/bin/python3.14 data-pipeline/simulacao-assembleias.py`
+      + `biome format --write tests/fixtures/simulacao`). `pnpm sim:full` continua sendo o do federal
+      e não toca os arquivos das assembleias.
 
 ## Fase 2 — zonas e projeção
 

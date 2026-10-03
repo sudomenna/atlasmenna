@@ -17,17 +17,17 @@
  * `readInterruptorProjecao(cargo)` da frente T que escolhe a chave pelo cargo.
  * `-dep` nunca liga 7 e 8, nem `-est` o 6 (RF-287).
  *
- * No modo simulado só existe hoje o arquivo do federal
- * (`interruptor-projecao-dep.json`). Para 7 e 8 a chave simulada é AUSENTE —
- * desligada — até a frente S emitir o arquivo das assembleias: ler o do
- * federal ali ligaria a projeção das assembleias com o interruptor da Câmara,
- * que é exatamente o cruzamento que o RF-287 proíbe.
+ * No modo simulado cada chave tem o SEU arquivo: `interruptor-projecao-dep.json`
+ * para o 6 e `interruptor-projecao-est.json` para 7 e 8 (frente S). Na Fase 1
+ * o gerador das assembleias não emite o segundo — chave AUSENTE, desligada.
+ * Ler o do federal para 7/8 ligaria a projeção das assembleias com o
+ * interruptor da Câmara, que é exatamente o cruzamento que o RF-287 proíbe.
  *
  * Nunca lança: `readInterruptorProjecao` já não lança, e a interpretação é pura.
  */
 
 import type { CargoProporcional } from "@/lib/config/cargos";
-import { simulacaoInterruptorProjecao } from "@/lib/dev/simulacao";
+import { simulacaoInterruptorProjecao, simulacaoInterruptorProjecaoEst } from "@/lib/dev/simulacao";
 import {
   type InterruptorProjecaoLido,
   interpretarInterruptor,
@@ -45,8 +45,8 @@ function valorSimulado(cargo: CargoProporcional): unknown {
       return simulacaoInterruptorProjecao();
     case 7:
     case 8:
-      // Frente S: o simulado ainda não emite `interruptor-projecao-est`.
-      return undefined;
+      // `interruptor-projecao-est` — o arquivo das assembleias, nunca o `-dep`.
+      return simulacaoInterruptorProjecaoEst();
     default: {
       const naoCoberto: never = cargo;
       throw new Error(`[interruptor] cargo não coberto: ${String(naoCoberto)}`);

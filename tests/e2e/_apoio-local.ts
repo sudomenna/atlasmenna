@@ -156,6 +156,11 @@ export const MARCAS_DE_CASCA_VAZIA = [
   "Esta página ainda não recebeu dados",
   "— Aguardando dados",
   "Aguardando dados…",
+  // Spec 027 (RF-289): a capa das assembleias (`/deputado-estadual`) sem
+  // nenhum dos dois payloads (`est`, `dis`) — `AguardandoAssembleias`. A
+  // frase dela ("Aguardando os dados.") não casa com nenhuma das de cima;
+  // o atributo é o identificador estável, e nunca sai com dado.
+  'data-testid="casas-aguardando"',
 ] as const;
 
 /**
@@ -167,6 +172,30 @@ export const MARCAS_DE_CASCA_VAZIA = [
 export function cascaVaziaNoDocumento(html: string, baseURL: string | undefined): string[] {
   if (!alvoEhLocal(baseURL)) return [];
   return MARCAS_DE_CASCA_VAZIA.filter((m) => html.includes(m));
+}
+
+/**
+ * Frases de "detalhe do Blob indisponível" da página de UF de Deputado
+ * (`MOTIVO_INDISPONIVEL`, `app/(dep)/_pagina-uf-deputado.tsx`). Com o Blob
+ * servido pelo falso, nenhuma pode aparecer: se aparecer, o teto de peso
+ * passaria medindo a página SEM a parte que ele existe para medir, e o axe
+ * auditaria uma página sem as listas. Movido de `perf-budget.spec.ts` em
+ * 03/10 (spec 027, RF-289) para os dois portões usarem o mesmo alarme.
+ */
+export const DETALHE_DEPUTADO_INDISPONIVEL = [
+  "O armazenamento do detalhe não está configurado",
+  // Sem o território: desde a spec 027 a frase diz "este estado" ou "o
+  // Distrito Federal" conforme a casa.
+  "Ainda não há um detalhe publicado para",
+  "Não conseguimos buscar o detalhe agora",
+] as const;
+
+/** As páginas de UF de Deputado — federal, estadual e distrital (spec 027). */
+export const ROTA_UF_DEPUTADO = /^\/uf\/[A-Z]{2}\/deputado-(federal|estadual|distrital)$/;
+
+/** As frases de "detalhe indisponível" achadas no documento — lista vazia é o normal. */
+export function detalheDeputadoIndisponivel(html: string): string[] {
+  return DETALHE_DEPUTADO_INDISPONIVEL.filter((f) => html.includes(f));
 }
 
 /**

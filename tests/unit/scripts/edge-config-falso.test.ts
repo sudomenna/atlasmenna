@@ -23,6 +23,7 @@ import { blobUrlFor, deputadoUfBlobPathname, deputadoUfListaBlobPathname } from 
 import {
   currentProjectionKey,
   interruptorProjecaoDepKey,
+  interruptorProjecaoEstKey,
   ufProjectionKey,
 } from "@/lib/edge-config/keys";
 import {
@@ -45,12 +46,15 @@ const AUTH = "Bearer e2e";
 describe("montarChaves — fixtures do simulado", () => {
   const chaves = montarChaves();
 
-  it("serve exatamente 4 nacionais + 27 UFs × 3 cargos + o interruptor, e nada de turno 2 ou alias", () => {
+  it("serve exatamente 6 nacionais + 27 UFs × 3 cargos + os 2 interruptores, e nada de turno 2 ou alias", () => {
     // + 1: desde a frente S da spec 026 o simulado grava
     // `interruptor-projecao-dep.json` (ligado), e o falso o serve.
-    expect(chaves.size).toBe(4 + 27 * 3 + 1);
+    // + 2 nacionais + 1 interruptor: as assembleias (spec 027 frente S,
+    // RF-289) — `est`, `dis` e `interruptor-projecao-est`.
+    expect(chaves.size).toBe(6 + 27 * 3 + 2);
     expect(chaves.has(interruptorProjecaoDepKey())).toBe(true);
-    for (const cargo of ["pres", "gov", "sen", "dep"] as const) {
+    expect(chaves.has(interruptorProjecaoEstKey())).toBe(true);
+    for (const cargo of ["pres", "gov", "sen", "dep", "est", "dis"] as const) {
       expect(chaves.has(currentProjectionKey(cargo, 1))).toBe(true);
       expect(chaves.has(currentProjectionKey(cargo, 2))).toBe(false);
     }
@@ -60,6 +64,19 @@ describe("montarChaves — fixtures do simulado", () => {
     expect(
       [...chaves.keys()].some((k) => k.startsWith("projection-uf-") && k.endsWith("-dep-t1")),
     ).toBe(false);
+  });
+
+  it("🔴 est e dis servem o payload da SUA casa — nunca o do federal", () => {
+    const est = chaves.get(currentProjectionKey("est", 1)) as {
+      cargo?: number;
+      bancada?: { total_cadeiras?: number };
+    };
+    const dis = chaves.get(currentProjectionKey("dis", 1)) as {
+      cargo?: number;
+      bancada?: { total_cadeiras?: number };
+    };
+    expect([est.cargo, est.bancada?.total_cadeiras]).toEqual([7, 1035]);
+    expect([dis.cargo, dis.bancada?.total_cadeiras]).toEqual([8, 24]);
   });
 
   it("o valor de cada chave de UF é o payload daquela UF", () => {
@@ -233,6 +250,31 @@ describe("montarBlobs — o CDN do Blob, a partir das fixtures", () => {
     ).toHaveLength(27);
   });
 
+  it("🔴 serve as assembleias nos prefixos da casa (RF-289): 24 das 26 UFs do 7, só o DF no 8", () => {
+    const sp = blobs.get(deputadoUfBlobPathname(7, "SP")) as { cargo?: number; uf?: string };
+    expect([sp?.cargo, sp?.uf]).toEqual([7, "SP"]);
+    const lista = blobs.get(deputadoUfListaBlobPathname(7, "SP")) as { cargo?: number };
+    expect(lista?.cargo).toBe(7);
+    const df = blobs.get(deputadoUfBlobPathname(8, "DF")) as { cargo?: number; uf?: string };
+    expect([df?.cargo, df?.uf]).toEqual([8, "DF"]);
+    const chaves = [...blobs.keys()];
+    expect(chaves.filter((k) => k.startsWith("deputado-distrital/"))).toEqual([
+      "deputado-distrital/uf/DF.json",
+    ]);
+    expect(chaves).not.toContain("deputado-estadual/uf/DF.json");
+    // O gerador deixa RO e TO sem linha nenhuma (aguardando, de propósito).
+    const est = chaves.filter((k) => /^deputado-estadual\/uf\/[A-Z]{2}\.json$/.test(k));
+    expect(est).toHaveLength(24);
+    expect(est).not.toContain("deputado-estadual/uf/RO.json");
+  });
+
+  it("🔴 fixture de assembleia com UF fora da casa ⇒ lança, nunca grava no endereço de outra", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "falso-blob-casa-"));
+    fs.writeFileSync(path.join(dir, "deputado-uf.json"), JSON.stringify({}));
+    fs.writeFileSync(path.join(dir, "deputado-distrital-uf.json"), JSON.stringify({ SP: {} }));
+    expect(() => montarBlobs({ dir })).toThrow();
+  });
+
   it("a lista 61+ só é servida quando a fixture existe — nunca inventada", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "falso-blob-"));
     fs.writeFileSync(path.join(dir, "deputado-uf.json"), JSON.stringify({ SP: { uf: "SP" } }));
@@ -310,6 +352,25 @@ describe("interruptor da projeção (ADR-0063) — só servido quando pedido", (
       fs.writeFileSync(path.join(dir, `${nome}.json`), "{}");
     }
     expect(montarChaves({ dir }).has(interruptorProjecaoDepKey())).toBe(false);
+    // Sem os arquivos das assembleias, as chaves delas ficam ausentes (nunca o federal).
+    expect(montarChaves({ dir }).has(currentProjectionKey("est", 1))).toBe(false);
+  });
+
+  it("interruptor-projecao-est: desligado por padrão (Fase 1), a fixture manda, e as flags NÃO o tocam", () => {
+    for (const projecaoLigada of [undefined, true, false]) {
+      expect(montarChaves({ projecaoLigada }).get(interruptorProjecaoEstKey())).toMatchObject({
+        ligada: false,
+      });
+    }
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "falso-est-"));
+    for (const nome of ["presidente", "governador", "senador", "deputado"]) {
+      fs.writeFileSync(path.join(dir, `${nome}.json`), "{}");
+    }
+    for (const nome of ["presidente-uf", "governador-uf", "senador-uf"]) {
+      fs.writeFileSync(path.join(dir, `${nome}.json`), "{}");
+    }
+    fs.writeFileSync(path.join(dir, "interruptor-projecao-est.json"), '{"ligada":true}');
+    expect(montarChaves({ dir }).get(interruptorProjecaoEstKey())).toEqual({ ligada: true });
   });
 
   it("sem flag, com a fixture do simulado: serve o valor gravado pelo gerador (ligado)", () => {

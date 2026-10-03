@@ -2,9 +2,11 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page, test } from "@playwright/test";
 import {
   cascaVaziaNoDocumento,
+  detalheDeputadoIndisponivel,
   esperarMapaMontado,
   esperarRedeOciosa,
   instalarProjecaoLocal,
+  ROTA_UF_DEPUTADO,
 } from "./_apoio-local";
 import {
   CSS_LISTAS_DEPUTADO_VISIVEIS,
@@ -150,6 +152,14 @@ const ROUTES = [
   // metodologia das etiquetas editoriais, obrigatória pela constituição 1.6
   // § 8 — tabelas, listas longas e links de fonte que nenhuma rota acima tem.
   "/sobre-as-etiquetas",
+  // Spec 027 (RF-289), 2026-10-03: as três telas das assembleias — a capa das
+  // 27 casas, a Assembleia de SP (o pior caso: 94 lugares, listas de 95) e a
+  // Câmara Legislativa do DF, com o simulado delas servido pelo falso. As
+  // listas abertas e fechadas, a 375 e 320 px e por teclado, estão em
+  // `deputado-listas.spec.ts`.
+  "/deputado-estadual",
+  "/uf/SP/deputado-estadual",
+  "/uf/DF/deputado-distrital",
 ];
 const VIEWPORTS = [
   { name: "desktop", width: 1280, height: 900 },
@@ -192,10 +202,19 @@ for (const route of ROUTES) {
         await page.waitForTimeout(1500);
 
         // Auditar a casca de espera não é auditar a página (ver o cabeçalho).
+        const conteudo = await page.content();
         expect(
-          cascaVaziaNoDocumento(await page.content(), baseURL),
+          cascaVaziaNoDocumento(conteudo, baseURL),
           `${route} veio com a casca "sem dados" — o .next não saiu do \`pnpm build:e2e\`?`,
         ).toEqual([]);
+        // Nem a página de UF de Deputado sem o detalhe do Blob (as listas são
+        // o que mais há para auditar nela) — spec 027, RF-289.
+        if (ROTA_UF_DEPUTADO.test(route)) {
+          expect(
+            detalheDeputadoIndisponivel(conteudo),
+            `${route} renderizou sem o detalhe do Blob — o falso serve o Blob desta casa?`,
+          ).toEqual([]);
+        }
 
         const results = await new AxeBuilder({ page })
           .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])

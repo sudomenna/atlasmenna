@@ -5,8 +5,8 @@
  * comum das telas de deputado lê dado. Desde a frente T os leitores recebem o
  * cargo; o adaptador passa o cargo da página a TODAS as leituras — resumo,
  * detalhe, lista, interruptor, candidaturas — e, nas fontes de
- * desenvolvimento (simulação e fixture de `pnpm dev`, que são do FEDERAL),
- * devolve nada para 7 e 8 em vez de servir o federal como assembleia.
+ * desenvolvimento, serve a cada casa o SEU simulado (frente S) e nunca a
+ * fixture de `pnpm dev` (que é do FEDERAL) como assembleia.
  *
  * (Até 30/09 este arquivo provava o contrário: que 7 e 8 eram RECUSADOS até a
  * frente T. A frente U-b trocou a recusa pela leitura por cargo.)
@@ -132,7 +132,7 @@ describe("🔴 cargos 7 e 8 — cada casa lê a SUA fonte, nunca a do federal", 
   }
 });
 
-describe("🔴 fontes de desenvolvimento são do federal — 7 e 8 nunca as recebem", () => {
+describe("🔴 fontes de desenvolvimento — 7 e 8 nunca recebem as do federal", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
@@ -153,7 +153,7 @@ describe("🔴 fontes de desenvolvimento são do federal — 7 e 8 nunca as rece
     expect(dis.detalhe.status).toBe("unavailable");
   });
 
-  it("modo simulado: nenhuma leitura remota, e o estadual não recebe o simulado do federal", async () => {
+  it("modo simulado: nenhuma leitura remota, e cada casa lê o SEU simulado — nunca o do federal", async () => {
     vi.stubEnv("NODE_ENV", "development");
     vi.stubEnv("FIXTURE_VARIANT", "sim");
     // Controle: o simulado do federal existe e chega ao federal.
@@ -161,13 +161,31 @@ describe("🔴 fontes de desenvolvimento são do federal — 7 e 8 nunca as rece
     expect(fed.nacional?.cargo).toBe(6);
     expect((await lerListaDaCasa(6, "SP")).status).toBe("ok");
 
+    // Frente S: o estadual lê `deputado-estadual*.json` (cargo 7, 94 lugares
+    // em SP) — se lesse o do federal, viria cargo 6 e 70 lugares.
     const est = await lerDadosDaCasa(7, "SP");
+    expect(est.nacional?.cargo).toBe(7);
+    expect(est.nacional?.bancada.total_cadeiras).toBe(1035);
+    expect(est.detalhe.status).toBe("ok");
+    if (est.detalhe.status !== "ok") throw new Error("inalcançável");
+    expect(est.detalhe.detail.cargo).toBe(7);
+    expect(est.detalhe.detail.lugares_a_preencher).toBe(94);
     const lista = await lerListaDaCasa(7, "SP");
-    expect(est.nacional).toBeNull();
-    expect(est.detalhe.status).toBe("unavailable");
-    expect(lista.status).toBe("unavailable");
-    // Interruptor das assembleias no simulado: ausente ⇒ desligado — nunca o
-    // arquivo do federal (`interruptor-projecao-dep.json`).
+    expect(lista.status).toBe("ok");
+    if (lista.status !== "ok") throw new Error("inalcançável");
+    expect(lista.lista.cargo).toBe(7);
+
+    // O distrital lê `deputado-distrital*.json` (24 lugares no DF); sem lista
+    // 61+ (a casa tem 24) e sem DF no estadual nem SP no distrital.
+    const dis = await lerDadosDaCasa(8, "DF");
+    expect(dis.nacional?.cargo).toBe(8);
+    expect(dis.detalhe.status === "ok" && dis.detalhe.detail.lugares_a_preencher).toBe(24);
+    expect((await lerListaDaCasa(8, "DF")).status).toBe("unavailable");
+    expect((await lerDadosDaCasa(7, "DF")).detalhe.status).toBe("unavailable");
+    expect((await lerDadosDaCasa(8, "SP")).detalhe.status).toBe("unavailable");
+
+    // Interruptor das assembleias no simulado: sem `interruptor-projecao-est.json`
+    // (Fase 1) ⇒ ausente ⇒ desligado — nunca o arquivo do federal.
     expect(est.interruptor.ligada).toBe(false);
     expect(readDeputadoProjectionMock).not.toHaveBeenCalled();
     expect(readDeputadoUfDetailMock).not.toHaveBeenCalled();

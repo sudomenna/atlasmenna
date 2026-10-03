@@ -30,7 +30,8 @@
       "!tests/fixtures/simulacao/municipios-pres-t1.json",
       "!tests/fixtures/simulacao/municipios-gov-t1.json",
       "!tests/fixtures/simulacao/municipios-sen-t1.json",
-      "!tests/fixtures/simulacao/deputado-uf.json"
+      "!tests/fixtures/simulacao/deputado-uf.json",
+      "!tests/fixtures/simulacao/deputado-estadual-uf.json"
     ]
   },
   "formatter": {

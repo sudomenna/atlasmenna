@@ -10,20 +10,21 @@
  *
  * Os leitores recebem o cargo desde a frente T — `readDeputadoProjection(cargo)`
  * lê `projection-current-{dep,est,dis}-t1`, `readDeputadoUfDetail(cargo, uf)`
- * lê `deputado[-estadual|-distrital]/uf/<UF>.json`. O que ainda NÃO é por
- * cargo são as duas fontes de desenvolvimento: a simulação
- * (`lib/dev/simulacao.ts`) e a fixture de `pnpm dev`
+ * lê `deputado[-estadual|-distrital]/uf/<UF>.json`. As fontes de
+ * desenvolvimento também são por cargo: a simulação (`lib/dev/simulacao.ts`)
+ * tem arquivos próprios das assembleias desde a frente S
+ * (`deputado-estadual*.json`, `deputado-distrital*.json`, gerados por
+ * `data-pipeline/simulacao-assembleias.py`); a fixture de `pnpm dev`
  * (`tests/fixtures/edge-config/dep-current.json`, `tests/fixtures/blob/dep-uf.json`)
- * — as duas são do FEDERAL. Servi-las como a página da Assembleia Legislativa
- * de São Paulo poria a bancada de SP na Câmara dos Deputados com cara de dado
+ * continua só do FEDERAL. Servi-la como a página da Assembleia Legislativa de
+ * São Paulo poria a bancada de SP na Câmara dos Deputados com cara de dado
  * certo: o defeito do conversor de enum com default silencioso, que já mandou
  * payload de Senador para a chave do Presidente.
  *
  * Por isso a tabela {@link FONTES_DEV} é indexada por `CargoProporcional`, sem
- * ramo de fallback: para 7 e 8 as quatro fontes de desenvolvimento devolvem
- * `null` até a frente S gerar o simulado das assembleias, e a tela cai no
- * estado honesto ("aguardando os dados"). Cargo proporcional novo sem linha na
- * tabela é erro de compilação.
+ * ramo de fallback: para 7 e 8 a simulação lê os arquivos da casa, e a fixture
+ * de `pnpm dev` devolve `null` (a tela cai no estado honesto, "aguardando os
+ * dados"). Cargo proporcional novo sem linha na tabela é erro de compilação.
  *
  * As regras de sempre continuam, só mudaram de arquivo (estavam no corpo de
  * `uf/[sigla]/deputado-federal/page.tsx` e de `lista/route.ts`):
@@ -50,7 +51,11 @@ import {
 } from "@/lib/blob/deputado-uf";
 import type { CargoProporcional } from "@/lib/config/cargos";
 import {
+  type CargoAssembleia,
   resultadoEleitoral,
+  simulacaoAssembleiaNacional,
+  simulacaoAssembleiaUf,
+  simulacaoAssembleiaUfLista,
   simulacaoDeputadoNacional,
   simulacaoDeputadoUf,
   simulacaoDeputadoUfLista,
@@ -98,8 +103,8 @@ function fixtureDetalhe(sigla: string): DeputadoUfDetail | null {
 
 /**
  * As fontes de DESENVOLVIMENTO de cada cargo — simulação (`pnpm dev:sim`) e
- * fixture de `pnpm dev`. Ver o cabeçalho: só o federal tem as duas hoje; para
- * 7 e 8 tudo é `null` até a frente S, e NUNCA o federal.
+ * fixture de `pnpm dev`. Ver o cabeçalho: cada casa tem a SUA simulação; a
+ * fixture de `pnpm dev` só existe para o federal — e NUNCA serve 7 e 8.
  */
 interface FontesDev {
   simulacaoNacional: () => EdgePayloadDeputado | null;
@@ -109,13 +114,16 @@ interface FontesDev {
   fixtureUf: (sigla: string) => DeputadoUfDetail | null;
 }
 
-const NENHUMA_FONTE_DEV: FontesDev = {
-  simulacaoNacional: () => null,
-  simulacaoUf: () => null,
-  simulacaoLista: () => null,
-  fixtureNacional: () => null,
-  fixtureUf: () => null,
-};
+/** Assembleia: a simulação da casa; nenhuma fixture de `pnpm dev` (a que existe é do federal). */
+function fontesDaAssembleia(cargo: CargoAssembleia): FontesDev {
+  return {
+    simulacaoNacional: () => simulacaoAssembleiaNacional(cargo),
+    simulacaoUf: (sigla) => simulacaoAssembleiaUf(cargo, sigla),
+    simulacaoLista: (sigla) => simulacaoAssembleiaUfLista(cargo, sigla),
+    fixtureNacional: () => null,
+    fixtureUf: () => null,
+  };
+}
 
 const FONTES_DEV: Readonly<Record<CargoProporcional, FontesDev>> = {
   6: {
@@ -125,10 +133,10 @@ const FONTES_DEV: Readonly<Record<CargoProporcional, FontesDev>> = {
     fixtureNacional: () => depFixture as unknown as EdgePayloadDeputado,
     fixtureUf: (sigla) => fixtureDetalhe(sigla),
   },
-  // Frente S (spec 027 design § 11): o simulado das assembleias ainda não
-  // existe. As fixtures de `pnpm dev` acima são do federal — nunca aqui.
-  7: NENHUMA_FONTE_DEV,
-  8: NENHUMA_FONTE_DEV,
+  // Frente S (spec 027 design § 11): o simulado de cada casa. As fixtures de
+  // `pnpm dev` acima são do federal — nunca aqui.
+  7: fontesDaAssembleia(7),
+  8: fontesDaAssembleia(8),
 };
 
 /**

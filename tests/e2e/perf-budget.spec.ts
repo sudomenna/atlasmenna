@@ -3,9 +3,11 @@ import * as path from "node:path";
 import { expect, type Page, type Request, test } from "@playwright/test";
 import {
   cascaVaziaNoDocumento,
+  detalheDeputadoIndisponivel,
   esperarMapaMontado,
   esperarRedeOciosa,
   instalarProjecaoLocal,
+  ROTA_UF_DEPUTADO,
 } from "./_apoio-local";
 
 /**
@@ -129,6 +131,15 @@ const ROUTES = [
   "/uf/MG/deputado-federal",
   "/senador",
   "/sobre-as-etiquetas",
+  // Spec 027 (RF-289), 2026-10-03: as três telas das assembleias, medidas com
+  // o simulado delas (`data-pipeline/simulacao-assembleias.py`) servido pelo
+  // falso — Global Config `est`/`dis` e o Blob `deputado-{estadual,distrital}/`.
+  // A de SP estadual é o pior caso de peso do produto: 94 lugares, 26
+  // agremiações de até 95 candidatos (60 por agremiação no documento), todos
+  // os nomes com 30 caracteres acentuados.
+  "/deputado-estadual",
+  "/uf/SP/deputado-estadual",
+  "/uf/DF/deputado-distrital",
 ] as const;
 
 /**
@@ -193,6 +204,27 @@ const BUDGET_DOCUMENT_BYTES = 300 * KIB;
 const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
 
 /**
+ * Teto de documento de `/uf/SP/deputado-estadual` — **780 KiB, PROPOSTO em
+ * 03/10 pela frente S da spec 027 e PENDENTE da aprovação do dono** (RF-289:
+ * "proposto a partir da medição e aprovado pelo dono, como os 560 KiB do
+ * federal"). Medido com o simulado das assembleias no pior caso forçado
+ * (`data-pipeline/simulacao-assembleias.py`: 94 lugares, 26 agremiações de 95
+ * candidatos, 60 no documento — 1.570 linhas —, TODOS os nomes com 30
+ * caracteres acentuados) e o Blob servido pelo falso: **740.947 B (723,6
+ * KiB)**. 780 KiB = +7,8% sobre a medida, a mesma folga do federal (SP 520,5
+ * KiB sob 560). O custo por linha é o do federal (~470 B, HTML + payload RSC);
+ * o que cresce é o número de linhas (1.570 contra 1.007 do SP federal).
+ *
+ * E `/uf/DF/deputado-distrital` entra no teto das UFs do federal (560 KiB),
+ * também PROPOSTO: o RF-289 previa o global de 300 KiB e a medida desmente —
+ * **456.238 B (445,5 KiB)** com 26 agremiações de até 25 candidatos (650
+ * linhas; a mesma página que `/uf/RJ/deputado-federal`, 732 linhas, 440 KiB).
+ * Uma Câmara de 24 lugares tem tantas candidaturas quanto uma bancada federal
+ * de 46. O teto global NÃO muda.
+ */
+const TETO_DOCUMENTO_ASSEMBLEIA_SP = 780 * KIB;
+
+/**
  * Tetos de documento PRÓPRIOS de uma rota — exceção nomeada, nunca
  * afrouxamento do teto global acima, que não muda.
  *
@@ -210,23 +242,13 @@ const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> 
   "/uf/SP/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/RJ/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/MG/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
+  "/uf/SP/deputado-estadual": TETO_DOCUMENTO_ASSEMBLEIA_SP,
+  "/uf/DF/deputado-distrital": TETO_DOCUMENTO_DEPUTADO_UF,
 };
 
 function tetoDoDocumento(route: (typeof ROUTES)[number]): number {
   return TETO_DOCUMENTO_POR_ROTA[route] ?? BUDGET_DOCUMENT_BYTES;
 }
-
-/**
- * Frases de "detalhe do Blob indisponível" da página de UF de Deputado
- * (`MOTIVO_INDISPONIVEL`, `app/(dep)/uf/[sigla]/deputado-federal/page.tsx`).
- * Com o Blob servido pelo falso, nenhuma pode aparecer: se aparecer, o teto
- * de 560 KiB passaria medindo a página SEM a parte que ele existe para medir.
- */
-const DETALHE_DEPUTADO_INDISPONIVEL = [
-  "O armazenamento do detalhe não está configurado",
-  "Ainda não há um detalhe publicado para este estado",
-  "Não conseguimos buscar o detalhe agora",
-] as const;
 
 /**
  * Rotas que JÁ estouravam o teto do documento quando o portão passou a medir a
@@ -549,10 +571,9 @@ test.describe("perf budget (RNF-007a/b/c)", () => {
         `${route} veio com a casca "sem dados" — o .next não saiu do \`pnpm build:e2e\`?`,
       ).toEqual([]);
 
-      if (/^\/uf\/[A-Z]{2}\/deputado-federal$/.test(route)) {
-        const html = corpo.toString("utf8");
+      if (ROTA_UF_DEPUTADO.test(route)) {
         expect(
-          DETALHE_DEPUTADO_INDISPONIVEL.filter((f) => html.includes(f)),
+          detalheDeputadoIndisponivel(corpo.toString("utf8")),
           `${route} renderizou sem o detalhe do Blob — o BLOB_PUBLIC_BASE_URL do ` +
             "build:e2e/start:e2e aponta para o servidor falso?",
         ).toEqual([]);

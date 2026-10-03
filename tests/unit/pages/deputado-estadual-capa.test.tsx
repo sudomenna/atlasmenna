@@ -19,6 +19,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import DeputadoEstadualPage from "@/app/(dep)/deputado-estadual/page";
 import type { EdgePayloadDeputado } from "@/lib/edge-config/types";
+import { cascaVaziaNoDocumento } from "@/tests/e2e/_apoio-local";
 
 import { agremiacao, destaque, linhaUf, payloadCasa, puxador } from "../deputado/_payload-casa";
 
@@ -244,5 +245,25 @@ describe("nenhum payload — três estados, nunca zeros", () => {
     expect(t).not.toMatch(/1\.059|1\.035|\b0 cadeiras/);
     expect(doc.querySelector("[data-testid='bancada-linha']")).toBeNull();
     expect(doc.querySelector("main")?.getAttribute("data-trilha")).toBe("dep");
+  });
+});
+
+describe("🔴 portões e2e (RF-289) — o detector de casca conhece a capa sem dado", () => {
+  // `cascaVaziaNoDocumento` é o alarme dos portões de peso e de axe para
+  // "mediu a página errada". A casca da capa das assembleias não diz nenhuma
+  // das frases antigas ("Aguardando os dados." ≠ "Aguardando dados…") — sem
+  // a marca `data-testid="casas-aguardando"`, o portão mediria a casca verde.
+  const LOCAL = "http://localhost:3100";
+
+  it("sem nenhum payload ⇒ o detector acusa a marca da capa", async () => {
+    porCargo(null, null);
+    const markup = renderToStaticMarkup(await DeputadoEstadualPage());
+    expect(cascaVaziaNoDocumento(markup, LOCAL)).toContain('data-testid="casas-aguardando"');
+  });
+
+  it("com os dois payloads ⇒ o detector não acusa nada (o caso normal do portão)", async () => {
+    porCargo(est(), dis());
+    const markup = renderToStaticMarkup(await DeputadoEstadualPage());
+    expect(cascaVaziaNoDocumento(markup, LOCAL)).toEqual([]);
   });
 });

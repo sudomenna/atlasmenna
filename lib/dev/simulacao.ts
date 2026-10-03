@@ -490,6 +490,74 @@ export function simulacaoInterruptorProjecao(): unknown {
   return valor === null ? undefined : valor;
 }
 
+// ---------------------------------------------------------------------------
+// Assembleias — Deputado Estadual (7) e Distrital (8), spec 027 frente S
+// ---------------------------------------------------------------------------
+
+/** Os cargos proporcionais que NÃO são o federal. */
+export type CargoAssembleia = 7 | 8;
+
+/**
+ * Os arquivos de cada casa, gerados por `data-pipeline/simulacao-assembleias.py`
+ * (o modelo Python real sobre EA20 do simulado do TSE — sem banco). Tabela
+ * fechada por cargo, sem ramo de fallback: ler `deputado.json` para o 7 poria
+ * a bancada da Câmara dos Deputados na página da Assembleia com cara de dado
+ * certo (o defeito do conversor de enum com default silencioso). O 8 não tem
+ * lista 61+ (a Câmara Legislativa tem 24 lugares) — o arquivo nunca existe e
+ * a leitura devolve `null`.
+ */
+const ARQUIVOS_ASSEMBLEIA: Readonly<
+  Record<CargoAssembleia, { nacional: string; uf: string; lista: string }>
+> = {
+  7: {
+    nacional: "deputado-estadual.json",
+    uf: "deputado-estadual-uf.json",
+    lista: "deputado-estadual-uf-lista.json",
+  },
+  8: {
+    nacional: "deputado-distrital.json",
+    uf: "deputado-distrital-uf.json",
+    lista: "deputado-distrital-uf-lista.json",
+  },
+};
+
+/** Payload nacional de uma casa (`projection-current-{est,dis}-t1` no simulado). */
+export function simulacaoAssembleiaNacional(cargo: CargoAssembleia): EdgePayloadDeputado | null {
+  return servirArquivo<EdgePayloadDeputado>(ARQUIVOS_ASSEMBLEIA[cargo].nacional);
+}
+
+/**
+ * Detalhe da UF de uma casa (`/uf/[sigla]/deputado-{estadual,distrital}`).
+ * A UF fora do cargo (o DF no 7, qualquer outra no 8) não está no mapa ⇒ `null`.
+ */
+export function simulacaoAssembleiaUf(
+  cargo: CargoAssembleia,
+  sigla: string,
+): DeputadoUfDetail | null {
+  return servirDoMapa<DeputadoUfDetail>(ARQUIVOS_ASSEMBLEIA[cargo].uf, sigla);
+}
+
+/** Lista 61+ de uma casa (`/uf/[sigla]/deputado-estadual/lista`). */
+export function simulacaoAssembleiaUfLista(
+  cargo: CargoAssembleia,
+  sigla: string,
+): DeputadoUfLista | null {
+  return servirDoMapa<DeputadoUfLista>(ARQUIVOS_ASSEMBLEIA[cargo].lista, sigla);
+}
+
+/**
+ * O VALOR bruto de `interruptor-projecao-est` no modo simulado
+ * (`interruptor-projecao-est.json`), ou `undefined` sem o arquivo — chave
+ * ausente, projeção das assembleias DESLIGADA. Na Fase 1 o gerador não emite
+ * o arquivo de propósito: as assembleias não projetam (RF-285). É um arquivo
+ * SEPARADO do federal — `-dep` nunca liga 7 e 8 (RF-287).
+ */
+export function simulacaoInterruptorProjecaoEst(): unknown {
+  if (!varianteAtiva()) return undefined;
+  const valor = lerArquivo("interruptor-projecao-est.json");
+  return valor === null ? undefined : valor;
+}
+
 /**
  * Detalhe municipal — o que pinta o coroplético dentro da UF.
  *

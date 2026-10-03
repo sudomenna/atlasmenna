@@ -34,6 +34,9 @@
  *
  *   - Só as chaves CANÔNICAS montadas pelos construtores de `keys.ts`:
  *       `projection-current-{pres,gov,sen,dep}-t1`  ← `<cargo>.json`
+ *       `projection-current-{est,dis}-t1`           ← `deputado-{estadual,distrital}.json`
+ *                                                     (spec 027; opcionais — sem o arquivo,
+ *                                                     a chave fica ausente)
  *       `projection-uf-<UF>-{pres,gov,sen}-t1`      ← `<cargo>-uf.json`
  *     Nenhum alias legado, nenhuma chave com dois-pontos, nenhum turno 2 —
  *     o reader só pede esses no caminho de MISS, e aqui não há miss.
@@ -100,6 +103,12 @@
  *
  *   `/blob/deputado/uf/<UF>.json`        ← `deputado-uf.json[UF]`
  *   `/blob/deputado/uf-lista/<UF>.json`  ← `deputado-uf-lista.json[UF]` (se existir)
+ *   `/blob/deputado-estadual/uf/<UF>.json`       ← `deputado-estadual-uf.json[UF]`
+ *   `/blob/deputado-estadual/uf-lista/<UF>.json` ← `deputado-estadual-uf-lista.json[UF]`
+ *   `/blob/deputado-distrital/uf/DF.json`        ← `deputado-distrital-uf.json.DF`
+ *     (spec 027 RF-289; arquivos de `data-pipeline/simulacao-assembleias.py`,
+ *     todos opcionais. O caminho sai de `deputadoUfBlobPathname(cargo, UF)`,
+ *     que LANÇA para UF fora da casa — o DF no 7, qualquer outra no 8.)
  *
  * Qualquer outro caminho do Blob ⇒ 404, a resposta do CDN para objeto não
  * gravado. ⚠️ Isso muda três coisas FORA de Deputado, todas na direção de
@@ -121,6 +130,12 @@
  *   nenhum dos dois         ⇒ `interruptor-projecao-dep.json` da fixture, se
  *                             existir; senão, AUSENTE (= desligada).
  *
+ * E a chave das assembleias, `interruptor-projecao-est` (cargos 7 e 8, spec
+ * 027 RF-287/RF-289), independente da de cima — as flags NUNCA a tocam (`-dep`
+ * não liga 7 e 8): `interruptor-projecao-est.json` da fixture, se existir;
+ * senão `{ligada: false}`, que é como a produção a publica na Fase 1 (as
+ * assembleias não projetam, RF-285).
+ *
  * ─── Uso ───────────────────────────────────────────────────────────────────
  *
  *   tsx scripts/edge-config-falso.ts [--sem-blocos-novos] [--marcar-build]
@@ -141,9 +156,11 @@ import { fileURLToPath } from "node:url";
 
 import { deputadoUfBlobPathname, deputadoUfListaBlobPathname } from "@/lib/blob/paths";
 import type { Cargo } from "@/lib/config/calendar";
+import type { CargoProporcional } from "@/lib/config/cargos";
 import {
   currentProjectionKey,
   interruptorProjecaoDepKey,
+  interruptorProjecaoEstKey,
   ufProjectionKey,
 } from "@/lib/edge-config/keys";
 
@@ -151,7 +168,8 @@ const DIR_SIMULACAO = path.join(process.cwd(), "tests", "fixtures", "simulacao")
 
 /**
  * Cargo da chave → nome-base do arquivo em `tests/fixtures/simulacao/`.
- * `est`/`dis` (spec 027) ficam de fora até a frente S gerar as fixtures deles.
+ * Obrigatórios: sem eles o servidor não sobe (o simulado do federal existe
+ * desde 14/09).
  */
 const ARQUIVO_NACIONAL: Record<Exclude<Cargo, "est" | "dis">, string> = {
   pres: "presidente",
@@ -159,6 +177,22 @@ const ARQUIVO_NACIONAL: Record<Exclude<Cargo, "est" | "dis">, string> = {
   sen: "senador",
   dep: "deputado",
 };
+
+/**
+ * As assembleias (spec 027 frente S): nacional e detalhe por UF de cada casa,
+ * de `data-pipeline/simulacao-assembleias.py`. Opcionais — num diretório sem
+ * eles a chave e o Blob ficam ausentes, e o portão reprova pela casca
+ * ("Aguardando os dados", `data-testid="casas-aguardando"`) ou pelo "detalhe
+ * indisponível", nunca mede outra página calado.
+ */
+const ARQUIVOS_ASSEMBLEIA: ReadonlyArray<{
+  cargo: Extract<CargoProporcional, 7 | 8>;
+  token: Extract<Cargo, "est" | "dis">;
+  base: string;
+}> = [
+  { cargo: 7, token: "est", base: "deputado-estadual" },
+  { cargo: 8, token: "dis", base: "deputado-distrital" },
+];
 
 /**
  * Cargos com payload por UF no Global Config. Deputado fica de fora de
@@ -188,6 +222,8 @@ export const PREFIXO_BLOB = "/blob/";
 
 /** Arquivo opcional da fixture com o VALOR do interruptor. */
 const ARQUIVO_INTERRUPTOR = "interruptor-projecao-dep";
+/** Idem, das assembleias (spec 027). */
+const ARQUIVO_INTERRUPTOR_EST = "interruptor-projecao-est";
 
 function lerJson(dir: string, nome: string): unknown {
   return JSON.parse(fs.readFileSync(path.join(dir, `${nome}.json`), "utf8")) as unknown;
@@ -246,6 +282,17 @@ export function montarChaves(opts: OpcoesChaves = {}): Map<string, unknown> {
     }
   }
 
+  for (const { token, base } of ARQUIVOS_ASSEMBLEIA) {
+    const bruto = lerJsonOpcional(dir, base);
+    if (bruto !== undefined) chaves.set(currentProjectionKey(token, TURNO), bruto);
+  }
+
+  // Assembleias: fixture > `{ligada: false}` (Fase 1). As flags são do `-dep`.
+  chaves.set(
+    interruptorProjecaoEstKey(),
+    lerJsonOpcional(dir, ARQUIVO_INTERRUPTOR_EST) ?? { ligada: false, por: "edge-config-falso" },
+  );
+
   // Interruptor: flag > fixture > AUSENTE (= desligada, a regra de produção).
   if (opts.projecaoLigada !== undefined) {
     chaves.set(interruptorProjecaoDepKey(), {
@@ -279,6 +326,22 @@ export function montarBlobs(opts: Pick<OpcoesChaves, "dir"> = {}): Map<string, u
     if (!ehObjeto(listas)) throw new Error("deputado-uf-lista.json não é um mapa UF → lista");
     for (const [sigla, lista] of Object.entries(listas)) {
       blobs.set(deputadoUfListaBlobPathname(6, sigla), lista);
+    }
+  }
+
+  for (const { cargo, base } of ARQUIVOS_ASSEMBLEIA) {
+    for (const [sufixo, caminho] of [
+      ["uf", deputadoUfBlobPathname],
+      ["uf-lista", deputadoUfListaBlobPathname],
+    ] as const) {
+      const mapa = lerJsonOpcional(dir, `${base}-${sufixo}`);
+      if (mapa === undefined) continue;
+      if (!ehObjeto(mapa)) throw new Error(`${base}-${sufixo}.json não é um mapa UF → objeto`);
+      for (const [sigla, objeto] of Object.entries(mapa)) {
+        // Lança para UF fora da casa (o DF no 7, outra UF no 8): fixture
+        // errada não vira objeto no endereço de outra casa.
+        blobs.set(caminho(cargo, sigla), objeto);
+      }
     }
   }
 
@@ -520,6 +583,11 @@ async function main(argv: string[]): Promise<void> {
   process.stderr.write(
     `[edge-config-falso] ${chaves.size} chaves em http://127.0.0.1:${porta}/${id}` +
       ` + ${blobs.size} objetos de Blob em ${PREFIXO_BLOB} · interruptor ${interruptor}` +
+      ` · assembleias: ${
+        ARQUIVOS_ASSEMBLEIA.filter(({ token }) => chaves.has(currentProjectionKey(token, TURNO)))
+          .map(({ token }) => token)
+          .join("+") || "NENHUMA (o portão das três telas da spec 027 vai reprovar)"
+      }` +
       `${semBlocosNovos ? " (--sem-blocos-novos)" : ""}\n`,
   );
 
