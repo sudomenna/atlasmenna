@@ -162,7 +162,12 @@
 
 .foto {
   grid-area: foto;
-  display: block;
+  /* `flex`, não `block`: esta classe vence o `flex items-center` que o átomo
+     põe no fallback, e com `block` as iniciais caíam no canto superior
+     esquerdo, fora do círculo. Na `<img>` o `flex` não muda nada. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 44px;
   height: 44px;
   border-radius: 999px;
