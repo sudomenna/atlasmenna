@@ -173,4 +173,9 @@ volta à pré-eleição; as chaves de UF/Blob só se corrigem com uma rodada do 
 
 **Pendente na mesma noite:** `projections` ganhou linhas falsas entre 21:10 e 21:30 UTC (pres 700, gov 44,
 sen 70; `dado_ts` até 21:24 UTC em gov) — a série da spec 020 (janela de 24 h por `ts` e `dado_ts`)
-poderia exibi-las em Governador entre 17:00 e 18:24 BRT de 04/10. Ver o commit seguinte.
+poderia exibi-las em Governador entre 17:00 e 18:24 BRT de 04/10 — e, mesmo sem elas, começaria o eixo
+em 03/10 18h com os ciclos zerados da véspera. **Resolvido no commit seguinte:** a consulta da série
+(`_SERIE_POR_CANDIDATO_SQL`) ganhou o piso do fechamento das urnas (`_INICIO_APURACAO_POR_TURNO`, 17h BRT
+de cada turno; só vale depois do instante — `NOW() < piso OR dado_ts >= piso`). Conferido contra a tabela
+real, em transação somente leitura, trocando `NOW()` por instantes fixos: às 19h de 03/10 a consulta
+devolve o mesmo de antes (pres 700, gov 44, sen 70 pontos); às 17h30 de 04/10, zero pontos da véspera.

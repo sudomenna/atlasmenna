@@ -1133,6 +1133,27 @@ class SeriePorCandidatoBruta(NamedTuple):
 #: O `dado_ts IS NOT NULL` é redundante com a janela (`NULL > x` já é `NULL` e
 #: já reprova o `WHERE`) e está escrito assim mesmo: é o filtro que a decisão
 #: nomeia, e um leitor não deve ter de derivá-lo da lógica ternária do SQL.
+#:
+#: 🔴 **Piso do fechamento das urnas (emenda de 03/10/2026 ao ADR-0054).** Depois
+#: das 17h BRT do dia do turno, ponto com `dado_ts` anterior às 17h NÃO entra:
+#: antes do fechamento não existe voto, e a janela de 24 h traria para o eixo os
+#: ciclos da véspera — a linha começaria em 03/10 18h com 23 h de zeros e, em
+#: Governador, com as linhas FALSAS do incidente da virada (pares de RR que só
+#: tinham leituras do simulado; `dado_ts` até 21:24 UTC de 03/10). Antes das 17h
+#: o piso não se aplica (`NOW() < piso`) — fora do dia da eleição a consulta é a
+#: de antes. Turno sem entrada ⇒ piso na época Unix (inofensivo).
+_INICIO_APURACAO_POR_TURNO: dict[int, datetime] = {
+    1: datetime(2026, 10, 4, 17, 0, 0, tzinfo=timezone(timedelta(hours=-3))),
+    2: datetime(2026, 10, 25, 17, 0, 0, tzinfo=timezone(timedelta(hours=-3))),
+}
+_PISO_NEUTRO = datetime(1970, 1, 1, tzinfo=timezone.utc)
+
+
+def _piso_da_serie(turno: int) -> datetime:
+    """Instante a partir do qual um ponto de série vale (fechamento das urnas)."""
+    return _INICIO_APURACAO_POR_TURNO.get(int(turno), _PISO_NEUTRO)
+
+
 _SERIE_POR_CANDIDATO_SQL = """
     SELECT DISTINCT ON (uf, candidato_id, balde)
            uf, candidato_id, balde, momento, pct_atual, pct_projetado
@@ -1151,6 +1172,7 @@ _SERIE_POR_CANDIDATO_SQL = """
           AND dado_ts IS NOT NULL
           AND ts > NOW() - (%(janela)s || ' hours')::interval
           AND dado_ts > NOW() - (%(janela)s || ' hours')::interval
+          AND (NOW() < %(piso)s OR dado_ts >= %(piso)s)
     ) AS pontos
     ORDER BY uf, candidato_id, balde, momento DESC
 """
@@ -1198,6 +1220,7 @@ def fetch_series_por_candidato(
         "cargo": int(cargo),
         "turno": int(turno),
         "janela": str(window_hours),
+        "piso": _piso_da_serie(turno),
     }
     try:
         with conn.cursor() as cur:

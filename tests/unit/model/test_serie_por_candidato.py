@@ -1645,3 +1645,35 @@ def test_datetime_ingenuo_do_driver_nao_cai_no_fuso_da_maquina(
     finally:
         monkeypatch.undo()
         time.tzset()
+
+
+# ===========================================================================
+# Piso do fechamento das urnas — emenda de 03/10/2026 ao ADR-0054
+# ===========================================================================
+
+
+def test_piso_da_serie_e_o_fechamento_das_urnas_de_cada_turno() -> None:
+    """17h BRT do dia de cada turno; turno desconhecido ⇒ piso neutro (época)."""
+    from datetime import datetime, timedelta, timezone
+
+    from api.model.project import _piso_da_serie
+
+    brt = timezone(timedelta(hours=-3))
+    assert _piso_da_serie(1) == datetime(2026, 10, 4, 17, 0, tzinfo=brt)
+    assert _piso_da_serie(2) == datetime(2026, 10, 25, 17, 0, tzinfo=brt)
+    assert _piso_da_serie(9) == datetime(1970, 1, 1, tzinfo=timezone.utc)
+
+
+def test_consulta_recebe_o_piso_do_turno_e_o_aplica_so_depois_dele() -> None:
+    """A consulta leva o piso do turno pedido e o usa nas duas metades: antes
+    do instante (`NOW() < piso`) nada muda; depois, só `dado_ts >= piso`. Sem
+    isso, às 17h de 04/10 o eixo começaria na véspera (zeros da virada e as
+    linhas falsas de RR do incidente de 03/10)."""
+    from api.model.project import _piso_da_serie
+
+    for turno in (1, 2):
+        conn = _ConnDeLeitura([])
+        fetch_series_por_candidato(conn, 1, turno, window_hours=24)
+        assert conn.capturado["params"]["piso"] == _piso_da_serie(turno)
+        sql = " ".join(conn.capturado["sql"].split())
+        assert "AND (NOW() < %(piso)s OR dado_ts >= %(piso)s)" in sql
