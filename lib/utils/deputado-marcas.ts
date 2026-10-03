@@ -124,7 +124,7 @@ const TSE_ELEITO: ReadonlySet<RotuloTse> = new Set<RotuloTse>([
   "eleito",
 ]);
 
-function ehTseEleito(rotulo: RotuloTse | undefined): rotulo is RotuloTseEleito {
+export function ehTseEleito(rotulo: RotuloTse | undefined): rotulo is RotuloTseEleito {
   return rotulo !== undefined && TSE_ELEITO.has(rotulo);
 }
 

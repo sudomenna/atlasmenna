@@ -301,9 +301,12 @@ redirecionar para `/uf/DF/deputado-distrital`.
 - Given `/uf/SP/deputado-distrital`, when requisitada, then redireciona (308) para
   `/uf/SP/deputado-estadual` (open question 1).
 - Given `/uf/ZZ/deputado-estadual`, then 404.
-- Given uma agremiação de SP com 95 candidatos, when a página carrega, then as posições 1–60 estão no
-  documento, 20 visíveis, e "mostrar todos (35)" busca `GET /uf/SP/deputado-estadual/lista`; a rota
-  responde 404 para sigla fora das 26, e o distrital não tem rota de lista.
+- Given uma agremiação de SP com 95 candidatos, when a página carrega, then o documento traz os eleitos
+  + os 5 seguintes por `rank` (mínimo 10 linhas), todas visíveis e nenhuma oculta no DOM, e "mostrar
+  todos (N)" busca `GET /uf/SP/deputado-estadual/lista`, que devolve do primeiro candidato fora do
+  documento em diante; a rota responde 404 para sigla fora das 26. O DF tem a sua, em
+  `/uf/DF/deputado-distrital/lista`. **Emenda 2026-10-03 (ADR-0065, emenda de 03/10):** substitui o
+  "1–60, 20 visíveis" e o "distrital não tem rota de lista".
 - Given o leitor abriu a lista 61+ de SP no federal e depois abre a de SP no estadual, na mesma aba,
   when a segunda busca roda, then ela **faz** a requisição — o cache em memória é chaveado por
   `slug:UF`, nunca só por UF.

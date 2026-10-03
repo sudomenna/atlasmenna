@@ -134,9 +134,11 @@ const ROUTES = [
   // Spec 027 (RF-289), 2026-10-03: as três telas das assembleias, medidas com
   // o simulado delas (`data-pipeline/simulacao-assembleias.py`) servido pelo
   // falso — Global Config `est`/`dis` e o Blob `deputado-{estadual,distrital}/`.
-  // A de SP estadual é o pior caso de peso do produto: 94 lugares, 26
-  // agremiações de até 95 candidatos (60 por agremiação no documento), todos
-  // os nomes com 30 caracteres acentuados.
+  // A de SP estadual era o pior caso de peso do produto: 94 lugares, 26
+  // agremiações de até 95 candidatos, todos os nomes com 30 caracteres
+  // acentuados. Com o corte das assembleias (decisão do dono, 03/10: eleitos
+  // + 5, mínimo 10 por agremiação no documento) as duas de UF voltam ao teto
+  // GLOBAL — ver o histórico em `TETO_DOCUMENTO_POR_ROTA`.
   "/deputado-estadual",
   "/uf/SP/deputado-estadual",
   "/uf/DF/deputado-distrital",
@@ -204,27 +206,6 @@ const BUDGET_DOCUMENT_BYTES = 300 * KIB;
 const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
 
 /**
- * Teto de documento de `/uf/SP/deputado-estadual` — **780 KiB, PROPOSTO em
- * 03/10 pela frente S da spec 027 e PENDENTE da aprovação do dono** (RF-289:
- * "proposto a partir da medição e aprovado pelo dono, como os 560 KiB do
- * federal"). Medido com o simulado das assembleias no pior caso forçado
- * (`data-pipeline/simulacao-assembleias.py`: 94 lugares, 26 agremiações de 95
- * candidatos, 60 no documento — 1.570 linhas —, TODOS os nomes com 30
- * caracteres acentuados) e o Blob servido pelo falso: **740.947 B (723,6
- * KiB)**. 780 KiB = +7,8% sobre a medida, a mesma folga do federal (SP 520,5
- * KiB sob 560). O custo por linha é o do federal (~470 B, HTML + payload RSC);
- * o que cresce é o número de linhas (1.570 contra 1.007 do SP federal).
- *
- * E `/uf/DF/deputado-distrital` entra no teto das UFs do federal (560 KiB),
- * também PROPOSTO: o RF-289 previa o global de 300 KiB e a medida desmente —
- * **456.238 B (445,5 KiB)** com 26 agremiações de até 25 candidatos (650
- * linhas; a mesma página que `/uf/RJ/deputado-federal`, 732 linhas, 440 KiB).
- * Uma Câmara de 24 lugares tem tantas candidaturas quanto uma bancada federal
- * de 46. O teto global NÃO muda.
- */
-const TETO_DOCUMENTO_ASSEMBLEIA_SP = 780 * KIB;
-
-/**
  * Tetos de documento PRÓPRIOS de uma rota — exceção nomeada, nunca
  * afrouxamento do teto global acima, que não muda.
  *
@@ -236,14 +217,21 @@ const TETO_DOCUMENTO_ASSEMBLEIA_SP = 780 * KIB;
  *   emenda): mediu 315.242 B (307,8 KiB), 2,6% acima do global, com o
  *   hemiciclo de 513 cadeiras, os mais votados do país, os puxadores e o selo
  *   por UF.
+ *
+ * ⚠️ `/uf/SP/deputado-estadual` e `/uf/DF/deputado-distrital` NÃO têm teto
+ * próprio — ficam no global de 300 KiB, como o RF-289 previa. Em 03/10 a
+ * frente S mediu, com as listas em três faixas (60 por agremiação no
+ * documento), **740.947 B (723,6 KiB)** em SP (1.570 linhas) e **456.238 B
+ * (445,5 KiB)** no DF (650 linhas), e propôs 780 e 560 KiB. O dono decidiu
+ * outra coisa no mesmo dia: nas assembleias o documento leva, por
+ * agremiação, os eleitos + 5, mínimo 10 (`lib/deputado/lista-documento.ts`),
+ * e o resto vem pela rota da lista no clique. Os tetos propostos saíram.
  */
 const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> = {
   "/deputado-federal": 320 * KIB,
   "/uf/SP/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/RJ/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/MG/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
-  "/uf/SP/deputado-estadual": TETO_DOCUMENTO_ASSEMBLEIA_SP,
-  "/uf/DF/deputado-distrital": TETO_DOCUMENTO_DEPUTADO_UF,
 };
 
 function tetoDoDocumento(route: (typeof ROUTES)[number]): number {

@@ -36,6 +36,13 @@ Aceito (2026-09-29) — plano aprovado pelo dono.
 >    `tests/e2e/a11y-audit.spec.ts`); as listas trazidas à tela e abertas, a 375 e 320 px, passam em
 >    `tests/e2e/deputado-listas.spec.ts`. A conferir com VoiceOver e NVDA no bug bash.
 
+> **Emenda 2026-10-03 (decisão do dono — assembleias, cargos 7 e 8).** As três faixas e as 60
+> linhas por agremiação foram dimensionadas para a Câmara e **deixam de valer para Deputado Estadual
+> e Distrital**: lá o documento traz os eleitos mais os 5 seguintes por posição (mínimo de 10 linhas),
+> nada recortado no DOM, e o resto vem só em "mostrar todos", pela rota fora de `/api` — que passa a
+> existir também para o DF. O federal (cargo 6) **não muda**. Texto da decisão no fim deste arquivo
+> (§ "Emenda 2026-10-03 — Decisão").
+
 **Emenda escopada ao [ADR-0017](0017-transparencia-total-3-camadas.md).** O ADR-0017 proíbe
 collapsible — `display:none`, `hidden`, `<details>` — e foi escrito para as ~11 candidaturas de uma
 corrida majoritária. Esta emenda vale **só** para a lista de candidaturas por agremiação numa eleição
@@ -261,3 +268,45 @@ pré-renderizado, para o dado não sair duas vezes (HTML e payload RSC, o defeit
   `proxy.ts`, `lib/blob/paths.ts:207`, `lib/blob/deputado-uf.ts:193,263`, `lib/blob/write.ts`,
   `lib/edge-config/writer.ts:1354-1395`, `tests/e2e/perf-budget.spec.ts:109-167`,
   `app/api/internal/edge-write/route.ts:273`.
+
+## Emenda 2026-10-03 — Decisão (cargos 7 e 8)
+
+**Problema.** A frente S da spec 027 mediu, com servidor falso e pior caso de peso,
+`/uf/SP/deputado-estadual` em **724 KiB** (1.570 linhas, ~470 B por linha) e
+`/uf/DF/deputado-distrital` em **446 KiB** (650 linhas), contra o teto global de 300 KiB (RNF-007).
+As três faixas deste ADR (20 + 21 a 60 + 61 em diante) foram dimensionadas para a Câmara — SP com 70
+lugares e até 71 candidatos por agremiação. A ALESP tem 94 lugares e até 95 candidatos por agremiação, e
+o DF distrital tem 26 agremiações de até 25: a conta das 60 linhas por agremiação no documento não fecha.
+
+**Decisão (só cargos 7 e 8; o federal não muda).** Para cada agremiação, o documento traz **os eleitos**
+— na parcial, ou os do TSE (`tf = "s"`) — **mais as 5 candidaturas seguintes por `rank`, com mínimo de 10
+linhas**. **Nada fica oculto no DOM**: não há faixa 2 (nem `data-collapsed`, nem recorte por CSS); toda
+linha do documento é visível. O resto da lista vem **só** em "mostrar todos", pela rota fora de `/api`
+da Decisão 3, que passa a existir para as duas assembleias —
+`/uf/[sigla]/deputado-estadual/lista` e `/uf/DF/deputado-distrital/lista` (antes o distrital não tinha
+rota). A linha de corte continua no documento, e o resto da mecânica das Decisões 1 a 4 se mantém: ordem
+por voto contado, união por `sqcand`, candidatura com marca de eleito sempre no documento, resposta
+guardada em memória do cliente, erro com `no-store`. O contrato da rota **difere do federal**: a das
+assembleias devolve **do primeiro candidato fora do documento em diante** (um corte que varia por
+agremiação), não "61 em diante".
+
+**Alternativas rejeitadas.** (a) *Teto de documento próprio* (780 KiB para SP, 560 KiB para o DF), como
+fizemos para o federal: o dono preferiu que as assembleias caibam no teto global. (b) *20 linhas fixas
+por agremiação*: SP ficaria em ~380 KiB e o DF acima de 300 KiB, e partidos de SP com mais de 20 eleitos
+teriam eleitos fora do documento — contra a cláusula do D1 de que candidatura com marca de eleito fica
+sempre na página.
+
+**Consequências.**
+- Positivas: o peso do documento passa a crescer com o número de eleitos, não com o de candidatos; o
+  teto global de 300 KiB não ganha exceção para as assembleias; sem recorte, a árvore de acessibilidade
+  e o Ctrl+F veem exatamente o que está na tela (a ressalva do `content-visibility` da emenda de 30/09
+  segue valendo só para a distância da tela).
+- Negativas: **o "ver mais" das assembleias deixa de ser instantâneo** — as posições além do corte
+  passam a ser **busca** (as 21 a 60 do federal já estão na página), com latência, estado `aria-busy` e
+  erro possível; a faixa de busca é bem maior que a do federal (em SP, até 95 − 10 = 85 linhas por
+  agremiação). A rota passa a ser **uma por casa**, e o distrital ganha uma superfície que o plano da
+  spec 027 dizia não existir. O corte varia por agremiação, então o contrato da rota difere do federal e
+  o componente de lista precisa conhecer os dois. **O teto global só se confirma medindo**: as
+  medições acima são do desenho anterior; o número do novo desenho é do portão de peso (RNF-007,
+  `tests/e2e/perf-budget.spec.ts`), e o ADR não o afirma.
+- Cross-refs: spec 027 (RF-281, RF-289), ADR-0017 (emenda escopada), RNF-007, constituição § 3.

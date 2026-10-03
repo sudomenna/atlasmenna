@@ -166,21 +166,23 @@ export function hrefDaCasa(cargo: CargoProporcional, uf?: string | null): string
 }
 
 /**
- * O endereço da lista 61+ desta casa nesta UF (spec 026 RF-260; spec 027
+ * O endereço da lista desta casa nesta UF (spec 026 RF-260; spec 027
  * design § 7.2), ou `null` quando a casa não tem rota de lista.
  *
- * A Câmara Legislativa do DF (8) não tem: 24 cadeiras, e nenhuma agremiação
- * registra mais de 60 candidaturas lá — o objeto da UF já traz a lista
- * inteira. Sem `default`: cargo proporcional novo sem decisão aqui é erro de
- * compilação.
+ * As três casas têm desde 03/10: no federal a rota devolve as posições 61+;
+ * nas assembleias, tudo o que a página não levou ao documento (eleitos + 5,
+ * mínimo 10 — `lib/deputado/lista-documento.ts`). Até 03/10 a Câmara
+ * Legislativa do DF (8) devolvia `null` aqui: nenhuma agremiação passa de 60
+ * candidaturas lá, e o objeto da UF ia inteiro ao documento. O `null` continua
+ * no tipo para a casa que um dia não tiver rota. Sem `default`: cargo
+ * proporcional novo sem decisão aqui é erro de compilação.
  */
 export function rotaListaDaCasa(cargo: CargoProporcional, uf: string): string | null {
   switch (cargo) {
     case 6:
     case 7:
-      return `${hrefDaCasa(cargo, uf)}/lista`;
     case 8:
-      return null;
+      return `${hrefDaCasa(cargo, uf)}/lista`;
     default: {
       const naoCoberto: never = cargo;
       throw new Error(`rotaListaDaCasa: cargo não coberto ${String(naoCoberto)}`);

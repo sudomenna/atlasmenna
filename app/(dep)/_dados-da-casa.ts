@@ -47,6 +47,7 @@ import {
   type DeputadoUfListaResult,
   readDeputadoUfDetail,
   readDeputadoUfLista,
+  sanearDeputadoUfDetail,
   sanearDeputadoUfLista,
 } from "@/lib/blob/deputado-uf";
 import type { CargoProporcional } from "@/lib/config/cargos";
@@ -216,6 +217,34 @@ export async function lerListaDaCasa(
   return daSimulacao
     ? { status: "ok", lista: sanearDeputadoUfLista(daSimulacao), url: "fixture://simulacao" }
     : { status: "unavailable", reason: "not_found", url: null };
+}
+
+/**
+ * Só o detalhe da UF (Blob), para a rota da lista das casas de duas faixas
+ * (spec 027, decisão do dono de 03/10): a rota corta o objeto da UF pelo MESMO
+ * R que a página usou (`lib/deputado/lista-documento.ts`) e devolve o resto.
+ *
+ * Mesmas regras de {@link lerDadosDaCasa}: simulação ligada ⇒ nenhuma leitura
+ * remota, o detalhe da simulação saneado como a página o saneia; fixture de
+ * `pnpm dev` só com `NODE_ENV=development` e só do cargo que a tem.
+ */
+export async function lerDetalheDaCasa(
+  cargo: CargoProporcional,
+  sigla: string,
+): Promise<DeputadoUfDetailResult> {
+  const dev = FONTES_DEV[cargo];
+  if (simulacaoLigada()) {
+    const daSimulacao = dev.simulacaoUf(sigla);
+    return daSimulacao
+      ? { status: "ok", detail: sanearDeputadoUfDetail(daSimulacao), url: "fixture://simulacao" }
+      : { status: "unavailable", reason: "not_found", url: null };
+  }
+  const lido = await readDeputadoUfDetail(cargo, sigla);
+  if (lido.status === "ok" || process.env.NODE_ENV !== "development") return lido;
+  const daFixture = dev.fixtureUf(sigla);
+  return daFixture
+    ? { status: "ok", detail: sanearDeputadoUfDetail(daFixture), url: "fixture://dev" }
+    : lido;
 }
 
 /**

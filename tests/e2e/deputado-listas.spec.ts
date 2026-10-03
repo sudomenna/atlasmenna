@@ -37,9 +37,19 @@ import { CSS_LISTAS_DEPUTADO_VISIVEIS, SELETOR_LISTA_DEPUTADO } from "./_isencoe
  * (listas de até 28, sem lista 61+) —, e um percurso por TECLADO nas três:
  * chegar ao seletor da casa e à primeira lista só com Tab, abrir com Enter e,
  * onde há lista 61+, carregar o resto e receber o foco na 61ª.
+ *
+ * Spec 027, decisão do dono de 03/10: as assembleias levam ao documento, por
+ * agremiação, os eleitos + 5 (mínimo 10), tudo visível — nada recortado, sem
+ * "ver mais" (`lib/deputado/lista-documento.ts`). Nelas o estado "abertas" é
+ * "todas as listas com o resto carregado" (cada "mostrar todos" clicado; a
+ * rota responde uma vez por aba), e o percurso por teclado vai direto ao
+ * "mostrar todos" e espera o foco na primeira linha que chegou.
  */
 
 const ROTAS = ["/uf/SP/deputado-federal", "/uf/SP/deputado-estadual", "/uf/DF/deputado-distrital"];
+
+/** As rotas cuja lista vai em DUAS faixas (documento + rota) — as assembleias. */
+const DUAS_FAIXAS = new Set(["/uf/SP/deputado-estadual", "/uf/DF/deputado-distrital"]);
 const LARGURAS = [375, 320] as const;
 
 /** Rola a página inteira em passos de 80% da altura, para cada agremiação entrar em tela. */
@@ -85,7 +95,8 @@ test.describe.configure({ mode: "parallel", timeout: 120_000 });
 for (const ROTA of ROTAS) {
   for (const largura of LARGURAS) {
     for (const abertas of [false, true]) {
-      const estado = abertas ? "abertas (21–60)" : "fechadas";
+      const duas = DUAS_FAIXAS.has(ROTA);
+      const estado = abertas ? (duas ? "com o resto carregado" : "abertas (21–60)") : "fechadas";
       test(`listas de Deputado em ${ROTA} @ ${largura}px, ${estado}: sem rolagem horizontal, axe limpo`, async ({
         page,
         baseURL,
@@ -104,7 +115,44 @@ for (const ROTA of ROTAS) {
         // nenhuma o teste estaria medindo "Detalhe indisponível".
         expect(await listas.count(), "nenhuma lista de agremiação na página").toBeGreaterThan(5);
 
-        if (abertas) {
+        if (duas) {
+          // Nada recortado no documento, e nunca "ver mais".
+          expect(await page.locator(`${SELETOR_LISTA_DEPUTADO} li[data-f]`).count()).toBe(0);
+          expect(await page.locator('[data-testid="dep-ver-mais"]').count()).toBe(0);
+        }
+
+        if (abertas && duas) {
+          const todos = page.locator('[data-testid="dep-mostrar-todos"]');
+          const n = await todos.count();
+          expect(n, "nenhum 'mostrar todos' — o corte das assembleias não cortou?").toBeGreaterThan(
+            0,
+          );
+          // O botão SAI do documento quando a busca termina: clica sempre o
+          // primeiro que restar, até não sobrar nenhum.
+          for (let i = 0; i < n; i++) {
+            const b = todos.first();
+            await b.scrollIntoViewIfNeeded();
+            await b.click();
+            await expect(todos).toHaveCount(n - i - 1);
+          }
+          // Cada lista: ranks 1..N contíguos, sem repetir, e a última linha com altura.
+          const costura = await page.evaluate((sel) => {
+            return [...document.querySelectorAll(`${sel}`)].map((agr) => {
+              const ranks = [...agr.querySelectorAll("li[data-rank]")].map((l) =>
+                Number((l as HTMLElement).dataset.rank),
+              );
+              const ultima = agr.querySelector("li[data-rank]:last-of-type") as HTMLElement | null;
+              ultima?.scrollIntoView();
+              return {
+                cod: (agr as HTMLElement).dataset.cod,
+                contigua: ranks.every((r, i) => r === i + 1),
+                n: ranks.length,
+                altura: ultima?.getBoundingClientRect().height ?? 0,
+              };
+            });
+          }, SELETOR_LISTA_DEPUTADO);
+          expect(costura.filter((c) => !c.contigua || c.altura <= 0)).toEqual([]);
+        } else if (abertas) {
           const botoes = page.locator('[data-testid="dep-ver-mais"]');
           const n = await botoes.count();
           expect(
@@ -259,8 +307,12 @@ for (const ROTA of ROTAS) {
     const ateSeletor = await tabAte(page, '[data-testid="seletor-deputado"] a');
     expect(ateSeletor, "o seletor da casa não é alcançável por Tab").not.toBeNull();
 
-    const ateLista = await tabAte(page, '[data-testid="dep-ver-mais"]');
-    expect(ateLista, "nenhum 'mais candidatos' alcançável por Tab").not.toBeNull();
+    const duas = DUAS_FAIXAS.has(ROTA);
+    const ateLista = await tabAte(
+      page,
+      duas ? '[data-testid="dep-mostrar-todos"]' : '[data-testid="dep-ver-mais"]',
+    );
+    expect(ateLista, "nenhum botão de lista alcançável por Tab").not.toBeNull();
     const botao = page.locator(":focus");
     // Foco VISÍVEL (WCAG 2.4.7): o navegador o declara `:focus-visible` e há
     // contorno desenhado.
@@ -274,6 +326,25 @@ for (const ROTA of ROTAS) {
     });
     expect(visivel.focusVisible).toBe(true);
     expect(visivel.contorno || visivel.sombra, JSON.stringify(visivel)).toBe(true);
+
+    if (duas) {
+      // Assembleias: Enter em "mostrar todos" carrega o resto da agremiação e
+      // o foco vai para a primeira linha que chegou (a seguinte à última do
+      // documento) — nunca para o <body>.
+      const agremiacao = page.locator('[data-testid="dep-lista-agremiacao"]').filter({
+        has: botao,
+      });
+      const noDocumento = await agremiacao.locator("li[data-rank]").count();
+      await page.keyboard.press("Enter");
+      await expect
+        .poll(() =>
+          page.evaluate(() => (document.activeElement as HTMLElement | null)?.dataset.rank ?? ""),
+        )
+        .toBe(String(noDocumento + 1));
+      await expect(agremiacao.locator('[data-testid="dep-mostrar-todos"]')).toHaveCount(0);
+      await expect(agremiacao.locator("[role='status']")).toHaveText(/candidatos? carregados?\./);
+      return;
+    }
 
     await expect(botao).toHaveAttribute("aria-expanded", "false");
     await page.keyboard.press("Enter");

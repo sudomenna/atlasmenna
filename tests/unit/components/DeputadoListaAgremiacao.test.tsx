@@ -26,8 +26,10 @@ import {
   _limparCacheListas,
   DeputadoListaAgremiacao,
   type DeputadoListaAgremiacaoProps,
+  textoMostrarTodosDuasFaixas,
 } from "@/components/blocks/DeputadoListaAgremiacao";
-import type { DeputadoUfLinha, DeputadoUfLista } from "@/lib/blob/deputado-uf";
+import type { DeputadoUfDetail, DeputadoUfLinha, DeputadoUfLista } from "@/lib/blob/deputado-uf";
+import { restanteForaDoDocumento, ultimoRankNoDocumento } from "@/lib/deputado/lista-documento";
 import {
   type LinhaCompacta,
   paraLinhaCompacta,
@@ -609,5 +611,152 @@ describe("DeputadoListaAgremiacao — cliques (RF-260)", () => {
     );
     await esperar(() => linhasDoc(lista()).length === 71);
     expect(lista().textContent).not.toMatch(/cálculo gravado às/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Duas faixas — as assembleias (spec 027, decisão do dono de 03/10)
+// ---------------------------------------------------------------------------
+
+/**
+ * SP/PL da fixture de contrato como a página de uma ASSEMBLEIA o monta: as
+ * linhas cortadas em eleitos + 5 (mínimo 10) pela MESMA função da página, e
+ * a resposta da rota montada pela MESMA função da rota. 25 eleitos ⇒ 30 no
+ * documento, 41 pela rota (31..71).
+ */
+function propsAssembleia(
+  over: Partial<DeputadoListaAgremiacaoProps> = {},
+): DeputadoListaAgremiacaoProps {
+  const d = UFS.SP as UfFixture;
+  const a = agr("SP", "22");
+  const r = ultimoRankNoDocumento(a, d.totalizacao_final);
+  const base = props("SP", "22");
+  return {
+    ...base,
+    linhas: base.linhas.filter((l) => l[0] <= r),
+    rotaLista: "/uf/SP/deputado-estadual/lista",
+    haListaRestante: true,
+    duasFaixas: true,
+    ...over,
+  };
+}
+
+/** O que a rota do estadual responderia para a SP da fixture de contrato. */
+function restoSP(): DeputadoUfLista {
+  return restanteForaDoDocumento(
+    { ...(UFS.SP as unknown as DeputadoUfDetail), cargo: 7, uf: "SP" },
+    LISTA_SP,
+  );
+}
+
+describe("DeputadoListaAgremiacao — duas faixas (assembleias, 03/10)", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    _limparCacheListas();
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    vi.unstubAllGlobals();
+  });
+
+  async function esperar(cond: () => boolean) {
+    for (let i = 0; i < 50 && !cond(); i++) {
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 0));
+      });
+    }
+    expect(cond()).toBe(true);
+  }
+
+  function resposta(corpo: unknown, status = 200): Response {
+    return new Response(JSON.stringify(corpo), {
+      status,
+      headers: { "content-type": "application/json" },
+    });
+  }
+
+  const raiz = () => container.querySelector("[data-testid='dep-lista-agremiacao']") as HTMLElement;
+  const botao = () => raiz().querySelector<HTMLButtonElement>("[data-testid='dep-mostrar-todos']");
+
+  it("🔴 documento: as 30 linhas visíveis, nada recortado, nunca 'ver mais', e o botão conta o que falta", () => {
+    const doc = estatico(propsAssembleia());
+    const ranks = linhasDoc(doc).map((l) => Number(l.dataset.rank));
+    expect(ranks).toEqual(Array.from({ length: 30 }, (_, i) => i + 1));
+    expect(doc.querySelector("[data-f]")).toBeNull();
+    expect(doc.querySelector("ol")?.hasAttribute("data-collapsed")).toBe(false);
+    expect(doc.querySelector("[data-testid='dep-ver-mais']")).toBeNull();
+    expect(doc.querySelector("[data-testid='dep-mostrar-todos']")?.textContent).toBe(
+      "Mostrar todos — mais 41 candidatos de PL",
+    );
+    // RF-272 — a linha de corte continua: o 1º de fora (26º) está no documento.
+    expect(doc.querySelector("[data-testid='dep-corte']")).not.toBeNull();
+  });
+
+  it("o rótulo no singular", () => {
+    expect(textoMostrarTodosDuasFaixas(1, "PT")).toBe("Mostrar todos — mais 1 candidato de PT");
+  });
+
+  it("🔴 'mostrar todos': busca a rota da casa, aria-busy, região viva, foco na 31ª, 1..71 sem duplicata", async () => {
+    let soltar: (r: Response) => void = () => {};
+    const fetchSpy = vi.fn((_url: string) => new Promise<Response>((r) => (soltar = r)));
+    vi.stubGlobal("fetch", fetchSpy);
+    await act(async () => root.render(<DeputadoListaAgremiacao {...propsAssembleia()} />));
+    botao()?.focus();
+    await act(async () => botao()?.click());
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("/uf/SP/deputado-estadual/lista");
+    await esperar(() => raiz().querySelector("ol")?.getAttribute("aria-busy") === "true");
+    expect(botao()?.getAttribute("aria-disabled")).toBe("true");
+    // Segundo clique durante a busca: ignorado.
+    await act(async () => botao()?.click());
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    await act(async () => soltar(resposta(restoSP())));
+    await esperar(() => linhasDoc(raiz()).length === 71);
+
+    const ranks = linhasDoc(raiz()).map((l) => Number(l.dataset.rank));
+    expect(ranks).toEqual(Array.from({ length: 71 }, (_, i) => i + 1));
+    expect(raiz().querySelector("[role='status']")?.textContent).toBe("41 candidatos carregados.");
+    const r31 = raiz().querySelector<HTMLLIElement>("li[data-rank='31']");
+    expect(document.activeElement).toBe(r31);
+    // Nada recortado, nem as que chegaram.
+    expect(raiz().querySelector("[data-f]")).toBeNull();
+    expect(raiz().querySelector("ol")?.hasAttribute("data-collapsed")).toBe(false);
+    expect(botao()).toBeNull();
+    expect(raiz().textContent).not.toMatch(/cálculo gravado às/);
+  });
+
+  it("erro: 'tentar de novo', as 30 do documento ficam; o segundo clique busca de verdade", async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockResolvedValueOnce(resposta({ erro: "x" }, 502))
+      .mockResolvedValueOnce(resposta(restoSP()));
+    vi.stubGlobal("fetch", fetchSpy);
+    await act(async () => root.render(<DeputadoListaAgremiacao {...propsAssembleia()} />));
+    await act(async () => botao()?.click());
+    await esperar(() => botao()?.textContent === "Tentar de novo");
+    expect(linhasDoc(raiz())).toHaveLength(30);
+    await act(async () => botao()?.click());
+    await esperar(() => linhasDoc(raiz()).length === 71);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("resto de outro ciclo: o aviso das duas horas cita a 1ª posição que chegou (31ª), não a 61ª", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => resposta({ ...restoSP(), ts: "2026-10-04T23:11:00Z" })),
+    );
+    await act(async () => root.render(<DeputadoListaAgremiacao {...propsAssembleia()} />));
+    await act(async () => botao()?.click());
+    await esperar(() => linhasDoc(raiz()).length === 71);
+    expect(raiz().textContent).toMatch(/a partir da 31ª vêm do cálculo gravado às 20:11:00/);
   });
 });

@@ -17,7 +17,11 @@
  *   - M29: `nao_comparou` somado ao `comparou` na Conferência (o "confere" do
  *     eleitorado) — cai "não comparado, nunca 'fecha'";
  *   - `termoDoTerritorio` fixo nos estados — cai a varredura do DF;
- *   - `rotaListaDaCasa(8)` devolvendo a rota — cai "sem 'mostrar todos' no DF".
+ *   - (até 03/10) `rotaListaDaCasa(8)` devolvendo a rota — caía "sem 'mostrar
+ *     todos' no DF". Desde a decisão do dono de 03/10 o DF TEM rota de lista,
+ *     e o caso se inverteu;
+ *   - (03/10) o documento das assembleias sem o corte (60 por agremiação) ou
+ *     com o mínimo de 10 removido — cai "eleitos + 5 (mínimo 10)".
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -164,11 +168,96 @@ describe("RF-284 — o DF não é estado, e não tem Assembleia", () => {
   });
 });
 
+/**
+ * O AC da fixture tem no máximo 9 candidaturas por agremiação — abaixo do
+ * mínimo de 10, onde o corte nunca corta. Aqui a 1ª agremiação vai a 40
+ * candidaturas (3 eleitos ⇒ 10 no documento) e a 2ª a 30, com 12 eleitos
+ * (⇒ 17). A linha de corte acompanha o último eleito.
+ */
+function ampliado(d: DeputadoUfDetail): DeputadoUfDetail {
+  const [a, b] = d.agremiacoes;
+  for (const [agr, n, eleitos] of [
+    [a, 40, 3],
+    [b, 30, 12],
+  ] as const) {
+    if (!agr?.candidatos) throw new Error("fixture sem candidatos");
+    const modelo = agr.candidatos[agr.candidatos.length - 1];
+    const base = agr.candidatos.length;
+    for (let i = base; i < n; i++) {
+      agr.candidatos.push({
+        ...structuredClone(modelo),
+        sqcand: 90_000_000_000 + Number(agr.cod) * 1000 + i,
+        nome: `Ampliado ${agr.cod} ${i + 1}`,
+        rank: i + 1,
+        votos: 10 - (i % 10),
+        parcial: undefined,
+      } as NonNullable<typeof agr.candidatos>[number]);
+    }
+    for (const c of agr.candidatos) {
+      if (c.rank <= eleitos) c.parcial = "qp";
+      else delete c.parcial;
+    }
+    agr.cadeiras = eleitos;
+    agr.total_candidatos = n + 5;
+    const ultimo = agr.candidatos.find((c) => c.rank === eleitos);
+    const primeiro = agr.candidatos.find((c) => c.rank === eleitos + 1);
+    if (agr.corte && ultimo && primeiro) {
+      agr.corte = { ...agr.corte, ultimo_eleito: ultimo.sqcand, primeiro_fora: primeiro.sqcand };
+    }
+  }
+  return d;
+}
+
 describe("listas: rota por casa e número de urna de 5 dígitos", () => {
-  it("DF (sem rota de lista): nunca há 'mostrar todos', mesmo com lista restante declarada", async () => {
+  it("DF (rota de lista desde 03/10): 'mostrar todos' existe quando há candidatura fora do documento", async () => {
     const doc = await render(8, "DF");
     expect(doc.querySelector("[data-testid='dep-lista-agremiacao']")).not.toBeNull();
-    expect(doc.querySelector("[data-testid='dep-mostrar-todos']")).toBeNull();
+    expect(doc.querySelector("[data-testid='dep-mostrar-todos']")).not.toBeNull();
+  });
+
+  it("🔴 assembleias: o documento leva eleitos + 5 (mínimo 10) por agremiação, tudo visível", async () => {
+    for (const [cargo, uf] of [
+      [7, "SP"],
+      [8, "DF"],
+    ] as const) {
+      const d = ampliado(objetoResumo(cargo, uf));
+      lerDadosDaCasaMock.mockResolvedValue({
+        ...dados(cargo, uf),
+        detalhe: { status: "ok", detail: d, url: "https://blob.teste/x.json" },
+      });
+      const markup = renderToStaticMarkup(await renderPaginaUfDeputado(cargo, uf));
+      const doc = new DOMParser().parseFromString(markup, "text/html");
+      const cortadas: number[] = [];
+      for (const agr of d.agremiacoes) {
+        const eleitos = (agr.candidatos ?? []).filter((c) => c.parcial !== undefined);
+        const ultimo = Math.max(0, ...eleitos.map((c) => c.rank));
+        const esperado = Math.min(
+          agr.candidatos?.length ?? 0,
+          Math.max(10, ultimo > 0 ? ultimo + 5 : 0),
+        );
+        const lista = doc.querySelector(
+          `[data-testid='dep-lista-agremiacao'][data-cod='${agr.cod}']`,
+        );
+        const ranks = [...(lista?.querySelectorAll("li[data-rank]") ?? [])].map((l) =>
+          Number(l.getAttribute("data-rank")),
+        );
+        expect(ranks, `${uf}/${agr.cod}`).toEqual(
+          Array.from({ length: esperado }, (_, i) => i + 1),
+        );
+        cortadas.push(ranks.length);
+        // Nada recortado por CSS, e nunca "ver mais".
+        expect(lista?.querySelector("[data-f]"), `${uf}/${agr.cod}`).toBeNull();
+        expect(lista?.querySelector("[data-testid='dep-ver-mais']")).toBeNull();
+        // O botão conta o que FALTA: total − no documento.
+        const faltam = (agr.total_candidatos ?? 0) - esperado;
+        const botao = lista?.querySelector("[data-testid='dep-mostrar-todos']");
+        expect(texto(botao), `${uf}/${agr.cod}`).toBe(
+          `Mostrar todos — mais ${faltam} ${faltam === 1 ? "candidato" : "candidatos"} de ${agr.sigla}`,
+        );
+      }
+      // As duas ampliadas: 3 eleitos ⇒ 10 (de 40); 12 eleitos ⇒ 17 (de 30).
+      expect(cortadas.slice(0, 2), uf).toEqual([10, 17]);
+    }
   });
 
   it("SP estadual: 'mostrar todos' existe; o número de urna sai inteiro, com 5 dígitos", async () => {

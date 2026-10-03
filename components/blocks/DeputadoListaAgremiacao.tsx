@@ -18,6 +18,16 @@
  *      cargo e por UF na rota `GET /uf/<UF>/<slug do cargo>/lista` (a
  *      {@link DeputadoListaAgremiacaoProps.rotaLista}), só no clique.
  *
+ * ## Duas faixas — as assembleias (spec 027, decisão do dono de 03/10)
+ *
+ * Com {@link DeputadoListaAgremiacaoProps.duasFaixas} (cargos 7 e 8), a página
+ * já cortou as linhas: por agremiação, os eleitos + 5, mínimo 10
+ * (`lib/deputado/lista-documento.ts`). Todas ficam VISÍVEIS — nada recortado
+ * por CSS, nenhum "ver mais" —, e "mostrar todos" busca o RESTO na rota da
+ * casa (tudo o que não está no documento, e não só 61+). A busca, o cache por
+ * rota, o foco na primeira linha nova, `aria-busy`, a região viva e o "tentar
+ * de novo" são os mesmos. O federal (sem a prop) segue nas três faixas.
+ *
  * ## Por que cliente, e por que tuplas
  *
  * As linhas chegam como {@link LinhaCompacta} (`lib/utils/deputado-marcas.ts`)
@@ -84,12 +94,11 @@ export interface DeputadoListaAgremiacaoProps {
   /** `detail.lista.restantes > 0` — a UF tem lista 61+ publicada. */
   haListaRestante: boolean;
   /**
-   * Spec 027 (design § 7.3) — o endereço da lista 61+ DESTA casa nesta UF
-   * (`/uf/SP/deputado-federal/lista`, `/uf/SP/deputado-estadual/lista`), ou
-   * `null` quando a casa não tem rota de lista (a Câmara Legislativa do DF: 24
-   * cadeiras, nenhuma agremiação passa de 60 candidaturas) — e então nunca há
-   * botão "mostrar todos". Montado pelo servidor (`rotaListaDaCasa`); este
-   * componente não conhece cargo.
+   * Spec 027 (design § 7.3) — o endereço da lista DESTA casa nesta UF
+   * (`/uf/SP/deputado-federal/lista`, `/uf/SP/deputado-estadual/lista`,
+   * `/uf/DF/deputado-distrital/lista`), ou `null` quando a casa não tem rota
+   * de lista — e então nunca há botão "mostrar todos". Montado pelo servidor
+   * (`rotaListaDaCasa`); este componente não conhece cargo.
    */
   rotaLista: string | null;
   /** Linha de corte da parcial (RF-272). `null` sem corte ou com totalização final. */
@@ -103,6 +112,12 @@ export interface DeputadoListaAgremiacaoProps {
   tsDetalhe: string;
   /** Objeto v1: a legenda da coluna não promete % nem número (RF-276). */
   semPercentual?: boolean;
+  /**
+   * Spec 027 (decisão do dono de 03/10) — assembleias: as linhas recebidas são
+   * TODO o documento (eleitos + 5, mínimo 10), visíveis; a rota traz o resto.
+   * Ausente no federal, que fica nas três faixas.
+   */
+  duasFaixas?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -168,8 +183,17 @@ async function funcoesDeExibicao(mostrarPartido: boolean): Promise<ExibicaoLinha
 type EstadoBusca =
   | { fase: "ociosa" }
   | { fase: "buscando" }
-  | { fase: "pronta"; chegaram: number; tsLista: string }
+  | { fase: "pronta"; chegaram: number; tsLista: string; aPartirDe: number | null }
   | { fase: "erro" };
+
+/**
+ * O rótulo de "mostrar todos" nas assembleias: a contagem é a do que FALTA
+ * (`total_candidatos − linhas no documento`), porque o documento já não é um
+ * bloco fixo de 60 — "todos os 95" ao lado de 9 linhas visíveis diria pouco.
+ */
+export function textoMostrarTodosDuasFaixas(restantes: number, sigla: string): string {
+  return `Mostrar todos — mais ${restantes} ${restantes === 1 ? "candidato" : "candidatos"} de ${sigla}`;
+}
 
 // ---------------------------------------------------------------------------
 // O componente
@@ -189,6 +213,7 @@ export function DeputadoListaAgremiacao({
   mostrarPartido,
   tsDetalhe,
   semPercentual = false,
+  duasFaixas = false,
 }: DeputadoListaAgremiacaoProps) {
   const listaId = useId();
   const listaRef = useRef<HTMLOListElement>(null);
@@ -219,7 +244,8 @@ export function DeputadoListaAgremiacao({
     listaRef.current?.querySelector<HTMLLIElement>('li[tabindex="-1"]')?.focus();
   }, [focoEm]);
 
-  const naFaixa2 = linhas.filter((l) => l[L.RANK] > FAIXA_VISIVEL).length;
+  // Duas faixas: nada recortado, então nunca "ver mais".
+  const naFaixa2 = duasFaixas ? 0 : linhas.filter((l) => l[L.RANK] > FAIXA_VISIVEL).length;
   const restantes =
     rotaLista !== null &&
     haListaRestante &&
@@ -245,8 +271,13 @@ export function DeputadoListaAgremiacao({
       const novas = daAgremiacao.map((l) => paraLinhaCompacta(l, ctx, exibicao));
       const { linhas: unidas, acrescentadas } = unirPorSqcand(linhas, novas);
       setLinhas(unidas);
-      setBusca({ fase: "pronta", chegaram: acrescentadas.length, tsLista: lista.ts });
       const primeira = [...acrescentadas].sort((a, b) => a[L.RANK] - b[L.RANK])[0];
+      setBusca({
+        fase: "pronta",
+        chegaram: acrescentadas.length,
+        tsLista: lista.ts,
+        aPartirDe: primeira ? primeira[L.RANK] : null,
+      });
       setFocoEm(primeira ? primeira[L.SQCAND] : "lista");
     } catch {
       setBusca({ fase: "erro" });
@@ -274,7 +305,7 @@ export function DeputadoListaAgremiacao({
           : "";
   const avisoCiclos =
     busca.fase === "pronta" && busca.chegaram > 0 && busca.tsLista !== tsDetalhe
-      ? `As posições a partir da ${FAIXA_DOCUMENTO + 1}ª vêm do cálculo gravado às ${formatTimeHMS(busca.tsLista)}; as anteriores, do das ${formatTimeHMS(tsDetalhe)}. Entre os dois a fronteira pode ter mudado.`
+      ? `As posições a partir da ${duasFaixas ? (busca.aPartirDe ?? FAIXA_DOCUMENTO + 1) : FAIXA_DOCUMENTO + 1}ª vêm do cálculo gravado às ${formatTimeHMS(busca.tsLista)}; as anteriores, do das ${formatTimeHMS(tsDetalhe)}. Entre os dois a fronteira pode ter mudado.`
       : null;
 
   const itens: React.ReactElement[] = [];
@@ -291,7 +322,7 @@ export function DeputadoListaAgremiacao({
       <li
         key={l[L.SQCAND]}
         data-rank={rank}
-        data-f={rank > FAIXA_VISIVEL ? "" : undefined}
+        data-f={!duasFaixas && rank > FAIXA_VISIVEL ? "" : undefined}
         tabIndex={focoEm === l[L.SQCAND] ? -1 : undefined}
       >
         {/* Texto montado como UMA string: `{rank}º` sairia `21<!-- -->º` no
@@ -326,7 +357,7 @@ export function DeputadoListaAgremiacao({
         <li
           key="corte"
           data-corte=""
-          data-f={rank > FAIXA_VISIVEL ? "" : undefined}
+          data-f={!duasFaixas && rank > FAIXA_VISIVEL ? "" : undefined}
           data-testid="dep-corte"
         >
           {textoCorte}
@@ -347,7 +378,9 @@ export function DeputadoListaAgremiacao({
         ref={listaRef}
         id={listaId}
         className={styles.lista}
-        data-collapsed={aberta ? "false" : "true"}
+        // Duas faixas: nada a recolher — o atributo nem existe (ADR-0065,
+        // emenda de 03/10: "nem `data-collapsed`, nem recorte por CSS").
+        data-collapsed={duasFaixas ? undefined : aberta ? "false" : "true"}
         aria-busy={buscando || undefined}
         aria-label={`Candidatos de ${sigla} em ${uf}, por votos apurados`}
         // Alvo de foco só quando a busca não trouxe linha (ver `focoEm`); fora
@@ -397,7 +430,9 @@ export function DeputadoListaAgremiacao({
             >
               {busca.fase === "erro"
                 ? "Tentar de novo"
-                : `Mostrar todos os ${totalCandidatos} candidatos de ${sigla}`}
+                : duasFaixas
+                  ? textoMostrarTodosDuasFaixas(restantes, sigla)
+                  : `Mostrar todos os ${totalCandidatos} candidatos de ${sigla}`}
             </Button>
           ) : null}
         </div>

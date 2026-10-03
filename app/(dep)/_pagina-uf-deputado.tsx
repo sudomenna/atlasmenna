@@ -106,6 +106,11 @@ import {
 } from "@/lib/blob/deputado-uf";
 import type { CargoProporcional } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
+import {
+  linhasNoDocumento,
+  listaEmDuasFaixas,
+  ultimoRankNoDocumento,
+} from "@/lib/deputado/lista-documento";
 import type { EdgeDeputadoUfRow } from "@/lib/edge-config/types";
 import {
   localDaDisputa,
@@ -307,15 +312,27 @@ export async function renderPaginaUfDeputado(
   // O interruptor é aplicado ao OBJETO antes de qualquer componente vê-lo:
   // desligado, a cópia sai sem nenhum campo de projeção (ADR-0063 D4). O
   // detalhe da simulação/fixture passa pelo mesmo leitor tolerante do Blob.
-  const detail =
+  const detalheSaneado =
     detalhe.status === "ok"
-      ? aplicarInterruptorProjecao(
-          detalhe.url.startsWith("fixture://")
-            ? sanearDeputadoUfDetail(detalhe.detail)
-            : detalhe.detail,
-          interruptor,
-        )
+      ? detalhe.url.startsWith("fixture://")
+        ? sanearDeputadoUfDetail(detalhe.detail)
+        : detalhe.detail
       : null;
+  const detail = detalheSaneado ? aplicarInterruptorProjecao(detalheSaneado, interruptor) : null;
+
+  // Spec 027, decisão do dono de 03/10 — estadual e distrital levam ao
+  // documento, por agremiação, os eleitos + 5 (mínimo 10); o resto vem pela
+  // rota da lista, no clique (`lib/deputado/lista-documento.ts`). O corte é
+  // medido no objeto ANTES do interruptor: a rota, que não lê o interruptor,
+  // chega ao mesmo R. O federal não passa por aqui (três faixas, spec 026).
+  const duasFaixas = listaEmDuasFaixas(cargo);
+  const ultimoRankPorCod = new Map(
+    duasFaixas && detalheSaneado
+      ? detalheSaneado.agremiacoes.map(
+          (a) => [a.cod, ultimoRankNoDocumento(a, detalheSaneado.totalizacao_final)] as const,
+        )
+      : [],
+  );
 
   // Nem resumo nem detalhe: não há o que dizer sobre esta UF ainda.
   if (!row && !detail) {
@@ -636,8 +653,13 @@ export async function renderPaginaUfDeputado(
                   mostrarPartido: federacao,
                 };
                 // v2: `candidatos` na ordem do rank; v1: eleitos + suplentes (RF-276).
+                // Assembleias: só o que vai ao documento (eleitos + 5, mín. 10).
+                const ultimoRank = ultimoRankPorCod.get(agr.cod);
                 const linhas = agr.candidatos
-                  ? agr.candidatos.map((l) => paraLinhaCompacta(l, ctx, exibicao))
+                  ? (ultimoRank === undefined
+                      ? agr.candidatos
+                      : linhasNoDocumento(agr.candidatos, ultimoRank)
+                    ).map((l) => paraLinhaCompacta(l, ctx, exibicao))
                   : linhasCompactasDoV1(agr, exibicao);
                 const corte = corteCompacto(agr, ctx.totalizacaoFinal);
                 const projetadas = visivel ? agr.cadeiras_projetadas : undefined;
@@ -797,7 +819,11 @@ export async function renderPaginaUfDeputado(
                         sigla={agr.sigla}
                         linhas={linhas}
                         totalCandidatos={agr.total_candidatos}
-                        haListaRestante={(detail.lista?.restantes ?? 0) > 0}
+                        haListaRestante={
+                          duasFaixas
+                            ? (agr.total_candidatos ?? 0) > linhas.length
+                            : (detail.lista?.restantes ?? 0) > 0
+                        }
                         rotaLista={rotaListaDaCasa(cargo, sigla)}
                         corte={corte}
                         totalizacaoFinal={ctx.totalizacaoFinal}
@@ -805,6 +831,9 @@ export async function renderPaginaUfDeputado(
                         mostrarPartido={federacao}
                         tsDetalhe={detail.ts}
                         semPercentual={!agr.candidatos}
+                        // Só nas assembleias: no federal a prop nem existe, e o
+                        // payload RSC dele não ganha um byte.
+                        {...(duasFaixas ? { duasFaixas: true } : {})}
                       />
                     ) : null}
                   </li>

@@ -165,12 +165,16 @@ describe("RF-281 — GET /uf/<UF>/deputado-estadual/lista", () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it("SP ⇒ lê `deputado-estadual/uf-lista/SP.json` (nunca o do federal)", async () => {
+  it("SP ⇒ lê `deputado-estadual/uf/SP.json` (nunca o do federal)", async () => {
+    // Desde 03/10 a rota do estadual devolve o resto do DOCUMENTO (eleitos +
+    // 5, mínimo 10), e o corte sai do objeto da UF — que é lido primeiro. Com
+    // ele em 404, o de lista nem é pedido. A costura completa está em
+    // `tests/unit/api/deputado-lista-assembleia-route.test.ts`.
     const res = await listaEstadual(
       new Request("http://x/uf/SP/deputado-estadual/lista"),
       params("SP"),
     );
     expect(res.status).toBe(404); // o Blob simulado responde 404
-    expect(urlsLidas()).toEqual(["https://blob.teste/deputado-estadual/uf-lista/SP.json"]);
+    expect(urlsLidas()).toEqual(["https://blob.teste/deputado-estadual/uf/SP.json"]);
   });
 });
