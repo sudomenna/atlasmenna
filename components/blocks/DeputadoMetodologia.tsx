@@ -80,7 +80,7 @@ import {
   ZONAS_MINIMAS_PROJECAO,
 } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatPercentTrim } from "@/lib/utils/format";
-import { TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
+import { siglaNaFrase, TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
 
 /** Uma agremiação cuja cadeira projetada difere da parcial — o "o que está movendo". */
 export interface AgremiacaoMovendo {
@@ -199,6 +199,11 @@ export interface DeputadoMetodologiaProps {
    * (`TSE_DEPUTADO_GRANULARIDADE=uf`) cai no mesmo caso, com a mesma frase.
    */
   modoResumo?: boolean;
+  /**
+   * Spec 027 — a sigla com artigo ("No DF: …"). As telas das assembleias
+   * passam `true`; ausente ⇒ o texto do federal ("Em DF: …").
+   */
+  comArtigo?: boolean;
 }
 
 export function DeputadoMetodologia({
@@ -217,6 +222,7 @@ export function DeputadoMetodologia({
   projecaoPorUf,
   territorio = TERMO_ESTADO,
   modoResumo = false,
+  comArtigo = false,
 }: DeputadoMetodologiaProps) {
   const t = territorio;
   const visivel = variant === "uf" && ehProjecaoVisivel(projecao, interruptorLigado);
@@ -302,8 +308,8 @@ export function DeputadoMetodologia({
             {variant === "uf" && interruptorLigado && projecao && uf ? (
               <>
                 {" "}
-                Em {uf}: {formatPercent(pctApurado)} do eleitorado apurado e{" "}
-                {projecao.zonas_apuradas} de {projecao.zonas_total} zonas com boletim.{" "}
+                {siglaNaFrase(uf, comArtigo).Em}: {formatPercent(pctApurado)} do eleitorado apurado
+                e {projecao.zonas_apuradas} de {projecao.zonas_total} zonas com boletim.{" "}
                 {fraseEstadoProjecao(projecao, pctApurado, t)}
               </>
             ) : null}

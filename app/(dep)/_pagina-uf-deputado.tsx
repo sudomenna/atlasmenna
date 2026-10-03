@@ -117,6 +117,7 @@ import {
   nomeDaCasa,
   rotaListaDaCasa,
   rotuloCargo,
+  siglaNaFraseDoCargo,
   slugDoCargo,
   type TermoDoTerritorio,
   termoDoTerritorio,
@@ -167,7 +168,7 @@ export function metadataDaPaginaUf(cargo: CargoProporcional, siglaBruta: string)
     ? `${rotulo} ${sigla} — ${casa} · Apuração 2026 | AtlasMenna`
     : `${rotulo} ${sigla} — Apuração 2026 | AtlasMenna`;
   const description = casa
-    ? `Apuração da eleição de ${rotulo} em ${sigla} (2026) para a ${casa}: cadeiras por partido e federação com os votos já contados, votos de legenda e eleitos na parcial.`
+    ? `Apuração da eleição de ${rotulo} ${siglaNaFraseDoCargo(cargo, sigla).em} (2026) para a ${casa}: cadeiras por partido e federação com os votos já contados, votos de legenda e eleitos na parcial.`
     : `Apuração da eleição de ${rotulo} em ${sigla} (2026): cadeiras por partido e federação com os votos já contados, votos de legenda e eleitos, em tempo real.`;
   return {
     alternates: { canonical: url },
@@ -302,6 +303,9 @@ export async function renderPaginaUfDeputado(
 
   const rotulo = rotuloCargo(cargo);
   const territorio = termoDoTerritorio(sigla);
+  // Spec 027 — "no DF"/"do DF" nas assembleias; o federal guarda "em DF".
+  const comArtigo = cargo !== 6;
+  const naUf = siglaNaFraseDoCargo(cargo, sigla);
 
   // Toda leitura — resumo, detalhe, interruptor, com simulação e fixture de
   // desenvolvimento resolvidas — passa pelo adaptador, com o cargo na mão.
@@ -495,7 +499,7 @@ export async function renderPaginaUfDeputado(
                 plausível de origem desconhecida. */}
             {lugares == null ? (
               <>
-                O número de cadeiras que {sigla} elege ainda não foi publicado pelo TSE. Assim que
+                O número de cadeiras que {naUf.o} elege ainda não foi publicado pelo TSE. Assim que
                 vier, ele aparece aqui — não usamos tabela própria para esse número, porque errá-lo
                 corromperia todo o cálculo de cadeiras {territorio.doTerritorio}.
               </>
@@ -604,11 +608,18 @@ export async function renderPaginaUfDeputado(
           `<DetailUnavailable>` (RF-198) — o painel fica no DOM e nunca quebra.
           Hoje o produtor não publica `projetada` para o cargo 6 (o ciclo
           proporcional não calcula participação projetada), então o arco 3 fica
-          em "aguardando projeção". */}
+          em "aguardando projeção".
+
+          Spec 027 (véspera 03/10) — objeto em modo resumo (`granularidade:
+          "uf"`, as assembleias na Fase 1) NUNCA projeta: o painel mostra só o
+          voto apurado, nas duas visões, sem "aguardando projeção" nem "zona".
+          Pelo objeto, não pelo cargo — a mesma regra do `modoResumo` da
+          metodologia abaixo. */}
       <VotacaoEleitorado
         kicker={`${rotulo} · ${sigla}`}
         votacao={detail?.votacao}
         titleId="votacao-uf-heading"
+        semProjecao={detail?.granularidade === "uf"}
       />
 
       {/* Spec 026 RF-270 — os 10 mais votados da UF, do próprio objeto da UF
@@ -638,6 +649,7 @@ export async function renderPaginaUfDeputado(
               totalizacaoFinal={ctx.totalizacaoFinal}
               temDestino={temDestino}
               semPercentual={!v2}
+              comArtigo={comArtigo}
             />
             <ul
               data-testid="uf-agremiacoes"
@@ -807,6 +819,7 @@ export async function renderPaginaUfDeputado(
                     {/* RF-273 */}
                     <LinhaPuxadores
                       uf={sigla}
+                      comArtigo={comArtigo}
                       puxadores={agr.puxadores}
                       nomePorSqcand={nomePorSqcand}
                     />
@@ -831,9 +844,10 @@ export async function renderPaginaUfDeputado(
                         mostrarPartido={federacao}
                         tsDetalhe={detail.ts}
                         semPercentual={!agr.candidatos}
-                        // Só nas assembleias: no federal a prop nem existe, e o
+                        // Só nas assembleias: no federal as props nem existem, e o
                         // payload RSC dele não ganha um byte.
                         {...(duasFaixas ? { duasFaixas: true } : {})}
+                        {...(comArtigo ? { comArtigo: true } : {})}
                       />
                     ) : null}
                   </li>
@@ -884,6 +898,7 @@ export async function renderPaginaUfDeputado(
           uf={sigla}
           regras={detail.regras}
           territorio={territorio}
+          comArtigo={comArtigo}
           titleId="regras-heading"
         />
       ) : null}
@@ -929,6 +944,7 @@ export async function renderPaginaUfDeputado(
         // Spec 027 (RF-285) — pelo objeto, não pelo cargo: em modo resumo o
         // ciclo não calcula projeção, e o bloco não promete uma.
         modoResumo={detail?.granularidade === "uf"}
+        comArtigo={comArtigo}
       />
 
       <Footer />

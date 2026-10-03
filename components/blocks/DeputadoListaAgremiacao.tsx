@@ -63,6 +63,7 @@ import {
   unirPorSqcand,
 } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatTimeHMS, formatVotes } from "@/lib/utils/format";
+import { siglaNaFrase } from "@/lib/utils/termo-territorio";
 
 import styles from "./DeputadoListaAgremiacao.module.css";
 
@@ -118,6 +119,11 @@ export interface DeputadoListaAgremiacaoProps {
    * Ausente no federal, que fica nas três faixas.
    */
   duasFaixas?: boolean;
+  /**
+   * Spec 027 — a sigla com artigo ("no DF", "do DF"). As telas das assembleias
+   * passam `true`; ausente ⇒ o texto do federal ("em DF").
+   */
+  comArtigo?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -214,7 +220,9 @@ export function DeputadoListaAgremiacao({
   tsDetalhe,
   semPercentual = false,
   duasFaixas = false,
+  comArtigo = false,
 }: DeputadoListaAgremiacaoProps) {
+  const naUf = siglaNaFrase(uf, comArtigo);
   const listaId = useId();
   const listaRef = useRef<HTMLOListElement>(null);
   const [aberta, setAberta] = useState(false);
@@ -371,7 +379,7 @@ export function DeputadoListaAgremiacao({
       <p className={styles.legendaColunas}>
         {semPercentual
           ? "Por votos apurados: posição, candidato e votos."
-          : `Por votos apurados: posição, candidato, número de urna${mostrarPartido ? ", partido" : ""}, votos e % dos válidos de ${uf}.`}
+          : `Por votos apurados: posição, candidato, número de urna${mostrarPartido ? ", partido" : ""}, votos e % dos válidos ${naUf.de}.`}
       </p>
 
       <ol
@@ -382,7 +390,7 @@ export function DeputadoListaAgremiacao({
         // emenda de 03/10: "nem `data-collapsed`, nem recorte por CSS").
         data-collapsed={duasFaixas ? undefined : aberta ? "false" : "true"}
         aria-busy={buscando || undefined}
-        aria-label={`Candidatos de ${sigla} em ${uf}, por votos apurados`}
+        aria-label={`Candidatos de ${sigla} ${naUf.em}, por votos apurados`}
         // Alvo de foco só quando a busca não trouxe linha (ver `focoEm`); fora
         // da ordem de tabulação sempre.
         tabIndex={focoEm === "lista" ? -1 : undefined}

@@ -65,3 +65,36 @@ export const TERMO_DF: TermoDoTerritorio = Object.freeze({
 export function termoDoTerritorio(uf: string): TermoDoTerritorio {
   return uf.toUpperCase() === "DF" ? TERMO_DF : TERMO_ESTADO;
 }
+
+/**
+ * A SIGLA da UF dentro de uma frase, com a preposição já contraída (spec 027,
+ * véspera 03/10). Irmão do `TermoDoTerritorio`: aquele troca "estado" pelo
+ * nome por extenso; este mantém a sigla e só acerta o artigo. "DF" pede artigo
+ * ("no DF", "do DF", "o DF elege"); as siglas dos estados vão sem ("em SP",
+ * "de SP") — a forma que a tela do federal sempre usou.
+ */
+export interface SiglaNaFrase {
+  /** "SP" · "o DF" — sujeito ou objeto ("as cadeiras que o DF elege"). */
+  o: string;
+  /** "em SP" · "no DF" */
+  em: string;
+  /** "Em SP" · "No DF" — início de frase. */
+  Em: string;
+  /** "de SP" · "do DF" */
+  de: string;
+  /** "para SP" · "para o DF" */
+  para: string;
+}
+
+/**
+ * `comArtigo` decide se o DF ganha o artigo. As telas das assembleias (cargos
+ * 7 e 8) passam `true`; o federal (cargo 6) passa `false` e guarda o texto que
+ * sempre teve ("em DF") — mudança deliberadamente restrita às telas novas na
+ * véspera. Siglas de estado saem iguais nos dois casos.
+ */
+export function siglaNaFrase(uf: string, comArtigo: boolean): SiglaNaFrase {
+  if (comArtigo && uf.toUpperCase() === "DF") {
+    return { o: `o ${uf}`, em: `no ${uf}`, Em: `No ${uf}`, de: `do ${uf}`, para: `para o ${uf}` };
+  }
+  return { o: uf, em: `em ${uf}`, Em: `Em ${uf}`, de: `de ${uf}`, para: `para ${uf}` };
+}

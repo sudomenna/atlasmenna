@@ -37,6 +37,7 @@ import {
   cargoInfo,
   ufsDoCargo,
 } from "@/lib/config/cargos";
+import { type SiglaNaFrase, siglaNaFrase } from "@/lib/utils/termo-territorio";
 
 /** Os três proporcionais (6, 7, 8), na ordem da tabela — para iterar em teste e no seletor. */
 export const CARGOS_DEPUTADO: readonly CargoProporcional[] = CARGOS_PROPORCIONAIS;
@@ -138,6 +139,15 @@ export function nomeDaCasa(cargo: CargoProporcional, uf: string): string {
 // dependência nenhuma, para que componentes que vão ao bundle do cliente
 // (`MarcaDeputado`, `deputado-marcas`) o usem sem puxar esta tabela.
 export { type TermoDoTerritorio, termoDoTerritorio } from "@/lib/utils/termo-territorio";
+
+/**
+ * A sigla da UF numa frase da tela do cargo (spec 027, véspera 03/10): "no DF"
+ * e "do DF" nas assembleias; o federal guarda o texto que sempre teve ("em
+ * DF"). Siglas de estado saem iguais nos três cargos ("em SP", "de SP").
+ */
+export function siglaNaFraseDoCargo(cargo: CargoProporcional, uf: string): SiglaNaFrase {
+  return siglaNaFrase(normalizar(uf), cargo !== 6);
+}
 
 /**
  * Onde as cadeiras da UF estão em disputa, para a frase do resumo

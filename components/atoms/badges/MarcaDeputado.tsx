@@ -23,7 +23,7 @@ import {
   textoDaMarca,
 } from "@/lib/utils/deputado-marcas";
 
-import { TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
+import { siglaNaFrase, TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
 
 import styles from "./MarcaDeputado.module.css";
 
@@ -88,6 +88,11 @@ export interface LegendaMarcasProps {
   uf: string;
   /** Spec 027 — "o estado" · "o Distrito Federal". Ausente ⇒ o termo dos estados. */
   territorio?: TermoDoTerritorio;
+  /**
+   * Spec 027 — a sigla com artigo ("dos válidos do DF"). As telas das
+   * assembleias passam `true`; ausente ⇒ o texto do federal ("de DF").
+   */
+  comArtigo?: boolean;
 }
 
 /**
@@ -102,13 +107,14 @@ export function LegendaMarcas({
   semPercentual = false,
   uf,
   territorio = TERMO_ESTADO,
+  comArtigo = false,
 }: LegendaMarcasProps) {
   return (
     <ul className={styles.legenda} data-testid="dep-legenda-marcas">
       {semPercentual ? null : (
         <li>
-          O percentual ao lado dos votos é sobre os votos válidos de {uf} — a base da conta de
-          cadeiras.
+          O percentual ao lado dos votos é sobre os votos válidos {siglaNaFrase(uf, comArtigo).de} —
+          a base da conta de cadeiras.
         </li>
       )}
       {totalizacaoFinal ? (

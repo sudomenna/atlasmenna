@@ -1046,3 +1046,53 @@ describe("RF-195b — a metodologia acompanha a visão, sem frase órfã nem rep
     expect(p).not.toMatch(/anulad/i);
   });
 });
+
+describe("spec 027 (véspera 03/10) — `semProjecao`: o painel das assembleias em modo resumo", () => {
+  // As assembleias, na Fase 1, são lidas pelo resumo da UF e NUNCA projetam.
+  // O painel não pode dizer "aguardando projeção… zona apurada" nem esconder o
+  // voto apurado atrás da visão "Parcial" do seletor (que abre em Projeção).
+  //
+  // Mutações aplicadas à mão e desfeitas (03/10), que estes casos derrubam:
+  //   - M-S1: ignorar `semProjecao` no arco 3 (`{semProjecao ? null : …}` → sempre o arco) —
+  //     cai "sem arco 3 e sem 'zona'";
+  //   - M-S2: `visaoApurado` sempre "parcial" — cai "arcos 1 e 2 nas duas visões";
+  //   - M-S3: `projetada` sem a guarda (`votacao.projetada` cru) — cai "projeção no payload".
+  const c = contagensParciais();
+  const projetada = {
+    validos: 50_000_000,
+    brancos: 5_000_000,
+    nulos: 4_000_000,
+    abstencao: 28_000_000,
+  };
+
+  it("🔴 sem arco 3 e sem nenhuma menção a projeção ou a zona", () => {
+    const doc = parse(<VotacaoEleitorado votacao={{ contagens: c }} semProjecao />);
+    expect(doc.querySelector('[data-testid="votacao-circulo-3"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="votacao-circulo-3-aguardando"]')).toBeNull();
+    const texto = doc.body.textContent ?? "";
+    expect(texto).not.toMatch(/proje/i);
+    expect(texto).not.toMatch(/\bzona/i);
+  });
+
+  it("🔴 arcos 1 e 2 e a metodologia aparecem nas DUAS visões (nada preso a `data-view-only`)", () => {
+    const doc = parse(<VotacaoEleitorado votacao={{ contagens: c }} semProjecao />);
+    expect(doc.querySelector('[data-testid="votacao-circulo-1"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="votacao-circulo-2"]')).not.toBeNull();
+    expect(doc.querySelector('[data-testid="votacao-metodologia-parcial"]')).not.toBeNull();
+    expect(doc.querySelectorAll("[data-view-only]")).toHaveLength(0);
+  });
+
+  it("🔴 projeção no payload ⇒ continua sem arco 3 e sem o parágrafo da projeção", () => {
+    const doc = parse(<VotacaoEleitorado votacao={{ contagens: c, projetada }} semProjecao />);
+    expect(doc.querySelector('[data-testid="votacao-circulo-3"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="votacao-metodologia-proj"]')).toBeNull();
+  });
+
+  it("sem a prop, o painel segue como sempre (o federal): arco 3 'aguardando' e visões separadas", () => {
+    const doc = parse(<VotacaoEleitorado votacao={{ contagens: c }} />);
+    expect(doc.querySelector('[data-testid="votacao-circulo-3-aguardando"]')).not.toBeNull();
+    expect(
+      doc.querySelector('[data-testid="votacao-circulo-1-visao"]')?.getAttribute("data-view-only"),
+    ).toBe("parcial");
+  });
+});

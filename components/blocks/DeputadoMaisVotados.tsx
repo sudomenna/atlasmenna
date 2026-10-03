@@ -33,6 +33,7 @@ import { marcasDosBits } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
+import { siglaNaFrase } from "@/lib/utils/termo-territorio";
 
 import styles from "./DeputadoListaAgremiacao.module.css";
 
@@ -70,7 +71,10 @@ export function DeputadoMaisVotados({
 }: DeputadoMaisVotadosProps) {
   if (!linhas || linhas.length === 0) return null;
   const noPais = escopo === "pais";
-  const titulo = noPais ? "Mais votados do país" : `Mais votados em ${uf ?? ""}`;
+  // Spec 027 — "no DF"/"do DF" nas assembleias; o federal guarda o texto de sempre.
+  const comArtigo = cargo !== 6;
+  const naUf = siglaNaFrase(uf ?? "", comArtigo);
+  const titulo = noPais ? "Mais votados do país" : `Mais votados ${naUf.em}`;
   const rotulo = rotuloDado ?? rotuloCargo(cargo);
 
   return (
@@ -83,7 +87,7 @@ export function DeputadoMaisVotados({
         <p className={styles.legendaColunas}>
           {noPais
             ? `Os 10 candidatos com mais votos apurados no país, de todas as agremiações. O percentual de cada um é sobre os votos válidos ${cargo === 6 ? "do estado dele" : "da unidade dele — o estado, ou o Distrito Federal"} — é lá que a cadeira é disputada.`
-            : `Os 10 candidatos com mais votos apurados em ${uf ?? ""}, de todas as agremiações. O percentual é sobre os votos válidos de ${uf ?? ""}.`}
+            : `Os 10 candidatos com mais votos apurados ${naUf.em}, de todas as agremiações. O percentual é sobre os votos válidos ${naUf.de}.`}
         </p>
         {/* Nome acessível = o título do painel ("Mais votados em SP"): o
             leitor que pula de lista em lista sabe qual é esta (G6, 30/09). */}
@@ -124,13 +128,13 @@ export function DeputadoMaisVotados({
                     // sempre com o destino ao lado, que desfaz a leitura de voto nominal.
                     <small>
                       {formatPercent(l.pct_validos, 2)}
-                      {noPais ? ` dos válidos de ${l.uf}` : null} ·{" "}
+                      {noPais ? ` dos válidos ${siglaNaFrase(l.uf, comArtigo).de}` : null} ·{" "}
                       <DestinoDeputadoTexto destino={l.destino} />
                     </small>
                   ) : l.pct_validos !== null ? (
                     <small>
                       {formatPercent(l.pct_validos, 2)}
-                      {noPais ? ` dos válidos de ${l.uf}` : null}
+                      {noPais ? ` dos válidos ${siglaNaFrase(l.uf, comArtigo).de}` : null}
                     </small>
                   ) : (
                     <small>—</small>

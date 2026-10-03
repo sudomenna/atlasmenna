@@ -29,6 +29,7 @@ import { rotuloCargo } from "@/lib/utils/casa-legislativa";
 import { formatVotes } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
+import { siglaNaFrase } from "@/lib/utils/termo-territorio";
 
 import styles from "./DeputadoListaAgremiacao.module.css";
 
@@ -36,13 +37,22 @@ function quocientesTexto(n: number): string {
   return `${n.toLocaleString("pt-BR")} ${n === 1 ? "quociente eleitoral" : "quocientes eleitorais"}`;
 }
 
-/** "fez 3 quocientes de SP sozinho; os 2 de excedente somam para a agremiação e não elegem nome nenhum." */
-export function frasePuxador(p: { quocientes: number; excedente: number }, uf: string): string {
+/**
+ * "fez 3 quocientes de SP sozinho; os 2 de excedente somam para a agremiação e não elegem nome nenhum."
+ *
+ * `comArtigo` (spec 027): nas assembleias o DF leva artigo — "do DF". O
+ * federal chama sem ele e guarda o texto de sempre.
+ */
+export function frasePuxador(
+  p: { quocientes: number; excedente: number },
+  uf: string,
+  comArtigo = false,
+): string {
   const exc =
     p.excedente === 1
       ? "o 1 de excedente soma"
       : `os ${p.excedente.toLocaleString("pt-BR")} de excedente somam`;
-  return `fez ${quocientesTexto(p.quocientes)} de ${uf} sozinho; ${exc} para a agremiação e não elege${p.excedente === 1 ? "" : "m"} nome nenhum`;
+  return `fez ${quocientesTexto(p.quocientes)} ${siglaNaFrase(uf, comArtigo).de} sozinho; ${exc} para a agremiação e não elege${p.excedente === 1 ? "" : "m"} nome nenhum`;
 }
 
 export interface DeputadoPuxadoresProps {
@@ -66,6 +76,7 @@ export function DeputadoPuxadores({ cargo, rotulo, puxadores, titleId }: Deputad
   // para o distrital (spec 027, RF-284).
   const doLugar = cargo === 6 ? "do estado" : "do estado (ou do Distrito Federal)";
   const doSeuLugar = cargo === 6 ? "do seu estado" : "do seu estado (ou do Distrito Federal)";
+  const comArtigo = cargo !== 6;
   return (
     <Panel
       kicker={`${rotulo ?? rotuloCargo(cargo)} · Brasil`}
@@ -97,8 +108,9 @@ export function DeputadoPuxadores({ cargo, rotulo, puxadores, titleId }: Deputad
                       {agremiacao === partido ? agremiacao : `${partido} · ${agremiacao}`} · {p.uf}
                     </small>
                     <small>
-                      {frasePuxador(p, p.uf)} (quociente de {p.uf}:{" "}
-                      {formatVotes(p.quociente_eleitoral)} votos).
+                      {frasePuxador(p, p.uf, comArtigo)} (quociente{" "}
+                      {siglaNaFrase(p.uf, comArtigo).de}: {formatVotes(p.quociente_eleitoral)}{" "}
+                      votos).
                     </small>
                   </span>
                   <span>
@@ -120,13 +132,20 @@ export function DeputadoPuxadores({ cargo, rotulo, puxadores, titleId }: Deputad
 
 export interface LinhaPuxadoresProps {
   uf: string;
+  /** Spec 027 — "do DF" nas assembleias. Ausente ⇒ o texto do federal ("de DF"). */
+  comArtigo?: boolean;
   puxadores: readonly DeputadoPuxadorAgremiacao[] | undefined;
   /** `sqcand` → nome de exibição, montado pelo chamador a partir das linhas da agremiação. */
   nomePorSqcand: ReadonlyMap<number, string>;
 }
 
 /** A linha "Puxador: …" dentro de uma agremiação, na página da UF. */
-export function LinhaPuxadores({ uf, puxadores, nomePorSqcand }: LinhaPuxadoresProps) {
+export function LinhaPuxadores({
+  uf,
+  comArtigo = false,
+  puxadores,
+  nomePorSqcand,
+}: LinhaPuxadoresProps) {
   if (!puxadores || puxadores.length === 0) return null;
   return (
     <ul
@@ -145,7 +164,7 @@ export function LinhaPuxadores({ uf, puxadores, nomePorSqcand }: LinhaPuxadoresP
       {puxadores.map((p) => (
         <li key={p.sqcand}>
           <strong>Puxador:</strong> {nomePorSqcand.get(p.sqcand) ?? "candidato desta agremiação"}{" "}
-          {frasePuxador(p, uf)}.
+          {frasePuxador(p, uf, comArtigo)}.
         </li>
       ))}
     </ul>

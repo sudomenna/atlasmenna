@@ -190,12 +190,12 @@ describe("RF-282 — frescor por fonte, listas do país, grade, sem plenário", 
     expect(d).toMatch(/^Câmara Legislativa do Distrito Federal: .*20:35:00, a cada 5 minutos\.$/);
   });
 
-  it("mais votados unem os dois payloads (o DF entra), com o % 'dos válidos de {UF}' e o número de 5 dígitos inteiro", async () => {
+  it("mais votados unem os dois payloads (o DF entra), com o % 'dos válidos de SP' · 'do DF' e o número de 5 dígitos inteiro", async () => {
     porCargo(est(), dis());
     const doc = await render();
     const itens = [...doc.querySelectorAll("[data-testid='dep-mais-votados-pais'] li")];
     expect(itens.map((li) => li.getAttribute("data-uf"))).toEqual(["SP", "DF", "SP"]);
-    expect(textoDe(itens[1])).toContain("dos válidos de DF");
+    expect(textoDe(itens[1])).toContain("dos válidos do DF");
     expect(textoDe(itens[1])).toContain("nº 50123");
     expect(textoDe(doc.querySelector("[data-testid='dep-puxadores-pais']"))).toContain("SP");
   });
@@ -265,5 +265,42 @@ describe("🔴 portões e2e (RF-289) — o detector de casca conhece a capa sem 
     porCargo(est(), dis());
     const markup = renderToStaticMarkup(await DeputadoEstadualPage());
     expect(cascaVaziaNoDocumento(markup, LOCAL)).toEqual([]);
+  });
+});
+
+describe("spec 027 (véspera 03/10) — a frase das figuras e o DF nas listas do país", () => {
+  // Mutações aplicadas à mão e desfeitas (03/10), que estes casos derrubam:
+  //   - M-S7: a nota da figura de volta a "de 1.059, somadas as 27 casas" — cai "figuras";
+  //   - M-S8: `comArtigo` do `<DeputadoMaisVotados>` fixo em `false` — cai "dos válidos do DF".
+  it("🔴 figuras: cadeiras já distribuídas sobre as 1.059 das 27 casas, e casas com a conta feita", async () => {
+    porCargo(est(), dis());
+    const doc = await render();
+    const figuras = [
+      ...doc.querySelectorAll("[data-testid='casas-figuras'] [data-testid='figure']"),
+    ];
+    expect(figuras).toHaveLength(2);
+    const [cadeiras, casas] = figuras.map((f) => ({
+      label: textoDe(f.querySelector("[data-testid='figure-label']")),
+      value: textoDe(f.querySelector("[data-testid='figure-value']")),
+      note: textoDe(f.querySelector("[data-testid='figure-note']")),
+    }));
+    expect(cadeiras?.label).toBe("Cadeiras já distribuídas");
+    expect(cadeiras?.note).toBe("das 1.059 cadeiras das 27 casas");
+    expect(casas?.label).toBe("Casas com a conta feita");
+    expect(casas?.note).toMatch(/^das 27, com os votos já apurados/);
+    const tudo = textoDe(doc.querySelector("[data-testid='casas-figuras']"));
+    expect(tudo).not.toContain("somadas as");
+    expect(tudo).not.toMatch(/\beleit/i);
+  });
+
+  it("🔴 mais votados do país: o distrital é 'dos válidos do DF', o estadual 'de SP'", async () => {
+    porCargo(est(), dis());
+    const doc = await render();
+    const lista = doc.querySelector("[data-testid='dep-mais-votados-pais']");
+    const df = textoDe(lista?.querySelector("[data-uf='DF']"));
+    const sp = textoDe(lista?.querySelector("[data-uf='SP']"));
+    expect(df).toContain("dos válidos do DF");
+    expect(df).not.toContain("de DF");
+    expect(sp).toContain("dos válidos de SP");
   });
 });

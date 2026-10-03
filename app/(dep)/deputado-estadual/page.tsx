@@ -201,16 +201,25 @@ export default async function DeputadoEstadualPage() {
             mais votados dentro dela. Não oficial. Fonte: TSE.
           </p>
 
-          <div className="grid grid-cols-2" style={{ gap: "var(--space-4)" }}>
+          {/* Véspera 03/10 — "963 de 1.059, somadas as 27 casas" ao lado de
+              "23 de 27 casas calculadas" se lia como duas contas sobre a mesma
+              coisa. Cada número agora diz do que é parte: as cadeiras já
+              distribuídas sobre o total fixo das 27 casas, e quantas casas já
+              têm a conta feita com os votos apurados. */}
+          <div
+            className="grid grid-cols-2"
+            style={{ gap: "var(--space-4)" }}
+            data-testid="casas-figuras"
+          >
             <Figure
-              label="Cadeiras definidas"
-              note={`de ${milhar(soma.total)}, somadas as ${TOTAL_CASAS} casas`}
+              label="Cadeiras já distribuídas"
+              note={`das ${milhar(soma.total)} cadeiras das ${TOTAL_CASAS} casas`}
               size="lg"
               value={milhar(soma.atribuidas)}
             />
             <Figure
-              label="Casas com cadeiras calculadas"
-              note={`de ${TOTAL_CASAS}`}
+              label="Casas com a conta feita"
+              note={`das ${TOTAL_CASAS}, com os votos já apurados — as cadeiras ao lado vêm delas`}
               value={String(soma.casasCalculadas)}
             />
           </div>

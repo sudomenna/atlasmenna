@@ -21,13 +21,18 @@
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { DeputadoRegras as RegrasDados } from "@/lib/blob/deputado-uf";
 import { formatVotes } from "@/lib/utils/format";
-import { TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
+import { siglaNaFrase, TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
 
 export interface DeputadoRegrasProps {
   uf: string;
   regras: RegrasDados | undefined;
   /** Spec 027 — "o estado" · "o Distrito Federal". Ausente ⇒ o termo dos estados. */
   territorio?: TermoDoTerritorio;
+  /**
+   * Spec 027 — a sigla com artigo ("no DF", "do DF"). As telas das assembleias
+   * passam `true`; ausente ⇒ o texto do federal ("em DF").
+   */
+  comArtigo?: boolean;
   titleId: string;
 }
 
@@ -42,19 +47,21 @@ export function DeputadoRegras({
   uf,
   regras,
   territorio = TERMO_ESTADO,
+  comArtigo = false,
   titleId,
 }: DeputadoRegrasProps) {
+  const naUf = siglaNaFrase(uf, comArtigo);
   return (
     <Panel
       kicker="Como as cadeiras são distribuídas"
-      title={`Regras com os números de ${uf}`}
+      title={`Regras com os números ${naUf.de}`}
       titleId={titleId}
     >
       {regras ? (
         <div className="flex flex-col" style={{ gap: "var(--space-3)" }} data-testid="dep-regras">
           <p className="max-w-prose" style={TEXTO}>
             Os números abaixo são de agora: o quociente eleitoral muda a cada boletim, porque
-            depende dos votos válidos já apurados em {uf}.
+            depende dos votos válidos já apurados {naUf.em}.
           </p>
           <dl
             className="grid"
@@ -67,7 +74,7 @@ export function DeputadoRegras({
             <Item
               rotulo="Cadeiras em disputa"
               valor={regras.lugares_a_preencher.toLocaleString("pt-BR")}
-              nota={`o número que o TSE publicou para ${uf}`}
+              nota={`o número que o TSE publicou ${naUf.para}`}
               testid="dep-regras-lugares"
             />
             <Item
@@ -111,7 +118,7 @@ export function DeputadoRegras({
         </div>
       ) : (
         <p className="max-w-prose" style={TEXTO} data-testid="dep-regras-aguardando">
-          As regras com os números de {uf} aparecem aqui quando o TSE publicar quantas cadeiras{" "}
+          As regras com os números {naUf.de} aparecem aqui quando o TSE publicar quantas cadeiras{" "}
           {territorio.o} elege e houver votos apurados — o quociente eleitoral depende das duas
           coisas.
         </p>

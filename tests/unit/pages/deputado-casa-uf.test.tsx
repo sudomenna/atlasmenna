@@ -228,6 +228,77 @@ describe("rota e metadata por cargo (casca fina)", () => {
 
     const dis = metadataDaPaginaUf(8, "DF");
     expect(dis.alternates?.canonical).toBe("/uf/DF/deputado-distrital");
-    expect(String(dis.description)).toContain("Deputado Distrital em DF");
+    expect(String(dis.description)).toContain("Deputado Distrital no DF");
+  });
+});
+
+describe("spec 027 (véspera 03/10) — o texto do DF e o painel Votação em modo resumo", () => {
+  // O objeto do SP do contrato, relabelado como o DF e lido em modo resumo
+  // (`granularidade: "uf"`, como as assembleias na Fase 1), com `votacao`.
+  //
+  // Mutações aplicadas à mão e desfeitas (03/10), que estes casos derrubam:
+  //   - M-S4: `comArtigo` da página fixo em `false` — cai "no DF / do DF";
+  //   - M-S5: `siglaNaFrase` ignorando `comArtigo` (artigo sempre no DF) — cai
+  //     "o federal no DF guarda o texto de sempre";
+  //   - M-S6: a página sem `semProjecao` — cai "sem arco 3 nem 'zona'".
+  function detalheDf(granularidade: "uf" | "zona"): DeputadoUfDetailResult {
+    const r = detalheSp();
+    if (r.status !== "ok") throw new Error("fixture");
+    const d = r.detail as DeputadoUfDetail & Record<string, unknown>;
+    d.uf = "DF";
+    d.granularidade = granularidade;
+    d.votacao = {
+      contagens: {
+        aptos: 2_000_000,
+        instalados: 1_500_000,
+        comparecimento: 1_200_000,
+        abstencao: 300_000,
+        validos: 1_000_000,
+        brancos: 80_000,
+        nulos: 70_000,
+        anulados: 30_000,
+        sub_judice: 20_000,
+      },
+    };
+    return r;
+  }
+
+  it("🔴 distrital no DF: 'no DF' / 'do DF', nunca 'em DF' / 'de DF'", async () => {
+    lerDadosDaCasaMock.mockResolvedValue({
+      nacional: nacional(),
+      detalhe: detalheDf("uf"),
+      interruptor: DESLIGADO,
+    });
+    const doc = await render(8, "DF");
+    const t = textoDe(doc);
+    expect(doc.querySelector("#mais-votados-uf-heading")?.textContent).toBe("Mais votados no DF");
+    expect(t).toContain("votos válidos do DF");
+    expect(doc.querySelector("#regras-heading")?.textContent).toBe("Regras com os números do DF");
+    expect(t).not.toMatch(/\b(em|de) DF\b/);
+  });
+
+  it("🔴 distrital no DF em modo resumo: Votação sem arco 3 nem 'zona apurada'", async () => {
+    lerDadosDaCasaMock.mockResolvedValue({
+      nacional: nacional(),
+      detalhe: detalheDf("uf"),
+      interruptor: DESLIGADO,
+    });
+    const doc = await render(8, "DF");
+    const painel = doc.querySelector("[data-testid='votacao-eleitorado']");
+    expect(painel).not.toBeNull();
+    expect(doc.querySelector("[data-testid='votacao-circulo-3']")).toBeNull();
+    expect(doc.querySelector("[data-testid='votacao-circulo-1-visao']")).toBeNull();
+    expect(textoDe(doc)).not.toContain("zona apurada");
+  });
+
+  it("o federal no DF guarda o texto de sempre ('em DF') e o arco 3 'aguardando'", async () => {
+    lerDadosDaCasaMock.mockResolvedValue({
+      nacional: nacional(),
+      detalhe: detalheDf("zona"),
+      interruptor: DESLIGADO,
+    });
+    const doc = await render(6, "DF");
+    expect(doc.querySelector("#mais-votados-uf-heading")?.textContent).toBe("Mais votados em DF");
+    expect(doc.querySelector("[data-testid='votacao-circulo-3-aguardando']")).not.toBeNull();
   });
 });

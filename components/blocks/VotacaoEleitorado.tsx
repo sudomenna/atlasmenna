@@ -991,6 +991,15 @@ export interface VotacaoEleitoradoProps {
    * eleitor)". Valor que não seja inteiro ≥ 1 ⇒ `<DetailUnavailable>`.
    */
   votosPorEleitor?: number;
+  /**
+   * Spec 027 (véspera 03/10) — este cargo NUNCA projeta: o objeto foi lido
+   * pelo resumo da UF (`granularidade: "uf"`), sem zonas, e não há projeção a
+   * esperar. Com `true` o painel mostra só o voto apurado (arcos 1 e 2) nas
+   * DUAS visões do seletor, sem o arco 3 e sem frase que mencione projeção ou
+   * zona — "aguardando projeção… zona apurada" prometeria um dado que não vem.
+   * Ausente ⇒ o comportamento de sempre (o federal segue igual).
+   */
+  semProjecao?: boolean;
 }
 
 const TITLE_ID_PADRAO = "votacao-eleitorado-heading";
@@ -1014,6 +1023,7 @@ export function VotacaoEleitorado({
   titleId = TITLE_ID_PADRAO,
   className,
   votosPorEleitor = 1,
+  semProjecao = false,
 }: VotacaoEleitoradoProps) {
   // RF-198 — o painel degrada, nunca some. `votacao` ausente é "não sabemos";
   // é DIFERENTE de `contagens` zeradas, que é "não começou" (RF-193b).
@@ -1034,7 +1044,11 @@ export function VotacaoEleitorado({
   }
 
   const c = votacao.contagens;
-  const projetada = votacao.projetada;
+  // Sem projeção possível, nem o que viesse no payload é desenhado.
+  const projetada = semProjecao ? undefined : votacao.projetada;
+  // Os arcos do voto apurado deixam de ser "da visão Parcial": aparecem nas
+  // duas, porque não há outra coisa a mostrar na Projeção.
+  const visaoApurado: ViewMode | undefined = semProjecao ? undefined : "parcial";
 
   // `null` significa que as fatias NÃO fecham na base do arco. Não é um estado
   // de espera: é um payload que não soma, e cada arco o diz na própria caixa em
@@ -1085,7 +1099,7 @@ export function VotacaoEleitorado({
 
         {/* Arco 1 — RF-193 / RF-193b. As SEIS fatias sobre os aptos. */}
         <Arco
-          visao="parcial"
+          visao={visaoApurado}
           id="votacao-circulo-1"
           defsPrefix={titleId}
           titulo="Do eleitorado apto"
@@ -1107,7 +1121,7 @@ export function VotacaoEleitorado({
             própria e nomeada, sem "ainda não apurado". Denominador zero
             (RF-193b) NÃO vira "0,0%": vira texto. */}
         <Arco
-          visao="parcial"
+          visao={visaoApurado}
           id="votacao-circulo-2"
           defsPrefix={titleId}
           titulo="Do eleitorado já apurado"
@@ -1138,30 +1152,32 @@ export function VotacaoEleitorado({
             (ADR-0017 / ADR-0018). Projeção que não fecha é um terceiro caso,
             com texto próprio: confundi-lo com "aguardando" mandaria o operador
             esperar por um dado que já chegou, e errado. */}
-        <Arco
-          visao="proj"
-          id="votacao-circulo-3"
-          defsPrefix={titleId}
-          titulo="Projeção para o fim da apuração"
-          baseLabel={base3}
-          total={c.aptos * k}
-          fatias={comCorNeutra(c3 ?? [])}
-          vazio={
-            c3
-              ? undefined
-              : projetada
-                ? {
-                    testid: "votacao-circulo-3-inconsistente",
-                    texto:
-                      "A projeção publicada soma mais que o eleitorado apto — não é possível montar este gráfico sem inventar um número.",
-                  }
-                : {
-                    testid: "votacao-circulo-3-aguardando",
-                    texto:
-                      "Aguardando projeção — ainda não há zona apurada suficiente para projetar o fim da apuração.",
-                  }
-          }
-        />
+        {semProjecao ? null : (
+          <Arco
+            visao="proj"
+            id="votacao-circulo-3"
+            defsPrefix={titleId}
+            titulo="Projeção para o fim da apuração"
+            baseLabel={base3}
+            total={c.aptos * k}
+            fatias={comCorNeutra(c3 ?? [])}
+            vazio={
+              c3
+                ? undefined
+                : projetada
+                  ? {
+                      testid: "votacao-circulo-3-inconsistente",
+                      texto:
+                        "A projeção publicada soma mais que o eleitorado apto — não é possível montar este gráfico sem inventar um número.",
+                    }
+                  : {
+                      testid: "votacao-circulo-3-aguardando",
+                      texto:
+                        "Aguardando projeção — ainda não há zona apurada suficiente para projetar o fim da apuração.",
+                    }
+            }
+          />
+        )}
       </div>
 
       {/* Metodologia (constituição § 8). RF-197 exige que a soma de anulados
@@ -1195,7 +1211,7 @@ export function VotacaoEleitorado({
           </p>
         ) : null}
         <p
-          data-view-only="parcial"
+          data-view-only={visaoApurado}
           data-testid="votacao-metodologia-parcial"
           style={ESTILO_PARAGRAFO_METODOLOGIA}
         >
