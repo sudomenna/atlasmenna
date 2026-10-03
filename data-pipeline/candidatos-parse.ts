@@ -205,6 +205,53 @@ export function ehPublicavel(inseridoUrna: string | null | undefined): boolean {
 }
 
 /**
+ * Situações de julgamento em que a candidatura **ainda recebe voto válido ou
+ * sub judice** — decisão do dono de 03/10/2026, véspera do 1º turno (emenda ao
+ * ADR-0040). Estar na urna não basta: quem renunciou, foi indeferido sem
+ * recurso ou faleceu depois da carga das urnas continua NELA, mas o TSE anula
+ * os votos e não lista a candidatura no arquivo de resultados (EA20).
+ *
+ * Medido em 03/10 contra o cadastro das 16h31 e os 110 EA20 zerados da eleição
+ * real (cargos 1, 3, 5, 6, 7, 8): estas cinco situações somam 18.853 na urna e
+ * TODAS estão no EA20 (menos 1 deferido, anomalia do TSE em AM-Senador); as
+ * de fora — RENÚNCIA 133, INDEFERIDO 109, FALECIMENTO 3, PEDIDO NÃO CONHECIDO 1
+ * — têm ZERO no EA20.
+ *
+ * Lista de PERMISSÃO, não de exclusão: situação nova ou desconhecida fica de
+ * fora (fail-closed, mesma postura de {@link ehPublicavel}). O resultado de
+ * apuração não depende desta lista — nome e número de quem tem voto vêm do
+ * próprio EA20; aqui se decide só quem aparece na grade de candidaturas.
+ */
+/**
+ * `SG_FEDERACAO` sem o número de cada partido. O cadastro de 12/09 trazia
+ * `PT/PC do B/PV`; o de 03/10 passou a trazer `13-PT/65-PC do B/43-PV` (mesma
+ * federação, medido nas 5). Sem normalizar, o cartão da candidatura mudaria de
+ * texto na véspera e deixaria de bater com `fed.sg` do EA20 (`PT/PC do B/PV`).
+ * Só tira o prefixo `NN-` de cada membro; o resto da sigla fica como o TSE
+ * escreveu.
+ */
+export function siglaDeFederacao(sigla: string | null): string | null {
+  if (sigla == null) return null;
+  return sigla
+    .split("/")
+    .map((membro) => membro.replace(/^\s*\d+-/, ""))
+    .join("/");
+}
+
+export const SITUACOES_QUE_CONTAM_VOTO: ReadonlySet<string> = new Set([
+  "DEFERIDO",
+  "DEFERIDO EM PRAZO RECURSAL OU COM RECURSO",
+  "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO",
+  "PENDENTE DE JULGAMENTO",
+  "PEDIDO NÃO CONHECIDO EM PRAZO RECURSAL OU COM RECURSO",
+]);
+
+export function situacaoContaVoto(situacao: string | null | undefined): boolean {
+  if (situacao == null) return false;
+  return SITUACOES_QUE_CONTAM_VOTO.has(situacao.trim());
+}
+
+/**
  * `NM_URNA_CANDIDATO` com fallback para `NM_CANDIDATO`.
  *
  * Medido: o nome de urna **nunca** vem vazio (0 em 20.939) e tem no máximo 30
@@ -268,13 +315,14 @@ export function mapearCandidato(
     partido_sigla: campo(campos, header, "SG_PARTIDO"),
     partido_numero: Number(campo(campos, header, "NR_PARTIDO")),
     partido_nome: opcional(campo(campos, header, "NM_PARTIDO")),
-    federacao_sigla: opcional(campo(campos, header, "SG_FEDERACAO")),
+    federacao_sigla: siglaDeFederacao(opcional(campo(campos, header, "SG_FEDERACAO"))),
     coligacao_nome: opcional(campo(campos, header, "NM_COLIGACAO")),
     situacao_julgamento: complementar.situacaoJulgamento,
     inserido_urna: ehPublicavel(complementar.inseridoUrna),
     substituido: complementar.substituido.trim() === "S",
     sq_substituido: complementar.sqSubstituido,
-    publicavel: ehPublicavel(complementar.inseridoUrna),
+    publicavel:
+      ehPublicavel(complementar.inseridoUrna) && situacaoContaVoto(complementar.situacaoJulgamento),
   };
 }
 

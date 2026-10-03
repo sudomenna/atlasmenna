@@ -22,6 +22,9 @@ import {
   mapearCandidato,
   nomeDeUrna,
   opcional,
+  SITUACOES_QUE_CONTAM_VOTO,
+  siglaDeFederacao,
+  situacaoContaVoto,
   unirCandidaturas,
 } from "@/data-pipeline/candidatos-parse.ts";
 
@@ -150,6 +153,82 @@ describe("ehPublicavel — fail-closed (RF-141, ADR-0040)", () => {
     expect(
       mapear(linhaPrincipal(), linhaComplementar({ ST_CANDIDATO_INSERIDO_URNA: "SIM" })),
     ).toMatchObject({ publicavel: true, inserido_urna: true });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Emenda 03/10/2026 ao ADR-0040 — só publica quem ainda recebe voto
+// ---------------------------------------------------------------------------
+
+describe("situacaoContaVoto — renúncia, indeferido sem recurso e falecimento saem da grade", () => {
+  it.each([
+    "DEFERIDO",
+    "DEFERIDO EM PRAZO RECURSAL OU COM RECURSO",
+    "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO",
+    "PENDENTE DE JULGAMENTO",
+    "PEDIDO NÃO CONHECIDO EM PRAZO RECURSAL OU COM RECURSO",
+  ])("%s conta voto (o TSE a mantém no EA20)", (s) => {
+    expect(situacaoContaVoto(s)).toBe(true);
+  });
+
+  // MUTAÇÃO ALVO: `return true` ou lista de EXCLUSÃO no lugar da de permissão.
+  it.each([
+    "RENÚNCIA",
+    "INDEFERIDO",
+    "FALECIMENTO",
+    "PEDIDO NÃO CONHECIDO",
+    "CANCELADO",
+    "SITUAÇÃO NOVA DO TSE",
+    "",
+  ])("%s NÃO conta voto (fora do EA20, ou desconhecida → fail-closed)", (s) => {
+    expect(situacaoContaVoto(s)).toBe(false);
+  });
+
+  it("null/undefined não contam; espaço em volta é ruído", () => {
+    expect(situacaoContaVoto(null)).toBe(false);
+    expect(situacaoContaVoto(undefined)).toBe(false);
+    expect(situacaoContaVoto("  DEFERIDO ")).toBe(true);
+  });
+
+  it("a lista tem exatamente as 5 situações medidas em 03/10", () => {
+    expect(SITUACOES_QUE_CONTAM_VOTO.size).toBe(5);
+  });
+
+  it("na urna mas RENUNCIOU ⇒ não publicável (inserido_urna continua verdadeiro)", () => {
+    expect(
+      mapear(
+        linhaPrincipal(),
+        linhaComplementar({
+          ST_CANDIDATO_INSERIDO_URNA: "SIM",
+          DS_SITUACAO_JULGAMENTO: "RENÚNCIA",
+        }),
+      ),
+    ).toMatchObject({ publicavel: false, inserido_urna: true });
+    expect(
+      mapear(
+        linhaPrincipal(),
+        linhaComplementar({
+          ST_CANDIDATO_INSERIDO_URNA: "SIM",
+          DS_SITUACAO_JULGAMENTO: "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO",
+        }),
+      ),
+    ).toMatchObject({ publicavel: true, inserido_urna: true });
+  });
+});
+
+describe("siglaDeFederacao — o cadastro de 03/10 trouxe o número de cada partido", () => {
+  it.each([
+    ["13-PT/65-PC do B/43-PV", "PT/PC do B/PV"],
+    ["44-UNIÃO/11-PP", "UNIÃO/PP"],
+    ["25-PRD/77-SOLIDARIEDADE", "PRD/SOLIDARIEDADE"],
+    ["PSOL/REDE", "PSOL/REDE"],
+  ])("%s → %s", (cru, limpo) => {
+    expect(siglaDeFederacao(cru)).toBe(limpo);
+  });
+
+  it("null continua null; número fora do prefixo não é tocado", () => {
+    expect(siglaDeFederacao(null)).toBeNull();
+    expect(siglaDeFederacao("PARTIDO 2026/X")).toBe("PARTIDO 2026/X");
   });
 });
 
