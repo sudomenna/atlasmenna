@@ -15,10 +15,10 @@ de 01/01); para o turno 2, 25/10.
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
-from api.model.project import _CORTE_RESIDUO_SIMULADO_POR_TURNO
+from api.model.project import _CORTE_RESIDUO_SIMULADO_POR_TURNO, _VIRADA_PRODUCAO_1T
 
 TS_PATH = Path(__file__).resolve().parents[3] / "lib" / "config" / "calendar.ts"
 
@@ -44,10 +44,22 @@ def test_calendario_ts_e_legivel() -> None:
 
 
 def test_corte_de_cada_turno_e_o_inicio_mais_tardio_do_turno_no_calendario() -> None:
+    """Turno 2: igual ao calendário. Turno 1: a exceção da emenda de 03/10 ao
+    ADR-0054 — o corte é a virada de produção (03/10 18:00 BRT), que tem de
+    ficar ANTES do início do turno no calendário e no máximo 6 h antes dele
+    (uma antecipação maior engoliria o ensaio de 03/10 de dia, que ainda era
+    simulado). Se o calendário do turno 1 mudar, esta guarda quebra alto."""
     por_turno = _inicios_por_turno()
     assert set(_CORTE_RESIDUO_SIMULADO_POR_TURNO) == set(por_turno)
     for turno, inicios in por_turno.items():
-        assert _CORTE_RESIDUO_SIMULADO_POR_TURNO[turno] == max(inicios), (
-            f"turno {turno}: Python diz {_CORTE_RESIDUO_SIMULADO_POR_TURNO[turno]}, "
+        corte = _CORTE_RESIDUO_SIMULADO_POR_TURNO[turno]
+        if turno == 1:
+            assert corte == _VIRADA_PRODUCAO_1T
+            assert max(inicios) - timedelta(hours=6) <= corte < max(inicios), (
+                f"turno 1: corte {corte} fora da faixa (virada ≤ 6 h antes de {max(inicios)})"
+            )
+            continue
+        assert corte == max(inicios), (
+            f"turno {turno}: Python diz {corte}, "
             f"calendar.ts diz {max(inicios)} — atualize os dois juntos"
         )

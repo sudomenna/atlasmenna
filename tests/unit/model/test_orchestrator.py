@@ -1927,7 +1927,9 @@ def test_ts_minimo_valido_depois_do_corte_devolve_o_instante_do_turno() -> None:
 
     agora = datetime(2026, 10, 4, 20, 0, tzinfo=timezone.utc)
     corte = _ts_minimo_valido(1, agora)
-    assert corte == datetime(2026, 10, 4, 3, 0, tzinfo=timezone.utc)
+    # Emenda 03/10 ao ADR-0054: o corte do turno 1 é a virada de produção,
+    # 03/10 18:00 BRT (21:00 UTC), não mais 04/10 00:00 BRT.
+    assert corte == datetime(2026, 10, 3, 21, 0, tzinfo=timezone.utc)
 
 
 def test_ts_minimo_valido_no_limite_inclui() -> None:
@@ -1937,8 +1939,23 @@ def test_ts_minimo_valido_no_limite_inclui() -> None:
     abaixo)."""
     from api.model.project import _ts_minimo_valido
 
-    corte_turno1 = datetime(2026, 10, 4, 3, 0, tzinfo=timezone.utc)
+    corte_turno1 = datetime(2026, 10, 3, 21, 0, tzinfo=timezone.utc)
     assert _ts_minimo_valido(1, corte_turno1) == corte_turno1
+
+
+def test_ts_minimo_valido_na_noite_da_virada_ja_filtra() -> None:
+    """Regressão do incidente de 03/10: às 18h30 BRT da véspera (depois da
+    virada, antes da meia-noite) o filtro JÁ vale — senão as leituras do
+    simulado dos pares de RR removidos (03077×5, 03115×5; última em 30/09)
+    voltam ao site como "0,1% apurado". Um minuto antes da virada, ainda não."""
+    from api.model.project import _ts_minimo_valido
+
+    noite_da_virada = datetime(2026, 10, 3, 21, 30, tzinfo=timezone.utc)
+    assert _ts_minimo_valido(1, noite_da_virada) == datetime(
+        2026, 10, 3, 21, 0, tzinfo=timezone.utc
+    )
+    um_minuto_antes = datetime(2026, 10, 3, 20, 59, tzinfo=timezone.utc)
+    assert _ts_minimo_valido(1, um_minuto_antes) is None
 
 
 def test_ts_minimo_valido_turno_2_usa_25_10() -> None:

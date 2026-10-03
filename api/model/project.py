@@ -355,8 +355,18 @@ def _open_conn():
 # Instantes espelham `lib/config/calendar.ts:92-103` (CALENDAR_2026) — mesmo
 # calendário, reescrito aqui porque este módulo Python não importa TS. Se o
 # calendário mudar lá, mudar aqui também.
+#
+# EXCEÇÃO DO TURNO 1 (emenda ADR-0054, 03/10/2026): o corte foi ANTECIPADO
+# para o instante da virada de produção (03/10 18:00 BRT), em vez de 04/10
+# 00:00. Na virada o robô passou a gravar na gaveta pública, e dois pares de
+# RR removidos de `zonas` à tarde (03077×5, 03115×5) só tinham leituras do
+# simulado — eram as únicas com voto, e o site publicou "0,1% apurado" com
+# candidatos fictícios. Medido em 03/10: a última leitura do simulado (ele
+# 21270/21272) é de 30/09 13:13 UTC e a primeira real (6257/6259) de 03/10
+# 21:06 UTC; 18:00 BRT (21:00 UTC) separa as duas famílias.
+_VIRADA_PRODUCAO_1T = datetime(2026, 10, 3, 18, 0, 0, tzinfo=timezone(timedelta(hours=-3)))
 _CORTE_RESIDUO_SIMULADO_POR_TURNO: dict[int, datetime] = {
-    1: datetime(2026, 10, 4, 0, 0, 0, tzinfo=timezone(timedelta(hours=-3))),
+    1: _VIRADA_PRODUCAO_1T,
     2: datetime(2026, 10, 25, 0, 0, 0, tzinfo=timezone(timedelta(hours=-3))),
 }
 

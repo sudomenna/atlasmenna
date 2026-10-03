@@ -150,3 +150,27 @@ A decisão de apagar fica para depois da eleição.
 - Spec: [002-modelo-estatistico](../../specs/002-modelo-estatistico/spec.md) — `fetch_snapshots`
   e `fetch_municipio_aggregates` ganham o corte; gate OT-4/replay 2022 não é afetado (replay não
   passa por essas funções).
+
+## Emenda — 03/10/2026, ~18h40: corte do turno 1 antecipado para a virada (03/10 18:00 BRT)
+
+**Incidente.** Às 18:00 BRT de 03/10 a produção foi virada (códigos 6257/6259; `EDGE_CONFIG_ID` removido
+— o robô passou a gravar na gaveta pública). Às 18:10 o site público mostrava "0,1% apurado" com
+candidatos e partidos fictícios (CANDIDATO 9983, P 9998 66% em Governador, P 9980 50,5% em Senador).
+Causa: os pares de RR removidos de `zonas` à tarde (03077×5, 03115×5, véspera § 2.5) só tinham leituras
+do simulado (ele 21270/21272, última em 30/09 13:13 UTC, `pct_apurado` 100) — as únicas com voto entre
+as últimas leituras de cada par. Esta ADR aceitava o filtro vazio antes de 04/10 00:00 supondo "ensaio
+sem voto", e não previu pares que só existiam no simulado. Sem gatilho (arquivos inalterados), o dado
+falso ficaria no ar até 17h de 04/10.
+
+**Decisão (dono, "conserte tudo profundamente").** `_CORTE_RESIDUO_SIMULADO_POR_TURNO[1]` passa a ser
+`_VIRADA_PRODUCAO_1T = 2026-10-03 18:00 -03:00`. Medido: última leitura do simulado 30/09 13:13 UTC,
+primeira real 03/10 21:06 UTC. O calendário do site (`lib/config/calendar.ts`) NÃO muda — a guarda de
+sincronia passa a exigir, para o turno 1, o corte igual à virada e até 6 h antes do início do turno;
+o turno 2 continua igual ao calendário. Teste de regressão
+`test_ts_minimo_valido_na_noite_da_virada_ja_filtra` (mutação aplicada — volta a 04/10 00:00 → falha).
+Remendo imediato antes do deploy: `pnpm projection:seed --force` (páginas nacionais pres/gov/sen de
+volta à pré-eleição; as chaves de UF/Blob só se corrigem com uma rodada do modelo).
+
+**Pendente na mesma noite:** `projections` ganhou linhas falsas entre 21:10 e 21:30 UTC (pres 700, gov 44,
+sen 70; `dado_ts` até 21:24 UTC em gov) — a série da spec 020 (janela de 24 h por `ts` e `dado_ts`)
+poderia exibi-las em Governador entre 17:00 e 18:24 BRT de 04/10. Ver o commit seguinte.
