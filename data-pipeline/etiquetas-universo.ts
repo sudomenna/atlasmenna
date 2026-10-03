@@ -26,6 +26,8 @@ import { resolve } from "node:path";
 
 import { normalizarSigla, normalizarSqcand } from "@/lib/etiquetas/formato";
 
+import { siglaDeFederacao } from "./candidatos-parse";
+
 export type CargoEtiquetado = 3 | 5 | 6;
 
 export interface CandidaturaUniverso {
@@ -67,7 +69,11 @@ export function candidaturaDeCampos(
   if (cargo !== 3 && cargo !== 5 && cargo !== 6) return null;
   const sqcand = normalizarSqcand(v("SQ_CANDIDATO"));
   if (!sqcand) throw new Error(`SQ_CANDIDATO inválido: "${v("SQ_CANDIDATO")}"`);
-  const fed = v("SG_FEDERACAO");
+  // Desde o cadastro de 03/10 o TSE escreve "13-PT/65-PC do B/43-PV"; o de
+  // 12/09 escrevia "PT/PC do B/PV". A mesma limpeza da importação
+  // (`siglaDeFederacao`) faz os dois darem a mesma chave — senão toda linha
+  // `federacao:` do `partidos.csv` deixa de existir no universo.
+  const fed = siglaDeFederacao(v("SG_FEDERACAO")) ?? "";
   return {
     sqcand,
     cargo,

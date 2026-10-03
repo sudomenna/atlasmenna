@@ -185,6 +185,34 @@ describe("RF-229 — o universo lê só cinco colunas", () => {
     expect(() => montarUniverso([a, { ...a, partido: "PL" }])).toThrow(/duas vezes/);
   });
 
+  it("🔴 cadastro de 03/10 ('13-PT/65-PC do B/43-PV') dá a MESMA federação do de 12/09", () => {
+    const de = (sg: string, sq: string) =>
+      candidaturaDeCampos(registroTse({ SQ_CANDIDATO: sq, SG_FEDERACAO: sg }), HEADER)?.federacao;
+    expect(de("13-PT/65-PC do B/43-PV", "250002012345")).toBe("PT/PC DO B/PV");
+    expect(de("PT/PC do B/PV", "250002012346")).toBe("PT/PC DO B/PV");
+    expect(de("44-UNIÃO/11-PP", "250002012347")).toBe("UNIAO/PP");
+    expect(de("#NULO", "250002012348")).toBeNull();
+
+    // E a linha `federacao:` escrita à mão no `partidos.csv` existe no universo.
+    const universo = montarUniverso([
+      candidaturaDeCampos(
+        registroTse({ SG_PARTIDO: "PT", SG_FEDERACAO: "13-PT/65-PC do B/43-PV" }),
+        HEADER,
+      )!,
+    ]);
+    const r = compilarEtiquetas(
+      entrada(
+        {
+          "partidos.csv":
+            `${CABECALHO}\n` +
+            "federacao:PT/PC do B/PV,centrao,nao,,https://x.org,Estatuto,2026-09-01,sim,2026-09-28,\n",
+        },
+        { universo },
+      ),
+    );
+    expect(r.ok ? [] : r.erros.map((e) => e.mensagem)).toEqual([]);
+  });
+
   it("membros de federação são os OBSERVADOS (PCDOB, não 'PC do B')", () => {
     const u = montarUniverso([
       { sqcand: "1", cargo: 6, uf: "SP", partido: "PCDOB", federacao: "PT/PC DO B/PV" },

@@ -1,9 +1,9 @@
 {
   "formato": "etiquetas/v1",
   "meta": {
-    "versao": 1790666935,
-    "gerado_em": "2026-09-29T07:28:55.613Z",
-    "conteudo_sha256": "7764d6aea91c6ad9cc6770aa27a0604873b8250f2c9ced8489f189612fdb93bf",
+    "versao": 1791066675,
+    "gerado_em": "2026-10-03T22:31:15.855Z",
+    "conteudo_sha256": "dd24cbb2dd7f2c8eb85e9ce6a4410c82c53538e9dedfc429151f1eb2e5c6eee2",
     "git_sha": null
   },
   "uf": "MS",
