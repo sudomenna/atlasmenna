@@ -10,7 +10,7 @@ screens: [T-17, T-18, T-11, T-12]
 requirements: [RF-278, RF-279, RF-280, RF-281, RF-282, RF-283, RF-284, RF-285, RF-286, RF-287, RF-288, RF-289, RF-290]
 depends_on: [017-deputado-federal, 026-deputado-listas-projecao, 018-identidade-candidatura]
 amends: [017-deputado-federal, 018-identidade-candidatura, 011-sobre-o-modelo]
-apis: [GET /uf/[sigla]/deputado-estadual/lista, GET /api/ingest/deputado-estadual, GET /api/ingest/deputado-distrital, GET /api/ingest/deputado-estadual/[fatia]]
+apis: [GET /uf/[sigla]/deputado-estadual/lista, GET /uf/DF/deputado-distrital/lista, GET /api/ingest/deputado-estadual, GET /api/ingest/deputado-distrital, GET /api/ingest/deputado-estadual/[fatia]]
 components: [CargoTabs, DeputadoCasaSeletor, DeputadoBancadaPanel, UfBandeirasGrid, DeputadoListaAgremiacao, MarcaDeputado, DeputadoMaisVotados, DeputadoPuxadores, DeputadoRegras, DeputadoConferencia, DeputadoMetodologia, VotacaoEleitorado]
 nfr: [RNF-002, RNF-003, RNF-006, RNF-007a, RNF-012, RNF-019, RNF-022, RNF-023, RNF-024, RNF-035]
 # ADRs novos desta spec, escritos em paralelo pelo adr-author (citados sem link até existirem):
@@ -27,7 +27,7 @@ opens_after: 2026-09-29
 
 **Rotas novas**: `/deputado-estadual` (T-17, capa das 27 casas), `/uf/[sigla]/deputado-estadual`
 (T-18, 26 UFs) e `/uf/DF/deputado-distrital` (T-18, DF).
-**Rota nova de dado**: `GET /uf/[sigla]/deputado-estadual/lista` — fora de `/api` pelo mesmo motivo da
+**Rotas novas de dado**: `GET /uf/[sigla]/deputado-estadual/lista` e `GET /uf/DF/deputado-distrital/lista` (esta desde a emenda de 03/10 ao ADR-0065) — fora de `/api` pelo mesmo motivo da
 rota do federal (BotID em `/api/*`, ADR-0065 D3).
 **Rotas emendadas**: `/deputado-federal` (T-11) e `/uf/[sigla]/deputado-federal` (T-12) — seletor da casa
 e aba "Deputados" (RF-283).
@@ -443,7 +443,11 @@ e fechada).
   agremiação), when medida, then cabe num **teto próprio** registrado em `tests/e2e/perf-budget.spec.ts`
   como exceção nomeada — proposto pelo `a11y-perf-auditor` a partir da medição e aprovado pelo dono,
   como os 480 KiB do federal (ADR-0065 D5); o teto global de 300 KiB não muda.
-- Given as outras duas rotas, then cabem no teto global.
+- Given as outras duas rotas, then cabem no teto global. ⚠️ **Emenda 2026-10-03 (dono):** com o corte das
+  listas (eleitos + 5, mínimo 10 — ADR-0065, emenda 03/10) mediram SP estadual 373,6 KiB e DF distrital
+  356,3 KiB (o resto é o cabeçalho das agremiações); as DUAS páginas de UF têm teto próprio de **400 KiB**
+  em `tests/e2e/perf-budget.spec.ts`. A capa `/deputado-estadual` cabe no global. Enxugar os cabeçalhos
+  fica para depois do 1º turno.
 - Given o axe, then zero violações nas três, com a lista aberta e fechada.
 - Given `/uf/SP/deputado-federal`, then continua cabendo nos seus 480 KiB (sem regressão).
 

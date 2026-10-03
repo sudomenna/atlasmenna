@@ -318,7 +318,7 @@ está em `comparou` e o horário do boletim.
 
 `app/(dep)/uf/[sigla]/deputado-estadual/lista/route.ts`, com o corpo do federal num módulo comum
 (`app/(dep)/_rota-lista-deputado.ts`, `GET(cargo, sigla)`), mesmos cabeçalhos e códigos (026 § 8.5;
-ADR-0065 D3). Não existe rota para o 8.
+ADR-0065 D3). ~~Não existe rota para o 8.~~ Emenda 03/10: o 8 também tem rota (`app/(dep)/uf/[sigla]/deputado-distrital/lista/route.ts`, só DF), e nas assembleias a rota devolve o restante depois do corte do documento (eleitos + 5, mínimo 10), não só 61+ (ADR-0065, emenda 03/10).
 
 ### 7.3 Blocos com cargo
 

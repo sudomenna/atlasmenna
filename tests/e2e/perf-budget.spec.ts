@@ -137,8 +137,8 @@ const ROUTES = [
   // A de SP estadual era o pior caso de peso do produto: 94 lugares, 26
   // agremiações de até 95 candidatos, todos os nomes com 30 caracteres
   // acentuados. Com o corte das assembleias (decisão do dono, 03/10: eleitos
-  // + 5, mínimo 10 por agremiação no documento) as duas de UF voltam ao teto
-  // GLOBAL — ver o histórico em `TETO_DOCUMENTO_POR_ROTA`.
+  // + 5, mínimo 10 por agremiação no documento) as duas de UF ficam em teto
+  // próprio de 400 KiB, aprovado pelo dono — ver `TETO_DOCUMENTO_POR_ROTA`.
   "/deputado-estadual",
   "/uf/SP/deputado-estadual",
   "/uf/DF/deputado-distrital",
@@ -218,20 +218,28 @@ const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
  *   hemiciclo de 513 cadeiras, os mais votados do país, os puxadores e o selo
  *   por UF.
  *
- * ⚠️ `/uf/SP/deputado-estadual` e `/uf/DF/deputado-distrital` NÃO têm teto
- * próprio — ficam no global de 300 KiB, como o RF-289 previa. Em 03/10 a
+ * `/uf/SP/deputado-estadual` e `/uf/DF/deputado-distrital` — 400 KiB (abaixo).
+ * O RF-289 previa o global de 300 KiB. Em 03/10 a
  * frente S mediu, com as listas em três faixas (60 por agremiação no
  * documento), **740.947 B (723,6 KiB)** em SP (1.570 linhas) e **456.238 B
  * (445,5 KiB)** no DF (650 linhas), e propôs 780 e 560 KiB. O dono decidiu
  * outra coisa no mesmo dia: nas assembleias o documento leva, por
  * agremiação, os eleitos + 5, mínimo 10 (`lib/deputado/lista-documento.ts`),
  * e o resto vem pela rota da lista no clique. Os tetos propostos saíram.
+ * Com o corte, mediram **382.556 B (373,6 KiB)** em SP e **364.851 B
+ * (356,3 KiB)** no DF — o peso restante é o cabeçalho das 26 agremiações
+ * (~1,7 KB cada, no HTML e no payload RSC). O dono aprovou em 03/10 um teto
+ * próprio de **400 KiB** para as duas ({@link TETO_DOCUMENTO_ASSEMBLEIA_UF});
+ * enxugar os cabeçalhos fica para depois do 1º turno.
  */
+const TETO_DOCUMENTO_ASSEMBLEIA_UF = 400 * KIB;
 const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> = {
   "/deputado-federal": 320 * KIB,
   "/uf/SP/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/RJ/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/MG/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
+  "/uf/SP/deputado-estadual": TETO_DOCUMENTO_ASSEMBLEIA_UF,
+  "/uf/DF/deputado-distrital": TETO_DOCUMENTO_ASSEMBLEIA_UF,
 };
 
 function tetoDoDocumento(route: (typeof ROUTES)[number]): number {
