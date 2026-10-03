@@ -166,6 +166,18 @@ publica a lista sem fotos, sem erro nenhum na tela.
         `pnpm db:zonas:faltantes --pesos-oficiais build/tse-archives/perfil_eleitorado_2026_AP-PE-DF.csv --uf PE --col-qt QT_ELEITORES` (simulação; depois `--escrever`). O 2.4 passa a esperar **6134**.
       - **Se não listar:** nada muda; PE fica com os pesos de 2024 (Σ −2,6% do oficial).
       AP e DF já estão com os pesos oficiais desde 30/09 (backup `build/zonas-backup-20260930T172318Z.json`).
+      ✅ **FEITO em 03/10 ~14h20 (autorizado pelo dono).** O EA12 real (`ele2026/6259/config/mun-e006259-cm.json`,
+      `dg` 02/10) **lista** Recife 0001 — e mostrou mais uma diferença: **RR Bonfim (03077) e Normandia (03115)
+      passaram da zona 5 para a 9** (o perfil_eleitorado_2026 confirma). Gravado, cada passo com backup em `build/`:
+      1. `--so-estrutural --ea12 <EA12 real>` → `zonas` +3 (PE 25313×1, RR 03077×9, RR 03115×9).
+      2. `--pesos-oficiais … --uf PE` → PE fecha com o arquivo oficial (7.225.744; backup `20261003T171718Z`).
+      3. Remoção de RR 03077×5 e 03115×5 (`zonas` e `eleitorado`; backup `20261003T171828Z`). Os 94/85 snapshots
+         desses pares eram todos do simulado (antes do corte ADR-0054) e **continuam no banco** (§ 10); para isso a
+         lista de fantasmas e a contagem de snapshots foram ajustadas só para essa execução e devolvidas ao estado
+         anterior (o código na `main` não mudou).
+      4. `--pesos-oficiais … --uf RR` → RR fecha com o arquivo oficial (401.496; backup `20261003T171841Z`).
+      Conferência final: o banco bate par a par com o EA12 real — **6.106 pares, todos com peso, nenhum aviso**.
+      O 2.4 passa a esperar **`Total de alvos: 6134`** (medido em 03/10 com `ele2026/6257`).
 
 ---
 
