@@ -5,9 +5,9 @@
 //   embutido em campo entre aspas), ISO-8859-1.
 // - Util de batches para COPY-like INSERT.
 
-import { exec } from "node:child_process";
+import { exec, execFile } from "node:child_process";
 import { createReadStream, createWriteStream, existsSync, mkdirSync, statSync } from "node:fs";
-import { mkdir } from "node:fs/promises";
+import { mkdir, rename, rm } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { Readable } from "node:stream";
@@ -71,67 +71,145 @@ export function getPool(): Pool {
  */
 export const TSE_ETL_USER_AGENT = "AtlasMenna-ETL/0.1";
 
+/** Opções de `downloadCached`. */
+export interface DownloadCachedOpts {
+  /** Tamanho mínimo aceitável (sanity check pós-download). */
+  minBytes?: number;
+  /**
+   * Re-baixa **mesmo com cache válido**. O download vai para um arquivo
+   * temporário ao lado do destino e só substitui o cache por `rename` atômico
+   * depois de completo e acima de `minBytes` — um download que falha no meio
+   * (HTTP de erro, rede caindo, corpo truncado) deixa o cache antigo intacto.
+   */
+  force?: boolean;
+  /** Diretório de cache. Default `CACHE_DIR`; existe para os testes. */
+  cacheDir?: string;
+}
+
 /**
  * Baixa uma URL para o diretório de cache se ainda não existir.
- * Reaproveita o arquivo local se já presente e não-vazio.
- * Retorna o caminho local.
+ * Reaproveita o arquivo local se já presente e acima de `minBytes` —
+ * **a menos que `force`**. Retorna o caminho local.
+ *
+ * ⚠️ Sem `force`, o cache não expira: um ZIP baixado em 12/09 é servido para
+ * sempre, mesmo que o TSE tenha regerado o arquivo. Foi assim que, em 03/10,
+ * `candidatos:import --force` quase republicou o cadastro de 12/09 — a flag
+ * prometia re-baixar e esta função não tinha como. Quem precisa de dado novo
+ * passa `force: true`.
  *
  * @param url - URL HTTPS pública
- * @param filename - Nome do arquivo dentro de CACHE_DIR
- * @param opts.minBytes - Tamanho mínimo aceitável (sanity check pós-download)
+ * @param filename - Nome do arquivo dentro do diretório de cache
  */
 export async function downloadCached(
   url: string,
   filename: string,
-  opts: { minBytes?: number } = {},
+  opts: DownloadCachedOpts = {},
 ): Promise<string> {
-  ensureCacheDir();
-  const dest = resolve(CACHE_DIR, filename);
+  const cacheDir = opts.cacheDir ?? CACHE_DIR;
+  if (!existsSync(cacheDir)) mkdirSync(cacheDir, { recursive: true });
+  const dest = resolve(cacheDir, filename);
   if (existsSync(dest)) {
     const size = statSync(dest).size;
     if (size > (opts.minBytes ?? 1024)) {
-      console.log(`  [cache hit] ${filename} (${(size / 1024 / 1024).toFixed(1)} MB)`);
-      return dest;
+      if (!opts.force) {
+        console.log(`  [cache hit] ${filename} (${(size / 1024 / 1024).toFixed(1)} MB)`);
+        return dest;
+      }
+      console.log(
+        `  [force] ${filename} em cache (${(size / 1024 / 1024).toFixed(1)} MB) — re-baixando`,
+      );
+    } else {
+      console.log(`  [cache stale] ${filename} (${size}B) — re-baixando`);
     }
-    console.log(`  [cache stale] ${filename} (${size}B) — re-baixando`);
   }
   console.log(`  [download] ${url}`);
   const t0 = Date.now();
-  const res = await fetch(url, {
-    headers: { "User-Agent": TSE_ETL_USER_AGENT },
-    // signal: AbortSignal.timeout não suportado consistentemente em Node 22 fetch;
-    // fica a critério do orquestrador setar timeout via Bash.
-  });
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status} ${res.statusText} baixando ${url}`);
-  }
-  if (!res.body) {
-    throw new Error(`Resposta sem body para ${url}`);
-  }
-  await pipeline(
-    Readable.fromWeb(res.body as unknown as import("node:stream/web").ReadableStream),
-    createWriteStream(dest),
-  );
-  const size = statSync(dest).size;
-  console.log(
-    `  [done] ${filename} ${(size / 1024 / 1024).toFixed(1)} MB em ${((Date.now() - t0) / 1000).toFixed(1)}s`,
-  );
-  if (opts.minBytes && size < opts.minBytes) {
-    throw new Error(
-      `Arquivo baixado (${size}B) abaixo do mínimo esperado (${opts.minBytes}B) — fonte TSE pode ter mudado.`,
+  // Temporário no MESMO diretório: `rename` só é atômico dentro do mesmo
+  // sistema de arquivos.
+  const tmp = `${dest}.part-${process.pid}-${Date.now()}`;
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": TSE_ETL_USER_AGENT },
+      // signal: AbortSignal.timeout não suportado consistentemente em Node 22 fetch;
+      // fica a critério do orquestrador setar timeout via Bash.
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText} baixando ${url}`);
+    }
+    if (!res.body) {
+      throw new Error(`Resposta sem body para ${url}`);
+    }
+    await pipeline(
+      Readable.fromWeb(res.body as unknown as import("node:stream/web").ReadableStream),
+      createWriteStream(tmp),
     );
+    const size = statSync(tmp).size;
+    console.log(
+      `  [done] ${filename} ${(size / 1024 / 1024).toFixed(1)} MB em ${((Date.now() - t0) / 1000).toFixed(1)}s`,
+    );
+    if (opts.minBytes && size < opts.minBytes) {
+      throw new Error(
+        `Arquivo baixado (${size}B) abaixo do mínimo esperado (${opts.minBytes}B) — fonte TSE pode ter mudado.`,
+      );
+    }
+    await rename(tmp, dest);
+  } catch (err) {
+    await rm(tmp, { force: true }).catch(() => {});
+    throw err;
   }
   return dest;
 }
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+/** Opções de `unzipTo`. */
+export interface UnzipToOpts {
+  /**
+   * Re-extrai mesmo que a pasta já tenha arquivos. Extrai numa pasta
+   * temporária e só então troca pela antiga — um ZIP corrompido deixa a
+   * extração anterior intacta. Arquivos que existiam na pasta antiga e não
+   * existem no ZIP novo **somem** (é o ponto: nada de CSV velho ao lado do novo).
+   */
+  force?: boolean;
+  /** Diretório de cache. Default `CACHE_DIR`; existe para os testes. */
+  cacheDir?: string;
+}
 
 /**
- * Descompacta um ZIP em CACHE_DIR/<subdir> usando `unzip` do sistema.
- * Idempotente: se o subdir já existe e tem arquivos, pula.
+ * Descompacta um ZIP em <cacheDir>/<subdir> usando `unzip` do sistema.
+ * Idempotente: se o subdir já existe e tem arquivos, pula — **a menos que
+ * `force`**. Sem `force`, um ZIP novo baixado por cima de um antigo NÃO é
+ * re-extraído: quem lê a pasta continua lendo o CSV antigo (`[unzip cache hit]`).
  */
-export async function unzipTo(zipPath: string, subdir: string): Promise<string> {
-  const targetDir = resolve(CACHE_DIR, subdir);
+export async function unzipTo(
+  zipPath: string,
+  subdir: string,
+  opts: UnzipToOpts = {},
+): Promise<string> {
+  const cacheDir = resolve(opts.cacheDir ?? CACHE_DIR);
+  const targetDir = resolve(cacheDir, subdir);
+  if (opts.force) {
+    // `force` apaga a pasta-alvo: ela tem de ser uma subpasta própria do cache,
+    // nunca o cache inteiro (que guarda backups ao lado) nem algo fora dele.
+    if (dirname(targetDir) !== cacheDir) {
+      throw new Error(
+        `unzipTo: subdir inválido "${subdir}" — com force precisa ser uma pasta direta do cache`,
+      );
+    }
+    const tmpDir = `${targetDir}.part-${process.pid}-${Date.now()}`;
+    console.log(`  [unzip force] ${zipPath} → ${subdir}/`);
+    try {
+      await mkdir(tmpDir, { recursive: true });
+      await execFileAsync("unzip", ["-o", "-q", zipPath, "-d", tmpDir]);
+      await rm(targetDir, { recursive: true, force: true });
+      await rename(tmpDir, targetDir);
+    } catch (err) {
+      await rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+      throw err;
+    }
+    return targetDir;
+  }
   await mkdir(targetDir, { recursive: true });
   // Sanity: já existe e tem CSV dentro?
   if (existsSync(targetDir)) {

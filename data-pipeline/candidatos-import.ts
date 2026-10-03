@@ -41,6 +41,26 @@
 //   node --experimental-strip-types data-pipeline/candidatos-import.ts --cargo 1
 //   node --experimental-strip-types data-pipeline/candidatos-import.ts --uf BA --dry-run
 //   node --experimental-strip-types data-pipeline/candidatos-import.ts --allow-shrink
+//   node --experimental-strip-types data-pipeline/candidatos-import.ts --force
+//
+// ─── Cache local e `--force` ────────────────────────────────────────────────
+//
+// Os ZIPs ficam em `build/tse-archives/` e **não expiram**: sem `--force`, um
+// ZIP baixado em 12/09 é lido para sempre, mesmo com o TSE tendo regerado o
+// arquivo. `--force` re-baixa os dois ZIPs e re-extrai os CSVs (o cache antigo
+// só é substituído depois que o download novo termina inteiro).
+//
+// Até 03/10 o `--force` prometia isso e não fazia — `downloadCached` não tinha
+// como ignorar o cache — e quase republicou o cadastro de 12/09 na véspera.
+// Desde então há também uma **trava de cache velho**: se o `DT_GERACAO` do CSV
+// lido for mais de 24 h anterior ao `Last-Modified` do ZIP no CDN, o ciclo
+// ABORTA antes de abrir o banco (inclusive em `--dry-run`) e manda rodar com
+// `--force`. `--aceitar-cache-velho` importa assim mesmo, e aí o `fonte_ts`
+// gravado é o `DT_GERACAO` do arquivo lido — nunca o `Last-Modified` remoto.
+//
+// `--force` **não** desliga a guarda de encolhimento (até 03/10 desligava):
+// re-baixar é a operação de rotina da véspera, e desligar a RF-152 junto era
+// exatamente o que não se quer nela. Para isso existe `--allow-shrink`.
 //
 // Pré-requisito: migration 0008 aplicada.
 
@@ -60,10 +80,14 @@ import {
   ANO_PLEITO,
   type AvaliacaoEncolhimento,
   avaliarEncolhimento,
+  avaliarFrescorCache,
   CARGOS_PRODUTO,
   type CandidatoRow,
   type ContagemCargoUf,
   contarPublicaveis,
+  decidirFrescor,
+  type FrescorCache,
+  geracaoParaData,
   unirCandidaturas,
 } from "./candidatos-parse.ts";
 import { colisoes } from "./candidatos-resolve.ts";
@@ -87,8 +111,13 @@ interface Cli {
   fixture: boolean;
   /** Publica mesmo com queda além do limiar (RF-152). Fica registrado no log. */
   allowShrink: boolean;
-  /** Ignora o cache local (re-baixa) **e** implica `--allow-shrink`. */
+  /**
+   * Ignora o cache local: re-baixa os dois ZIPs e re-extrai os CSVs. NÃO
+   * implica `--allow-shrink` (até 03/10 implicava — ver cabeçalho).
+   */
   force: boolean;
+  /** Importa mesmo com a trava de cache velho disparada (ver cabeçalho). */
+  aceitarCacheVelho: boolean;
 }
 
 function parseCli(argv: string[]): Cli {
@@ -99,6 +128,7 @@ function parseCli(argv: string[]): Cli {
     fixture: false,
     allowShrink: false,
     force: false,
+    aceitarCacheVelho: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -122,7 +152,8 @@ function parseCli(argv: string[]): Cli {
       cli.allowShrink = true;
     } else if (a === "--force") {
       cli.force = true;
-      cli.allowShrink = true;
+    } else if (a === "--aceitar-cache-velho") {
+      cli.aceitarCacheVelho = true;
     } else if (a?.startsWith("--")) {
       throw new Error(`Flag desconhecida: ${a}`);
     }
@@ -157,27 +188,19 @@ async function lerFonteTs(url: string): Promise<Date | null> {
   }
 }
 
-/**
- * `DT_GERACAO HH_GERACAO` do CSV ("12/09/2026 19:31:30") como instante.
- * O TSE gera em horário de Brasília (UTC−03:00), fixo — o Brasil não tem
- * horário de verão desde 2019.
- */
-function geracaoParaData(declarada: string | null): Date | null {
-  if (!declarada) return null;
-  const m = /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/.exec(declarada.trim());
-  if (!m) return null;
-  const [, dd, mm, yyyy, hh, mi, ss] = m;
-  const d = new Date(`${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}-03:00`);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Obtenção dos CSVs
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function csvDoZip(url: string, nomeZip: string, subdir: string, sufixo: string) {
-  const zip = await downloadCached(url, nomeZip, { minBytes: 500 * 1024 });
-  const dir = await unzipTo(zip, subdir);
+async function csvDoZip(
+  url: string,
+  nomeZip: string,
+  subdir: string,
+  sufixo: string,
+  force: boolean,
+) {
+  const zip = await downloadCached(url, nomeZip, { minBytes: 500 * 1024, force });
+  const dir = await unzipTo(zip, subdir, { force });
   const arquivos = await readdir(dir);
   // Só o BRASIL: é a união exata dos 28 arquivos por UF (medido). Ler os 28
   // duplicaria cada linha.
@@ -217,16 +240,28 @@ async function obterFontes(cli: Cli): Promise<Fonte> {
         "consulta_cand_2026.zip",
         "consulta_cand_2026",
         "consulta_cand_2026",
+        cli.force,
       ),
       complementar: await csvDoZip(
         URL_COMPLEMENTAR,
         "consulta_cand_complementar_2026.zip",
         "consulta_cand_complementar_2026",
         "consulta_cand_complementar_2026",
+        cli.force,
       ),
       origem: "tse",
     };
   } catch (err) {
+    // Com `--force` o operador pediu dado novo do TSE; com `--allow-shrink` a
+    // guarda de encolhimento está desligada e nada impediria a fixture (umas
+    // dezenas de linhas) de substituir o cadastro do país. Nos dois casos,
+    // falhar é o único desfecho seguro.
+    if (cli.force || cli.allowShrink) {
+      throw new Error(
+        `fonte TSE indisponível (${(err as Error).message}). Com --force/--allow-shrink ` +
+          "não há queda para a fixture — nada foi gravado. O cache local anterior foi preservado.",
+      );
+    }
     console.warn(`  [warn] fonte TSE indisponível: ${(err as Error).message}`);
     console.warn("  [warn] caindo na fixture — a importação NÃO cobre o país.");
     return fixtures();
@@ -375,12 +410,14 @@ async function main(): Promise<void> {
   const cargos = cli.cargo != null ? [cli.cargo] : [...CARGOS_PRODUTO];
   console.log(
     `[candidatos-import] cargos=${cargos.join(",")} uf=${cli.uf ?? "(todas)"} ` +
-      `${cli.dryRun ? "DRY-RUN " : ""}${cli.allowShrink ? "ALLOW-SHRINK " : ""}`.trimEnd(),
+      `${cli.dryRun ? "DRY-RUN " : ""}${cli.force ? "FORCE " : ""}` +
+      `${cli.allowShrink ? "ALLOW-SHRINK " : ""}`.trimEnd(),
   );
 
   // ── frescor da fonte, antes de baixar 4,2 MB ────────────────────────────
   const lastModified = cli.fixture ? null : await lerFonteTs(URL_PRINCIPAL);
-  if (lastModified) console.log(`  [frescor] Last-Modified: ${lastModified.toISOString()}`);
+  if (lastModified)
+    console.log(`  [frescor] Last-Modified remoto (CDN): ${lastModified.toISOString()}`);
 
   const fonte = await obterFontes(cli);
   console.log(`  [fonte] ${fonte.origem}: ${fonte.principal.split("/").pop()}`);
@@ -404,7 +441,46 @@ async function main(): Promise<void> {
   });
 
   const geracao = geracaoParaData(uniao.geracaoDeclarada);
-  const fonteTs = lastModified ?? geracao;
+
+  // ── trava de cache velho — ANTES de abrir o banco, então vale no dry-run ──
+  const frescor: FrescorCache =
+    fonte.origem === "fixture"
+      ? { estado: "indeterminado", motivo: "fixture" }
+      : avaliarFrescorCache(geracao, lastModified);
+  const decisao = decidirFrescor(frescor, lastModified, geracao, cli.aceitarCacheVelho);
+  if (frescor.estado === "velho") {
+    const dias = (frescor.defasagemMs / 86_400_000).toFixed(1).replace(".", ",");
+    const aviso = [
+      "",
+      "  ████████████████████████████████████████████████████████████████████",
+      "  ██  CACHE VELHO — o arquivo lido NÃO é o que o TSE publica agora   ██",
+      "  ████████████████████████████████████████████████████████████████████",
+      `    DT_GERACAO do arquivo lido : ${uniao.geracaoDeclarada} (${frescor.lido.toISOString()})`,
+      `    Last-Modified remoto (CDN) : ${frescor.remoto.toISOString()}`,
+      `    defasagem                  : ${dias} dias (limite: 24 h)`,
+      "    O ZIP em build/tse-archives/ é de outro dia. Rode de novo com --force",
+      "    para baixar o arquivo atual.",
+      "",
+    ].join("\n");
+    if (decisao.abortar) {
+      console.error(aviso);
+      throw new Error(
+        "trava de cache velho: abortado ANTES de abrir o banco — nada foi gravado. " +
+          "Rode com --force (ou, se for mesmo para importar o arquivo antigo, --aceitar-cache-velho).",
+      );
+    }
+    console.warn(aviso);
+    console.warn(
+      "  [--aceitar-cache-velho] importando o arquivo antigo por decisão do operador; " +
+        "fonte_ts = DT_GERACAO do arquivo lido.",
+    );
+  } else if (frescor.estado === "indeterminado" && fonte.origem === "tse") {
+    console.warn(`  [frescor] não deu para comparar arquivo lido × CDN (${frescor.motivo}).`);
+  }
+
+  // `fonte_ts` é o que a tela mostra ao leitor (RF-150): com cache velho
+  // aceito, carimba a data do que foi de fato lido (ver `decidirFrescor`).
+  const { fonteTs, fonteTsOrigem } = decisao;
   if (!fonteTs) {
     throw new Error(
       "Sem `fonte_ts`: nem Last-Modified do CDN nem DT_GERACAO do CSV. " +
@@ -539,10 +615,21 @@ async function main(): Promise<void> {
   console.log(
     `  fonte                 : ${fonte.origem}${fonte.origem === "fixture" ? " ⚠️ GAP — a importação NÃO cobre o país" : ""}`,
   );
+  console.log(`  fonte_ts gravado      : ${fonteTsIso} (${fonteTsOrigem})`);
+  console.log(`  Last-Modified remoto  : ${lastModified?.toISOString() ?? "—"}`);
   console.log(
-    `  fonte_ts              : ${fonteTsIso}${lastModified ? " (Last-Modified do ZIP)" : " (DT_GERACAO do CSV)"}`,
+    `  DT_GERACAO arq. lido  : ${uniao.geracaoDeclarada ?? "—"}` +
+      `${geracao ? ` (${geracao.toISOString()})` : ""}`,
   );
-  console.log(`  DT_GERACAO declarada  : ${uniao.geracaoDeclarada ?? "—"}`);
+  console.log(
+    `  frescor do cache      : ${
+      frescor.estado === "ok"
+        ? "OK (arquivo lido = arquivo do CDN)"
+        : frescor.estado === "velho"
+          ? "⚠️ VELHO — importado por --aceitar-cache-velho"
+          : `indeterminado (${frescor.motivo})`
+    }`,
+  );
   console.log(`  linhas lidas          : ${n(uniao.lidas)}`);
   const descartes = [...uniao.descartadosPorCargo.entries()].sort((a, b) => a[0] - b[0]);
   console.log(

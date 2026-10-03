@@ -514,3 +514,103 @@ export function contarPublicaveis(linhas: readonly CandidatoRow[]): ContagemCarg
   }
   return [...m.values()].sort((a, b) => a.cargo - b.cargo || a.uf.localeCompare(b.uf));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Frescor do arquivo LIDO × frescor do arquivo REMOTO
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * `DT_GERACAO HH_GERACAO` do CSV ("12/09/2026 19:31:30") como instante.
+ * O TSE gera em horário de Brasília (UTC−03:00), fixo — o Brasil não tem
+ * horário de verão desde 2019.
+ */
+export function geracaoParaData(declarada: string | null): Date | null {
+  if (!declarada) return null;
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/.exec(declarada.trim());
+  if (!m) return null;
+  const [, dd, mm, yyyy, hh, mi, ss] = m;
+  const d = new Date(`${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}-03:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/**
+ * Folga entre o `DT_GERACAO` declarado no CSV e o `Last-Modified` do ZIP no CDN
+ * acima da qual o arquivo lido é tido como **outro** arquivo — mais velho que o
+ * publicado. Medido em 12/09: os dois diferem em ~4 min no mesmo arquivo
+ * (19:31:30 BRT ↔ 22:35 GMT). O TSE regera ~1×/dia; 24 h separa "mesmo arquivo"
+ * de "cache de outro dia" com margem larga para os dois lados.
+ */
+export const FOLGA_CACHE_VELHO_MS = 24 * 60 * 60 * 1000;
+
+export type FrescorCache =
+  | { estado: "ok"; defasagemMs: number }
+  | { estado: "velho"; defasagemMs: number; lido: Date; remoto: Date }
+  | { estado: "indeterminado"; motivo: string };
+
+/**
+ * O CSV que vamos ler é o mesmo que o TSE publica agora?
+ *
+ * Existe por causa de 03/10: o cache local (`build/tse-archives/`) servia o
+ * ZIP de 12/09, o `[frescor]` lia o `Last-Modified` de 03/10 do CDN, e o
+ * resumo carimbava `fonte_ts` = 03/10 sobre dado de 12/09. Só o `DT_GERACAO`
+ * entregava. Esta função compara os dois e diz "velho" quando o arquivo lido
+ * é mais de `FOLGA_CACHE_VELHO_MS` mais antigo que o remoto.
+ *
+ * Arquivo lido MAIS NOVO que o remoto (CDN atrasado/cache de borda) não é
+ * "velho": o que importa aqui é não publicar dado antigo.
+ */
+export function avaliarFrescorCache(
+  geracaoLida: Date | null,
+  lastModifiedRemoto: Date | null,
+): FrescorCache {
+  if (!lastModifiedRemoto) {
+    return { estado: "indeterminado", motivo: "sem Last-Modified do CDN" };
+  }
+  if (!geracaoLida) {
+    return { estado: "indeterminado", motivo: "CSV sem DT_GERACAO/HH_GERACAO legível" };
+  }
+  const defasagemMs = lastModifiedRemoto.getTime() - geracaoLida.getTime();
+  if (defasagemMs > FOLGA_CACHE_VELHO_MS) {
+    return { estado: "velho", defasagemMs, lido: geracaoLida, remoto: lastModifiedRemoto };
+  }
+  return { estado: "ok", defasagemMs };
+}
+
+export interface DecisaoFrescor {
+  /** `true` = abortar antes de abrir o banco (nada é gravado, nem em dry-run). */
+  abortar: boolean;
+  /** O `fonte_ts` a gravar e mostrar ao leitor (RF-150); `null` se não há nenhuma data. */
+  fonteTs: Date | null;
+  fonteTsOrigem: "Last-Modified remoto" | "DT_GERACAO do arquivo lido";
+}
+
+/**
+ * O que fazer com o veredito de `avaliarFrescorCache`.
+ *
+ * - **velho, sem `aceitarCacheVelho`** → aborta. Falhar e não avisar porque o
+ *   aviso de 03/10 existia (o `DT_GERACAO declarada` estava no resumo) e passou;
+ *   rodar de novo com `--force` custa 4,2 MB e meio minuto.
+ * - **velho, com `aceitarCacheVelho`** → segue, e `fonte_ts` é o `DT_GERACAO`
+ *   do arquivo lido. Carimbar o Last-Modified remoto seria afirmar ao leitor
+ *   que a lista é de hoje quando é de outro dia.
+ * - **ok / indeterminado** → `fonte_ts` = Last-Modified remoto (o que sempre
+ *   foi), com `DT_GERACAO` de reserva quando o CDN não respondeu.
+ */
+export function decidirFrescor(
+  frescor: FrescorCache,
+  lastModifiedRemoto: Date | null,
+  geracaoLida: Date | null,
+  aceitarCacheVelho: boolean,
+): DecisaoFrescor {
+  if (frescor.estado === "velho") {
+    return {
+      abortar: !aceitarCacheVelho,
+      fonteTs: frescor.lido,
+      fonteTsOrigem: "DT_GERACAO do arquivo lido",
+    };
+  }
+  if (lastModifiedRemoto) {
+    return { abortar: false, fonteTs: lastModifiedRemoto, fonteTsOrigem: "Last-Modified remoto" };
+  }
+  return { abortar: false, fonteTs: geracaoLida, fonteTsOrigem: "DT_GERACAO do arquivo lido" };
+}

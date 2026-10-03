@@ -561,9 +561,25 @@ Internamente usa `tsx` — o loader de strip-types não resolve o alias `@/` que
 `lib/blob/write.ts` usa, e falharia antes da primeira linha. Mesmo motivo de
 `pnpm edge-config:smoke` e `pnpm replay-2022`.
 
-**Argumentos**:
-- Sem flag: baixa arquivos do TSE se houver mudança detectada via header `Last-Modified` (GET Range). Se nenhuma mudança, ciclo para sem escrever.
-- `--force`: ignora `Last-Modified` e reimporta tudo (use só em emergência ou em 02–03/10 se o ciclo anterior falhou).
+**Argumentos** (corrigido em 03/10 — a versão anterior descrevia um comportamento que nunca existiu):
+- Sem flag: usa o ZIP que já estiver em `build/tse-archives/`, **por mais velho que seja** — o cache
+  não expira. Só baixa se o arquivo não existir. O `Last-Modified` (GET Range) serve apenas para a
+  trava de cache velho abaixo, não decide download.
+- `--force`: re-baixa os dois ZIPs e re-extrai os CSVs (o cache antigo só é substituído depois que o
+  download novo termina inteiro; se o TSE falhar, aborta sem cair na fixture). **É o modo da
+  véspera.** Até 03/10 o `--force` prometia isso e não fazia, e também desligava a guarda de
+  encolhimento — hoje **não desliga**; para isso existe `--allow-shrink`.
+- **Trava de cache velho**: se o `DT_GERACAO` do CSV lido for mais de 24 h anterior ao
+  `Last-Modified` do ZIP no CDN, o ciclo aborta **antes de abrir o banco** (inclusive em
+  `--dry-run`) com um aviso `CACHE VELHO` que mostra as duas datas. Conserto: `--force`.
+  `--aceitar-cache-velho` importa assim mesmo, gravando `fonte_ts` = `DT_GERACAO` do arquivo lido.
+- O resumo mostra separados: `fonte_ts gravado` (e de onde veio), `Last-Modified remoto` e
+  `DT_GERACAO arq. lido`. Até 03/10 havia uma linha só, `fonte_ts`, que carimbava o
+  `Last-Modified` remoto mesmo quando o arquivo lido era de outro dia.
+
+`pnpm candidatos:fotos --force` também passou a re-baixar e re-extrair os 28 ZIPs (além de
+reescrever toda foto no Blob, como já fazia). Sem `--force`, as fotos saem do ZIP em cache —
+candidatura registrada depois do download fica sem foto.
 
 ### Saída esperada (13/09)
 
@@ -595,7 +611,7 @@ Se uma reimportação produzir **menos de 98%** da contagem anterior, o ciclo **
   Anterior: 7698 publicáveis
   Novo:     7540 publicáveis
   Queda: 2,07% (máximo permitido: 2%)
-  Ação: use --force para confirmar a mudança, ou investigue
+  Ação: use --allow-shrink para confirmar a mudança, ou investigue
 ```
 
 ### Onde olhar em emergência
@@ -624,8 +640,8 @@ node --experimental-strip-types data-pipeline/candidatos-import.ts --skip-db --f
 
 | # | Comando | O que faz | O que NÃO faz |
 |---|---|---|---|
-| 1 | `pnpm candidatos:import` | Baixa os dois CSVs do TSE e grava **só no Postgres** (tabelas `candidatos` e `partidos`). Deixa `foto_ok = false` em todas. | **Não toca no Blob.** Não baixa foto. Não publica nada visível. |
-| 2 | `pnpm candidatos:fotos` | Baixa os 28 ZIPs de foto, sobe os JPEGs para `candidatos/foto/<UF>/<sqcand>.jpg` no Blob e marca `foto_ok = true` no Postgres. | Não republica as fatias — quem lê as fatias continua vendo o `foto_ok` antigo. |
+| 1 | `pnpm candidatos:import --force` | Baixa os dois CSVs do TSE (sem `--force`, lê o ZIP em cache, de qualquer data) e grava **só no Postgres** (tabelas `candidatos` e `partidos`). Deixa `foto_ok = false` em todas. | **Não toca no Blob.** Não baixa foto. Não publica nada visível. |
+| 2 | `pnpm candidatos:fotos --force` | Baixa os 28 ZIPs de foto (sem `--force`, lê os ZIPs em cache), sobe os JPEGs para `candidatos/foto/<UF>/<sqcand>.jpg` no Blob e marca `foto_ok = true` no Postgres. | Não republica as fatias — quem lê as fatias continua vendo o `foto_ok` antigo. |
 | 3 | `pnpm candidatos:publish` | Lê o Postgres e escreve **as 82 fatias `candidatos/uf/<UF>/<cargo>.json` E o `candidatos/index.json`** no Blob. É o único passo que torna o dado visível ao site. | — |
 
 ⚠️ **A ordem não é sugestão.** O passo 3 fotografa o estado do banco no instante em que roda. Se rodar

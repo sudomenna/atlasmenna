@@ -43,8 +43,11 @@
 // cada ciclo seria custo puro. `--force` é a saída para o único cenário de
 // reescrita real que o ADR-0041 admite: o TSE corrigir a foto de alguém.
 //
-// ⚠️ `--force` NÃO re-baixa o ZIP (o cache de `downloadCached` continua
-// valendo). Para forçar download novo, apague `build/tse-archives/` à mão.
+// `--force` também **re-baixa e re-extrai** os ZIPs (desde 03/10). Antes não
+// re-baixava: o cache de `build/tse-archives/` não expira, e um run sem
+// `--force` continua lendo o ZIP do dia em que foi baixado pela primeira vez —
+// candidatura registrada depois disso fica sem foto. O cache antigo só é
+// substituído depois que o download novo termina inteiro.
 //
 // ─── Uso ────────────────────────────────────────────────────────────────────
 //
@@ -139,7 +142,10 @@ const UPDATE_BATCH = 1000;
 export interface Cli {
   /** `null` = todas as 28 siglas. */
   ufs: readonly string[] | null;
-  /** Reescreve foto já marcada `foto_ok` (TSE corrigiu a imagem de alguém). */
+  /**
+   * Re-baixa e re-extrai os ZIPs (ignora o cache local) **e** reescreve foto
+   * já marcada `foto_ok` (TSE corrigiu a imagem de alguém).
+   */
   force: boolean;
   /** Baixa, casa e conta — não escreve no Blob nem no banco. */
   dryRun: boolean;
@@ -558,11 +564,9 @@ async function main(): Promise<void> {
       const zip = await downloadCached(
         `${BASE_FOTOS}/foto_cand2026_${uf}_div.zip`,
         `fotos_${uf}.zip`,
-        {
-          minBytes: ZIP_MIN_BYTES,
-        },
+        { minBytes: ZIP_MIN_BYTES, force: cli.force },
       );
-      const dir = await unzipTo(zip, `fotos_${uf}`);
+      const dir = await unzipTo(zip, `fotos_${uf}`, { force: cli.force });
       const entradas = await readdir(dir);
 
       const resumo = await importarFotosDaSigla(

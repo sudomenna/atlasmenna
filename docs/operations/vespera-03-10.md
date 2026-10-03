@@ -87,14 +87,20 @@ publica a lista sem fotos, sem erro nenhum na tela.
 
 - [ ] **1.1.** Nesta ordem, um de cada vez, esperando cada um terminar:
       ```bash
-      cd ~/Projetos/AtlasMenna && set -a; . ./.env.local; set +a; pnpm candidatos:import
+      cd ~/Projetos/AtlasMenna && set -a; . ./.env.local; set +a; pnpm candidatos:import --force
       ```
       ```bash
-      cd ~/Projetos/AtlasMenna && set -a; . ./.env.local; set +a; pnpm candidatos:fotos
+      cd ~/Projetos/AtlasMenna && set -a; . ./.env.local; set +a; pnpm candidatos:fotos --force
       ```
       ```bash
       cd ~/Projetos/AtlasMenna && set -a; . ./.env.local; set +a; pnpm candidatos:publish
       ```
+      **Por que o `--force` nos dois primeiros:** sem ele, o computador reaproveita a lista e as
+      fotos que baixou da última vez (a de 12/09) em vez de buscar as de hoje no TSE. Com ele,
+      busca tudo de novo. As fotos demoram mais com `--force`, porque todas sobem de novo.
+
+      Se o primeiro comando parar com **`CACHE VELHO`** em letras grandes, ele não gravou nada:
+      a lista que ele leu é de outro dia. Confira se o `--force` está no comando e rode de novo.
 - [ ] **1.2.** Redeploy de produção (ver 2.3). Sem ele o site serve a lista velha por até 12 horas.
 
 ---
