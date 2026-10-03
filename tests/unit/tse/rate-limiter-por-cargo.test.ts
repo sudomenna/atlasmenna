@@ -18,10 +18,17 @@
  *   (f) `fetchEA20` e `detectChangedUfs` pagam no bucket do cargo que recebem;
  *   (g) nenhum caminho de produção pede o bucket "sem cargo".
  *
- * Sem rede: `fetch` é substituído por um 304. O relógio é o real — os casos
- * foram desenhados para que o caminho CORRETO nunca precise esperar (burst do
- * bucket), e para que o caminho ERRADO (bucket compartilhado) espere ou caia na
- * taxa errada, que é o que as asserções medem.
+ * Sem rede: `fetch` é substituído por um 304. Dois instrumentos:
+ *   - a TAXA de cada bucket é medida pelo tempo que ele leva para entregar N
+ *     tokens, em relógio falso (`medirBucket`, `_taxa-do-bucket.ts`);
+ *   - a RAJADA (2 tokens, `TSE_BURST_INICIAL`) é o que sobra para os casos de
+ *     fetch em relógio real: o caminho CORRETO nunca precisa esperar, e o
+ *     caminho ERRADO (bucket compartilhado) espera, que é o que as asserções
+ *     medem.
+ *
+ * Até 2026-10-03 a rajada era igual à taxa (25) e contar tokens com
+ * `tryAcquire()` dava a taxa de graça; com a rajada fixa em 2 isso deixou de
+ * valer — daí `medirBucket`.
  */
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -30,7 +37,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type CargoTse, cargoInfo } from "@/lib/config/cargos";
 import { detectChangedUfs } from "@/lib/tse/acompanhamento";
 import { fetchEA20 } from "@/lib/tse/client";
-import { getTseRateLimiter, resetTseRateLimiter } from "@/lib/tse/rate-limiter";
+import { getTseRateLimiter, resetTseRateLimiter, TSE_BURST_INICIAL } from "@/lib/tse/rate-limiter";
+import { medirBucket } from "./_taxa-do-bucket";
 
 // `acompanhamento.ts` importa `targets.ts`, que importa `@/lib/db` — e o client
 // do Neon lança na importação sem `DATABASE_URL`. Mockado só para o módulo
@@ -42,15 +50,17 @@ vi.mock("@/lib/db", () => ({
 
 const URL_QUALQUER = "https://exemplo.test/ea20.json";
 
-/** Esvazia o burst do bucket e devolve quantos tokens ele tinha. */
-function drenar(cargo: CargoTse | undefined): number {
+/** Taxa (req/s em regime) do bucket do cargo, medida pelo tempo. */
+async function taxaDe(cargo: CargoTse | undefined): Promise<number> {
+  return (await medirBucket(getTseRateLimiter(cargo))).taxa;
+}
+
+/** Quantos tokens o bucket entrega sem esperar (a rajada). */
+function rajadaDe(cargo: CargoTse | undefined): number {
   const bucket = getTseRateLimiter(cargo);
-  let tokens = 0;
-  for (let i = 0; i < 1000; i++) {
-    if (bucket.tryAcquire()) tokens++;
-    else break;
-  }
-  return tokens;
+  let n = 0;
+  for (let i = 0; i < 1000 && bucket.tryAcquire(); i++) n++;
+  return n;
 }
 
 function stubFetch304(): ReturnType<typeof vi.fn> {
@@ -71,51 +81,56 @@ afterEach(() => {
 });
 
 describe("(a) o bucket de um cargo não herda a taxa de outro", () => {
-  it("cargo 6 (5 rps) criado PRIMEIRO não muda os 25 rps do cargo 1 na mesma instância", () => {
+  it("cargo 6 (5 rps) criado PRIMEIRO não muda os 25 rps do cargo 1 na mesma instância", async () => {
     // O defeito de origem: a 1ª chamada congelava a taxa e as seguintes
     // recebiam o mesmo bucket. Com o 6 na frente, o Presidente andava a 5 rps
     // e 6.110 alvos levavam ~1.222 s — muito além dos 300 s de maxDuration.
     // (A spec 027 acrescenta os cargos 7/8 a 1 rps: o mesmo defeito, pior.)
     expect(getTseRateLimiter(6)).toBeDefined();
 
-    expect(drenar(6)).toBe(cargoInfo(6).rpsMax); // 5
-    expect(drenar(1)).toBe(cargoInfo(1).rpsMax); // 25, não 5
+    expect(await taxaDe(6)).toBe(cargoInfo(6).rpsMax); // 5
+    expect(await taxaDe(1)).toBe(cargoInfo(1).rpsMax); // 25, não 5
   });
 
-  it("vale nos dois sentidos e para todos os cargos: cada um tem o teto da tabela", () => {
+  it("vale nos dois sentidos e para todos os cargos: cada um tem o teto da tabela", async () => {
     // Ordem invertida e cargo 6 no meio: nenhum herda de quem veio antes.
     for (const cargo of [1, 6, 3, 5] as const) {
-      expect(drenar(cargo), `cargo ${cargo}`).toBe(cargoInfo(cargo).rpsMax);
+      expect(await taxaDe(cargo), `cargo ${cargo}`).toBe(cargoInfo(cargo).rpsMax);
     }
   });
 
-  it("TSE_MAX_RPS é override global, mas aplicado a CADA bucket (não compartilhado)", () => {
+  it("TSE_MAX_RPS é override global, mas aplicado a CADA bucket (não compartilhado)", async () => {
     vi.stubEnv("TSE_MAX_RPS", "3");
-    // Se o override criasse um bucket só, o segundo drenar devolveria 0.
-    expect(drenar(1)).toBe(3);
-    expect(drenar(6)).toBe(3);
+    // Se o override criasse um bucket só, o segundo ficaria com a taxa (e a
+    // rajada) já gastas pelo primeiro e mediria diferente de 3.
+    expect(await taxaDe(1)).toBe(3);
+    expect(await taxaDe(6)).toBe(3);
   });
 });
 
 describe("(b) ciclos concorrentes de cargos diferentes não dividem bucket", () => {
-  it("25 fetches do cargo 1 + 25 do cargo 3 em paralelo: ninguém espera", async () => {
+  it("2 fetches do cargo 1 + 2 do cargo 3 em paralelo: ninguém espera", async () => {
     stubFetch304();
 
     await Promise.all([
-      ...Array.from({ length: 25 }, () => fetchEA20({ url: URL_QUALQUER, cargo: 1 })),
-      ...Array.from({ length: 25 }, () => fetchEA20({ url: URL_QUALQUER, cargo: 3 })),
+      ...Array.from({ length: TSE_BURST_INICIAL }, () =>
+        fetchEA20({ url: URL_QUALQUER, cargo: 1 }),
+      ),
+      ...Array.from({ length: TSE_BURST_INICIAL }, () =>
+        fetchEA20({ url: URL_QUALQUER, cargo: 3 }),
+      ),
     ]);
 
-    // Cada cargo gastou o próprio burst de 25. Com um bucket só (50 pedidos
-    // contra 25 tokens) haveria espera e uma das contas passaria de 25.
-    expect(getTseRateLimiter(1).stats.acquired).toBe(25);
-    expect(getTseRateLimiter(3).stats.acquired).toBe(25);
+    // Cada cargo gastou a própria rajada de 2. Com um bucket só (4 pedidos
+    // contra 2 tokens) haveria espera.
+    expect(getTseRateLimiter(1).stats.acquired).toBe(TSE_BURST_INICIAL);
+    expect(getTseRateLimiter(3).stats.acquired).toBe(TSE_BURST_INICIAL);
     expect(getTseRateLimiter(1).stats.waitedMs).toBe(0);
     expect(getTseRateLimiter(3).stats.waitedMs).toBe(0);
   });
 
   it("esgotar o bucket do cargo 6 não tira token do cargo 1", () => {
-    expect(drenar(6)).toBe(5);
+    expect(rajadaDe(6)).toBe(TSE_BURST_INICIAL);
     expect(getTseRateLimiter(6).tryAcquire()).toBe(false);
     expect(getTseRateLimiter(1).tryAcquire()).toBe(true);
   });
@@ -127,7 +142,7 @@ describe("(c) ciclos concorrentes do MESMO cargo dividem o bucket do cargo", () 
     expect(getTseRateLimiter(1)).not.toBe(getTseRateLimiter(3));
   });
 
-  it("duas 'invocações' do cargo 1 drenando juntas somam 25, não 50", () => {
+  it("duas 'invocações' do cargo 1 drenando juntas somam a rajada de 2, não 4", () => {
     // Intercala duas invocações pedindo token ao mesmo tempo: o teto do cargo
     // vale por IP, então a soma é o teto — não o dobro.
     const a = getTseRateLimiter(1);
@@ -138,43 +153,43 @@ describe("(c) ciclos concorrentes do MESMO cargo dividem o bucket do cargo", () 
       if (a.tryAcquire()) tokensA++;
       if (b.tryAcquire()) tokensB++;
     }
-    expect(tokensA + tokensB).toBe(cargoInfo(1).rpsMax);
+    expect(tokensA + tokensB).toBe(TSE_BURST_INICIAL);
     expect(tokensA).toBeGreaterThan(0);
     expect(tokensB).toBeGreaterThan(0);
   });
 
-  it("13 + 13 fetches concorrentes do cargo 1 ultrapassam o burst e UM deles espera", async () => {
+  it("2 + 2 fetches concorrentes do cargo 1 ultrapassam a rajada e esperam", async () => {
     stubFetch304();
 
     await Promise.all([
-      ...Array.from({ length: 13 }, () => fetchEA20({ url: URL_QUALQUER, cargo: 1 })), // ciclo A
-      ...Array.from({ length: 13 }, () => fetchEA20({ url: URL_QUALQUER, cargo: 1 })), // ciclo B
+      ...Array.from({ length: 2 }, () => fetchEA20({ url: URL_QUALQUER, cargo: 1 })), // ciclo A
+      ...Array.from({ length: 2 }, () => fetchEA20({ url: URL_QUALQUER, cargo: 1 })), // ciclo B
     ]);
 
-    // 26 pedidos contra 25 tokens: a 26ª espera ~40 ms. Com um bucket POR
-    // INVOCAÇÃO ninguém esperaria — é a divisão do teto que este caso prova.
+    // 4 pedidos contra 2 tokens: o 3º espera ~40 ms e o 4º ~80 ms. Com um bucket
+    // POR INVOCAÇÃO ninguém esperaria — é a divisão do teto que este caso prova.
     const bucket = getTseRateLimiter(1);
-    expect(bucket.stats.acquired).toBe(26);
+    expect(bucket.stats.acquired).toBe(4);
     expect(bucket.stats.waitedMs).toBeGreaterThan(0);
   });
 });
 
 describe("(d) chamada sem cargo não contamina nenhum cargo", () => {
-  it("o bucket sem cargo é próprio e fica no default seguro (5 rps), criado ou não antes", () => {
+  it("o bucket sem cargo é próprio e fica no default seguro (5 rps), criado ou não antes", async () => {
     expect(getTseRateLimiter()).not.toBe(getTseRateLimiter(1));
     expect(getTseRateLimiter()).not.toBe(getTseRateLimiter(6));
-    expect(drenar(undefined)).toBe(5);
+    expect(await taxaDe(undefined)).toBe(5);
   });
 
-  it("criar/esgotar o bucket sem cargo PRIMEIRO não altera a taxa de nenhum cargo", () => {
-    expect(drenar(undefined)).toBe(5);
-    expect(drenar(1)).toBe(cargoInfo(1).rpsMax);
-    expect(drenar(3)).toBe(cargoInfo(3).rpsMax);
-    expect(drenar(6)).toBe(cargoInfo(6).rpsMax);
+  it("criar/esgotar o bucket sem cargo PRIMEIRO não altera a taxa de nenhum cargo", async () => {
+    expect(await taxaDe(undefined)).toBe(5);
+    expect(await taxaDe(1)).toBe(cargoInfo(1).rpsMax);
+    expect(await taxaDe(3)).toBe(cargoInfo(3).rpsMax);
+    expect(await taxaDe(6)).toBe(cargoInfo(6).rpsMax);
   });
 
   it("esgotar um cargo não toca o bucket sem cargo, e fetchEA20 com cargo não o consome", async () => {
-    drenar(1);
+    rajadaDe(1);
     expect(getTseRateLimiter().stats.acquired).toBe(0);
 
     stubFetch304();
@@ -190,18 +205,18 @@ describe("(e) resetTseRateLimiter limpa todos os buckets", () => {
       seis: getTseRateLimiter(6),
       sem: getTseRateLimiter(),
     };
-    drenar(1);
-    drenar(6);
-    drenar(undefined);
+    rajadaDe(1);
+    rajadaDe(6);
+    rajadaDe(undefined);
 
     resetTseRateLimiter();
 
     expect(getTseRateLimiter(1)).not.toBe(antes.um);
     expect(getTseRateLimiter(6)).not.toBe(antes.seis);
     expect(getTseRateLimiter()).not.toBe(antes.sem);
-    expect(drenar(1)).toBe(cargoInfo(1).rpsMax);
-    expect(drenar(6)).toBe(cargoInfo(6).rpsMax);
-    expect(drenar(undefined)).toBe(5);
+    expect(rajadaDe(1)).toBe(TSE_BURST_INICIAL);
+    expect(rajadaDe(6)).toBe(TSE_BURST_INICIAL);
+    expect(rajadaDe(undefined)).toBe(TSE_BURST_INICIAL);
   });
 });
 

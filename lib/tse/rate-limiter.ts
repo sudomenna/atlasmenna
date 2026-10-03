@@ -57,7 +57,8 @@ export interface TokenBucket {
 export interface TokenBucketOptions {
   /** Taxa de reposição de tokens por segundo. Deve ser > 0. */
   ratePerSec: number;
-  /** Capacidade máxima (burst inicial). Default: igual a ratePerSec. */
+  /** Capacidade máxima (burst inicial). Default: igual a ratePerSec. Os buckets
+   * de produção (`getTseRateLimiter`) passam `TSE_BURST_INICIAL` (2). */
   burst?: number;
   /** Relógio injetável (ms epoch). Default: Date.now. */
   now?: () => number;
@@ -195,9 +196,13 @@ export function createTokenBucket(opts: TokenBucketOptions): TokenBucket {
  * é override GLOBAL: ela substitui o teto de todos os cargos de uma vez, então
  * um valor alto multiplica pelo número de crons simultâneos.
  *
- * Pendência registrada: buckets independentes garantem a média, não o pico
- * instantâneo. Um limitador coordenado entre invocações (contador
- * compartilhado) é a solução completa — decidir depois do simulado 1, com
+ * Rajada inicial (2026-10-03, ADR-0068): resolvida — todo bucket de produção
+ * nasce com `TSE_BURST_INICIAL` = 2 tokens (abaixo). O pico do agregado caiu de
+ * 156 para 88 req no pior segundo.
+ *
+ * Pendência registrada: buckets independentes garantem a média; entre
+ * INSTÂNCIAS diferentes (que não se coordenam) nada limita o pico. Um
+ * limitador coordenado entre invocações (contador compartilhado) é a solução completa — decidir depois do simulado 1, com
  * `rateLimited` medido. Histórico do default: 30 quando um único ciclo cobria
  * todos os cargos sequencialmente; 50 e depois 40 na fase de dois cargos
  * concorrentes (ADR-0035 D3 e a auditoria que o emendou); por cargo desde a
@@ -207,6 +212,19 @@ const TSE_MAX_RPS_FLOOR = 1;
 /** Default quando o caller não informa cargo — o teto dos cargos leves, que é
  * o valor seguro sem saber quem mais está no ar. Ver `getTseRateLimiter`. */
 const TSE_MAX_RPS_DEFAULT = 5;
+
+/** Rajada inicial (capacidade) de TODO bucket de produção: 2 tokens, não a taxa.
+ *
+ * Com `burst = rps` o bucket nasce cheio e cada cargo emite até 2 × taxa no 1º
+ * segundo; os quatro ciclos disparam juntos a cada múltiplo de 5 min, e o teste
+ * de carga mediu **156 requisições no 1º segundo** (49+49+49+9) contra os 100
+ * req/s/IP do TSE (bloqueio de 10 min). Com 2 tokens, o pior segundo deslizante
+ * é (taxa + 2) por cargo: 27+27+27+7 = **88**. Não é 1: com capacidade 1 o
+ * `refill()` descarta o overshoot do `setTimeout` (o timer dispara alguns ms
+ * depois do devido e o excedente passa do teto de 1 token), e a taxa efetiva a
+ * 25 rps caiu 2–26% medido — o ciclo de ~244 s chegaria perto dos 300 s de
+ * `maxDuration`. Ver ADR-0068. */
+export const TSE_BURST_INICIAL = 2;
 
 /** Um bucket por cargo dentro do processo (ADR-0068). Nunca uma chamada de um
  * cargo decide a taxa de outro. */
@@ -269,7 +287,10 @@ let bucketSemCargo: TokenBucket | null = null;
 export function getTseRateLimiter(cargo?: CargoTse): TokenBucket {
   if (cargo === undefined) {
     if (!bucketSemCargo) {
-      bucketSemCargo = createTokenBucket({ ratePerSec: taxaEfetiva(TSE_MAX_RPS_DEFAULT) });
+      bucketSemCargo = createTokenBucket({
+        ratePerSec: taxaEfetiva(TSE_MAX_RPS_DEFAULT),
+        burst: TSE_BURST_INICIAL,
+      });
     }
     return bucketSemCargo;
   }
@@ -277,7 +298,10 @@ export function getTseRateLimiter(cargo?: CargoTse): TokenBucket {
   const existente = bucketsPorCargo.get(cargo);
   if (existente) return existente;
 
-  const criado = createTokenBucket({ ratePerSec: taxaEfetiva(cargoInfo(cargo).rpsMax) });
+  const criado = createTokenBucket({
+    ratePerSec: taxaEfetiva(cargoInfo(cargo).rpsMax),
+    burst: TSE_BURST_INICIAL,
+  });
   bucketsPorCargo.set(cargo, criado);
   return criado;
 }

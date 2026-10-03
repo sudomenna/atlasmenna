@@ -108,7 +108,7 @@ vi.mock("@/lib/tse/alerts", async (importOriginal) => {
 
 import { type CargoTse, cargoInfo, piorCasoAgregadoRps } from "@/lib/config/cargos";
 import { runIngestCycle } from "@/lib/tse/ingest-handler";
-import { resetTseRateLimiter } from "@/lib/tse/rate-limiter";
+import { resetTseRateLimiter, TSE_BURST_INICIAL } from "@/lib/tse/rate-limiter";
 import { clearTargetsCache } from "@/lib/tse/targets";
 
 // ---------------------------------------------------------------------------
@@ -119,6 +119,15 @@ const SEGREDO = "segredo-de-carga";
 const T0 = Date.parse("2026-10-04T20:00:00Z");
 /** O teto do pior caso agregado que a constituição § 1 exige "bem abaixo" dos 100 do TSE. */
 const TETO_AGREGADO_RPS = 80;
+/** O limite documentado do TSE: 100 req/s por IP, bloqueio de 10 min acima disso. */
+const LIMITE_TSE_RPS = 100;
+/**
+ * O teto do PICO — qualquer janela de 1 s, inclusive a do 1º segundo. Cada
+ * bucket emite no máximo `taxa + rajada` numa janela de 1 s; com a rajada em
+ * `TSE_BURST_INICIAL` (2) e os quatro cargos juntos: 27+27+27+7 = 88. Era 156
+ * (49+49+49+9) com a rajada igual à taxa — acima dos 100 do TSE.
+ */
+const TETO_PICO_RPS = TETO_AGREGADO_RPS + 4 * TSE_BURST_INICIAL;
 /** maxDuration das rotas de ingestão (ADR-0035 D3). */
 const MAX_DURATION_MS = 300_000;
 
@@ -326,10 +335,10 @@ describe.each(ORDENS)("carga concorrente — $nome", ({ ciclos }) => {
       expect(duracao, `cargo ${cargo}: ${(duracao / 1000).toFixed(1)} s`).toBeLessThanOrEqual(
         MAX_DURATION_MS,
       );
-      // E não cabe POR TRAPAÇA: a duração é a do bucket (N alvos a `rps`, menos o
-      // burst inicial de `rps` tokens). Um teste que passasse com 0 s não
-      // provaria que a taxa foi exercida.
-      const esperado = ((n - rps) / rps) * 1000;
+      // E não cabe POR TRAPAÇA: a duração é a do bucket (N alvos a `rps`, menos a
+      // rajada inicial de `TSE_BURST_INICIAL` tokens). Um teste que passasse com
+      // 0 s não provaria que a taxa foi exercida.
+      const esperado = ((n - TSE_BURST_INICIAL) / rps) * 1000;
       expect(duracao, `cargo ${cargo}: duração do bucket`).toBeGreaterThanOrEqual(esperado * 0.99);
       expect(duracao, `cargo ${cargo}: duração do bucket`).toBeLessThanOrEqual(esperado * 1.05);
     }
@@ -344,7 +353,7 @@ describe.each(ORDENS)("carga concorrente — $nome", ({ ciclos }) => {
     expect(n).toBeLessThanOrEqual(1030);
     expect(duracao).toBeLessThanOrEqual(MAX_DURATION_MS);
 
-    const esperado = ((n - 5) / 5) * 1000;
+    const esperado = ((n - TSE_BURST_INICIAL) / 5) * 1000;
     expect(duracao).toBeGreaterThanOrEqual(esperado * 0.99);
     expect(duracao).toBeLessThanOrEqual(esperado * 1.05);
   }, 180_000);
@@ -352,8 +361,23 @@ describe.each(ORDENS)("carga concorrente — $nome", ({ ciclos }) => {
   it("taxa observada por cargo nunca passa do teto do cargo; o total, nunca de 80 rps", async () => {
     const r = await obter();
 
-    // Regime permanente = janelas fixas de 1 s a partir do 2º segundo: o burst
-    // inicial do bucket (`rps` tokens, instantâneo) já foi gasto na janela 0.
+    // O PICO do agregado — o gate que importa para o IP. Os quatro buckets
+    // começam juntos e o CDN simulado responde em 0 ms, o pior caso possível.
+    // Com a rajada igual à taxa (até 2026-10-03) isto media 156 req no 1º
+    // segundo (49+49+49+9), acima dos 100 do TSE. Com a rajada em 2 o teto
+    // teórico é 88 — e nenhuma janela de 1 s, deslizante OU fixa, passa dele.
+    const todos = PESADOS.concat(6).flatMap((c) => r.instantes.get(c) as number[]);
+    const pico = picoDeslizante(todos);
+    expect(pico, "pico deslizante do agregado").toBeLessThanOrEqual(TETO_PICO_RPS);
+    expect(pico, "pico deslizante do agregado").toBeLessThan(LIMITE_TSE_RPS);
+    expect(
+      Math.max(...porSegundo(todos).values()),
+      "pico em janela fixa de 1 s",
+    ).toBeLessThanOrEqual(TETO_PICO_RPS);
+
+    // Regime permanente = janelas fixas de 1 s a partir do 2º segundo: a rajada
+    // inicial do bucket (`TSE_BURST_INICIAL` tokens, instantânea) já foi gasta na
+    // janela 0.
     const somaPorSegundo = new Map<number, number>();
     for (const cargo of [...PESADOS, 6] as CargoTse[]) {
       const teto = cargoInfo(cargo).rpsMax;
@@ -363,17 +387,17 @@ describe.each(ORDENS)("carga concorrente — $nome", ({ ciclos }) => {
           expect(n, `cargo ${cargo}, janela ${s}s`).toBeLessThanOrEqual(teto);
           somaPorSegundo.set(s, (somaPorSegundo.get(s) ?? 0) + n);
         } else {
-          // Janela 0: burst (`teto`) + reposição de 1 s (`teto`) é o limite teórico
+          // Janela 0: rajada (2) + reposição de 1 s (`teto`) é o limite teórico
           // de um token bucket — o "pico instantâneo" que o ADR-0035 já registra.
-          expect(n, `cargo ${cargo}, janela 0`).toBeLessThanOrEqual(2 * teto);
+          expect(n, `cargo ${cargo}, janela 0`).toBeLessThanOrEqual(teto + TSE_BURST_INICIAL);
         }
       }
 
-      // Nenhuma janela DESLIZANTE de 1 s passa de burst + taxa.
+      // Nenhuma janela DESLIZANTE de 1 s passa de rajada + taxa.
       expect(
         picoDeslizante(r.instantes.get(cargo) as number[]),
         `cargo ${cargo}`,
-      ).toBeLessThanOrEqual(2 * teto);
+      ).toBeLessThanOrEqual(teto + TSE_BURST_INICIAL);
 
       // E a média do ciclo inteiro não passa do teto do cargo.
       const total = (r.instantes.get(cargo) as number[]).length;
@@ -382,17 +406,6 @@ describe.each(ORDENS)("carga concorrente — $nome", ({ ciclos }) => {
         teto * 1.01,
       );
     }
-
-    // A rajada inicial, somada: os quatro buckets cheios ao mesmo tempo e um CDN
-    // de latência zero põem ~156 requisições no PRIMEIRO segundo (49+49+49+9) —
-    // acima dos 100 do TSE, se ele contar por segundo. Não é efeito do ADR-0068
-    // (o bucket é o mesmo de antes; o singleton tinha o mesmo burst) e o teto
-    // teórico de quatro token buckets é burst + taxa de cada um = 2 × 80. O
-    // ADR-0035 registra a pendência ("buckets independentes garantem a média,
-    // não o pico instantâneo"); aqui só se trava o limite teórico para que uma
-    // mudança de burst/taxa apareça. Medir `rateLimited` no simulado decide.
-    const todos = PESADOS.concat(6).flatMap((c) => r.instantes.get(c) as number[]);
-    expect(picoDeslizante(todos)).toBeLessThanOrEqual(2 * TETO_AGREGADO_RPS);
 
     const maxTotalPermanente = Math.max(...somaPorSegundo.values());
     expect(maxTotalPermanente).toBeLessThanOrEqual(TETO_AGREGADO_RPS);

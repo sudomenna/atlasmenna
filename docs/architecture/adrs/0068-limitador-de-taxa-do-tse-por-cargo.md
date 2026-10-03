@@ -124,7 +124,8 @@ bucket de 5 rps (mais lento, não mais rápido), mas em instâncias diferentes s
 **6. O comentário errado sai.** As afirmações "o Fluid Compute isola instâncias" e "cada invocação tem seu
 próprio bucket" em `rate-limiter.ts` e `lib/config/cargos.ts` (`rpsMax`) são removidas e substituídas pela
 descrição correta (Contexto 2), apontando para este ADR. O texto "buckets independentes garantem a média, não o
-pico instantâneo" permanece: é verdadeiro e continua sendo a pendência do limitador coordenado.
+pico instantâneo" permanece verdadeiro entre INSTÂNCIAS e continua sendo a pendência do limitador coordenado
+(a rajada inicial de cada bucket foi resolvida na emenda de 2026-10-03).
 
 ## Alternativas consideradas
 
@@ -162,14 +163,12 @@ pico instantâneo" permanece: é verdadeiro e continua sendo a pendência do lim
   atômica, e o handler segue sem ele se a gravação do marcador falhar. Duas instâncias do **mesmo** cargo em
   voo ao mesmo tempo têm buckets independentes e somam o dobro do teto do cargo; este ADR não cobre isso, e só
   o limitador coordenado cobriria.
-- **A rajada inicial não é tratada, e o teste de carga a mede.** Cada bucket começa cheio (burst = taxa).
-  Com os quatro ciclos começando no mesmo instante e um CDN de latência zero, o **primeiro segundo** soma
-  ~156 requisições (49 + 49 + 49 + 9), acima dos 100 rps do TSE se ele contar por segundo; em regime a soma é
-  80. Isso **não é efeito deste ADR** (o bucket é o mesmo de antes, o burst também) e é exatamente a pendência
-  que o ADR-0035 registra ("buckets independentes garantem a média, não o pico instantâneo"). A latência real
-  e o semáforo de 20 requisições em voo por ciclo tendem a achatá-la, mas não foi medido. O teste de carga
-  trava o limite teórico (burst + taxa de cada bucket = 2 × 80) para que uma mudança de burst ou taxa apareça;
-  a decisão de encolher o burst inicial ou de coordenar o limitador depende de `rateLimited` no simulado.
+- ~~**A rajada inicial não é tratada, e o teste de carga a mede.**~~ **RESOLVIDA em 2026-10-03 (ver "Emenda de
+  2026-10-03" abaixo).** Redação original, preservada: cada bucket começava cheio (burst = taxa); com os quatro
+  ciclos começando no mesmo instante e um CDN de latência zero, o **primeiro segundo** somava 156 requisições
+  (49 + 49 + 49 + 9), acima dos 100 rps do TSE se ele contar por segundo; em regime a soma era 80. Não era
+  efeito deste ADR (o singleton tinha o mesmo burst), e era a pendência que o ADR-0035 registra ("buckets
+  independentes garantem a média, não o pico instantâneo").
 - **Invocações concorrentes do mesmo cargo na mesma instância agora competem pelo teto**: cada uma fica mais
   lenta do que rodando sozinha. É o que o teto por IP exige, mas é também um risco de `maxDuration` se uma
   invocação duplicada (por exemplo, disparo manual no meio da janela) dividir o bucket com o ciclo do cron. O
@@ -218,3 +217,43 @@ pico instantâneo" permanece: é verdadeiro e continua sendo a pendência do lim
   `docs/operations/runbook.md` (§ "O que NÃO é problema: fan-out e rate limit", que desde 22/09 descreve o
   limitador como "token bucket **por cargo**" — leitura do `rpsMax` por cargo, que era verdadeira só para a
   taxa inicial; a afirmação passa a valer por inteiro com este ADR).
+
+## Emenda de 2026-10-03 — rajada inicial de 2 tokens (pendência do burst resolvida)
+
+**Achado** (constitution-guard, § 1, severidade alta, pré-existente): `createTokenBucket` usava
+`capacity = burst ?? ratePerSec`, então todo bucket de produção nascia cheio e emitia até 2 × taxa no 1º segundo.
+Os quatro ciclos disparam juntos a cada múltiplo de 5 minutos e o teste de carga mediu **156 requisições no 1º
+segundo** (49 + 49 + 49 + 9) contra os 100 req/s por IP do TSE (bloqueio de 10 minutos).
+
+**Decisão** (aprovada pelo dono, véspera do 1º turno): os buckets por cargo e o bucket sem cargo são criados com
+`burst = TSE_BURST_INICIAL = 2` (`lib/tse/rate-limiter.ts`). Taxas (`rpsMax`), locks e crons não mudam.
+`createTokenBucket` mantém o default `burst = ratePerSec` para quem o chamar direto; só `getTseRateLimiter` fixa a
+rajada.
+
+**Por que 2 e não 1.** Com capacidade 1, o `refill()` descarta o excedente quando o `setTimeout` dispara alguns
+ms depois do devido (o token que acumularia além de 1 é cortado), e a taxa efetiva a 25 rps caiu de 2% a 26%
+medido — o ciclo de ~244 s chegaria perto dos 300 s de `maxDuration`. Com capacidade 2, uma batida atrasada do
+timer cabe no segundo token.
+
+**Medido** (`tests/unit/tse/ingest-carga-por-cargo.test.ts`, relógio simulado, 304 instantâneo, os quatro ciclos
+juntos, nas duas ordens de chegada):
+
+| | antes (burst = taxa) | depois (burst = 2) |
+|---|---|---|
+| Pico do agregado, qualquer janela de 1 s (deslizante e fixa) | **156** | **84** |
+| Teto teórico (taxa + 2 por cargo: 27 + 27 + 27 + 7) | 160 (2 × 80) | 88 |
+| Ciclo Presidente / Governador / Senador (6.110 + agregados) | 244,5 s (244.520 / 244.480 / 244.480 ms) | 245,4 s (245.440 / 245.400 / 245.400 ms) |
+| Fatia do Deputado Federal (cargo 6, 5 rps) | 203,6 s | 204,2 s |
+
+O custo é ~0,9 s por ciclo (a rajada gasta é menor), longe dos 300 s. O pico de 84 fica abaixo do teórico de 88
+porque o teste conta janelas de 1 s em aberto à direita (26 + 26 + 26 + 6); o gate usa o 88, que vale para
+qualquer janela.
+
+**Travado em teste**: o teste de carga reprova se **qualquer** janela de 1 s do agregado passar de 88 (e exige
+< 100); a duração dos ciclos pesados segue ≤ 300 s e ≈ (N − 2) / taxa; um bucket recém-criado de 25 rps entrega no
+máximo 2 sem esperar (`rate-limiter.test.ts`). Mutação à mão: voltar `capacity = ratePerSec` derruba 11 casos e o
+gate de pico reprova com "expected 156 to be less than or equal to 88"; desfeita.
+
+**O que NÃO muda**: a pendência do limitador **coordenado entre instâncias** segue aberta (buckets de instâncias
+diferentes não se coordenam; duas instâncias do mesmo cargo ainda somam o dobro do teto do cargo, e quem evita
+isso é o lock anti-overlap). O pico de 88 supõe uma instância por cargo.

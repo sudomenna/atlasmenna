@@ -12,7 +12,13 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CARGOS, cargoInfo, piorCasoAgregadoRps } from "@/lib/config/cargos";
-import { createTokenBucket, getTseRateLimiter, resetTseRateLimiter } from "@/lib/tse/rate-limiter";
+import {
+  createTokenBucket,
+  getTseRateLimiter,
+  resetTseRateLimiter,
+  TSE_BURST_INICIAL,
+} from "@/lib/tse/rate-limiter";
+import { medirBucket } from "./_taxa-do-bucket";
 
 // ---------------------------------------------------------------------------
 // Virtual clock helper
@@ -110,18 +116,14 @@ describe("getTseRateLimiter", () => {
   // cargos leves — 5 rps. É o valor seguro quando não se sabe quem mais está
   // no ar: o caller sem cargo não pode reservar 35 rps do orçamento do IP.
   // Era 40 até 2026-09-11, quando o teto virou por cargo (ADR-0026).
-  it("sem cargo, usa o teto conservador quando TSE_MAX_RPS está ausente (§ 1)", () => {
+  it("sem cargo, usa o teto conservador quando TSE_MAX_RPS está ausente (§ 1)", async () => {
     vi.stubEnv("TSE_MAX_RPS", "");
-    const bucket = getTseRateLimiter();
-
-    // Burst default = ratePerSec; N tryAcquire() consecutivos devem passar,
-    // o N+1º deve falhar (relógio real não anda entre chamadas síncronas).
     const conservador = Math.min(...CARGOS.map((c) => c.rpsMax));
-    let succeeded = 0;
-    for (let i = 0; i < conservador + 1; i++) {
-      if (bucket.tryAcquire()) succeeded++;
-    }
-    expect(succeeded).toBe(conservador);
+    const { rajada, taxa } = await medirBucket(getTseRateLimiter());
+
+    // Desde 2026-10-03 a rajada é fixa (2); a taxa é medida pelo tempo.
+    expect(rajada).toBe(TSE_BURST_INICIAL);
+    expect(taxa).toBe(conservador);
   });
 
   // -------------------------------------------------------------------------
@@ -163,17 +165,14 @@ describe("getTseRateLimiter", () => {
     expect(piorCasoAgregadoRps()).toBeLessThan(TETO_TSE_RPS);
   });
 
-  it("cada cargo usa o teto da tabela canônica quando TSE_MAX_RPS está ausente", () => {
+  it("cada cargo usa o teto da tabela canônica quando TSE_MAX_RPS está ausente", async () => {
     for (const info of CARGOS) {
       resetTseRateLimiter();
       vi.stubEnv("TSE_MAX_RPS", "");
-      const bucket = getTseRateLimiter(info.cd);
+      const { rajada, taxa } = await medirBucket(getTseRateLimiter(info.cd));
 
-      let taxa = 0;
-      for (let i = 0; i < 101; i++) {
-        if (bucket.tryAcquire()) taxa++;
-      }
       expect(taxa, `cargo ${info.cd} (${info.label})`).toBe(info.rpsMax);
+      expect(rajada, `cargo ${info.cd}: rajada`).toBe(TSE_BURST_INICIAL);
     }
   });
 
@@ -216,14 +215,9 @@ describe("getTseRateLimiter", () => {
   // `rateLimited` ao vivo). Mesmo ele, dobrado, não pode encostar nos 100 do
   // TSE sem que a decisão seja consciente — se este teste falhar, o ceiling
   // subiu e RF-010.3 precisa ser revisto ANTES do código.
-  it("nem o ceiling dobrado alcança o limite do TSE (RF-010.3, margem do ceiling)", () => {
+  it("nem o ceiling dobrado alcança o limite do TSE (RF-010.3, margem do ceiling)", async () => {
     vi.stubEnv("TSE_MAX_RPS", "500"); // clampa no ceiling
-    const bucket = getTseRateLimiter();
-
-    let ceiling = 0;
-    for (let i = 0; i < 101; i++) {
-      if (bucket.tryAcquire()) ceiling++;
-    }
+    const { taxa: ceiling } = await medirBucket(getTseRateLimiter());
 
     expect(ceiling).toBe(50);
     // O ceiling é escotilha de janela SUPERVISIONADA e vale para UM processo.
@@ -233,40 +227,59 @@ describe("getTseRateLimiter", () => {
     expect(ceiling * 2).toBeLessThanOrEqual(100);
   });
 
-  it("respeita TSE_MAX_RPS dentro do clamp [1, 50]", () => {
-    vi.stubEnv("TSE_MAX_RPS", "5");
-    const bucket = getTseRateLimiter();
-
-    let succeeded = 0;
-    for (let i = 0; i < 10; i++) {
-      if (bucket.tryAcquire()) succeeded++;
-    }
-    expect(succeeded).toBe(5);
+  it("respeita TSE_MAX_RPS dentro do clamp [1, 50]", async () => {
+    vi.stubEnv("TSE_MAX_RPS", "7");
+    const { taxa } = await medirBucket(getTseRateLimiter());
+    expect(taxa).toBe(7);
   });
 
   // RF-010.3 (spec 001): a taxa efetiva nunca pode passar de 50 req/s, teto de
   // segurança abaixo dos 100 req/s documentados pelo TSE. Se este teste falhar
   // por o clamp ter subido, a spec é que manda — revise RF-010.3 antes do código.
-  it("clampa valores acima de 50 para 50 (teto RF-010.3)", () => {
+  it("clampa valores acima de 50 para 50 (teto RF-010.3)", async () => {
     vi.stubEnv("TSE_MAX_RPS", "500");
-    const bucket = getTseRateLimiter();
-
-    let succeeded = 0;
-    for (let i = 0; i < 60; i++) {
-      if (bucket.tryAcquire()) succeeded++;
-    }
-    expect(succeeded).toBe(50);
+    const { taxa } = await medirBucket(getTseRateLimiter());
+    expect(taxa).toBe(50);
   });
 
-  it("clampa valores abaixo de 1 para 1", () => {
+  it("clampa valores abaixo de 1 para 1", async () => {
     vi.stubEnv("TSE_MAX_RPS", "0");
-    const bucket = getTseRateLimiter();
+    const { taxa } = await medirBucket(getTseRateLimiter(), 20);
+    expect(taxa).toBe(1);
+  });
 
-    let succeeded = 0;
-    for (let i = 0; i < 3; i++) {
-      if (bucket.tryAcquire()) succeeded++;
+  // 2026-10-03 — a rajada inicial dos buckets de PRODUÇÃO é 2, não a taxa. Com
+  // `burst = rps` o agregado dos quatro cargos punha 156 req no 1º segundo (o
+  // TSE bloqueia o IP por 10 min acima de 100 req/s). Ver ADR-0068.
+  it("um bucket recém-criado de 25 rps entrega no máximo 2 sem esperar", () => {
+    vi.stubEnv("TSE_MAX_RPS", "");
+    const bucket = getTseRateLimiter(1); // Presidente, 25 rps
+    expect(cargoInfo(1).rpsMax).toBe(25);
+
+    let semEsperar = 0;
+    for (let i = 0; i < 30; i++) {
+      if (bucket.tryAcquire()) semEsperar++;
     }
-    expect(succeeded).toBe(1);
+    expect(TSE_BURST_INICIAL).toBe(2);
+    expect(semEsperar).toBe(2);
+    expect(bucket.stats.waitedMs).toBe(0);
+  });
+
+  it("a rajada vale para todo bucket de produção: cada cargo, o sem cargo e o override", () => {
+    for (const info of CARGOS) {
+      resetTseRateLimiter();
+      const b = getTseRateLimiter(info.cd);
+      const n = [0, 1, 2, 3, 4].filter(() => b.tryAcquire()).length;
+      expect(n, `cargo ${info.cd}`).toBe(TSE_BURST_INICIAL);
+    }
+    resetTseRateLimiter();
+    const semCargo = getTseRateLimiter();
+    expect([0, 1, 2, 3, 4].filter(() => semCargo.tryAcquire()).length).toBe(2);
+
+    vi.stubEnv("TSE_MAX_RPS", "50");
+    resetTseRateLimiter();
+    const alto = getTseRateLimiter(1);
+    expect([0, 1, 2, 3, 4].filter(() => alto.tryAcquire()).length).toBe(2);
   });
 
   it("reaproveita a mesma instância entre chamadas até resetTseRateLimiter()", () => {
