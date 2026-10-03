@@ -13,6 +13,9 @@ source: PRD.md (RF-059) + constituição § 7
 |---|---|---|
 | Repo GitHub | `sudomenna/atlasmenna` (público — as páginas `/sobre-*` linkam para ele) | https://github.com/sudomenna/atlasmenna |
 | Vercel project | `atlasmenna` (scope `sudomennas-projects`) | https://vercel.com/sudomennas-projects/atlasmenna |
+| Domínio público | `www.atlasmenna.online` (canônico; `atlasmenna.online` → 308 → www; DNS Cloudflare, proxy desligado) | https://www.atlasmenna.online |
+| Endereço reserva | `atlasmenna.vercel.app` (serve produção sem redirect; não depende do DNS) | https://atlasmenna.vercel.app |
+| Alias antigo | `salacofre.vercel.app` → 308 → `www.atlasmenna.online` desde 03/10 (ADR-0069). Crons chamam a URL do deployment, não o alias | — |
 | Vercel preview/prod URL inicial | deploy `salacofre-7ft711fbp-...` | https://salacofre-7ft711fbp-sudomennas-projects.vercel.app |
 | Edge Config store | `salacofre-edge-config` | (env `EDGE_CONFIG`) |
 | Blob store (public) | `salacofre-blob` (`store_jbTu251tioj3y57Z`, region iad1) | base: https://jbtu251tioj3y57z.public.blob.vercel-storage.com/ |

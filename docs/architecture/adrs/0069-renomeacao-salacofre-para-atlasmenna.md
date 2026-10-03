@@ -65,9 +65,16 @@ histórica acima. O corpo decisório dos ADRs antigos não foi alterado além do
   com 301.
 - Domínio novo `atlasmenna.online`, DNS no Cloudflare, CNAME para a Vercel, **proxy desligado**. O apex
   responde 308 para `www.atlasmenna.online`.
-- `salacofre.vercel.app` **continua anexado e servindo**. Não foi removido nem redirecionado; o redirecionamento
-  para o domínio novo fica planejado para depois do 1º turno. Enquanto isso, `docs/sprints/_D1-04out2026.md` o
-  cita como alternativa de contingência.
+- `salacofre.vercel.app` **redireciona (308) para `www.atlasmenna.online`** desde 03/10 ~16h12, preservando
+  caminho e query (decisão do dono, antecipando o que estava previsto para depois do 1º turno). Antes de ligar,
+  medido nos logs da Vercel (`vercel logs --follow --json`, campo `domain`): **todas** as invocações de cron
+  (`/api/ingest/*`) chegam pela URL exclusiva do deployment (`atlasmenna-<hash>-sudomennas-projects.vercel.app`),
+  nunca pelo alias — e cron da Vercel não segue redirect. Amostra de 2 min depois de ligar: ingest de
+  presidente, governador, deputado-distrital e deputado-estadual seguiu rodando, sem erro. As chamadas
+  internas (modelo, `edge-write`) usam `INTERNAL_BASE_URL` (ausente em produção) → `VERCEL_URL`, também a URL
+  do deployment.
+- **Endereço reserva**: `atlasmenna.vercel.app`, anexado em 03/10 servindo produção **sem** redirect. Não
+  depende do DNS da Cloudflare; é o que `docs/sprints/_D1-04out2026.md` cita como contingência.
 
 **4. User-Agents.**
 
@@ -93,7 +100,7 @@ byte a byte idênticas (status e hash do corpo) de `resultados.tse.jus.br` (`ele
 3. **Recursos externos** `salacofre-db` (Neon) e `salacofre-blob` (Blob), e as URLs imutáveis de deployment
    `salacofre-*-sudomennas-projects.vercel.app`. Renomeação opcional, **depois de 26/10**.
 4. **`docs/_pitch/salacofre-pitch-investidor.pdf`**: binário, inalterado. A versão HTML irmã foi renomeada.
-5. **`salacofre.vercel.app`** como alias funcional, conforme a Decisão 3.
+5. **`salacofre.vercel.app`** continua anexado (agora como redirect 308 para o domínio novo), conforme a Decisão 3.
 
 ## Consequências
 
@@ -118,10 +125,13 @@ byte a byte idênticas (status e hash do corpo) de `resultados.tse.jus.br` (`ele
   troca textual. **Reversão**: Instant Rollback da Vercel para o deployment do commit `624b145` e, se
   necessário, renomear de volta o projeto Vercel e o repositório GitHub. O 301 do GitHub não cobre quem já
   tiver o remote antigo em clones, hooks ou integrações com nome fixo.
-- **Dois endereços públicos vivos** (`salacofre.vercel.app` e `atlasmenna.online`) até o redirecionamento
-  pós-1º turno: duas origens para BotID, cache e métricas.
+- **Dois endereços públicos servindo** (`www.atlasmenna.online` e a reserva `atlasmenna.vercel.app`): duas
+  origens para BotID, cache e métricas. O alias antigo só redireciona.
+- **A vigia da noite** (tarefa agendada local `vigia-noite-1t`) fazia `curl` sem `-L` em
+  `salacofre.vercel.app` e teria acusado "site fora do ar" a cada 10 min; foi apontada para
+  `www.atlasmenna.online` antes do redirect.
 - **Pendências**: itens de 05/10 (stores do Edge Config e semente do simulador, esta com `pnpm sim:full`);
-  renomeações opcionais após 26/10; redirecionamento do alias antigo; o canal do Slack passa a constar nos
+  renomeações opcionais após 26/10; o canal do Slack passa a constar nos
   documentos como `#atlasmenna-ops`, mas **nunca foi criado**, então o nome nos documentos ainda não
   corresponde a nenhum canal real.
 
