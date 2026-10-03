@@ -704,11 +704,10 @@ O download dos arquivos usa `TSE_ETL_USER_AGENT` de `data-pipeline/_tse-common.t
 AtlasMenna-ETL/0.1
 ```
 
-**Se a Akamai bloquear o download com 403**, adicionar o field de contato (atualmente pendente):
-
-```
-AtlasMenna-ETL/0.1 (contato: menna@outsiders.digital)
-```
+**Se a Akamai bloquear o download com 403**, **não** acrescentar URL nem e-mail ao header — esse é
+justamente o formato que o CDN bloqueia (ver o comentário de `TSE_ETL_USER_AGENT` em
+`data-pipeline/_tse-common.ts`). Desde 03/10 nenhum User-Agent do projeto leva e-mail (ADR-0069).
+Comparar a resposta com o header atual, com `AtlasMenna/0.1` e sem header nenhum.
 
 Mas primeiro **verifique se a URL de base está correta** (deve ser `https://cdn.tse.jus.br/`, não outro host).
 
