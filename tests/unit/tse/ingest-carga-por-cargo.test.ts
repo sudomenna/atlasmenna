@@ -409,7 +409,14 @@ describe.each(ORDENS)("carga concorrente — $nome", ({ ciclos }) => {
 
     const maxTotalPermanente = Math.max(...somaPorSegundo.values());
     expect(maxTotalPermanente).toBeLessThanOrEqual(TETO_AGREGADO_RPS);
-    expect(piorCasoAgregadoRps()).toBe(TETO_AGREGADO_RPS);
+    // A tabela inteira soma os quatro simulados aqui + as assembleias da spec
+    // 027 (cargos 7 e 8 a 1 rps cada, resumo por UF — ADR-0067): 80 + 2 = 82.
+    // O teste simula só os quatro de fan-out; a soma da tabela tem de bater e
+    // continuar bem abaixo dos 100 do TSE (constituição § 1).
+    expect(piorCasoAgregadoRps()).toBe(
+      TETO_AGREGADO_RPS + cargoInfo(7).rpsMax + cargoInfo(8).rpsMax,
+    );
+    expect(piorCasoAgregadoRps()).toBe(82);
     // Com os quatro no ar, o regime permanente encosta no teto da soma — e
     // nunca o passa. (Se caísse muito abaixo, a simulação estaria errada.)
     expect(maxTotalPermanente).toBeGreaterThanOrEqual(TETO_AGREGADO_RPS - 1);
