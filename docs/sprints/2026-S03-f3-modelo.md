@@ -87,7 +87,7 @@ Justificativa: forçar promoção com gate semanticamente fraco compromete a cre
 - **`p_vitoria_a` semanticamente invertido**: `compute_national` define "A" = menor `candidato_id`. Com 11 candidatos no replay 2022, A = Ciro (3022112), não Lula (3022113). Não afetou gate (MAE é por id), mas quebra UI quando spec 003+ consumir. Fix obrigatório S04: identificar top-2 por `pct_projetado`, não por id.
 - **CRITICAL P2 só apareceu no `constitution-guard`**: T16b embutiu hex literais `#c0392b`/`#2980b9` no payload Edge Config (violação § 2). Corrigido in-place para tokens semânticos. Lição: para qualquer task que toca payload visível ao front, despachar `constitution-guard` **durante** a task, não só no gate final.
 - **`pnpm test` exit code é traiçoeiro**: rodou exit 0 mesmo com 8 test files falhando por ausência de `DATABASE_URL` no env. Real `pnpm test` deveria sempre rodar com `.env.local` exportado. Documentar no `package.json` ou criar wrapper.
-- **Estimativas conservadoras demais**: caminho crítico 19h, realidade ~8h. Foi bom (folga), mas indica que minhas estimativas não calibraram com a agressividade de paralelização disponível em SalaCofre. Recalibrar para S04.
+- **Estimativas conservadoras demais**: caminho crítico 19h, realidade ~8h. Foi bom (folga), mas indica que minhas estimativas não calibraram com a agressividade de paralelização disponível em AtlasMenna. Recalibrar para S04.
 
 ### Carry-over pra S04
 

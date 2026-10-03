@@ -11,7 +11,7 @@ Copie **tudo** dentro do bloco abaixo como a primeira mensagem.
 ---
 
 ```
-Continuando o SalaCofre. Leia primeiro, nesta ordem:
+Continuando o AtlasMenna. Leia primeiro, nesta ordem:
 
 1. docs/_meta/handoff-2026-09-07-redesign.md   (estado atual — comece por aqui)
 2. docs/architecture/adrs/0025-design-system-atlas-menna-restyle-in-place.md

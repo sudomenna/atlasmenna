@@ -11,8 +11,8 @@ source: PRD.md (RF-059) + constituição § 7
 
 | Recurso | Identificador | URL |
 |---|---|---|
-| Repo GitHub | `sudomenna/salacofre` (privado) | https://github.com/sudomenna/salacofre |
-| Vercel project | `salacofre` (scope `sudomennas-projects`) | https://vercel.com/sudomennas-projects/salacofre |
+| Repo GitHub | `sudomenna/atlasmenna` (privado) | https://github.com/sudomenna/atlasmenna |
+| Vercel project | `atlasmenna` (scope `sudomennas-projects`) | https://vercel.com/sudomennas-projects/atlasmenna |
 | Vercel preview/prod URL inicial | deploy `salacofre-7ft711fbp-...` | https://salacofre-7ft711fbp-sudomennas-projects.vercel.app |
 | Edge Config store | `salacofre-edge-config` | (env `EDGE_CONFIG`) |
 | Blob store (public) | `salacofre-blob` (`store_jbTu251tioj3y57Z`, region iad1) | base: https://jbtu251tioj3y57z.public.blob.vercel-storage.com/ |

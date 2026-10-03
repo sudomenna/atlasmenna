@@ -32,7 +32,7 @@ Medições feitas contra o ambiente de simulado em 17/09/2026 (arquivos reais em
 | Arquivos disponíveis | UF (`zz-c0001-…-u.json`), acompanhamento (`zz-e021270-ab.json`, 185 itens), par (`zz29254-z0001-…-u.json`) |
 | Cargos com arquivo | só `c0001` (Presidente) |
 
-O SalaCofre exclui `ZZ` em **todas** as camadas, por decisões independentes tomadas ao longo de
+O AtlasMenna exclui `ZZ` em **todas** as camadas, por decisões independentes tomadas ao longo de
 S01–S03: `lib/tse/targets.ts` (`TODAS_UFS` com 27 siglas), `lib/tse/ea12-schema.ts:113`
 (`excluirUfs` com default `["ZZ"]`), `data-pipeline/zonas-import.ts:111,140` e
 `data-pipeline/validate-coverage.ts:22,31` (`uf <> 'ZZ'`), `data-pipeline/simulacao-gerar.ts:1001`,

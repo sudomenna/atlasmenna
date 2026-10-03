@@ -28,7 +28,7 @@ novas de cargo (Senador e Deputado Federal) até o 1º turno.
    BaseToggle desligado, specs 002/011 reescritas, sprints re-baselinadas). **Fora do commit**:
    `docs/_pitch/`, `tse_docs/Switchcraft.pdf`.
 2. **Kit de design copiado** para `docs/design-system/atlas-menna/` (81 arquivos, 400 KB; sem
-   `assets/geo/` — o SalaCofre usa MapLibre + PMTiles). Ver o `README.md` de lá para rodar o
+   `assets/geo/` — o AtlasMenna usa MapLibre + PMTiles). Ver o `README.md` de lá para rodar o
    protótipo (`npx serve docs/design-system/atlas-menna`).
 3. **Três ADRs escritos** (ver § ADRs abaixo).
 4. **Plano aprovado** pelo usuário, com seis decisões que **não devem ser reabertas**.
@@ -180,7 +180,7 @@ se em 24/09 nem isso estiver verde, a aba fica desabilitada e o cargo vai para 2
   do replay é sintética.
 - `compute_swing_descritivo`, `brancos_nulos` no mesmo `idx` dos candidatos, assert de percentil
   do RF-015.
-- Caixa `contato@salacofre.com.br` antes de 15/09; chamado ao TSE em 12/09 se as URLs do simulado
+- Caixa de contato do User-Agent antes de 15/09; chamado ao TSE em 12/09 se as URLs do simulado
   não saírem.
 - Visão municipal cobre 2.180 de 5.572 municípios sem avisar o leitor (dívida sob a constituição § 8).
 - `spec-syncer` ainda não propagou os ADRs 0024–0026 para `index.json`, `traceability.md` e as

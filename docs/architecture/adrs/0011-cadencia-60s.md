@@ -36,7 +36,7 @@ O Vercel Cron nativo com 1 disparo/min resulta em **1 ciclo completo por invoca�
 
 A cadência de ingestão TSE é fixada em **60s** via `vercel.json` `crons` nativo. O handler `/api/ingest` executa **um único ciclo completo** por invocação: busca lista de arquivos modificados, filtra por ETag, faz download seletivo, processa e propaga para Edge Config + Neon. Não há `setTimeout` interno, não há loop multi-ciclo, não há estado compartilhado entre ticks consecutivos além do ETag cache no Edge Config.
 
-Esta decisão renegocia o RNF-006: a defasagem máxima TSE→tela passa de <30s para <90s (60s polling + ~10s processamento + ~10s propagação Edge Config). Para o público-alvo do SalaCofre — acompanhamento em tempo real por audiência geral — 90s permanece operacionalmente "tempo real".
+Esta decisão renegocia o RNF-006: a defasagem máxima TSE→tela passa de <30s para <90s (60s polling + ~10s processamento + ~10s propagação Edge Config). Para o público-alvo do AtlasMenna — acompanhamento em tempo real por audiência geral — 90s permanece operacionalmente "tempo real".
 
 ## Consequências
 

@@ -55,7 +55,7 @@ posterior.
 
 ## Contexto
 
-O SalaCofre projeta Deputado Federal (cargo TSE 6) desde o ADR-0026, que decidiu ingestão em
+O AtlasMenna projeta Deputado Federal (cargo TSE 6) desde o ADR-0026, que decidiu ingestão em
 granularidade UF e read path via Vercel Blob, mas deixou **fora de escopo** o método de conversão
 de votos em cadeiras — o núcleo aritmético que transforma `votosPartido`/`votosCandidato` em
 número de cadeiras por partido e lista de eleitos, exibido ao vivo no dia da apuração
@@ -68,7 +68,7 @@ O sistema eleitoral proporcional brasileiro (Código Eleitoral, arts. 106–112)
 direto de proporção — é uma cascata de regras com pisos individuais e de partido, arredondamento
 não-trivial, distribuição de sobras por médias sucessivas, e uma norma central (art. 111) que foi
 **declarada inconstitucional pelo STF em 2024** e substituída por regulamento do TSE. Nenhuma
-dessas nuances aparece em qualquer doc canônico do SalaCofre hoje: `docs/reference/regulatory.md`
+dessas nuances aparece em qualquer doc canônico do AtlasMenna hoje: `docs/reference/regulatory.md`
 não cita os arts. 106–112, e o watch item mais próximo trata da Res. 23.751/2026 (atos gerais de
 divulgação), não da fórmula de cadeiras. Federações (Lei 9.096/1995 art. 11-A; Lei 9.504/1997 art.
 6º-A) contam como um único partido para todo o cálculo — o que o EA20 já expõe via
@@ -80,7 +80,7 @@ Deputado Federal em 2026.
 A norma operacional que implementa os artigos do Código Eleitoral é a **Res.-TSE nº 23.677/2021**,
 com redação dada pela **Res.-TSE nº 23.734/2024** e pela **Res.-TSE nº 23.748/2026** — não a
 Res. 23.751/2026, que trata de atos gerais de divulgação de resultados por terceiros (a norma que
-já rege o § 1 da constituição do SalaCofre, mas que **não** define fórmula de cadeiras). Essa
+já rege o § 1 da constituição do AtlasMenna, mas que **não** define fórmula de cadeiras). Essa
 distinção é registrada aqui porque a memória de projeto associava genericamente "23.751/2026" a
 qualquer norma TSE de 2026 — não é o caso para este ADR.
 
@@ -126,7 +126,7 @@ Hardcodar essa tabela seria apostar num número que pode não bater no dia — v
 ## Decisão
 
 **O número de vagas por UF (`lugaresAPreencher`) vem do dado do TSE, nunca de tabela hardcoded no
-SalaCofre.** O EA20/EA12 da corrida proporcional declara o número de vagas a preencher por UF; o
+AtlasMenna.** O EA20/EA12 da corrida proporcional declara o número de vagas a preencher por UF; o
 pipeline lê esse campo do envelope oficial, com um smoke test contra o simulado (15–17/09 e
 22–24/09) validando que a soma nacional bate 513. Errar o denominador do quociente eleitoral
 corrompe toda a projeção da UF — não há justificativa para arriscar isso numa tabela mantida à

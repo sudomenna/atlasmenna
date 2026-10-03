@@ -49,7 +49,7 @@ Este ADR **supera parcialmente** o ADR-0017 — apenas a definição de Camada 1
 **Positivas**:
 - Retrato mais honesto da corrida 1T: elimina o viés editorial de reduzir uma disputa de 9–11 candidatos a um duelo top-2, e dá ao 3º colocado (e ao agregado "Outros") um peso visual proporcional ao seu IC real.
 - Participação (abstenção, brancos, nulos) deixa de ser dado omitido — atende constituição § 8 (transparência metodológica: "o que está movendo o forecast" passa a incluir quem não votou em ninguém).
-- Denominadores corretos e rastreáveis: cada termômetro cita explicitamente sua base, o que facilita auditoria e evita que o SalaCofre publique um número que diverge do TSE por escolha de normalização.
+- Denominadores corretos e rastreáveis: cada termômetro cita explicitamente sua base, o que facilita auditoria e evita que o AtlasMenna publique um número que diverge do TSE por escolha de normalização.
 - IC de "Outros" estatisticamente correto (soma de resamples, não subtração), consistente com o mesmo método já usado para candidatos individuais (ADR-0006).
 
 **Negativas**:

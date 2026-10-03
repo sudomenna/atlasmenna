@@ -105,7 +105,7 @@ Fechada em 2026-05-17 (47 dias antes do `end: 2026-08-02` planejado), na mesma s
 - **Smoke visual antes dos gates**: usuário pediu pra ver no browser (`/`, `/uf/SP`, `/sobre-o-modelo`) em meio da sessão. Descobrimos 2 bugs de UX importantes que viraram fixes inline:
   - Scroll do mouse ampliando o mapa (`scrollZoom: false` em todos os 4 mapas)
   - Feature IDs no PMTiles numéricos (default tippecanoe) → expression `["match", ["get", "SIGLA_UF"], ...]` em vez de `setFeatureState`
-- **Análise comparativa NYT vs SalaCofre** trouxe insight chave: NYT esconde minor candidates atrás de clique. Decisão deliberada de divergir disso (ADR-0017) — narrativa do 1T BR exige transparência total. Aliou bem com personas P2/P3 da spec.
+- **Análise comparativa NYT vs AtlasMenna** trouxe insight chave: NYT esconde minor candidates atrás de clique. Decisão deliberada de divergir disso (ADR-0017) — narrativa do 1T BR exige transparência total. Aliou bem com personas P2/P3 da spec.
 
 ### O que melhorar
 

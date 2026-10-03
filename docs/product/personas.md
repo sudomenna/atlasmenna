@@ -1,6 +1,6 @@
 ---
 title: Personas
-description: Personas-alvo do SalaCofre e seus comportamentos esperados
+description: Personas-alvo do AtlasMenna e seus comportamentos esperados
 status: stable
 source: PRD.md § 4.1
 ---

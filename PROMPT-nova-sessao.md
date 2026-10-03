@@ -6,7 +6,7 @@
 
 ---
 
-Continuando o SalaCofre. Leia primeiro, nesta ordem:
+Continuando o AtlasMenna. Leia primeiro, nesta ordem:
 
 1. `docs/_meta/handoff-2026-09-13.md` — **comece por aqui**, é o estado completo
 2. `docs/reference/risks.md` — as **quatro primeiras linhas** de *Riscos ativos* reenquadram o projeto
@@ -167,7 +167,7 @@ verde. `check_zona_merge_sanity` é a rede enquanto isso.
 
 ## Credenciais e acessos — o que existe nesta máquina
 
-- **`gh`** tem duas contas; a ativa é `cneeducacao`, o repositório é `sudomenna/salacofre`, e a
+- **`gh`** tem duas contas; a ativa é `cneeducacao`, o repositório é `sudomenna/atlasmenna`, e a
   conta errada dá 403. Trocar antes do push e **devolver depois**.
 - **A CLI `vercel` está logada em outra conta** (Bruna Puga). O caminho que funciona é
   `--token="$EDGE_CONFIG_TOKEN" --scope=sudomennas-projects`, ou `curl` na API.

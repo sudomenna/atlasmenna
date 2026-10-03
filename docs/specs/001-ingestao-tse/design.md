@@ -294,13 +294,10 @@ em notação BR — `parseEA20Numeric()` converte no ponto de uso, preservando o
 // lib/tse/client.ts
 // User-Agent HONESTO — identifica projeto, URL pública e contato. NUNCA declara
 // cadastro/credenciamento: a Res. 23.751/2026 não prevê nenhum (RF-010.6, ADR-0020).
-// Contato: contato@salacofre.com.br (definido em 2026-09-05, ADR-0020).
-// 🔴 2026-09-19 — a URL virou `salacofre.vercel.app`, PROVISORIAMENTE: o domínio
-// próprio ainda não foi apontado (curl estoura 25s; DNS em 189.125.92.230, fora
-// da Vercel) e o ADR-0020 exige URL **verificável**. Reverter quando o domínio
-// entrar no ar. ⚠️ O CONTATO segue não verificável — mesmo domínio, e e-mail
-// exige MX separado. Ver risks.md, 2ª linha de Riscos ativos.
-export const USER_AGENT = 'SalaCofre/1.0 (+https://salacofre.vercel.app; contato: contato@salacofre.com.br)';
+// 2026-10-03 — domínio próprio `atlasmenna.online` e SEM e-mail: a caixa de
+// contato definida em 05/09 nunca existiu (sem registro MX), então não era
+// contato verificável. Ver o docstring de `USER_AGENT` em lib/tse/client.ts.
+export const USER_AGENT = 'AtlasMenna/1.0 (+https://atlasmenna.online)';
 
 async function fetchEA20(opts: { url: string; etag?: string | null }): Promise<FetchResult> {
   // Token de taxa ANTES de cada tentativa, inclusive retries (RF-010.3).

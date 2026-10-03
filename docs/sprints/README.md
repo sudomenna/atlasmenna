@@ -1,4 +1,4 @@
-# Sprints — SalaCofre
+# Sprints — AtlasMenna
 
 Camada temporal entre o [roadmap macro](../product/roadmap.md) (fases F1–F8) e as [tasks por spec](../specs/) (granularidade fina).
 

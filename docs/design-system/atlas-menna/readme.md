@@ -2,7 +2,7 @@
 
 Cópia fiel do export `Design system para apuração eleitoral.zip` (projeto Claude Design
 `a2991f9b-6ed8-40ac-88a7-308c8dc9ea42`), **sem** `assets/geo/` (TopoJSON de 1,2 MB — o
-SalaCofre usa MapLibre + PMTiles, ADR-0003/0004).
+AtlasMenna usa MapLibre + PMTiles, ADR-0003/0004).
 
 - `readme.md` — fundamentos do design (leia primeiro).
 - `tokens/` — `colors.css` (light + `[data-theme=dark]`), `typography.css`, `spacing.css`, `fonts.css`, `base.css`.
@@ -22,9 +22,9 @@ npx serve docs/design-system/atlas-menna
 Sem `assets/geo/` o mapa do protótipo fica em "carregando geometria…"; tudo o mais renderiza.
 Para o mapa, extraia o zip original em outra pasta.
 
-## Como este kit é aplicado no SalaCofre
+## Como este kit é aplicado no AtlasMenna
 
 Ver ADR-0025 (adoção por restyle-in-place, tokens em Tailwind v4 `@theme static`), ADR-0024
 (paleta por partido) e `docs/design-system/tokens.md`. Divergências deliberadas: wordmark
-"SalaCofre"; mapa MapLibre; Senado 2026 tem **2 vagas por UF** (o protótipo diz 1); rodapé
+"AtlasMenna"; mapa MapLibre; Senado 2026 tem **2 vagas por UF** (o protótipo diz 1); rodapé
 constitucional em vez de "Protótipo com dados simulados".

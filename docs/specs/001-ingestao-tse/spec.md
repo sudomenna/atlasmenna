@@ -133,7 +133,7 @@ WHILE o sistema consome os arquivos de divulgação de resultados do TSE, the sy
 
 1. **Nada aqui depende de um ato administrativo do TSE.** O RF anterior exigia "status do cadastro aprovado" — requisito inverificável, porque não há processo de inscrição nem endpoint/registro onde consultar tal status. As obrigações abaixo são todas verificáveis por código e por teste.
 2. **Decomposição de votos é requisito de schema, não de artigo.** O EA20 decompõe `v.vvc` (votos a votáveis concorrentes) em `v.vv` (válidos) + `v.van` (anulados) + `v.vansj` (anulados sub judice), e `v.vvc` — não `v.tv` — é o denominador de "votos a candidatos". Essa obrigação está confirmada no **dicionário de dados do EA20**; **não** foi possível confirmar um parágrafo específico da Res. 23.751/2026 que a imponha (o material disponível é o slide oficial de apresentação, não o texto integral). Ver ADR-0020, seção "Consequências". O tratamento correto dos denominadores é requisito do modelo — [spec 002](../002-modelo-estatistico/spec.md) — não deste RF.
-3. Art. 268 (vedação de majorar preço de serviços em razão dos dados do TSE) e art. 269 (descumprimento impede acesso) não geram requisito de código: o SalaCofre é gratuito e não cobra por acesso (constituição § 1).
+3. Art. 268 (vedação de majorar preço de serviços em razão dos dados do TSE) e art. 269 (descumprimento impede acesso) não geram requisito de código: o AtlasMenna é gratuito e não cobra por acesso (constituição § 1).
 
 ---
 
@@ -198,7 +198,7 @@ IF uma URL do CDN do TSE não puder ser derivada deterministicamente da padroniz
 WHEN o sistema faz qualquer requisição ao CDN do TSE, the system SHALL enviar um `User-Agent` que identifique o projeto por nome, URL pública e contato verificável, e SHALL NOT declarar cadastro, credenciamento ou homologação junto ao TSE.
 
 **Aceitação**:
-- Given qualquer requisição, when os headers são inspecionados, then há `User-Agent` no formato `SalaCofre/<versão> (+<url pública>; <contato>)` com `contato: contato@salacofre.com.br` e `Accept: application/json`.
+- Given qualquer requisição, when os headers são inspecionados, then há `User-Agent` no formato `AtlasMenna/<versão> (+<url pública>)` — hoje `AtlasMenna/1.0 (+https://atlasmenna.online)`, sem e-mail desde 03/10 (a caixa declarada antes nunca existiu) — e `Accept: application/json`.
 - Given o valor do `User-Agent`, when se busca por "cadastr"/"credenci"/"homolog", then não há ocorrência.
 
 ## Requisitos Não-Funcionais aplicáveis

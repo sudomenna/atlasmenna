@@ -55,7 +55,7 @@ Jornada principal: [../../product/use-cases.md](../../product/use-cases.md#fluxo
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ SalaCofre     ● AO VIVO   atualizado 17:23:42      [Pres][Gov] │
+│ AtlasMenna     ● AO VIVO   atualizado 17:23:42      [Pres][Gov] │
 ├──────────────────────────────────────────────────────────────────┤
 │   Apuração Presidencial 2026: Lula à frente                      │
 │   Projeção em tempo real com base em apuração real do TSE e     │

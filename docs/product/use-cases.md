@@ -1,6 +1,6 @@
 ---
 title: Casos de Uso
-description: Casos de uso primários e secundários do SalaCofre mapeados a personas
+description: Casos de uso primários e secundários do AtlasMenna mapeados a personas
 status: stable
 source: PRD.md § 4.2
 ---

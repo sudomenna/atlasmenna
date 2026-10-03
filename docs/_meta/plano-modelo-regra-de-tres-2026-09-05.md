@@ -378,7 +378,7 @@ E3 dupla imputação e total nacional completo desde o 1º ciclo; RF-018; contra
 + MAE@15min reportado. Esperar MAE > 0,998 pp. Falha → decisão do usuário (relaxar via ADR só após
 3 tentativas, regra de `risks.md`).
 
-**Visual/conformidade**: `rm -rf .next`; `preview_start salacofre-dev`; 4 rotas em 375 px e
+**Visual/conformidade**: `rm -rf .next`; `preview_start atlasmenna-dev`; 4 rotas em 375 px e
 desktop, 1T e 2T (`FIXTURE_VARIANT=t2` — **`binary` inalterado**); toggle alterna os seis, abre em
 votáveis, rótulo acompanha, nada some do DOM, teclado; RF-062 nos seis; `/sobre-o-modelo` sem
 swing como método; `next build` confirma modo de renderização das 4 rotas. Gates: `model-validator`

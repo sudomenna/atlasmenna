@@ -21,7 +21,7 @@ Duas alternativas foram avaliadas. A primeira — construir uma árvore paralela
 
 ## Decisão
 
-O SalaCofre adota o design system Atlas Menna por **restyle-in-place**, direto na branch `s07/simulado-ready-hero-1t`, ao invés de árvore `v2` paralela com cutover posterior.
+O AtlasMenna adota o design system Atlas Menna por **restyle-in-place**, direto na branch `s07/simulado-ready-hero-1t`, ao invés de árvore `v2` paralela com cutover posterior.
 
 1. **Mesmos arquivos, mesmos exports.** Os 46 componentes existentes são restilizados nos próprios arquivos, mantendo nome de export e assinatura de props — os 42 testes unitários que importam por nome continuam válidos sem alteração de import. Onde o kit Atlas Menna introduz um componente sem equivalente direto (ex.: `TopBar`, `TabBar`, `HoverCard`, `Sheet`, `SegmentedControl`), ele entra como **componente novo**; nunca como rename de um componente existente que cumpre outro papel. `Footer` e `main[data-trilha]` (ADR-0019) permanecem de posse de cada página — não migram para o shell global.
 2. **Shell global aditivo.** `TopBar` e `TabBar` (portados de `docs/design-system/atlas-menna/components/layout/`) passam a renderizar em `app/layout.tsx`, acima de `{children}`. Isso não estende o layout para ler estado dinâmico (cookies, searchParams) — o toggle de tema e a navegação de abas continuam client-side, sem tocar a pré-renderização estática das 54 páginas de UF.

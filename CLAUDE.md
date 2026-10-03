@@ -77,7 +77,7 @@ Você faz: planejamento, sequenciamento, síntese de retornos, conversa com o us
 
 ## 2. TL;DR do projeto
 
-**SalaCofre** — plataforma web pública de apuração eleitoral 2026 com projeção estatística (estilo NYT Live Forecast). Greenfield em 2026-05-17 — só docs. Stack Vercel-nativa (Next.js 16, React 19, TS, Edge Config, PMTiles, Neon Postgres, Python 3.14). Janela crítica: 04/10/2026 (1º turno) e 25/10/2026 (2º turno). Opera em **Spec Driven Development** estrito.
+**AtlasMenna** — plataforma web pública de apuração eleitoral 2026 com projeção estatística (estilo NYT Live Forecast). Greenfield em 2026-05-17 — só docs. Stack Vercel-nativa (Next.js 16, React 19, TS, Edge Config, PMTiles, Neon Postgres, Python 3.14). Janela crítica: 04/10/2026 (1º turno) e 25/10/2026 (2º turno). Opera em **Spec Driven Development** estrito.
 
 ---
 

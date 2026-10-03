@@ -1,6 +1,6 @@
 ---
 title: Estrutura de Pastas
-description: Árvore canônica do repositório salacofre/ com responsabilidades por diretório
+description: Árvore canônica do repositório atlasmenna/ com responsabilidades por diretório
 status: stable
 source: PRD.md § 9.4
 ---
@@ -8,7 +8,7 @@ source: PRD.md § 9.4
 # Estrutura de Pastas
 
 ```
-salacofre/
+atlasmenna/
 ├── vercel.ts                              # config TS (crons, rewrites, regions)
 ├── next.config.ts
 ├── tailwind.config.ts

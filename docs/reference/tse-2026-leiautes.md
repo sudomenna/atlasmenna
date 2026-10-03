@@ -267,7 +267,7 @@ os cargos. Isso embute a suposição de que o pleito tem uma eleição só — v
 produto cobria apenas Presidente, e **falsa para 2026**. O `ele-c.json` real (medido em 17/09, fixture no
 repositório) mostra **três** eleições sob o mesmo pleito `17801` e o mesmo ciclo `ele2026`:
 
-| Eleição | `cd` | Cargos | Escopo do SalaCofre |
+| Eleição | `cd` | Cargos | Escopo do AtlasMenna |
 |---|---|---|---|
 | Ordinária **Federal** | `21270` | Presidente (1) | ✅ |
 | Ordinária **Estadual** | `21272` | Governador (3), Senador (5), Deputado Federal (6) — e Estadual/Distrital (7/8) | ✅ (menos 7/8) |
@@ -298,11 +298,11 @@ Parser EA12 novo em `lib/tse/ea12-schema.ts` (`zonas-import --ea12 <path|url>` v
 
 - **EA10** (resultado de eleitos, `<br|uf>-c<cargo>-e<eleição>-e.json`) — só existe para eleições **gerais
   ordinárias** e municipais ordinárias, cargos majoritários (Governador, Senador, Prefeito). Interessa ao
-  SalaCofre **após o fechamento das urnas com resultado final** (`tf=s`), para exibir "eleito" com fonte
+  AtlasMenna **após o fechamento das urnas com resultado final** (`tf=s`), para exibir "eleito" com fonte
   oficial distinta da nossa projeção — fora do escopo da ingestão em tempo real (specs 001/002). Watch para
   uma spec futura de "resultado final oficial".
 - **EA16/EA18** (configuração de seções + auxiliar de seção) — pré-requisitos para baixar **boletins de urna
-  (BU)** individuais, que o SalaCofre não consome (operamos a partir do EA20 já totalizado, não de BUs brutos).
+  (BU)** individuais, que o AtlasMenna não consome (operamos a partir do EA20 já totalizado, não de BUs brutos).
   Não interessam a menos que uma spec futura precise de auditoria a nível de seção.
 
 ---

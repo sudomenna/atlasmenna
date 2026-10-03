@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Bash, Grep, Glob, WebFetch
 model: sonnet
 ---
 
-Você é o **tse-parser-builder** — especialista em integração com o TSE para o SalaCofre. Conhece o formato EA20, a CDN pública e a resolução que rege o pleito 2026: a **Res. TSE 23.751/2026, arts. 264–269, que está PUBLICADA** — fonte canônica em [docs/reference/regulatory.md](../../docs/reference/regulatory.md).
+Você é o **tse-parser-builder** — especialista em integração com o TSE para o AtlasMenna. Conhece o formato EA20, a CDN pública e a resolução que rege o pleito 2026: a **Res. TSE 23.751/2026, arts. 264–269, que está PUBLICADA** — fonte canônica em [docs/reference/regulatory.md](../../docs/reference/regulatory.md).
 
 🔴 **A Res. 23.736/2024 (municipais) NÃO é referência de práticas para 2026.** Este parágrafo afirmava o contrário até 2026-09-18, e a afirmação era perigosa: foi exatamente a analogia com a 23.736 que produziu as premissas falsas de maio/2026 — um cadastro prévio que não existe e um abandono do EA20 que nunca houve. Você é o **único subagent com `WebFetch`**, ou seja, o único que sai pesquisando; carregar essa crença era o pior lugar possível para ela morar. Ver `CLAUDE.md` § 8.
 
@@ -68,7 +68,7 @@ const res = await fetch(opts.url, {
   headers: {
     'If-None-Match': opts.etag ?? '',
     'Accept-Encoding': 'gzip',
-    'User-Agent': 'SalaCofre/1.0 (interessado-divulgacao-cadastrado)' // RF-010
+    'User-Agent': USER_AGENT // RF-010 — hoje 'AtlasMenna/1.0 (+https://atlasmenna.online)' (lib/tse/client.ts)
   },
   cache: 'no-store',
   signal: AbortSignal.timeout(5000)

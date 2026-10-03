@@ -60,7 +60,7 @@ O ADR-0017 proíbe literalmente "qualquer botão 'Mostrar todos os N candidatos'
 (`0017-transparencia-total-3-camadas.md:33`, "sem `display:none`, sem `hidden`, sem `<details>`") e
 o ADR-0029 § 7 reafirma essa proibição contra o próprio componente equivalente do kit (`ResultPanel`
 do protótipo, `App.jsx:39`, que faz `rows.slice(0, limit)` — remoção literal de itens do array antes
-do render). O `<ResultPanel>` do SalaCofre (`components/blocks/ResultPanel.tsx:204-215`) monta
+do render). O `<ResultPanel>` do AtlasMenna (`components/blocks/ResultPanel.tsx:204-215`) monta
 **todas** as linhas de candidato, sempre, no mesmo `<ol>`, na ordem do ranking:
 
 ```

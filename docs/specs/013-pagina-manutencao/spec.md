@@ -33,7 +33,7 @@ Ativação é **admin flag** (Edge Config `maintenance:mode` ∈ `"off" | "fallb
 - Lê **apenas** `maintenance:mode` e `maintenance:context` (transição) do Edge Config — ambos ≤ 1 KB ([ADR-0001](../../architecture/adrs/0001-edge-config-no-read-path.md)).
 - Modo `fallback`: mensagem genérica + link `resultados.tse.jus.br` + data/hora de última tentativa (best-effort).
 - Modo `transicao`: hero recap 1T (placar nacional final + bandeira de quem vai a 2T) + countdown até 25/10 + CTA "Voltar em [data]".
-- Manter brand do SalaCofre (`<Footer />` constituição § 1, tipografia serif).
+- Manter brand do AtlasMenna (`<Footer />` constituição § 1, tipografia serif).
 - Meta/OG ([RNF-028](../../nfr/seo.md)) — preview de share dignifica o estado da página.
 
 **Out**:
@@ -73,7 +73,7 @@ WHEN `maintenance:mode !== "off"`, the system SHALL retornar `307 Redirect` de `
 
 - **Graceful degradation** ([RNF-012](../../nfr/availability.md)): página renderiza com 0 deps externas além de Edge Config (que tem SLA próprio); fallback de `fallback` quando `EDGE_CONFIG` env ausente em dev.
 - **Contraste 4.5:1** ([RNF-022](../../nfr/accessibility.md)) — vale para countdown numérico grande tanto quanto pro corpo.
-- **Meta/OG** ([RNF-028](../../nfr/seo.md)) — em modo `transicao`, OG dinâmico mostra "Resultado do 1º turno — SalaCofre"; em `fallback`, OG estático genérico.
+- **Meta/OG** ([RNF-028](../../nfr/seo.md)) — em modo `transicao`, OG dinâmico mostra "Resultado do 1º turno — AtlasMenna"; em `fallback`, OG estático genérico.
 
 ## Componentes envolvidos
 

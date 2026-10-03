@@ -115,7 +115,7 @@ redesign (dark mode, painel de chances completo, rótulos de mapa).
 - [ ] 4 gates em paralelo + `spec-syncer` fechando o catálogo de componentes e a traceability
 
 ### Preparação do simulado (13 → 14/09)
-- [ ] Caixa `contato@salacofre.com.br` no User-Agent
+- [ ] Caixa de contato no User-Agent
 - [ ] Chamado ao TSE se as URLs do simulado não saírem
 - [ ] **Congelar a UI** nas janelas 9–12h e 14–17h de 15–17/09
 

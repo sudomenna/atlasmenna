@@ -557,7 +557,7 @@ rota de cron:
 - a guarda de encolhimento precisa de uma decisão de operador para o `--force`.
 
 Usa `TSE_ETL_USER_AGENT` de `data-pipeline/_tse-common.ts:70` — hoje
-`"SalaCofre-ETL/0.1"`, já sem o contato entre parênteses que o WAF da Akamai
+`"AtlasMenna-ETL/0.1"`, já sem o contato entre parênteses que o WAF da Akamai
 bloqueia (spec § open question 2). Não regenerar esse valor localmente: o
 módulo é compartilhado com `historical-import`, `eleitorado-import` e
 `zonas-import`, e o ADR-0039 nomeia a regressão por acoplamento como risco.

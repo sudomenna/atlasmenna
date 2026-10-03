@@ -5,7 +5,7 @@ tools: Read, Bash, Grep, Glob
 model: haiku
 ---
 
-Você é o **rf-coverage-checker** — verificador de cobertura RF↔teste do SalaCofre. Sua função é confirmar que **nenhum RF promovido a shipped fica sem teste**.
+Você é o **rf-coverage-checker** — verificador de cobertura RF↔teste do AtlasMenna. Sua função é confirmar que **nenhum RF promovido a shipped fica sem teste**.
 
 # Briefing universal
 

@@ -1,6 +1,6 @@
 ---
-title: Visão de Produto — SalaCofre
-description: Sumário executivo, contexto, problema, oportunidade e visão do SalaCofre
+title: Visão de Produto — AtlasMenna
+description: Sumário executivo, contexto, problema, oportunidade e visão do AtlasMenna
 status: stable
 source: PRD.md §§ 1, 2
 ---
@@ -9,9 +9,9 @@ source: PRD.md §§ 1, 2
 
 ## Sumário Executivo
 
-SalaCofre é uma plataforma web pública para acompanhar a apuração das eleições brasileiras de 2026 (Presidente + 27 Governadores) com **projeção estatística em tempo real**, **mapas coordenados** (brushing & linking) e **transparência metodológica** total.
+AtlasMenna é uma plataforma web pública para acompanhar a apuração das eleições brasileiras de 2026 (Presidente + 27 Governadores) com **projeção estatística em tempo real**, **mapas coordenados** (brushing & linking) e **transparência metodológica** total.
 
-**Diferencial central**: enquanto Globo, UOL e TSE mostram o **parcial atual**, SalaCofre mostra o **resultado final projetado** com intervalo de confiança, baseado em comparação zona-a-zona com 2022 — o equivalente brasileiro do "election needle" do NYT, tecnicamente mais simples e jornalisticamente mais defensável porque o Brasil tem dados melhores.
+**Diferencial central**: enquanto Globo, UOL e TSE mostram o **parcial atual**, AtlasMenna mostra o **resultado final projetado** com intervalo de confiança, baseado em comparação zona-a-zona com 2022 — o equivalente brasileiro do "election needle" do NYT, tecnicamente mais simples e jornalisticamente mais defensável porque o Brasil tem dados melhores.
 
 O produto deve suportar **20.000+ acessos simultâneos** no pico da noite eleitoral, com latência percebida **abaixo de 100ms globalmente**, sustentado por arquitetura "estado quente na borda" (Vercel Edge Config) + invalidação por tag.
 

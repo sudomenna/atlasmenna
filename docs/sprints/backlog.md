@@ -16,7 +16,7 @@ Lista append-only de itens que **vão precisar acontecer** mas ainda não foram 
 
 ## Infra & DX
 
-- [ ] Provisão de domínio `salacofre.com.br` e `.com` (DNS na Vercel)
+- [ ] Provisão de domínio `atlasmenna.online` (DNS na Vercel)
 - [ ] SSL automático via Vercel (default, só confirmar)
 - [ ] Setup GitHub repo + branch protection (main exige PR + check verde)
 - [ ] CI workflow básico (typecheck + lint + unit em PR)
@@ -29,7 +29,7 @@ Lista append-only de itens que **vão precisar acontecer** mas ainda não foram 
 - [ ] Definição de cores finais nos tokens — confirmar PT=vermelho, PL=azul (já em [tokens.md](../design-system/tokens.md))
 - [ ] Favicon + ícones (16, 32, 180px)
 - [ ] OG image estática de fallback (`public/og-static.png`)
-- [ ] Texto institucional curto pra footer ("SalaCofre por <quem>")
+- [ ] Texto institucional curto pra footer ("AtlasMenna por <quem>")
 
 ## Dados externos
 
@@ -60,7 +60,7 @@ Lista append-only de itens que **vão precisar acontecer** mas ainda não foram 
 ## Observabilidade
 
 - [ ] Definir formato exato dos correlation IDs nos logs estruturados (RNF-032)
-- [ ] Setup do canal `#salacofre-ops` no Slack (ou alternativa)
+- [ ] Setup do canal `#atlasmenna-ops` no Slack (ou alternativa)
 - [ ] Webhook de alerta com fallback secundário (atualmente só Slack — ver risco em [risks.md](../reference/risks.md))
 
 ## DX dos subagents

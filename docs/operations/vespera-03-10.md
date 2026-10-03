@@ -29,7 +29,7 @@ mostra "Aguardando o primeiro boletim" a noite toda, igual à tela normal de ant
       cd ~/Projetos/AtlasMenna && vercel whoami
       ```
       **Você deve ver** o nome da conta (`sudomenna` ou a do time). Se pedir para "linkar", rode
-      `vercel link` e escolha o projeto `salacofre`.
+      `vercel link` e escolha o projeto `atlasmenna`.
 
 - [ ] **0.2. Rodar a vigia no modo "dia D".**
       ```bash
@@ -116,7 +116,7 @@ publica a lista sem fotos, sem erro nenhum na tela.
       endereços na mão — endereço errado pode bloquear o acesso da máquina ao TSE por 10 minutos.
 
 - [ ] **2.1. A virada no painel da Vercel — tudo de uma vez, nesta ordem, sem publicar no meio.**
-      Vercel → projeto **salacofre** → **Settings** → **Environment Variables**. Filtre por
+      Vercel → projeto **atlasmenna** → **Settings** → **Environment Variables**. Filtre por
       **Production**.
       1. **Editar** `TSE_COD_ELEICAO_FEDERAL` → **Value** = o número **Federal** anotado
          (`ele2026/<número>`). Confira que o ambiente continua **só Production**.

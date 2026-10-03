@@ -401,7 +401,7 @@ Três fatos que mudam a leitura das seções acima:
 Ordenadas por prazo.
 
 ### 13.1 Texto de contato do User-Agent — **bloqueante antes de 15/09**
-`lib/tse/client.ts:60` tem `SalaCofre/1.0 (+https://salacofre.com.br; contato: pendente)`. O ADR-0020
+`lib/tse/client.ts:60` tem `AtlasMenna/1.0 (+https://atlasmenna.online; contato: pendente)`. O ADR-0020
 fixa o **formato** e proíbe declarar cadastro; o **texto** (URL ou e-mail público) é decisão sua.
 Depois de decidir, basta editar `client.ts` — `acompanhamento.ts` já importa a constante.
 

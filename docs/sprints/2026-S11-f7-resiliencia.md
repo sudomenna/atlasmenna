@@ -82,7 +82,7 @@ uma noite perdida.
 **22 caixas**. Quando esta sprint foi escrita (18/09) estavam **todas as 22 em branco** —
 não porque nada tivesse sido feito, mas porque o checklist parou de ser lido: a primeira
 caixa já estava resolvida desde **05/09** (`lib/tse/client.ts:61-62` já traz
-`SalaCofre/1.0 (+https://salacofre.com.br; contato: contato@salacofre.com.br)`) e seguia
+a URL do domínio próprio e uma caixa de e-mail como contato) e seguia
 em branco. Ainda em 18/09, essa caixa foi marcada — **1 de 22** (`:17`).
 
 O trabalho desta sprint são as **21 restantes**, e a lição da caixa 1 é o método: uma
@@ -151,7 +151,7 @@ repositório** (conferido em 18/09).
 - [ ] `SLACK_WEBHOOK_URL` presente em Production, não só em Preview (herda da S08).
 - [ ] `EDGE_CONFIG` ativa e validada em produção — segue **comentada** no `.env.local`
       desde 18/05 por timeout do endpoint (`pre-prod-checklist.md:30`).
-- [ ] DNS: `salacofre.com.br` **+** `.com` apontando para a Vercel; SSL automático conferido.
+- [ ] DNS: `atlasmenna.online` apontando para a Vercel; SSL automático conferido.
 - [ ] Rolling Release configurado com canary de 10% inicial. ⚠️ Em 17/05 uma rolling
       release ficou **parada nos 10%** sem ninguém notar — conferir a promoção, não só a
       configuração.

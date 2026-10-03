@@ -138,7 +138,7 @@ Referência completa em [`../_meta/plano-s07-2026-09-05.md`](../_meta/plano-s07-
 
 ### ✅ Fase 5 — Propagação e integração — concluída 05/09
 
-- [x] Decidido: contato do User-Agent = `contato@salacofre.com.br` (ADR-0020 Consequências, pendência resolvida)
+- [x] Decidido: contato do User-Agent = uma caixa de e-mail no domínio próprio (ADR-0020 Consequências, pendência resolvida; a caixa nunca chegou a existir e saiu do UA em 03/10)
 - [x] `lib/tse/client.ts:60` — User-Agent atualizado com contato real
 - [x] Spec 001 (spec.md + design.md) — pendência de contato removida
 - [x] ADR-0020 — registrado que decisão foi tomada
@@ -258,7 +258,7 @@ destrava os demais — o replay — bloqueava o gate OT-4.
 - [x] **`/sobre-o-modelo`, specs 002 e 011 reescritas** — RF-011/012/013/017 em EARS,
       RF-020.2 e RF-020.3 novos; `SwingIllustration` → `ExtrapolationIllustration`;
       disclaimer de K-1 removido. `spec-implementer`, 06/09
-- [x] **User-Agent com contato definido** — `contato@salacofre.com.br`
+- [x] **User-Agent com contato definido** — caixa de e-mail no domínio próprio (nunca criada; saiu do UA em 03/10)
 - [x] **`BaseToggle` implementado e deliberadamente desligado** — ligar `?base=` derruba
       `/`, `/uf/[sigla]` e `/uf/[sigla]/governador` de estático para dinâmico (54 páginas
       pré-renderizadas), porque `searchParams` força render dinâmico e o PPR segue
@@ -325,7 +325,7 @@ diria "Candidato 13 lidera".
 
 **Três defeitos graves encontrados de passagem:**
 
-1. 🔴 **O site público publicava resultados eleitorais inventados.** `salacofre.vercel.app` mostrava
+1. 🔴 **O site público publicava resultados eleitorais inventados.** `atlasmenna.online` mostrava
    "Candidato PT — 15.240.321 votos — 23,4% APURADO", três semanas antes do pleito: a home caía na
    fixture de teste **incondicionalmente**, e o comentário do código afirmava que em produção "a
    fixture nunca é lida". Corrigido (`593eb74`), com busca literal pelos números provando zero
@@ -732,9 +732,9 @@ in place, sem regressão de status.
 ### Bloqueantes antes de 15/09
 
 - [x] **Texto de contato do User-Agent definido** (05/09, decisão do usuário):
-      `SalaCofre/1.0 (+https://salacofre.com.br; contato: contato@salacofre.com.br)`
-      (`lib/tse/client.ts:60`). ⚠️ **A caixa `contato@salacofre.com.br` precisa existir e ser lida
-      antes de 15/09** — é por ela que o TSE avisaria de bloqueio de IP ou mudança de leiaute.
+      nome do produto, URL do domínio próprio e uma caixa de e-mail nele
+      (`lib/tse/client.ts:60`). ⚠️ **A caixa precisa existir e ser lida
+      antes de 15/09** (nunca chegou a existir; o e-mail saiu do UA em 03/10) — é por ela que o TSE avisaria de bloqueio de IP ou mudança de leiaute.
       Propagar para `pre-prod-checklist.md`, `runbook.md`, spec 001 e ADR-0020 (`spec-syncer`).
 - [ ] **`pnpm tse:watch --once` diariamente** — o monitor destaca em maiúsculas quando surgir
       eleição geral 2026 no `ele-c.json`. O `ele-c.json` de produção ainda está em `ele2024`.

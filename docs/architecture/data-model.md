@@ -11,7 +11,7 @@ source: PRD.md § 11
 
 ```sql
 -- Histórico de eleições GERAIS (Presidente + Governador) — 2018 e 2022.
--- NÃO inclui 2024 (pleito municipal: prefeito/vereador — fora do escopo do SalaCofre).
+-- NÃO inclui 2024 (pleito municipal: prefeito/vereador — fora do escopo do AtlasMenna).
 -- Se houver expansão futura para municipal, adicionar cargos 11 (Prefeito), 13 (Vereador) e ano 2020/2024.
 CREATE TABLE historical_results (
   id BIGSERIAL PRIMARY KEY,

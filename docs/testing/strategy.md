@@ -1,6 +1,6 @@
 ---
 title: Estratégia de Testes
-description: Pirâmide de testes do SalaCofre — unit, integração, e2e, replay, load, a11y, simulados TSE
+description: Pirâmide de testes do AtlasMenna — unit, integração, e2e, replay, load, a11y, simulados TSE
 status: stable
 source: PRD.md § 20
 ---

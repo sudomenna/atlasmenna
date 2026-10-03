@@ -598,7 +598,7 @@ existem (T-01, T-09, T-11 e as de UF), abaixo do parágrafo que já está lá.
    dispensa a função de desempate do RF-143 e elimina os 4 casos da Bahia.
 2. **A correção de User-Agent do ADR-0039 já está no working tree, não
    commitada, e não foi feita por esta spec.** `data-pipeline/_tse-common.ts:70`
-   traz `TSE_ETL_USER_AGENT = "SalaCofre-ETL/0.1"` com comentário medindo o WAF
+   traz `TSE_ETL_USER_AGENT = "AtlasMenna-ETL/0.1"` com comentário medindo o WAF
    em 13/09: a regra bloqueia UA com e-mail ou URL entre parênteses e aceita
    token de produto simples. O ADR-0039 chama a correção de "pré-requisito de
    implementação"; ela aparenta estar feita.

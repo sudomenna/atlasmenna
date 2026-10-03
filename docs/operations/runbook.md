@@ -37,7 +37,7 @@ Documento operacional com procedimentos para cenários críticos. Versão comple
 
 ```bash
 # Em navegador, após deploy:
-# 1. Abrir https://salacofre.com.br em incógnito
+# 1. Abrir https://atlasmenna.online em incógnito
 # 2. Confirmar que a página exibe "Aguardando o primeiro boletim…"
 # 3. **Não deve exibir resultado com votos reais** (ex: "PT 15.240.321 votos 43,5%")
 ```
@@ -292,7 +292,7 @@ contra o site publicado nada muda.
    vitest. E um número medido aqui é do SIMULADO, não do site: pesos de 26/09
    em `/` foram 391.710 B lendo produção e 510.219 B lendo a fixture.
 2. **Build local ≠ build da Vercel.** A referência continua sendo
-   `PLAYWRIGHT_BASE_URL=https://salacofre.vercel.app`. O cruzamento dá confiança:
+   `PLAYWRIGHT_BASE_URL=https://atlasmenna.online`. O cruzamento dá confiança:
    o chunk do MapLibre mediu **285,0 KiB** local contra **285,3 KiB** publicados
    em 18/09.
 
@@ -351,7 +351,7 @@ por isso o guarda falha antes, com o nome certo.
 
 ### Como recriar o banco do CI
 
-1. **Neon → Branches → New Branch**, no projeto do SalaCofre.
+1. **Neon → Branches → New Branch**, no projeto do AtlasMenna.
    - **Name**: `ci`
    - 🔴 **Auto-delete: Never.** O default da caixa de diálogo é *After 1 day*. Com o default,
      o CI volta a quebrar no dia seguinte — e **pior do que hoje**: em vez da mensagem
@@ -365,7 +365,7 @@ por isso o guarda falha antes, com o nome certo.
 
 ```bash
 gh auth switch --user sudomenna
-gh secret set DATABASE_URL_CI --repo sudomenna/salacofre
+gh secret set DATABASE_URL_CI --repo sudomenna/atlasmenna
 ```
 
 ### Por que a string COM pooling
@@ -423,7 +423,7 @@ faltar, `DATABASE_URL:` aparece **vazio** no ambiente do passo.
 | Rotular a projeção como **não oficial** | Art. 267 § 4º + constituição § 1 | Footer "Não oficial. Fonte: TSE." em toda superfície; a projeção precisa ser **inconfundível** com o resultado oficial. |
 | Buscar os arquivos **periodicamente**, conforme os padrões da Justiça Eleitoral | Art. 267 § 3º | Cron de 60 s (ADR-0011) dentro de `INGEST_WINDOW`, com rate limiter de saída. |
 | Infraestrutura de comunicação por conta da entidade | Art. 267 § 2º | Vercel + Neon; nenhuma dependência de recurso do TSE além do CDN público. |
-| Não majorar preço de serviço em razão dos dados do TSE | Art. 268 | SalaCofre é gratuito e público. |
+| Não majorar preço de serviço em razão dos dados do TSE | Art. 268 | AtlasMenna é gratuito e público. |
 | Distinguir **válidos / anulados / anulados sub judice** | **Schema do EA20** (`v.vvc = v.vv + v.van + v.vansj`) — ver ADR-0020, "Consequências" | Denominador de "% dos votos a votáveis" derivado de `vvc`, nunca de `v.tv`. ⚠️ ADR-0020 **não conseguiu confirmar** um parágrafo específico da resolução que imponha isso — trate como **requisito de schema**, não cite artigo. |
 | Presidente só a partir das **17h de Brasília** | Art. 265 § 1º | `INGEST_WINDOW` default `17-04`. |
 | Descumprir o capítulo → **perda de acesso** ao centro de dados | Art. 269 | É a razão de as invariantes técnicas abaixo serem invioláveis. |
@@ -435,19 +435,18 @@ faltar, `DATABASE_URL:` aparece **vazio** no ambiente do passo.
 - **Proibição absoluta de sondar URLs adivinhadas** contra `resultados.tse.jus.br` ou `resultados-sim.tse.jus.br` — ver a advertência em [Testes manuais de alerting](#testes-manuais-de-alerting-t21-spec-001).
 - **Envelope Zod em `.passthrough()`, nunca `.strict()`** — o TSE não anunciou freeze de leiaute.
 
-### User-Agent — decisão humana bloqueante antes de 15/09
+### User-Agent
 
-O UA atual (`lib/tse/client.ts:60`) é **honesto** mas **incompleto**:
+O UA atual (`lib/tse/client.ts`, constante `USER_AGENT`) é **honesto** e só identifica o produto e a URL pública:
 
 ```
-SalaCofre/1.0 (+https://salacofre.com.br; contato: pendente)
+AtlasMenna/1.0 (+https://atlasmenna.online)
 ```
 
-O valor anterior — `SalaCofre/1.0 (interessado-divulgacao-cadastrado)` — declarava um cadastro **inexistente** e foi removido; **nunca reintroduzir** menção a cadastro (ADR-0020). Falta o texto de contato (URL ou e-mail público verificável).
+O valor de maio — `AtlasMenna/1.0 (interessado-divulgacao-cadastrado)` — declarava um cadastro **inexistente** e foi removido; **nunca reintroduzir** menção a cadastro (ADR-0020). **Não há e-mail no UA desde 03/10**: a caixa de contato que constava antes nunca existiu (o domínio de então nunca teve registro MX), e declarar uma caixa que não recebe nada não é identificação verificável. Se uma caixa real for criada, ela volta ao UA — e o teste literal de `tests/unit/tse/client.test.ts` cai junto.
 
 - **Owner**: Tiago Menna (menna@outsiders.digital).
-- **Prazo**: antes da 1ª janela do simulado (**15/09**).
-- **Bloqueia**: `pre-prod-checklist.md`. Enquanto for `contato: pendente`, o header não cumpre o espírito do formato fixado no ADR-0020 (identificação verificável), ainda que já não seja falso.
+- Os importadores de dados abertos (`data-pipeline/_tse-common.ts`, `TSE_ETL_USER_AGENT`) usam `AtlasMenna-ETL/0.1`, sem URL nem e-mail: o WAF de `cdn.tse.jus.br`/`dadosabertos.tse.jus.br` bloqueia essa forma. O vigia (`scripts/tse-watch.ts`) usa `AtlasMenna-watch/1.0`.
 
 ### Triggers que invalidam esta seção
 
@@ -506,7 +505,7 @@ O valor anterior — `SalaCofre/1.0 (interessado-divulgacao-cadastrado)` — dec
 
 ### Forçar alerta de lag (`tse.lag_seconds > 60`)
 
-1. No preview Vercel, garantir env `SLACK_WEBHOOK_URL` apontando pra `#salacofre-ops` (ou canal de teste).
+1. No preview Vercel, garantir env `SLACK_WEBHOOK_URL` apontando pra `#atlasmenna-ops` (ou canal de teste).
 2. Setar `INGEST_WINDOW_OVERRIDE=true` e `CRON_ENABLED=true` no preview.
 3. Servir uma fixture com `dg/hg` 2 horas no passado (ex.: `dg="04/10/2026", hg="18:00:00"` num teste rodado às 20:00 BRT) — apontar `TSE_BASE_URL` para o mock local, ou seedar `snapshots` com `payload.dg/hg` antigos. **Formato de `dg` é `dd/mm/aaaa`** (EA20 § dicionário de dados); `ddMMyyyy` é legado tolerado por `calculateLagSeconds`, não o formato real.
 4. POST manual para `/api/ingest` com `x-cron-secret` correto:
@@ -514,7 +513,7 @@ O valor anterior — `SalaCofre/1.0 (interessado-divulgacao-cadastrado)` — dec
    curl -X POST -H "x-cron-secret: $CRON_SECRET" \
      https://<preview-url>/api/ingest
    ```
-5. Confirmar mensagem `[WARN] tse.lag_seconds > 60` em `#salacofre-ops`.
+5. Confirmar mensagem `[WARN] tse.lag_seconds > 60` em `#atlasmenna-ops`.
 
 ### Forçar alerta de erros (`>= 3 erros consecutivos`)
 
@@ -531,7 +530,7 @@ Sempre contra o **mock local**, nunca contra o TSE:
    INGEST_WINDOW_OVERRIDE=true TSE_MAX_RPS=10 pnpm dev
    curl -X POST localhost:3000/api/ingest -H "x-cron-secret: $CRON_SECRET"
    ```
-3. Confirmar mensagem `[ERROR] 3 erros consecutivos no ciclo` em `#salacofre-ops` (com `SLACK_WEBHOOK_URL` setada localmente) e os contadores `notFound` / `rateLimited` na resposta JSON.
+3. Confirmar mensagem `[ERROR] 3 erros consecutivos no ciclo` em `#atlasmenna-ops` (com `SLACK_WEBHOOK_URL` setada localmente) e os contadores `notFound` / `rateLimited` na resposta JSON.
 
 ### Não disparou?
 
@@ -702,13 +701,13 @@ Roda com `tsx` (mesmo motivo de `candidatos:import` acima). Saída esperada:
 O download dos arquivos usa `TSE_ETL_USER_AGENT` de `data-pipeline/_tse-common.ts:70`. Atualmente:
 
 ```
-SalaCofre-ETL/0.1
+AtlasMenna-ETL/0.1
 ```
 
 **Se a Akamai bloquear o download com 403**, adicionar o field de contato (atualmente pendente):
 
 ```
-SalaCofre-ETL/0.1 (contato: menna@outsiders.digital)
+AtlasMenna-ETL/0.1 (contato: menna@outsiders.digital)
 ```
 
 Mas primeiro **verifique se a URL de base está correta** (deve ser `https://cdn.tse.jus.br/`, não outro host).
@@ -1323,9 +1322,9 @@ isto é, para nós mesmos. **Um vigia que mora dentro do processo vigiado não �
 ### 🔴 Por que ele não bate na porta do site — medido em 18/09
 
 ```
-GET https://salacofre.vercel.app/               → HTTP 200 (HTML)
-GET https://salacofre.vercel.app/api/projection → HTTP 403 {"error":"bot_detected"}
-GET https://salacofre.vercel.app/api/health     → HTTP 403 {"error":"bot_detected"}
+GET https://atlasmenna.online/               → HTTP 200 (HTML)
+GET https://atlasmenna.online/api/projection → HTTP 403 {"error":"bot_detected"}
+GET https://atlasmenna.online/api/health     → HTTP 403 {"error":"bot_detected"}
 ```
 
 O Vercel BotID trata qualquer cliente automatizado como robô: **todas as rotas `/api/*` estão
@@ -1641,8 +1640,8 @@ granularidade `zona`, que é exatamente o que o Passo 0 precisa confirmar contra
 ### Variante A — armar e publicar (rehearsal completo)
 
 Exercita a cadeia inteira, incluindo a publicação. **O site público mostra os números do
-simulado durante a janela.** Fato atenuante medido em 19/09: `salacofre.com.br` não resolve
-(`docs/reference/risks.md`), então o único endereço no ar é `salacofre.vercel.app`.
+simulado durante a janela.** Fato atenuante medido em 19/09: o domínio próprio de então (`.com.br`) não resolvia
+(`docs/reference/risks.md`), então o único endereço no ar era o `.vercel.app`.
 
 ```bash
 printf 'https://resultados-sim.tse.jus.br/simulado/simulado2026' | vercel env add TSE_BASE_URL production
@@ -1792,7 +1791,7 @@ O que faz (`scripts/tse-watch.ts`):
 3. Compara com `build/tse-watch/state.json` (`--state` para trocar) e imprime o diff.
 4. **Quando surgir uma eleição com `t=1|2` e nome contendo "2026", o alerta sai em MAIÚSCULAS** — `ELEIÇÃO GERAL 2026 DETECTADA`. É esse o sinal que destrava `TSE_COD_ELEICAO`.
 
-Exit codes: `0` sem mudança · `2` com mudança · `1` erro. UA próprio, `SalaCofre-watch/1.0`, sem alegação de cadastro. Não precisa de Postgres. **Nunca sonda URL adivinhada** — só os 10 alvos acima.
+Exit codes: `0` sem mudança · `2` com mudança · `1` erro. UA próprio, `AtlasMenna-watch/1.0`, sem alegação de cadastro. Não precisa de Postgres. **Nunca sonda URL adivinhada** — só os 10 alvos acima.
 
 > Em 05/09 o `ele-c.json` de produção ainda está em `ele2024`. Rodar `--once` **diariamente** até o TSE publicar; se nada aparecer até **~12/09**, abrir chamado em `30308800.tse.jus.br` (descrição começando com `Resultados - Divulgação`).
 

@@ -38,7 +38,7 @@ Aprender com o 1T e ajustar o que for necessário pra o 2T. Sem feature nova; s�
 - [ ] Dataset oficial do 1T 2026 carregado em `historical_results` (turno 1, ano 2026)
 - [ ] Replay do pipeline contra dados reais do 1T — comparar com o que foi servido em real-time
 - [ ] Recalibração modelo se necessário (delegar a `model-validator`)
-- [ ] Sweep do Slack `#salacofre-ops` por aprendizados
+- [ ] Sweep do Slack `#atlasmenna-ops` por aprendizados
 - [ ] Atualizar runbook com aprendizados (incidentes encontrados, novas heurísticas)
 - [ ] Comunicado público: "como nos saímos no 1T" (LinkedIn/X) — insumo OP-4
 

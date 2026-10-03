@@ -24,7 +24,7 @@ specs_planned_next: [002-modelo-estatistico]
 
 ## Chores fora de spec
 
-- [ ] Setup do canal Slack `#salacofre-ops` + webhook
+- [ ] Setup do canal Slack `#atlasmenna-ops` + webhook
 - [ ] Cron Vercel configurado em `vercel.ts` (apenas preview ativo nesta sprint; produção desabilitada via `CRON_ENABLED=false`)
 - [ ] Fixtures TSE 2022 reais baixadas pra `tests/fixtures/tse/2022/`
 - [ ] Atualizar [docs/operations/dashboard-status.md](../operations/dashboard-status.md) com URLs reais quando `/_status` existir (parcial — dashboard completo é S07)

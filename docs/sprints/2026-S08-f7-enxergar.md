@@ -263,7 +263,7 @@ aplicadas reprovaria todos, e é por isso que a conferência existe e é ruidosa
       🔴 **Nunca apontar para produção.** É o banco que vai guardar a apuração de 04/10, e
       o CI roda a cada push.
 - [ ] **Cadastrar o segredo `DATABASE_URL_CI`** em *Settings → Secrets and variables →
-      Actions* do repositório `sudomenna/salacofre` — **do dono**. O nome é exato; o
+      Actions* do repositório `sudomenna/atlasmenna` — **do dono**. O nome é exato; o
       workflow lê `secrets.DATABASE_URL_CI` em dois passos.
 - [ ] Conferir que o job `test` fecha verde inteiro, com os 10 arquivos saindo da lista de
       falha de coleta.

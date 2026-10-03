@@ -23,7 +23,7 @@ Alternativa simpler: feature flag manual via env var `MAINTENANCE_MODE=true` con
 
 ```
 <h1>Estamos voltando logo</h1>
-<p>O SalaCofre está temporariamente indisponível.</p>
+<p>O AtlasMenna está temporariamente indisponível.</p>
 <p>Enquanto isso, você pode acompanhar a apuração diretamente em:</p>
 <a href="https://resultados.tse.jus.br">resultados.tse.jus.br</a>
 ```

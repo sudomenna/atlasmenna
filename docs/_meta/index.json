@@ -1,7 +1,7 @@
 {
-  "$schema": "https://salacofre.com.br/docs-index.schema.json",
-  "name": "SalaCofre Docs Index",
-  "description": "Índice machine-readable da documentação SDD do SalaCofre. Carregar este arquivo dá a um agente o mapa completo das specs, NFRs, ADRs e fontes canônicas.",
+  "$schema": "https://atlasmenna.online/docs-index.schema.json",
+  "name": "AtlasMenna Docs Index",
+  "description": "Índice machine-readable da documentação SDD do AtlasMenna. Carregar este arquivo dá a um agente o mapa completo das specs, NFRs, ADRs e fontes canônicas.",
   "version": "1.0",
   "last_updated": "2026-09-21",
   "source_prd": "docs/PRD.md",

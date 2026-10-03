@@ -1,6 +1,6 @@
 ---
 name: spec-syncer
-description: Mantém consistência entre os artefatos da documentação SDD do SalaCofre — `docs/specs/<NNN>/spec.md`, `design.md`, `tasks.md`, `docs/_meta/traceability.md`, `docs/_meta/index.json`, `docs/README.md`, `docs/design-system/components.md` e CLAUDE.md. Use proativamente sempre que qualquer um desses for editado, criado ou marcado como `shipped`. Também use quando uma novo RF for adicionado, um RF for renumerado, uma spec mudar de status, ou um componente for renomeado. Valida cross-refs, frontmatter, cobertura e propaga mudanças.
+description: Mantém consistência entre os artefatos da documentação SDD do AtlasMenna — `docs/specs/<NNN>/spec.md`, `design.md`, `tasks.md`, `docs/_meta/traceability.md`, `docs/_meta/index.json`, `docs/README.md`, `docs/design-system/components.md` e CLAUDE.md. Use proativamente sempre que qualquer um desses for editado, criado ou marcado como `shipped`. Também use quando uma novo RF for adicionado, um RF for renumerado, uma spec mudar de status, ou um componente for renomeado. Valida cross-refs, frontmatter, cobertura e propaga mudanças.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: haiku
 ---

@@ -8,7 +8,7 @@ source: tse_docs/txt/apresentacao-interessados-2026.txt (fonte primária); ADR-0
 # Regulamentação
 
 > **Reescrito em 2026-09-05.** A versão anterior desta página (redigida em 2026-05-17) afirmava que a
-> resolução de 2026 estava "a ser publicada", que o TSE abandonaria o leiaute EA20 e que o SalaCofre
+> resolução de 2026 estava "a ser publicada", que o TSE abandonaria o leiaute EA20 e que o AtlasMenna
 > precisaria de cadastro prévio aprovado. **As três afirmações eram falsas.** A correção e a apuração dos
 > fatos estão em [ADR-0020](../architecture/adrs/0020-conformidade-res-23751-2026.md).
 
@@ -19,11 +19,11 @@ A norma que rege a divulgação de resultados por terceiros no pleito 2026 é a 
 "Da Divulgação dos Resultados" — artigos 264 a 269**
 (`tse_docs/txt/apresentacao-interessados-2026.txt:22-26`).
 
-| Pleito | Resolução TSE | Aplicabilidade ao SalaCofre |
+| Pleito | Resolução TSE | Aplicabilidade ao AtlasMenna |
 |---|---|---|
 | Eleição Geral 2022 | Res. 23.673/2021 | Referência histórica. Sem efeito. |
 | Eleição Municipal 2024 | Res. 23.736/2024 | **Não rege este pleito.** Não é mais referência de práticas — foi a analogia com esta resolução que produziu as premissas falsas de maio/2026. |
-| **Eleição Geral 2026** | **Res. TSE nº 23.751/2026, arts. 264–269** | **Rege o SalaCofre em produção.** Publicada. |
+| **Eleição Geral 2026** | **Res. TSE nº 23.751/2026, arts. 264–269** | **Rege o AtlasMenna em produção.** Publicada. |
 
 ### Artigos confirmados
 
@@ -51,7 +51,7 @@ localizável. Não citar "art. 265 §2º" como base para isso — esse parágraf
 
 ## 2. Não existe cadastro prévio
 
-**O SalaCofre não precisa se cadastrar, credenciar ou homologar junto ao TSE, porque a Res. 23.751/2026 não
+**O AtlasMenna não precisa se cadastrar, credenciar ou homologar junto ao TSE, porque a Res. 23.751/2026 não
 prevê nenhum desses procedimentos.**
 
 O material oficial descreve as entidades que consomem os dados como "entidades interessadas na divulgação dos
@@ -64,7 +64,7 @@ têm **zero ocorrências** no material oficial.
 Consequências operacionais:
 
 - O `User-Agent` enviado ao CDN do TSE **não pode declarar cadastro** (`lib/tse/client.ts`, constante
-  `USER_AGENT`). O valor antigo — `SalaCofre/1.0 (interessado-divulgacao-cadastrado)` — afirmava um status
+  `USER_AGENT`). O valor antigo — `AtlasMenna/1.0 (interessado-divulgacao-cadastrado)` — afirmava um status
   inexistente. O formato correto identifica projeto, URL pública e contato verificável, sem menção a cadastro.
 - Não há prazo administrativo a monitorar, nem aprovação a esperar. O risco "Cadastro TSE atrasado" está
   **fechado** ([risks.md](./risks.md)).
@@ -87,14 +87,14 @@ JSON). O diff campo-a-campo contra a implementação está em
 Não existe plano de refactor "EA20 → JSON" e não há audiência pendente: a audiência técnica **já ocorreu**
 (julho/2026) e seu material é a fonte primária citada nesta página.
 
-## 4. Obrigações que recaem sobre o SalaCofre
+## 4. Obrigações que recaem sobre o AtlasMenna
 
-| Obrigação | Base | Como o SalaCofre cumpre |
+| Obrigação | Base | Como o AtlasMenna cumpre |
 |---|---|---|
 | Estabelecer infraestrutura própria de comunicação com o centro de dados | Art. 267 §2º | Cliente HTTP próprio em `lib/tse/`; nenhuma dependência de intermediário |
 | Buscar os arquivos periodicamente, conforme os padrões da Justiça Eleitoral | Art. 267 §3º | Cron de ingestão com cadência e janela configuráveis; nomes de arquivo derivados da padronização documentada |
 | **Não alterar o conteúdo dos dados distribuídos** | Art. 267 §4º | `snapshots.payload` guarda o envelope EA20 **cru e inalterado**; projeção é registro derivado, nunca gravado sobre o oficial (constituição §§ 1 e 10) |
-| Não majorar preço de serviços em razão dos dados do TSE | Art. 268 | SalaCofre é público e gratuito; não há serviço precificado |
+| Não majorar preço de serviços em razão dos dados do TSE | Art. 268 | AtlasMenna é público e gratuito; não há serviço precificado |
 | Não descumprir as exigências do capítulo, sob pena de bloqueio/desconexão | Art. 269 | Rate limiter, retry honrando `Retry-After` e proibição de sondagem são invariantes de engenharia (§ 5) |
 | Rotular a projeção como não oficial | Art. 267 §4º + constituição § 1 | Footer "Não oficial. Fonte: TSE." em toda página, com link para `resultados.tse.jus.br`; tooltips e legendas atribuem fonte (TSE, IBGE) |
 
@@ -124,11 +124,11 @@ Invariantes de engenharia que decorrem disso (formalizados em
    ([tse-2026-leiautes.md](./tse-2026-leiautes.md) § 1) ou de alvo confirmado por EA11/EA14/EA15. Para
    exercitar caminhos de erro, usar o CDN falso local (`scripts/tse-mock-server.ts`, `pnpm tse:mock`).
 4. **Envelope Zod em `.passthrough()`, nunca `.strict()`** (`lib/tse/ea20-schema.ts`) — não há freeze de
-   leiaute anunciado; o schema valida os campos que o SalaCofre consome e tolera campos desconhecidos sem
+   leiaute anunciado; o schema valida os campos que o AtlasMenna consome e tolera campos desconhecidos sem
    rejeitar o arquivo inteiro.
 
 **Não confirmado**: se respostas **304 (Not Modified)** contam para o limite de 100 req/s. A fonte primária não
-trata de cache condicional. O SalaCofre trata como se contassem (posição conservadora) — ver risco aberto em
+trata de cache condicional. O AtlasMenna trata como se contassem (posição conservadora) — ver risco aberto em
 [risks.md](./risks.md).
 
 ## 6. Simulados e parâmetros oficiais
@@ -150,7 +150,7 @@ Protocolo operacional dos simulados: [../testing/tse-simulados.md](../testing/ts
 
 ## 7. LGPD (Lei 13.709/2018)
 
-Tratamento de dados pessoais **não se aplica** — o SalaCofre não coleta, armazena nem processa PII por design
+Tratamento de dados pessoais **não se aplica** — o AtlasMenna não coleta, armazena nem processa PII por design
 (constituição § 5). Analytics são agregadas e anonimizadas; cookies são apenas técnicos, sem tracking de
 terceiros. Os dados consumidos do TSE são resultados agregados de urna, não dados pessoais de eleitores.
 

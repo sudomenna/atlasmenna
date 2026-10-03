@@ -127,7 +127,7 @@ pnpm vigia:ciclo      # vigia externo: o ciclo está vivo?  0=ok · 2=parado · 
 pnpm alerta:teste     # manda um alarme de teste SEM encostar no CDN do TSE
 ```
 
-E `.claude/launch.json` ganhou `salacofre-dev-sim` (modo simulação no navegador).
+E `.claude/launch.json` ganhou `atlasmenna-dev-sim` (modo simulação no navegador).
 
 ---
 
@@ -279,7 +279,7 @@ Todos estão nas mensagens de commit, com o número medido. Os quatro que mais e
 ## 9. Prompt de retomada
 
 ```
-Retomando o SalaCofre. Leia primeiro `docs/_meta/handoff-2026-09-18-fechamento-s07.md`
+Retomando o AtlasMenna. Leia primeiro `docs/_meta/handoff-2026-09-18-fechamento-s07.md`
 — ele supersede o de 18/09 e tem o estado, as armadilhas medidas e o que falta.
 
 🔴 PRIMEIRA COISA: o trabalho da sessão anterior NÃO foi empurrado.

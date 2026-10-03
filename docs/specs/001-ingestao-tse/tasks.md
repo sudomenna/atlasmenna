@@ -24,7 +24,7 @@ closed: 2026-05-17
 ## Decisões fechadas (resolvendo as Open Questions originais)
 
 - **D-1 (ex-OQ-1) Cadência: 60s via Vercel Cron nativo.** Não self-loop. Implicações: (a) RF-002 muda de "a cada 15s" para "a cada 60s"; (b) RNF-006 muda defasagem TSE→tela de <30s para <90s (60s polling + ~10s processamento + ~10s propagação Edge Config + margem). Renegociação formal via **ADR-0011** (`adr-author` antes de T09). Spec.md e design.md também são atualizados (T-pre-coding abaixo).
-- ~~**D-2 (ex-OQ-2) User-Agent**: manter `SalaCofre/1.0 (interessado-divulgacao-cadastrado)` como placeholder. Revisado no T22 quando resolução TSE 2026 for publicada.~~ **REVERTIDA (2026-09-05)**: aquele User-Agent declarava ao TSE um cadastro **que nunca existiu** — afirmação falsa. Substituído por `SalaCofre/1.0 (+<url>; <contato>)` (RF-010.6, ADR-0020, `lib/tse/client.ts:60`). Falta só o texto do contato (decisão humana).
+- ~~**D-2 (ex-OQ-2) User-Agent**: manter `AtlasMenna/1.0 (interessado-divulgacao-cadastrado)` como placeholder. Revisado no T22 quando resolução TSE 2026 for publicada.~~ **REVERTIDA (2026-09-05)**: aquele User-Agent declarava ao TSE um cadastro **que nunca existiu** — afirmação falsa. Substituído por `AtlasMenna/1.0 (+<url>; <contato>)` (RF-010.6, ADR-0020, `lib/tse/client.ts:60`). Falta só o texto do contato (decisão humana).
 - **D-3 (ex-OQ-3) Raw EA20**: **só Postgres** nesta sprint. JSONB completo na coluna `snapshots.payload`. Dual write para Blob fica como chore S03 se custo de armazenamento couber. Backlog atualizado.
 - **D-4 (ex-OQ-4) Whitelist preview**: SP × cargo 1 (Presidente) × ~500 zonas (~500 GETs/ciclo). Configurada via `TSE_TARGETS_WHITELIST=SP:1` env var no preview. Produção lê todas as zonas × cargos ativos da `zonas`.
 
@@ -78,7 +78,7 @@ closed: 2026-05-17
 - [x] **T04 — `fetchEA20()` com If-None-Match**
   - Cria `lib/tse/client.ts` com `fetchEA20(opts: { url, etag? }): Promise<{ kind: 'fresh'; data: EA20; etag: string|null; hash: string } | { kind: 'not_modified' } | { kind: 'not_found' }>`.
   - `If-None-Match` enviado se `etag` presente; `Accept-Encoding: gzip`; `AbortSignal.timeout(5000)`.
-  - User-Agent: `SalaCofre/1.0 (interessado-divulgacao-cadastrado)` (placeholder até OQ-2 / RF-010).
+  - User-Agent: `AtlasMenna/1.0 (interessado-divulgacao-cadastrado)` (placeholder até OQ-2 / RF-010).
   - SHA256 do body via `crypto.subtle.digest` (Web Crypto, runtime-agnóstico).
   - Trata 304 → `not_modified`; 404 → `not_found`; outros 4xx/5xx → throw `TSEError`.
   - Cobre: **RF-001, RF-003**.
@@ -227,7 +227,7 @@ closed: 2026-05-17
   - Estimado: 1.5h.
 
 - [x] **T21 — Teste manual: forçar alerta Slack**
-  - Em preview, com `SLACK_WEBHOOK_URL` setado, injetar fixture com `dg/hg` antigo → confirmar mensagem em `#salacofre-ops`.
+  - Em preview, com `SLACK_WEBHOOK_URL` setado, injetar fixture com `dg/hg` antigo → confirmar mensagem em `#atlasmenna-ops`.
   - Documentar passo em `docs/operations/runbook.md` (seção "TSE indisponível").
   - Cobre: DoD sprint S02.
   - Estimado: 0.5h.
@@ -236,7 +236,7 @@ closed: 2026-05-17
 
 - [~] **T22 — ~~Checklist RF-010 e watch regulatório~~ — OBSOLETA (2026-09-05)**
   - ~~**NÃO é código** — entrada em `docs/operations/runbook.md` (seção "Conformidade TSE"):~~
-    - ~~User-Agent atual: `SalaCofre/1.0 (interessado-divulgacao-cadastrado)`.~~
+    - ~~User-Agent atual: `AtlasMenna/1.0 (interessado-divulgacao-cadastrado)`.~~
     - ~~Status cadastro TSE: **pendente** (resolução 2026 não publicada).~~
     - ~~Owner: usuário (Tiago).~~
     - ~~Watch: revisar `docs/reference/regulatory.md` semanalmente.~~

@@ -13,7 +13,7 @@ Aceito.
 
 ## Contexto
 
-Entre 04/10/2026 (D1) e 25/10/2026 (D2), o site SalaCofre transiciona do 1º turno presidencial para o 2º. Durante o 2T, a pergunta central do leitor é binária ("A vs B, quem ganha?"), mas há uma pergunta secundária imediata, persistente durante os ~21 dias da janela e particularmente densa no dia D2 em si: "como foi que A e B chegaram aqui?". Em corridas hipotéticas (Lula 36% × Bolsonaro 31% × Tarcísio 22% × demais) o leitor que chega na home pela primeira vez em 25/10 não tem o contexto do 1T memorizado — e a constituição § 8 (transparência total) exige que o site não exiba números do 2T como se tivessem nascido do nada.
+Entre 04/10/2026 (D1) e 25/10/2026 (D2), o site AtlasMenna transiciona do 1º turno presidencial para o 2º. Durante o 2T, a pergunta central do leitor é binária ("A vs B, quem ganha?"), mas há uma pergunta secundária imediata, persistente durante os ~21 dias da janela e particularmente densa no dia D2 em si: "como foi que A e B chegaram aqui?". Em corridas hipotéticas (Lula 36% × Bolsonaro 31% × Tarcísio 22% × demais) o leitor que chega na home pela primeira vez em 25/10 não tem o contexto do 1T memorizado — e a constituição § 8 (transparência total) exige que o site não exiba números do 2T como se tivessem nascido do nada.
 
 Três alternativas de UX foram consideradas para apresentar o recap do 1T no 2T:
 

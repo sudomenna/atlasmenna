@@ -14,7 +14,7 @@ source: PRD.md § 23.5
 > descrevia um requisito **inverificável** e foi removido. Fundamento: [ADR-0020](../architecture/adrs/0020-conformidade-res-23751-2026.md).
 > Os itens abaixo são as obrigações que **de fato** existem.
 
-- [x] **User-Agent com contato definido** — ✅ **FEITO em 05/09**, conferido no disco em 18/09. `lib/tse/client.ts:61-62` hoje é `SalaCofre/1.0 (+https://salacofre.com.br; contato: contato@salacofre.com.br)` — `contato: pendente` não existe mais no arquivo, e o docstring registra a troca em `client.ts:57`. Sem menção a cadastro (a Res. 23.751/2026 não prevê nenhum). ⚠️ **O que continua sendo obrigação humana**: a caixa `contato@salacofre.com.br` precisa estar **ativa e ser lida** — é por ela que o TSE avisaria de bloqueio de IP ou de mudança de leiaute durante os simulados e no dia D.
+- [x] **User-Agent com contato definido** — ✅ **FEITO em 05/09**, conferido no disco em 18/09. `lib/tse/client.ts` hoje é `AtlasMenna/1.0 (+https://atlasmenna.online)` (03/10) — `contato: pendente` não existe mais no arquivo. 🔴 **Desde 03/10 o UA não leva e-mail**: a caixa que constava nele nunca existiu (domínio sem registro MX). Sem menção a cadastro (a Res. 23.751/2026 não prevê nenhum). ⚠️ **Consequência**: não há caixa pela qual o TSE avisaria de bloqueio de IP ou de mudança de leiaute; se o dono criar uma, ela volta ao UA (decisão do dono).
 - [ ] **Tetos de rps calibrados no simulado** — os valores de `rpsMax` em `lib/config/cargos.ts` (25 / 25 / 25 / 5, agregado 80) são estimativa de segurança, não medição. ⚠️ Em produção `TSE_MAX_RPS` fica **ausente**: é override global e anularia o teto por cargo. Valor final vem das janelas de 15–17/09 e 22–24/09 (ver [tse-simulados.md](../testing/tse-simulados.md)), com `rateLimited == 0` em ciclo completo.
 - [ ] **Os DOIS códigos de eleição de produção configurados** — `TSE_COD_ELEICAO_FEDERAL` e `TSE_COD_ELEICAO_ESTADUAL`, formato `ele2026/<n>` cada, obtidos do `ele-c.json` de produção ou de comunicado oficial. ⚠️ **Corrigido em 18/09**: este item pedia uma variável só, `TSE_COD_ELEICAO` — o [ADR-0044](../architecture/adrs/0044-codigo-eleicao-por-cargo.md) (17/09) a substituiu por duas, porque o pleito 2026 tem duas eleições paralelas (Federal = Presidente; Estadual = Gov/Sen/Dep). Uma **não supre** a outra: setar só a federal faz os três cargos estaduais lançarem (`lib/tse/targets.ts:339-346`). A `TSE_COD_ELEICAO` única sobrevive apenas como fallback legado. **Continua em aberto**: a última leitura da vigia (`build/tse-watch/state.json`, 18/09 02h29 BRT) ainda reporta `ciclo: "ele2024"`; o TSE publica em 03/10. Os códigos do **simulado** (21270/21272) **não** valem para produção. **Jamais adivinhar** — URL malformada pode bloquear o IP por 10 min.
 - [ ] **`pnpm tse:watch` rodando externamente** (cron fora da Vercel, diário) até 04/10 — detecta publicação dos códigos de 2026 e mudança em qualquer dos 9 leiautes.
@@ -39,7 +39,7 @@ source: PRD.md § 23.5
 - [ ] Rolling Release configurado com canary 10% inicial
 - [ ] OG images dinâmicas testadas em WhatsApp/X/Threads
 - [ ] Página de manutenção testada
-- [ ] DNS preparado (salacofre.com.br + .com)
+- [ ] DNS preparado (atlasmenna.online)
 - [ ] Backup do Postgres configurado (Neon snapshot)
 - [ ] Plano de comunicação pré-D (post Linkedin/X anunciando)
 

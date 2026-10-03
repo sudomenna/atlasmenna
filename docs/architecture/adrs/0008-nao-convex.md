@@ -15,7 +15,7 @@ Aceito.
 
 Convex é uma plataforma de dados reativa que oferece sync automático via WebSocket. Atraente para apps colaborativos em tempo real.
 
-Para SalaCofre o caso é diferente: **broadcast read-heavy**. Todos os 20k clientes leem o mesmo payload pequeno, atualizado a cada 15s. Não há colaboração, não há writes por cliente.
+Para AtlasMenna o caso é diferente: **broadcast read-heavy**. Todos os 20k clientes leem o mesmo payload pequeno, atualizado a cada 15s. Não há colaboração, não há writes por cliente.
 
 WebSocket por cliente seria anti-padrão (ver ADR-0002).
 

@@ -70,7 +70,7 @@ Ver [spec 012](../012-dashboard-status/spec.md).
 
 **RF-057 — Alertas Slack/email se lag >60s**
 
-WHILE a janela de apuração está ativa, IF `tse.lag_seconds > 60`, the system SHALL postar alerta em `#salacofre-ops`.
+WHILE a janela de apuração está ativa, IF `tse.lag_seconds > 60`, the system SHALL postar alerta em `#atlasmenna-ops`.
 
 **RF-058 — Modo manutenção amigável**
 

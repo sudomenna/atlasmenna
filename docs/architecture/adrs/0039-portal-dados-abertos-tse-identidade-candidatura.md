@@ -70,7 +70,7 @@ nota de rodapé:
    `HEAD` não estivesse bloqueado.
 3. **Bloqueio de User-Agent na Akamai.** `cdn.tse.jus.br` e `dadosabertos.tse.jus.br` devolvem
    **403** para o User-Agent que `data-pipeline/_tse-common.ts:70` já usa em produção
-   (`"SalaCofre-ETL/0.1 (+menna@outsiders.digital)"`); sem header de UA (ou com UA genérico de
+   (`"AtlasMenna-ETL/0.1 (+menna@outsiders.digital)"`); sem header de UA (ou com UA genérico de
    navegador) os mesmos hosts devolvem 200/206. `curl` devolve 403 em qualquer configuração de
    UA testada — fingerprint de TLS, não de UA — então um 403 via `curl` **não prova** que o
    recurso saiu do ar; só prova que `curl` não passa. `resultados.tse.jus.br` (host da ingestão

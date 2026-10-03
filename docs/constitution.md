@@ -1,12 +1,12 @@
 ---
-title: SalaCofre — Constituição do Produto
+title: AtlasMenna — Constituição do Produto
 description: Princípios não-negociáveis que governam toda decisão de produto, design e engenharia
 status: stable
 version: 1.6
 last_updated: 2026-09-29
 ---
 
-# Constituição do SalaCofre
+# Constituição do AtlasMenna
 
 Estes princípios são **invariantes**. Toda spec, ADR, PR ou decisão de produto precisa respeitá-los. Mudar um princípio exige justificativa explícita registrada em ADR + atualização desta constituição com versionamento (não silenciosamente).
 
@@ -16,7 +16,7 @@ Estes princípios são **invariantes**. Toda spec, ADR, PR ou decisão de produt
 
 A norma vigente é a **Resolução TSE nº 23.751/2026**, que trata da divulgação de resultados por terceiros no **Título III, Capítulo VI, artigos 264 a 269**. Ela está **publicada**. A Res. 23.736/2024 não rege este pleito e não é mais referência normativa.
 
-- **Não existe cadastro prévio.** A Res. 23.751/2026 não institui inscrição, credenciamento nem homologação de "interessado na divulgação"; o termo é descritivo, não um status administrativo. O SalaCofre opera sem cadastro, e **nenhuma superfície do produto — a começar pelo `User-Agent` enviado ao TSE — pode declarar um cadastro, credenciamento ou autorização que não existe.** Identificação honesta (nome do projeto, URL pública, contato verificável) é obrigatória; afirmação de status inexistente é proibida.
+- **Não existe cadastro prévio.** A Res. 23.751/2026 não institui inscrição, credenciamento nem homologação de "interessado na divulgação"; o termo é descritivo, não um status administrativo. O AtlasMenna opera sem cadastro, e **nenhuma superfície do produto — a começar pelo `User-Agent` enviado ao TSE — pode declarar um cadastro, credenciamento ou autorização que não existe.** Identificação honesta (nome do projeto, URL pública, contato verificável) é obrigatória; afirmação de status inexistente é proibida.
 - **O dado oficial é intocável.** O art. 267 §4º veda às entidades que divulgam resultados promover qualquer alteração de conteúdo dos dados distribuídos pela Justiça Eleitoral. Em consequência, o snapshot bruto recebido do TSE é persistido **cru e inalterado**, e nenhuma transformação do produto pode ser gravada sobre o registro do dado oficial.
 - **A projeção é conteúdo derivado e precisa ser inconfundível com o oficial.** Projeção estatística, intervalo de confiança e probabilidades não são resultado do TSE; toda superfície onde aparecem deve rotulá-las como não oficiais, de forma que nenhum leitor razoável as confunda com apuração. Esta é uma obrigação regulatória (art. 267 §4º), não apenas editorial.
 - **Os limites técnicos do CDN do TSE são invariantes de engenharia, não recomendações.** O TSE documenta máximo de 100 requisições por IP por segundo, com bloqueio de 10 minutos renovável; adverte que requisição malformada (404) também pode gerar bloqueio; e declara que **não é possível listar os arquivos**. Daí decorrem três invariantes: (a) **rate limiter de saída obrigatório**, com teto configurado bem abaixo do limite documentado; (b) **proibição absoluta de sondar URL adivinhada** contra `resultados.tse.jus.br` ou `resultados-sim.tse.jus.br` — toda URL requisitada deve derivar da padronização documentada ou de arquivo de acompanhamento; (c) **schema tolerante a campos desconhecidos** (`.passthrough()`, nunca `.strict()`), porque o TSE não anunciou freeze de leiaute.
@@ -28,7 +28,7 @@ A norma vigente é a **Resolução TSE nº 23.751/2026**, que trata da divulgaç
 
 ## 2. Neutralidade política
 
-- Cores partidárias seguem uma **paleta editorial própria do SalaCofre** — uma cor por partido/federação, documentada com hex exato em `docs/design-system/tokens.md` — **nunca** as cores oficiais de partido. Toda cor de partido deve ter **ΔE76 ≥ 10** em relação ao hex oficial documentado do partido (manual de marca ou uso reiterado em material oficial), critério auditável e verificável por qualquer agente ou revisor. A cor de cada partido é **estável durante toda a noite de apuração** e entre as duas noites do pleito (1º e 2º turnos): não muda por rank, por ordem de apuração, por margem ou por qualquer evento da corrida — apenas a **intensidade** (claro↔saturado) pode variar com a margem projetada, nunca a matiz.
+- Cores partidárias seguem uma **paleta editorial própria do AtlasMenna** — uma cor por partido/federação, documentada com hex exato em `docs/design-system/tokens.md` — **nunca** as cores oficiais de partido. Toda cor de partido deve ter **ΔE76 ≥ 10** em relação ao hex oficial documentado do partido (manual de marca ou uso reiterado em material oficial), critério auditável e verificável por qualquer agente ou revisor. A cor de cada partido é **estável durante toda a noite de apuração** e entre as duas noites do pleito (1º e 2º turnos): não muda por rank, por ordem de apuração, por margem ou por qualquer evento da corrida — apenas a **intensidade** (claro↔saturado) pode variar com a margem projetada, nunca a matiz.
 - Nomes de candidatos e siglas partidárias aparecem **sempre na mesma ordem** dentro de uma mesma corrida sempre que essa ordem for escolhida pelo produto — por nome, por partido, por simpatia editorial ou por qualquer critério de desempate decidido sem input do leitor (sem favorecimento por ordem de leitura). **Exceção expressa**: quando a tela oferece um controle explícito, visível e reversível a um clique para o leitor alternar entre bases de apuração de voto (ex.: "Parcial" e "Projeção"), a ordem PODE acompanhar a base selecionada pelo próprio leitor — a invariante protege contra o produto decidindo a ordem por quem lê, não contra o leitor decidindo por si mesmo. Essa exceção só vale quando, cumulativamente: **(a)** a métrica que ordena é sempre uma métrica de voto — nunca nome, partido ou juízo de valor; **(b)** a mesma derivação de base rege, na mesma tela, ordem, cor e qualquer destaque correlacionado, sem duas fontes de verdade discordando sobre quem lidera; **(c)** dado ausente na base selecionada nunca produz um zero fabricado que desloque um candidato — a ordem cai inteira para a base com dado completo. Fora dessa exceção — sem controle de base ativa, como a fase pré-eleição ou uma lista de identidade de candidatura sem contagem de voto —, a ordem permanece fixa e não pode ser escolhida pelo produto.
 - Insights gerados por templates **não emitem julgamento** ("Lula consolida vitória" é OK; "vitória esmagadora" não é).
 - Quando há ambiguidade na atribuição de bloco político 2022→2026, exibir disclaimer explícito.

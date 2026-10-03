@@ -20,7 +20,7 @@ não é feita por este documento.
 ## Contexto
 
 A constituição § 2 v1.3 (fixada pelo ADR-0024) mede uma coisa: **ΔE76 ≥ 10 entre a cor editorial
-do SalaCofre e o hex oficial daquele partido** — a distância até a marca que a cor representa. É a
+do AtlasMenna e o hex oficial daquele partido** — a distância até a marca que a cor representa. É a
 pergunta "isto não é a cor do PT". Nunca foi medida a pergunta simétrica — "isto não é a cor do
 PSTU **também**" — porque nada no § 2, no ADR-0024 ou no processo de entrega do kit exigia comparar
 os 31 tokens de partido **entre si**. O kit Atlas Menna (`docs/design-system/atlas-menna/tokens/
@@ -251,7 +251,7 @@ nada:
 
 > ## 2. Neutralidade política
 >
-> - Cores partidárias seguem uma **paleta editorial própria do SalaCofre** — uma cor por
+> - Cores partidárias seguem uma **paleta editorial própria do AtlasMenna** — uma cor por
 >   partido/federação, documentada com hex exato em `docs/design-system/tokens.md` — **nunca** as
 >   cores oficiais de partido. Toda cor de partido deve ter **ΔE76 ≥ 10** em relação ao hex oficial
 >   documentado do partido (manual de marca ou uso reiterado em material oficial), critério

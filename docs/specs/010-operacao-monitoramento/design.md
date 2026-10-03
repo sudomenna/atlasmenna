@@ -22,7 +22,7 @@ Coletadas via `console.log` JSON estruturado + Vercel Logs:
 
 ## Alertas Slack
 
-Webhook em `lib/alerts/slack.ts` posta em `#salacofre-ops`. Trigger via try/catch dos handlers ou rotina periódica.
+Webhook em `lib/alerts/slack.ts` posta em `#atlasmenna-ops`. Trigger via try/catch dos handlers ou rotina periódica.
 
 ## Rolling Releases
 
