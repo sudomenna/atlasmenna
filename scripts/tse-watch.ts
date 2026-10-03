@@ -57,7 +57,7 @@
 //
 // Entre requisições: `await sleep(250)` fixo (≤ 10 requisições no total —
 // 1 GET + 9 HEAD — não precisa do rate limiter do pipeline de ingest).
-// User-Agent honesto: "SalaCofre-watch/1.0" (RF-010 / conformidade — nenhuma
+// User-Agent honesto: "AtlasMenna-watch/1.0" (RF-010 / conformidade — nenhuma
 // alegação de cadastro).
 
 import { createHash } from "node:crypto";
@@ -79,7 +79,7 @@ const DEFAULT_TARGETS_PATH = resolve(REPO_ROOT, "scripts/tse-watch.targets.json"
 const DEFAULT_STATE_PATH = resolve(REPO_ROOT, "build/tse-watch/state.json");
 const DEFAULT_INTERVAL_SEC = 300;
 
-const USER_AGENT = "SalaCofre-watch/1.0";
+const USER_AGENT = "AtlasMenna-watch/1.0";
 const FETCH_TIMEOUT_MS = 8_000;
 const SLEEP_BETWEEN_REQUESTS_MS = 250;
 

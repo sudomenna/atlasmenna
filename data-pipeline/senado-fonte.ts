@@ -46,7 +46,7 @@ export const SENADO_BASE = "https://legis.senado.leg.br/dadosabertos/";
  * e-mail nem URL entre parênteses — a forma que o WAF do TSE aceita e que não
  * custa nada repetir aqui.
  */
-export const SENADO_USER_AGENT = "SalaCofre-ETL/0.1";
+export const SENADO_USER_AGENT = "AtlasMenna-ETL/0.1";
 
 /** Espaço mínimo entre duas chamadas: o limite oficial é 10 req/s; usamos ~1,6. */
 export const INTERVALO_MINIMO_MS = 600;

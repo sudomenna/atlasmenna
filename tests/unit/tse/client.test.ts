@@ -392,14 +392,12 @@ describe("fetchEA20 — User-Agent + Accept headers", () => {
     // 2026-09-05 — User-Agent revisado: NÃO declara cadastro (não existe —
     // Res. TSE 23.751/2026 não prevê cadastro prévio de "interessado").
     //
-    // 🔴 2026-09-19 — a URL virou `salacofre.vercel.app`, PROVISORIAMENTE: o
-    // domínio próprio ainda não foi apontado e não responde, e o ADR-0020 exige
-    // URL **verificável**. Esta asserção é literal de propósito: quando o
-    // domínio entrar no ar, ela cai e obriga quem reverter a olhar o docstring
-    // de `USER_AGENT`, que explica o porquê dos dois lados da troca.
-    expect(headers?.["User-Agent"]).toBe(
-      "SalaCofre/1.0 (+https://salacofre.vercel.app; contato: contato@salacofre.com.br)",
-    );
+    // 2026-10-03 — domínio próprio `atlasmenna.online` e SEM e-mail: a caixa
+    // de contato declarada antes nunca existiu (sem registro MX). O ADR-0020
+    // exige identificação **verificável**. Esta asserção é literal de
+    // propósito: qualquer troca de URL ou volta de um contato cai aqui e obriga
+    // quem mexer a olhar o docstring de `USER_AGENT`, que explica o porquê.
+    expect(headers?.["User-Agent"]).toBe("AtlasMenna/1.0 (+https://atlasmenna.online)");
   });
 
   it("always sends Accept: application/json", async () => {

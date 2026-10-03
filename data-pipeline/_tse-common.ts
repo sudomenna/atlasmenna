@@ -47,19 +47,21 @@ export function getPool(): Pool {
  * ⚠️ Medido em 2026-09-13: o WAF (Akamai) de `cdn.tse.jus.br` e
  * `dadosabertos.tse.jus.br` devolve **403** para qualquer User-Agent que
  * carregue e-mail ou URL de contato. O valor anterior —
- * `"SalaCofre-ETL/0.1 (+menna@outsiders.digital)"` — era bloqueado, e com ele
+ * `"AtlasMenna-ETL/0.1 (+menna@outsiders.digital)"` — era bloqueado, e com ele
  * `historical-import`, `eleitorado-import` e `zonas-import` falhariam contra o
  * TSE. O defeito ficava escondido pelo cache local e pelo fallback de fixture.
  *
  * A regra do WAF é sobre a FORMA, não sobre o nome: bloqueia qualquer UA com
- * e-mail ou URL entre parênteses (`"SalaCofre/0.1 (+https://salacofre.com.br)"`,
- * `"SalaCofre/0.1 contato@…"`) e também `"curl/8.7.1"`. Aceita token de produto
- * simples (`"SalaCofre-ETL/0.1"`, `"SalaCofre/0.1"`) e ausência de header.
+ * e-mail ou URL entre parênteses (`"AtlasMenna/0.1 (+https://atlasmenna.online)"`,
+ * `"AtlasMenna/0.1 contato@…"`) e também `"curl/8.7.1"`. Aceita token de produto
+ * simples (`"AtlasMenna-ETL/0.1"`, `"AtlasMenna/0.1"`) e ausência de header.
  *
  * Mantemos um identificador — a constituição § 1 pede que o cliente seja
  * reconhecível pelo TSE — mas o contato **não cabe aqui**. Passar-se por
- * navegador resolveria o 403 e seria desonesto; não é opção. O canal de
- * contato é `contato@salacofre.com.br`, documentado no runbook.
+ * navegador resolveria o 403 e seria desonesto; não é opção. Não há caixa de
+ * contato a declarar: a que constava antes nunca existiu (sem registro MX), e
+ * desde 2026-10-03 nenhum User-Agent do projeto leva e-mail (ver o docstring de
+ * `USER_AGENT` em `lib/tse/client.ts`).
  *
  * `resultados.tse.jus.br` (ingestão EA20, dia D) **não** aplica esta regra —
  * é outra propriedade Akamai, e `lib/tse/client.ts` não é afetado. Não
@@ -67,7 +69,7 @@ export function getPool(): Pool {
  *
  * Cross-refs: ADR-0038, docs/operations/runbook.md.
  */
-export const TSE_ETL_USER_AGENT = "SalaCofre-ETL/0.1";
+export const TSE_ETL_USER_AGENT = "AtlasMenna-ETL/0.1";
 
 /**
  * Baixa uma URL para o diretório de cache se ainda não existir.

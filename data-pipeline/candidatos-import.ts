@@ -30,7 +30,7 @@
 //     do catálogo. `DT_GERACAO`/`HH_GERACAO` dentro do CSV servem de
 //     conferência cruzada (12/09 19:31:30 BRT ↔ Last-Modified 22:35 GMT).
 //  3. **O WAF da Akamai bloqueia User-Agent com e-mail ou URL.** Usamos
-//     `TSE_ETL_USER_AGENT` de `_tse-common.ts` — hoje `"SalaCofre-ETL/0.1"`.
+//     `TSE_ETL_USER_AGENT` de `_tse-common.ts` — hoje `"AtlasMenna-ETL/0.1"`.
 //     Não "melhorar" acrescentando contato: volta a dar 403, e o módulo é
 //     compartilhado com três outros importadores.
 //

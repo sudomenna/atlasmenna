@@ -57,7 +57,7 @@ export const MAX_EM_EXERCICIO = 513;
 export const MIN_DEPUTADOS_HISTORICO = 7000;
 
 /** Mesmo identificador sem contato do ETL do TSE (ver `_tse-common.ts`). */
-const USER_AGENT = "SalaCofre-ETL/0.1";
+const USER_AGENT = "AtlasMenna-ETL/0.1";
 
 export interface OpcoesFonteCamara {
   dir?: string;

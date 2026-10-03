@@ -55,17 +55,10 @@
 
 import { readFile } from "node:fs/promises";
 import { derivarPares, type EA12Par, parseEA12 } from "../lib/tse/ea12-schema.ts";
-import { getPool } from "./_tse-common.ts";
+import { getPool, TSE_ETL_USER_AGENT } from "./_tse-common.ts";
 
 const BATCH_SIZE = 500;
 const ANO_ELEITORADO = 2026;
-
-/**
- * Mantido em sincronia manual com `USER_AGENT` em `lib/tse/client.ts`.
- * Não dá pra importar de lá: `node --experimental-strip-types` não resolve os
- * imports sem extensão que existem dentro de `lib/tse/`.
- */
-const USER_AGENT = "SalaCofre/1.0 (+https://salacofre.com.br; contato: contato@salacofre.com.br)";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tipos
@@ -186,7 +179,7 @@ function parseCli(argv: string[]): Cli {
 async function lerEa12(ref: string): Promise<unknown> {
   if (/^https?:\/\//i.test(ref)) {
     console.log(`  [ea12] GET ${ref}`);
-    const res = await fetch(ref, { headers: { "User-Agent": USER_AGENT } });
+    const res = await fetch(ref, { headers: { "User-Agent": TSE_ETL_USER_AGENT } });
     if (!res.ok) {
       throw new Error(`HTTP ${res.status} ${res.statusText} ao buscar EA12 em ${ref}`);
     }

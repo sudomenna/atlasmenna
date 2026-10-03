@@ -55,33 +55,31 @@ export type FetchEA20Result =
  * continua sendo boa prática de transparência (constituição § 1) mesmo sem
  * exigência formal do TSE.
  *
- * 2026-09-05 — contato definido pelo usuário: `contato@salacofre.com.br`.
- * A caixa precisa estar ativa e ser lida: é por ela que o TSE avisaria de
- * bloqueio de IP ou de mudança de leiaute durante os simulados e no dia D.
+ * 2026-09-05 — o dono definiu como contato uma caixa de e-mail no domínio
+ * próprio de então. 🔴 **Essa caixa nunca existiu**: o domínio nunca teve
+ * registro **MX**, então nenhum aviso do TSE (bloqueio de IP, mudança de
+ * leiaute) teria chegado a alguém por ela.
  *
- * 🔴 **2026-09-19 — a URL passou a ser `salacofre.vercel.app`, por decisão do
- * dono, e isso é PROVISÓRIO.**
+ * 2026-09-19 — a URL passou a ser o endereço `.vercel.app` do projeto, por
+ * decisão do dono: o domínio próprio de então nunca foi apontado (medido em
+ * 19/09, o `curl` estourava 25s e o DNS resolvia para `189.125.92.230`, que não
+ * é endereço da Vercel). O ADR-0020 exige "URL pública e contato
+ * **verificável**" — e uma URL que não responde não é verificável. Declarar um
+ * endereço morto a uma autoridade eleitoral é a mesma classe de problema que o
+ * `interessado-divulgacao-cadastrado` de antes: uma afirmação que não se
+ * sustenta se alguém for conferir.
  *
- * `salacofre.com.br` ainda não foi apontado: medido em 19/09, o `curl` estoura
- * 25s e o DNS resolve para `189.125.92.230`, que não é endereço da Vercel. O
- * ADR-0020 exige "URL pública e contato **verificável**" — e uma URL que não
- * responde não é verificável. Declarar um endereço morto a uma autoridade
- * eleitoral é a mesma classe de problema que o `interessado-divulgacao-cadastrado`
- * de antes: uma afirmação que não se sustenta se alguém for conferir.
+ * 2026-10-03 — domínio próprio `atlasmenna.online`, e **o User-Agent deixou de
+ * levar e-mail**: ficaram só o nome do produto e a URL pública. Declarar uma
+ * caixa que não recebe nada é tão inverificável quanto declarar um endereço
+ * que não abre. Medido em 03/10 contra todos os hosts que o projeto consulta:
+ * a resposta com o User-Agent novo é byte a byte igual à do anterior.
  *
- * Entre um endereço bonito que não abre e um feio que abre, o ADR pede o
- * segundo. Reverter é trocar esta string de volta quando o domínio estiver no
- * ar — e o teste de `client.test.ts` cai junto, de propósito.
- *
- * ⚠️ **O CONTATO CONTINUA NÃO VERIFICÁVEL, e isso NÃO foi resolvido aqui.**
- * `contato@salacofre.com.br` depende do mesmo domínio e exige registro **MX**
- * separado — que não vem junto com o apontamento do site. Pelo parágrafo acima,
- * é por esta caixa que o TSE avisaria de bloqueio de IP durante o simulado ou no
- * dia D. **Hoje esse aviso não chegaria a ninguém.** Decisão pendente do dono;
- * registrado em `docs/reference/risks.md` (2ª linha de Riscos ativos).
+ * ⚠️ **Não há canal de contato declarado ao TSE por este cabeçalho.** Se uma
+ * caixa real for criada, ela volta aqui — e o teste literal de
+ * `client.test.ts` cai junto, de propósito, obrigando a conferir este docstring.
  */
-export const USER_AGENT =
-  "SalaCofre/1.0 (+https://salacofre.vercel.app; contato: contato@salacofre.com.br)";
+export const USER_AGENT = "AtlasMenna/1.0 (+https://atlasmenna.online)";
 
 /** Fetch timeout in milliseconds. Documented in design.md § Tratamento de falhas. */
 const FETCH_TIMEOUT_MS = 5_000;
