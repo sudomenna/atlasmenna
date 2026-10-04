@@ -1,0 +1,84 @@
+/*
+ * components/atoms/charts/SerieBaseAlternavel.module.css
+ *
+ * Spec 020, RF-172 (emenda de 2026-10-04) — a chave "Apuração | Projeção"
+ * própria do gráfico da evolução da apuração.
+ *
+ * A alternância é por CASCATA, como era a do shell: o `<svg>` do servidor traz
+ * os dois grupos (`data-serie-only="parcial"` e `="proj"`), e o atributo
+ * `data-serie-base` do invólucro decide qual aparece. O JS só troca uma string.
+ *
+ * Por que `data-serie-only` e não o `data-view-only` de `app/globals.css`:
+ * decisão do dono de 04/10 — esta chave é INDEPENDENTE da do topo. Com o
+ * atributo antigo, o seletor do shell continuaria escondendo um dos grupos e as
+ * duas chaves brigariam pelo mesmo traço.
+ *
+ * O desenho dos botões é o da chave "Ordenar por" do RF-295
+ * (`components/blocks/StrongholdsPanel.module.css`): mesmo trilho, mesmo piso de
+ * toque (`--tap-min` no toque, 32px a partir de 960px), mesmo par inverso
+ * quando ligado.
+ *
+ * Modo `pure` de CSS Modules: toda regra carrega ao menos uma classe local.
+ */
+
+.raiz[data-serie-base="parcial"] [data-serie-only="proj"],
+.raiz[data-serie-base="proj"] [data-serie-only="parcial"] {
+  display: none;
+}
+
+/* Reset do `<fieldset>`: sem ele, borda, padding e o `min-width: min-content`
+ * do UA impediriam a fileira de caber na coluna de 400px. */
+.chave {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.segmentos {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-pill);
+}
+
+.segmento {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-primary);
+  font: var(--type-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.segmento:hover {
+  background: var(--surface-sunken);
+}
+
+.segmento.segmentoOn,
+.segmento.segmentoOn:hover {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+
+@media (min-width: 960px) {
+  .segmento {
+    min-height: 32px;
+  }
+}

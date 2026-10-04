@@ -218,6 +218,12 @@ e o payload já carrega os dois separadamente (`candidato_id`/rank de um lado, `
 > a cor vem. O custo (oito tokens mais pálidos no tema escuro, sem que contraste exigisse) está
 > medido e registrado no ADR-0047.
 
+> ⚠️ **Emenda de 2026-10-04 (decisão do dono): o gráfico ganhou chave própria.** A alternância
+> apurado/projetado deixou de ser do `ViewModeSwitch` do shell: o widget tem uma chave
+> "Apuração | Projeção" independente (`SerieBaseAlternavel.tsx`, abre em Apuração), e os grupos
+> passaram de `data-view-only` para `data-serie-only`. O formato da série, o teto e a régua única
+> não mudam. Detalhe no RF-172 da spec 020.
+
 ## Consequência de produto, registrada explicitamente
 
 Com D4, a candidatura que cai do top-4 desaparece do gráfico **inclusive do seu próprio passado**, e

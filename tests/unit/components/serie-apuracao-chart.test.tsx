@@ -20,6 +20,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
+import { act } from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -28,6 +30,7 @@ import {
   type SerieApuracaoChartProps,
   type SerieCandidatoView,
 } from "@/components/atoms/charts/SerieApuracaoChart";
+import { SERIE_BASE_INICIAL } from "@/components/atoms/charts/SerieBaseAlternavel";
 
 const ALTURA = 220;
 
@@ -179,9 +182,12 @@ describe("<SerieApuracaoChart /> — T1: mata a troca de apurado por projetado",
   });
 
   it("as duas bases são renderizadas no servidor, cada uma no seu grupo de visão", () => {
-    // RF-172: a alternância é da cascata `data-view-only`, não de JS.
-    expect(doc.querySelector('g[data-view-only="parcial"]')).not.toBeNull();
-    expect(doc.querySelector('g[data-view-only="proj"]')).not.toBeNull();
+    // RF-172 (emenda de 04/10): a alternância é da chave própria do gráfico,
+    // pelo atributo `data-serie-only` — e NÃO pelo `data-view-only` do shell,
+    // que faria o seletor do topo continuar escondendo uma das bases.
+    expect(doc.querySelector('g[data-serie-only="parcial"]')).not.toBeNull();
+    expect(doc.querySelector('g[data-serie-only="proj"]')).not.toBeNull();
+    expect(doc.querySelector("svg [data-view-only]")).toBeNull();
   });
 });
 
@@ -739,7 +745,7 @@ describe("<SerieApuracaoChart /> — RF-176: a tabela acessível", () => {
  * escreveria `"use client"` no gráfico: escreveriam num utilitário que ele
  * importa, três arquivos abaixo, sem relacionar uma coisa à outra.
  */
-describe("<SerieApuracaoChart /> — RF-172(b)(c): a promessa de 0 B", () => {
+describe("<SerieApuracaoChart /> — RF-172(b)(c): a fronteira de cliente é só a chave", () => {
   const RAIZ = path.join(process.cwd(), "components/atoms/charts/SerieApuracaoChart.tsx");
 
   /** Resolve `@/x/y` para o arquivo em disco, testando as extensões usadas aqui. */
@@ -774,7 +780,15 @@ describe("<SerieApuracaoChart /> — RF-172(b)(c): a promessa de 0 B", () => {
     return [...vistos];
   }
 
-  it('(b) nenhum módulo da árvore do gráfico declara "use client"', () => {
+  /**
+   * Emenda de 2026-10-04: o dono pediu uma chave "Apuração | Projeção" dentro
+   * do gráfico, independente da do topo. A promessa deixou de ser "0 B" e
+   * passou a ser "só a chave": a ÚNICA fronteira de cliente da árvore é
+   * `SerieBaseAlternavel.tsx`, e o desenho continua todo no servidor.
+   */
+  const CHAVE = path.join(process.cwd(), "components/atoms/charts/SerieBaseAlternavel.tsx");
+
+  it('(b) o único módulo da árvore do gráfico com "use client" é a chave', () => {
     const modulos = arvore();
 
     // Guarda do instrumento: se a travessia devolvesse só a raiz, ela passaria
@@ -791,8 +805,8 @@ describe("<SerieApuracaoChart /> — RF-172(b)(c): a promessa de 0 B", () => {
     );
     expect(
       comUseClient.map((f) => path.relative(process.cwd(), f)),
-      'um "use client" nesta árvore quebra a promessa de 0 B do RF-172(b)',
-    ).toEqual([]);
+      'um "use client" fora da chave arrasta o desenho do gráfico para o pacote do navegador',
+    ).toEqual([path.relative(process.cwd(), CHAVE)]);
   });
 
   /**
@@ -815,9 +829,7 @@ describe("<SerieApuracaoChart /> — RF-172(b)(c): a promessa de 0 B", () => {
     { estado: "ok", props: {} },
   ];
 
-  it.each(
-    ESTADOS,
-  )("(c) estado $estado renderiza sem controle próprio — nem <button>, nem <input>, nem <select>", ({
+  it.each(ESTADOS)("(c) estado $estado: botões só os dois da chave, e só no estado ok", ({
     estado,
     props,
   }) => {
@@ -843,9 +855,20 @@ describe("<SerieApuracaoChart /> — RF-172(b)(c): a promessa de 0 B", () => {
     expect(marcado, `esperava cair no ramo ${estado}`).toContain(`data-estado="${estado}"`);
     expect(marcado.length).toBeGreaterThan(200);
 
-    expect(marcado).not.toContain("<button");
     expect(marcado).not.toContain("<input");
     expect(marcado).not.toContain("<select");
+
+    const doc = new DOMParser().parseFromString(marcado, "text/html");
+    const botoes = [...doc.querySelectorAll("button")];
+    if (estado === "ok") {
+      expect(botoes.map((b) => b.textContent)).toEqual(["Apuração", "Projeção"]);
+      for (const b of botoes) expect(b.closest('[data-testid="serie-base-chave"]')).not.toBeNull();
+    } else {
+      // Sem série não há o que alternar; no "antes do dia" a palavra
+      // "projeção" é proibida (RF-174).
+      expect(botoes).toHaveLength(0);
+      expect(doc.querySelector('[data-testid="serie-base-chave"]')).toBeNull();
+    }
   });
 
   it("(c) o módulo não tem handler de evento em lugar nenhum", () => {
@@ -1144,5 +1167,101 @@ describe("<SerieApuracaoChart /> — G8: mata a regressão silenciosa do `height
     const { largura, altura } = caixa(doc);
     // 480/260 = 1,85. O default antigo dava 480/220 = 2,18 — reprova.
     expect(largura / altura).toBeLessThan(2.0);
+  });
+});
+
+/**
+ * RF-172, emenda de 2026-10-04 — a chave "Apuração | Projeção" do gráfico.
+ *
+ * Montada de verdade (`createRoot` + `act`, happy-dom), como a chave do RF-295
+ * em `StrongholdsPanel.test.tsx`: `renderToStaticMarkup` descarta o handler e
+ * não provaria o clique.
+ *
+ * Mutações que matam: (M1) abrir em Projeção; (M2) o clique não trocar o
+ * atributo; (M3) o grupo voltar a `data-view-only` — o seletor do topo
+ * continuaria mandando e a chave não esconderia nada; (M4) a regra de CSS
+ * esconder a base errada.
+ */
+// biome-ignore lint/suspicious/noExplicitAny: flag global do React para `act` fora de um runner de testes de React
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+
+describe("<SerieApuracaoChart /> — RF-172: a chave própria do gráfico", () => {
+  function montar(): { container: HTMLDivElement; root: Root } {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => {
+      root.render(
+        <SerieApuracaoChart
+          eixo={eixoDe(4)}
+          cadenciaMin={5}
+          candidatos={[
+            cand({ id: 13, apurado: [10, 20, 30, 40], projetado: [40, 33, 31, 30] }),
+            cand({ id: 22, apurado: [40, 33, 31, 30], projetado: [10, 20, 30, 40] }),
+          ]}
+          escopo="Brasil"
+          titleId="chave"
+          height={ALTURA}
+        />,
+      );
+    });
+    return { container, root };
+  }
+
+  function botao(container: HTMLElement, base: "parcial" | "proj"): HTMLButtonElement {
+    const b = container.querySelector<HTMLButtonElement>(
+      `[data-testid="serie-base-botao"][data-base="${base}"]`,
+    );
+    if (!b) throw new Error(`botão ${base} ausente`);
+    return b;
+  }
+
+  it("(M1) abre em Apuração", () => {
+    const { container, root } = montar();
+    const alvo = container.querySelector("[data-serie-base]");
+    expect(alvo?.getAttribute("data-serie-base")).toBe("parcial");
+    expect(SERIE_BASE_INICIAL).toBe("parcial");
+    expect(botao(container, "parcial").getAttribute("aria-pressed")).toBe("true");
+    expect(botao(container, "proj").getAttribute("aria-pressed")).toBe("false");
+    act(() => root.unmount());
+  });
+
+  it("(M2) clicar em Projeção troca a base, e voltar desfaz", () => {
+    const { container, root } = montar();
+    const alvo = () => container.querySelector("[data-serie-base]");
+
+    act(() => botao(container, "proj").click());
+    expect(alvo()?.getAttribute("data-serie-base")).toBe("proj");
+    expect(botao(container, "proj").getAttribute("aria-pressed")).toBe("true");
+    expect(botao(container, "parcial").getAttribute("aria-pressed")).toBe("false");
+
+    act(() => botao(container, "parcial").click());
+    expect(alvo()?.getAttribute("data-serie-base")).toBe("parcial");
+    act(() => root.unmount());
+  });
+
+  it("(M3) o svg fica DENTRO do alvo, os dois grupos seguem no DOM, e aria-controls aponta para ele", () => {
+    const { container, root } = montar();
+    const alvo = container.querySelector("[data-serie-base]");
+    expect(alvo?.querySelector('svg g[data-serie-only="parcial"]')).not.toBeNull();
+    expect(alvo?.querySelector('svg g[data-serie-only="proj"]')).not.toBeNull();
+    expect(botao(container, "proj").getAttribute("aria-controls")).toBe(alvo?.id);
+    // A tabela acessível (RF-176) fica FORA do alvo: as duas bases continuam
+    // legíveis por leitor de tela em qualquer posição da chave.
+    expect(alvo?.querySelector('[data-testid="serie-apuracao-tabela"]')).toBeNull();
+    act(() => root.unmount());
+  });
+
+  it("(M4) o CSS esconde a base OPOSTA à escolhida, e só pelo atributo próprio", () => {
+    const css = readFileSync(
+      path.join(process.cwd(), "components/atoms/charts/SerieBaseAlternavel.module.css"),
+      "utf-8",
+    ).replace(/\/\*[\s\S]*?\*\//g, "");
+    const regra = css.match(/([^{}]+)\{\s*display:\s*none;?\s*\}/);
+    const seletores = (regra?.[1] ?? "").split(",").map((x) => x.replace(/\s+/g, " ").trim());
+    expect(seletores).toEqual([
+      '.raiz[data-serie-base="parcial"] [data-serie-only="proj"]',
+      '.raiz[data-serie-base="proj"] [data-serie-only="parcial"]',
+    ]);
   });
 });

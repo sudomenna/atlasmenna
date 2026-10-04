@@ -50,10 +50,14 @@
  *    zero (RF-175b). Zero é um resultado; ausência de medição não é
  *    (`docs/reference/risks.md`, "três estados e não-regressão").
  *
- * 5. **Sem controle próprio** (RF-172). As duas bases saem em
- *    `<g data-view-only="parcial">` e `<g data-view-only="proj">`; quem alterna
- *    é o `<ViewModeSwitch>` do shell, pela cascata que já existe em
- *    `app/globals.css`. O componente não tem `<input>`, `<button>` nem estado.
+ * 5. **Chave própria, independente do topo** (RF-172, emenda de 2026-10-04).
+ *    As duas bases saem em `<g data-serie-only="parcial">` e
+ *    `<g data-serie-only="proj">`; quem alterna é o `<SerieBaseAlternavel>`
+ *    (client, só no estado "ok"), que abre em Apuração. Até 04/10 era o
+ *    `<ViewModeSwitch>` do shell, pela cascata `data-view-only`; o dono pediu um
+ *    seletor dentro do gráfico e decidiu que ele só muda o gráfico — por isso o
+ *    atributo mudou de nome, para a cascata do shell não alcançá-lo. ESTE módulo
+ *    continua Server Component: não tem `<input>`, `<button>` nem estado.
  *
  * ## Por que `display:none` aqui não viola o ADR-0017
  *
@@ -84,6 +88,7 @@
 
 import type { CSSProperties } from "react";
 
+import { SerieBaseAlternavel } from "@/components/atoms/charts/SerieBaseAlternavel";
 import { makeTimeScale, verticalScale } from "@/components/atoms/charts/scale";
 import { formatPercent, formatTimeHMS } from "@/lib/utils/format";
 import { textForParty } from "@/lib/utils/party-color";
@@ -834,7 +839,7 @@ export function SerieApuracaoChart({
    */
   const emVaga = destacaVagas ? candidatos.slice(0, 2) : [];
 
-  /** Um grupo por base. A cascata de `data-view-only` escolhe qual aparece. */
+  /** Um grupo por base. A chave `<SerieBaseAlternavel>` escolhe qual aparece. */
   function grupoDaBase(base: Base) {
     // `candidatos[1]` é opcional sob `noUncheckedIndexedAccess`: uma corrida de
     // 2 vagas com uma só candidatura medida não tem 2ª colocada, e portanto não
@@ -844,7 +849,7 @@ export function SerieApuracaoChart({
       destacaVagas && segundaColocada ? ultimoMedido(serieDaBase(segundaColocada, base)) : null;
 
     return (
-      <g data-view-only={base === "parcial" ? "parcial" : "proj"} data-base={base}>
+      <g data-serie-only={base === "parcial" ? "parcial" : "proj"} data-base={base}>
         {/* Régua da 2ª vaga (RF-173): a linha de corte do Senado, na altura da
             2ª colocada DAQUELA base. Uma régua por base porque o corte é um
             dado, e o dado muda entre apurado e projetado. */}
@@ -918,56 +923,61 @@ export function SerieApuracaoChart({
       aria-labelledby={titleId}
       style={MOLDURA}
     >
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="xMidYMid meet"
-        className="block h-auto w-full"
-        role="img"
-        aria-labelledby={`${titleId} ${descId}`}
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <title id={titleId}>{`Evolução da apuração — ${escopo}`}</title>
-        <desc id={descId}>
-          Fatia de votos de {candidatos.length}{" "}
-          {candidatos.length === 1 ? "candidatura" : "candidaturas"} entre {horaInicio} e {horaFim},
-          em duas bases: o que já foi apurado e a projeção do modelo. Os mesmos números estão na
-          tabela logo abaixo, instante a instante.
-        </desc>
+      {/* RF-172, emenda de 2026-10-04 — a chave própria do gráfico, só neste
+          estado: nos outros não há série para alternar, e no "antes do dia" a
+          palavra "projeção" é proibida (RF-174). */}
+      <SerieBaseAlternavel>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          className="block h-auto w-full"
+          role="img"
+          aria-labelledby={`${titleId} ${descId}`}
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <title id={titleId}>{`Evolução da apuração — ${escopo}`}</title>
+          <desc id={descId}>
+            Fatia de votos de {candidatos.length}{" "}
+            {candidatos.length === 1 ? "candidatura" : "candidaturas"} entre {horaInicio} e{" "}
+            {horaFim}, em duas bases: o que já foi apurado e a projeção do modelo. Os mesmos números
+            estão na tabela logo abaixo, instante a instante.
+          </desc>
 
-        <Eixos width={width} yBase={yBase} />
+          <Eixos width={width} yBase={yBase} />
 
-        {/* A régua vertical, FORA dos grupos de base: é a régua compartilhada,
+          {/* A régua vertical, FORA dos grupos de base: é a régua compartilhada,
             e mantê-la aqui torna estruturalmente impossível que as duas visões
             anunciem escalas diferentes (RF-172d).
 
             Desenhada ANTES dos grupos de base de propósito: em SVG a ordem do
             documento é a ordem de pintura, e a gridline tem de passar por baixo
             do traço da candidatura, nunca por cima dele. */}
-        <ReguaVertical width={width} yMin={yMin} yMax={yMax} yFor={yFor} />
+          <ReguaVertical width={width} yMin={yMin} yMax={yMax} yFor={yFor} />
 
-        <text
-          x={SERIE_PAD_LEFT}
-          y={height - 6}
-          fontSize="10"
-          fontFamily="var(--font-sans)"
-          fill={ROTULO_FILL}
-        >
-          {horaInicio}
-        </text>
-        <text
-          x={width - SERIE_PAD_RIGHT}
-          y={height - 6}
-          textAnchor="end"
-          fontSize="10"
-          fontFamily="var(--font-sans)"
-          fill={ROTULO_FILL}
-        >
-          {horaFim}
-        </text>
+          <text
+            x={SERIE_PAD_LEFT}
+            y={height - 6}
+            fontSize="10"
+            fontFamily="var(--font-sans)"
+            fill={ROTULO_FILL}
+          >
+            {horaInicio}
+          </text>
+          <text
+            x={width - SERIE_PAD_RIGHT}
+            y={height - 6}
+            textAnchor="end"
+            fontSize="10"
+            fontFamily="var(--font-sans)"
+            fill={ROTULO_FILL}
+          >
+            {horaFim}
+          </text>
 
-        {grupoDaBase("parcial")}
-        {grupoDaBase("proj")}
-      </svg>
+          {grupoDaBase("parcial")}
+          {grupoDaBase("proj")}
+        </svg>
+      </SerieBaseAlternavel>
 
       {/* RF-176 — a tabela. Uma só, com as duas bases lado a lado. */}
       {/* 🔴 **A `sr-only` vai no DIV, nunca na `<table>`** (2026-09-19).

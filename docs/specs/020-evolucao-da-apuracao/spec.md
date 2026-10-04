@@ -20,8 +20,9 @@ ship_blocked_on: []
 **Rotas novas**: nenhuma.
 **Superfícies emendadas**: `/`, `/uf/[sigla]`, `/uf/[sigla]/governador`, `/uf/[sigla]/senador`.
 **Mecanismo**: uma série por candidatura publicada em forma colunar com teto de
-pontos, um componente SVG sem lib de charting, e a cascata `data-view-only` que
-já existe para alternar entre apurado e projetado.
+pontos, um componente SVG sem lib de charting, e — desde a emenda de 2026-10-04
+ao RF-172 — uma chave "Apuração | Projeção" própria do gráfico, independente do
+seletor do topo.
 **Decisão**: [ADR-0046](../../architecture/adrs/0046-serie-por-candidato-limitada-por-construcao.md).
 
 ## Status
@@ -254,18 +255,32 @@ superfícies de cada um**.
 
 ### Apresentação
 
-**RF-172 — As duas visões alternam pelo controle que já existe**
+**RF-172 — As duas visões alternam por uma chave própria do gráfico**
 
-WHERE o leitor alterna entre apurado e projetado, the system SHALL renderizar as
-duas séries no servidor sob `data-view-only="parcial"` e `data-view-only="proj"`,
-deixando o `<ViewModeSwitch>` do shell e a cascata de `app/globals.css`
-resolverem a alternância, e SHALL NOT introduzir controle próprio.
+> **Emenda de 2026-10-04 (decisão do dono, dia da eleição).** A redação original
+> proibia controle próprio e entregava a alternância ao `<ViewModeSwitch>` do
+> shell (cascata `data-view-only`). O dono pediu um seletor DENTRO do gráfico, e
+> decidiu que ele é **independente** do seletor do topo: o leitor pode ter o
+> placar em Parcial e o gráfico em Projeção ao mesmo tempo. A promessa de 0 B de
+> JS caiu; o desenho continua todo no servidor.
 
-*Aceitação:* (a) o HTML do servidor contém os dois grupos; (b) o widget adiciona
-**0 B** ao bundle de aplicação medido por `tests/e2e/perf-budget.spec.ts`;
-(c) não há `<input>`, `<button>` nem `"use client"` no módulo do gráfico; (d) o
-eixo vertical é **idêntico** nas duas visões — alternar não move nenhuma linha
-por mudança de escala, que seria uma mentira gráfica produzida a cada clique.
+WHERE o gráfico tem série para desenhar (estado "ok"), the system SHALL renderizar
+as duas séries no servidor sob `data-serie-only="parcial"` e
+`data-serie-only="proj"`, e SHALL oferecer uma chave "Apuração | Projeção"
+(`components/atoms/charts/SerieBaseAlternavel.tsx`) que abre em Apuração e
+alterna só o gráfico, sem ser alcançada pelo `<ViewModeSwitch>` do shell.
+
+*Aceitação:* (a) o HTML do servidor contém os dois grupos, e nenhum
+`data-view-only` dentro do `<svg>`; (b) a única fronteira de cliente da árvore do
+gráfico é `SerieBaseAlternavel.tsx` — o módulo do gráfico segue sem
+`"use client"` e sem handler; (c) a chave só existe no estado "ok" — os estados
+"antes do dia", "indisponível" e "apurando" não têm `<button>` (no primeiro a
+palavra "projeção" é proibida pelo RF-174); a chave é `<fieldset>` com `<legend>`
+e `<button aria-pressed aria-controls>`, alvo de toque ≥ `--tap-min` abaixo de
+960px; (d) o eixo vertical é **idêntico** nas duas visões — alternar não move
+nenhuma linha por mudança de escala, que seria uma mentira gráfica produzida a
+cada clique; (e) a tabela acessível (RF-176) fica fora da chave e mantém as duas
+bases em qualquer posição dela.
 
 **RF-173 — Senador: quatro linhas, duas vagas legíveis sem cor**
 
