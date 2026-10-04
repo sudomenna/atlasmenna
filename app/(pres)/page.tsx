@@ -973,7 +973,7 @@ export default async function HomePage() {
           note={
             pre
               ? "Esta é a lista de candidaturas registradas pelo TSE para a Presidência, na ordem do número na urna. Nenhum voto foi contado: a votação é em 4 de outubro de 2026."
-              : "Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados por UF e país."
+              : "Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados por UF e país. O % apurado do Brasil é a soma dos estados publicados pelo TSE — a tela “Brasil” do site do TSE às vezes atualiza com atraso em relação aos estados, e por isso pode mostrar um número menor."
           }
           pctApurado={pct_apurado_total}
           rule="none"
