@@ -264,7 +264,7 @@ VAGAS_EM_DISPUTA_2026: dict[int, int] = {5: 54, 6: 513, 7: 1035, 8: 24}
 #: `api/model/dado_ts.py` seria o segundo número a manter à mão, exatamente o
 #: que o ADR proíbe — e `dado_ts.py` não pode importar de `project.py`, que é
 #: quem importa `dado_ts`.
-ATUALIZACAO_MIN_DEPUTADO = 30
+ATUALIZACAO_MIN_DEPUTADO = 15  # 🔴 04/10/2026 18h: 30→15 por ordem do dono (6 fatias a cada 15 min)
 
 #: Cadência de ingestão de cada cargo, em **segundos**. É o intervalo entre
 #: duas leituras COMPLETAS do universo de alvos daquele cargo — não o intervalo
