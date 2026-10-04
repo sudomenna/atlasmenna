@@ -65,7 +65,13 @@ const THEMES = ["light", "dark"] as const;
 const FIXTURES: Record<string, string> = JSON.parse(
   execFileSync(
     process.platform === "win32" ? "node_modules/.bin/tsx.cmd" : "node_modules/.bin/tsx",
-    [path.join("tests", "e2e", "_serie-fixture-render.tsx")],
+    [
+      // `.css` de CSS Module importado pelo gráfico (desde 34783b3) — ver
+      // `_css-stub-loader.mjs`.
+      "--import",
+      `./${path.join("tests", "e2e", "_css-stub-register.mjs")}`,
+      path.join("tests", "e2e", "_serie-fixture-render.tsx"),
+    ],
     { cwd: process.cwd(), encoding: "utf-8", maxBuffer: 32 * 1024 * 1024 },
   ),
 );
