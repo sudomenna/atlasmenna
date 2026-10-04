@@ -278,3 +278,66 @@ describe("<MunicipioTable /> — 'mostrar mais', no cliente", () => {
     expect(container.querySelector("h3")?.textContent).toContain("853");
   });
 });
+
+/**
+ * 2026-10-03 — teto duro (`limite`), pedido do dono para a rota de governador:
+ * "traga apenas a lista dos 25 primeiros municípios rankeados por maiores
+ * colégios eleitorais". Sem "mostrar mais"; cabeçalho e status dizem o recorte.
+ */
+describe("<MunicipioTable limite /> — recorte dos N maiores", () => {
+  /** Embaralha de forma determinística para que "os maiores" não seja "os primeiros". */
+  function embaralhadas(n: number): MunicipioRow[] {
+    const r = makeRows(n);
+    return r.map((_, i) => r[(i * 7) % n] as MunicipioRow);
+  }
+
+  it("(l1) 🔴 645 municípios com limite 25: 25 linhas, os 25 MAIORES, sem botão", () => {
+    // 645 e 7 são coprimos, então `embaralhadas` é permutação.
+    const doc = parse(<MunicipioTable rows={embaralhadas(645)} limite={25} />);
+    expect(linhas(doc)).toBe(25);
+    expect(doc.querySelector('[data-testid="municipios-carregar-mais"]')).toBeNull();
+    // makeRows: i=0 é o maior eleitorado → "Município 1" … "Município 25".
+    const nomes = [...doc.querySelectorAll("tbody tr")].map(
+      (tr) => tr.querySelector("td")?.textContent ?? "",
+    );
+    expect(nomes[0]).toContain("Município 1");
+    expect(nomes[24]).toContain("Município 25");
+    expect(nomes.some((n) => n.includes("Município 26"))).toBe(false);
+  });
+
+  it("(l2) cabeçalho, legenda e status declaram o recorte e o total da UF", () => {
+    const doc = parse(<MunicipioTable rows={makeRows(645)} limite={25} />);
+    expect(doc.querySelector("h3")?.textContent).toBe("Municípios — 25 maiores de 645");
+    expect(doc.querySelector('[data-testid="municipios-ordem"]')?.textContent).toContain(
+      "25 maiores colégios eleitorais",
+    );
+    expect(doc.querySelector('[data-testid="municipios-status"]')?.textContent).toBe(
+      "Mostrando 25 de 645 municípios.",
+    );
+    // A tabela contém 25 linhas de dado — é isso que ela anuncia.
+    expect(doc.querySelector("table")?.getAttribute("aria-rowcount")).toBe("25");
+  });
+
+  it("(l3) o limite vale mesmo acima da primeira leva padrão (20)", () => {
+    const doc = parse(<MunicipioTable rows={makeRows(100)} limite={25} />);
+    expect(linhas(doc)).toBe(25);
+  });
+
+  it("(l4) UF com menos municípios que o limite: lista inteira, sem texto de recorte", () => {
+    const doc = parse(<MunicipioTable rows={makeRows(15)} limite={25} />);
+    expect(linhas(doc)).toBe(15);
+    expect(doc.querySelector("h3")?.textContent).toBe("Municípios (15)");
+    expect(doc.querySelector('[data-testid="municipios-ordem"]')?.textContent).not.toContain(
+      "maiores",
+    );
+  });
+
+  it("(l5) sem eleitorado publicado, o recorte NÃO promete 'maiores'", () => {
+    const semEleitorado = makeRows(40).map(({ eleitorado: _e, ...r }) => r);
+    const doc = parse(<MunicipioTable rows={semEleitorado} limite={25} />);
+    expect(linhas(doc)).toBe(25);
+    expect(doc.querySelector('[data-testid="municipios-ordem"]')?.textContent).not.toContain(
+      "maiores colégios",
+    );
+  });
+});

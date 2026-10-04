@@ -145,6 +145,25 @@ describe("<MunicipioExplorer /> — a folha aberta pelo mapa", () => {
     expect(folha()?.textContent).toContain("Município · SP");
   });
 
+  it("(b2) 2026-10-03 — `limiteLista` corta a LISTA, mas o mapa ainda abre quem ficou de fora", () => {
+    act(() => {
+      root.render(
+        <MunicipioExplorer
+          ufSigla="SP"
+          municipios={municipios}
+          rows={rows}
+          candidatos={candidatos}
+          limiteLista={1}
+        />,
+      );
+    });
+    expect(container.querySelectorAll("tbody tr")).toHaveLength(1);
+    expect(container.querySelector("tbody")?.textContent).not.toContain("Campinas");
+
+    cliqueNoMapa("3509502");
+    expect(folha()?.textContent).toContain("Campinas");
+  });
+
   it("(c) município sem dado no payload é no-op — o mapa desenha mais do que o payload cobre", () => {
     montar();
     cliqueNoMapa("3500000");

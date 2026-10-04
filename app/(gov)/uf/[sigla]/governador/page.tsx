@@ -738,6 +738,9 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
               municipios={municipios}
               rows={municipioRows}
               candidatos={payload.candidatos}
+              // 2026-10-03, pedido do dono: só os 25 maiores colégios
+              // eleitorais na lista; o resto abre pelo mapa.
+              limiteLista={25}
             />
           </div>
         ) : (

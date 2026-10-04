@@ -346,6 +346,17 @@ export interface MunicipioTableProps {
   /** Tamanho de cada leva seguinte. Default {@link MUNICIPIOS_POR_LOTE}. */
   lote?: number;
   /**
+   * Teto DURO da lista: só os `limite` maiores colégios eleitorais entram, e
+   * não há "mostrar mais". Ausente, a lista pagina até o último município.
+   *
+   * 2026-10-03, pedido do dono para a rota de governador: "traga apenas a
+   * lista dos 25 primeiros municípios rankeados por maiores colégios
+   * eleitorais". Os demais seguem alcançáveis pelo mapa — o clique abre a
+   * mesma folha (`<MunicipioExplorer>` recebe o payload inteiro, não o corte).
+   * Cabeçalho, legenda e status dizem que a lista é um recorte e de quantos.
+   */
+  limite?: number;
+  /**
    * Quando presente, o nome do município vira um `<button>` que devolve o
    * `cod_ibge` ao caller (tipicamente `<MunicipioExplorer>`, que abre a folha
    * do município no `<Sheet>`).
@@ -567,8 +578,16 @@ function VotosLinha({ row }: { row: MunicipioRow }) {
  * A legenda que explica a ordem. Três textos porque são três situações reais,
  * e colapsá-las mentiria em duas delas (constituição § 8).
  */
-function textoDaOrdem(comEleitorado: number, total: number): string {
+function textoDaOrdem(comEleitorado: number, total: number, limite?: number): string {
   if (total === 0) return "Nenhum município apurado até agora nesta corrida.";
+  // Recorte por `limite`: a frase só promete "maiores" quando TODOS têm
+  // eleitorado — senão a ordem de origem entra no corte e "maiores" mentiria.
+  if (limite !== undefined && total > limite) {
+    const n = limite.toLocaleString("pt-BR");
+    return comEleitorado === total
+      ? `Os ${n} maiores colégios eleitorais do estado, do maior para o menor. Os demais municípios abrem pelo mapa.`
+      : `Os ${n} primeiros municípios: quem tem eleitorado publicado vem antes, do maior para o menor. Os demais abrem pelo mapa.`;
+  }
   if (comEleitorado === 0) {
     return "Esta corrida não publica o eleitorado por município, então a lista segue a ordem em que o payload chega — nenhum município fica de fora.";
   }
@@ -582,6 +601,7 @@ export function MunicipioTable({
   rows,
   inicial = MUNICIPIOS_PRIMEIRA_LEVA,
   lote = MUNICIPIOS_POR_LOTE,
+  limite,
   onSelect,
 }: MunicipioTableProps) {
   const [carregados, setCarregados] = useState(inicial);
@@ -597,7 +617,14 @@ export function MunicipioTable({
     setCarregados(inicial);
   }
 
-  const ordenadas = useMemo(() => ordenarPorEleitorado(rows), [rows]);
+  const ordenadasTodas = useMemo(() => ordenarPorEleitorado(rows), [rows]);
+  // Total da UF (para dizer "de quantos") vs. o que a lista contém.
+  const totalUf = ordenadasTodas.length;
+  const ordenadas = useMemo(
+    () => (limite !== undefined ? ordenadasTodas.slice(0, limite) : ordenadasTodas),
+    [ordenadasTodas, limite],
+  );
+  const recortada = ordenadas.length < totalUf;
   const comEleitorado = useMemo(() => rows.filter(temEleitorado).length, [rows]);
 
   const tabelaId = useId();
@@ -620,7 +647,8 @@ export function MunicipioTable({
   }, [carregados]);
 
   const total = ordenadas.length;
-  const visiveis = Math.min(carregados, total);
+  // Com teto, o recorte É a lista inteira: não há leva nem "mostrar mais".
+  const visiveis = limite !== undefined ? total : Math.min(carregados, total);
   const lista = ordenadas.slice(0, visiveis);
   const restantes = total - visiveis;
   const proximoLote = Math.min(lote, restantes);
@@ -638,7 +666,9 @@ export function MunicipioTable({
         className="mb-2 text-lg"
         style={{ fontFamily: "var(--font-serif)", color: "var(--color-text)" }}
       >
-        Municípios ({total.toLocaleString("pt-BR")})
+        {recortada
+          ? `Municípios — ${total.toLocaleString("pt-BR")} maiores de ${totalUf.toLocaleString("pt-BR")}`
+          : `Municípios (${total.toLocaleString("pt-BR")})`}
       </h3>
 
       <p
@@ -650,7 +680,7 @@ export function MunicipioTable({
           color: "var(--text-muted)",
         }}
       >
-        {textoDaOrdem(comEleitorado, total)}
+        {textoDaOrdem(comEleitorado, totalUf, limite)}
       </p>
 
       <table
@@ -765,8 +795,8 @@ export function MunicipioTable({
           color: "var(--text-muted)",
         }}
       >
-        Mostrando {visiveis.toLocaleString("pt-BR")} de {total.toLocaleString("pt-BR")}{" "}
-        {total === 1 ? "município" : "municípios"}.
+        Mostrando {visiveis.toLocaleString("pt-BR")} de {totalUf.toLocaleString("pt-BR")}{" "}
+        {totalUf === 1 ? "município" : "municípios"}.
       </p>
 
       {restantes > 0 ? (

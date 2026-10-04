@@ -113,6 +113,8 @@ export interface MunicipioExplorerProps {
    * com `rank`), montado pela página de governador.
    */
   waffleCandidatos?: EdgeCandidate[];
+  /** Repassado a `<MunicipioTable limite>` — corta a LISTA, nunca a folha. */
+  limiteLista?: number;
 }
 
 // `FolhaRow` (o percentual sobre o total apurado NO MUNICÍPIO) e a função que
@@ -244,6 +246,7 @@ export function MunicipioExplorer({
   rows,
   candidatos,
   waffleCandidatos,
+  limiteLista,
 }: MunicipioExplorerProps) {
   // Qual município está aberto vive FORA deste componente desde 2026-09-10:
   // o clique no mapa (`<ChoroplethMapUF>`) precisa abrir esta mesma folha, e o
@@ -310,7 +313,7 @@ export function MunicipioExplorer({
         />
       ) : null}
 
-      <MunicipioTable rows={rows} onSelect={abrir} />
+      <MunicipioTable rows={rows} limite={limiteLista} onSelect={abrir} />
 
       {municipio ? (
         <Sheet
