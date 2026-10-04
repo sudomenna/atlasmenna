@@ -38,6 +38,7 @@
  * carrega juízo nenhum sobre as corridas (constituição § 2).
  */
 
+import { UfFlag } from "@/components/atoms/data/UfFlag";
 import { ufsPorNome } from "@/components/atoms/maps/_shared";
 import { type CargoTse, cargoInfo } from "@/lib/config/cargos";
 
@@ -150,10 +151,15 @@ export function UfLinksGrid({
                     o nome por extenso e a sigla continuam os dois em texto,
                     exatamente como aqui. A exigência de RF-162/163 é que o
                     rótulo seja texto — não que não possa haver ícone ao lado.
-                    Este componente segue sem bandeira porque a superfície dele
-                    é outra: a fase SEM payload, onde a regra da spec 019 é
-                    dizer o mínimo. */}
-                <span className="min-w-0 truncate">{uf.nome}</span>
+                    2026-10-04 — o dono pediu a bandeira aqui também (ADR-0070,
+                    emenda): na fase SEM payload a capa de Deputado Federal
+                    mostrava esta lista crua enquanto a Estadual, já com dado,
+                    mostrava a grade com bandeiras. Mesmo arranjo do
+                    `UfPicker`: bandeira + nome juntos, sigla à direita. */}
+                <span className="flex min-w-0 items-center" style={{ gap: "var(--space-2)" }}>
+                  <UfFlag sigla={uf.sigla} />
+                  <span className="min-w-0 truncate">{uf.nome}</span>
+                </span>
                 <span className="flex-none" style={{ font: "var(--type-figure-sm)" }}>
                   {uf.sigla}
                 </span>

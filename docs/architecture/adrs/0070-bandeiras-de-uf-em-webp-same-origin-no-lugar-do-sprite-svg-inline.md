@@ -159,3 +159,16 @@ Ficaram **983 B** de folga sob os 336 KiB, e cada agremiação a mais na apuraç
 (×2). Alternativas apresentadas: subir o teto; manter e enxugar a legenda. O dono escolheu **subir para
 344 KiB** (~15 agremiações a mais de folga). Alterados `TETO_DOCUMENTO_POR_ROTA` em
 `tests/e2e/perf-budget.spec.ts` e a linha da rota em `docs/nfr/performance.md`.
+
+## Emenda — 2026-10-04, bandeira também no `UfLinksGrid` (decisão do dono)
+
+A decisão original deixava o `UfLinksGrid` (a lista de UFs da fase SEM payload, spec 019) sem
+bandeira. Na manhã de 04/10 isso ficou visível: a capa de Deputado ainda sem dado do cargo 6
+mostrava, na aba Federal, a lista crua, enquanto a aba Estadual (cargo 7, já com o boletim de voto
+zero do TSE) mostrava a grade com as 27 bandeiras. O dono pediu a bandeira também ali.
+
+`UfLinksGrid` passa a usar o mesmo arranjo do `UfPicker`: bandeira (`<UfFlag>`, 21×15, lazy,
+`alt=""`) junto do nome, sigla à direita. Vale em todo lugar que o componente aparece na fase sem
+dado (capas de Governador, Senador e Deputado). O texto do link não muda. Teste:
+`tests/unit/components/UfLinksGrid.test.tsx` (mutação conferida: sem o `<UfFlag>`, (a) e (b)
+reprovam).
