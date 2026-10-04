@@ -5,10 +5,10 @@ status: shipped
 priority: M
 personas: [P1, P2, P3]
 screens: [T-09, T-10]
-requirements: [RF-100, RF-101, RF-102, RF-103, RF-104, RF-105, RF-106, RF-107, RF-108, RF-179, RF-184, RF-181, RF-185, RF-186, RF-187, RF-188, RF-180, RF-189, RF-191]
+requirements: [RF-100, RF-101, RF-102, RF-103, RF-104, RF-105, RF-106, RF-107, RF-108, RF-179, RF-184, RF-181, RF-185, RF-186, RF-187, RF-188, RF-180, RF-189, RF-191, RF-301]
 depends_on: [001-ingestao-tse, 002-modelo-estatistico]
 apis: [GET /api/ingest/senador, POST /api/ingest/senador, GET /api/projection?cargo=senador]
-components: [ResultPanel, CandidateListCollapse, ChancesPanel, CargoTabs, RaceHeader, ForecastTransparency, NationalChoroplethMap, ChoroplethMapUF, StateResultSheet, UfHoverLink, MunicipioTable, MunicipioExplorer, GovernorCard, HoverCard]
+components: [ResultPanel, CandidateListCollapse, ChancesPanel, CargoTabs, RaceHeader, ForecastTransparency, NationalChoroplethMap, ChoroplethMapUF, StateResultSheet, UfHoverLink, MunicipioTable, MunicipioExplorer, GovernorCard, HoverCard, ComposicaoVagasLista]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-006, RNF-022, RNF-023, RNF-024]
 adrs: [0001, 0012, 0020, 0021, 0026, 0028, 0033, 0034, 0035, 0038, 0042, 0048, 0050, 0051, 0053, 0055, 0056, 0057]
 opens_after: 2026-09-11
@@ -265,6 +265,9 @@ composição total de 81 cadeiras do Senado.
 - Given qualquer estado de apuração, when a tela renderiza, then o denominador
   exibido é 54 e há texto distinguindo-o das 81 cadeiras.
 
+> **Ampliado em 2026-10-04 pelo [RF-301](#os-nomes-das-54-vagas-04102026)** (decisão do dono):
+> cada linha de partido abre com quem ocupa as vagas, nas duas bases.
+
 > **Nota 2026-09-27 (decisão do dono) — a lista "Estado a estado" de `/senador` (T-09).**
 > Passou a usar o mesmo cartão da grade de `/governador` (`<GovernorCard cargo="sen">`):
 > as quatro primeiras posições e "Outros", sempre em % dos votos válidos da UF, com o
@@ -316,6 +319,74 @@ WHEN um candidato ao Senado está visível em tabela de resultado em `/uf/[sigla
 - Given mesmo candidato em 4º lugar na base parcial, when seletor = "parcial", then badge diz "Indefinido" (4º não ocupa vaga, são apenas 2 vagas).
 - Given candidato não em top-2 em nenhuma base, when renderiza em qualquer seletor, then badge exibe "Indefinido".
 - Given a base muda do seletor Parcial/Projeção, when a linha re-renderiza, then o texto do badge acompanha a nova base sem latência.
+
+### Os nomes das 54 vagas (04/10/2026)
+
+**RF-301 — Quem ocupa as vagas, partido a partido, em "As 54 vagas em disputa" (T-09)**
+
+> **Decisão do dono, 04/10/2026** (dia do 1º turno): "para o usuário poder enxergar todos os
+> senadores eleitos". Até esta data a seção do RF-107 só contava vagas por partido; os 54 nomes
+> existiam espalhados nos 27 cartões "Estado a estado".
+
+WHEN `/senador` renderiza a composição das vagas em disputa (RF-107) fora da fase pré, the system
+SHALL permitir abrir cada linha de partido — nas duas versões da chave "Parcial / Projeção" — e
+mostrar quem ocupa as vagas daquele partido no país: a sigla da UF e o nome de cada ocupante, em
+ordem de sigla de UF (duas vagas da mesma UF no mesmo partido, na ordem da vaga), sob o selo da
+base daquela versão; e a linha "aguardando apuração" SHALL abrir com as UFs cujas vagas ainda não
+têm ocupante nessa base.
+
+Regras:
+
+- **Sem leitura nova** — tudo sai do payload que a capa já lê, pelas mesmas derivações que já
+  desenham a contagem (`lib/utils/senado-nomes-das-vagas.ts`):
+  - **Projeção**: `vagasDerivadas` (`lib/utils/senado-2027.ts`), **conferida** contra
+    `composicao_vagas` partido a partido (por `chavePartido`) e no total. Divergência ⇒ **nenhuma**
+    linha abre, e a seção fica como era, só com a contagem publicada (falha fechada, o mesmo
+    princípio do RF-217). É o caso do payload sem `partido` em `top_candidatos`.
+  - **Parcial**: `vagasNaParcial` (`lib/utils/senado-parcial.ts`) — a mesma lista que
+    `composicaoNaParcial` conta; o nome vem pelo `id` em `por_uf[].top_candidatos` da UF.
+- **UF aguardando nunca vira nome nem zero** (decisão do dono de 14/09: não começou / não sabemos /
+  apurando são três estados). Na Parcial, UF sem apurado, sem `pct_atual` ou com anulada que não
+  deixa provar o 2º lugar (`vagasDaUfNaParcial`) vai para a linha "aguardando apuração". Se a soma
+  das vagas sem ocupante por UF não fechar com o número que a linha imprime, a linha não abre.
+- Uma linha de partido só abre quando os nomes são **exatamente** tantos quantos ela conta.
+- **O nome é o do cartão** da UF: `nomeExibicao` sobre o nome de urna; sem nome no payload,
+  `Cand <id>` — o mesmo fallback do `<GovernorCard>`.
+- **Selo e ressalvas**: o selo da base sai uma vez por partido aberto, com "não oficial" — o mesmo
+  texto do `<VagaBadge>` e do `<ResultPanel>` (`VAGA_LABEL`: "Vaga projetada" / "Vaga na
+  parcial"). Cada nome leva só a ressalva que foge dele: UF com 100% apurado ⇒ "apuração
+  concluída", nas duas bases (a vaga "decidida" de `senado-2027.ts`, igual nas duas); na
+  Projeção, UF sem voto apurado ⇒ "sem voto apurado" (a mesma condição `pct_apurado > 0` do selo
+  do cartão). **Nunca "eleito"** (constituição § 1, RF-218).
+- **`<details>`/`<summary>` nativo**, zero JavaScript, dentro de Server Component
+  (`<ComposicaoVagasLista>`). ⚠️ O ADR-0017 proíbe `<details>` nas listas de candidatos de uma
+  corrida, para que nenhuma candidatura saia da tela; esta lista não é a de uma corrida — é um
+  índice, por partido, de nomes que já estão visíveis, fora de qualquer recolhido, nos 27 cartões
+  da mesma página.
+- **A seção não muda de lugar**; fechada, cada linha é a mesma pílula "N PARTIDO" de antes.
+- **Peso** (pior caso, as 54 vagas atribuídas nas duas bases, fixture `tests/fixtures/simulacao/`):
+  +2,6 KB de HTML e ~+6,2 KB estimados no payload RSC, contra o teto de 480 KiB de `/senador`.
+
+**Aceitação**:
+- Given um payload em que o PL ocupa vaga em RJ e em SP, when a versão Projeção renderiza e a linha
+  do PL abre, then os nomes saem "RJ · …" antes de "SP · …" (ordem de UF, não de nome nem de
+  `por_uf`), em número igual à contagem do PL, e a soma dos nomes de todas as linhas mais o
+  "aguardando apuração" é 54.
+- Given duas vagas do mesmo partido na mesma UF, when a linha abre, then elas saem na ordem da vaga.
+- Given SP com o apurado em ordem diferente da projeção e RJ sem `pct_atual`, when a versão Parcial
+  abre, then os nomes de SP são os dois mais votados até aqui, resolvidos pelo `id`; nenhum nome de
+  RJ aparece em linha de partido nenhuma; e RJ está na lista da linha "aguardando apuração".
+- Given `top_candidatos` sem `nome`, when as linhas abrem, then o nome é `Cand <id>`, igual ao do
+  cartão da UF.
+- Given um payload cuja derivação não fecha com `composicao_vagas` (ex.: sem `partido`), when a
+  versão Projeção renderiza, then nenhuma linha abre e a contagem publicada continua visível.
+- Given teclado ou leitor de tela, when o foco chega a uma linha, then o nome acessível começa pelo
+  texto visível (ex.: "9 PL") e diz o que abre ("…, ver os nomes"); a sigla abreviada na tela é dita
+  inteira (ex.: "REP, REPUBLICANOS").
+- Given a fase pré, when `/senador` renderiza, then nada no bloco abre.
+
+Testes: `tests/unit/utils/senado-nomes-das-vagas.test.ts`, `tests/unit/pages/senador.test.tsx`
+(describe "RF-301").
 
 ## Requisitos Não-Funcionais
 

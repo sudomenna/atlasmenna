@@ -31,6 +31,8 @@ import type {
   EdgeUfMunicipio,
   EdgeUfRow,
 } from "@/lib/edge-config/types";
+import senCurrent from "@/tests/fixtures/edge-config/sen-current.json" with { type: "json" };
+import simulacao from "@/tests/fixtures/simulacao/senador.json" with { type: "json" };
 
 const readProjectionMock = vi.fn();
 const readUfProjectionMock = vi.fn();
@@ -114,6 +116,32 @@ function linhasComVaga(doc: Document): number {
   return [...doc.querySelectorAll("li")].filter(
     (li) => li.querySelector("[data-testid='result-vaga-marker']") != null,
   ).length;
+}
+
+/**
+ * RF-301 — as pílulas de "As 54 vagas" (os `<li>` FILHOS do `<ul>`), pelo
+ * texto VISÍVEL: o do `<summary>` sem o `.sr-only`, ou o do próprio `<li>`
+ * quando ele não abre. Os nomes de dentro do `<details>` ficam de fora.
+ */
+function pilulas(ul: Element | null | undefined): string[] {
+  return [...(ul?.children ?? [])].map((li) => {
+    const details = li.firstElementChild?.tagName === "DETAILS" ? li.firstElementChild : null;
+    const alvo = (details?.querySelector("summary") ?? li).cloneNode(true) as Element;
+    for (const s of [...alvo.querySelectorAll(".sr-only")]) s.remove();
+    return (alvo.textContent ?? "").replace(/\s+/g, " ").trim();
+  });
+}
+
+/** RF-301 — a pílula (`<li>` filho) cujo texto visível é `rotulo` ("9 PL"). */
+function pilula(ul: Element | null | undefined, rotulo: string): Element | undefined {
+  const lis = [...(ul?.children ?? [])];
+  return lis[pilulas(ul).indexOf(rotulo)];
+}
+
+/** RF-301 — os nomes que uma pílula abre (`<ol> > <li>`), ou `null` se ela não abre. */
+function nomesDaPilula(li: Element | undefined): string[] | null {
+  const ol = li?.querySelector("details > ol");
+  return ol ? [...ol.children].map((n) => (n.textContent ?? "").trim()) : null;
 }
 
 function ufCand(
@@ -712,10 +740,11 @@ describe("/senador — Parcial × Projeção (04/10)", () => {
     const parcial = doc.querySelector(
       "[data-view-only='parcial'] [data-testid='composicao-partidos-parcial']",
     );
-    // A projeção é a de sempre — o payload, intocado.
-    expect(itens(proj)).toEqual(["1PL", "1PP", "1PSD", "1PT", "50aguardando apuração"]);
+    // A projeção é a de sempre — o payload, intocado. (RF-301: só as pílulas,
+    // o texto VISÍVEL de cada uma; os nomes que abrem têm caso próprio.)
+    expect(pilulas(proj)).toEqual(["1 PL", "1 PP", "1 PSD", "1 PT", "50 aguardando apuração"]);
     // A Parcial: SP pelo apurado (PL, MDB); RJ sem medida ⇒ aguardando.
-    expect(itens(parcial)).toEqual(["1MDB", "1PL", "52aguardando apuração"]);
+    expect(pilulas(parcial)).toEqual(["1 MDB", "1 PL", "52 aguardando apuração"]);
     // O rótulo do precedente de /governador, só na Parcial.
     const titulo = doc.getElementById("composicao-parcial-heading");
     expect(titulo?.textContent).toBe("Se a apuração parasse agora");
@@ -806,6 +835,213 @@ describe("/senador — Parcial × Projeção (04/10)", () => {
     const doc = await render(SenadoPage());
     expect(doc.querySelectorAll("[data-testid='senado-hemiciclo']")).toHaveLength(1);
     expect(doc.querySelector("[data-testid='composicao-parcial']")).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RF-301 (04/10/2026, dono) — cada partido de "As 54 vagas" abre com os nomes
+// ---------------------------------------------------------------------------
+
+describe("/senador — RF-301: quem ocupa as vagas de cada partido", () => {
+  const PROJ = "[data-view-only='proj'] [data-testid='composicao-partidos']";
+  const PARCIAL = "[data-view-only='parcial'] [data-testid='composicao-partidos-parcial']";
+
+  /**
+   * RJ passa a dar a 1ª vaga ao PL (Zeca Lima): o PL tem nomes em DUAS UFs.
+   * Por UF: RJ Zeca, SP Bruno. Por nome: Bruno, Zeca. Na ordem de `por_uf`
+   * (SP vem antes): SP, RJ. Só a ordem por UF dá RJ primeiro.
+   */
+  function plEmDuasUfs(): EdgePayload {
+    const p = nacional();
+    const rj = p.por_uf[1] as EdgeUfRow;
+    rj.top_candidatos = [
+      { id: 11, pct: 45, nome: "Zeca Lima", partido: "PL", sqcand: "250002553931" },
+      { id: 12, pct: 28, nome: "Fábio Cruz", partido: "PP", sqcand: "250002553932" },
+      { id: 13, pct: 20, nome: "Gil Souza", partido: "PDT", sqcand: "50002553933" },
+    ];
+    p.composicao_vagas = {
+      ...(p.composicao_vagas as NonNullable<EdgePayload["composicao_vagas"]>),
+      por_partido: [
+        { partido: "PL", vagas: 2 },
+        { partido: "PP", vagas: 1 },
+        { partido: "PT", vagas: 1 },
+      ],
+    };
+    return p;
+  }
+
+  /** SP com apurado em ordem OUTRA que a projeção; RJ sem `pct_atual`. */
+  function comApurado(): EdgePayload {
+    const p = nacional();
+    const sp = p.por_uf[0] as EdgeUfRow;
+    const atual: Record<number, number> = { 1: 25, 2: 35, 3: 33 };
+    sp.top_candidatos = sp.top_candidatos.map((t) => ({ ...t, pct_atual: atual[t.id] }));
+    return p;
+  }
+
+  const textoSemSr = (el: Element | null | undefined) => {
+    const c = el?.cloneNode(true) as Element | undefined;
+    for (const s of [...(c?.querySelectorAll(".sr-only") ?? [])]) s.remove();
+    return (c?.textContent ?? "").replace(/\s+/g, " ").trim();
+  };
+
+  it("🔴 Projeção: cada partido abre com os nomes certos, por SIGLA DE UF; Σ = 54 − aguardando", async () => {
+    readProjectionMock.mockResolvedValue(plEmDuasUfs());
+    const doc = await render(SenadoPage());
+    const ul = doc.querySelector(PROJ);
+
+    expect(pilulas(ul)).toEqual(["2 PL", "1 PP", "1 PT", "50 aguardando apuração"]);
+    // (c) — por UF (RJ antes de SP), não por nome nem na ordem de `por_uf`.
+    expect(nomesDaPilula(pilula(ul, "2 PL"))).toEqual(["RJ · Zeca Lima", "SP · Bruno Reis"]);
+    expect(nomesDaPilula(pilula(ul, "1 PP"))).toEqual(["RJ · Fábio Cruz"]);
+    expect(nomesDaPilula(pilula(ul, "1 PT"))).toEqual(["SP · Ana Lima"]);
+
+    // Cada pílula abre com EXATAMENTE tantos nomes quantos conta; Σ = 54 − 50.
+    let soma = 0;
+    for (const rotulo of ["2 PL", "1 PP", "1 PT"]) {
+      const n = nomesDaPilula(pilula(ul, rotulo));
+      expect(n).toHaveLength(Number(rotulo.split(" ")[0]));
+      soma += n?.length ?? 0;
+    }
+    expect(soma).toBe(54 - 50);
+
+    // O selo da base, uma vez por partido — nunca "eleito".
+    const selos = [...(ul?.querySelectorAll("details > p") ?? [])].map((p) => p.textContent);
+    expect(selos.slice(0, 3)).toEqual(Array(3).fill("Vaga projetada · não oficial"));
+    expect((ul?.textContent ?? "").toLowerCase()).not.toContain("eleit");
+
+    // "aguardando apuração" abre com as 25 UFs que faltam (nem RJ nem SP).
+    const ag = doc.querySelector(`${PROJ} [data-testid='composicao-aguardando']`);
+    const ufs = (ag?.querySelector("details > p")?.textContent ?? "").split(", ");
+    expect(ufs).toHaveLength(25);
+    expect(ufs).not.toContain("RJ");
+    expect(ufs).not.toContain("SP");
+    expect(ufs[0]).toBe("AC");
+
+    // A nota convida a abrir — só porque há o que abrir.
+    expect(doc.querySelector("[data-testid='composicao-nota']")?.textContent).toContain(
+      "Abra um partido para ver os nomes.",
+    );
+  });
+
+  it("🔴 Parcial: nome pelo `id`; UF aguardando fora dos nomes e listada; nunca zero", async () => {
+    readProjectionMock.mockResolvedValue(comApurado());
+    const doc = await render(SenadoPage());
+    const ul = doc.querySelector(PARCIAL);
+
+    expect(pilulas(ul)).toEqual(["1 MDB", "1 PL", "52 aguardando apuração"]);
+    // (a) — SP pelo apurado: Bruno (PL) e Célia (MDB); Ana (PT, 1ª na
+    // projeção) fora. Com a lista da projeção, o MDB não abriria.
+    expect(nomesDaPilula(pilula(ul, "1 MDB"))).toEqual(["SP · Célia Mota"]);
+    expect(nomesDaPilula(pilula(ul, "1 PL"))).toEqual(["SP · Bruno Reis"]);
+    // (b) — RJ não tem `pct_atual`: nenhum nome de lá, nem "Cand N".
+    const nomes = [...(ul?.querySelectorAll("details > ol > li") ?? [])].map((l) => l.textContent);
+    expect(nomes).toEqual(["SP · Célia Mota", "SP · Bruno Reis"]);
+    for (const quem of ["Ana Lima", "Eva Prado", "Fábio Cruz", "Gil Souza", "Cand"]) {
+      expect(ul?.textContent).not.toContain(quem);
+    }
+    // RJ está na linha "aguardando" — 26 UFs × 2 = 52, sem zero inventado.
+    const ag = doc.querySelector(`${PARCIAL} [data-testid='composicao-aguardando-parcial']`);
+    const ufs = (ag?.querySelector("details > p")?.textContent ?? "").split(", ");
+    expect(ufs).toContain("RJ");
+    expect(ufs).not.toContain("SP");
+    expect(ufs).toHaveLength(26);
+    expect(ul?.textContent).not.toMatch(/(^|\D)0 /);
+
+    const selos = [...(ul?.querySelectorAll("details > p") ?? [])].map((p) => p.textContent);
+    expect(selos.slice(0, 2)).toEqual(Array(2).fill("Vaga na parcial · não oficial"));
+  });
+
+  it("sem `nome` no payload ⇒ o mesmo `Cand <id>` do cartão, nas duas bases", async () => {
+    const p = comApurado();
+    for (const row of p.por_uf) {
+      row.top_candidatos = row.top_candidatos.map(({ nome: _n, ...t }) => t);
+    }
+    readProjectionMock.mockResolvedValue(p);
+    const doc = await render(SenadoPage());
+
+    expect(nomesDaPilula(pilula(doc.querySelector(PROJ), "1 PT"))).toEqual(["SP · Cand 1"]);
+    expect(nomesDaPilula(pilula(doc.querySelector(PARCIAL), "1 PL"))).toEqual(["SP · Cand 2"]);
+    // O cartão de SP escreve exatamente o mesmo nome.
+    const cartao = doc.querySelector("[data-uf='SP'] article [data-view-only='proj'] li");
+    expect(cartao?.textContent).toContain("Cand 1");
+  });
+
+  it("🔴 payload sem `partido` (sen-current.json) ⇒ as pílulas não abrem, e a nota não convida", async () => {
+    readProjectionMock.mockResolvedValue(senCurrent as unknown as EdgePayload);
+    const doc = await render(SenadoPage());
+    const ul = doc.querySelector(PROJ);
+
+    // A contagem publicada continua — só sem nomes (falha fechada, RF-217).
+    expect(pilulas(ul)[0]).toBe("7 PL");
+    expect(ul?.querySelector("details")).toBeNull();
+    expect(doc.querySelector("[data-testid='composicao-nota']")?.textContent).not.toContain(
+      "Abra um partido",
+    );
+    // Sem `pct_atual` em lugar nenhum: a Parcial diz que não tem.
+    expect(doc.querySelector("[data-testid='composicao-parcial-vazia']")).not.toBeNull();
+    expect(doc.querySelector(PARCIAL)).toBeNull();
+  });
+
+  it("🔴 simulação (nomes reais, 27 UFs): toda pílula abre, Σ fecha, ordem por UF, nome = o do cartão", async () => {
+    readProjectionMock.mockResolvedValue(simulacao as unknown as EdgePayload);
+    const doc = await render(SenadoPage());
+
+    for (const [sel, testAg] of [
+      [PROJ, "composicao-aguardando"],
+      [PARCIAL, "composicao-aguardando-parcial"],
+    ] as const) {
+      const ul = doc.querySelector(sel);
+      const lis = [...(ul?.children ?? [])].filter((li) => !li.hasAttribute("data-ag"));
+      expect(lis.length).toBeGreaterThan(0);
+      let soma = 0;
+      for (const li of lis) {
+        const n = nomesDaPilula(li) as string[];
+        expect(n).not.toBeNull();
+        expect(n).toHaveLength(Number(pilulas(ul)[lis.indexOf(li)]?.split(" ")[0]));
+        const ufs = n.map((x) => x.slice(0, 2));
+        expect(ufs).toEqual([...ufs].sort());
+        // Cada nome está no cartão daquela UF.
+        for (const linha of n) {
+          const [uf, nome] = linha.split(" · ") as [string, string];
+          expect(doc.querySelector(`[data-uf='${uf}'] article`)?.textContent).toContain(nome);
+        }
+        soma += n.length;
+      }
+      const ag = doc.querySelector(`[data-testid='${testAg}']`);
+      const aguardando = ag ? Number(textoSemSr(ag.querySelector("b"))) : 0;
+      expect(soma + aguardando).toBe(54);
+    }
+  });
+
+  it("acessibilidade: `<summary>` começa pelo texto visível e diz o que abre; sigla inteira dita", async () => {
+    readProjectionMock.mockResolvedValue(simulacao as unknown as EdgePayload);
+    const doc = await render(SenadoPage());
+    const ul = doc.querySelector(PROJ);
+    const summaries = [...(ul?.querySelectorAll("summary") ?? [])];
+    expect(summaries.length).toBeGreaterThan(0);
+    for (const s of summaries) {
+      const todo = (s.textContent ?? "").replace(/\s+/g, " ").trim();
+      // WCAG 2.5.3: o nome acessível COMEÇA pelo rótulo visível.
+      expect(todo.startsWith(textoSemSr(s))).toBe(true);
+      expect(todo).toMatch(/, ver (o nome|os nomes)$/);
+    }
+    // REPUBLICANOS: desenhado "REP", dito inteiro.
+    const rep = summaries.find((s) => textoSemSr(s).endsWith(" REP"));
+    expect(rep?.textContent).toContain("REPUBLICANOS");
+    // Lista de verdade, e nenhum título novo: o `<h2>` do painel segue único.
+    expect(ul?.querySelectorAll("details > ol").length).toBe(summaries.length);
+    expect(ul?.querySelector("h1, h2, h3, h4, h5, h6")).toBeNull();
+    expect(doc.querySelectorAll("#composicao-heading")).toHaveLength(1);
+  });
+
+  it("fase pré: o bloco não tem o que abrir (não há quem nomear)", async () => {
+    readProjectionMock.mockResolvedValue(nacional({ fase: FASE_PRE_ELEICAO }));
+    const doc = await render(SenadoPage());
+    const painel = doc.getElementById("composicao-heading")?.closest("section");
+    expect(painel).not.toBeNull();
+    expect(painel?.querySelector("details")).toBeNull();
+    expect(painel?.textContent).not.toMatch(/ver os? nomes?|Abra um partido/);
   });
 });
 

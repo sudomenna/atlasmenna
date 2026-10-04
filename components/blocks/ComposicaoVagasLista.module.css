@@ -1,0 +1,98 @@
+/*
+ * components/blocks/ComposicaoVagasLista.module.css — spec 016, RF-107 + RF-301.
+ *
+ * A fileira "N PARTIDO" de "As 54 vagas em disputa" (capa `/senador`), e,
+ * desde 04/10/2026 (RF-301), o `<details>` de cada partido com os nomes.
+ *
+ * ⚠️ UMA classe local só, na raiz (o motivo é o de `GovernorCard.module.css`:
+ * a classe de módulo sai com ~30 bytes, e a lista vai DUAS vezes ao
+ * documento — HTML e payload RSC — nas DUAS bases). Os filhos são alcançados
+ * por ESTRUTURA, e a estrutura é fixa:
+ *
+ *   <ul class="l">
+ *     <li>                                   ← partido com nomes
+ *       <details>
+ *         <summary><b>9</b> <span>PL</span><span class="sr-only">…</span></summary>
+ *         <p>selo da base</p>
+ *         <ol><li>UF · NOME</li>…</ol>
+ *       </details>
+ *     </li>
+ *     <li><b>9</b><span>PL</span></li>        ← partido sem nomes (falha fechada)
+ *     <li data-ag>…</li>                       ← "aguardando apuração"
+ *   </ul>
+ *
+ * Fechado, cada `<li>` é a mesma "pílula" de antes (número + sigla, em
+ * fileira que quebra). Aberto, o `<li>` toma a linha inteira (`:has`, já usado
+ * em `RealceHemiciclo.module.css`) e os nomes saem em colunas de 15rem. Sem
+ * `:has`, o conteúdo abre dentro da pílula — feio, mas certo.
+ *
+ * Tokens idênticos aos do `style` que esta lista tinha em `page.tsx`.
+ */
+
+.l {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: var(--type-body-sm);
+}
+
+.l > li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.l > li:has(> details[open]) {
+  flex-basis: 100%;
+}
+
+/* O número da pílula. Só o `<b>` filho direto do `<li>` ou do `<summary>` —
+ * nunca texto dos nomes. */
+.l > li > b,
+.l summary > b {
+  font: var(--type-figure-sm);
+}
+
+/* Dentro do `<summary>` o espaço entre número e sigla é um nó de texto (o
+ * nome acessível precisa dele: "9 PL", não "9PL"); a margem completa o
+ * `gap` da pílula sem `<summary>`. */
+.l summary > b {
+  margin-inline-end: 0.25em;
+}
+
+.l > li > b + span,
+.l summary > b + span {
+  color: var(--text-secondary);
+}
+
+.l > li[data-ag] > b + span,
+.l > li[data-ag] summary > b + span {
+  color: var(--text-muted);
+}
+
+/* Alvo de toque: 24px de altura mínima (WCAG 2.2 2.5.8, folga sobre a 2.1). */
+.l summary {
+  min-height: 24px;
+  cursor: pointer;
+}
+
+.l details > p {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.l details > ol {
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+  columns: 15rem;
+  column-gap: var(--space-6);
+}
+
+.l details > ol > li {
+  break-inside: avoid;
+}

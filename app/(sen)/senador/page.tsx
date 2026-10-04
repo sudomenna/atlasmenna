@@ -59,6 +59,7 @@ import { VoteBar, type VoteBarSegment } from "@/components/atoms/bars/VoteBar";
 import { EtiquetaFiltro } from "@/components/atoms/controls/EtiquetaFiltro";
 import { Figure } from "@/components/atoms/data/Figure";
 import { Panel } from "@/components/atoms/surfaces/Panel";
+import { ComposicaoVagasLista } from "@/components/blocks/ComposicaoVagasLista";
 import { EtiquetasAviso } from "@/components/blocks/EtiquetasAviso";
 import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { GovernorCard } from "@/components/blocks/GovernorCard";
@@ -81,8 +82,13 @@ import { MANDATO_2027 } from "@/lib/senado/mandato-2027";
 import { MANDATO_2031 } from "@/lib/senado/mandato-2031";
 import { haAnulada, NOTA_ANULADAS_SEM_REGRA_1T } from "@/lib/utils/destino-voto";
 import { textForParty } from "@/lib/utils/party-color";
+import { VAGA_LABEL } from "@/lib/utils/selo-resultado";
+import {
+  nomesDoPartido,
+  nomesNaParcial,
+  nomesNaProjecao,
+} from "@/lib/utils/senado-nomes-das-vagas";
 import { composicaoNaParcial } from "@/lib/utils/senado-parcial";
-import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import senFixture from "@/tests/fixtures/edge-config/sen-current.json" with { type: "json" };
 
 /** Código TSE do cargo desta rota. A granularidade e as vagas saem da tabela
@@ -264,9 +270,32 @@ export default async function SenadoPage() {
   // dois mais votados ATÉ AQUI em cada UF (`lib/utils/senado-parcial.ts`), UF
   // sem apurado aguardando, UF concluída igual à projeção. Mesma regra de cor
   // da barra da projeção (`textForParty`).
+  const vagasPorUf = composicao?.vagas_por_uf ?? VAGAS;
   const parcial = composicao
-    ? composicaoNaParcial(payload.por_uf, composicao.vagas_por_uf ?? VAGAS, vagasEmDisputa)
+    ? composicaoNaParcial(payload.por_uf, vagasPorUf, vagasEmDisputa)
     : null;
+
+  // RF-301 (04/10/2026, dono) — quem ocupa as vagas de cada partido, nas duas
+  // bases, pelas MESMAS derivações da contagem (`lib/utils/senado-nomes-das-vagas.ts`).
+  // Projeção: `null` quando a derivação não fecha com `composicao_vagas` ⇒ as
+  // linhas ficam só com o número. Fase pré: nada a nomear.
+  const nomesProj = composicao && !pre ? nomesNaProjecao(payload, vagasPorUf) : null;
+  const nomesParcial =
+    parcial && !pre ? nomesNaParcial(payload.por_uf, vagasPorUf, vagasEmDisputa) : null;
+  const linhasProj = composicao
+    ? composicao.por_partido.map((p) => ({
+        partido: p.partido,
+        vagas: p.vagas,
+        nomes: nomesDoPartido(nomesProj, p.partido, p.vagas),
+      }))
+    : [];
+  const linhasParcial = parcial
+    ? parcial.porPartido.map((p) => ({
+        partido: p.partido,
+        vagas: p.vagas,
+        nomes: nomesDoPartido(nomesParcial, p.partido, p.vagas),
+      }))
+    : [];
   const segmentosParcial: VoteBarSegment[] = parcial
     ? parcial.porPartido.map((p) => ({
         id: p.partido,
@@ -403,41 +432,22 @@ export default async function SenadoPage() {
                   showLabels={false}
                 />
 
-                <ul
-                  className="flex flex-wrap"
-                  data-testid="composicao-partidos"
-                  style={{ listStyle: "none", margin: 0, padding: 0, gap: "var(--space-3)" }}
-                >
-                  {composicao.por_partido.map((p) => (
-                    <li
-                      key={p.partido}
-                      className="inline-flex items-baseline"
-                      style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
-                    >
-                      <span style={{ font: "var(--type-figure-sm)" }}>{p.vagas}</span>
-                      {/* Desenhado ⇒ abreviado (2026-09-19). Oito ou mais partidos
-                      numa fileira `flex-wrap`; o `ariaLabel` do `<VoteBar>`
-                      logo acima segue com as siglas inteiras.
-                      🔴 Esta é a composição do SENADO, não a bancada da Câmara:
-                      a exceção do dono ("home de Deputados não abrevia") é da
-                      rota `/deputado-federal`, não de toda tela que lista
-                      partido. */}
-                      <span style={{ color: "var(--text-secondary)" }}>
-                        {siglaExibicao(p.partido)}
-                      </span>
-                    </li>
-                  ))}
-                  {aguardando > 0 ? (
-                    <li
-                      className="inline-flex items-baseline"
-                      data-testid="composicao-aguardando"
-                      style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
-                    >
-                      <span style={{ font: "var(--type-figure-sm)" }}>{aguardando}</span>
-                      <span style={{ color: "var(--text-muted)" }}>aguardando apuração</span>
-                    </li>
-                  ) : null}
-                </ul>
+                {/* RF-107 + RF-301 — "N PARTIDO" por linha, e cada partido abre
+                    com quem ocupa as vagas (`<details>`, zero JS). Desenhado ⇒
+                    sigla abreviada (2026-09-19); o `ariaLabel` do `<VoteBar>`
+                    acima e o `<summary>` dizem a sigla inteira.
+                    🔴 Esta é a composição do SENADO, não a bancada da Câmara:
+                    a exceção do dono ("home de Deputados não abrevia") é da
+                    rota `/deputado-federal`, não de toda tela que lista
+                    partido. */}
+                <ComposicaoVagasLista
+                  linhas={linhasProj}
+                  aguardando={aguardando}
+                  ufsAguardando={nomesProj?.ufsAguardando ?? null}
+                  selo={VAGA_LABEL.proj}
+                  testId="composicao-partidos"
+                  testIdAguardando="composicao-aguardando"
+                />
 
                 <p
                   className="max-w-prose"
@@ -457,6 +467,8 @@ export default async function SenadoPage() {
                   2022, com mandato até 2031: não estão em disputa e não entram nesta contagem. O
                   total por partido é a soma das 27 corridas estaduais — o TSE não publica um
                   arquivo nacional para este cargo.
+                  {/* RF-301 — só quando há o que abrir. */}
+                  {linhasProj.some((l) => l.nomes) ? " Abra um partido para ver os nomes." : null}
                 </p>
               </div>
             </div>
@@ -492,36 +504,17 @@ export default async function SenadoPage() {
                       segments={segmentosParcial}
                       showLabels={false}
                     />
-                    <ul
-                      className="flex flex-wrap"
-                      data-testid="composicao-partidos-parcial"
-                      style={{ listStyle: "none", margin: 0, padding: 0, gap: "var(--space-3)" }}
-                    >
-                      {parcial.porPartido.map((p) => (
-                        <li
-                          key={p.partido}
-                          className="inline-flex items-baseline"
-                          style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
-                        >
-                          <span style={{ font: "var(--type-figure-sm)" }}>{p.vagas}</span>
-                          <span style={{ color: "var(--text-secondary)" }}>
-                            {siglaExibicao(p.partido)}
-                          </span>
-                        </li>
-                      ))}
-                      {parcial.aguardando > 0 ? (
-                        <li
-                          className="inline-flex items-baseline"
-                          data-testid="composicao-aguardando-parcial"
-                          style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
-                        >
-                          <span style={{ font: "var(--type-figure-sm)" }}>
-                            {parcial.aguardando}
-                          </span>
-                          <span style={{ color: "var(--text-muted)" }}>aguardando apuração</span>
-                        </li>
-                      ) : null}
-                    </ul>
+                    {/* RF-301 — os nomes da Parcial saem de `vagasNaParcial`,
+                        a MESMA lista que esta contagem soma; UF aguardando
+                        nunca vira nome — vai para a linha "aguardando". */}
+                    <ComposicaoVagasLista
+                      linhas={linhasParcial}
+                      aguardando={parcial.aguardando}
+                      ufsAguardando={nomesParcial?.ufsAguardando ?? null}
+                      selo={VAGA_LABEL.parcial}
+                      testId="composicao-partidos-parcial"
+                      testIdAguardando="composicao-aguardando-parcial"
+                    />
                   </>
                 ) : (
                   // Nenhuma UF com contagem utilizável: diz que não tem, sem
@@ -554,6 +547,9 @@ export default async function SenadoPage() {
                   Retrato do que já foi contado, não resultado nem projeção. Estado ainda sem votos
                   apurados fica aguardando; estado com a apuração concluída conta igual à projeção.
                   O total por partido é a soma das 27 corridas estaduais. Não oficial.
+                  {linhasParcial.some((l) => l.nomes)
+                    ? " Abra um partido para ver os nomes."
+                    : null}
                 </p>
               </section>
             </div>
