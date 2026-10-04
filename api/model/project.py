@@ -2007,8 +2007,21 @@ def fetch_municipio_aggregates(
                 "votos_por_candidato": {},
                 "total_votos": 0,
                 "eleitores_tse": 0,
+                "secoes_tot": 0.0,
+                "secoes_total": 0.0,
             },
         )
+        # 🔴 04/10/2026 ~20h: % do município = Σ `s.st` / Σ `s.ts` dos pares
+        # — a conta do TSE (Σ ts das 10 zonas de Porto Alegre = 3.077 = `ts`
+        # do arquivo municipal). A média ponderada abaixo fica de fallback:
+        # com votos idênticos, Fortaleza dava 82,04% contra 82,76% do TSE.
+        _s = payload.get("s") if isinstance(payload, dict) else None
+        if isinstance(_s, dict):
+            _st = _parse_br_number(_s.get("st"))
+            _ts = _parse_br_number(_s.get("ts"))
+            if _st is not None and _ts is not None and _ts > 0:
+                bucket["secoes_tot"] += float(_st)
+                bucket["secoes_total"] += float(_ts)
         # 🔴 04/10/2026 ~19h50: `e.te` do próprio arquivo do par é o
         # eleitorado OFICIAL de 2026 (Σ te dos pares de Porto Alegre =
         # 1.064.200 = `te` do arquivo municipal). A tabela `eleitorado` é o
@@ -2063,7 +2076,11 @@ def fetch_municipio_aggregates(
     for key, b in agg.items():
         den = b["pct_apurado_den"]
         out[key] = {
-            "pct_apurado": b["pct_apurado_num"] / den if den > 0 else 0.0,
+            "pct_apurado": (
+                max(0.0, min(100.0, 100.0 * b["secoes_tot"] / b["secoes_total"]))
+                if b["secoes_total"] > 0
+                else (b["pct_apurado_num"] / den if den > 0 else 0.0)
+            ),
             "votos_por_candidato": b["votos_por_candidato"],
             "total_votos": b["total_votos"],
             "eleitores_tse": b["eleitores_tse"],
