@@ -2017,7 +2017,10 @@ def test_fetch_snapshots_corte_ignora_par_so_com_residuo_do_simulado(fake_db) ->
     municipios = {s["cod_municipio_tse"]: s for s in out}
     assert 1001 not in municipios
     assert 1002 in municipios
-    assert municipios[1002]["pct_apurado"] == 12.0
+    # A linha NOVA (40%), não a do simulado (90%). Identifica pelo payload: o
+    # `pct_apurado` agora sai de `s.st/s.ts` do envelope (04/10/2026), igual
+    # nas duas linhas sintéticas.
+    assert municipios[1002]["payload"] is snapshots[2]["payload"]
 
 
 def test_fetch_snapshots_corte_nao_se_aplica_antes_da_virada(fake_db) -> None:

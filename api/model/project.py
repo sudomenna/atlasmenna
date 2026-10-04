@@ -154,7 +154,11 @@ from api.model.turnout import (
     aggregate_national_participacao,
     estimate_uf_participacao,
 )
-from api.model.zona_merge import check_zona_merge_sanity, merge_pairs_into_zonas
+from api.model.zona_merge import (
+    check_zona_merge_sanity,
+    merge_pairs_into_zonas,
+    pct_totalizado,
+)
 
 # ---------------------------------------------------------------------------
 # Logging — JSON-line para alinhar com lib/tse/log.ts (RNF-032)
@@ -618,7 +622,11 @@ def fetch_snapshots(
             "cod_municipio_tse": int(r[1]) if r[1] is not None else 0,
             "cod_zona": r[2],
             "nivel": r[3],
-            "pct_apurado": float(r[4]) if r[4] is not None else 0.0,
+            # 🔴 04/10/2026: `s.st/s.ts` do payload, não a coluna (que o
+            # ingest grava de `s.psa` ≈ 100%) — ver `zona_merge.pct_totalizado`.
+            "pct_apurado": pct_totalizado(
+                r[5], float(r[4]) if r[4] is not None else 0.0
+            ),
             "payload": r[5],
             "ts": r[6],
         }

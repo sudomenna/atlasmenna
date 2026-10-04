@@ -156,6 +156,30 @@ def _num(raw: Any) -> float | None:
         return None
 
 
+def pct_totalizado(payload: Any, fallback: float) -> float:
+    """`% apurado` de um arquivo EA20 = `100 · s.st / s.ts` (seções
+    TOTALIZADAS sobre o total de seções), o mesmo número que o TSE chama de
+    `pst`.
+
+    🔴 04/10/2026 ~17h25, noite do 1º turno: o pipeline usava `s.psa`. No
+    leiaute de 2026, `si`/`sa` contam só as seções já totalizadas, então
+    `psa = sa/si` dá ~100% em qualquer par com UMA urna contada. O site
+    mostrou "Apurado 9,1%" com o TSE em 1,5% (`br-c0001-e006257-u.json`,
+    17h24: st 7.105 de ts 499.248, sa = si = 7.103, psa 100,00).
+
+    Sem `s.ts > 0` ou sem `s.st` (arquivo antigo, fixture), devolve
+    `fallback` — o valor que a linha já trazia.
+    """
+    s = payload.get("s") if isinstance(payload, dict) else None
+    if not isinstance(s, dict):
+        return fallback
+    st = _num(s.get("st"))
+    ts = _num(s.get("ts"))
+    if st is None or ts is None or ts <= 0:
+        return fallback
+    return max(0.0, min(100.0, 100.0 * st / ts))
+
+
 def _fmt_int(x: float) -> str:
     """Contagem somada → string de dígitos, o formato em que o TSE publica
     contagens no EA20 (sem separador de milhar)."""
@@ -214,6 +238,26 @@ def _psa_merged(rows: list[SnapshotRow]) -> tuple[float, bool]:
     Devolve `(psa, usou_fallback)`. Fallback (quando algum par não publica
     `s.si`, ou `Σsi = 0`): média dos `psa` de cada par ponderada por `e.te`.
     """
+    # 🔴 04/10/2026: `Σst / Σts` primeiro — ver `pct_totalizado`. O `Σsa/Σsi`
+    # abaixo dá ~100% para qualquer zona com uma urna totalizada no leiaute
+    # de 2026; fica só para arquivo sem `s.ts`.
+    soma_st = 0.0
+    soma_ts = 0.0
+    ts_completo = True
+    for r in rows:
+        payload = r.get("payload")
+        s = payload.get("s") if isinstance(payload, dict) else None
+        s = s if isinstance(s, dict) else {}
+        st = _num(s.get("st"))
+        ts = _num(s.get("ts"))
+        if st is None or ts is None:
+            ts_completo = False
+            break
+        soma_st += st
+        soma_ts += ts
+    if ts_completo and soma_ts > 0:
+        return max(0.0, min(100.0, 100.0 * soma_st / soma_ts)), False
+
     soma_sa = 0.0
     soma_si = 0.0
     si_completo = True
