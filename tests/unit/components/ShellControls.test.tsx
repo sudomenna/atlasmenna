@@ -43,7 +43,7 @@ describe("<ShellControls />", () => {
     expect(tabs.map((t) => t.getAttribute("data-value"))).toEqual(["parcial", "proj"]);
     // Estado exposto: exatamente um selecionado, e é o default da store.
     expect(tabs.filter((t) => t.getAttribute("aria-selected") === "true")).toHaveLength(1);
-    expect(view?.getAttribute("data-value")).toBe("proj");
+    expect(view?.getAttribute("data-value")).toBe("parcial");
   });
 
   it("(c) o slot de cargo é do caller — o layout continua sendo quem compõe o shell", () => {

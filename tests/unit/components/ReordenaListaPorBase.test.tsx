@@ -224,13 +224,13 @@ describe("<ReordenaListaPorBase /> — ligado à store de base", () => {
     root = createRoot(host);
 
     act(() => root?.render(<ReordenaListaPorBase />));
-    expect(ordem(ol)).toEqual(["A", "B", "C"]); // default é `proj`
-
-    act(() => setViewMode("parcial"));
-    expect(ordem(ol)).toEqual(["C", "B", "A"]);
+    expect(ordem(ol)).toEqual(["C", "B", "A"]); // default é `parcial` (04/10/2026)
 
     act(() => setViewMode("proj"));
     expect(ordem(ol)).toEqual(["A", "B", "C"]);
+
+    act(() => setViewMode("parcial"));
+    expect(ordem(ol)).toEqual(["C", "B", "A"]);
   });
 
   it("uma lista SEM o atributo não é tocada — é a garantia da fase pré", () => {

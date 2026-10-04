@@ -27,7 +27,7 @@
  * cascata, qual coluna fica em destaque e qual fica em segundo plano. Isso
  * significa que:
  *
- *   - o servidor renderiza `<html data-view="proj">` (o default), então o
+ *   - o servidor renderiza `<html data-view="parcial">` (o default), então o
  *     primeiro paint já sai correto, sem flash e sem esperar hidratação;
  *   - componentes puramente textuais (linhas de candidato, o `<h1>` do
  *     painel) NÃO precisam virar Client Component para reagir — o CSS faz
@@ -58,14 +58,16 @@
 export type ViewMode = "parcial" | "proj";
 
 /**
- * Base que a página abre. `proj` porque a projeção é o produto — o parcial
- * está sempre a um toque de distância, e ambos os números continuam visíveis
- * lado a lado nas linhas de candidato de qualquer forma.
+ * Base que a página abre. `parcial` desde 04/10/2026 ~17h (decisão do dono
+ * na noite do 1º turno): abre no número oficial apurado pelo TSE, e a
+ * projeção fica a um toque de distância. Até então era `proj` ("a projeção
+ * é o produto", ADR-0029 § 2). Os dois números continuam visíveis lado a
+ * lado nas linhas de candidato de qualquer forma.
  *
  * Precisa casar com o `data-view` que `app/layout.tsx` escreve no `<html>`,
  * senão o primeiro render do cliente diverge do HTML do servidor.
  */
-export const VIEW_MODE_DEFAULT: ViewMode = "proj";
+export const VIEW_MODE_DEFAULT: ViewMode = "parcial";
 
 /** Atributo espelhado no `<html>` — a ponte entre a store e a cascata CSS. */
 export const VIEW_MODE_ATTRIBUTE = "data-view";

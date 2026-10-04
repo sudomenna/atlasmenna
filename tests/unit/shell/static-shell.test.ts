@@ -109,7 +109,7 @@ describe("shell estático (ADR-0029 § 2 — restrição dura)", () => {
     expect(code).toContain('from "@/lib/state/view-mode"');
     // Se o default mudar sem o `<html>` acompanhar, o primeiro render do
     // cliente diverge do HTML do servidor e a hidratação é descartada.
-    expect(VIEW_MODE_DEFAULT).toBe("proj");
+    expect(VIEW_MODE_DEFAULT).toBe("parcial");
   });
 
   it("(c2) nenhum módulo alcançado pelo Server Component do layout importa React", () => {

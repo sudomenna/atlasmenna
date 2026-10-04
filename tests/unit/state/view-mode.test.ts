@@ -30,8 +30,8 @@ beforeEach(() => {
 });
 
 describe("view-mode store (ADR-0029 § 2)", () => {
-  it("(a) o default é 'proj' — e é ele que `app/layout.tsx` escreve no <html>", () => {
-    expect(VIEW_MODE_DEFAULT).toBe("proj");
+  it("(a) o default é 'parcial' (desde 04/10/2026) — e é ele que `app/layout.tsx` escreve no <html>", () => {
+    expect(VIEW_MODE_DEFAULT).toBe("parcial");
     expect(VIEW_MODE_ATTRIBUTE).toBe("data-view");
   });
 
@@ -47,18 +47,18 @@ describe("view-mode store (ADR-0029 § 2)", () => {
     const listener = vi.fn();
     const unsubscribe = subscribeViewMode(listener);
 
-    setViewMode("parcial");
+    setViewMode("proj");
     expect(listener).toHaveBeenCalledTimes(1);
 
     // Mesmo valor → nenhum re-render disparado nos assinantes.
-    setViewMode("parcial");
+    setViewMode("proj");
     expect(listener).toHaveBeenCalledTimes(1);
 
-    setViewMode("proj");
+    setViewMode("parcial");
     expect(listener).toHaveBeenCalledTimes(2);
 
     unsubscribe();
-    setViewMode("parcial");
+    setViewMode("proj");
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
