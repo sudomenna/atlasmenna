@@ -40,7 +40,7 @@ describe("<CandidateBar />", () => {
     expect(text).toContain("Lula");
     expect(text).toContain("PT");
     expect(text).toContain("53,2%");
-    expect(text).toContain("≈ aproximadamente 79,8 mi votos projetados");
+    expect(text).toContain("≈ 79,8 mi votos projetados");
   });
 
   it("(b) clamp: pct > 100 vira 100, < 0 vira 0", () => {

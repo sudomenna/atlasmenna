@@ -81,6 +81,7 @@ import { MANDATO_2027 } from "@/lib/senado/mandato-2027";
 import { MANDATO_2031 } from "@/lib/senado/mandato-2031";
 import { haAnulada, NOTA_ANULADAS_SEM_REGRA_1T } from "@/lib/utils/destino-voto";
 import { textForParty } from "@/lib/utils/party-color";
+import { composicaoNaParcial } from "@/lib/utils/senado-parcial";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import senFixture from "@/tests/fixtures/edge-config/sen-current.json" with { type: "json" };
 
@@ -259,6 +260,22 @@ export default async function SenadoPage() {
     : [];
   const aguardando = composicao ? Math.max(0, vagasEmDisputa - composicao.vagas_projetadas) : 0;
 
+  // 04/10/2026 (dono) — a mesma composição "se a apuração parasse agora": os
+  // dois mais votados ATÉ AQUI em cada UF (`lib/utils/senado-parcial.ts`), UF
+  // sem apurado aguardando, UF concluída igual à projeção. Mesma regra de cor
+  // da barra da projeção (`textForParty`).
+  const parcial = composicao
+    ? composicaoNaParcial(payload.por_uf, composicao.vagas_por_uf ?? VAGAS, vagasEmDisputa)
+    : null;
+  const segmentosParcial: VoteBarSegment[] = parcial
+    ? parcial.porPartido.map((p) => ({
+        id: p.partido,
+        label: p.partido,
+        pct: vagasEmDisputa > 0 ? (p.vagas * 100) / vagasEmDisputa : 0,
+        color: textForParty(p.partido),
+      }))
+    : [];
+
   return (
     <main
       data-trilha="sen"
@@ -357,11 +374,19 @@ export default async function SenadoPage() {
             aparece aqui quando a votação começar.
           </p>
         ) : composicao ? (
-          <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
-            {/* Sem `marker`: não existe "maioria" a marcar aqui. Metade destas
+          <>
+            {/* 04/10/2026 (dono) — o bloco reage à chave "Parcial / Projeção":
+              duas versões, cada uma sob um `<div data-view-only>` NU (sem
+              classe de `display` — `app/globals.css`). A da projeção é a de
+              sempre; a da Parcial segue o precedente de `/governador` ("Se a
+              apuração parasse agora"). A escondida sai da árvore de
+              acessibilidade, e o `<h2>` do painel é um só. */}
+            <div data-view-only="proj">
+              <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
+                {/* Sem `marker`: não existe "maioria" a marcar aqui. Metade destas
                 54 vagas não é metade do Senado — as outras 27 cadeiras não
                 estão em disputa e seguem com quem foi eleito em 2022. */}
-            {/* `showLabels={false}`: o `<VoteBar>` rotula, por default, o
+                {/* `showLabels={false}`: o `<VoteBar>` rotula, por default, o
                 PRIMEIRO e o SEGUNDO segmento — desenho pensado para o duelo de
                 uma corrida majoritária. Numa composição de oito partidos isso
                 imprime dois nomes arbitrários sob a barra, como se os dois
@@ -369,69 +394,170 @@ export default async function SenadoPage() {
                 TODOS, com a contagem de cada um. O `ariaLabel` explícito
                 garante que o leitor de tela receba a série inteira em vez do
                 texto gerado para dois segmentos. */}
-            <VoteBar
-              ariaLabel={`Composição projetada das ${vagasEmDisputa} vagas em disputa: ${composicao.por_partido
-                .map((p) => `${p.partido} ${p.vagas}`)
-                .join(", ")}`}
-              marker={null}
-              segments={segmentos}
-              showLabels={false}
-            />
+                <VoteBar
+                  ariaLabel={`Composição projetada das ${vagasEmDisputa} vagas em disputa: ${composicao.por_partido
+                    .map((p) => `${p.partido} ${p.vagas}`)
+                    .join(", ")}`}
+                  marker={null}
+                  segments={segmentos}
+                  showLabels={false}
+                />
 
-            <ul
-              className="flex flex-wrap"
-              data-testid="composicao-partidos"
-              style={{ listStyle: "none", margin: 0, padding: 0, gap: "var(--space-3)" }}
-            >
-              {composicao.por_partido.map((p) => (
-                <li
-                  key={p.partido}
-                  className="inline-flex items-baseline"
-                  style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
+                <ul
+                  className="flex flex-wrap"
+                  data-testid="composicao-partidos"
+                  style={{ listStyle: "none", margin: 0, padding: 0, gap: "var(--space-3)" }}
                 >
-                  <span style={{ font: "var(--type-figure-sm)" }}>{p.vagas}</span>
-                  {/* Desenhado ⇒ abreviado (2026-09-19). Oito ou mais partidos
+                  {composicao.por_partido.map((p) => (
+                    <li
+                      key={p.partido}
+                      className="inline-flex items-baseline"
+                      style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
+                    >
+                      <span style={{ font: "var(--type-figure-sm)" }}>{p.vagas}</span>
+                      {/* Desenhado ⇒ abreviado (2026-09-19). Oito ou mais partidos
                       numa fileira `flex-wrap`; o `ariaLabel` do `<VoteBar>`
                       logo acima segue com as siglas inteiras.
                       🔴 Esta é a composição do SENADO, não a bancada da Câmara:
                       a exceção do dono ("home de Deputados não abrevia") é da
                       rota `/deputado-federal`, não de toda tela que lista
                       partido. */}
-                  <span style={{ color: "var(--text-secondary)" }}>{siglaExibicao(p.partido)}</span>
-                </li>
-              ))}
-              {aguardando > 0 ? (
-                <li
-                  className="inline-flex items-baseline"
-                  data-testid="composicao-aguardando"
-                  style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
-                >
-                  <span style={{ font: "var(--type-figure-sm)" }}>{aguardando}</span>
-                  <span style={{ color: "var(--text-muted)" }}>aguardando apuração</span>
-                </li>
-              ) : null}
-            </ul>
+                      <span style={{ color: "var(--text-secondary)" }}>
+                        {siglaExibicao(p.partido)}
+                      </span>
+                    </li>
+                  ))}
+                  {aguardando > 0 ? (
+                    <li
+                      className="inline-flex items-baseline"
+                      data-testid="composicao-aguardando"
+                      style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
+                    >
+                      <span style={{ font: "var(--type-figure-sm)" }}>{aguardando}</span>
+                      <span style={{ color: "var(--text-muted)" }}>aguardando apuração</span>
+                    </li>
+                  ) : null}
+                </ul>
 
-            <p
-              className="max-w-prose"
-              data-testid="composicao-nota"
-              style={{
-                margin: 0,
-                font: "var(--type-body-sm)",
-                fontSize: "var(--text-xs)",
-                color: "var(--text-muted)",
-                textWrap: "pretty",
-              }}
-            >
-              O Senado tem <strong>{composicao.total_cadeiras ?? 81} cadeiras</strong>. Em 2026 a
-              eleição renova dois terços delas — as{" "}
-              <strong>{vagasEmDisputa} que aparecem aqui</strong>. As outras{" "}
-              {(composicao.total_cadeiras ?? 81) - vagasEmDisputa} são de senadores eleitos em 2022,
-              com mandato até 2031: não estão em disputa e não entram nesta contagem. O total por
-              partido é a soma das 27 corridas estaduais — o TSE não publica um arquivo nacional
-              para este cargo.
-            </p>
-          </div>
+                <p
+                  className="max-w-prose"
+                  data-testid="composicao-nota"
+                  style={{
+                    margin: 0,
+                    font: "var(--type-body-sm)",
+                    fontSize: "var(--text-xs)",
+                    color: "var(--text-muted)",
+                    textWrap: "pretty",
+                  }}
+                >
+                  O Senado tem <strong>{composicao.total_cadeiras ?? 81} cadeiras</strong>. Em 2026
+                  a eleição renova dois terços delas — as{" "}
+                  <strong>{vagasEmDisputa} que aparecem aqui</strong>. As outras{" "}
+                  {(composicao.total_cadeiras ?? 81) - vagasEmDisputa} são de senadores eleitos em
+                  2022, com mandato até 2031: não estão em disputa e não entram nesta contagem. O
+                  total por partido é a soma das 27 corridas estaduais — o TSE não publica um
+                  arquivo nacional para este cargo.
+                </p>
+              </div>
+            </div>
+            <div data-view-only="parcial">
+              <section
+                aria-labelledby="composicao-parcial-heading"
+                className="flex flex-col"
+                data-testid="composicao-parcial"
+                style={{ gap: "var(--space-4)" }}
+              >
+                <h3
+                  id="composicao-parcial-heading"
+                  style={{ margin: 0, font: "var(--type-title)", fontSize: "var(--text-lg)" }}
+                >
+                  Se a apuração parasse agora
+                </h3>
+                <p
+                  className="max-w-prose"
+                  style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+                >
+                  O que já saiu das urnas, sem projeção: em cada estado, as duas vagas ficam com os
+                  dois mais votados até aqui.
+                </p>
+                {parcial && parcial.atribuidas > 0 ? (
+                  <>
+                    <VoteBar
+                      ariaLabel={`Vagas em disputa se a apuração parasse agora: ${parcial.porPartido
+                        .map((p) => `${p.partido} ${p.vagas}`)
+                        .join(
+                          ", ",
+                        )}${parcial.aguardando > 0 ? `; ${parcial.aguardando} aguardando apuração` : ""}`}
+                      marker={null}
+                      segments={segmentosParcial}
+                      showLabels={false}
+                    />
+                    <ul
+                      className="flex flex-wrap"
+                      data-testid="composicao-partidos-parcial"
+                      style={{ listStyle: "none", margin: 0, padding: 0, gap: "var(--space-3)" }}
+                    >
+                      {parcial.porPartido.map((p) => (
+                        <li
+                          key={p.partido}
+                          className="inline-flex items-baseline"
+                          style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
+                        >
+                          <span style={{ font: "var(--type-figure-sm)" }}>{p.vagas}</span>
+                          <span style={{ color: "var(--text-secondary)" }}>
+                            {siglaExibicao(p.partido)}
+                          </span>
+                        </li>
+                      ))}
+                      {parcial.aguardando > 0 ? (
+                        <li
+                          className="inline-flex items-baseline"
+                          data-testid="composicao-aguardando-parcial"
+                          style={{ gap: "var(--space-2)", font: "var(--type-body-sm)" }}
+                        >
+                          <span style={{ font: "var(--type-figure-sm)" }}>
+                            {parcial.aguardando}
+                          </span>
+                          <span style={{ color: "var(--text-muted)" }}>aguardando apuração</span>
+                        </li>
+                      ) : null}
+                    </ul>
+                  </>
+                ) : (
+                  // Nenhuma UF com contagem utilizável: diz que não tem, sem
+                  // número nenhum (decisão do dono, 14/09 — nunca um zero de
+                  // resgate).
+                  <p
+                    className="max-w-prose"
+                    data-testid="composicao-parcial-vazia"
+                    style={{
+                      margin: 0,
+                      font: "var(--type-body-sm)",
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    Nenhum estado tem votos apurados para senador ainda. A contagem por partido
+                    aparece aqui quando a apuração começar.
+                  </p>
+                )}
+                <p
+                  className="max-w-prose"
+                  data-testid="composicao-nota-parcial"
+                  style={{
+                    margin: 0,
+                    font: "var(--type-body-sm)",
+                    fontSize: "var(--text-xs)",
+                    color: "var(--text-muted)",
+                    textWrap: "pretty",
+                  }}
+                >
+                  Retrato do que já foi contado, não resultado nem projeção. Estado ainda sem votos
+                  apurados fica aguardando; estado com a apuração concluída conta igual à projeção.
+                  O total por partido é a soma das 27 corridas estaduais. Não oficial.
+                </p>
+              </section>
+            </div>
+          </>
         ) : (
           <p
             className="max-w-prose"
@@ -499,13 +625,26 @@ export default async function SenadoPage() {
                 estado (`/uf/[sigla]/senador`, RF-104). Cada cartão segue sendo
                 o link para essa tela, e a lista continua o alvo do
                 `aria-describedby` do mapa nacional (`corridas-heading`). */}
+            {/* 04/10/2026 (dono) — o texto acompanha a base dos cartões. Um
+                `<p>` não tem classe de `display`, então pode levar o
+                `data-view-only` direto. */}
             <p
               className="max-w-prose"
+              data-view-only="proj"
               style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
             >
               Os quatro mais votados de cada estado e a soma dos demais, em percentual dos votos
               válidos. São duas vagas por estado: ficam com elas as duas primeiras posições, que
               levam o selo de eleito pela projeção — não é o resultado oficial.
+            </p>
+            <p
+              className="max-w-prose"
+              data-view-only="parcial"
+              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+            >
+              Os quatro mais votados até agora em cada estado e a soma dos demais, em percentual dos
+              votos já apurados. Se a apuração parasse agora, as duas vagas ficariam com os que
+              levam o selo "vaga na parcial" — não é resultado nem projeção.
             </p>
             {/* Spec 025 (RF-247) — filtro por etiqueta: esconde corridas, nunca reordena. */}
             {capa.filtro.length > 0 ? (
@@ -552,6 +691,7 @@ export default async function SenadoPage() {
                                 cargo="sen"
                                 nivelTitulo={4}
                                 etiquetas={capa.chips(uf.sigla)}
+                                duasBases
                               />
                             </a>
                           </li>

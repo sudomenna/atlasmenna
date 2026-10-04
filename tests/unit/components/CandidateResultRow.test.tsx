@@ -814,7 +814,9 @@ describe("🔴 votos projetados na visão Projeção (decisão do dono, 2026-10-
     const linha = linhaKit(doc);
     const p = proj(doc);
     expect(p?.getAttribute("data-view-only")).toBe("proj");
-    expect(p?.textContent).toBe("≈ aproximadamente 172 mil votos projetados");
+    expect(p?.querySelector(':scope > [aria-hidden="true"]')?.textContent).toBe(
+      "≈ 172 mil votos projetados",
+    );
     // Classe do átomo (`.votos` → `--color-pct-proj`, travado em
     // `ProjecaoIndicador.test.tsx` e no teste de contraste), nada inline.
     expect(p?.getAttribute("class")).toMatch(/votos/);
@@ -836,7 +838,9 @@ describe("🔴 votos projetados na visão Projeção (decisão do dono, 2026-10-
     const doc = parse(<CandidateResultRow {...BASE} {...VOTOS} />);
     const p = proj(doc);
     expect(p?.getAttribute("data-view-only")).toBe("proj");
-    expect(p?.textContent).toBe("≈ aproximadamente 172 mil votos projetados");
+    expect(p?.querySelector(':scope > [aria-hidden="true"]')?.textContent).toBe(
+      "≈ 172 mil votos projetados",
+    );
     expect(
       p?.parentElement?.querySelector(':scope > [data-view-only="parcial"]')?.textContent,
     ).toBe("67 mil votos");
@@ -890,7 +894,9 @@ describe("🔴 votos projetados na visão Projeção (decisão do dono, 2026-10-
     expect(props.votosProjetados).toBe(1_512_345);
     for (const variant of ["kit", "densa"] as const) {
       const doc = parse(<CandidateResultRow {...props} variant={variant} />);
-      expect(proj(doc)?.textContent).toBe("≈ aproximadamente 1,5 mi votos projetados");
+      expect(proj(doc)?.querySelector(':scope > [aria-hidden="true"]')?.textContent).toBe(
+        "≈ 1,5 mi votos projetados",
+      );
       expect(proj(doc)?.textContent).not.toContain("67");
     }
     // Fonte sem o campo (payload legado, fonte montada à mão) ⇒ sem linha projetada.

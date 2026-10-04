@@ -165,8 +165,8 @@
   white-space: nowrap;
 }
 
-/* percentual — é o PROJETADO (`top_candidatos[].pct` / `outros.pct`, nas duas
- * visões) ⇒ cor da projeção (decisão do dono, 2026-10-04: "sempre que exibir
+/* percentual — é o PROJETADO (`top_candidatos[].pct` / `outros.pct`; no
+ * modo de duas bases, a lista da projeção) ⇒ cor da projeção (decisão do dono, 2026-10-04: "sempre que exibir
  * percentual projetado a cor deve ser a cor padrão para projeção"). O cartão
  * é `--color-bg` (= `--surface-card`), onde o ocre mede 5,45:1 / 8,75:1. */
 .c li > span:nth-child(4) {
@@ -174,4 +174,13 @@
   width: 2.5rem;
   text-align: right;
   color: var(--color-pct-proj);
+}
+
+/* 04/10/2026 (dono) — a lista da PARCIAL (`duasBases`, dentro de
+ * `[data-view-only="parcial"]`) mostra o APURADO (`pct_atual`) ⇒ a cor dos
+ * números de voto, `--color-pct-votos` (= `--text-primary`), não a da
+ * projeção. Mais específica que a regra acima (classe + atributo +
+ * pseudo-classe), então vence sem `!important`. */
+.c [data-view-only="parcial"] li > span:nth-child(4) {
+  color: var(--color-pct-votos);
 }

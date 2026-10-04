@@ -261,6 +261,19 @@ const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> 
   "/uf/MG/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/SP/deputado-estadual": TETO_DOCUMENTO_ASSEMBLEIA_UF,
   "/uf/DF/deputado-distrital": TETO_DOCUMENTO_ASSEMBLEIA_UF,
+  // 04/10 — decisão do dono. `build:e2e` em worktree limpo (base 6f4f0df):
+  // `/uf/SP` mediu 309.710 B SEM as mudanças do dia (já acima dos 300 KiB por
+  // causa do "↑ 38,0% proj" e do "≈ N votos projetados" de 03/10, ~260 +
+  // ~300 B por linha ×2 pelo payload RSC) e 310.747 B com a correção de a11y
+  // do "≈"; comprimido, 32.330 B. 320 KiB deixam ~16 KiB para a noite.
+  "/uf/SP": 320 * KIB,
+  // 04/10 — decisão do dono: a capa ganhou a versão Parcial completa (barra
+  // das 54, hemiciclo das 81 e os 27 cartões por apurado, em
+  // `data-view-only`). Mesma base: 297.540 B → 462.558 B (+55%); comprimido,
+  // 33.647 B → 44.159 B (+10,5 KB, o que o celular baixa). Os cartões vivem
+  // dentro do client `RegiaoRecolhivel` ⇒ cada byte vai também no payload
+  // RSC. 480 KiB deixam ~29 KiB para a noite. Enxugar é a próxima tarefa.
+  "/senador": 480 * KIB,
 };
 
 function tetoDoDocumento(route: (typeof ROUTES)[number]): number {

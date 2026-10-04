@@ -377,7 +377,12 @@ describe("/senador (T-09)", () => {
     expect(doc.querySelectorAll("[data-uf='SP'] article b[data-s='e']")).toHaveLength(VAGAS_SENADO);
 
     // O rótulo acessível diz "eleitos" e nomeia os DOIS, não "o líder".
-    const aria = doc.querySelector("[data-uf='SP'] article")?.getAttribute("aria-label") ?? "";
+    // Desde 04/10/2026 (cartão nas duas bases) a descrição da projeção mora na
+    // `<ul>` da visão Projeção; o `<article>` diz só UF e apurado.
+    const aria =
+      doc
+        .querySelector("[data-uf='SP'] article [data-view-only='proj'] > ul")
+        ?.getAttribute("aria-label") ?? "";
     expect(aria).toMatch(/eleitos: Ana Lima .* e Bruno Reis /);
     expect(aria).not.toContain("Célia Mota");
     expect(aria).not.toMatch(/líder/);
@@ -669,6 +674,132 @@ describe("/senador — spec 023: as 81 cadeiras e a barra na paleta de partido",
     const doc = await render(SenadoPage());
 
     expect(hemiciclo(doc)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// /senador — a chave "Parcial / Projeção" (decisão do dono, 04/10/2026)
+// ---------------------------------------------------------------------------
+
+describe("/senador — Parcial × Projeção (04/10)", () => {
+  /**
+   * SP com o apurado em ordem OUTRA que a da projeção: projeção Ana (PT) >
+   * Bruno (PL) > Célia (MDB); apurado Bruno 35 > Célia 33 > Ana 25. RJ sem
+   * `pct_atual` (não medido) ⇒ aguardando na Parcial.
+   */
+  function comApurado(): EdgePayload {
+    const p = nacional();
+    const sp = p.por_uf[0] as EdgeUfRow;
+    const atual: Record<number, number> = { 1: 25, 2: 35, 3: 33 };
+    sp.top_candidatos = sp.top_candidatos.map((t) => ({ ...t, pct_atual: atual[t.id] }));
+    return p;
+  }
+
+  const itens = (el: Element | null | undefined) =>
+    [...(el?.querySelectorAll("li") ?? [])].map((li) =>
+      (li.textContent ?? "").replace(/\s+/g, " ").trim(),
+    );
+
+  it("🔴 'As 54 vagas': Projeção = `composicao_vagas`; Parcial = os 2 mais votados até aqui", async () => {
+    readProjectionMock.mockResolvedValue(comApurado());
+    const doc = await render(SenadoPage());
+    const proj = doc.querySelector("[data-view-only='proj'] [data-testid='composicao-partidos']");
+    const parcial = doc.querySelector(
+      "[data-view-only='parcial'] [data-testid='composicao-partidos-parcial']",
+    );
+    // A projeção é a de sempre — o payload, intocado.
+    expect(itens(proj)).toEqual(["1PL", "1PP", "1PSD", "1PT", "50aguardando apuração"]);
+    // A Parcial: SP pelo apurado (PL, MDB); RJ sem medida ⇒ aguardando.
+    expect(itens(parcial)).toEqual(["1MDB", "1PL", "52aguardando apuração"]);
+    // O rótulo do precedente de /governador, só na Parcial.
+    const titulo = doc.getElementById("composicao-parcial-heading");
+    expect(titulo?.textContent).toBe("Se a apuração parasse agora");
+    expect(titulo?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe("parcial");
+    // Barra da Parcial: cor do PARTIDO (mesma regra da projeção), soma ≤ 54.
+    const trilho = doc.querySelector("[data-view-only='parcial'] [data-testid='vote-bar-track']");
+    expect(trilho?.getAttribute("aria-label")).toBe(
+      "Vagas em disputa se a apuração parasse agora: MDB 1, PL 1; 52 aguardando apuração",
+    );
+    const segs = [
+      ...(trilho?.querySelectorAll("[data-testid='vote-bar-segment']") ?? []),
+    ] as HTMLElement[];
+    expect(segs).toHaveLength(2);
+    // Um `<h2>` só para o painel — a versão escondida não duplica o título.
+    expect(doc.querySelectorAll("#composicao-heading")).toHaveLength(1);
+  });
+
+  it("🔴 nada apurado ⇒ a Parcial diz que não tem, sem número nenhum", async () => {
+    readProjectionMock.mockResolvedValue(nacional());
+    const doc = await render(SenadoPage());
+    const bloco = doc.querySelector("[data-testid='composicao-parcial']");
+    expect(bloco?.querySelector("[data-testid='composicao-parcial-vazia']")).not.toBeNull();
+    expect(bloco?.querySelector("[data-testid='composicao-partidos-parcial']")).toBeNull();
+    expect(bloco?.querySelector("[data-testid='vote-bar']")).toBeNull();
+  });
+
+  it("🔴 'As 81 cadeiras': o hemiciclo da Parcial pinta as 54 pelo apurado; o da Projeção, o de sempre", async () => {
+    readProjectionMock.mockResolvedValue(comApurado());
+    const doc = await render(SenadoPage());
+    const proj = doc.querySelector("[data-view-only='proj'] [data-testid='senado-hemiciclo']");
+    const parcial = doc.querySelector(
+      "[data-view-only='parcial'] [data-testid='senado-hemiciclo']",
+    );
+    const n = (h: Element | null, estado: string) =>
+      h?.querySelectorAll(`svg g[data-estado='${estado}'] circle`).length;
+    expect([n(proj, "continua_2031"), n(proj, "projetada"), n(proj, "aguardando")]).toEqual([
+      27, 4, 50,
+    ]);
+    expect([
+      n(parcial, "continua_2031"),
+      n(parcial, "projetada"),
+      n(parcial, "aguardando"),
+    ]).toEqual([27, 2, 52]);
+    // As 2 da Parcial são PL e MDB (anel na cor do partido), nenhuma PT/PP/PSD.
+    const partidos = [...(parcial?.querySelectorAll("svg g[data-estado='projetada']") ?? [])].map(
+      (g) => g.getAttribute("data-partido"),
+    );
+    expect(partidos.sort()).toEqual(["MDB", "PL"]);
+    // Texto da base certa, e nunca "eleito".
+    expect(parcial?.textContent).toContain("se a apuração parasse agora");
+    expect(parcial?.textContent).not.toContain("pela projeção");
+    expect(parcial?.textContent?.toLowerCase()).not.toContain("eleit");
+    // `id`s internos não colidem entre as duas figuras.
+    const ids = [...doc.querySelectorAll("[id]")].map((e) => e.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    // Um título só para o painel.
+    expect(doc.querySelectorAll("#senado-2027-heading")).toHaveLength(1);
+  });
+
+  it("🔴 cartões: Projeção com '● ELEITO' e % projetado; Parcial com o apurado e 'VAGA NA PARCIAL'", async () => {
+    readProjectionMock.mockResolvedValue(comApurado());
+    const doc = await render(SenadoPage());
+    const cartao = doc.querySelector("[data-uf='SP'] article");
+    const proj = itens(cartao?.querySelector("[data-view-only='proj']"));
+    const parcial = itens(cartao?.querySelector("[data-view-only='parcial']"));
+    expect(proj[0]).toMatch(/^1° ?Ana Lima ?PT.*● ELEITO.*40%$/);
+    expect(proj[1]).toMatch(/^2° ?Bruno Reis ?PL.*● ELEITO.*30%$/);
+    expect(parcial[0]).toMatch(/^1° ?Bruno Reis ?PL.*VAGA NA PARCIAL.*35%$/);
+    expect(parcial[1]).toMatch(/^2° ?Célia Mota ?MDB.*VAGA NA PARCIAL.*33%$/);
+    expect(parcial[2]).toMatch(/^3° ?Ana Lima ?PT.*25%$/);
+    expect(parcial.join(" ")).not.toContain("ELEITO");
+    // RJ sem `pct_atual`: ordem da projeção, "—", nenhum selo.
+    const rj = itens(doc.querySelector("[data-uf='RJ'] article [data-view-only='parcial']"));
+    expect(rj.every((l) => l.endsWith("—"))).toBe(true);
+    expect(rj.join(" ")).not.toContain("VAGA");
+    // O texto acima da lista segue a base.
+    const textos = [...doc.querySelectorAll("p[data-view-only]")].map((p) => [
+      p.getAttribute("data-view-only"),
+      p.textContent ?? "",
+    ]);
+    expect(textos.find(([b]) => b === "proj")?.[1]).toContain("eleito pela projeção");
+    expect(textos.find(([b]) => b === "parcial")?.[1]).toContain("Se a apuração parasse agora");
+  });
+
+  it("fase pré: nada é duplicado — o hemiciclo e a composição saem uma vez só", async () => {
+    readProjectionMock.mockResolvedValue(nacional({ fase: FASE_PRE_ELEICAO }));
+    const doc = await render(SenadoPage());
+    expect(doc.querySelectorAll("[data-testid='senado-hemiciclo']")).toHaveLength(1);
+    expect(doc.querySelector("[data-testid='composicao-parcial']")).toBeNull();
   });
 });
 

@@ -54,8 +54,8 @@ describe("<HeadlineScore />", () => {
     expect(text).toContain("Lula à frente");
     expect(text).toContain("53,2%");
     expect(text).toContain("46,8%");
-    expect(text).toContain("≈ aproximadamente 79,8 mi votos projetados");
-    expect(text).toContain("≈ aproximadamente 70,1 mi votos projetados");
+    expect(text).toContain("≈ 79,8 mi votos projetados");
+    expect(text).toContain("≈ 70,1 mi votos projetados");
     expect(text).toContain("[51,9; 54,5]");
   });
 
@@ -191,12 +191,9 @@ describe("<HeadlineScore />", () => {
     // "projetados" — o número cheio afirmava precisão que o modelo não tem.
     const binary = parse(<HeadlineScore candidatos={[lula, bolso]} mode="binary" />);
     const linhas = [...binary.querySelectorAll('[data-testid="votos-projetados"]')].map(
-      (e) => e.textContent,
+      (e) => e.querySelector(':scope > [aria-hidden="true"]')?.textContent,
     );
-    expect(linhas).toEqual([
-      "≈ aproximadamente 79,8 mi votos projetados",
-      "≈ aproximadamente 70,1 mi votos projetados",
-    ]);
+    expect(linhas).toEqual(["≈ 79,8 mi votos projetados", "≈ 70,1 mi votos projetados"]);
     expect(binary.body.textContent).not.toContain("79.812.408");
     // O placar só mostra projeção: a linha não pode sumir na visão Parcial.
     for (const e of binary.querySelectorAll('[data-testid="votos-projetados"]')) {

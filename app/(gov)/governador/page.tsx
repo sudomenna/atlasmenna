@@ -696,6 +696,10 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
                             uf={uf}
                             candidatos={national.candidatos}
                             etiquetas={capa.cartao(uf.sigla)}
+                            // 04/10/2026 (dono) — o cartão reage à chave
+                            // "Parcial / Projeção": apurado na Parcial,
+                            // projeção na Projeção.
+                            duasBases
                           />
                         ))}
                       </div>

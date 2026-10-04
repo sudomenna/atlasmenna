@@ -140,14 +140,22 @@ describe("<VotosProjetados /> e votosProjetadosExibiveis", () => {
   }
 
   it("(a) compacto, com '≈' e 'votos projetados' — mil e mi", () => {
-    expect(vp(172_418)?.textContent).toBe("≈ aproximadamente 172 mil votos projetados");
-    expect(vp(1_512_345)?.textContent).toBe("≈ aproximadamente 1,5 mi votos projetados");
+    expect(vp(172_418)?.querySelector(':scope > [aria-hidden="true"]')?.textContent).toBe(
+      "≈ 172 mil votos projetados",
+    );
+    expect(vp(1_512_345)?.querySelector(':scope > [aria-hidden="true"]')?.textContent).toBe(
+      "≈ 1,5 mi votos projetados",
+    );
   });
 
   it("(b) a11y: '≈' é aria-hidden; quem ouve recebe 'aproximadamente 172 mil votos projetados'", () => {
     const raiz = vp(172_418);
-    expect(raiz?.querySelector('[aria-hidden="true"]')?.textContent).toBe("≈ ");
-    expect(raiz?.querySelector(".sr-only")?.textContent).toBe("aproximadamente ");
+    expect(raiz?.querySelector('[aria-hidden="true"]')?.textContent).toBe(
+      "≈ 172 mil votos projetados",
+    );
+    expect(raiz?.querySelector(".sr-only")?.textContent).toBe(
+      "aproximadamente 172 mil votos projetados",
+    );
     // O que um leitor de tela lê: tudo menos o aria-hidden.
     const fala = [...(raiz?.childNodes ?? [])]
       .filter((n) => !(n instanceof Element && n.getAttribute("aria-hidden") === "true"))

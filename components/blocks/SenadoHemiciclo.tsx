@@ -43,6 +43,18 @@
  *
  * `role="img"` com `<title>`/`<desc>`, e `aria-describedby` apontando para a
  * lista textual deste mesmo bloco — um item por partido, na ordem das cunhas.
+ *
+ * ## As duas bases (04/10/2026, decisão do dono)
+ *
+ * Fora da fase pré, o painel desenha o Senado DUAS vezes, cada uma sob um
+ * `<div data-view-only>` NU (sem classe de `display` — ver
+ * `app/globals.css`): a de sempre, pela projeção (`derivarSenado2027(…)`,
+ * byte a byte a de antes), e a da Parcial — "se a apuração parasse agora" —,
+ * com as 54 vagas dos dois mais votados até aqui em cada UF
+ * (`derivarSenado2027(…, "parcial")`, `lib/utils/senado-parcial.ts`). As 27
+ * que continuam e as UFs concluídas são as mesmas nas duas. A chave
+ * "Parcial / Projeção" escolhe pela cascata, sem JS; a escondida sai da
+ * árvore de acessibilidade. O título `<h2>` do painel é um só.
  */
 
 import type { CSSProperties } from "react";
@@ -115,6 +127,7 @@ interface ItemLegenda {
  * seria vocabulário de medição antes de haver medição (spec 019, RF-161).
  */
 function itensDaLegenda(senado: Senado2027, pre: boolean): ItemLegenda[] {
+  const parcial = senado.base === "parcial";
   const { contagem, continuaSemPartido } = senado;
   const itens: ItemLegenda[] = [
     {
@@ -144,7 +157,9 @@ function itensDaLegenda(senado: Senado2027, pre: boolean): ItemLegenda[] {
         id: "projetada",
         forma: "anel",
         n: contagem.projetada,
-        texto: "anel na cor do partido: vagas de 2026 pela projeção — ainda podem mudar",
+        texto: parcial
+          ? "anel na cor do partido: vagas de 2026 se a apuração parasse agora — ainda podem mudar"
+          : "anel na cor do partido: vagas de 2026 pela projeção — ainda podem mudar",
       },
     );
   }
@@ -226,7 +241,9 @@ export function SenadoHemiciclo({
       ? `; ${plural(contagem.decidida, "vaga", "vagas")} de 2026 em estado com a apuração concluída`
       : "") +
     (contagem.projetada > 0
-      ? `; ${plural(contagem.projetada, "vaga", "vagas")} de 2026 pela projeção`
+      ? `; ${plural(contagem.projetada, "vaga", "vagas")} de 2026 ${
+          senado.base === "parcial" ? "se a apuração parasse agora" : "pela projeção"
+        }`
       : "") +
     (contagem.aguardando > 0
       ? `; ${plural(contagem.aguardando, "vaga", "vagas")} em disputa ${
@@ -270,10 +287,11 @@ export function SenadoHemiciclo({
                 <Amostra forma={item.forma} />
                 <span style={{ minWidth: 0 }}>
                   {/* 🔴 04/10 (dono): a contagem das vagas PELA PROJEÇÃO é número
-                      projetado ⇒ cor da projeção. As demais são medidas. */}
+                      projetado ⇒ cor da projeção. As demais são medidas — e,
+                      na base Parcial, a das vagas não firmes também. */}
                   <strong
                     style={
-                      item.id === "projetada"
+                      item.id === "projetada" && senado.base === "proj"
                         ? { fontWeight: 600, color: "var(--color-pct-proj)" }
                         : { fontWeight: 600 }
                     }
@@ -304,7 +322,7 @@ export function SenadoHemiciclo({
       >
         {senado.partidos.map((p) => (
           <li key={p.chave} data-partido={p.sigla}>
-            {textoDoPartido(p)}
+            {textoDoPartido(p, senado.base)}
           </li>
         ))}
         {contagem.aguardando > 0 ? (
@@ -359,30 +377,80 @@ export function SenadoHemicicloPanel({ payload, mandato }: SenadoHemicicloPanelP
   const { senado } = resultado;
   const pre = senado.fase !== "normal";
 
+  const projecao = (
+    <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
+      <p
+        className="max-w-prose"
+        style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+      >
+        {pre
+          ? `Como fica o Senado a partir de 2027: as ${senado.vagasEmDisputa} vagas em disputa nesta eleição, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estão em disputa.`
+          : `Como fica o Senado a partir de 2027: as ${senado.vagasEmDisputa} vagas em disputa, pela projeção de cada estado, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estão em disputa. Não oficial.`}
+      </p>
+      {/* RF-294 — realce por partido: ponteiro numa cadeira ou numa linha
+          da lista (`li[data-partido]`) esmaece as dos outros partidos. */}
+      <RealceHemiciclo
+        raiz="senado"
+        atributo="data-partido"
+        chaves={senado.partidos.map((p) => p.sigla)}
+      >
+        <SenadoHemiciclo senado={senado} />
+      </RealceHemiciclo>
+    </div>
+  );
+
+  // Fase pré: as duas bases são a mesma coisa (nenhuma vaga atribuída) e o
+  // segmentado "Parcial / Projeção" está apagado (RF-161) — uma versão só.
+  if (pre) {
+    return (
+      <Panel
+        kicker="Senado de 2027"
+        title={`As ${senado.total} cadeiras`}
+        titleId="senado-2027-heading"
+      >
+        {projecao}
+      </Panel>
+    );
+  }
+
+  // 04/10 (dono) — a versão da Parcial. Só pode falhar onde a da projeção
+  // também falharia (mesmas conferências de total e de composição); se
+  // falhar, a visão Parcial diz isso em vez de mostrar a projeção.
+  const naParcial = derivarSenado2027(payload, mandato, "parcial");
+  if (!naParcial.ok) {
+    console.warn(
+      `${LOG_TAG_SENADO_2027} hemiciclo da parcial não desenhado: ${naParcial.motivo} — ${naParcial.detalhe}`,
+    );
+  }
+
   return (
     <Panel
-      kicker={pre ? "Senado de 2027" : "Senado de 2027 · não oficial"}
+      kicker="Senado de 2027 · não oficial"
       title={`As ${senado.total} cadeiras`}
       titleId="senado-2027-heading"
     >
-      <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
-        <p
-          className="max-w-prose"
-          style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-        >
-          {pre
-            ? `Como fica o Senado a partir de 2027: as ${senado.vagasEmDisputa} vagas em disputa nesta eleição, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estão em disputa.`
-            : `Como fica o Senado a partir de 2027: as ${senado.vagasEmDisputa} vagas em disputa, pela projeção de cada estado, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estão em disputa. Não oficial.`}
-        </p>
-        {/* RF-294 — realce por partido: ponteiro numa cadeira ou numa linha
-            da lista (`li[data-partido]`) esmaece as dos outros partidos. */}
-        <RealceHemiciclo
-          raiz="senado"
-          atributo="data-partido"
-          chaves={senado.partidos.map((p) => p.sigla)}
-        >
-          <SenadoHemiciclo senado={senado} />
-        </RealceHemiciclo>
+      <div data-view-only="proj">{projecao}</div>
+      <div data-view-only="parcial">
+        <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
+          <p
+            className="max-w-prose"
+            data-testid="senado-hemiciclo-parcial-texto"
+            style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+          >
+            {naParcial.ok
+              ? `Se a apuração parasse agora: as ${senado.vagasEmDisputa} vagas em disputa com os dois mais votados até aqui em cada estado, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estão em disputa. Estado ainda sem votos apurados fica aguardando. Não oficial.`
+              : "O Senado pela contagem de agora não pôde ser montado com segurança. Não oficial."}
+          </p>
+          {naParcial.ok ? (
+            <RealceHemiciclo
+              raiz="senado-parcial"
+              atributo="data-partido"
+              chaves={naParcial.senado.partidos.map((p) => p.sigla)}
+            >
+              <SenadoHemiciclo senado={naParcial.senado} idPrefixo="senado-hemiciclo-parcial" />
+            </RealceHemiciclo>
+          ) : null}
+        </div>
       </div>
     </Panel>
   );

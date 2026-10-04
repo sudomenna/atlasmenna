@@ -40,10 +40,12 @@ import { vagasDaCorrida } from "@/lib/config/cargos";
 import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
 import { normalizarSqcand } from "@/lib/etiquetas/formato";
 import type { EtiquetasDaCorrida } from "@/lib/etiquetas/telas";
-import { classificarProjecao } from "@/lib/utils/desfecho-governador";
+import { classificarContagem, classificarProjecao } from "@/lib/utils/desfecho-governador";
 import { anuladasAoFim, compete, exibePercentual, votosDaAnulada } from "@/lib/utils/destino-voto";
 import { formatPercentTrim } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
+import { rankByParcial } from "@/lib/utils/rank-parcial";
+import { vagasDaUfNaParcial } from "@/lib/utils/senado-parcial";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
 
@@ -132,6 +134,14 @@ export interface GovernorCardProps {
    * `top_candidatos`, e a etiqueta só é consultada linha a linha.
    */
   etiquetas?: EtiquetasDaCorrida;
+  /**
+   * 04/10/2026 (dono) — o cartão reage à chave "Parcial / Projeção" das capas
+   * `/governador` e `/senador`: a lista sai nas duas bases, cada uma sob
+   * `data-view-only`. Na Parcial, `pct_atual` (cor `--color-pct-votos`), na
+   * ordem do apurado, com o selo da mesma base; na Projeção, a lista de
+   * sempre. Ausente ⇒ o cartão de antes, uma lista só (a home de Presidente).
+   */
+  duasBases?: boolean;
 }
 
 /**
@@ -190,7 +200,12 @@ interface Row {
   id: number | null; // null = "Outros"
   nome: string;
   partido: string;
-  pct: number;
+  /**
+   * O número da linha NA BASE da lista: `pct` (projeção) ou `pct_atual`
+   * (Parcial). `null` só na Parcial, quando o apurado não foi medido — a tela
+   * escreve "—", nunca `0` (decisão do dono, 14/09).
+   */
+  pct: number | null;
   /** Já resolvida pela SIGLA — ver o `candidateColor` abaixo. */
   corResolvida: string;
   rank: number; // só pra "Outros" virar cinza
@@ -202,12 +217,65 @@ interface Row {
   sqcand?: string | null;
 }
 
+type TopCandidato = EdgeUfRow["top_candidatos"][number];
+
+/**
+ * 04/10/2026 (dono) — a ordem da lista na base PARCIAL: as 4 primeiras do
+ * corte inteiro (`top_candidatos`, resgatados do RF-190 incluídos) pelo
+ * comparador único `rankByParcial` (`pct_atual` desc → `pct_projetado` desc →
+ * `id` asc), anulada no fim das 4 — o espelho exato da lista da projeção
+ * (prefixo de 4 do array, anulada no fim).
+ *
+ * `null` quando a Parcial não tem leitura honesta: nada apurado, ou falta
+ * `pct_atual` a alguém do corte. Aí a ordem cai INTEIRA para a da projeção
+ * (constituição § 2, exceção (c)) e os números saem "—".
+ */
+function ordemParcial(uf: EdgeUfRow): TopCandidato[] | null {
+  const top = uf.top_candidatos ?? [];
+  if (!(uf.pct_apurado > 0) || top.length === 0) return null;
+  if (!top.every((t) => typeof t.pct_atual === "number")) return null;
+  const porId = new Map(top.map((t) => [t.id, t] as const));
+  const ranking = rankByParcial(
+    top.map((t) => ({ id: t.id, pct_atual: t.pct_atual as number, pct_projetado: t.pct })),
+  );
+  return anuladasAoFim(ranking.slice(0, 4).map((r) => porId.get(r.id) as TopCandidato));
+}
+
+/**
+ * O selo de governador na Parcial — "se a apuração parasse agora", a MESMA
+ * regra de `<GovernadoresPlacarTurno base="contagem">` (`classificarContagem`,
+ * `lib/utils/desfecho-governador.ts`) e o mesmo condicional dos rótulos dele.
+ * Nunca "eleito". `aguardando` ⇒ sem selo: não há contagem a resumir.
+ */
+function chipContagem(uf: EdgeUfRow): StatusChip | null {
+  switch (classificarContagem(uf)) {
+    case "eleito_1t":
+      return { label: "FECHARIA NO 1T", s: "e", ariaText: "fecharia no 1º turno" };
+    case "segundo_turno":
+      return { label: "IRIA AO 2T", s: "t", ariaText: "iria ao 2º turno" };
+    default:
+      return null;
+  }
+}
+
+/**
+ * O selo de vaga do SENADO na Parcial — sempre com a base dita, como o
+ * `VAGA_LABEL.parcial` do `<ResultPanel>` (`lib/utils/selo-resultado.ts`).
+ * Variante neutra: verde é a cor de "eleito", e isto não é.
+ */
+const CHIP_VAGA_PARCIAL: StatusChip = {
+  label: "VAGA NA PARCIAL",
+  s: "a",
+  ariaText: "nas vagas na parcial",
+};
+
 export function GovernorCard({
   uf,
   candidatos,
   cargo = "gov",
   nivelTitulo = 3,
   etiquetas,
+  duasBases = false,
 }: GovernorCardProps) {
   const senado = cargo === "sen";
   const presidente = cargo === "pres";
@@ -231,7 +299,7 @@ export function GovernorCard({
   // etiqueta; o líder do cartão é o 1º QUE COMPETE. Sem anulada, a ordem é a
   // de sempre.
   const topCandidatos = anuladasAoFim((uf.top_candidatos ?? []).slice(0, 4));
-  const top = topCandidatos.map<Row>((t, i) => {
+  const linha = (t: TopCandidato, i: number, pct: number | null): Row => {
     const meta = candIndex.get(t.id);
     return {
       id: t.id,
@@ -254,7 +322,7 @@ export function GovernorCard({
       // cargo 3 em que a decisão editorial por `sqcand` chega a valer.
       nome: t.nome ? nomeExibicao(t.nome, t.sqcand) : `Cand ${t.id}`,
       partido: t.partido ?? "—",
-      pct: t.pct,
+      pct,
       // ⚠️ A redação anterior dizia que a cor "é função do RANK, não da
       // identidade". Isso deixou de valer com o ADR-0024 (07/09): a cor É a
       // identidade, e o grid de 27 governadores é o exemplo que o próprio ADR
@@ -266,7 +334,8 @@ export function GovernorCard({
       ...(typeof t.votos_atuais === "number" ? { votos: t.votos_atuais } : {}),
       ...(etiquetas ? { sqcand: normalizarSqcand(t.sqcand) } : {}),
     };
-  });
+  };
+  const top = topCandidatos.map<Row>((t, i) => linha(t, i, t.pct));
 
   // 🔴 A linha "Outros" vem do CAMPO `uf.outros` (2026-09-19), nunca mais de
   // `100 − Σ(top)`.
@@ -301,19 +370,15 @@ export function GovernorCard({
   // estados diferentes (decisão do dono, 14/09) e um zero escreveria "Outros
   // 0,0%" numa corrida de três.
   const outros = uf.outros;
-  const rows: Row[] = outros
-    ? [
-        ...top,
-        {
-          id: null,
-          nome: "Outros",
-          partido: "",
-          pct: outros.pct,
-          corResolvida: "var(--color-cand-other)",
-          rank: 99,
-        },
-      ]
-    : top;
+  const linhaOutros = (pct: number | null): Row => ({
+    id: null,
+    nome: "Outros",
+    partido: "",
+    pct,
+    corResolvida: "var(--color-cand-other)",
+    rank: 99,
+  });
+  const rows: Row[] = outros ? [...top, linhaOutros(outros.pct)] : top;
 
   const liderRow = top.find(compete);
   // 2026-09-29 — Senado: quem ocupa as vagas, pelo ponto único
@@ -337,13 +402,94 @@ export function GovernorCard({
     : liderRow
       ? [liderRow]
       : [];
-  const descreve = (r: Row) => `${r.nome} (${r.partido}) com ${formatPercentTrim(r.pct)}`;
+  const descreve = (r: Row) =>
+    `${r.nome} (${r.partido}) com ${r.pct === null ? "—" : formatPercentTrim(r.pct)}`;
   const apurado = `${formatPercentTrim(uf.pct_apurado)} apurado`;
-  const ariaLabel = senado
-    ? `${nomeUf}${destaque.length > 0 ? `, ${chipSenado ? chipSenado.ariaText : "mais votados"}: ${destaque.map(descreve).join(" e ")}` : ""}, ${apurado}`
+  const descricaoProj = senado
+    ? `${destaque.length > 0 ? `, ${chipSenado ? chipSenado.ariaText : "mais votados"}: ${destaque.map(descreve).join(" e ")}` : ""}`
     : presidente
-      ? `${nomeUf}${liderRow ? `, na frente no estado: ${descreve(liderRow)}` : ""}, ${apurado}`
-      : `${nomeUf}, ${chip?.ariaText}${liderRow ? `, líder: ${descreve(liderRow)}` : ""}, ${apurado}`;
+      ? `${liderRow ? `, na frente no estado: ${descreve(liderRow)}` : ""}`
+      : `, ${chip?.ariaText}${liderRow ? `, líder: ${descreve(liderRow)}` : ""}`;
+  const ariaLabel = `${nomeUf}${descricaoProj}, ${apurado}`;
+
+  /** Uma lista de linhas — a de sempre, ou a da Parcial no modo de duas bases. */
+  const lista = (
+    linhas: readonly Row[],
+    selo: (r: Row) => StatusChip | null,
+    ariaLista?: string,
+  ) => (
+    // Spread condicional pelo mesmo motivo do `data-etq` abaixo: no payload RSC
+    // um `aria-label={undefined}` viraria `"$undefined"` em cada cartão.
+    <ul {...(ariaLista !== undefined ? { "aria-label": ariaLista } : {})}>
+      {linhas.map((r, idx) => {
+        const s = selo(r);
+        const pctWidth = r.pct === null ? 0 : Math.max(0, Math.min(100, r.pct));
+        return (
+          <li key={r.id ?? `outros-${idx}`}>
+            <span aria-hidden="true">{r.id === null ? "" : compete(r) ? `${idx + 1}°` : "—"}</span>
+            {/* Quebra, não corta (2026-09-28): selo e etiqueta descem
+                INTEIROS para a linha de baixo quando não cabem. */}
+            <span>
+              {r.nome}
+              {/* Desenhado ⇒ abreviado (2026-09-19). */}
+              {r.partido ? <span>{siglaExibicao(r.partido)}</span> : null}
+              {r.destino ? <DestinoEtiqueta destino={r.destino} /> : null}
+              {/* Spec 025 — o chip editorial divide a MESMA posição do selo:
+                  sem etiqueta, a lista de filhos do `<span>` é a de antes, e
+                  o payload RSC (o cartão é filho de `<RegiaoRecolhivel>`,
+                  cliente) não ganha um `null` por linha. `<span>` de texto,
+                  nunca interativo (no /senador o cartão está num `<a>`); só
+                  para quem tem chance, e só com a chave `chips` ligada. */}
+              {r.sqcand && etiquetas?.porSqcand.has(r.sqcand) ? (
+                <>
+                  {s ? <b data-s={s.s}>{s.label}</b> : null}
+                  <EtiquetasLinha resolucoes={etiquetas.porSqcand.get(r.sqcand)} />
+                </>
+              ) : s ? (
+                <b data-s={s.s}>{s.label}</b>
+              ) : null}
+            </span>
+            {r.id !== null && !exibePercentual(r) ? (
+              // Emenda "opção A" ao ADR-0053 — a anulada não tem barra nem
+              // percentual (o % dela é sobre outra base). Os votos ocupam as
+              // DUAS colunas (barra + número), para a linha continuar
+              // alinhada; sem voto no dado, o espaço fica vazio.
+              <span data-testid="governor-card-votos-anulada">{votosDaAnulada(r.votos, true)}</span>
+            ) : (
+              <>
+                <i
+                  aria-hidden="true"
+                  style={
+                    { "--w": `${round2(pctWidth)}%`, "--cor": r.corResolvida } as CSSProperties
+                  }
+                >
+                  <i />
+                </i>
+                <span>{r.pct === null ? "—" : formatPercentTrim(r.pct)}</span>
+              </>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+
+  const cabecalho = (
+    <header>
+      <Titulo>
+        {/* Bandeira decorativa (`alt=""`): o nome do estado e a sigla
+            continuam em texto. Classe, não `style` — 27 cartões por tela. */}
+        <UfFlag sigla={uf.sigla} width={17} height={12} inline />
+        {nomeUf}
+        <span>· {uf.sigla}</span>
+      </Titulo>
+      <span>{formatPercentTrim(uf.pct_apurado)} apur</span>
+    </header>
+  );
+  // Spread condicional, e não `data-etq={undefined}`: o cartão também viaja
+  // no payload RSC (é `children` do `<RegiaoRecolhivel>`, cliente), e lá um
+  // `undefined` vira `"data-etq":"$undefined"` — 23 B × 27 cartões por nada.
+  const dataEtq = etiquetas?.tokens !== undefined ? { "data-etq": etiquetas.tokens } : {};
 
   // 🔴 2026-09-28 — markup ENXUTO. Até esta data cada cartão carregava ~4,3 KB
   // de `style={}` e classes utilitárias repetidos em toda linha, e a home
@@ -353,83 +499,68 @@ export function GovernorCard({
   // barra) e `--cor` (cor do partido), no `style` do trilho. A estrutura da
   // linha é contrato daquele arquivo: mudar a ordem dos filhos do `<li>` muda
   // o desenho.
+  if (!duasBases) {
+    return (
+      <article aria-label={ariaLabel} className={styles.c} {...dataEtq}>
+        {/* 🔴 2026-09-28 (decisão do dono) — o cartão completo (4 primeiros +
+            "Outros") vale em TODA largura; a linha única do celular saiu. */}
+        {cabecalho}
+        {lista(rows, seloDe)}
+      </article>
+    );
+  }
+
+  // ===== 04/10/2026 (dono) — as duas bases no mesmo cartão =================
+  //
+  // O cabeçalho (UF, % apurado) é um só; a LISTA sai duas vezes, cada uma num
+  // `<div data-view-only>` NU (sem `display` próprio — `app/globals.css`):
+  // a da projeção, idêntica à de sempre, e a da Parcial — `pct_atual`, na
+  // ordem do apurado, com o selo da mesma base. A descrição para leitor de
+  // tela passa do `<article>` para cada `<ul>` (`aria-label`): um nome só no
+  // cartão não pode dizer a projeção na visão Parcial.
+  const ordem = ordemParcial(uf);
+  const usaParcial = ordem !== null;
+  const topParcial = (ordem ?? topCandidatos).map<Row>((t, i) =>
+    linha(t, i, usaParcial && typeof t.pct_atual === "number" ? t.pct_atual : null),
+  );
+  const rowsParcial: Row[] = outros
+    ? [...topParcial, linhaOutros(usaParcial ? (outros.pct_atual ?? null) : null)]
+    : topParcial;
+  const liderParcial = usaParcial ? topParcial.find(compete) : undefined;
+  // Senado: os ocupantes vêm de `vagasDaUfNaParcial` — o MESMO ponto da barra
+  // das 54 e do hemiciclo na Parcial (constituição § 2 (b): cor, ordem e
+  // destaque de uma base não discordam). UF `aguardando` ⇒ ninguém marcado.
+  const ocupantesParcial: ReadonlySet<number> = senado
+    ? new Set(vagasDaUfNaParcial(uf, VAGAS_SENADO).ocupantes.map((c) => c.id))
+    : SEM_OCUPANTES;
+  const chipParcialGov = senado || presidente ? null : chipContagem(uf);
+  const seloParcial = (r: Row): StatusChip | null => {
+    if (r.id === null) return null;
+    if (senado) return ocupantesParcial.has(r.id) ? CHIP_VAGA_PARCIAL : null;
+    return r.id === liderParcial?.id ? chipParcialGov : null;
+  };
+  const destaqueParcial = senado
+    ? topParcial.filter((r) => r.id !== null && ocupantesParcial.has(r.id))
+    : liderParcial
+      ? [liderParcial]
+      : [];
+  const descricaoParcial = !usaParcial
+    ? ", na parcial: aguardando apuração"
+    : senado
+      ? destaqueParcial.length > 0
+        ? `, ${CHIP_VAGA_PARCIAL.ariaText}: ${destaqueParcial.map(descreve).join(" e ")}`
+        : ""
+      : `, se a apuração parasse agora${chipParcialGov ? `: ${chipParcialGov.ariaText}` : ""}${
+          liderParcial ? `, na frente: ${descreve(liderParcial)}` : ""
+        }`;
+
   return (
-    <article
-      aria-label={ariaLabel}
-      className={styles.c}
-      // Spread condicional, e não `data-etq={undefined}`: o cartão também viaja
-      // no payload RSC (é `children` do `<RegiaoRecolhivel>`, cliente), e lá um
-      // `undefined` vira `"data-etq":"$undefined"` — 23 B × 27 cartões por nada.
-      {...(etiquetas?.tokens !== undefined ? { "data-etq": etiquetas.tokens } : {})}
-    >
-      {/* 🔴 2026-09-28 (decisão do dono) — o cartão completo (4 primeiros +
-          "Outros") vale em TODA largura; a linha única do celular saiu. */}
-      <header>
-        <Titulo>
-          {/* Bandeira decorativa (`alt=""`): o nome do estado e a sigla
-              continuam em texto. Classe, não `style` — 27 cartões por tela. */}
-          <UfFlag sigla={uf.sigla} width={17} height={12} inline />
-          {nomeUf}
-          <span>· {uf.sigla}</span>
-        </Titulo>
-        <span>{formatPercentTrim(uf.pct_apurado)} apur</span>
-      </header>
-      <ul>
-        {rows.map((r, idx) => {
-          const selo = seloDe(r);
-          const pctWidth = Math.max(0, Math.min(100, r.pct));
-          return (
-            <li key={r.id ?? `outros-${idx}`}>
-              <span aria-hidden="true">
-                {r.id === null ? "" : compete(r) ? `${idx + 1}°` : "—"}
-              </span>
-              {/* Quebra, não corta (2026-09-28): selo e etiqueta descem
-                  INTEIROS para a linha de baixo quando não cabem. */}
-              <span>
-                {r.nome}
-                {/* Desenhado ⇒ abreviado (2026-09-19). */}
-                {r.partido ? <span>{siglaExibicao(r.partido)}</span> : null}
-                {r.destino ? <DestinoEtiqueta destino={r.destino} /> : null}
-                {/* Spec 025 — o chip editorial divide a MESMA posição do selo:
-                    sem etiqueta, a lista de filhos do `<span>` é a de antes, e
-                    o payload RSC (o cartão é filho de `<RegiaoRecolhivel>`,
-                    cliente) não ganha um `null` por linha. `<span>` de texto,
-                    nunca interativo (no /senador o cartão está num `<a>`); só
-                    para quem tem chance, e só com a chave `chips` ligada. */}
-                {r.sqcand && etiquetas?.porSqcand.has(r.sqcand) ? (
-                  <>
-                    {selo ? <b data-s={selo.s}>{selo.label}</b> : null}
-                    <EtiquetasLinha resolucoes={etiquetas.porSqcand.get(r.sqcand)} />
-                  </>
-                ) : selo ? (
-                  <b data-s={selo.s}>{selo.label}</b>
-                ) : null}
-              </span>
-              {r.id !== null && !exibePercentual(r) ? (
-                // Emenda "opção A" ao ADR-0053 — a anulada não tem barra nem
-                // percentual (o % dela é sobre outra base). Os votos ocupam as
-                // DUAS colunas (barra + número), para a linha continuar
-                // alinhada; sem voto no dado, o espaço fica vazio.
-                <span data-testid="governor-card-votos-anulada">
-                  {votosDaAnulada(r.votos, true)}
-                </span>
-              ) : (
-                <>
-                  <i
-                    aria-hidden="true"
-                    style={
-                      { "--w": `${round2(pctWidth)}%`, "--cor": r.corResolvida } as CSSProperties
-                    }
-                  >
-                    <i />
-                  </i>
-                  <span>{formatPercentTrim(r.pct)}</span>
-                </>
-              )}
-            </li>
-          );
-        })}
-      </ul>
+    <article aria-label={`${nomeUf}, ${apurado}`} className={styles.c} {...dataEtq}>
+      {cabecalho}
+      <div data-view-only="proj">{lista(rows, seloDe, `Pela projeção${descricaoProj}`)}</div>
+      <div data-view-only="parcial">
+        {lista(rowsParcial, seloParcial, `Na parcial${descricaoParcial}`)}
+      </div>
     </article>
   );
 }

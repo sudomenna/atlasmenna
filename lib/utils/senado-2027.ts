@@ -64,6 +64,7 @@ import {
   type ValidacaoMandato2031,
 } from "@/lib/senado/mandato-2031";
 import { ordenarBancada } from "@/lib/utils/bancada";
+import { vagasNaParcial } from "@/lib/utils/senado-parcial";
 import { ocupantesDasVagas } from "@/lib/utils/vagas-eleitas";
 
 /** Estado de uma cadeira do Senado de 2027. Ordem = ordem dentro da cunha. */
@@ -124,8 +125,28 @@ export interface PartidoSenado2027 {
  */
 export type FaseSenado2027 = "pre" | "normal" | "sem_dados";
 
+/**
+ * A base da chave "Parcial / Projeção" que atribuiu as vagas em disputa
+ * (decisão do dono, 04/10/2026).
+ *
+ * - `"proj"` — a de sempre: `vagasDerivadas`, conferida contra
+ *   `composicao_vagas` (RF-217).
+ * - `"parcial"` — "se a apuração parasse agora": `vagasNaParcial`
+ *   (`lib/utils/senado-parcial.ts`). Não há composição parcial publicada para
+ *   conferir; a soma é feita aqui, das 27 UFs, cada uma uma vez.
+ *
+ * ⚠️ Na base `"parcial"` o estado de cadeira `"projetada"` quer dizer "vaga
+ * ainda não firme, pela contagem de agora" — o mesmo desenho (anel na cor do
+ * partido), outro texto. O nome do estado ficou para não espalhar um quinto
+ * estado por `Record<EstadoCadeiraSenado, …>`; quem escreve texto lê
+ * {@link Senado2027.base}.
+ */
+export type BaseSenado2027 = "proj" | "parcial";
+
 export interface Senado2027 {
   fase: FaseSenado2027;
+  /** A base que atribuiu as vagas em disputa — ver {@link BaseSenado2027}. */
+  base: BaseSenado2027;
   /** Cadeiras da casa: foto + vagas em disputa. 81. */
   total: number;
   vagasEmDisputa: number;
@@ -251,6 +272,7 @@ function descreverMapa(m: Map<string, number>): string {
 export function derivarSenado2027(
   payload: EdgePayload | null,
   mandato: ValidacaoMandato2031,
+  base: BaseSenado2027 = "proj",
 ): ResultadoSenado2027 {
   if (!mandato.ok) {
     return recusa("mandato_invalido", mandato.erros.join("; "));
@@ -293,10 +315,31 @@ export function derivarSenado2027(
     if (!composicao) {
       return recusa("sem_composicao", "payload de Senador sem `composicao_vagas` fora da fase pré");
     }
-    vagas = vagasDerivadas(payload, vagasPorUf);
-    if (vagas.length > vagasEmDisputa) {
-      return recusa("vagas_excedentes", `${vagas.length} vagas derivadas para ${vagasEmDisputa}`);
+    if (base === "parcial") {
+      // Sem composição parcial publicada: nada a conferir além do teto. A
+      // derivação já conta só as 27 UFs, uma vez cada.
+      vagas = vagasNaParcial(payload.por_uf ?? [], vagasPorUf).map((v) => ({
+        estado: v.estado === "decidida" ? "decidida" : "projetada",
+        sigla: v.sigla,
+        uf: v.uf,
+        sqcand: null,
+        nome: null,
+        id: v.id,
+      }));
+      if (vagas.length > vagasEmDisputa) {
+        return recusa(
+          "vagas_excedentes",
+          `${vagas.length} vagas na parcial para ${vagasEmDisputa}`,
+        );
+      }
+    } else {
+      vagas = vagasDerivadas(payload, vagasPorUf);
+      if (vagas.length > vagasEmDisputa) {
+        return recusa("vagas_excedentes", `${vagas.length} vagas derivadas para ${vagasEmDisputa}`);
+      }
     }
+  }
+  if (fase === "normal" && payload !== null && composicao && base === "proj") {
     const derivado = contarPorChave(vagas.map((v) => [v.sigla, 1] as [string, number]));
     const publicado = contarPorChave(
       composicao.por_partido.map((p) => [p.partido, p.vagas] as [string, number]),
@@ -377,6 +420,7 @@ export function derivarSenado2027(
     ok: true,
     senado: {
       fase,
+      base,
       total,
       vagasEmDisputa,
       cadeiras,
@@ -396,12 +440,15 @@ export function derivarSenado2027(
  *
  * 🔴 Nunca "eleito": a cadeira que continua é "até 2031"; a da UF concluída é
  * "em 2026 (apuração concluída no estado)" — a base sempre dita (ADR-0055,
- * constituição § 1).
+ * constituição § 1). Na base Parcial, a não firme é "em 2026 (parcial)".
  */
-export function textoDoPartido(p: PartidoSenado2027): string {
+export function textoDoPartido(p: PartidoSenado2027, base: BaseSenado2027 = "proj"): string {
   const partes: string[] = [];
   if (p.continua > 0) partes.push(`${p.continua} até 2031`);
   if (p.decidida > 0) partes.push(`${p.decidida} em 2026 (apuração concluída no estado)`);
-  if (p.projetada > 0) partes.push(`${p.projetada} em 2026 (projeção)`);
+  // Base Parcial (04/10): a cadeira não firme é a da contagem de agora.
+  if (p.projetada > 0) {
+    partes.push(`${p.projetada} em 2026 (${base === "parcial" ? "parcial" : "projeção"})`);
+  }
   return `${p.sigla} ${p.cadeiras} — ${partes.join(" + ")}`;
 }

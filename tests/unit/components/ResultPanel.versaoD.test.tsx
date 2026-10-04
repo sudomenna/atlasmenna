@@ -283,10 +283,11 @@ describe("🔴 votos projetados na lista do painel (decisão do dono, 2026-10-03
       <ResultPanel candidatos={corrida} pctApurado={40} selo="turno" title="T" turno={1} />,
     );
     const vp = (nome: string) =>
-      linhaDe(doc, nome)?.querySelector('[data-testid="votos-projetados"]')?.textContent ?? null;
-    expect(vp("Ana Lima")).toBe("≈ aproximadamente 3,8 mi votos projetados");
-    expect(vp("Bruno Reis")).toBe("≈ aproximadamente 2,5 mi votos projetados");
-    expect(vp("Célia Mota")).toBe("≈ aproximadamente 172 mil votos projetados");
+      linhaDe(doc, nome)?.querySelector('[data-testid="votos-projetados"] > [aria-hidden="true"]')
+        ?.textContent ?? null;
+    expect(vp("Ana Lima")).toBe("≈ 3,8 mi votos projetados");
+    expect(vp("Bruno Reis")).toBe("≈ 2,5 mi votos projetados");
+    expect(vp("Célia Mota")).toBe("≈ 172 mil votos projetados");
     expect(vp("Davi Nunes")).toBeNull();
     // A Parcial segue com o apurado (Célia: 45 × 10.000).
     expect(

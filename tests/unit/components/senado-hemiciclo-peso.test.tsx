@@ -20,6 +20,14 @@
  * (13 grupos). Painel = 17.362 B (17,0 KiB), folga de ~1 KiB. O teto NÃO
  * subiu: é por isso que o CSS tem uma regra por chave, e não três
  * (`lib/utils/realce-hemiciclo.ts`).
+ *
+ * 🔴 2026-10-04 (dono): o painel passou a desenhar o Senado nas DUAS bases da
+ * chave "Parcial / Projeção" (cada uma sob `data-view-only`) — a da Parcial é
+ * um segundo hemiciclo completo, com legenda, lista e realce próprios. O
+ * custo dobra por construção, e o teto passou a ser POR VERSÃO (18 KiB × 2).
+ * O pior caso agora traz `pct_atual` em toda candidatura, para que a versão
+ * da Parcial também atribua as 54 vagas (sem `pct_atual` ela sairia quase
+ * vazia e o teste mediria menos do que a página pode servir).
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -37,7 +45,7 @@ const KIB = 1024;
  * por cadeira ⇒ ~21,3 KiB) e um `<title>` por bolinha (+~40 B × 81 ⇒
  * ~18,4 KiB, no limite — por isso a folga é curta de propósito).
  */
-const TETO_PAINEL_BYTES = 18 * KIB;
+const TETO_PAINEL_BYTES = 2 * 18 * KIB;
 
 const SIGLAS = [
   "PL",
@@ -61,9 +69,9 @@ function piorCaso() {
     const b = SIGLAS[(i + 5) % SIGLAS.length] as string;
     for (const s of [a, b]) contagem.set(s, (contagem.get(s) ?? 0) + 1);
     return ufRow(uf, i % 2 === 0 ? 100 : 55, [
-      cand(i * 10 + 1, a, 40),
-      cand(i * 10 + 2, b, 30),
-      cand(i * 10 + 3, "PCO", 5),
+      cand(i * 10 + 1, a, 40, { pct_atual: 38 }),
+      cand(i * 10 + 2, b, 30, { pct_atual: 31 }),
+      cand(i * 10 + 3, "PCO", 5, { pct_atual: 6 }),
     ]);
   });
   return payloadSenado(
@@ -84,6 +92,8 @@ describe("SenadoHemiciclo — peso do markup (o gate que o RNF-007 não dá)", (
     expect(markup.length, "o painel não foi desenhado — o caso não mede nada").toBeGreaterThan(
       1000,
     );
+    // As duas versões estão lá — senão o teto mediria só metade do painel.
+    expect((markup.match(/data-testid="senado-hemiciclo-figura"/g) ?? []).length).toBe(2);
     const peso = bytes(markup);
     expect(peso, `painel em ${(peso / KIB).toFixed(1)} KiB`).toBeLessThan(TETO_PAINEL_BYTES);
   });
@@ -92,6 +102,7 @@ describe("SenadoHemiciclo — peso do markup (o gate que o RNF-007 não dá)", (
     const markup = renderToStaticMarkup(
       <SenadoHemicicloPanel payload={piorCaso()} mandato={MANDATO_2031} />,
     );
+    // A primeira figura é a da projeção (a Parcial vem depois, no DOM).
     const svg = markup.slice(markup.indexOf("<svg role"), markup.indexOf("</svg>"));
     const circles = (svg.match(/<circle/g) ?? []).length;
     const grupos = (svg.match(/<g /g) ?? []).length;

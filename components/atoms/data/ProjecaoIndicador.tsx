@@ -192,10 +192,16 @@ export function VotosProjetados({
       data-testid="votos-projetados"
       data-view-only={dentroDaProjecao ? undefined : "proj"}
     >
-      <span aria-hidden="true">≈ </span>
-      <span className="sr-only">aproximadamente </span>
-      {formatVotesCompact(votos)} votos{" "}
-      {rotuloClassName ? <span className={rotuloClassName}>projetados</span> : "projetados"}
+      {/* 04/10 — o "≈" NÃO pode ficar sozinho num elemento: o axe classifica
+          o contraste de um glifo isolado como indecidível (`incomplete`,
+          "shortTextContent") e o portão de a11y reprova. O texto desenhado
+          inteiro fica num só `aria-hidden`; quem ouve recebe a frase por
+          extenso no `sr-only`. */}
+      <span aria-hidden="true">
+        ≈ {formatVotesCompact(votos)} votos{" "}
+        {rotuloClassName ? <span className={rotuloClassName}>projetados</span> : "projetados"}
+      </span>
+      <span className="sr-only">aproximadamente {formatVotesCompact(votos)} votos projetados</span>
     </span>
   );
 }

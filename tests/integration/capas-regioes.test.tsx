@@ -106,11 +106,21 @@ function esperado(
   ];
 }
 
+/**
+ * As duas bases do CONSOLIDADO da região. Desde 04/10/2026 os cartões
+ * (`<GovernorCard duasBases>`) também têm `[data-view-only]` — o filtro por
+ * `article` mantém este seletor sobre o resumo da região, não sobre as listas
+ * dos cartões.
+ */
+function foraDoCartao<T extends Element>(lista: Iterable<T>): T[] {
+  return [...lista].filter((e) => e.closest("article") === null);
+}
+
 function legenda(doc: Document, regiao: string, base: "parcial" | "proj"): string[] {
-  const itens = doc.querySelectorAll(
-    `[data-regiao="${regiao}"] [data-view-only="${base}"] > ul > li`,
+  const itens = foraDoCartao(
+    doc.querySelectorAll(`[data-regiao="${regiao}"] [data-view-only="${base}"] > ul > li`),
   );
-  return [...itens].map((li) => (li.textContent ?? "").replace(/\s+/g, " ").trim());
+  return itens.map((li) => (li.textContent ?? "").replace(/\s+/g, " ").trim());
 }
 
 const rowsDe = (p: EdgePayload, regiao: string) => {
@@ -249,8 +259,8 @@ describe("/governador — agrupado por região", () => {
       const proj = doc.querySelector(`[data-regiao="${r.id}"] [data-view-only="proj"]`);
       const parcial = doc.querySelector(`[data-regiao="${r.id}"] [data-view-only="parcial"]`);
       const vp = proj?.querySelector('[data-testid="votos-projetados"]');
-      expect(vp?.textContent).toBe(
-        `≈ aproximadamente ${formatVotesCompact(total)} votos projetados`,
+      expect(vp?.querySelector(':scope > [aria-hidden="true"]')?.textContent).toBe(
+        `≈ ${formatVotesCompact(total)} votos projetados`,
       );
       // Já dentro do resumo da Projeção: não repete o `data-view-only`.
       expect(vp?.hasAttribute("data-view-only")).toBe(false);
@@ -313,7 +323,7 @@ describe("/governador — agrupado por região", () => {
     const todas = await govPage();
     const filtrada = await govPage("decididos_1t");
     const resumo = (d: Document) =>
-      [...d.querySelectorAll("[data-regiao] [data-view-only]")].map((e) => e.outerHTML);
+      foraDoCartao(d.querySelectorAll("[data-regiao] [data-view-only]")).map((e) => e.outerHTML);
     expect(resumo(filtrada)).toEqual(resumo(todas));
     const n = (d: Document) => d.querySelectorAll("[data-regiao] article").length;
     expect(n(todas)).toBe(27);
@@ -346,6 +356,39 @@ describe("/governador — agrupado por região", () => {
   });
 });
 
+describe("/governador — cartões nas duas bases (04/10/2026)", () => {
+  const linhas = (el: Element | null | undefined) =>
+    [...(el?.querySelectorAll("li") ?? [])].map((li) =>
+      (li.textContent ?? "").replace(/\s+/g, " ").trim(),
+    );
+
+  it("🔴 cada cartão: Projeção com `pct`; Parcial com `pct_atual`, na ordem do apurado", async () => {
+    const doc = await govPage();
+    const cartoes = [...doc.querySelectorAll("[data-regiao] article")];
+    expect(cartoes).toHaveLength(27);
+    for (const art of cartoes) {
+      expect(art.querySelectorAll(":scope > [data-view-only='proj'] > ul")).toHaveLength(1);
+      expect(art.querySelectorAll(":scope > [data-view-only='parcial'] > ul")).toHaveLength(1);
+    }
+    // AC no simulado: a projeção põe Tião Bocalom à frente; o apurado, Alan Rick.
+    const ac = gov.por_uf.find((u) => u.sigla === "AC") as EdgeUfRow;
+    const art = cartoes.find((a) => a.querySelector("h3")?.textContent?.includes("· AC"));
+    const proj = linhas(art?.querySelector("[data-view-only='proj']"));
+    const parcial = linhas(art?.querySelector("[data-view-only='parcial']"));
+    const porProj = [...ac.top_candidatos].slice(0, 4);
+    const porAtual = [...ac.top_candidatos].sort(
+      (a, b) => (b.pct_atual as number) - (a.pct_atual as number) || b.pct - a.pct || a.id - b.id,
+    );
+    expect(porProj[0]?.id).not.toBe(porAtual[0]?.id); // a fixture discrimina
+    expect(proj[0]).toContain(formatPercentTrim(porProj[0]?.pct as number));
+    expect(parcial[0]).toContain(formatPercentTrim(porAtual[0]?.pct_atual as number));
+    expect(parcial[0]).toMatch(/IRIA AO 2T|FECHARIA NO 1T/);
+    expect(parcial.join(" ")).not.toMatch(/ELEITO|VAI A 2T|EM APURAÇÃO/);
+    // O filtro por etiqueta conta `[data-etq]` por cartão: continua 1 por UF.
+    expect(doc.querySelectorAll("[data-regiao] article").length).toBe(27);
+  });
+});
+
 describe("/senador — agrupado por região", () => {
   it("regiões em ordem, 27 links, consolidado por partido em '% dos votos'", async () => {
     const doc = await render(SenadoPage());
@@ -353,7 +396,7 @@ describe("/senador — agrupado por região", () => {
       [...doc.querySelectorAll("[data-regiao]")].map((r) => r.getAttribute("data-regiao")),
     ).toEqual(REGIOES.map((r) => r.id));
     expect(doc.querySelectorAll('a[data-testid="corrida-uf"]')).toHaveLength(27);
-    const bases = [...doc.querySelectorAll("[data-regiao] [data-view-only]")].map(
+    const bases = foraDoCartao(doc.querySelectorAll("[data-regiao] [data-view-only]")).map(
       (e) => e.textContent,
     );
     for (const b of bases) {
