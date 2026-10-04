@@ -2023,8 +2023,11 @@ def fetch_municipio_aggregates(
             peso = 0.0
         if peso <= 0:
             peso = 1.0
-        bucket["pct_apurado_num"] += (
-            float(pct_apurado) if pct_apurado is not None else 0.0
+        # 🔴 04/10/2026 ~18h: `s.st/s.ts` do payload, não a coluna (que o
+        # ingest grava de `s.psa` ≈ 100%) — o mesmo conserto de
+        # `fetch_snapshots`. Porto Alegre mostrava 69,6% com o TSE em 7,7%.
+        bucket["pct_apurado_num"] += pct_totalizado(
+            payload, float(pct_apurado) if pct_apurado is not None else 0.0
         ) * peso
         bucket["pct_apurado_den"] += peso
         if votos_total is not None:
