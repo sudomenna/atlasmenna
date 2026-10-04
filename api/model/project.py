@@ -2006,14 +2006,27 @@ def fetch_municipio_aggregates(
                 "pct_apurado_den": 0.0,
                 "votos_por_candidato": {},
                 "total_votos": 0,
+                "eleitores_tse": 0,
             },
         )
-        try:
-            peso = float(
-                eleitorado_par.get((str(uf), cod_municipio_tse, int(cod_zona)), 0)
-            )
-        except (TypeError, ValueError):
-            peso = 0.0
+        # 🔴 04/10/2026 ~19h50: `e.te` do próprio arquivo do par é o
+        # eleitorado OFICIAL de 2026 (Σ te dos pares de Porto Alegre =
+        # 1.064.200 = `te` do arquivo municipal). A tabela `eleitorado` é o
+        # cadastro de 2024 (`data-pipeline/eleitorado-import.ts`) e diferia
+        # do TSE em >1% em 205 de 391 municípios amostrados (Feijó/AC:
+        # 23.221 vs 24.197). Vale para o "Eleitores" exibido e para o peso.
+        _e = payload.get("e") if isinstance(payload, dict) else None
+        te_par = _parse_br_number(_e.get("te")) if isinstance(_e, dict) else None
+        if te_par is not None and te_par > 0:
+            bucket["eleitores_tse"] += int(te_par)
+            peso = float(te_par)
+        else:
+            try:
+                peso = float(
+                    eleitorado_par.get((str(uf), cod_municipio_tse, int(cod_zona)), 0)
+                )
+            except (TypeError, ValueError):
+                peso = 0.0
         if peso <= 0:
             peso = 1.0
         # 🔴 04/10/2026 ~18h: `s.st/s.ts` do payload, não a coluna (que o
@@ -2053,6 +2066,7 @@ def fetch_municipio_aggregates(
             "pct_apurado": b["pct_apurado_num"] / den if den > 0 else 0.0,
             "votos_por_candidato": b["votos_por_candidato"],
             "total_votos": b["total_votos"],
+            "eleitores_tse": b["eleitores_tse"],
         }
     return out
 
@@ -6431,7 +6445,11 @@ def build_uf_payloads(
             # `capital` só aparece quando é `true` (são 27 em ~5.570
             # municípios): ausência == não-capital para o consumidor, e o
             # payload da UF não paga por 644 `"capital": false`.
-            if meta.get("eleitores") is not None:
+            # 04/10 ~19h50: o eleitorado do TSE de 2026 (Σ `e.te` dos pares,
+            # ver `fetch_municipio_aggregates`) vence o cadastro de 2024.
+            if agg.get("eleitores_tse"):
+                payload_row["eleitores"] = int(agg["eleitores_tse"])
+            elif meta.get("eleitores") is not None:
                 payload_row["eleitores"] = int(meta["eleitores"])
             if meta.get("capital"):
                 payload_row["capital"] = True
