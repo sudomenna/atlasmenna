@@ -321,6 +321,9 @@ const config: VercelProjectConfig = {
     "api/model/project.py": {
       // 🔴 04/10/2026 17h55: 60 s cortava Senado e Deputado no meio da noite.
       maxDuration: 300,
+      // 🔴 04/10/2026 19h20: "ran out of available memory" com a apuração em
+      // ~60% — Presidente parado 15 min. Máximo do plano.
+      memory: 3009,
       // Bundle Python tende a inflar com numpy. Excluímos artefatos comuns
       // que não são necessários em runtime.
       excludeFiles: "{tests/**,__tests__/**,**/*.test.py,**/test_*.py,**/__pycache__/**,**/*.pyc}",
