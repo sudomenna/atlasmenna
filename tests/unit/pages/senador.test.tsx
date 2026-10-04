@@ -1426,16 +1426,21 @@ describe("/uf/[sigla]/senador — os municípios (2026-09-20)", () => {
     readUfProjectionMock.mockResolvedValue(ufPayload());
   });
 
-  it("(v) 🔴 a lista existe nesta rota, com a mesma primeira leva de 20", async () => {
+  it("(v) 🔴 a lista existe nesta rota — só os 25 maiores, sem 'mostrar mais' (03/10)", async () => {
+    // 2026-10-03, pedido do dono: o mesmo recorte do governador. Mutação que
+    // morre aqui: tirar `limiteLista={25}` da página (volta a 20 + botão).
     readUfDetailMock.mockResolvedValueOnce(blobSenadorComMunicipios(municipiosSen(645)));
     const doc = await render(UFSenadorPage(PARAMS_SP));
 
     expect(doc.querySelector("[data-testid='municipios-lista']")).not.toBeNull();
-    expect(doc.querySelector("#municipios-heading")?.textContent).toContain("Municípios (645)");
-    expect(doc.querySelectorAll("[data-testid='municipios-lista'] tbody tr")).toHaveLength(20);
-    expect(doc.querySelector("table[aria-rowcount='645']")).not.toBeNull();
-    expect(doc.querySelector("[data-testid='municipios-carregar-mais']")?.textContent).toContain(
-      "625",
+    expect(doc.querySelector("#municipios-heading")?.textContent).toBe(
+      "Municípios — 25 maiores de 645",
+    );
+    expect(doc.querySelectorAll("[data-testid='municipios-lista'] tbody tr")).toHaveLength(25);
+    expect(doc.querySelector("table[aria-rowcount='25']")).not.toBeNull();
+    expect(doc.querySelector("[data-testid='municipios-carregar-mais']")).toBeNull();
+    expect(doc.querySelector("[data-testid='municipios-status']")?.textContent).toBe(
+      "Mostrando 25 de 645 municípios.",
     );
   });
 
@@ -1443,8 +1448,9 @@ describe("/uf/[sigla]/senador — os municípios (2026-09-20)", () => {
     readUfDetailMock.mockResolvedValueOnce(blobSenadorComMunicipios(municipiosSen(30)));
     const doc = await render(UFSenadorPage(PARAMS_SP));
 
-    // 20 botões = a primeira leva. Antes desta data eram ZERO nesta rota.
-    expect(doc.querySelectorAll("[data-testid='municipio-open']")).toHaveLength(20);
+    // 25 botões = o recorte dos 25 maiores (03/10; era a leva de 20). Antes
+    // de 20/09 eram ZERO nesta rota.
+    expect(doc.querySelectorAll("[data-testid='municipio-open']")).toHaveLength(25);
     // A folha começa fechada; abri-la é interação (e2e / MunicipioExplorer).
     expect(doc.querySelector("[data-testid='sheet']")).toBeNull();
   });
