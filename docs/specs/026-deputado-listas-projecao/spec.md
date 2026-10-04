@@ -5,17 +5,17 @@ status: implementing
 priority: M
 personas: [P1, P2, P3]
 screens: [T-11, T-12]
-requirements: [RF-260, RF-261, RF-262, RF-263, RF-264, RF-265, RF-266, RF-267, RF-268, RF-269, RF-270, RF-271, RF-272, RF-273, RF-274, RF-275, RF-276, RF-277, RF-291, RF-297, RF-298]
+requirements: [RF-260, RF-261, RF-262, RF-263, RF-264, RF-265, RF-266, RF-267, RF-268, RF-269, RF-270, RF-271, RF-272, RF-273, RF-274, RF-275, RF-276, RF-277, RF-291, RF-297, RF-298, RF-299, RF-300]
 depends_on: [017-deputado-federal, 018-identidade-candidatura]
 amends: [017-deputado-federal, 011-sobre-o-modelo]
-apis: [GET /uf/[sigla]/deputado-federal/lista]
-components: [DeputadoListaAgremiacao, MarcaDeputado, DeputadoMaisVotados, DeputadoPuxadores, DeputadoRegras, DeputadoConferencia, DeputadoMetodologia, CandidateListCollapse, VotacaoEleitorado]
+apis: [GET /uf/[sigla]/deputado-federal/lista, GET /deputado-federal/eleitos]
+components: [DeputadoListaAgremiacao, MarcaDeputado, DeputadoMaisVotados, DeputadoPuxadores, DeputadoRegras, DeputadoConferencia, DeputadoMetodologia, CandidateListCollapse, VotacaoEleitorado, DeputadoBancadaPanel, BancadaEleitosNacional]
 nfr: [RNF-002, RNF-003, RNF-006, RNF-007a, RNF-012, RNF-022, RNF-023, RNF-024, RNF-035]
 # ADRs novos desta spec, a numerar pelo orquestrador (depois da 0062):
 #   ADR-0063 — Projeção de deputado com trava de 25% e interruptor no Edge Config
 #   ADR-0064 — Destino do voto no proporcional
 #   ADR-0065 — Listas de candidaturas proporcionais em três faixas
-adrs: [0001, 0005, 0017, 0021, 0023, 0026, 0027, 0034, 0036, 0038, 0049, 0053, 0063, 0064, 0065, 0073, 0074]
+adrs: [0001, 0005, 0017, 0021, 0023, 0026, 0027, 0034, 0036, 0038, 0049, 0051, 0053, 0063, 0064, 0065, 0073, 0074]
 ship_blocked_on: [ADR-0063, ADR-0064 e ADR-0065 aceitos, G2 (replay sintético) reportado ao dono antes de ligar o interruptor, portões e2e de peso e acessibilidade em /uf/SP/deputado-federal com o Blob servido]
 opens_after: 2026-09-29
 ---
@@ -67,11 +67,19 @@ estimativa nossa e o que é o resultado oficial.
 - Mais votados do estado e do país, linha de corte, puxadores, regras com os números do estado.
 - Três correções: Conferência de verdade; `dvt` no cálculo de cadeiras; % apurado da UF.
 - Contrato v2 aditivo do payload (objetos v1 continuam renderizando) e portões e2e com o Blob servido.
+- *Emenda 04/10:* na capa, lista nacional de eleitos por agremiação, sob demanda, e cenário projetado
+  nacional misto e rotulado, com a bancada como última seção de conteúdo (RF-299, RF-300).
 
 ### Fora
 
-- **Bancada nacional projetada.** A capa ganha só o selo de estado da projeção por UF; somar
-  projeções de UFs liberadas com parciais de UFs aguardando produziria um número sem nome.
+- **Bancada nacional projetada** — *emendado em 04/10 (decisão do dono; ADR-0063, emenda de 04/10 (2)).*
+  O texto de 29/09 dizia: "A capa ganha só o selo de estado da projeção por UF; somar projeções de UFs
+  liberadas com parciais de UFs aguardando produziria um número sem nome." A resposta do dono ao "número
+  sem nome" foi **dar nome ao número**: o cenário misto entra (RF-300), sempre com o rótulo do que foi
+  somado. **Continua fora**: voto projetado por candidato em página nacional (RF-297); faixa de cadeiras
+  do cenário nacional; reordenar as agremiações pelo cenário; qualquer mudança no modelo ou no payload do
+  Edge Config para isso (o cenário é montado na leitura, a partir dos objetos por UF); e a bancada
+  nacional projetada das assembleias (spec 027 § Fora, inalterada).
 - **Gravar a projeção de deputado em `projections`** — o `candidato_id` é `int4` e não comporta o
   `sqcand` de 11 dígitos. A projeção é reproduzível dos snapshots mais o código e mais o estado do
   interruptor registrado no log do ciclo (ADR-0063, constituição § 6).
@@ -497,6 +505,71 @@ The system SHALL NOT acrescentar classe nem atributo por linha de candidato para
 - Given o documento de `/uf/SP/deputado-federal`, when se compara o peso antes e depois **desta frente** (só CSS), then o HTML não ganha bytes por linha.
 - Given um bloco `<small>` dentro de uma lista de candidato a 1920 px, when se mede, then seu `font-size` é o de `--text-xs` e não 80% dele.
 
+### Emenda de 04/10 (2) — capa: eleitos por agremiação e cenário projetado nacional
+
+> **Decisão do dono, dia do 1º turno** ([ADR-0063, emenda de 04/10 (2)](../../architecture/adrs/0063-projecao-deputado-federal-trava-25-e-interruptor-edge-config.md)).
+> Revoga **em parte** o § Fora desta spec ("Bancada nacional projetada") e a última frase da Decisão 1 do
+> ADR-0063. Nada muda no modelo Python nem no payload do Edge Config: tudo é lido, na hora, dos objetos por
+> UF do Blob. O RF-297 (nenhum voto projetado por candidato em página nacional) e o RF-271 (a capa não lê o
+> Blob de UF) continuam valendo. Só o Federal; a capa de Estadual/Distrital não muda.
+>
+> **Numeração.** RF-299 e RF-300 conferidos por grep em `docs/` em 2026-10-04 — nenhum uso anterior
+> (o último era RF-298, desta spec; o RF-296 mora na spec 003).
+
+**RF-299 — Lista nacional de eleitos por agremiação, sob demanda, e bancada como última seção da capa**
+
+WHEN o leitor aciona o botão "Ver os eleitos" de uma agremiação do painel "Bancada apurada — Quem fica com as cadeiras" da capa `/deputado-federal`, the system SHALL buscar `GET /deputado-federal/eleitos` — rota **fora de `/api`** (ADR-0065 D3), com `Cache-Control: public, s-maxage=60, stale-while-revalidate=60` no sucesso e `no-store` em 404 (nenhuma UF com dado) e 502 (erro) —, no máximo **uma vez por aba** dentro da janela de 60 s e compartilhando a resposta entre todas as agremiações, and SHALL listar os candidatos dessa agremiação agrupados por UF (sigla e quantos eleitos dela há ali), cada um com nome, partido, voto apurado, % dos válidos da UF e a marca (RF-262, RF-267), em ordem fixa: UF por sigla e, dentro dela, `rank` de apuração (§ 2, § 6).
+WHILE o seletor do topo está em "Parcial", the system SHALL listar só as candidaturas com marca de eleito na parcial ou "Eleito (TSE)", sob o cabeçalho "N eleitos na parcial em K estados · eleito na parcial não é resultado oficial".
+The system SHALL mostrar avatar (RF-291) só em quem é eleito na parcial ou TSE; SHALL NOT exibir voto projetado por candidato (RF-297); SHALL NOT reordenar nada pela projeção; and SHALL NOT ler o Blob de nenhuma UF na renderização da capa (RF-271) — a leitura acontece só na rota, só sob demanda.
+IF a rota falha, responde 404 ou a resposta não chega, THEN the system SHALL manter o painel e os números da bancada intactos e dizer, na própria agremiação, que a lista não está disponível agora, com "tentar de novo"; IF uma UF não pôde ser lida, THEN the system SHALL tratá-la como **sem dado** — dito na tela — e nunca como zero eleitos.
+WHILE uma lista está aberta, the system SHALL acompanhar a atualização automática da página (ADR-0074) — a resposta em memória vale 60 s —, sem fechá-la nem tirar o foco.
+The system SHALL dispor o painel da bancada como a **última seção de conteúdo** da capa — depois de "Estado a estado" e antes da nota de metodologia —, com o `Camara2027Panel` sozinho na sua linha; o hemiciclo do topo continua desenhando a parcial e o `aria-describedby="bancada-agremiacoes"` dele continua válido.
+
+**Aceitação**:
+- Given a capa renderizada no teste, when se conta a leitura de Blob e as requisições à rota, then `readDeputadoUfDetail` não foi chamado nenhuma vez e nenhuma requisição à rota foi feita antes do clique (RF-271 segue).
+- Given a capa, when se lê a ordem das seções, then "Estado a estado" vem antes do painel da bancada, que vem antes de `<DeputadoMetodologia>`, e o `Camara2027Panel` não divide linha com o painel.
+- Given o leitor abre o PT e depois o PL, when as duas listas abrem, then houve **um** único fetch à rota na aba, os dois blocos usam a mesma resposta, e reacionar o botão dentro de 60 s não refaz a busca.
+- Given uma agremiação com 3 eleitos na parcial em 2 UFs (2 em SP, 1 em BA) e o seletor em "Parcial", when abre, then há dois grupos — BA com "1 eleito", SP com "2 eleitos", nesta ordem de sigla —, dentro de cada um os nomes na ordem de `rank`, e o cabeçalho diz "3 eleitos na parcial em 2 estados".
+- Given um candidato marcado só na projeção (UF liberada) e o seletor em "Parcial", when a lista renderiza, then ele não aparece.
+- Given uma lista com eleito com foto, eleito sem foto e candidato não eleito, when renderiza, then só os dois eleitos têm avatar — foto e iniciais.
+- Given o botão de abrir, when auditado, then tem `aria-expanded` e `aria-controls`; given o "Recolher" no fim da lista, when acionado, then a lista fecha, `aria-expanded` volta a `false` e o foco vai para o botão de abrir.
+- Given a rota respondendo 404 (antes da apuração), when o leitor abre uma agremiação, then ela diz "lista ainda não disponível" com "tentar de novo", e os números da bancada são os de antes.
+- Given 26 UFs lidas e 1 que falhou, when a rota responde, then a UF vem em `ufs_sem_dado`, a tela diz quantos estados ficaram fora e nenhuma UF aparece com "0 eleitos".
+- Given o módulo da rota, when o teste procura o caminho, then ele não está sob `/api` (o teste falha se movido) e o sucesso leva `s-maxage=60` enquanto 404 e 502 levam `no-store`.
+- Given a resposta da rota, when se procura `votos_projetados`, then ele não existe em linha nenhuma.
+- Given o `cadeiras` da linha (vindo do payload) diferente da contagem de nomes da lista (vinda do Blob, de outro ciclo), when a agremiação está aberta, then a linha mostra o número do payload, a lista mostra a contagem dos nomes que recebeu, e nenhuma é ajustada para igualar a outra.
+- Given a capa `/deputado-estadual`, when renderiza, then não há ilha, botão nem chamada à rota (inalterada).
+- Given a capa a 375 px, when o axe audita com uma lista aberta e fechada, then zero violações e nenhuma rolagem horizontal; given o portão de peso, when mede o documento, then o teto da capa **não é subido por esta emenda** — se estourar, o implementador para e leva o número medido ao dono.
+
+**RF-300 — Cenário projetado nacional, misto e rotulado**
+
+WHILE o seletor do topo está em "Projeção" e a projeção de Deputado está ligada (RF-265), the system SHALL mostrar, em cada agremiação do painel da bancada da capa, o **cenário projetado nacional**: a soma, sobre as UFs lidas, das cadeiras projetadas (RF-263) nas UFs com projeção **liberada** (RF-264) e das cadeiras da parcial nas demais; and SHALL acompanhar o número, no mesmo elemento, do rótulo "projeção em X de 27 estados; nos outros Y, a parcial" — X e Y derivados dos dados, nunca literais —, acrescido de "Z sem dado agora, fora da conta" quando Z > 0, and de "projeção · não oficial" e "pontual" (RF-266; sem faixa, como na emenda de 29/09 do ADR-0063).
+WHEN o leitor escolhe "Projeção" na capa, the system SHALL buscar a mesma rota do RF-299, compartilhando a resposta e a regra de uma busca por aba — o cenário não depende de o leitor abrir uma agremiação.
+The system SHALL manter visível, ao lado do cenário e com o nome dela, a cadeira da parcial da agremiação (ADR-0063, Decisão 5 — o número da projeção nunca substitui o da parcial; precedente: RF-180, spec 003), and SHALL desenhar a barra de segmentos do painel com o cenário sob o mesmo rótulo.
+WHEN o leitor abre uma agremiação nesse modo, the system SHALL listar, por UF, os candidatos eleitos na projeção das UFs liberadas, com "eleito na projeção · não oficial", e os eleitos na parcial das UFs travadas, sob o subtítulo "parcial — projeção ainda travada neste estado", sob o cabeçalho "N no cenário projetado · projeção em X de 27 estados; nos outros Y, a parcial"; "Eleito (TSE)" tem precedência sobre as duas marcas (RF-267). Cada nome diz de onde veio.
+IF o interruptor está desligado, THEN the system SHALL NOT mostrar número, nome nem selo de projeção na capa — o número da linha é o da parcial e a tela diz "A projeção de deputados está desligada agora — mostrando a parcial." —; a rota SHALL omitir a projeção na própria resposta, and a página, que lê o interruptor a cada renderização (RF-265), SHALL entregar o estado à ilha, que SHALL ignorar qualquer campo de projeção da resposta quando a página diz "desligada" (dois pontos de leitura, ADR-0063 Decisão 4).
+IF nenhuma UF está com a projeção liberada (X = 0), THEN the system SHALL NOT chamar a parcial de "cenário projetado": diz que nenhum estado tem projeção liberada ainda e mostra a parcial.
+IF a busca ainda não terminou ou falhou, THEN the system SHALL manter a parcial com um aviso curto — nunca um zero.
+WHERE uma agremiação tem cadeira no cenário e nenhuma linha no painel (zero cadeiras na parcial), the system SHALL acrescentá-la ao fim da lista, com a parcial em zero e o rótulo do cenário.
+The system SHALL manter a ordem das agremiações e das linhas a da parcial (ADR-0063 Decisão 5, ADR-0051); SHALL manter o hemiciclo do topo na parcial (ADR-0049); SHALL NOT exibir voto projetado por candidato (RF-297); and SHALL NOT alterar o payload nacional nem o modelo.
+
+**Aceitação**:
+- Given uma agremiação com parcial 3 na UF A (liberada, 5 cadeiras projetadas) e parcial 4 na UF B (travada), e nenhuma cadeira nas demais UFs, when a capa está em "Projeção", then o cenário da linha é 9 e a parcial 7 continua visível, com o nome dela, ao lado.
+- Given 19 UFs liberadas e 8 travadas, when o rótulo renderiza, then diz "projeção em 19 de 27 estados; nos outros 8, a parcial"; o teste repete com 3 liberadas e 24 travadas para pegar um literal escrito à mão, e o "27" vem da lista fechada de UFs, não do JSX (design 017 D8).
+- Given uma UF travada cujo objeto traz `cadeiras_projetadas`, when o cenário soma, then essa UF conta a **parcial** — só `projecaoVisivel` faz a projeção contar.
+- Given 1 UF cujo Blob falhou, when o cenário soma, then ela fica fora da soma, o rótulo diz "1 sem dado agora, fora da conta" e nada é somado como "0 cadeiras" em silêncio.
+- Given o interruptor desligado e o seletor em "Projeção", when a capa renderiza, then nenhum número, nome ou selo de projeção aparece, o número da linha é o da parcial e a frase de desligada está na tela; given a mesma situação com a resposta da rota ainda trazendo projeção (cache do CDN), when a ilha a recebe, then a ignora e nada de projeção aparece.
+- Given o seletor em "Parcial", when a capa renderiza, then o cenário, o rótulo e a versão da barra estão fora do DOM visível e da árvore de acessibilidade (cascata `[data-view-only]`, RF-180).
+- Given nenhuma UF liberada, when a capa está em "Projeção", then não há a expressão "cenário projetado" aplicada a um número que é só a parcial, e a tela diz que nenhum estado tem projeção liberada.
+- Given uma agremiação aberta em "Projeção" com a UF A liberada e a UF B travada, when a lista renderiza, then os nomes de A saem com "eleito na projeção · não oficial", os de B com "parcial — projeção ainda travada neste estado", e um nome com "Eleito (TSE)" mostra só essa marca.
+- Given a capa em "Parcial" e em "Projeção", when se compara a ordem das linhas no DOM, then é a mesma — inclusive com uma agremiação cujo cenário é maior que o da linha de cima.
+- Given o hemiciclo do topo, when o seletor está em "Projeção", then ele continua desenhando a parcial.
+- Given a resposta da rota, o HTML e o payload RSC da capa, when se procura `votos_projetados`, then ele não existe.
+- Given a capa em "Projeção", when o texto fora do bloco de metodologia é lido, then toda ocorrência de "projeção"/"projetad" está no mesmo elemento que "não oficial" (RF-266).
+- Given `<DeputadoMetodologia>` da capa, when renderiza, then diz que o cenário nacional soma projeção nas UFs liberadas e parcial nas demais, que é pontual e sem faixa e que não substitui a parcial (§ 8).
+- Given o leitor escolhe "Projeção" sem abrir nenhuma agremiação, when a capa reage, then há **um** fetch à rota; given que depois ele abre uma agremiação dentro de 60 s, then não há segundo fetch.
+- Given o seletor virando de "Parcial" para "Projeção" com a busca ainda em andamento, when a resposta demora, then a linha continua com a parcial e o aviso curto até chegar — sem zero e sem salto de leiaute que esconda o número da parcial.
+
 ## Requisitos Não-Funcionais
 
 - **RNF-002 / RNF-003** — LCP e INP da página de SP com ~1.000 linhas: `content-visibility: auto` por
@@ -534,6 +607,13 @@ The system SHALL NOT acrescentar classe nem atributo por linha de candidato para
 Os blocos atuais, mais **Mais votados do país** (RF-271) e **Puxadores** (RF-273), ambos do payload
 nacional, e o selo do estado da projeção em cada linha da tabela estado a estado.
 
+*Emenda 04/10 (RF-299, RF-300).* O painel "Bancada apurada — Quem fica com as cadeiras" (`DeputadoBancadaPanel`)
+sai do par com o `Camara2027Panel` e passa a ser a **última seção de conteúdo**, depois de "Estado a estado"
+e antes da nota de metodologia (`DeputadoMetodologia`); o `Camara2027Panel` fica sozinho na linha. Cada
+agremiação do painel ganha o botão "Ver os eleitos" (ilha cliente `BancadaEleitosNacional`, uma por linha)
+e, com o seletor em "Projeção", o cenário projetado nacional rotulado ao lado da parcial. O hemiciclo do
+topo continua na parcial.
+
 ## Open questions
 
 1. **Puxador a partir de 2 × QE** (excedente ≥ 1) — decisão deste design, para que "puxador" seja quem
@@ -549,6 +629,11 @@ nacional, e o selo do estado da projeção em cada linha da tabela estado a esta
    mesmo buraco, a projeção daquela UF fica indisponível a noite inteira — por construção.
 5. **`snapshots.pct_apurado = s.psa`** vale para todos os cargos. Esta spec deixa de usá-lo no cargo 6;
    se outro cargo usa `max(pct_apurado)` do mesmo jeito, é outra investigação.
+6. **UF já totalizada no rótulo do cenário (RF-300).** Uma UF com totalização final e projeção liberada
+   conta `cadeiras_projetadas`, idêntica à parcial pelo G1 (questão 3); o RF-300 só manda que os **nomes**
+   dela saiam "Eleito (TSE)". Em qual balde do rótulo "projeção em X de 27 estados; nos outros Y, a
+   parcial" ela entra (X, porque o objeto está liberado, ou Y, porque o número é oficial) **não está
+   decidido**; o número do cenário é o mesmo nos dois casos. Dono pode decidir; não bloqueia.
 
 ## Emendas a outras specs
 
@@ -559,6 +644,11 @@ nacional, e o selo do estado da projeção em cada linha da tabela estado a esta
   [017 § Emendas](../017-deputado-federal/spec.md#emendas-por-specs-posteriores).
 - **Spec 011** — `/sobre-o-modelo` explica a projeção de deputado dentro da seção 5 ("Cadeiras"),
   sem `<h2>` novo. Registro em [011 § Emendas](../011-sobre-o-modelo/spec.md#emendas-por-specs-posteriores).
+  *Emenda 04/10:* a mesma seção, e o `<DeputadoMetodologia>` da capa, passam a explicar o cenário nacional
+  misto (RF-300, constituição § 8). Registro em 011 § Emendas **pendente**.
+- **Spec 027** — o § Fora "Bancada nacional projetada das assembleias" **continua valendo**: a emenda de
+  04/10 (RF-299, RF-300) é só do Deputado Federal. Estendê-la às assembleias exige decisão própria (ADR-0066,
+  ponto em aberto "Soma nacional na capa").
 
 ## Cross-refs
 
@@ -568,6 +658,9 @@ nacional, e o selo do estado da projeção em cada linha da tabela estado a esta
 - [ADR-0027](../../architecture/adrs/0027-conversao-votos-em-cadeiras-deputado-federal.md) — o método de cadeiras
 - [ADR-0021](../../architecture/adrs/0021-extrapolacao-do-apurado-sem-2022.md) e
   [ADR-0023](../../architecture/adrs/0023-pos-estratificacao-por-porte-de-zona.md) — a extrapolação por zona
+- [ADR-0063, emenda de 04/10 (2)](../../architecture/adrs/0063-projecao-deputado-federal-trava-25-e-interruptor-edge-config.md) —
+  o cenário nacional misto rotulado (RF-299, RF-300); [ADR-0051](../../architecture/adrs/0051-ordem-de-candidatos-segue-base-de-apuracao-selecionada.md) —
+  por que o cenário não reordena
 - [ADR-0053](../../architecture/adrs/0053-anulado-sai-da-disputa-sub-judice-segue-o-tse.md) — o destino no majoritário
 - [ADR-0017](../../architecture/adrs/0017-transparencia-total-3-camadas.md) e
   [ADR-0034](../../architecture/adrs/0034-resultpanel-colapso-visual-corte-fora-do-kit.md) — colapso sem remover nó

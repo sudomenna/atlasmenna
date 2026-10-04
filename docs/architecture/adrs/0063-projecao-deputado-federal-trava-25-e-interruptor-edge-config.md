@@ -19,6 +19,16 @@ Aceito (2026-09-29) — plano aprovado pelo dono.
 > Passa a ser publicado e exibido, com as ressalvas abaixo. A Decisão 5 (nunca ordena, nunca substitui o
 > apurado) permanece. Texto no fim deste arquivo (§ "Emenda 2026-10-04 — Decisão").
 
+> **Emenda 2026-10-04 (2) (decisão do dono, dia do 1º turno — bancada nacional projetada como cenário
+> misto rotulado, só Deputado Federal).** A última frase da Decisão 1 ("Não há bancada nacional
+> projetada…") é **revogada em parte**: a capa `/deputado-federal` passa a mostrar, com o seletor do topo em
+> "Projeção", o cenário projetado nacional de cada agremiação — UF com projeção liberada conta a projeção,
+> UF travada conta a parcial, e o número sempre diz isso no rótulo — e a lista nacional dos candidatos
+> eleitos de cada agremiação. Tudo montado na leitura, a partir dos objetos por UF do Blob: o payload do
+> Edge Config e o modelo não mudam. As Decisões 3, 4 e 5 permanecem; a 4 ganha uma extensão (dois pontos de
+> leitura do interruptor também na rota nova) e a 5 é explicitada para o cenário. Texto no fim deste
+> arquivo (§ "Emenda 2026-10-04 (2) — Decisão").
+
 **Supera o D9 do design da spec 017** ("o número central é voto apurado, não voto projetado; no cargo 6
 não existe projeção de voto; a tela não pode chamar isso de projeção") **e a redação do D10**
 (`composition.model = 0`, justificado por "decorre de D9"), e **emenda o RF-127** (o intervalo de
@@ -94,6 +104,12 @@ não os cria). O valor de `composition` sob projeção liberada é definido no d
 uma restrição que este ADR fixa: nunca declarar `model: 0` sobre um número que o modelo produziu.
 Não há bancada nacional projetada: o contrato leva a projeção **por UF**, e a capa nacional mostra
 só o selo de estado da projeção de cada UF.
+
+> **Emenda 2026-10-04 (2).** A frase acima ("Não há bancada nacional projetada…") foi **revogada em
+> parte** pelo dono: a capa passa a mostrar um cenário nacional misto, sempre rotulado, montado na leitura
+> a partir dos objetos por UF — ver § "Emenda 2026-10-04 (2) — Decisão". O contrato continua levando a
+> projeção **por UF**, e nada do payload nem do modelo muda. O texto original fica como foi decidido em
+> 29/09.
 
 **2. Método.** Todas as etapas em aritmética exata; nada de `float` decidindo cadeira.
 
@@ -412,6 +428,141 @@ custo ao escolher "eleitos + 7".
   que o número por candidato é pontual e sem faixa — constituição § 8), `docs/specs/026-.../design.md` §
   2.2 (campo na linha), runbook (a ressalva do Blob cobre o campo novo).
 
+## Emenda 2026-10-04 (2) — Decisão (bancada nacional projetada como cenário misto rotulado, Deputado Federal)
+
+**Contexto.** O painel "Bancada apurada — Quem fica com as cadeiras" da capa `/deputado-federal` diz
+quantas cadeiras cada agremiação tem na parcial (o `bancada` do payload nacional, no Edge Config), mas não
+**quem** são os eleitos — para ver nomes o leitor abre as 27 páginas de UF —, e com o seletor do topo em
+"Projeção" não mostra número nenhum, porque a Decisão 1 e o § "Fora" da spec 026 vetaram a bancada nacional
+projetada: "somar projeções de UFs liberadas com parciais de UFs aguardando produziria um número sem nome".
+No dia do 1º turno o dono pediu as duas coisas — a lista nacional de eleitos por agremiação e o número da
+Projeção — e respondeu à objeção do "número sem nome" dando nome ao número: o que foi somado fica declarado
+no próprio rótulo.
+
+A restrição de implementação é o dia da eleição: mexer no modelo Python ou na gravação do payload do Edge
+Config arrisca a apuração da noite, então a solução tem de **só ler** o que já é publicado. E já é publicado:
+cada objeto de UF do Blob (`deputado/uf/<UF>.json`, lido por `readDeputadoUfDetail`) traz toda candidatura
+com marca — parcial, projeção ou TSE — qualquer que seja o `rank` (ADR-0065 D1: candidatura marcada fica
+sempre no documento; a faixa 61+ nunca carrega marca), e o `cod` de cada agremiação do objeto é a chave
+**nacional** (design 017 D3, emenda de 29/09), igual ao `cod` de `bancada.por_agremiacao` — o casamento entre
+UFs é igualdade de string.
+
+Dois pontos desta emenda tocam decisões acima e se leem com elas. A **Decisão 5** diz que "o número da
+projeção nunca substitui o da parcial": um número nacional que *trocasse* o da linha ao virar o seletor a
+contrariaria (o precedente da casa é o RF-180 da spec 003 — a coluna Parcial fica no DOM em qualquer base,
+só a ênfase tipográfica muda). E a **Decisão 4** limita o "desligar → sumir" ao tempo de regeneração da
+página: uma rota nova com cache de CDN de 60 s mais 300 s de `stale-while-revalidate` que carrega dado de
+projeção, se copiada tal e qual do molde de `/lista` (ADR-0065 D3), **não** obedeceria a esse limite. A faixa
+61+ podia ignorar o interruptor porque nunca leva projeção; esta rota leva.
+
+**Decisão.**
+
+1. **A bancada nacional projetada passa a existir, como cenário misto rotulado.** Por agremiação nacional
+   (`cod`), o cenário é a soma, sobre as UFs com dado, de `cadeiras_projetadas` nas UFs com projeção visível
+   (`liberada` e interruptor ligado — `projecaoVisivel`) e de `cadeiras`, a parcial, nas demais. O número
+   **nunca aparece sem o rótulo** "projeção em X de 27 estados; nos outros Y, a parcial" — X e Y derivados
+   dos dados, nunca escritos à mão, e "Z sem dado agora, fora da conta" quando uma UF não pôde ser lida —,
+   nem sem "projeção · não oficial" (§ 1) e "pontual" (emenda de 29/09: sem faixa, é o rótulo que cumpre a
+   Decisão 8). Cada nome listado diz de onde veio: "eleito na projeção · não oficial" (UF liberada),
+   "parcial — projeção ainda travada neste estado" (UF travada) ou "Eleito (TSE)", que tem precedência sobre
+   os dois (RF-267). Com X = 0 não há cenário projetado — a tela diz que nenhum estado tem projeção liberada
+   e mostra a parcial. Com o interruptor desligado nenhum dado de projeção sai, e a tela mostra a parcial
+   com o aviso "A projeção de deputados está desligada agora — mostrando a parcial." A Decisão 1 fica
+   revogada **só** nesta parte: o contrato continua levando a projeção **por UF**.
+
+2. **A soma é feita na leitura, por uma rota fora de `/api`.** Um agregador puro
+   (`lib/deputado/eleitos-nacionais.ts`) recebe as 27 UFs lidas do Blob e o estado do interruptor e devolve,
+   por agremiação, `parcial`, `cenario`, as UFs de cada base e as linhas dos candidatos. A rota
+   `GET /deputado-federal/eleitos` (`app/(dep)/deputado-federal/eleitos/route.ts`, `nodejs`,
+   `force-dynamic`) o monta lendo o interruptor, as 27 UFs em paralelo e as fotos dos eleitos. Sucesso:
+   `Cache-Control: public, s-maxage=60, stale-while-revalidate=60`; nenhuma UF com dado: 404 `no-store`;
+   erro: 502 `no-store`. UF que falha ou não existe vai para `ufs_sem_dado` e **nunca** vira zero. A rota
+   fica fora de `/api` pelo motivo do ADR-0065 D3 (o BotID roda em `/api/*`, ADR-0009), e não abre dado novo:
+   os Blobs de UF já são públicos. Não toca Postgres (ADR-0001; o read path é Edge Config e Blob,
+   ADR-0026). A capa **não** chama a rota no servidor — o RF-271 segue valendo. Uma ilha cliente pequena,
+   montada por linha da bancada, busca no primeiro clique em "Ver os eleitos" **ou** ao escolher "Projeção"
+   no seletor, uma vez por aba, com a resposta guardada em memória por 60 s e compartilhada entre as linhas.
+   Se a rota falha, falha só o recurso novo: a capa e os números da bancada seguem como estão (§ 7).
+
+3. **O que não muda.** Voto projetado por candidato continua proibido em página nacional (emenda de
+   04/10 (1), item 2; RF-297): o agregador e a rota o descartam, e a lista nacional carrega só voto apurado.
+   O hemiciclo do topo continua desenhando a parcial (ADR-0049). A **ordem** das agremiações na bancada
+   continua a da parcial (`ordenarBancada`): a projeção nunca ordena (Decisão 5, ADR-0051); dentro da lista
+   aberta, a ordem é UF por sigla e depois `rank` de apuração. O § 2 admitiria reordenar pelo seletor, sob
+   as condições (a) a (c); isso fica adiado, não rejeitado. A capa de Deputado Estadual não muda, e a
+   exclusão da bancada nacional projetada das assembleias (spec 027 § Fora; ADR-0066, ponto em aberto "Soma
+   nacional na capa") continua valendo — estendê-la exige decisão própria.
+
+4. **A Decisão 5 vale para o cenário: os dois números convivem.** Em "Projeção" a linha mostra o cenário em
+   evidência, na cor de projeção, e **mantém a parcial visível, com o nome dela**. Virar o seletor muda a
+   ênfase; não apaga o que foi contado.
+
+5. **A Decisão 4 se estende: dois pontos de leitura do interruptor também aqui.** A rota lê o interruptor e
+   omite a projeção quando ele está desligado; a página — que já o lê a cada renderização, para o selo por
+   UF — entrega o estado à ilha, e a ilha **ignora** qualquer campo de projeção que a resposta traga quando
+   a página diz "desligada". Assim o "desligar → sumir" continua limitado à regeneração da página (alvo de
+   60 s, ainda não medido) e à atualização automática (ADR-0074), e não ao cache da rota. O que sobra é da
+   mesma classe da ressalva do Blob: o corpo em cache no CDN pode conter projeção até o fim da janela de
+   cache, sem aparecer na tela.
+
+**Alternativas consideradas.**
+
+- *Calcular o cenário nacional no modelo e publicá-lo no payload.* Rejeitada: no dia da eleição qualquer
+  mudança no modelo Python ou na escrita do Edge Config arrisca a apuração da noite.
+- *Ler as 27 UFs no servidor, na renderização da capa.* Rejeitada: viola o RF-271 (a capa não lê Blob de
+  UF), põe 27 leituras no caminho do LCP (§ 3, RNF-002) e engorda o documento com listas que o leitor não
+  pediu.
+- *Rota sob `/api`.* Rejeitada pelo ADR-0065 D3: o BotID responde 403 a cliente automatizado e derruba o
+  portão e2e.
+- *Cenário só com as UFs liberadas, ignorando as travadas.* Rejeitada: seria um "país" feito de parte dos
+  estados, que cresce com o avanço da apuração — o número sem nome que a spec 026 vetou.
+- *Manter o veto (só parcial na capa).* Rejeitada pelo dono: o leitor pergunta "como fica a bancada", e a
+  capa nacional seria a única tela de Deputado sem resposta.
+- *Trocar o número da linha pelo cenário ao virar o seletor.* Rejeitada por contrariar a Decisão 5 (item 4).
+
+**Consequências desta emenda.**
+
+- *Positivas*:
+  - Responde na capa à pergunta "quem", sem 27 cliques e sem tocar no modelo; se a rota cair, só ela cai.
+  - É reversível: tirar a ilha devolve a capa de antes, sem migração de dado.
+  - O interruptor continua desligando tudo, agora com o ponto de leitura da página também sobre a rota.
+  - A soma é aritmética inteira sobre números que o modelo já publicou; não cria método estatístico novo.
+- *Negativas*:
+  - **O número nacional mistura duas bases.** O rótulo é a única mitigação, e quem lê só "12 cadeiras" vê um
+    número que não é nem a parcial nem a projeção pura. Pior: o misto **se move por composição, não por
+    voto** — quando uma UF passa dos 25% e vira "liberada", o cenário salta ao trocar parcial por projeção
+    naquela UF, sem boletim novo, e a fração X de 27 sobe ao longo da noite. Cedo, com X pequeno, o número é
+    quase a parcial com selo de projeção (por isso o X = 0 não se chama cenário).
+  - **Pontual, sem faixa.** O intervalo de cadeiras projetadas foi adiado (emenda de 29/09) e faixa de uma
+    UF não se soma à de outra; o cenário nacional não tem faixa nem como ter, com as peças existentes. Vale o
+    rótulo "pontual" — o mesmo desvio assumido da Decisão 8, agora numa tela que mais gente lê.
+  - **Nomes de pessoas, em escala nacional.** A lista põe numa só tela dezenas de "eleito na projeção · não
+    oficial" de UFs diferentes. O erro de uma projeção de UF (voto de reduto, Negativas acima) fica mais
+    visível e mais fácil de ser lido como resultado — o risco da emenda (1), ampliado.
+  - **A linha pode estar numa ordem que o cenário desmente.** A agremiação com cenário maior pode ficar
+    abaixo de outra com cenário menor, porque a ordem é a da parcial.
+  - **Desencontro entre fontes.** A linha vem do Edge Config (payload nacional, da última renderização da
+    página) e a lista vem do Blob por UF; os dois podem ser de ciclos diferentes — o cargo 6 roda fatiado
+    (ADR-0036). Somam-se o Data Cache de 60 s do Blob, o `s-maxage` de 60 s e o `stale-while-revalidate` de
+    300 s da rota e os 60 s da memória do cliente: de alguns segundos, no caso comum, a alguns minutos, no
+    pior. O `cadeiras` da linha e a contagem de nomes da lista podem divergir por um ciclo, e nenhum dos dois
+    é ajustado para igualar o outro; cada um leva o seu nome. A janela de 300 s é a do molde `/lista`, cujo
+    dado muda pouco; aqui o dado muda a cada ciclo, e a janela pode ser apertada (por exemplo, SWR de 60 s)
+    sem mudar o desenho.
+  - **Fan-out de leitura.** Cada falha de cache faz 27 leituras de Blob e 1 de Edge Config. O CDN absorve em
+    regime, mas o custo da primeira requisição de cada região depois de expirar não foi medido.
+  - **Peso.** A ilha por linha entra no JS e no HTML da capa (botão e `aria-*` em cada linha). O teto de
+    peso do documento e o RNF-007a **não sobem** por esta emenda; se estourarem, para-se e leva-se o número
+    ao dono.
+  - **A exceção ao § 6 se estende.** O cenário não é gravado: reproduz-se dos objetos de UF mais o código,
+    mas o Blob é reescrito a cada ciclo, e o que a tela mostrou às 21h37 só se reconstrói por replay.
+  - **A Decisão 1 continua no arquivo.** Quem ler só ela conclui que a bancada nacional projetada não
+    existe; a nota ao lado dela e esta seção resolvem, ao custo de leitura (como na emenda de 29/09).
+- *Propagação*: spec 026 (RF-299 e RF-300; § Fora emendado; § Telas), design 026 (nota junto do contrato
+  nacional), spec 011 (`/sobre-o-modelo`, seção "Cadeiras", e o `<DeputadoMetodologia>` da capa precisam
+  explicar o cenário misto — § 8), `docs/design-system/components.md` (`BancadaEleitosNacional`), runbook (a
+  ressalva do Blob cobre também a rota nova), `docs/nfr/performance.md` se o teto da capa mudar.
+
 ## Cross-refs
 
 - [ADR-0001](0001-edge-config-no-read-path.md) — Edge Config no read path; Postgres fora dele.
@@ -445,3 +596,13 @@ custo ao escolher "eleitos + 7".
   `api/model/project.py:2025-2040` e `:7924`, `lib/edge-config/keys.ts`,
   `lib/db/schema.ts:236`, `proxy.ts`. Textos a corrigir: `docs/operations/runbook.md:870`,
   `vercel.ts:184`. Operação: `docs/operations/vespera-03-10.md` § 0.5.
+- Emenda de 04/10 (2): [ADR-0009](0009-botid-vercel.md) e [ADR-0065](0065-listas-proporcionais-em-tres-faixas.md)
+  D3 — a rota fora de `/api`; [ADR-0026](0026-cargos-senador-deputado-ingestao-e-read-path.md) — Blob como
+  read path; [ADR-0036](0036-deputado-federal-granularidade-zona-fatiada.md) — cargo 6 fatiado;
+  [ADR-0049](0049-hemiciclo-camara-geometria-fixa-anel-na-indefinida.md) — hemiciclo segue na parcial;
+  [ADR-0051](0051-ordem-de-candidatos-segue-base-de-apuracao-selecionada.md) — a ordem não segue o cenário;
+  [ADR-0074](0074-atualizacao-automatica-das-paginas-por-router-refresh.md) — a lista aberta acompanha a
+  atualização da página; [ADR-0066](0066-cargos-7-e-8-como-proporcionais-do-produto.md) — a soma nacional
+  das assembleias continua fora. Spec 026: RF-299 e RF-300; spec 003: RF-180 (precedente: a parcial fica no
+  DOM em qualquer base). Constituição § 1 (rótulo), § 2 (ordem), § 3 (banco fora do read path), § 4 (cor
+  nunca sozinha), § 6 (exceção do cargo 6), § 7 (falha isolada), § 8 (metodologia da capa).

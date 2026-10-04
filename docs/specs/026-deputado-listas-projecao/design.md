@@ -358,7 +358,12 @@ interface EdgeDeputadoPuxador extends EdgeDeputadoDestaque {
 ```
 
 `bancada` não muda (continua a parcial). Custo: +~8 KB, chegando a ~19 KiB dos 75 KiB do orçamento da
-chave. Nenhuma bancada nacional projetada (spec § Fora).
+chave. Nenhuma bancada nacional projetada **neste contrato** (spec § Fora).
+
+> **Emenda 04/10 (decisão do dono).** O cenário nacional misto (RF-300) e a lista nacional de eleitos
+> (RF-299) **não entram neste contrato**: são montados na leitura, por `GET /deputado-federal/eleitos`, a
+> partir dos objetos por UF do Blob. O payload do Edge Config e o modelo não mudam. ADR-0063, emenda de
+> 04/10 (2).
 
 ⚠️ **Emenda de 2026-09-29 — o `cod` da agremiação é a chave nacional, não o `agr[].n`.** Até esta data
 o `cod` era o `agr[].n` do EA20, sob a premissa (design 017 D3) de que ele seria estável no país. Não

@@ -522,7 +522,7 @@
       "status": "accepted",
       "date": "2026-09-29",
       "amends": ["0021", "0023"],
-      "note": "Plano aprovado pelo dono em 29/09. Supera o D9 (e a redação do D10) do design da spec 017 — 'no cargo 6 não há projeção de voto' — e emenda o RF-127 (o intervalo de cadeiras vale para a projeção); estende os ADR-0021/0023 ao cargo 6 sem superseder; NÃO toca o ADR-0027 (mesmo algoritmo, entrada já filtrada pelo ADR-0064). Método: zona apurada = esi>0 ∧ vv>0, k = te/esi, razão das somas por chave (sqcand, legenda:<cod>), pós-estratificação por tercis de te (UF com >=12 zonas), imputação das zonas sem boletim no estado inteiro (decisão do dono), arredondamento inteiro determinístico em Fraction, depois distribuir_cadeiras inalterado. Trava por UF, todas juntas: % apurado >= 25 (PONDERADO pelo eleitorado — corrige project.py:7924, que pegava o max entre zonas; zona sem boletim conta zero), >= 2 zonas apuradas, nv publicado, sem coligação, interruptor ligado; estado liberada|aguardando|indisponivel sempre com motivo. Interruptor = chave do Global Config `interruptor-projecao-dep` {ligada, pct_minimo?, em?, por?}, lida a cada ciclo E a cada render (desligar->sumir alvo 60 s, não medido); falha fechada (erro de leitura, valor inválido e chave ausente = desligada); pct_minimo só sobe; em/por nunca publicados; `pnpm dep:projecao` confirma o id do store e recusa o de ensaio por omissão. Regra registrada: variável de ambiente NÃO é interruptor de runtime na Vercel (só deployment novo) — runbook.md:870 e vercel.ts:184 afirmam 'sem deploy' para TSE_DEPUTADO_GRANULARIDADE e estão errados; deploy congelado 16h-05h em 04/10. Sempre 'projeção · não oficial' (§ 1) + bloco § 8; ordem das listas segue o voto apurado, a projeção nunca ordena (§ 2/ADR-0051). § 6: sem linhas novas em `projections` — precedente do dono de 17/09 (CARGOS_COM_SERIE_PERSISTIDA={1,3,5}) + candidato_id int4 não comporta sqcand de 11-12 dígitos; exceção assumida ao texto da constituição, não reinterpretada. Validação G1 (identidades) / G2 (replay sintético, reportado ao dono, NÃO sobe a trava sozinho) / G3 (geografia real de 2022, só se o dono baixar) / G4 (simulado) / G5 (replay presidencial inalterado, MAE@1h 2,3623 pp / cobertura 82,5%); limitação: sem ordem de chegada real de 2022 — risco de voto de reduto a 25%; degradação pré-acordada: se G2 falhar feio, a projeção sobe DESLIGADA. Negativas: nasce ligada sem validação contra a noite real; desligar é rápido, ligar leva um ciclo do modelo; sem alarme que compare projeção e parcial; Blob reescrito a cada ciclo (histórico só por replay).",
+      "note": "Plano aprovado pelo dono em 29/09. Supera o D9 (e a redação do D10) do design da spec 017 — 'no cargo 6 não há projeção de voto' — e emenda o RF-127 (o intervalo de cadeiras vale para a projeção); estende os ADR-0021/0023 ao cargo 6 sem superseder; NÃO toca o ADR-0027 (mesmo algoritmo, entrada já filtrada pelo ADR-0064). Método: zona apurada = esi>0 ∧ vv>0, k = te/esi, razão das somas por chave (sqcand, legenda:<cod>), pós-estratificação por tercis de te (UF com >=12 zonas), imputação das zonas sem boletim no estado inteiro (decisão do dono), arredondamento inteiro determinístico em Fraction, depois distribuir_cadeiras inalterado. Trava por UF, todas juntas: % apurado >= 25 (PONDERADO pelo eleitorado — corrige project.py:7924, que pegava o max entre zonas; zona sem boletim conta zero), >= 2 zonas apuradas, nv publicado, sem coligação, interruptor ligado; estado liberada|aguardando|indisponivel sempre com motivo. Interruptor = chave do Global Config `interruptor-projecao-dep` {ligada, pct_minimo?, em?, por?}, lida a cada ciclo E a cada render (desligar->sumir alvo 60 s, não medido); falha fechada (erro de leitura, valor inválido e chave ausente = desligada); pct_minimo só sobe; em/por nunca publicados; `pnpm dep:projecao` confirma o id do store e recusa o de ensaio por omissão. Regra registrada: variável de ambiente NÃO é interruptor de runtime na Vercel (só deployment novo) — runbook.md:870 e vercel.ts:184 afirmam 'sem deploy' para TSE_DEPUTADO_GRANULARIDADE e estão errados; deploy congelado 16h-05h em 04/10. Sempre 'projeção · não oficial' (§ 1) + bloco § 8; ordem das listas segue o voto apurado, a projeção nunca ordena (§ 2/ADR-0051). § 6: sem linhas novas em `projections` — precedente do dono de 17/09 (CARGOS_COM_SERIE_PERSISTIDA={1,3,5}) + candidato_id int4 não comporta sqcand de 11-12 dígitos; exceção assumida ao texto da constituição, não reinterpretada. Validação G1 (identidades) / G2 (replay sintético, reportado ao dono, NÃO sobe a trava sozinho) / G3 (geografia real de 2022, só se o dono baixar) / G4 (simulado) / G5 (replay presidencial inalterado, MAE@1h 2,3623 pp / cobertura 82,5%); limitação: sem ordem de chegada real de 2022 — risco de voto de reduto a 25%; degradação pré-acordada: se G2 falhar feio, a projeção sobe DESLIGADA. Negativas: nasce ligada sem validação contra a noite real; desligar é rápido, ligar leva um ciclo do modelo; sem alarme que compare projeção e parcial; Blob reescrito a cada ciclo (histórico só por replay). Emenda 04/10 (2) (decisão do dono, dia do 1º turno): a Decisão 1 ('não há bancada nacional projetada') é revogada em parte — a capa /deputado-federal passa a mostrar o cenário projetado nacional misto e rotulado (UF liberada conta a projeção, UF travada conta a parcial; rótulo 'projeção em X de 27 estados; nos outros Y, a parcial') e a lista nacional de eleitos por agremiação, montados NA LEITURA a partir dos objetos de UF do Blob por rota GET /deputado-federal/eleitos fora de /api (cache s-maxage 60 + swr 300); payload do Edge Config e modelo não mudam; voto projetado por candidato segue proibido em página nacional (RF-297); a parcial segue visível ao lado do cenário (Decisão 5) e a ordem segue a da parcial; interruptor lido na rota E na página (a ilha ignora projeção quando a página diz desligada); só Federal — assembleias seguem sem bancada nacional projetada. Negativas: número nacional mistura duas bases e se move por composição; pontual, sem faixa; nomes de pessoas em escala nacional; desencontro entre Blob e payload por até minutos; 27 leituras de Blob por falha de cache (não medido); peso da capa.",
       "path": "docs/architecture/adrs/0063-projecao-deputado-federal-trava-25-e-interruptor-edge-config.md"
     },
     {
@@ -1974,11 +1974,13 @@
         "RF-277",
         "RF-291",
         "RF-297",
-        "RF-298"
+        "RF-298",
+        "RF-299",
+        "RF-300"
       ],
       "depends_on": ["017-deputado-federal", "018-identidade-candidatura"],
       "amends": ["017-deputado-federal", "011-sobre-o-modelo"],
-      "apis": ["GET /uf/[sigla]/deputado-federal/lista"],
+      "apis": ["GET /uf/[sigla]/deputado-federal/lista", "GET /deputado-federal/eleitos"],
       "components": [
         "DeputadoListaAgremiacao",
         "MarcaDeputado",
@@ -1989,7 +1991,9 @@
         "DeputadoMetodologia",
         "CandidateListCollapse",
         "VotacaoEleitorado",
-        "AvatarDestaque"
+        "AvatarDestaque",
+        "DeputadoBancadaPanel",
+        "BancadaEleitosNacional"
       ],
       "nfr": [
         "RNF-002",
@@ -2014,6 +2018,7 @@
         "0036",
         "0038",
         "0049",
+        "0051",
         "0053",
         "0063",
         "0064",
