@@ -2715,6 +2715,41 @@ def _pct_apurado_oficial(agregados: list[Any]) -> dict[str, float]:
     return out
 
 
+def _pct_apurado_nacional_somado(agregados: list[Any]) -> float | None:
+    """`% apurado` nacional = Σ `s.st` dos agregados de UF ÷ total de seções.
+
+    🔴 04/10/2026 ~18h35: o arquivo `br` do TSE atualiza bem mais devagar que
+    os de UF — às 18h32 o `br` (gerado 18h26) dizia 27,88% e a soma das UFs
+    (+ exterior) dava 34,26%. O Senado, que não tem `br`, já somava as UFs e
+    aparecia à frente do Presidente. Denominador = o maior entre Σ `s.ts` das
+    UFs e o `s.ts` do `br` (se faltar uma UF, o número cai, nunca sobe).
+    `None` sem agregado de UF legível.
+    """
+    soma_st = 0.0
+    soma_ts = 0.0
+    ts_br = 0.0
+    n = 0
+    for a in agregados or []:
+        payload = a.get("payload")
+        sec = payload.get("s") if isinstance(payload, dict) else None
+        if not isinstance(sec, dict):
+            continue
+        st = _parse_br_number(sec.get("st"))
+        ts = _parse_br_number(sec.get("ts"))
+        if st is None or ts is None or ts <= 0:
+            continue
+        if nivel_do_snapshot(a) == NIVEL_BR:
+            ts_br = max(ts_br, float(ts))
+            continue
+        soma_st += float(st)
+        soma_ts += float(ts)
+        n += 1
+    den = max(soma_ts, ts_br)
+    if n == 0 or den <= 0:
+        return None
+    return max(0.0, min(100.0, 100.0 * soma_st / den))
+
+
 def nivel_do_snapshot(s: Mapping[str, Any]) -> str:
     """Nível de abrangência de uma linha de `snapshots`, normalizado.
 
@@ -9555,8 +9590,15 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                 anulados=anulados,
             )
             # 🔴 04/10/2026 — nacional = `pst` oficial do arquivo BR do TSE.
-            if "BR" in pct_oficial and isinstance(edge_payload, dict):
-                edge_payload["pct_apurado_total"] = pct_oficial["BR"]
+            # 18h35: o `br` atrasa minutos em relação às UFs — fica o MAIOR
+            # entre ele e a soma das UFs (ambos oficiais; apuração só sobe).
+            _pct_nac = [
+                v
+                for v in (pct_oficial.get("BR"), _pct_apurado_nacional_somado(agregados))
+                if v is not None
+            ]
+            if _pct_nac and isinstance(edge_payload, dict):
+                edge_payload["pct_apurado_total"] = max(_pct_nac)
             post_edge_write(edge_payload, payloads_uf=uf_payloads)
         except Exception as edge_exc:  # noqa: BLE001 — never block the response
             _log(
