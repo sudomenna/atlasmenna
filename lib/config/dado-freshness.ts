@@ -83,8 +83,11 @@ import { formatTimeHMS } from "@/lib/utils/format";
  * em todo ciclo saudável desta corrida.
  */
 export const CADENCIA_SEGUNDOS: Readonly<Record<CargoTse, number>> = {
-  1: 60,
-  3: 60,
+  // 🔴 04/10/2026 17h30: o cron é de minuto, mas a VOLTA leva ~250 s e o lock
+  // anti-overlap pula as batidas no meio — o dado se renova a cada ~5 min.
+  // Com 60 s o banner "não avançam há 4 minutos" acendia em toda volta sadia.
+  1: 300,
+  3: 300,
   5: 300,
   6: 1800,
   7: 300,
