@@ -34,6 +34,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
+import { rotuloDaUnidade } from "@/components/atoms/maps/_shared";
 import type { EdgeCandidate, EdgePayload } from "@/lib/edge-config/types";
 import { eleitosNacionais } from "@/lib/utils/anuncios-definidos";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -227,7 +228,8 @@ export function montarEntradaIA(
           : `candidato ${u.lider}`;
       })();
     return [
-      u.sigla,
+      // ADR-0045 — "Exterior", nunca "ZZ": o modelo escreveria a sigla crua.
+      rotuloDaUnidade(u.sigla),
       finito(u.pct_apurado) ? r2(u.pct_apurado) : null,
       lider,
       finito(u.margem_projetada) ? r2(u.margem_projetada) : null,

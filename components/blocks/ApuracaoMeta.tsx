@@ -94,7 +94,14 @@ export function ApuracaoMeta({
       style={{ gap: "var(--space-6)" }}
     >
       <Figure label="Apurado" value={formatPercent(pctApurado, 1)} size="md" />
-      <Figure label="UFs apuradas" value={`${ufsApuradas}/${totalUfs}`} size="md" />
+      {/* ADR-0045 — no Presidente o denominador é 28: diz ao leitor que o
+          28º é o exterior, e não uma UF que ele não conhece. */}
+      <Figure
+        label="UFs apuradas"
+        value={`${ufsApuradas}/${totalUfs}`}
+        size="md"
+        {...(totalUfs > 27 ? { note: "27 UFs e o exterior" } : {})}
+      />
       <Figure label={frescor.label} value={frescor.value} size="md" />
     </div>
   );

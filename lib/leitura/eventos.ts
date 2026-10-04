@@ -13,6 +13,7 @@
  * (`components/blocks/BulletinPanel.tsx`).
  */
 
+import { unidadesDeApuracao } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
 import type { EdgeCandidate, EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
 import { eleitosNacionais, fraseEleitos } from "@/lib/utils/anuncios-definidos";
@@ -24,7 +25,10 @@ import { type EstadoResumo, type EventoBoletim, HISTORICO_MAX } from "./types";
 /** Marcos de % apurado que viram linha no histórico (um por ciclo, o maior). */
 export const MARCOS = [1, 5, 10, 25, 50, 75, 90, 95, 99, 100] as const;
 
-const TOTAL_UFS = 27;
+// ADR-0045 — o Presidente tem 28 unidades de apuração: as 27 UFs e o
+// exterior (`ZZ`). `ufs_apuradas` (produtor) conta a linha ZZ quando ela tem
+// boletim, então o denominador tem de contá-la também.
+const TOTAL_UFS = unidadesDeApuracao(1);
 
 /** Limiares de P(2º turno) que viram linha quando cruzados PARA CIMA. */
 const LIMIARES_2T_SOBE = [0.5, 0.9, 0.99] as const;
@@ -129,7 +133,7 @@ function rotulo(nome: string | undefined, partido: string | undefined, sqcand?: 
 }
 
 function textoApuracao(pct: number, ufs: number): string {
-  return `${formatPercent(pct, 1)} das seções apuradas, com boletim em ${ufs} de ${TOTAL_UFS} unidades federativas.`;
+  return `${formatPercent(pct, 1)} das seções apuradas, com boletim em ${ufs} de ${TOTAL_UFS} unidades de apuração (27 UFs e o exterior).`;
 }
 
 // ---------------------------------------------------------------------------
@@ -264,7 +268,7 @@ export function derivarEventos(
       id: "todas_ufs",
       ts,
       head: "Apuração",
-      text: `Todas as ${TOTAL_UFS} unidades federativas já têm boletim de urna na contagem.`,
+      text: "As 27 unidades federativas e o exterior já têm boletim de urna na contagem.",
       tipo: "todas_ufs",
     });
   }

@@ -1,0 +1,940 @@
+{
+  "_fonte": {
+    "localidades": "EA12 federal real mun-e006257-cm.json (resultados.tse.jus.br/oficial/ele2026/6257/config), baixado 2026-10-04 16h50 — 186 localidades, todas zona 0001",
+    "aptos": "perfil_eleitorado_2026_ZZ.csv (dadosabertos TSE, gerado 2026-07-14), soma de QT_ELEITORES por CD_MUNICIPIO",
+    "total_aptos": 918876,
+    "nomes": "nome do EA12 em caixa de título (preposições minúsculas)"
+  },
+  "localidades": [
+    {
+      "cod": 29173,
+      "nome": "Katmandu",
+      "aptos": 32
+    },
+    {
+      "cod": 29254,
+      "nome": "Abidjã",
+      "aptos": 91
+    },
+    {
+      "cod": 29262,
+      "nome": "Abu Dhabi",
+      "aptos": 2995
+    },
+    {
+      "cod": 29270,
+      "nome": "Accra",
+      "aptos": 43
+    },
+    {
+      "cod": 29289,
+      "nome": "Amã",
+      "aptos": 1492
+    },
+    {
+      "cod": 29297,
+      "nome": "Ancara",
+      "aptos": 77
+    },
+    {
+      "cod": 29300,
+      "nome": "Argel",
+      "aptos": 49
+    },
+    {
+      "cod": 29319,
+      "nome": "Artigas",
+      "aptos": 611
+    },
+    {
+      "cod": 29327,
+      "nome": "Assunção",
+      "aptos": 2212
+    },
+    {
+      "cod": 29335,
+      "nome": "Atenas",
+      "aptos": 1211
+    },
+    {
+      "cod": 29343,
+      "nome": "Bangkok",
+      "aptos": 311
+    },
+    {
+      "cod": 29351,
+      "nome": "Barcelona",
+      "aptos": 17298
+    },
+    {
+      "cod": 29360,
+      "nome": "Beirute",
+      "aptos": 8927
+    },
+    {
+      "cod": 29378,
+      "nome": "Belgrado",
+      "aptos": 115
+    },
+    {
+      "cod": 29386,
+      "nome": "Berlim",
+      "aptos": 15141
+    },
+    {
+      "cod": 29394,
+      "nome": "Bissau",
+      "aptos": 89
+    },
+    {
+      "cod": 29408,
+      "nome": "Bogotá",
+      "aptos": 1512
+    },
+    {
+      "cod": 29416,
+      "nome": "Boston",
+      "aptos": 53406
+    },
+    {
+      "cod": 29424,
+      "nome": "Bridgetown",
+      "aptos": 22
+    },
+    {
+      "cod": 29432,
+      "nome": "Bruxelas",
+      "aptos": 10094
+    },
+    {
+      "cod": 29440,
+      "nome": "Bucareste",
+      "aptos": 130
+    },
+    {
+      "cod": 29459,
+      "nome": "Budapeste",
+      "aptos": 813
+    },
+    {
+      "cod": 29467,
+      "nome": "Buenos Aires",
+      "aptos": 11873
+    },
+    {
+      "cod": 29475,
+      "nome": "Caiena",
+      "aptos": 3117
+    },
+    {
+      "cod": 29483,
+      "nome": "Cairo",
+      "aptos": 204
+    },
+    {
+      "cod": 29491,
+      "nome": "Camberra",
+      "aptos": 6261
+    },
+    {
+      "cod": 29505,
+      "nome": "Caracas",
+      "aptos": 994
+    },
+    {
+      "cod": 29513,
+      "nome": "Chicago",
+      "aptos": 12480
+    },
+    {
+      "cod": 29521,
+      "nome": "Chuy",
+      "aptos": 27
+    },
+    {
+      "cod": 29530,
+      "nome": "Cidade do Cabo",
+      "aptos": 355
+    },
+    {
+      "cod": 29548,
+      "nome": "Singapura",
+      "aptos": 866
+    },
+    {
+      "cod": 29556,
+      "nome": "Ciudad del Este",
+      "aptos": 5102
+    },
+    {
+      "cod": 29564,
+      "nome": "Ciudad Guayana",
+      "aptos": 72
+    },
+    {
+      "cod": 29572,
+      "nome": "Cochabamba",
+      "aptos": 416
+    },
+    {
+      "cod": 29580,
+      "nome": "Concepción",
+      "aptos": 78
+    },
+    {
+      "cod": 29599,
+      "nome": "Copenhague",
+      "aptos": 2863
+    },
+    {
+      "cod": 29602,
+      "nome": "Córdoba",
+      "aptos": 926
+    },
+    {
+      "cod": 29610,
+      "nome": "Dacar",
+      "aptos": 133
+    },
+    {
+      "cod": 29629,
+      "nome": "Dacca",
+      "aptos": 1
+    },
+    {
+      "cod": 29637,
+      "nome": "Damasco",
+      "aptos": 776
+    },
+    {
+      "cod": 29645,
+      "nome": "Díli",
+      "aptos": 90
+    },
+    {
+      "cod": 29653,
+      "nome": "Doha",
+      "aptos": 764
+    },
+    {
+      "cod": 29661,
+      "nome": "Dublin",
+      "aptos": 16794
+    },
+    {
+      "cod": 29670,
+      "nome": "Encarnación",
+      "aptos": 282
+    },
+    {
+      "cod": 29688,
+      "nome": "Estocolmo",
+      "aptos": 4894
+    },
+    {
+      "cod": 29696,
+      "nome": "Frankfurt",
+      "aptos": 12999
+    },
+    {
+      "cod": 29700,
+      "nome": "Genebra",
+      "aptos": 11914
+    },
+    {
+      "cod": 29718,
+      "nome": "Georgetown",
+      "aptos": 178
+    },
+    {
+      "cod": 29742,
+      "nome": "Hamamatsu",
+      "aptos": 13734
+    },
+    {
+      "cod": 29750,
+      "nome": "Hanói",
+      "aptos": 82
+    },
+    {
+      "cod": 29769,
+      "nome": "Harare",
+      "aptos": 7
+    },
+    {
+      "cod": 29777,
+      "nome": "Havana",
+      "aptos": 92
+    },
+    {
+      "cod": 29785,
+      "nome": "Helsinque",
+      "aptos": 1284
+    },
+    {
+      "cod": 29793,
+      "nome": "Hong Kong",
+      "aptos": 671
+    },
+    {
+      "cod": 29807,
+      "nome": "Houston",
+      "aptos": 16465
+    },
+    {
+      "cod": 29815,
+      "nome": "Iaundê",
+      "aptos": 14
+    },
+    {
+      "cod": 29823,
+      "nome": "Iquitos",
+      "aptos": 17
+    },
+    {
+      "cod": 29831,
+      "nome": "Islamabade",
+      "aptos": 18
+    },
+    {
+      "cod": 29840,
+      "nome": "Jacarta",
+      "aptos": 173
+    },
+    {
+      "cod": 29858,
+      "nome": "Kiev",
+      "aptos": 65
+    },
+    {
+      "cod": 29874,
+      "nome": "Kinshasa",
+      "aptos": 27
+    },
+    {
+      "cod": 29882,
+      "nome": "Kuaite",
+      "aptos": 140
+    },
+    {
+      "cod": 29890,
+      "nome": "Kuala Lumpur",
+      "aptos": 171
+    },
+    {
+      "cod": 29904,
+      "nome": "La Paz",
+      "aptos": 419
+    },
+    {
+      "cod": 29912,
+      "nome": "Lagos",
+      "aptos": 82
+    },
+    {
+      "cod": 29939,
+      "nome": "Libreville",
+      "aptos": 18
+    },
+    {
+      "cod": 29947,
+      "nome": "Lima",
+      "aptos": 1622
+    },
+    {
+      "cod": 29955,
+      "nome": "Lisboa",
+      "aptos": 78833
+    },
+    {
+      "cod": 29963,
+      "nome": "Lomé",
+      "aptos": 7
+    },
+    {
+      "cod": 29971,
+      "nome": "Londres",
+      "aptos": 37564
+    },
+    {
+      "cod": 29980,
+      "nome": "Los Angeles",
+      "aptos": 18311
+    },
+    {
+      "cod": 29998,
+      "nome": "Luanda",
+      "aptos": 720
+    },
+    {
+      "cod": 30066,
+      "nome": "Madri",
+      "aptos": 23519
+    },
+    {
+      "cod": 30074,
+      "nome": "Manágua",
+      "aptos": 134
+    },
+    {
+      "cod": 30082,
+      "nome": "Manila",
+      "aptos": 230
+    },
+    {
+      "cod": 30090,
+      "nome": "Maputo",
+      "aptos": 561
+    },
+    {
+      "cod": 30104,
+      "nome": "Mexico",
+      "aptos": 3975
+    },
+    {
+      "cod": 30112,
+      "nome": "Miami",
+      "aptos": 40104
+    },
+    {
+      "cod": 30120,
+      "nome": "Milão",
+      "aptos": 24632
+    },
+    {
+      "cod": 30147,
+      "nome": "Montevidéu",
+      "aptos": 2460
+    },
+    {
+      "cod": 30155,
+      "nome": "Montreal",
+      "aptos": 11004
+    },
+    {
+      "cod": 30163,
+      "nome": "Moscou",
+      "aptos": 256
+    },
+    {
+      "cod": 30171,
+      "nome": "Mumbai",
+      "aptos": 57
+    },
+    {
+      "cod": 30180,
+      "nome": "Munique",
+      "aptos": 13411
+    },
+    {
+      "cod": 30198,
+      "nome": "Nagóia",
+      "aptos": 44570
+    },
+    {
+      "cod": 30201,
+      "nome": "Nairóbi",
+      "aptos": 112
+    },
+    {
+      "cod": 30210,
+      "nome": "Nova Delhi",
+      "aptos": 141
+    },
+    {
+      "cod": 30228,
+      "nome": "Nova York",
+      "aptos": 39026
+    },
+    {
+      "cod": 30244,
+      "nome": "Oslo",
+      "aptos": 2197
+    },
+    {
+      "cod": 30252,
+      "nome": "Ottawa",
+      "aptos": 2366
+    },
+    {
+      "cod": 30260,
+      "nome": "Panama",
+      "aptos": 1402
+    },
+    {
+      "cod": 30279,
+      "nome": "Paramaribo",
+      "aptos": 1430
+    },
+    {
+      "cod": 30287,
+      "nome": "Paris",
+      "aptos": 27062
+    },
+    {
+      "cod": 30295,
+      "nome": "Paso Los Libres",
+      "aptos": 41
+    },
+    {
+      "cod": 30309,
+      "nome": "Pedro Juan Caballero",
+      "aptos": 650
+    },
+    {
+      "cod": 30317,
+      "nome": "Pequim",
+      "aptos": 350
+    },
+    {
+      "cod": 30325,
+      "nome": "Port Of Spain",
+      "aptos": 88
+    },
+    {
+      "cod": 30333,
+      "nome": "Porto Príncipe",
+      "aptos": 33
+    },
+    {
+      "cod": 30341,
+      "nome": "Porto",
+      "aptos": 47676
+    },
+    {
+      "cod": 30350,
+      "nome": "Praga",
+      "aptos": 693
+    },
+    {
+      "cod": 30368,
+      "nome": "Praia",
+      "aptos": 146
+    },
+    {
+      "cod": 30376,
+      "nome": "Pretória",
+      "aptos": 657
+    },
+    {
+      "cod": 30392,
+      "nome": "Quito",
+      "aptos": 996
+    },
+    {
+      "cod": 30406,
+      "nome": "Rabat",
+      "aptos": 117
+    },
+    {
+      "cod": 30414,
+      "nome": "Ramallah",
+      "aptos": 2140
+    },
+    {
+      "cod": 30422,
+      "nome": "Riade",
+      "aptos": 311
+    },
+    {
+      "cod": 30430,
+      "nome": "Rio Branco",
+      "aptos": 58
+    },
+    {
+      "cod": 30449,
+      "nome": "Roma",
+      "aptos": 14197
+    },
+    {
+      "cod": 30457,
+      "nome": "Amsterdã",
+      "aptos": 12806
+    },
+    {
+      "cod": 30465,
+      "nome": "Salto del Guairá",
+      "aptos": 901
+    },
+    {
+      "cod": 30473,
+      "nome": "Santa Cruz de la Sierra",
+      "aptos": 2783
+    },
+    {
+      "cod": 30481,
+      "nome": "Santiago",
+      "aptos": 3569
+    },
+    {
+      "cod": 30490,
+      "nome": "São Domingos",
+      "aptos": 417
+    },
+    {
+      "cod": 30503,
+      "nome": "São Francisco",
+      "aptos": 15530
+    },
+    {
+      "cod": 30511,
+      "nome": "São José",
+      "aptos": 718
+    },
+    {
+      "cod": 30520,
+      "nome": "São Salvador",
+      "aptos": 161
+    },
+    {
+      "cod": 30538,
+      "nome": "Seul",
+      "aptos": 489
+    },
+    {
+      "cod": 30546,
+      "nome": "Sófia",
+      "aptos": 98
+    },
+    {
+      "cod": 30562,
+      "nome": "Sydney",
+      "aptos": 14070
+    },
+    {
+      "cod": 30570,
+      "nome": "Taipé",
+      "aptos": 624
+    },
+    {
+      "cod": 30597,
+      "nome": "Teerã",
+      "aptos": 45
+    },
+    {
+      "cod": 30600,
+      "nome": "Tegucigalpa",
+      "aptos": 153
+    },
+    {
+      "cod": 30619,
+      "nome": "Tel Aviv",
+      "aptos": 3452
+    },
+    {
+      "cod": 30627,
+      "nome": "Tóquio",
+      "aptos": 30062
+    },
+    {
+      "cod": 30635,
+      "nome": "Toronto",
+      "aptos": 21005
+    },
+    {
+      "cod": 30651,
+      "nome": "Cantão",
+      "aptos": 422
+    },
+    {
+      "cod": 30669,
+      "nome": "Gaborone",
+      "aptos": 10
+    },
+    {
+      "cod": 30686,
+      "nome": "Trípoli",
+      "aptos": 30
+    },
+    {
+      "cod": 30708,
+      "nome": "Tunis",
+      "aptos": 47
+    },
+    {
+      "cod": 30740,
+      "nome": "Varsóvia",
+      "aptos": 756
+    },
+    {
+      "cod": 30767,
+      "nome": "Viena",
+      "aptos": 3147
+    },
+    {
+      "cod": 30783,
+      "nome": "Washington",
+      "aptos": 18193
+    },
+    {
+      "cod": 30805,
+      "nome": "Wellington",
+      "aptos": 3130
+    },
+    {
+      "cod": 30821,
+      "nome": "Windhoek",
+      "aptos": 38
+    },
+    {
+      "cod": 30848,
+      "nome": "Xangai",
+      "aptos": 746
+    },
+    {
+      "cod": 30864,
+      "nome": "Zurique",
+      "aptos": 15122
+    },
+    {
+      "cod": 30902,
+      "nome": "Hartford",
+      "aptos": 9190
+    },
+    {
+      "cod": 30929,
+      "nome": "Colombo",
+      "aptos": 12
+    },
+    {
+      "cod": 30961,
+      "nome": "Faro",
+      "aptos": 8288
+    },
+    {
+      "cod": 30988,
+      "nome": "Sarajevo",
+      "aptos": 12
+    },
+    {
+      "cod": 38881,
+      "nome": "Belmopan",
+      "aptos": 13
+    },
+    {
+      "cod": 38903,
+      "nome": "Conacri",
+      "aptos": 5
+    },
+    {
+      "cod": 38920,
+      "nome": "Cotonou",
+      "aptos": 8
+    },
+    {
+      "cod": 38962,
+      "nome": "Dar Es Salaam",
+      "aptos": 34
+    },
+    {
+      "cod": 38989,
+      "nome": "Ierevan",
+      "aptos": 13
+    },
+    {
+      "cod": 39004,
+      "nome": "Mendoza",
+      "aptos": 236
+    },
+    {
+      "cod": 39020,
+      "nome": "Zagreb",
+      "aptos": 136
+    },
+    {
+      "cod": 39063,
+      "nome": "Vancouver",
+      "aptos": 12113
+    },
+    {
+      "cod": 39080,
+      "nome": "Atlanta",
+      "aptos": 16321
+    },
+    {
+      "cod": 39102,
+      "nome": "Mascate",
+      "aptos": 97
+    },
+    {
+      "cod": 39128,
+      "nome": "Baku",
+      "aptos": 5
+    },
+    {
+      "cod": 39160,
+      "nome": "Liubliana",
+      "aptos": 163
+    },
+    {
+      "cod": 39187,
+      "nome": "Brazzaville",
+      "aptos": 2
+    },
+    {
+      "cod": 39209,
+      "nome": "Bratislava",
+      "aptos": 132
+    },
+    {
+      "cod": 39225,
+      "nome": "São Tomé",
+      "aptos": 18
+    },
+    {
+      "cod": 39241,
+      "nome": "Astana",
+      "aptos": 13
+    },
+    {
+      "cod": 39263,
+      "nome": "Malabo",
+      "aptos": 5
+    },
+    {
+      "cod": 39284,
+      "nome": "Uagadugu",
+      "aptos": 6
+    },
+    {
+      "cod": 39306,
+      "nome": "Istambul",
+      "aptos": 327
+    },
+    {
+      "cod": 39322,
+      "nome": "Nicosia",
+      "aptos": 137
+    },
+    {
+      "cod": 98000,
+      "nome": "Guatemala",
+      "aptos": 285
+    },
+    {
+      "cod": 99104,
+      "nome": "Tbilisi",
+      "aptos": 29
+    },
+    {
+      "cod": 99139,
+      "nome": "Tirana",
+      "aptos": 9
+    },
+    {
+      "cod": 99147,
+      "nome": "Saint Johns",
+      "aptos": 1
+    },
+    {
+      "cod": 99155,
+      "nome": "Puerto Iguazú",
+      "aptos": 62
+    },
+    {
+      "cod": 99171,
+      "nome": "Bagdá",
+      "aptos": 10
+    },
+    {
+      "cod": 99180,
+      "nome": "Nassau",
+      "aptos": 70
+    },
+    {
+      "cod": 99198,
+      "nome": "Abuja",
+      "aptos": 3
+    },
+    {
+      "cod": 99210,
+      "nome": "Cobija",
+      "aptos": 1
+    },
+    {
+      "cod": 99236,
+      "nome": "Puerto Quijarro",
+      "aptos": 8
+    },
+    {
+      "cod": 99244,
+      "nome": "Rivera",
+      "aptos": 19
+    },
+    {
+      "cod": 99279,
+      "nome": "Santa Elena de Uairén",
+      "aptos": 1
+    },
+    {
+      "cod": 99287,
+      "nome": "Lusaca",
+      "aptos": 27
+    },
+    {
+      "cod": 99295,
+      "nome": "Pyongyang",
+      "aptos": 1
+    },
+    {
+      "cod": 99317,
+      "nome": "Talin",
+      "aptos": 325
+    },
+    {
+      "cod": 99325,
+      "nome": "Adis Abeba",
+      "aptos": 3
+    },
+    {
+      "cod": 99333,
+      "nome": "St Georges de Loyapock",
+      "aptos": 10
+    },
+    {
+      "cod": 99341,
+      "nome": "Lilongue",
+      "aptos": 6
+    },
+    {
+      "cod": 99350,
+      "nome": "Bamako",
+      "aptos": 5
+    },
+    {
+      "cod": 99376,
+      "nome": "Yangon",
+      "aptos": 6
+    },
+    {
+      "cod": 99384,
+      "nome": "Castries",
+      "aptos": 7
+    },
+    {
+      "cod": 99430,
+      "nome": "Kingston-jamaica",
+      "aptos": 103
+    },
+    {
+      "cod": 99473,
+      "nome": "Barein",
+      "aptos": 69
+    },
+    {
+      "cod": 99490,
+      "nome": "Orlando",
+      "aptos": 26411
+    },
+    {
+      "cod": 99503,
+      "nome": "Edimburgo",
+      "aptos": 4459
+    },
+    {
+      "cod": 99511,
+      "nome": "Marselha",
+      "aptos": 2668
+    }
+  ]
+}

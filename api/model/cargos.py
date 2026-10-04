@@ -55,10 +55,16 @@ Granularidade = Literal["uf", "zona"]
 #: `lib/config/cargos.ts` — o teste de sincronia os confronta.
 Abrangencia = Literal["todas-as-ufs", "ufs-sem-df", "so-df"]
 
+#: Sigla do exterior no TSE (`dados/zz/`) — ADR-0045. Não é unidade
+#: federativa; é a 28ª unidade de apuração, e só do Presidente (cargo 1).
+#: Espelha `SIGLA_EXTERIOR` de `lib/config/cargos.ts`.
+UF_EXTERIOR = "ZZ"
+
 #: As 27 unidades da federação, em ordem alfabética de sigla. **Sem `ZZ`** (o
 #: exterior): `ZZ` não é UF — é a circunscrição dos eleitores no exterior, que
-#: votam só para Presidente, e o agregado nacional desse cargo sai do arquivo
-#: `br` do TSE, não da soma das UFs. Sem `BR` pelo mesmo motivo (ver
+#: votam só para Presidente. O exterior entra no universo do cargo 1 por
+#: `ufs_do_cargo` (ADR-0045), nunca por esta lista: ela continua sendo as 27 UFs
+#: dos cargos 3/5/6/7/8. Sem `BR` pelo mesmo motivo (ver
 #: `project.py::_snapshots_por_uf`).
 UFS_BRASIL: tuple[str, ...] = (
     "AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT",
@@ -85,6 +91,9 @@ class CargoInfo(TypedDict):
     proporcional: bool
     granularidade: Granularidade
     abrangencia: Abrangencia
+    #: ADR-0045 — `True` só no cargo 1: o exterior (`ZZ`) é a 28ª unidade de
+    #: apuração do Presidente. Espelha `CargoInfo.abrangeExterior` (TS).
+    abrange_exterior: bool
 
 
 CARGOS: tuple[CargoInfo, ...] = (
@@ -99,6 +108,7 @@ CARGOS: tuple[CargoInfo, ...] = (
         "proporcional": False,
         "granularidade": "zona",
         "abrangencia": "todas-as-ufs",
+        "abrange_exterior": True,
     },
     {
         "cd": 3,
@@ -111,6 +121,7 @@ CARGOS: tuple[CargoInfo, ...] = (
         "proporcional": False,
         "granularidade": "zona",
         "abrangencia": "todas-as-ufs",
+        "abrange_exterior": False,
     },
     {
         "cd": 5,
@@ -123,6 +134,7 @@ CARGOS: tuple[CargoInfo, ...] = (
         "proporcional": False,
         "granularidade": "zona",
         "abrangencia": "todas-as-ufs",
+        "abrange_exterior": False,
     },
     {
         "cd": 6,
@@ -135,6 +147,7 @@ CARGOS: tuple[CargoInfo, ...] = (
         "proporcional": True,
         "granularidade": "zona",
         "abrangencia": "todas-as-ufs",
+        "abrange_exterior": False,
     },
     # Spec 027 (ADR-0066) — as assembleias. Mesma eleição do TSE que o
     # Deputado Federal (21272), mesmo leiaute "Proporcional | UF", mesma lei
@@ -153,6 +166,7 @@ CARGOS: tuple[CargoInfo, ...] = (
         "proporcional": True,
         "granularidade": "uf",
         "abrangencia": "ufs-sem-df",
+        "abrange_exterior": False,
     },
     {
         "cd": 8,
@@ -165,6 +179,7 @@ CARGOS: tuple[CargoInfo, ...] = (
         "proporcional": True,
         "granularidade": "uf",
         "abrangencia": "so-df",
+        "abrange_exterior": False,
     },
 )
 
@@ -371,7 +386,9 @@ def granularidade(cd: int, default: Granularidade = "zona") -> Granularidade:
 def ufs_do_cargo(cd: int) -> tuple[str, ...]:
     """As UFs em que o cargo é disputado, em ordem alfabética (spec 027 RF-278).
 
-    - `"todas-as-ufs"` (1, 3, 5, 6) → as 27 de `UFS_BRASIL`;
+    - `"todas-as-ufs"` (1, 3, 5, 6) → as 27 de `UFS_BRASIL`; no cargo com
+      `abrange_exterior` (só o 1, ADR-0045) as 27 **mais** `ZZ` — 28 unidades
+      de apuração, `ZZ` por último, como `ufsDoCargo` no TS;
     - `"ufs-sem-df"` (7, Deputado Estadual) → 26, sem o DF;
     - `"so-df"` (8, Deputado Distrital) → só `("DF",)`.
 
@@ -387,13 +404,17 @@ def ufs_do_cargo(cd: int) -> tuple[str, ...]:
     proporcional só roda para cargo da tabela (`project.py::_e_proporcional`),
     e `test_deputado_estadual.py` confere que todo proporcional tem abrangência.
 
-    `ZZ` (exterior) não entra em cargo nenhum: não é UF (ver `UFS_BRASIL`).
+    `ZZ` (exterior) só entra no cargo 1 (ADR-0045): o eleitor no exterior vota
+    apenas para Presidente. Nos demais, `ZZ` fora do universo — é isso que
+    mantém o `% apurado` de Governador/Senador/Deputado com denominador de 27 UFs.
     """
     info = cargo_info(cd)
     if info is None:
         return ()
     abrangencia = info["abrangencia"]
     if abrangencia == "todas-as-ufs":
+        if info["abrange_exterior"]:
+            return (*UFS_BRASIL, UF_EXTERIOR)
         return UFS_BRASIL
     if abrangencia == "ufs-sem-df":
         return tuple(uf for uf in UFS_BRASIL if uf != "DF")
@@ -403,3 +424,14 @@ def ufs_do_cargo(cd: int) -> tuple[str, ...]:
     # melhor que devolver um universo inventado (o default silencioso que
     # esta base já pagou três vezes).
     raise ValueError(f"abrangência desconhecida para o cargo {cd}: {abrangencia!r}")
+
+
+def abrange_exterior(cd: int) -> bool:
+    """O cargo tem o exterior (`ZZ`) entre as unidades de apuração? (ADR-0045)
+
+    `False` para cargo fora da tabela: sem declaração, sem exterior — o
+    default seguro, porque `ZZ` a mais no denominador de um cargo que não o
+    tem trava o `% apurado` abaixo de 100% (ele nunca apura).
+    """
+    info = cargo_info(cd)
+    return bool(info["abrange_exterior"]) if info is not None else False

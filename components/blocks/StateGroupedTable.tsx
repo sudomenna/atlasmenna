@@ -52,6 +52,7 @@
  * indexável; muda só o handler que o App Router acopla.
  */
 
+import { rotuloDaUnidade } from "@/components/atoms/maps/_shared";
 import { UfHoverLink } from "@/components/atoms/tables/UfHoverLink";
 import { candidateMarkerColor } from "@/components/blocks/_candidateColor";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
@@ -207,7 +208,8 @@ function CelulaUf({ row }: { row: EdgeUfRow }) {
         style={{ color: "var(--color-text)" }}
       >
         <span className="flex items-baseline justify-between gap-2">
-          <span className="font-medium tabular-nums">{row.sigla}</span>
+          {/* ADR-0045 — o exterior (`ZZ`) aparece como "Exterior", nunca a sigla crua. */}
+          <span className="font-medium tabular-nums">{rotuloDaUnidade(row.sigla)}</span>
           <span className="text-xs tabular-nums" style={{ color: "var(--color-text-muted)" }}>
             {/* 🔴 04/10 (dono): a margem é projetada ⇒ cor da projeção; o
                 % apurado ao lado segue na tinta apagada. */}
@@ -319,7 +321,9 @@ export function StateGroupedTable({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <caption className="sr-only">
-            27 UFs agrupadas em 5 colunas pela margem projetada.
+            {rows.some((r) => r.sigla === "ZZ")
+              ? "27 UFs e o exterior agrupados em 5 colunas pela margem projetada."
+              : "27 UFs agrupadas em 5 colunas pela margem projetada."}
           </caption>
           <thead>
             <tr>

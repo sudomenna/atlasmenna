@@ -134,6 +134,7 @@
 import { useId, useState } from "react";
 
 import { PartyTag } from "@/components/atoms/data/PartyTag";
+import { rotuloDaUnidade } from "@/components/atoms/maps/_shared";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { queCompetem } from "@/lib/utils/destino-voto";
@@ -474,7 +475,7 @@ function CandidateTable({
           lista.map((l) => (
             <tr key={l.sigla} data-uf={l.sigla}>
               <th scope="row" style={{ ...CELL, font: "var(--type-figure-sm)", fontWeight: 500 }}>
-                {l.sigla}
+                {rotuloDaUnidade(l.sigla)}
               </th>
               <td style={{ ...CELL, font: "var(--type-body-sm)" }}>
                 <span style={{ color: "var(--text-secondary)" }}>

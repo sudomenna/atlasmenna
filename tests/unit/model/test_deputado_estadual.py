@@ -220,7 +220,9 @@ def test_rf278_cargos_7_e_8_seguem_o_ramo_proporcional(monkeypatch: pytest.Monke
 
 def test_rf278_abrangencia_de_cada_cargo() -> None:
     assert len(cargos.UFS_BRASIL) == 27 and "ZZ" not in cargos.UFS_BRASIL
-    for cd in (1, 3, 5, 6):
+    # ADR-0045: o Presidente tem a 28ª unidade (o exterior); os demais, as 27.
+    assert cargos.ufs_do_cargo(1) == (*cargos.UFS_BRASIL, "ZZ")
+    for cd in (3, 5, 6):
         assert cargos.ufs_do_cargo(cd) == cargos.UFS_BRASIL
     estadual = cargos.ufs_do_cargo(7)
     assert len(estadual) == 26 and "DF" not in estadual

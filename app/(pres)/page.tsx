@@ -183,6 +183,7 @@ import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { currentPresidentialTurno } from "@/lib/config/calendar";
+import { isExterior, unidadesDeApuracao } from "@/lib/config/cargos";
 import { avaliarFrescorDado } from "@/lib/config/dado-freshness";
 import { isPreEleicao } from "@/lib/config/fase";
 import { agruparPorRegiao } from "@/lib/config/regioes";
@@ -632,6 +633,9 @@ export default async function HomePage() {
 
   const { national, por_uf, pct_apurado_total, ufs_apuradas, ts, insights, composition, turno } =
     payload;
+  // ADR-0045 — a linha do exterior (`ZZ`), quando o produtor a publica. Fica
+  // fora do agrupamento por região (não é região) e entra como cartão avulso.
+  const exteriorRow = por_uf.find((r) => isExterior(r.sigla));
 
   /**
    * ADR-0072 — "leitura da noite": análise por IA, manchetes da imprensa e
@@ -1001,6 +1005,8 @@ export default async function HomePage() {
               pctApurado={pct_apurado_total}
               ts={ts}
               ufsApuradas={ufs_apuradas}
+              // ADR-0045 — 27 UFs + o exterior: o denominador vem da tabela.
+              totalUfs={unidadesDeApuracao(1)}
             />
 
             {/* Camada 1 do 2T: `<HeadlineScore />` intocado, com o recap do 1T
@@ -1155,6 +1161,7 @@ export default async function HomePage() {
           candidatos={national.candidatos}
           pctApuradoTotal={pct_apurado_total}
           ufsApuradas={ufs_apuradas}
+          totalUfs={unidadesDeApuracao(1)}
         />
       )}
 
@@ -1172,6 +1179,7 @@ export default async function HomePage() {
           rows={por_uf}
           pctApuradoTotal={pct_apurado_total}
           ufsApuradas={ufs_apuradas}
+          totalUfs={unidadesDeApuracao(1)}
           ts={ts}
           turno={turno}
           historico={leitura.historico}
@@ -1256,6 +1264,30 @@ export default async function HomePage() {
                 </li>
               ) : null,
             )}
+            {/* ADR-0045 item 7 — o exterior não é região: `agruparPorRegiao`
+                o descarta, e ele entra aqui, por último, como cartão avulso
+                com link para `/uf/ZZ`. Só aparece quando o produtor publicou
+                a linha `ZZ` em `por_uf`. */}
+            {exteriorRow ? (
+              <li key={exteriorRow.sigla}>
+                <a
+                  href={`/uf/${exteriorRow.sigla}`}
+                  data-testid="corrida-uf-pres"
+                  data-uf={exteriorRow.sigla}
+                  className="block"
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  <GovernorCard
+                    uf={exteriorRow}
+                    candidatos={national.candidatos}
+                    cargo="pres"
+                    nivelTitulo={3}
+                    duasBases
+                    turno={turno}
+                  />
+                </a>
+              </li>
+            ) : null}
           </ul>
         </Panel>
       )}

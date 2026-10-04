@@ -276,9 +276,17 @@ class FakeCursor:
                 self._last_rows = [(u, m, v) for (u, m), v in por_mun.items()]
             else:
                 # fetch_eleitorado — Σ dos pares da zona (peso do estimador).
+                # ADR-0045: no exterior (`ZZ`) a chave é a localidade
+                # (`cod_municipio_tse`), como no `CASE ... GROUP BY uf, 2` da
+                # query real.
                 por_zona: dict[tuple[str, int], int] = {}
                 for e in fixtures:
-                    chave = (e["uf"], e["cod_zona"])
+                    chave = (
+                        e["uf"],
+                        int(e.get("cod_municipio_tse") or 0)
+                        if e["uf"] == "ZZ"
+                        else e["cod_zona"],
+                    )
                     por_zona[chave] = por_zona.get(chave, 0) + int(e["eleitores_aptos"])
                 self._last_rows = [(u, z, v) for (u, z), v in por_zona.items()]
         elif "FROM candidatos" in sql:

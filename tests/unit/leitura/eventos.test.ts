@@ -166,7 +166,7 @@ describe("derivarEventos — início e marcos", () => {
     const marco = r.eventos[1] as EventoBoletim;
     expect(marco.head).toBe("Apuração");
     expect(marco.text).toBe(
-      "30,0% das seções apuradas, com boletim em 18 de 27 unidades federativas.",
+      "30,0% das seções apuradas, com boletim em 18 de 28 unidades de apuração (27 UFs e o exterior).",
     );
   });
 
@@ -353,10 +353,18 @@ describe("derivarEventos — chamadas, 2º turno, 27 UFs", () => {
     ).toEqual([]);
   });
 
-  it("27 UFs gera `todas_ufs` uma vez", () => {
-    const r = derivarEventos(estado({ ufs_apuradas: 26 }), payload({ pct: 30, ufs: 27 }), AGORA);
+  it("27 UFs + o exterior (28, ADR-0045) gera `todas_ufs` uma vez", () => {
+    const r = derivarEventos(estado({ ufs_apuradas: 27 }), payload({ pct: 30, ufs: 28 }), AGORA);
     expect(ids(r.eventos)).toEqual(["todas_ufs"]);
-    expect(derivarEventos(r.estado, payload({ pct: 30, ufs: 27 }), AGORA).eventos).toEqual([]);
+    expect(r.eventos[0]?.text).toBe(
+      "As 27 unidades federativas e o exterior já têm boletim de urna na contagem.",
+    );
+    expect(derivarEventos(r.estado, payload({ pct: 30, ufs: 28 }), AGORA).eventos).toEqual([]);
+  });
+
+  it("🔴 ADR-0045: 27 de 28 (um estado OU o exterior faltando) NÃO dispara `todas_ufs`", () => {
+    const r = derivarEventos(estado({ ufs_apuradas: 26 }), payload({ pct: 30, ufs: 27 }), AGORA);
+    expect(ids(r.eventos)).not.toContain("todas_ufs");
   });
 
   it("nenhum texto usa adjetivo de julgamento", () => {

@@ -134,6 +134,19 @@ export interface CargoInfo {
   /** Quais UFs têm esta corrida — ver {@link Abrangencia} e {@link ufsDoCargo}. */
   readonly abrangencia: Abrangencia;
   /**
+   * `true` só para Presidente (ADR-0045 item 1): o eleitor domiciliado no
+   * exterior vota apenas para Presidente (Código Eleitoral, art. 225), e o TSE
+   * publica o exterior sob a sigla `ZZ` (`dados/zz/`) só no cargo 1. Com este
+   * campo `true`, `ufsDoCargo` devolve as 27 UFs **mais** `"ZZ"` (28 unidades
+   * de apuração — `unidadesDeApuracao`).
+   *
+   * ⚠️ Nos demais cargos tem de ser `false`: um `zz-c0003-…` não existe no CDN,
+   * e pedi-lo a cada rodada é 404 que conta para o bloqueio de IP
+   * (constituição § 1). Por isso `"ZZ"` NÃO entra em `UFS_DA_ELEICAO`, que é a
+   * lista compartilhada dos cargos 3/5/6.
+   */
+  readonly abrangeExterior: boolean;
+  /**
    * Granularidade de ingestão **padrão** deste cargo (ADR-0026 item 1).
    *
    * `"zona"` (~6.110 pares por cargo) é o que o estimador precisa para a
@@ -270,6 +283,7 @@ export const CARGOS = [
     temSegundoTurno: true,
     temArquivoBr: true,
     proporcional: false,
+    abrangeExterior: true,
     abrangencia: "todas-as-ufs",
     granularidade: "zona",
     rpsMax: 25,
@@ -284,6 +298,7 @@ export const CARGOS = [
     temSegundoTurno: true,
     temArquivoBr: false,
     proporcional: false,
+    abrangeExterior: false,
     abrangencia: "todas-as-ufs",
     granularidade: "zona",
     rpsMax: 25,
@@ -298,6 +313,7 @@ export const CARGOS = [
     temSegundoTurno: false,
     temArquivoBr: false,
     proporcional: false,
+    abrangeExterior: false,
     abrangencia: "todas-as-ufs",
     granularidade: "zona",
     rpsMax: 25,
@@ -312,6 +328,7 @@ export const CARGOS = [
     temSegundoTurno: false,
     temArquivoBr: false,
     proporcional: true,
+    abrangeExterior: false,
     abrangencia: "todas-as-ufs",
     granularidade: "zona",
     rpsMax: 5,
@@ -327,6 +344,7 @@ export const CARGOS = [
     temSegundoTurno: false,
     temArquivoBr: false,
     proporcional: true,
+    abrangeExterior: false,
     abrangencia: "ufs-sem-df",
     granularidade: "uf",
     rpsMax: 1,
@@ -341,6 +359,7 @@ export const CARGOS = [
     temSegundoTurno: false,
     temArquivoBr: false,
     proporcional: true,
+    abrangeExterior: false,
     abrangencia: "so-df",
     granularidade: "uf",
     rpsMax: 1,
@@ -444,6 +463,23 @@ const UFS_SEM_DF: readonly string[] = Object.freeze(UFS_DA_ELEICAO.filter((uf) =
 const SO_DF: readonly string[] = Object.freeze(["DF"]);
 
 /**
+ * Sigla do exterior no TSE (`dados/zz/`) — ADR-0045. Não é unidade federativa:
+ * não tem mapa, bandeira, região nem governador. Só existe no cargo 1.
+ */
+export const SIGLA_EXTERIOR = "ZZ";
+
+/**
+ * As 27 UFs **mais** o exterior — as 28 unidades de apuração do Presidente
+ * (ADR-0045). Lista PRÓPRIA, e não `UFS_DA_ELEICAO` com `ZZ` acrescentado: a
+ * lista das 27 é compartilhada pelos cargos 3/5/6, que não têm arquivo no
+ * exterior (404 em massa no TSE → bloqueio de IP, constituição § 1).
+ */
+export const UFS_COM_EXTERIOR: readonly string[] = Object.freeze([
+  ...UFS_DA_ELEICAO,
+  SIGLA_EXTERIOR,
+]);
+
+/**
  * As UFs em que a corrida deste cargo existe — lidas da `abrangencia` da
  * tabela. Presidente/Governador/Senador/Deputado Federal: as 27; Deputado
  * Estadual (7): as 26 sem o DF; Deputado Distrital (8): só `["DF"]`.
@@ -455,10 +491,11 @@ const SO_DF: readonly string[] = Object.freeze(["DF"]);
  * `as`, lança.
  */
 export function ufsDoCargo(cd: CargoTse): readonly string[] {
-  const abrangencia = cargoInfo(cd).abrangencia;
+  const { abrangencia, abrangeExterior } = cargoInfo(cd);
   switch (abrangencia) {
     case "todas-as-ufs":
-      return UFS_DA_ELEICAO;
+      // ADR-0045: só o Presidente (`abrangeExterior: true`) tem o exterior.
+      return abrangeExterior ? UFS_COM_EXTERIOR : UFS_DA_ELEICAO;
     case "ufs-sem-df":
       return UFS_SEM_DF;
     case "so-df":
@@ -468,6 +505,21 @@ export function ufsDoCargo(cd: CargoTse): readonly string[] {
       throw new Error(`[cargos] abrangência não coberta: ${String(naoCoberta)} (cargo ${cd})`);
     }
   }
+}
+
+/**
+ * Quantas unidades de apuração o cargo tem — o denominador dos contadores
+ * "N de M" da tela (ADR-0045 item 7): 28 para o Presidente (27 UFs + o
+ * exterior), 27 para Governador/Senador/Deputado Federal, 26 para o Deputado
+ * Estadual, 1 para o Distrital. Lido de `ufsDoCargo`, nunca um literal.
+ */
+export function unidadesDeApuracao(cd: CargoTse): number {
+  return ufsDoCargo(cd).length;
+}
+
+/** `true` se a sigla é a do exterior (`ZZ`, qualquer caixa) — ADR-0045. */
+export function isExterior(sigla: string): boolean {
+  return sigla.toUpperCase() === SIGLA_EXTERIOR;
 }
 
 /** `true` se a corrida do cargo existe na UF (sigla em qualquer caixa). */

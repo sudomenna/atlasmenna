@@ -77,7 +77,9 @@ import numpy as np
 from pydantic import BaseModel, Field, ValidationError
 
 from api.model.cargos import (
+    UF_EXTERIOR,
     Granularidade,
+    abrange_exterior,
     cadencia_segundos,
     cargo_info,
     granularidade as cargo_granularidade,
@@ -686,17 +688,55 @@ def fetch_eleitorado(conn, ano: int = 2026) -> dict[tuple[str, int], int]:
     A **chave de saída não muda** — continua `(uf, cod_zona)`, porque a
     unidade do estimador continua sendo a zona (ADR-0021/0023). Nada a jusante
     precisou mudar.
+
+    🔴 **Única exceção, declarada: o exterior (`ZZ`, ADR-0045 item 5).** As ~186
+    localidades compartilham a zona `1`; somadas por `cod_zona` virariam UMA
+    unidade e o bootstrap daria intervalo de largura zero. Só para `uf = 'ZZ'`
+    a coluna de saída é o `cod_municipio_tse` (pseudo-zona) — a mesma chave que
+    `zona_merge.cod_zona_de_agrupamento` põe nas linhas dos snapshots. Para as
+    27 UFs o SQL devolve exatamente o `cod_zona` de antes. O `GROUP BY 2` (a
+    expressão `CASE`) evita o alias `cod_zona` colidir com a coluna da tabela.
+
+    ⚠️ **Não filtra por cargo.** Quem chama para um cargo sem exterior TEM de
+    passar o resultado por `eleitorado_do_cargo` — senão o `ZZ` (que só o
+    cargo 1 apura) entra no denominador do `% apurado` de Governador, Senador e
+    Deputado, e esse número nunca passa de ~99,4%.
     """
-    sql = """
-        SELECT uf, cod_zona, SUM(eleitores_aptos) AS eleitores_aptos
+    sql = f"""
+        SELECT uf,
+               CASE WHEN uf = '{UF_EXTERIOR}' THEN cod_municipio_tse
+                    ELSE cod_zona END AS cod_zona_de_agrupamento,
+               SUM(eleitores_aptos) AS eleitores_aptos
         FROM eleitorado
         WHERE ano = %s
-        GROUP BY uf, cod_zona
+        GROUP BY uf, 2
     """
     with conn.cursor() as cur:
         cur.execute(sql, (ano,))
         rows = cur.fetchall()
     return {(r[0], r[1]): int(r[2]) for r in rows}
+
+
+def eleitorado_do_cargo(
+    eleitorado: dict[tuple[str, int], int], cargo: int
+) -> dict[tuple[str, int], int]:
+    """O eleitorado que PESA no `cargo`: sem o exterior onde ele não vota.
+
+    ADR-0045: `ZZ` tem eleitorado carregado (o cargo 1 o apura), mas só o
+    Presidente tem o exterior entre as unidades de apuração
+    (`cargos.abrange_exterior`). Nos demais cargos as linhas `ZZ` saem daqui,
+    antes de qualquer derivado (`_eleitorado_total_by_uf`, o denominador do
+    `pct_apurado_total`, o universo da união de UFs do payload, a
+    estratificação). Cargo fora da tabela: sem exterior.
+
+    Devolve o MESMO dict quando não há `ZZ` a retirar (nenhuma cópia nos
+    ciclos dos cargos 3/5/6/7/8 de antes do exterior existir no banco).
+    """
+    if abrange_exterior(cargo):
+        return eleitorado
+    if not any(uf == UF_EXTERIOR for (uf, _z) in eleitorado):
+        return eleitorado
+    return {chave: v for chave, v in eleitorado.items() if chave[0] != UF_EXTERIOR}
 
 
 def fetch_municipio_eleitorado(conn, ano: int = 2026) -> dict[tuple[str, int], int]:
@@ -2847,6 +2887,14 @@ def _compute_estratos_por_uf(
     `estimate_uf_candidatos` sem os parâmetros e o caminho original roda
     byte-a-byte idêntico (nenhum sorteio extra é consumido do RNG, § 6).
     """
+    # ADR-0045 — o exterior NÃO é estratificado, de propósito. Suas ~186
+    # pseudo-zonas passariam do mínimo de 12 e entrariam nos tercis, mas o
+    # caminho estratificado só foi medido contra as 27 UFs (replay 2022, gate
+    # OT-4) e os tercis de "porte de localidade" não têm validação alguma. O
+    # `(None, None)` leva ao bootstrap simples, que já tem uma unidade por
+    # localidade e intervalo de largura > 0.
+    if uf == UF_EXTERIOR:
+        return None, None
     zonas_da_uf = [
         (cod_zona, aptos)
         for (u, cod_zona), aptos in eleitorado.items()
@@ -3225,6 +3273,12 @@ def compute_swing_descritivo(
     for sigla, rows in rows_by_uf.items():
         out[sigla] = None
         if not comparavel:
+            continue
+        # ADR-0045 item 6 — o exterior não tem swing: o histórico existe
+        # (`historical_results` guarda `ZZ` de 2018/2022), mas em zona única;
+        # não há variação intra-unidade que sustente a comparação. `None`, nunca
+        # um número calculado sobre uma base que não é a mesma.
+        if sigla == UF_EXTERIOR:
             continue
         # Líder do APURADO. Linhas sem `pct_atual` (UF imputada do
         # nacional, candidato sem voto ainda) não concorrem à liderança —
@@ -8547,7 +8601,9 @@ def _do_project_proporcional(
         zonas_prop, agregados = particionar_por_nivel(snapshots)
         snapshots = zonas_para_o_modelo(zonas_prop, agregados, cargo=req.cargo)
         try:
-            eleitorado = fetch_eleitorado(conn, ano=2026)
+            eleitorado = eleitorado_do_cargo(
+                fetch_eleitorado(conn, ano=2026), req.cargo
+            )
         except Exception as exc:  # noqa: BLE001 — pesa o pct, não decide cadeira
             # O eleitorado só pondera o `pct_apurado_total`. Perdê-lo degrada
             # esse número (cai para média simples); derrubar o ciclo por causa
@@ -9106,7 +9162,11 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                     conn.rollback()
                 except Exception:  # noqa: BLE001 — autocommit ou sem tx
                     pass
-            eleitorado = fetch_eleitorado(conn, ano=2026)
+            # ADR-0045 — o exterior (`ZZ`) só pesa no cargo 1; nos demais ele
+            # sairia do denominador do `% apurado` (nunca apura lá).
+            eleitorado = eleitorado_do_cargo(
+                fetch_eleitorado(conn, ano=2026), req.cargo
+            )
 
             # Guarda de sanidade (plano `perfeito-monte-um-plano-eventual-
             # candle.md`, 2026-09-11): a premissa de que o EA20 por par traz

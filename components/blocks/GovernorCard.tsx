@@ -39,6 +39,7 @@ import type { CSSProperties } from "react";
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { EtiquetasLinha } from "@/components/atoms/data/EtiquetasLinha";
 import { UfFlag } from "@/components/atoms/data/UfFlag";
+import { nomeDaUnidade } from "@/components/atoms/maps/_shared";
 import { candidateColor } from "@/components/blocks/_candidateColor";
 import { vagasDaCorrida } from "@/lib/config/cargos";
 import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
@@ -334,7 +335,10 @@ export function GovernorCard({
   // Senado: a conta é do AtlasMenna (o TSE não publica a marca na apuração).
   const atribuicao = atribuicaoDaDefinicao(cargo, definicao);
   const Titulo = `h${nivelTitulo}` as "h3" | "h4";
-  const nomeUf = UF_NAMES[uf.sigla] ?? uf.sigla;
+  // ADR-0045 — o exterior (`ZZ`, só no cargo 1) se chama "Exterior" e não
+  // repete a sigla ao lado do nome: "ZZ" é código do TSE, não do leitor.
+  const exterior = uf.sigla === "ZZ";
+  const nomeUf = UF_NAMES[uf.sigla] ?? nomeDaUnidade(uf.sigla);
   const candIndex = new Map(candidatos.map((c) => [c.id, c] as const));
 
   // Top-4 derivados de uf.top_candidatos (ordenado por pct desc — orchestrator
@@ -602,7 +606,7 @@ export function GovernorCard({
             continuam em texto. Classe, não `style` — 27 cartões por tela. */}
         <UfFlag sigla={uf.sigla} width={17} height={12} inline />
         {nomeUf}
-        <span>· {uf.sigla}</span>
+        {exterior ? null : <span>· {uf.sigla}</span>}
       </Titulo>
       <span>{formatPercentTrim(uf.pct_apurado)} apur</span>
     </header>

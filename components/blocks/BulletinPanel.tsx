@@ -120,7 +120,9 @@ export function buildBulletin({
     id: "apuracao",
     ts,
     head: "Apuração",
-    text: `${formatPercent(pctApuradoTotal, 1)} das seções apuradas, com boletim em ${ufsApuradas} de ${totalUfs} unidades federativas.`,
+    // ADR-0045 — com o exterior no denominador (Presidente: 28), "unidades
+    // federativas" seria falso: o exterior não é UF.
+    text: `${formatPercent(pctApuradoTotal, 1)} das seções apuradas, com boletim em ${ufsApuradas} de ${totalUfs} ${totalUfs > 27 ? "unidades de apuração (27 UFs e o exterior)" : "unidades federativas"}.`,
   });
 
   // 🔊 2026-09-19 — as siglas deste painel NÃO abreviam, e isso é deliberado.

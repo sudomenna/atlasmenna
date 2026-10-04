@@ -40,6 +40,7 @@
  */
 
 import { Figure } from "@/components/atoms/data/Figure";
+import { rotuloDaUnidade } from "@/components/atoms/maps/_shared";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { formatPercent } from "@/lib/utils/format";
@@ -121,7 +122,9 @@ export function RemainingPanel({
   const emAberto = rows
     .filter((r) => faltaApurar(r) > 0 && resultadoEmAberto(r))
     .map((r) => r.sigla)
-    .sort((a, b) => a.localeCompare(b, "pt-BR"));
+    .sort((a, b) => a.localeCompare(b, "pt-BR"))
+    // ADR-0045 — o exterior (`ZZ`) entra na frase como "Exterior".
+    .map(rotuloDaUnidade);
 
   const faltaNacional = Math.max(0, Math.min(100, 100 - pctApuradoTotal));
   const semBoletim = Math.max(0, totalUfs - ufsApuradas);
@@ -199,7 +202,7 @@ export function RemainingPanel({
                     scope="row"
                     style={{ ...CELL, font: "var(--type-figure-sm)", fontWeight: 500 }}
                   >
-                    {row.sigla}
+                    {rotuloDaUnidade(row.sigla)}
                   </th>
                   <td style={{ ...CELL, font: "var(--type-body-sm)" }}>
                     <span>

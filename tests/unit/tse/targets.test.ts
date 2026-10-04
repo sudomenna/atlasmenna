@@ -305,7 +305,8 @@ describe("listIngestTargets — cada cargo usa o código da SUA eleição", () =
     // RF-199 (spec 021): produção soma 27 UF + 1 BR (só cargo 1) aos alvos
     // de zona — não substitui nenhum. PARES.length continua a contagem de
     // zona, agora só uma parcela do total.
-    expect(targets).toHaveLength(PARES.length + 27 + 1);
+    // ADR-0045: o cargo 1 tem 28 unidades (27 UFs + o exterior `ZZ`).
+    expect(targets).toHaveLength(PARES.length + 28 + 1);
     expect(targets.filter((t) => t.nivel === "zona")).toHaveLength(PARES.length);
     expect(new Set(targets.map((t) => t.codEleicao))).toEqual(new Set([FEDERAL]));
     expect(targets.every((t) => t.url.includes(`/${FEDERAL}/dados/`))).toBe(true);
@@ -517,7 +518,9 @@ describe("listIngestTargets — granularidade uf (opt-in explícito)", () => {
 
     const targets = await listIngestTargets("production");
 
-    expect(targets).toHaveLength(27 * 2 + 1);
+    // ADR-0045: 28 do cargo 1 (com o exterior) + 27 do cargo 3 + 1 BR.
+    expect(targets).toHaveLength(28 + 27 + 1);
+    expect(targets.filter((t) => t.uf === "ZZ").map((t) => t.cargo)).toEqual([1]);
     expect(targets.every((t) => t.nivel === "uf" || t.nivel === "br")).toBe(true);
     expect(targets.filter((t) => t.nivel === "br")).toHaveLength(1);
     expect(targets.find((t) => t.nivel === "br")?.cargo).toBe(1);
@@ -658,10 +661,13 @@ describe("listIngestTargets — granularidade por cargo (ADR-0026 + emenda (b))"
     );
 
     const ufTargets = targets.filter((t) => t.nivel === "uf");
-    expect(ufTargets).toHaveLength(27);
+    // ADR-0045: o cargo 1 ganha o exterior (`ZZ`) — 28 UFs; os demais, 27.
+    const nUfs = cargo === 1 ? 28 : 27;
+    expect(ufTargets).toHaveLength(nUfs);
+    expect(ufTargets.some((t) => t.uf === "ZZ")).toBe(cargo === 1);
     expect(ufTargets.every((t) => t.cargo === cargo)).toBe(true);
     expect(targets.filter((t) => t.nivel === "br")).toHaveLength(cargo === 1 ? 1 : 0);
-    expect(targets).toHaveLength(pares.length + 27 + (cargo === 1 ? 1 : 0));
+    expect(targets).toHaveLength(pares.length + nUfs + (cargo === 1 ? 1 : 0));
   });
 
   it("cargo 6 (Deputado Federal) com TSE_DEPUTADO_GRANULARIDADE=uf volta a enumerar 27 UFs, sem tocar o banco", async () => {
@@ -732,8 +738,9 @@ describe("listIngestTargets — pares (2 municípios na mesma zona)", () => {
 
     const targets = await listIngestTargets("production");
 
-    // RF-199 (spec 021): +27 UF + 1 BR (cargo 1) somados aos 2 de zona.
-    expect(targets).toHaveLength(2 + 27 + 1);
+    // RF-199 (spec 021): +28 UF (27 + exterior, ADR-0045) + 1 BR (cargo 1)
+    // somados aos 2 de zona.
+    expect(targets).toHaveLength(2 + 28 + 1);
     const zonaTargets = targets.filter((t) => t.nivel === "zona");
     expect(zonaTargets.every((t) => t.codZona === 1 && t.cargo === 1)).toBe(true);
     expect(zonaTargets).toHaveLength(2);
@@ -1071,7 +1078,7 @@ describe("listIngestTargets — RF-199: agregado UF/BR aditivo em produção", (
     // A granularidade efetiva de zona não muda — continua "zona" (default
     // da tabela canônica). O único fato novo é a soma do agregado.
     expect(targets.filter((t) => t.nivel === "zona")).toHaveLength(1);
-    expect(targets.filter((t) => t.nivel === "uf")).toHaveLength(27);
+    expect(targets.filter((t) => t.nivel === "uf")).toHaveLength(28); // + exterior (ADR-0045)
     expect(targets.filter((t) => t.nivel === "br")).toHaveLength(1);
   });
 
@@ -1093,7 +1100,7 @@ describe("listIngestTargets — RF-199: agregado UF/BR aditivo em produção", (
 
     const targets = await listIngestTargets("production");
 
-    expect(targets.filter((t) => t.nivel === "uf")).toHaveLength(27);
+    expect(targets.filter((t) => t.nivel === "uf")).toHaveLength(28); // + exterior (ADR-0045)
     expect(targets.filter((t) => t.nivel === "br")).toHaveLength(1);
     expect(vi.mocked(db.select)).not.toHaveBeenCalled();
   });
@@ -1106,5 +1113,75 @@ describe("listIngestTargets — RF-199: agregado UF/BR aditivo em produção", (
 
     expect(targets.filter((t) => t.nivel === "br")).toHaveLength(0);
     expect(targets.filter((t) => t.nivel === "uf")).toHaveLength(27);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ADR-0045 — o exterior (`ZZ`) entra SÓ no cargo 1
+// ---------------------------------------------------------------------------
+
+describe("listIngestTargets — ADR-0045: exterior (ZZ) só no Presidente", () => {
+  // A tabela `zonas` não depende de cargo: depois da carga do exterior ela tem
+  // os pares ZZ ao lado dos das 27 UFs. Quem impede que Governador/Senador/
+  // Deputado peçam `zz…-c0003-…` (arquivo que o TSE não publica — 404 em massa,
+  // bloqueio de IP) é `ufsDoCargo`. Este bloco prova o filtro nos dois níveis.
+  const PARES_COM_EXTERIOR = [
+    { uf: "SP", codMunicipioTse: 71072, codZona: 1 },
+    { uf: "ZZ", codMunicipioTse: 29254, codZona: 1 },
+    { uf: "ZZ", codMunicipioTse: 99198, codZona: 1 },
+  ];
+
+  beforeEach(() => {
+    vi.stubEnv("TSE_COD_ELEICAO", "ele2026/619");
+  });
+
+  it("cargo 1 recebe `zz-c0001` (UF) e os pares ZZ de zona, com a URL da pasta `zz`", async () => {
+    mockZonasRowsOnce([...PARES_COM_EXTERIOR]);
+    const targets = await listIngestTargets("production", { cargo: 1 });
+
+    const zz = targets.filter((t) => t.uf === "ZZ");
+    expect(zz.filter((t) => t.nivel === "uf")).toHaveLength(1);
+    expect(zz.filter((t) => t.nivel === "zona").map((t) => t.codMunicipioTse)).toEqual([
+      29254, 99198,
+    ]);
+    const ufZz = zz.find((t) => t.nivel === "uf");
+    expect(ufZz?.url).toMatch(/\/dados\/zz\/zz-c0001-e\d+-u\.json$/);
+    const parZz = zz.find((t) => t.codMunicipioTse === 29254);
+    expect(parZz?.url).toMatch(/\/dados\/zz\/zz29254-z0001-c0001-e\d+-u\.json$/);
+    // 3 pares de zona + 28 UFs (27 + ZZ) + 1 BR.
+    expect(targets).toHaveLength(3 + 28 + 1);
+  });
+
+  it.each([
+    3, 5, 6,
+  ] as const)("cargo %i NUNCA recebe ZZ — nem UF nem par de zona", async (cargo) => {
+    mockZonasRowsOnce([...PARES_COM_EXTERIOR]);
+    const targets = await listIngestTargets("production", { cargo });
+
+    expect(targets.some((t) => t.uf === "ZZ")).toBe(false);
+    expect(targets.some((t) => t.url.includes("/zz/"))).toBe(false);
+    expect(targets.filter((t) => t.nivel === "zona")).toHaveLength(1);
+    expect(targets.filter((t) => t.nivel === "uf")).toHaveLength(27);
+  });
+
+  it.each([7, 8] as const)("cargo %i (granularidade uf) NUNCA recebe ZZ", async (cargo) => {
+    const targets = await listIngestTargets("production", { cargo });
+    expect(targets.some((t) => t.uf === "ZZ")).toBe(false);
+    expect(vi.mocked(db.select)).not.toHaveBeenCalled();
+  });
+
+  it("whitelist de preview: `ZZ:1` vale, `ZZ:3` é descartado", async () => {
+    vi.stubEnv("TSE_GRANULARIDADE", "uf");
+    vi.stubEnv("TSE_TARGETS_WHITELIST", "ZZ:1,ZZ:3");
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const pres = await listIngestTargets("preview", { cargo: 1 });
+      expect(pres.map((t) => t.uf)).toEqual(["ZZ"]);
+      clearTargetsCache();
+      const gov = await listIngestTargets("preview", { cargo: 3 });
+      expect(gov.some((t) => t.uf === "ZZ")).toBe(false);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

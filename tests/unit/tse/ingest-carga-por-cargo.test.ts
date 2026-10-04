@@ -70,12 +70,24 @@ const H = vi.hoisted(() => {
     "TO",
   ];
   const PARES = 6110;
-  const zonas = Array.from({ length: PARES }, (_, i) => ({
-    uf: UFS[i % UFS.length] as string,
-    codMunicipioTse: 10_000 + i,
-    codZona: (i % 12) + 1,
-  }));
-  return { zonas, PARES, logs: [] as { notes?: string }[] };
+  // ADR-0045 — o exterior: 186 localidades (EA12 federal de 04/10/2026), todas
+  // na zona 0001. A tabela `zonas` não depende de cargo; só o cargo 1 as pede
+  // (`ufsDoCargo`), e o teste de orçamento abaixo cobra que ele continue
+  // cabendo em 300 s a 25 rps com elas.
+  const PARES_EXTERIOR = 186;
+  const zonas = [
+    ...Array.from({ length: PARES }, (_, i) => ({
+      uf: UFS[i % UFS.length] as string,
+      codMunicipioTse: 10_000 + i,
+      codZona: (i % 12) + 1,
+    })),
+    ...Array.from({ length: PARES_EXTERIOR }, (_, i) => ({
+      uf: "ZZ",
+      codMunicipioTse: 29_000 + i,
+      codZona: 1,
+    })),
+  ];
+  return { zonas, PARES, PARES_EXTERIOR, logs: [] as { notes?: string }[] };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -328,8 +340,14 @@ describe.each(ORDENS)("carga concorrente — $nome", ({ ciclos }) => {
       const rps = cargoInfo(cargo).rpsMax;
 
       // O universo é o real: ~6.110 zonas + os agregados de UF (+1 BR no cargo 1).
-      expect(n, `cargo ${cargo}: alvos`).toBeGreaterThanOrEqual(H.PARES);
-      expect(n, `cargo ${cargo}: alvos`).toBeLessThanOrEqual(H.PARES + 28);
+      // ADR-0045: o cargo 1 tem, além disso, as 186 localidades do exterior e o
+      // agregado `zz-c0001` — exatamente 6.110 + 186 + 28 UFs + 1 BR. Os
+      // demais NUNCA veem o exterior: exatamente 6.110 + 27.
+      if (cargo === 1) {
+        expect(n, "cargo 1: alvos").toBe(H.PARES + H.PARES_EXTERIOR + 28 + 1);
+      } else {
+        expect(n, `cargo ${cargo}: alvos`).toBe(H.PARES + 27);
+      }
 
       // Cabe no maxDuration — com folga, não no fio.
       expect(duracao, `cargo ${cargo}: ${(duracao / 1000).toFixed(1)} s`).toBeLessThanOrEqual(

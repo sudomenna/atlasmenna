@@ -131,7 +131,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { municipiosTotalFor } from "@/components/atoms/maps/_shared";
+import { municipiosTotalFor, rotuloDaUnidade } from "@/components/atoms/maps/_shared";
 import { MapSkeleton } from "@/components/atoms/maps/MapSkeleton";
 import { MapZoomControls } from "@/components/atoms/maps/MapZoomControls";
 import {
@@ -143,7 +143,7 @@ import mapFrameStyles from "@/components/blocks/MapFrameMobile.module.css";
 import { CHIP_STYLE, NationalMapBlock } from "@/components/blocks/NationalMapBlock";
 import { UfLeaderMapLazy } from "@/components/blocks/UfMapsLazy";
 import { UfPicker, type UfPickerCargo } from "@/components/layout/UfPicker";
-import { cargoFromToken } from "@/lib/config/cargos";
+import { cargoFromToken, isExterior } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
 import type { EdgePayload, EdgePayloadUf, EdgeUfMunicipio } from "@/lib/edge-config/types";
 import { useDadoFrescorStore } from "@/lib/state/dado-freshness-store";
@@ -376,7 +376,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
   // Passou a importar em 2026-09-19: até então `sen` nem disparava a busca,
   // então este caminho não existia para um dos três cargos.
   const escopo = sigla
-    ? `${CARGO_LABEL[cargo]} · ${sigla}${
+    ? `${CARGO_LABEL[cargo]} · ${rotuloDaUnidade(sigla)}${
         typeof ufResumo?.pct_apurado === "number"
           ? ` · ${formatPercent(ufResumo.pct_apurado, 1)} apurado`
           : ""
@@ -823,6 +823,66 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
         scopeLabel={escopo}
         action={<UfPicker cargo="sen" atual={sigla} />}
       />
+    );
+  }
+
+  if (sigla && isExterior(sigla)) {
+    // ADR-0045 item 7 — o EXTERIOR (`/uf/ZZ`, só Presidente) não tem mapa:
+    // as localidades (embaixadas, consulados) não têm geometria no país, e
+    // inventar uma posição seria afirmar uma geografia que não existe. A
+    // moldura mantém o cromo (← Brasil + seletor) e diz onde estão os números.
+    // O seletor recebe `atual={null}`: ele lista as 27 UFs, e mostrar "ZZ" no
+    // botão seria a sigla crua do TSE na tela.
+    return (
+      <>
+        <section aria-label="Exterior — sem mapa" className={mapFrameStyles.canvasFill}>
+          <div
+            className="flex h-full flex-col items-center justify-center text-center"
+            style={{ padding: "var(--space-6)", gap: "var(--space-2)" }}
+          >
+            <p style={{ fontFamily: "var(--font-serif)", fontSize: "var(--text-xl, 1.25rem)" }}>
+              Exterior
+            </p>
+            <p className="text-sm" style={{ color: "var(--color-text-muted)", maxWidth: "32ch" }}>
+              O voto dos brasileiros que moram fora do país não tem mapa: as localidades estão na
+              lista da página.
+            </p>
+          </div>
+          <div
+            className={[
+              mapFrameStyles.desktopOverlay,
+              "pointer-events-none absolute flex-wrap items-start justify-between",
+            ].join(" ")}
+            style={{
+              top: "var(--space-3)",
+              left: "var(--space-3)",
+              right: "var(--space-3)",
+              gap: "var(--space-2)",
+            }}
+          >
+            <div
+              className="pointer-events-auto flex min-w-0 items-center"
+              style={{ gap: "var(--space-2)" }}
+            >
+              <Link href={homeHref} style={CHIP_STYLE}>
+                ← Brasil
+              </Link>
+            </div>
+            <div className="pointer-events-auto flex-none">
+              <UfPicker cargo="pres" atual={null} />
+            </div>
+          </div>
+        </section>
+        <div className={mapFrameStyles.mobileChrome}>
+          <div className={mapFrameStyles.bar}>
+            <Link href={homeHref} className={mapFrameStyles.btn}>
+              ← Brasil
+            </Link>
+            <div className={mapFrameStyles.barSpacer} />
+            <UfPicker cargo="pres" atual={null} />
+          </div>
+        </div>
+      </>
     );
   }
 

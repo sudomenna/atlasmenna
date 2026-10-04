@@ -39,6 +39,18 @@ Três casos:
    `_discard_zero_zona_sentinel_when_real_zonas_exist` em `project.py`. Zona que
    só tem o sentinela mantém o sentinela (é o único dado disponível).
 
+Exceção declarada — o exterior (`ZZ`, ADR-0045 item 5)
+------------------------------------------------------
+No exterior, as ~186 localidades (embaixadas, consulados) compartilham a zona
+`0001`. Pela regra acima viram UMA unidade e o bootstrap degenera para
+intervalo de largura zero — afirmação de certeza vedada pela constituição § 6.
+Só para `uf = "ZZ"`, a chave de agrupamento passa a ser `cod_zona :=
+cod_municipio_tse` (`chave_de_zona`), de modo que cada localidade é uma unidade
+e a linha de saída carrega esse `cod_zona`. A MESMA chave é a do `GROUP BY` do
+eleitorado em `project.fetch_eleitorado`, e é isso que casa peso com leitura.
+Nenhuma outra UF é afetada (teste próprio em `test_exterior_zz.py`); o par
+sentinela (`cod_municipio_tse = 0`) do exterior não é reescrito.
+
 Campos derivados
 ----------------
 - `psa` (`s.psa`, % de seções apuradas) e o `pct_apurado` da linha:
@@ -72,6 +84,8 @@ import copy
 import json
 import logging
 from typing import Any
+
+from api.model.cargos import UF_EXTERIOR
 
 # Mesmo formato de linha de `project.fetch_snapshots` (dict solto).
 SnapshotRow = dict[str, Any]
@@ -445,6 +459,34 @@ def _merge_um_grupo(uf: str, cod_zona: int, rows: list[SnapshotRow]) -> Snapshot
     }
 
 
+def cod_zona_de_agrupamento(uf: Any, cod_zona: Any, cod_municipio_tse: Any) -> int:
+    """`cod_zona` que identifica a UNIDADE de reamostragem da linha.
+
+    Regra geral: o próprio `cod_zona`. **Única exceção, declarada (ADR-0045
+    item 5): `uf == "ZZ"`**, onde a unidade é a localidade e a chave vira o
+    `cod_municipio_tse`. Sentinela (`cod_municipio_tse <= 0`) mantém o
+    `cod_zona` original — não é localidade.
+
+    Ponto ÚNICO da exceção no lado dos snapshots (merge e guarda de sanidade);
+    o lado do eleitorado é o `GROUP BY` de `project.fetch_eleitorado`.
+    """
+    zona = int(cod_zona or 0)
+    mun = int(cod_municipio_tse or 0)
+    if str(uf) == UF_EXTERIOR and mun > 0:
+        return mun
+    return zona
+
+
+def chave_de_zona(row: SnapshotRow) -> tuple[str, int]:
+    """`(uf, cod_zona de agrupamento)` de uma linha de `fetch_snapshots`."""
+    return (
+        str(row.get("uf")),
+        cod_zona_de_agrupamento(
+            row.get("uf"), row.get("cod_zona"), row.get("cod_municipio_tse")
+        ),
+    )
+
+
 def merge_pairs_into_zonas(rows: list[SnapshotRow]) -> list[SnapshotRow]:
     """Soma os pares `(município, zona)` de volta à zona (decisão D-g).
 
@@ -458,7 +500,7 @@ def merge_pairs_into_zonas(rows: list[SnapshotRow]) -> list[SnapshotRow]:
     grupos: dict[tuple[str, int], list[SnapshotRow]] = {}
     ordem: list[tuple[str, int]] = []
     for r in rows:
-        chave = (str(r.get("uf")), int(r.get("cod_zona") or 0))
+        chave = chave_de_zona(r)
         if chave not in grupos:
             grupos[chave] = []
             ordem.append(chave)
@@ -475,8 +517,16 @@ def merge_pairs_into_zonas(rows: list[SnapshotRow]) -> list[SnapshotRow]:
             n_sentinelas_descartadas += len(do_grupo) - len(reais)
         efetivos = reais if reais else do_grupo
         if len(efetivos) == 1:
+            unico = efetivos[0]
+            if int(unico.get("cod_zona") or 0) != cod_zona:
+                # Só o exterior chega aqui (`chave_de_zona`): a linha da
+                # localidade passa a carregar a pseudo-zona, para casar com o
+                # eleitorado agrupado pela mesma chave. Cópia rasa — o payload
+                # continua sendo o mesmo objeto.
+                out.append({**unico, "cod_zona": cod_zona})
+                continue
             # Identidade — nem o dict nem o payload são reconstruídos.
-            out.append(efetivos[0])
+            out.append(unico)
             continue
         out.append(_merge_um_grupo(uf, cod_zona, efetivos))
         n_zonas_merged += 1
@@ -581,9 +631,11 @@ def check_zona_merge_sanity(
     """
     grupos: dict[tuple[str, int], list[SnapshotRow]] = {}
     for r in raw_rows:
-        chave = (str(r.get("uf")), int(r.get("cod_zona") or 0))
+        chave = chave_de_zona(r)
         grupos.setdefault(chave, []).append(r)
 
+    # As linhas MESCLADAS já carregam o `cod_zona` de agrupamento (a
+    # pseudo-zona do exterior, ADR-0045) — a chave delas é a própria.
     merged_by_key: dict[tuple[str, int], SnapshotRow] = (
         {(str(r.get("uf")), int(r.get("cod_zona") or 0)): r for r in merged_rows}
         if merged_rows is not None

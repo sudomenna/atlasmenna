@@ -125,6 +125,7 @@ import { TurnoBadge } from "@/components/atoms/badges/TurnoBadge";
 import { DadoParadoBanner } from "@/components/atoms/banners/DadoParadoBanner";
 import { SerieApuracaoChart } from "@/components/atoms/charts/SerieApuracaoChart";
 import { UfFlag } from "@/components/atoms/data/UfFlag";
+import { rotuloDaUnidade } from "@/components/atoms/maps/_shared";
 import {
   DetailFreshness,
   DetailUnavailable,
@@ -147,6 +148,7 @@ import {
   type UfDetailResult,
 } from "@/lib/blob/uf-detail";
 import { currentPresidentialTurno } from "@/lib/config/calendar";
+import { cargoExisteNaUf, isExterior, ufsDoCargo } from "@/lib/config/cargos";
 import { avaliarFrescorDado } from "@/lib/config/dado-freshness";
 import { isPreEleicao } from "@/lib/config/fase";
 import {
@@ -171,12 +173,14 @@ import nationalFixture from "@/tests/fixtures/edge-config/projection-current.jso
  * acessibilidade com `display: none`. Mesma mecânica da home.
  */
 function ResultTitle({ sigla }: { sigla: string }) {
+  // ADR-0045 — "Exterior", nunca "ZZ" (a bandeira já é `null` para ZZ).
+  const rotulo = rotuloDaUnidade(sigla);
   return (
     <>
       {/* Bandeira decorativa (`alt=""`), uma só para os dois textos. */}
       <UfFlag sigla={sigla} width={25} height={18} eager inline />
-      <span data-view-only="parcial">{sigla} — Resultado parcial</span>
-      <span data-view-only="proj">{sigla} — Projeção Atlas Menna</span>
+      <span data-view-only="parcial">{rotulo} — Resultado parcial</span>
+      <span data-view-only="proj">{rotulo} — Projeção Atlas Menna</span>
     </>
   );
 }
@@ -185,39 +189,15 @@ function ResultTitle({ sigla }: { sigla: string }) {
 // `next/dynamic({ ssr: false })`. Mantém ADR-0010 (chunk separado) mesmo
 // com Next 16 proibindo `ssr: false` em Server Components.
 
-// 27 UFs IBGE. Inclui DF (carry-over S03 — DF estava ausente no payload nacional).
-const UFS_BRASIL = [
-  "AC",
-  "AL",
-  "AM",
-  "AP",
-  "BA",
-  "CE",
-  "DF",
-  "ES",
-  "GO",
-  "MA",
-  "MG",
-  "MS",
-  "MT",
-  "PA",
-  "PB",
-  "PE",
-  "PI",
-  "PR",
-  "RJ",
-  "RN",
-  "RO",
-  "RR",
-  "RS",
-  "SC",
-  "SE",
-  "SP",
-  "TO",
-] as const;
+// As unidades de apuração PRESIDENCIAIS: as 27 UFs (DF incluído — carry-over
+// S03) e, desde o ADR-0045, o exterior (`ZZ`). Lidas da tabela canônica
+// (`ufsDoCargo(1)`), nunca uma lista local: o exterior só existe NESTA rota —
+// `/uf/ZZ/governador`, `/senador` e as de deputado continuam 404, porque o
+// eleitor no exterior vota só para Presidente (Código Eleitoral, art. 225).
+const UNIDADES_PRESIDENCIAIS = ufsDoCargo(1);
 
 export function generateStaticParams() {
-  return UFS_BRASIL.map((sigla) => ({ sigla }));
+  return UNIDADES_PRESIDENCIAIS.map((sigla) => ({ sigla }));
 }
 
 interface UFPageProps {
@@ -227,8 +207,11 @@ interface UFPageProps {
 export async function generateMetadata({ params }: UFPageProps): Promise<Metadata> {
   const { sigla: raw } = await params;
   const sigla = raw.toUpperCase();
-  const title = `${sigla} — Apuração Presidencial 2026 | AtlasMenna`;
-  const description = `Apuração presidencial 2026 em ${sigla}: projeção em tempo real, mapa de municípios, swing vs 2022.`;
+  const rotulo = rotuloDaUnidade(sigla);
+  const title = `${rotulo} — Apuração Presidencial 2026 | AtlasMenna`;
+  const description = isExterior(sigla)
+    ? "Apuração presidencial 2026 no exterior: votos dos eleitores que moram fora do Brasil, localidade por localidade."
+    : `Apuração presidencial 2026 em ${sigla}: projeção em tempo real, mapa de municípios, swing vs 2022.`;
   return {
     // RNF-027 — URL canônica /uf/<SIGLA>.
     alternates: { canonical: `/uf/${sigla}` },
@@ -363,9 +346,13 @@ export default async function UFPage({ params }: UFPageProps) {
   const { sigla: raw } = await params;
   const sigla = raw.toUpperCase();
 
-  if (!UFS_BRASIL.includes(sigla as (typeof UFS_BRASIL)[number])) {
+  if (!cargoExisteNaUf(1, sigla)) {
     notFound();
   }
+  // ADR-0045 — o exterior nunca aparece ao leitor como "ZZ": título, kickers e
+  // série usam "Exterior". A bandeira (`<UfFlag>`) já não desenha nada para ZZ.
+  const rotulo = rotuloDaUnidade(sigla);
+  const exterior = isExterior(sigla);
 
   // Os DOIS read paths, em paralelo (ADR-0032 item 3). O resumo vem do Global
   // Config; o detalhe municipal e as séries vêm do Vercel Blob. Nunca em série:
@@ -527,7 +514,7 @@ export default async function UFPage({ params }: UFPageProps) {
         <div>
           <h1 className="mt-4 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
             <UfFlag sigla={sigla} width={34} height={24} eager inline />
-            {sigla} — Aguardando dados
+            {rotulo} — Aguardando dados
           </h1>
           <p
             className="mt-2 text-sm"
@@ -562,7 +549,7 @@ export default async function UFPage({ params }: UFPageProps) {
               cadenciaMin={serie ? serie.cadencia_min : 5}
               candidatos={serie ? serie.candidatos : []}
               eixo={serie ? serie.eixo : []}
-              escopo={sigla}
+              escopo={rotulo}
               preEleicao={preNacional}
               titleId="serie-apuracao-heading"
             />
@@ -698,7 +685,7 @@ export default async function UFPage({ params }: UFPageProps) {
           em `<DetailUnavailable>` (RF-207) — não quebra. */}
       {zerado ? null : (
         <CorridaTresCirculos
-          kicker={`Presidente · ${sigla}`}
+          kicker={`Presidente · ${rotulo}`}
           modo="candidatura"
           votacao={payload.votacao}
           candidatos={payload.candidatos}
@@ -715,7 +702,7 @@ export default async function UFPage({ params }: UFPageProps) {
           sem agregado) ⇒ `<DetailUnavailable>` (RF-198) — não quebra. */}
       {zerado ? null : (
         <VotacaoEleitorado
-          kicker={`Presidente · ${sigla}`}
+          kicker={`Presidente · ${rotulo}`}
           votacao={payload.votacao}
           titleId="votacao-uf-heading"
         />
@@ -752,7 +739,7 @@ export default async function UFPage({ params }: UFPageProps) {
             cadenciaMin={serie ? serie.cadencia_min : 5}
             candidatos={serie ? serie.candidatos : []}
             eixo={serie ? serie.eixo : []}
-            escopo={sigla}
+            escopo={rotulo}
             preEleicao={false}
             zerado={zerado && !serie}
             titleId="serie-apuracao-heading"
@@ -769,7 +756,7 @@ export default async function UFPage({ params }: UFPageProps) {
           fonte deste bloco é o Vercel Blob, que falha independentemente do
           resumo, e esconder a seção comunicaria "não existe" quando a verdade é
           "não chegou". Estado explícito, sempre no DOM (ADR-0017). */}
-      <Panel kicker="Municípios">
+      <Panel kicker={exterior ? "Localidades no exterior" : "Municípios"}>
         {municipioReason === null ? (
           <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
             {detalhe.status === "ok" && (

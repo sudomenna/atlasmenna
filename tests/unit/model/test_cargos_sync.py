@@ -22,7 +22,16 @@ from pathlib import Path
 
 import pytest
 
-from api.model.cargos import CARGOS, cargo_info, granularidade, vagas_por_uf
+from api.model.cargos import (
+    CARGOS,
+    UF_EXTERIOR,
+    UFS_BRASIL,
+    abrange_exterior,
+    cargo_info,
+    granularidade,
+    ufs_do_cargo,
+    vagas_por_uf,
+)
 
 TS_PATH = Path(__file__).resolve().parents[3] / "lib" / "config" / "cargos.ts"
 
@@ -59,6 +68,8 @@ def _parse_ts() -> list[dict[str, object]]:
                 "granularidade": _campo(corpo, "granularidade"),
                 # Spec 027 RF-278 (ADR-0066) — quais UFs elegem o cargo.
                 "abrangencia": _campo(corpo, "abrangencia"),
+                # ADR-0045 — só o Presidente tem o exterior (`ZZ`).
+                "abrange_exterior": _campo(corpo, "abrangeExterior") == "true",
             }
         )
     return out
@@ -97,6 +108,7 @@ EQUIVALENCIA = {
     "proporcional": "proporcional",
     "granularidade": "granularidade",
     "abrangencia": "abrangencia",
+    "abrangeExterior": "abrange_exterior",
 }
 
 
@@ -197,3 +209,32 @@ def test_deputado_federal_nao_finge_ter_bancada_fixa():
     assert info is not None
     assert info["vagas_por_uf"] is None
     assert info["proporcional"] is True
+
+
+def test_so_o_presidente_abrange_o_exterior():
+    """ADR-0045 — o eleitor no exterior vota só para Presidente (Código
+    Eleitoral, art. 225). `ufsDoCargo(1)` = 27 UFs + `ZZ` (28 unidades de
+    apuração); nos demais cargos `ZZ` fica fora, e `UFS_BRASIL` segue com 27."""
+    assert UF_EXTERIOR == "ZZ"
+    assert len(UFS_BRASIL) == 27 and UF_EXTERIOR not in UFS_BRASIL
+
+    assert [c["cd"] for c in CARGOS if c["abrange_exterior"]] == [1]
+    assert abrange_exterior(1) is True
+    for cd in (3, 5, 6, 7, 8, 99):
+        assert abrange_exterior(cd) is False, cd
+
+    assert ufs_do_cargo(1) == (*UFS_BRASIL, "ZZ")
+    assert len(ufs_do_cargo(1)) == 28
+    for cd in (3, 5, 6, 7, 8):
+        assert UF_EXTERIOR not in ufs_do_cargo(cd), cd
+    assert ufs_do_cargo(3) == UFS_BRASIL
+    assert ufs_do_cargo(5) == UFS_BRASIL
+    assert ufs_do_cargo(6) == UFS_BRASIL
+
+
+def test_ufs_do_cargo_1_bate_com_a_lista_do_ts():
+    """A lista de UFs do Presidente no TS (`UFS_COM_EXTERIOR` = `UFS_DA_ELEICAO`
+    + `SIGLA_EXTERIOR`) tem de ser a que o espelho devolve, na mesma ordem."""
+    fonte = TS_PATH.read_text(encoding="utf-8")
+    assert re.search(r'SIGLA_EXTERIOR\s*=\s*"ZZ"', fonte)
+    assert re.search(r"UFS_COM_EXTERIOR[^=]*=\s*Object\.freeze\(\[\s*\.\.\.UFS_DA_ELEICAO,\s*SIGLA_EXTERIOR", fonte)

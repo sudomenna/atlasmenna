@@ -26,10 +26,14 @@ import {
   eleicaoDoCargo,
   isCargoProporcional,
   isCargoTse,
+  isExterior,
   parseCargoSegment,
   piorCasoAgregadoRps,
+  SIGLA_EXTERIOR,
+  UFS_COM_EXTERIOR,
   UFS_DA_ELEICAO,
   ufsDoCargo,
+  unidadesDeApuracao,
 } from "@/lib/config/cargos";
 
 describe("tabela de cargos", () => {
@@ -241,6 +245,47 @@ describe("CargoProporcional — derivado da tabela, não listado à mão", () =>
   });
 });
 
+describe("ADR-0045 — o exterior (ZZ) é a 28ª unidade, SÓ do Presidente", () => {
+  it("`abrangeExterior` é true só no cargo 1", () => {
+    for (const c of CARGOS) {
+      expect(c.abrangeExterior, `cargo ${c.cd}`).toBe(c.cd === 1);
+    }
+  });
+
+  it("🔴 ZZ NÃO entra na lista compartilhada das 27 (cargos 3/5/6 pediriam 404 ao TSE)", () => {
+    expect(UFS_DA_ELEICAO).not.toContain("ZZ");
+    for (const cd of [3, 5, 6, 7, 8] as const) {
+      expect(ufsDoCargo(cd), `cargo ${cd}`).not.toContain("ZZ");
+      expect(cargoExisteNaUf(cd, "ZZ"), `cargo ${cd}`).toBe(false);
+      expect(cargoExisteNaUf(cd, "zz"), `cargo ${cd}`).toBe(false);
+    }
+  });
+
+  it("cargo 1: 28 unidades, ZZ por último, lista congelada", () => {
+    expect(ufsDoCargo(1)).toHaveLength(28);
+    expect(ufsDoCargo(1).at(-1)).toBe(SIGLA_EXTERIOR);
+    expect(UFS_COM_EXTERIOR).toEqual(ufsDoCargo(1));
+    expect(Object.isFrozen(UFS_COM_EXTERIOR)).toBe(true);
+    expect(cargoExisteNaUf(1, "zz")).toBe(true);
+  });
+
+  it("unidadesDeApuracao — o denominador dos contadores 'N de M'", () => {
+    expect(unidadesDeApuracao(1)).toBe(28);
+    expect(unidadesDeApuracao(3)).toBe(27);
+    expect(unidadesDeApuracao(5)).toBe(27);
+    expect(unidadesDeApuracao(6)).toBe(27);
+    expect(unidadesDeApuracao(7)).toBe(26);
+    expect(unidadesDeApuracao(8)).toBe(1);
+  });
+
+  it("isExterior — só ZZ, em qualquer caixa", () => {
+    expect(isExterior("ZZ")).toBe(true);
+    expect(isExterior("zz")).toBe(true);
+    expect(isExterior("SP")).toBe(false);
+    expect(isExterior("BR")).toBe(false);
+  });
+});
+
 describe("RF-278 — em que UFs cada corrida existe (ufsDoCargo)", () => {
   it("as 27 UFs da eleição, sem repetição, com o DF", () => {
     expect(UFS_DA_ELEICAO).toHaveLength(27);
@@ -248,10 +293,12 @@ describe("RF-278 — em que UFs cada corrida existe (ufsDoCargo)", () => {
     expect(UFS_DA_ELEICAO).toContain("DF");
   });
 
-  it("os quatro cargos de antes existem nas 27", () => {
-    for (const cd of [1, 3, 5, 6] as const) {
+  it("os quatro cargos de antes existem nas 27 (o Presidente, também no exterior)", () => {
+    for (const cd of [3, 5, 6] as const) {
       expect(ufsDoCargo(cd), `cargo ${cd}`).toEqual(UFS_DA_ELEICAO);
     }
+    // ADR-0045 — o Presidente tem as 27 + o exterior.
+    expect(ufsDoCargo(1)).toEqual([...UFS_DA_ELEICAO, "ZZ"]);
   });
 
   it("🔴 Deputado Estadual (7): as 26 UFs SEM o DF — o DF não tem assembleia", () => {

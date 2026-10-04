@@ -179,6 +179,36 @@ export const UF_NOMES: Record<string, string> = {
 };
 
 /**
+ * Nome do EXTERIOR (sigla `ZZ` do TSE) para o leitor — ADR-0045 item 7.
+ *
+ * Fica FORA de `UF_NOMES` de propósito: aquela tabela alimenta o seletor de
+ * UF, a grade de links, o placar zerado de Governador/Senador e o desfecho de
+ * governador — superfícies em que o exterior não existe (só vota para
+ * Presidente). Quem precisa do nome de uma unidade de apuração PRESIDENCIAL
+ * usa {@link nomeDaUnidade}.
+ */
+export const NOME_EXTERIOR = "Exterior";
+
+/**
+ * Nome por extenso de uma unidade de apuração: a UF (`"SP"` → `"São Paulo"`)
+ * ou o exterior (`"ZZ"` → `"Exterior"`). Sigla desconhecida volta como veio —
+ * mas `"ZZ"` cru NUNCA chega ao leitor por aqui. Caixa indiferente.
+ */
+export function nomeDaUnidade(sigla: string): string {
+  const s = sigla.toUpperCase();
+  if (s === "ZZ") return NOME_EXTERIOR;
+  return UF_NOMES[s] ?? sigla;
+}
+
+/**
+ * Rótulo CURTO de uma unidade de apuração, para onde a tela mostra a sigla
+ * (tabelas, cartões): a própria sigla para as 27 UFs e `"Exterior"` para `ZZ`.
+ */
+export function rotuloDaUnidade(sigla: string): string {
+  return sigla.toUpperCase() === "ZZ" ? NOME_EXTERIOR : sigla;
+}
+
+/**
  * As 27 UFs `{ sigla, nome }` ordenadas por NOME em pt-BR — a ordem do
  * seletor do protótipo. Determinístico (constituição § 6): mesma entrada,
  * mesma saída, sem depender do locale do runtime (o `"pt-BR"` é explícito).
