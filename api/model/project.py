@@ -8626,6 +8626,10 @@ def _do_project_proporcional(
         # `_entradas_por_zona` como uma "zona" do tamanho do estado —
         # multiplicando a bancada. Ver `particionar_por_nivel`.
         zonas_prop, agregados = particionar_por_nivel(snapshots)
+        # 🔴 04/10/2026 18h10 — % apurado EXIBIDO = `pst` oficial do agregado
+        # da UF (ordem do dono). Só o rótulo: travas e projeção seguem no
+        # número das zonas lidas, que anda junto com os votos.
+        pct_oficial_prop = _pct_apurado_oficial(agregados)
         snapshots = zonas_para_o_modelo(zonas_prop, agregados, cargo=req.cargo)
         try:
             eleitorado = eleitorado_do_cargo(
@@ -8945,7 +8949,7 @@ def _do_project_proporcional(
         ufs.append(
             UfProporcional(
                 uf=sigla,
-                pct_apurado=pct_apurado,
+                pct_apurado=pct_oficial_prop.get(str(sigla).upper(), pct_apurado),
                 entrada=entrada,
                 resultado=resultado,
                 cadeiras_ci95=intervalo.por_agremiacao if intervalo is not None else None,
