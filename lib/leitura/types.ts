@@ -49,9 +49,24 @@ export type TipoEventoBoletim =
   | "marco"
   | "lideranca_apurado"
   | "lideranca_projecao"
+  /**
+   * LEGADO (até 2026-10-04): "A projeção chama <UF> para …", disparado por
+   * `EdgeUfRow.chamada`. O cron não emite mais (decisão do dono — só se
+   * anuncia o que está matematicamente definido); o valor fica no enum para
+   * um histórico já gravado continuar válido no schema, e a tela/IA o filtram
+   * (`EVENTOS_LEGADOS_OCULTOS`).
+   */
   | "chamada_uf"
+  /** Brasil matematicamente definido (`EdgeUfRow.eleitos_definidos`). */
+  | "eleito_definido"
   | "segundo_turno"
   | "todas_ufs";
+
+/**
+ * Tipos que continuam válidos num histórico gravado mas NÃO vão para a tela
+ * nem para a IA. Filtro só de leitura: o Blob não é reescrito por isso.
+ */
+export const EVENTOS_LEGADOS_OCULTOS: ReadonlySet<TipoEventoBoletim> = new Set(["chamada_uf"]);
 
 /**
  * Uma linha do histórico do Boletim. Os quatro primeiros campos são os de
@@ -110,8 +125,18 @@ export interface EstadoResumo {
   lider_projecao_id: number | null;
   /** `national.p_segundo_turno_overall` (0–1) ou null. */
   p2t: number | null;
-  /** Siglas das UFs já chamadas. */
+  /**
+   * LEGADO — siglas das UFs com `EdgeUfRow.chamada` já vista. Continua gravado
+   * (mesma regra de antes) só para o estado manter o formato que uma versão
+   * anterior do cron sabe ler; **não gera evento nem texto** desde 2026-10-04.
+   */
   chamadas: string[];
+  /**
+   * Ids já anunciados como MATEMATICAMENTE eleitos no Brasil
+   * (`lib/utils/anuncios-definidos.ts` → `eleitosNacionais`). Cumulativo.
+   * Opcional: estado gravado antes de 2026-10-04 não tem o campo (⇒ `[]`).
+   */
+  definidos?: number[];
   /** Marcos de % apurado já anunciados (ex. [10, 25]). */
   marcos: number[];
 }
@@ -151,6 +176,7 @@ export const EventoBoletimSchema = z.object({
     "lideranca_apurado",
     "lideranca_projecao",
     "chamada_uf",
+    "eleito_definido",
     "segundo_turno",
     "todas_ufs",
   ]),
@@ -180,6 +206,7 @@ export const EstadoResumoSchema = z.object({
   lider_projecao_id: z.number().nullable(),
   p2t: z.number().nullable(),
   chamadas: z.array(z.string()),
+  definidos: z.array(z.number()).optional(),
   marcos: z.array(z.number()),
 });
 

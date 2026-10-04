@@ -144,6 +144,23 @@ describe("filtrarParaTela — caminho feliz e portas fechadas", () => {
   it("(f) historico vazio → null", () => {
     expect(filtrarParaTela(leitura({ historico: [] }), LIGADO, CTX).historico).toBeNull();
   });
+
+  it("🔴 (f2) linhas legadas `chamada_uf` gravadas no Blob não vão para a tela (filtro só de leitura)", () => {
+    const chamada = {
+      id: "chamada_uf-SP",
+      ts: iso(20 * MIN),
+      head: "Chamada",
+      text: "A projeção chama SP para X.",
+      tipo: "chamada_uf" as const,
+    };
+    const l = leitura();
+    const misto = leitura({ historico: [chamada, ...l.historico] });
+    expect(filtrarParaTela(misto, LIGADO, CTX).historico).toEqual(l.historico);
+    // O objeto lido não é alterado (nada é apagado do que está gravado).
+    expect(misto.historico).toHaveLength(2);
+    // Só legadas ⇒ como se não houvesse histórico.
+    expect(filtrarParaTela(leitura({ historico: [chamada] }), LIGADO, CTX).historico).toBeNull();
+  });
 });
 
 describe("filtrarParaTela — análise por IA", () => {

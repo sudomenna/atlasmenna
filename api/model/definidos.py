@@ -27,9 +27,15 @@ telas a usam); estes campos são uma segunda pergunta, com resposta mais estrita
   - **Senador (5, 2 vagas)** — o TSE **não publica `md` para o Senado**. A conta
     é nossa e conservadora:
 
-        R = aptos − comparecimento − abstenção     (e.te − e.c − e.a da UF)
+        R = aptos − comparecimento − abstenção + eleitorado de seções
+            instaladas NÃO apuradas              (e.te − e.c − e.a + e.esna)
 
-    é o teto de eleitores que ainda podem ter voto somado. Ordenadas as
+    é o teto de eleitores que ainda podem ter voto somado. O `+ esna` veio da
+    auditoria constitucional (04/10): `c`/`a` cobrem as seções INSTALADAS,
+    inclusive as não apuradas, cujo voto ainda não está nos `vap` (dicionário
+    EA20, `:461-463`, `esi = c + a = esa + esna`). Sem ele o teto ficava baixo
+    demais e a conta podia declarar definido quem não está. Regras de ausência
+    de `esna` em `project.py::_esna_para_restantes`. Ordenadas as
     candidaturas que competem pelos votos absolutos apurados, a k-ésima
     (k ≤ vagas) está definida se `votos_k − votos_(vagas+1) > R` — estrito;
     sem (vagas+1)-ésima, os votos dela são 0.
@@ -92,7 +98,7 @@ class LeituraAgregado(NamedTuple):
     tf: bool  # `tf == "s"`
     esae: bool  # `esae == "s"`
     candidaturas: list[CandidaturaContada]
-    #: `e.te − e.c − e.a` do MESMO arquivo; `None` quando não dá para saber.
+    #: `e.te − e.c − e.a + e.esna` do MESMO arquivo; `None` quando não dá para saber.
     restantes: int | None
 
 

@@ -12,10 +12,14 @@ import { describe, expect, it } from "vitest";
 
 import type { EdgeUfRow } from "@/lib/edge-config/types";
 import {
+  ATRIBUICAO_SENADO,
+  atribuicaoDaDefinicao,
+  comEscopo,
   definicaoDaUf,
   ROTULO_ELEITO,
   ROTULO_ELEITOS,
   ROTULO_SEGUNDO_TURNO,
+  rotuloComEscopo,
 } from "@/lib/utils/eleitos-definidos";
 
 type Linha = Pick<EdgeUfRow, "top_candidatos" | "eleitos_definidos" | "segundo_turno_definido">;
@@ -107,5 +111,58 @@ describe("definicaoDaUf", () => {
     const d = definicaoDaUf(linha({ eleitos_definidos: 13 as unknown as number[] }));
     expect(d.eleitos.size).toBe(0);
     expect(d.rotulo).toBeUndefined();
+  });
+});
+
+// 2026-10-04 (auditoria constitucional P1/P8) — escopo por superfície e
+// atribuição do Senado. As constantes acima não mudam.
+describe("rotuloComEscopo / comEscopo / atribuicaoDaDefinicao", () => {
+  const eleito = { rotulo: ROTULO_ELEITO };
+  const eleitos = { rotulo: ROTULO_ELEITOS };
+  const segundo = { rotulo: ROTULO_SEGUNDO_TURNO };
+
+  it("município de Governador/Senado ⇒ 'No estado: …'", () => {
+    for (const cargo of ["gov", "sen"] as const) {
+      const o = { cargo, superficie: "municipio" } as const;
+      expect(rotuloComEscopo(eleito, o)).toBe("No estado: matematicamente eleito");
+      expect(rotuloComEscopo(eleitos, o)).toBe("No estado: matematicamente eleitos");
+      expect(rotuloComEscopo(segundo, o)).toBe("No estado: 2º turno definido");
+    }
+  });
+
+  it("Presidente ⇒ 'No país: …' em QUALQUER superfície", () => {
+    for (const superficie of ["estado", "municipio"] as const) {
+      expect(rotuloComEscopo(eleito, { cargo: "pres", superficie })).toBe(
+        "No país: matematicamente eleito",
+      );
+    }
+  });
+
+  it("superfície de um estado (balão, gaveta, cartão) de Gov/Sen ⇒ texto intacto", () => {
+    expect(rotuloComEscopo(eleito, { cargo: "gov", superficie: "estado" })).toBe(ROTULO_ELEITO);
+    expect(rotuloComEscopo(eleitos, { cargo: "sen", superficie: "estado" })).toBe(ROTULO_ELEITOS);
+  });
+
+  it("sem definição ⇒ undefined, nunca texto vazio nem só o prefixo", () => {
+    expect(rotuloComEscopo({ rotulo: undefined }, { cargo: "pres", superficie: "municipio" })).toBe(
+      undefined,
+    );
+  });
+
+  it("comEscopo sobre o rótulo de linha", () => {
+    expect(comEscopo(ROTULO_ELEITO, { cargo: "sen", superficie: "estado" })).toBe(ROTULO_ELEITO);
+    expect(comEscopo(ROTULO_ELEITO, { cargo: "gov", superficie: "municipio" })).toBe(
+      "No estado: matematicamente eleito",
+    );
+  });
+
+  it("atribuição: SÓ Senado e SÓ com alguém eleito", () => {
+    const com = { eleitos: new Set([13]) };
+    const sem = { eleitos: new Set<number>() };
+    expect(ATRIBUICAO_SENADO).toBe("Cálculo do AtlasMenna sobre a contagem do TSE");
+    expect(atribuicaoDaDefinicao("sen", com)).toBe(ATRIBUICAO_SENADO);
+    expect(atribuicaoDaDefinicao("sen", sem)).toBeUndefined();
+    expect(atribuicaoDaDefinicao("gov", com)).toBeUndefined();
+    expect(atribuicaoDaDefinicao("pres", com)).toBeUndefined();
   });
 });

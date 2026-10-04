@@ -62,7 +62,7 @@ export interface GovernadoresPlacarTurnoProps {
 /** Rótulos por base. A contagem fala no condicional — nunca "eleito". */
 const ROTULOS: Record<BaseDesfecho, Record<DesfechoGovernador, [string, string]>> = {
   projecao: {
-    eleito_1t: ["eleito no 1º turno", "eleitos no 1º turno"],
+    eleito_1t: ["vence no 1º turno", "vencem no 1º turno"],
     segundo_turno: ["vai ao 2º turno", "vão ao 2º turno"],
     em_aberto: ["em aberto", "em aberto"],
     aguardando: ["aguardando apuração", "aguardando apuração"],

@@ -242,7 +242,13 @@ import {
   notaAnuladas,
   votosDaAnulada,
 } from "@/lib/utils/destino-voto";
-import { definicaoDaUf } from "@/lib/utils/eleitos-definidos";
+import {
+  atribuicaoDaDefinicao,
+  comEscopo,
+  definicaoDaUf,
+  ROTULO_ELEITO,
+  rotuloComEscopo,
+} from "@/lib/utils/eleitos-definidos";
 import { formatPercent, formatPp } from "@/lib/utils/format";
 import { liderIdPorBase, ordenarTopCandidatosPorBase } from "@/lib/utils/lider-por-base";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -529,6 +535,15 @@ export function StateResultSheet({
   // ("Matematicamente eleito(s)" / "2º turno definido"). Nada aqui lê
   // `chamada`, margem ou posição: projeção não elege ninguém (constituição § 1).
   const definicao = row ? definicaoDaUf(row) : undefined;
+  // 2026-10-04 (auditoria P1/P8) — o texto com o escopo da superfície
+  // (Presidente: "No país: …", quem decide é o Brasil) e, no Senado, de quem é
+  // a conta (o TSE não publica a marca de eleito do Senado na apuração).
+  const rotuloStatus = definicao
+    ? rotuloComEscopo(definicao, { cargo, superficie: "estado" })
+    : undefined;
+  const atribuicao = definicao ? atribuicaoDaDefinicao(cargo, definicao) : undefined;
+  /** O que o leitor de tela ouve depois do nome eleito, com o mesmo escopo. */
+  const srEleito = `, ${comEscopo(ROTULO_ELEITO, { cargo, superficie: "estado" }).toLocaleLowerCase("pt-BR")}`;
 
   return (
     <Sheet
@@ -543,19 +558,34 @@ export function StateResultSheet({
           {/* 2026-10-04 — status da definição, no topo e visível: o mesmo texto
               do cabeçalho do balão do desktop. Só existe quando o produtor
               emitiu o campo; sem ele, nada (nunca "Chamada"). */}
-          {definicao?.rotulo ? (
-            <p
-              data-testid="state-sheet-status"
-              style={{
-                margin: "0 0 var(--space-3)",
-                font: "var(--type-kicker)",
-                letterSpacing: "var(--tracking-caps)",
-                textTransform: "uppercase",
-                color: "var(--text-secondary)",
-              }}
-            >
-              {definicao.rotulo}
-            </p>
+          {rotuloStatus ? (
+            <div style={{ margin: "0 0 var(--space-3)" }}>
+              <p
+                data-testid="state-sheet-status"
+                style={{
+                  margin: 0,
+                  font: "var(--type-kicker)",
+                  letterSpacing: "var(--tracking-caps)",
+                  textTransform: "uppercase",
+                  color: "var(--text-secondary)",
+                }}
+              >
+                {rotuloStatus}
+              </p>
+              {atribuicao ? (
+                <p
+                  data-testid="state-sheet-atribuicao"
+                  style={{
+                    margin: "var(--space-1) 0 0",
+                    font: "var(--type-body-sm)",
+                    fontSize: "var(--text-xs)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {atribuicao}
+                </p>
+              ) : null}
+            </div>
           ) : null}
           {/* RF-106 — "2 vagas por estado" precisa estar em TODA tela de
               Senador, sem exceção de fase (spec 016:149-152). A ficha cobre o
@@ -829,9 +859,9 @@ export function StateResultSheet({
                       }}
                     >
                       {nome}
-                      {eleito ? <span className="sr-only">, matematicamente eleito</span> : null}
+                      {eleito ? <span className="sr-only">{srEleito}</span> : null}
                     </span>
-                    <DestinoEtiqueta destino={tc.destino} />
+                    <DestinoEtiqueta destino={tc.destino} sobreFaixa={eleito} />
                     {partido ? (
                       <span
                         className="flex-none"

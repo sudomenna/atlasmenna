@@ -105,36 +105,41 @@ function pctsExibidos(doc: Document): string[] {
 }
 
 describe("<GovernorCard />", () => {
-  it("(a) bucket=chamada → chip ● ELEITO no líder", () => {
+  // 🔴 2026-10-04 (dono, auditoria P1) — a projeção não elege: "● ELEITO"
+  // virou o selo da BASE ("Vence no 1º turno · projeção"), e "eleito" só sai
+  // de `eleitos_definidos` (ver `GovernorCard.eleitosDefinidos.test.tsx`).
+  it("(a) bucket=chamada → 'Vence no 1º turno · projeção' no líder, nunca 'eleito'", () => {
     const uf = mkUf({ sigla: "SP", bucket: "chamada" });
     const doc = parse(<GovernorCard uf={uf} candidatos={candidatos} />);
-    expect(doc.body.textContent ?? "").toContain("● ELEITO");
+    const text = doc.body.textContent ?? "";
+    expect(text).toContain("Vence no 1º turno · projeção");
+    expect(text).not.toMatch(/eleito/i);
   });
 
-  it("(b) bucket=decidido_1t → ● ELEITO", () => {
+  it("(b) bucket=decidido_1t → 'Vence no 1º turno · projeção'", () => {
     const uf = mkUf({ sigla: "SP", bucket: "decidido_1t" });
     const doc = parse(<GovernorCard uf={uf} candidatos={candidatos} />);
-    expect(doc.body.textContent ?? "").toContain("● ELEITO");
+    expect(doc.body.textContent ?? "").toContain("Vence no 1º turno · projeção");
   });
 
-  it("(c) bucket=vai_2t → VAI A 2T", () => {
+  it("(c) bucket=vai_2t → '2º turno · projeção' nos DOIS primeiros", () => {
     const uf = mkUf({ sigla: "RJ", bucket: "vai_2t" });
     const doc = parse(<GovernorCard uf={uf} candidatos={candidatos} />);
     const text = doc.body.textContent ?? "";
-    expect(text).toContain("VAI A 2T");
-    expect(text).not.toContain("ELEITO");
+    expect(text.match(/2º turno · projeção/g)).toHaveLength(2);
+    expect(text).not.toMatch(/eleito/i);
   });
 
-  it("🔴 (c2) bucket=chamada com vai_a_2t=true → VAI A 2T, nunca ELEITO (RF-006.8)", () => {
+  it("🔴 (c2) bucket=chamada com vai_a_2t=true → 2º turno, nunca eleito (RF-006.8)", () => {
     // Margem grande não é eleição: líder com 38,5% e 13pp de folga vai ao 2º
     // turno. Até 2026-09-27 este card dizia "● ELEITO" (ES, GO, MG no simulado).
     const uf = mkUf({ sigla: "ES", bucket: "chamada", vai_a_2t: true });
     const doc = parse(<GovernorCard uf={uf} candidatos={candidatos} />);
     const text = doc.body.textContent ?? "";
-    expect(text).toContain("VAI A 2T");
-    expect(text).not.toContain("ELEITO");
+    expect(text).toContain("2º turno · projeção");
+    expect(text).not.toMatch(/eleito|Vence/i);
     expect(doc.querySelector("article")?.getAttribute("aria-label")).toContain(
-      "vai ao segundo turno",
+      "2º turno pela projeção",
     );
   });
 
@@ -181,14 +186,14 @@ describe("<GovernorCard />", () => {
     expect(doc.body.textContent ?? "").not.toContain("Outros");
   });
 
-  it("(g) aria-label descreve UF + status + líder", () => {
+  it("(g) aria-label descreve UF + status (com a base) + líder", () => {
     const uf = mkUf({ sigla: "SP", bucket: "chamada" });
     const doc = parse(<GovernorCard uf={uf} candidatos={candidatos} />);
     const article = doc.querySelector("article");
     const label = article?.getAttribute("aria-label") ?? "";
     expect(label).toContain("São Paulo");
-    expect(label).toContain("Tarcísio");
-    expect(label).toContain("eleito");
+    expect(label).toContain("vence no 1º turno pela projeção: Tarcísio");
+    expect(label).not.toMatch(/eleito/i);
   });
 
   it("🔴 (h) o cartão completo vale em TODA largura — sem a linha única do celular (dono, 2026-09-28)", () => {

@@ -35,9 +35,10 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 
 import type { EdgeCandidate, EdgePayload } from "@/lib/edge-config/types";
+import { eleitosNacionais } from "@/lib/utils/anuncios-definidos";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 
-import type { AnaliseIA, EventoBoletim } from "./types";
+import { type AnaliseIA, EVENTOS_LEGADOS_OCULTOS, type EventoBoletim } from "./types";
 
 /** Slug do AI Gateway usado quando o interruptor não traz `modelo`. */
 export const MODELO_PADRAO = "anthropic/claude-sonnet-5.5";
@@ -78,12 +79,12 @@ export const INSTRUCAO_SISTEMA = [
   "1. De 2 a 4 frases curtas, em português do Brasil, em tom sóbrio e informativo.",
   "2. Use SOMENTE números que estão no JSON. Não calcule, não estime, não arredonde de outro jeito e não traga nenhum dado de fora.",
   '3. Separe sempre o "apurado" (a contagem oficial do TSE, campos apurado_*) da "projeção não oficial do AtlasMenna" (campos projecao_* e prob_*). Ao citar um número da projeção, diga que é projeção do AtlasMenna.',
-  "4. Nunca declare ninguém eleito e nunca diga que alguém venceu ou ganhou a eleição. Probabilidade não é resultado.",
+  "4. Nunca declare ninguém eleito e nunca diga que alguém venceu ou ganhou a eleição. Probabilidade não é resultado. Única exceção: a regra 9.",
   '5. Números em formato brasileiro: vírgula decimal (36,8%), e "pp" para pontos percentuais (3,2 pp).',
   "6. Não repita o texto das frases_anteriores. Traga o que mudou desde então; se pouco mudou, diga o essencial com outras palavras.",
   "7. Sem adjetivos de mérito sobre candidatos: não qualifique pessoas, campanhas ou partidos (nada de 'forte', 'fraco', 'brilhante', 'desastroso', 'surpreendente'). Descreva números e fatos.",
   "8. Texto corrido em cada frase: sem markdown, sem listas, sem títulos, sem emojis.",
-  "9. Nas ufs, chamada=true quer dizer que a projeção do AtlasMenna aponta o líder daquela UF com folga — é projeção, não resultado oficial. ufs_com_apuracao_iniciada conta UFs com alguma urna apurada, não UFs com apuração concluída.",
+  "9. nacional.eleitos_matematicamente, quando existe, lista quem a contagem oficial do TSE já garante matematicamente como eleito. Só esse nome pode ser dito matematicamente eleito, sempre atribuindo à contagem oficial do TSE. Sem esse campo, ninguém está eleito. ufs_com_apuracao_iniciada conta UFs com alguma urna apurada, não UFs com apuração concluída.",
   "A hora no JSON é a de Brasília.",
 ].join("\n");
 
@@ -144,13 +145,7 @@ function candidatoParaIA(c: EdgeCandidate): Record<string, unknown> {
 }
 
 /** Colunas de cada linha de `ufs` na entrada. */
-export const UFS_COLUNAS = [
-  "uf",
-  "apurado_pct",
-  "lider_projecao",
-  "margem_projecao_pp",
-  "chamada",
-] as const;
+export const UFS_COLUNAS = ["uf", "apurado_pct", "lider_projecao", "margem_projecao_pp"] as const;
 
 interface OpcoesEnxugar {
   eventoTextoMax: number;
@@ -205,6 +200,20 @@ export function montarEntradaIA(
       prob_pct: probPct(c.prob),
     }));
   if (cenarios.length > 0) nacional.cenarios_2t_projetados = cenarios;
+  // 🔴 2026-10-04 (dono) — a coluna `chamada` das UFs (leitura da PROJEÇÃO)
+  // saiu: a IA não deve dizer "chamada". O que vai é o FATO da contagem — quem
+  // está matematicamente eleito no Brasil (`eleitos_definidos`), só quando há.
+  const eleitosIds = eleitosNacionais(payload.por_uf);
+  if (eleitosIds.length > 0) {
+    nacional.eleitos_matematicamente = eleitosIds.map((id) => {
+      const nome = nomePorId.get(id);
+      if (nome) return nome;
+      const t = (payload.por_uf ?? [])
+        .flatMap((u) => u.top_candidatos ?? [])
+        .find((c) => c.id === id);
+      return t?.nome ? nomeDe({ nome: t.nome, sqcand: t.sqcand ?? null }) : `candidato ${id}`;
+    });
+  }
 
   // Em tabela (colunas + linhas): 27 objetos com as chaves repetidas custavam
   // ~2,7 KB; em linhas, ~1 KB.
@@ -222,7 +231,6 @@ export function montarEntradaIA(
       finito(u.pct_apurado) ? r2(u.pct_apurado) : null,
       lider,
       finito(u.margem_projetada) ? r2(u.margem_projetada) : null,
-      u.chamada === true,
     ];
   });
 
@@ -235,7 +243,8 @@ export function montarEntradaIA(
   const horaDado = horaBrasiliaIso(payload.dado_ts);
   if (horaDado) geral.hora_do_dado_tse = horaDado;
 
-  const recentes = [...historico]
+  const recentes = historico
+    .filter((e) => !EVENTOS_LEGADOS_OCULTOS.has(e.tipo))
     .sort((a, b) => (a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0))
     .slice(0, EVENTOS_MAX);
 

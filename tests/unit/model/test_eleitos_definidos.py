@@ -73,6 +73,7 @@ def _ea20(
     te: int = 1_000,
     c: int = 500,
     a: int = 100,
+    esna: int | str | None = 0,
     md: str | None = None,
     tf: str | None = None,
     esae: str | None = None,
@@ -109,6 +110,8 @@ def _ea20(
         "e": {"te": str(te), "c": str(c), "a": str(a)},
         "v": {},
     }
+    if esna is not None:
+        root["e"]["esna"] = str(esna)
     for chave, valor in (("md", md), ("tf", tf), ("esae", esae)):
         if valor is not None:
             root[chave] = valor
@@ -303,6 +306,47 @@ def test_ler_agregado_restantes_e_campos() -> None:
     por_id = {c["id"]: c for c in leitura.candidaturas}
     assert por_id[1] == {"id": 1, "votos": 300, "destino": "valido", "e": "s", "st": "Eleito"}
     assert por_id[2]["destino"] == "anulado"
+
+
+def test_restantes_soma_esna() -> None:
+    """Mata "tira o esna": 1000 − 500 − 100 + 50 = 450."""
+    payload = _ea20([(1, 300, "valido")], cargo=5, te=1_000, c=500, a=100, esna=50)
+    leitura = ler_definicao_agregado(payload, 5)
+    assert leitura is not None and leitura.restantes == 450
+
+
+def test_senado_esna_no_limiar_desfaz_a_definicao() -> None:
+    """Sem a soma do esna, R = 50 e a 2ª (folga 60 sobre a 3ª) estaria
+    definida; com esna = 10, R = 60 == folga ⇒ NÃO definida (limiar exato).
+    Com esna = 9, R = 59 < 60 ⇒ definida."""
+    cands = [(1, 900, "valido"), (2, 540, "valido"), (3, 480, "valido")]
+    no_limiar = _ea20(cands, cargo=5, te=10_000, c=9_000, a=950, esna=10)
+    defin = montar_definidos([_snap("SP", "uf", no_limiar)], 5, 1, 2)
+    assert defin is not None and defin.por_uf["SP"] == Definicao(eleitos=(1,))
+    abaixo = _ea20(cands, cargo=5, te=10_000, c=9_000, a=950, esna=9)
+    defin = montar_definidos([_snap("SP", "uf", abaixo)], 5, 1, 2)
+    assert defin is not None and defin.por_uf["SP"] == Definicao(eleitos=(1, 2))
+
+
+def test_esna_ilegivel_ou_negativo_e_nao_sabemos() -> None:
+    for valor in ("xx", "-5"):
+        payload = _ea20([(1, 300, "valido")], cargo=5, esna=valor)
+        leitura = ler_definicao_agregado(payload, 5)
+        assert leitura is not None and leitura.restantes is None, valor
+
+
+def test_esna_ausente() -> None:
+    """Ausente: deriva de esi − esa; sem eles e com seção totalizada ⇒ None;
+    nada totalizado (sem c/a) ⇒ R = te, o teto absoluto."""
+    p = _ea20([(1, 300, "valido")], cargo=5, te=1_000, c=500, a=100, esna=None)
+    assert ler_definicao_agregado(p, 5).restantes is None  # type: ignore[union-attr]
+    p["e"].update({"esi": "600", "esa": "570"})
+    assert ler_definicao_agregado(p, 5).restantes == 430  # type: ignore[union-attr]
+    p["e"]["esa"] = "700"  # esa > esi: incoerente
+    assert ler_definicao_agregado(p, 5).restantes is None  # type: ignore[union-attr]
+    vazio = _ea20([(1, 0, "valido")], cargo=5, te=1_000, c=0, a=0, esna=None)
+    del vazio["e"]["c"], vazio["e"]["a"]
+    assert ler_definicao_agregado(vazio, 5).restantes == 1_000  # type: ignore[union-attr]
 
 
 def test_ler_agregado_candidatura_ilegivel_derruba_restantes() -> None:

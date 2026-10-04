@@ -143,7 +143,7 @@ describe("buildBulletin()", () => {
     expect(items.find((i) => i.id === "segundo-turno")).toBeUndefined();
   });
 
-  it("(f) chamadas do orchestrator entram literalmente, do mais antigo ao mais novo", () => {
+  it("🔴 (f) 2026-10-04 — `national.chamadas_recentes` NÃO é mais repassado (texto saía da `chamada`)", () => {
     const items = buildBulletin({
       ...base,
       national: makeNational({
@@ -153,11 +153,8 @@ describe("buildBulletin()", () => {
         ],
       }),
     });
-    const chamadas = items.filter((i) => i.id.startsWith("chamada-"));
-    expect(chamadas.map((c) => c.text)).toEqual([
-      "BA chamada para Candidato PT.",
-      "RS chamada para Candidato PL.",
-    ]);
+    expect(items.some((i) => i.id.startsWith("chamada"))).toBe(false);
+    expect(items.map((i) => i.text).join(" ")).not.toMatch(/chamad/i);
   });
 
   it("(g) determinístico — mesma entrada, mesma saída (constituição § 6)", () => {
@@ -185,13 +182,38 @@ describe("buildBulletin()", () => {
     }
   });
 
-  it("(i) zero UFs chamadas → frase no singular correto, não '0 unidades'", () => {
-    const nenhuma = buildBulletin({ ...base, rows: [makeRow({ chamada: false })] });
-    expect(nenhuma.find((i) => i.id === "chamadas")?.text).toContain("Nenhuma unidade federativa");
+  it("🔴 (i) 2026-10-04 — `chamada` (projeção) sem eleito definido: nenhum eleito anunciado", () => {
+    // Com nome nas linhas: uma leitura de `chamada`/`lider` acharia quem nomear.
+    const top = [{ id: 1, pct: 60, nome: "Candidato X", partido: "PX" }];
+    const items = buildBulletin({
+      ...base,
+      rows: [
+        makeRow({ sigla: "SP", chamada: true, lider: 1, top_candidatos: top }),
+        makeRow({ sigla: "MG", chamada: true, lider: 1, top_candidatos: top }),
+      ],
+    });
+    expect(items.find((i) => i.id === "definicao")).toMatchObject({
+      head: "Definição",
+      text: "Nenhuma candidatura está matematicamente eleita até agora.",
+    });
+    expect(items.map((i) => `${i.head} ${i.text}`).join(" ")).not.toMatch(/chamad/i);
+  });
 
-    const uma = buildBulletin({ ...base, rows: [makeRow({ chamada: true })] });
-    expect(uma.find((i) => i.id === "chamadas")?.text).toBe(
-      "1 unidade federativa já foi chamada para o líder local.",
+  it("(i2) Brasil definido: UMA frase com o nome pelo id de `eleitos_definidos` (não o líder)", () => {
+    const top = [
+      { id: 13, pct: 43, nome: "Candidato PT", partido: "PT" },
+      { id: 22, pct: 38, nome: "Candidato PL", partido: "PL" },
+    ];
+    const items = buildBulletin({
+      ...base,
+      rows: ["SP", "MG", "RJ"].map((sigla) =>
+        makeRow({ sigla, lider: 13, chamada: true, top_candidatos: top, eleitos_definidos: [22] }),
+      ),
+    });
+    const def = items.filter((i) => i.id === "definicao");
+    expect(def).toHaveLength(1);
+    expect(def[0]?.text).toBe(
+      "Candidato PL (PL) matematicamente eleito pela contagem oficial do TSE.",
     );
   });
 });

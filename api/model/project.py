@@ -6459,10 +6459,49 @@ def build_uf_payloads(
     return out
 
 
+def _esna_para_restantes(e: Any) -> int | None:
+    """A parcela `e.esna` de `restantes` (Senado), ou `None` = "não sabemos".
+
+    Por que somar (auditoria constitucional, 04/10): pelo dicionário do EA20
+    (`tse_docs/txt/tse-ea20-arquivo-de-resultado-unificado.txt:461-463`),
+    `esi = c + a` e `esi = esa + esna`. `c`/`a` cobrem o eleitorado das seções
+    INSTALADAS, inclusive as marcadas como não apuradas (`esna`, `:1174-1176`)
+    — e o voto dessas seções ainda não está nos `vap`. `te − c − a` sozinho
+    deixaria esses eleitores de fora do teto e poderia declarar definido quem
+    não está. Com a soma, `restantes = te − c − a + esna` (= `te − esa` sob as
+    identidades), e nunca fica abaixo da fórmula anterior (`esna ≥ 0`).
+
+    Ausência: o dicionário NÃO diz que `esna` ausente significa zero (diz só
+    que a informação "só é obtida após a totalização da seção eleitoral").
+    Nos arquivos reais do simulado de 2026 (`tests/fixtures/tse/2026-sim/`) o
+    TSE emite `"esna": "0"` explicitamente, inclusive com 0% apurado. Por isso:
+      - presente e legível (≥ 0) ⇒ ele;
+      - presente e ilegível ou negativo ⇒ `None`;
+      - ausente ⇒ `esi − esa`, quando os dois existem e são legíveis (a mesma
+        identidade);
+      - ausente e sem `esi`/`esa`, com `c` e `a` também ausentes ou zero
+        (nenhuma seção totalizada) ⇒ `0`: aí `restantes = te`, que já é o teto
+        absoluto — ninguém além do eleitorado pode votar;
+      - qualquer outro caso ⇒ `None`.
+    """
+    if not isinstance(e, dict):
+        return None
+    if "esna" in e:
+        v = _parse_br_number(e.get("esna"))
+        return int(round(v)) if v is not None and v >= 0 else None
+    esi = _parse_br_number(e.get("esi"))
+    esa = _parse_br_number(e.get("esa"))
+    if esi is not None and esa is not None:
+        return int(round(esi - esa)) if esi >= esa else None
+    c = _parse_br_number(e.get("c")) or 0.0
+    a = _parse_br_number(e.get("a")) or 0.0
+    return 0 if c == 0 and a == 0 else None
+
+
 def ler_definicao_agregado(payload: Any, cargo: int) -> LeituraAgregado | None:
     """Lê de UM EA20 agregado (`uf`/`br`) o que `api/model/definidos.py`
     precisa: `md`, `tf`, `esae`, as candidaturas (id, votos, destino, `e`,
-    `st`) e `restantes = e.te − e.c − e.a`.
+    `st`) e `restantes = e.te − e.c − e.a + e.esna` (ver `_esna_para_restantes`).
 
     Os campos chegam crus até aqui: a ingestão grava o EA20 inteiro em
     `snapshots.payload` (`lib/tse/ingest-handler.ts` → `insertSnapshot`), e o
@@ -6508,11 +6547,13 @@ def ler_definicao_agregado(payload: Any, cargo: int) -> LeituraAgregado | None:
 
     restantes: int | None = None
     bruto = _extract_zone_participacao(payload)
-    if bruto is not None and not ilegivel:
+    esna = _esna_para_restantes(root.get("e"))
+    if bruto is not None and not ilegivel and esna is not None:
         restantes = (
             int(bruto["eleitores_aptos"])
             - int(bruto["comparecimento"])
             - int(bruto["abstencao"])
+            + esna
         )
 
     md_raw = root.get("md")

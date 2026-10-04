@@ -132,7 +132,11 @@ import { cargoFromToken, vagasDaCorrida } from "@/lib/config/cargos";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { useHoverStore } from "@/lib/state/hover-store";
 import type { ViewMode } from "@/lib/state/view-mode";
-import { definicaoDaUf } from "@/lib/utils/eleitos-definidos";
+import {
+  atribuicaoDaDefinicao,
+  definicaoDaUf,
+  rotuloComEscopo,
+} from "@/lib/utils/eleitos-definidos";
 // (Nada de `@/lib/utils/cand-color` aqui desde 2026-09-20: nenhuma cor deste
 // mapa deriva mais da COLOCAÇÃO do líder — ver `resolveColor` e
 // `buildHoverRows` abaixo, e o topo de `components/blocks/_candidateColor.ts`.)
@@ -1726,8 +1730,16 @@ export function NationalChoroplethMapImpl({
             title={ufTitleFor(tooltip.sigla)}
             // 🔴 2026-10-04 — "Chamada" saiu: o cabeçalho só afirma o que a
             // apuração já decidiu ("Matematicamente eleito(s)" / "2º turno
-            // definido"), pelo mesmo ponto único que marca as linhas.
-            kicker={definicaoDaUf(tooltip.row).rotulo}
+            // definido"), pelo mesmo ponto único que marca as linhas. Em
+            // Presidente, com o escopo: "No país: matematicamente eleito" —
+            // quem decide é o Brasil, não o estado sob o cursor.
+            kicker={rotuloComEscopo(definicaoDaUf(tooltip.row), {
+              cargo,
+              superficie: "estado",
+            })}
+            // Senado: a marca é conta do AtlasMenna (o TSE não publica `md`
+            // para o Senado) — a atribuição vai no rodapé do balão.
+            nota={atribuicaoDaDefinicao(cargo, definicaoDaUf(tooltip.row))}
             apurado={tooltip.row.pct_apurado}
             rows={buildHoverRows(
               tooltip.row,

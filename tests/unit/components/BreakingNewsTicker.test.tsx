@@ -19,10 +19,11 @@ function parse(node: React.ReactElement): Document {
   return new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
 }
 
+// Formato de `itensFaixaAgora` (lib/utils/anuncios-definidos.ts) desde 04/10.
 const SAMPLE = [
-  { ts: "2026-10-04T22:15:00-03:00", texto: "SP chamada para Tarcísio (REP)" },
-  { ts: "2026-10-04T22:10:00-03:00", texto: "RJ vai para o 2º turno" },
-  { ts: "2026-10-04T22:05:00-03:00", texto: "Lula passa de 50%+1 no agregado nacional" },
+  { ts: "2026-10-04T22:15:00-03:00", texto: "SP: TARCÍSIO (REPUBLICANOS) matematicamente eleito" },
+  { ts: "2026-10-04T22:15:00-03:00", texto: "RJ: 2º turno definido" },
+  { ts: "2026-10-04T22:15:00-03:00", texto: "MT: A (X) e B (Y) matematicamente eleitos" },
 ];
 
 describe("<BreakingNewsTicker />", () => {
@@ -43,7 +44,7 @@ describe("<BreakingNewsTicker />", () => {
   it("(c) modo rotativo: exibe a primeira chamada inicialmente", () => {
     const doc = parse(<BreakingNewsTicker chamadas={SAMPLE} reducedMotion={false} />);
     const current = doc.querySelector('[data-testid="ticker-current-text"]');
-    expect(current?.textContent ?? "").toContain("Tarcísio");
+    expect(current?.textContent ?? "").toContain("TARCÍSIO");
   });
 
   it("(d) reduced mode: lista TODAS as chamadas empilhadas, sem rotação", () => {
@@ -51,11 +52,22 @@ describe("<BreakingNewsTicker />", () => {
     const section = doc.querySelector('[data-testid="breaking-news-ticker"]');
     expect(section?.getAttribute("data-mode")).toBe("reduced");
     const text = doc.body.textContent ?? "";
-    expect(text).toContain("Tarcísio");
+    expect(text).toContain("TARCÍSIO");
     expect(text).toContain("2º turno");
-    expect(text).toContain("50%");
+    expect(text).toContain("eleitos");
     const items = doc.querySelectorAll("li");
     expect(items.length).toBe(3);
+  });
+
+  it('🔴 2026-10-04 — cabeçalho e rótulo acessível não dizem "chamada" (nos dois modos)', () => {
+    for (const reducedMotion of [true, false]) {
+      const doc = parse(<BreakingNewsTicker chamadas={SAMPLE} reducedMotion={reducedMotion} />);
+      const section = doc.querySelector('[data-testid="breaking-news-ticker"]');
+      expect(section?.getAttribute("aria-label")).toBe("Resultados definidos");
+      expect(doc.body.textContent ?? "").not.toMatch(/chamad/i);
+    }
+    const reduzido = parse(<BreakingNewsTicker chamadas={SAMPLE} reducedMotion={true} />);
+    expect(reduzido.body.textContent).toContain("RESULTADOS DEFINIDOS");
   });
 
   it("(e) reduced mode: sem aria-live (lista estática)", () => {

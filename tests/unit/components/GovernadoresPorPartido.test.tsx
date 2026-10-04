@@ -58,9 +58,9 @@ describe("<GovernadoresPorPartido />", () => {
     const doc = parse(<GovernadoresPorPartido porUf={SIM.por_uf} base="projecao" />);
     const ls = linhas(doc);
     expect(ls[0]?.getAttribute("data-partido")).toBe("PT");
-    expect(ls[0]?.textContent).toContain("11 · 2 eleitos + 9 no 2º turno");
+    expect(ls[0]?.textContent).toContain("11 · 2 vencem no 1º turno + 9 no 2º turno");
     expect(ls[1]?.getAttribute("data-partido")).toBe("PL");
-    expect(ls[1]?.textContent).toContain("10 · 2 eleitos + 8 no 2º turno");
+    expect(ls[1]?.textContent).toContain("10 · 2 vencem no 1º turno + 8 no 2º turno");
   });
 
   it("(b) soma das linhas = eleitos + 2 × estados em 2º turno (9 + 2 × 17 = 43)", () => {

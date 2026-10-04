@@ -22,7 +22,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   EdgeCandidate,
   EdgeDestinoVoto,
-  EdgeNational,
   EdgePayload,
   EdgeUfCandidate,
   EdgeUfMunicipio,
@@ -467,26 +466,25 @@ describe("cartão de governador", () => {
 });
 
 describe("banner de eleito", () => {
-  it("🔴 nunca diz 'Presidente eleito: <anulada>' quando ela tem `rank` 1 [mutação: `rank === 1` sem `compete`]", () => {
-    const anula = nacional(10, "ANULA", "NOVO", 55, { rank: 1, destino: "anulado" });
-    const valida = nacional(11, "VALIDA", "PT", 35, { rank: 2, p_vitoria: 0.2 });
-    const national: EdgeNational = {
-      candidatos: [anula, valida],
-      needle_position: 1,
-      needle_band: "very_likely_a",
-      candidato_a_id: 11,
-      candidato_b_id: null,
-      p_segundo_turno_overall: 0,
-      cenarios_2t: [],
-    };
-    const doc = parse(
-      <NationalWinnerBanner
-        national={national}
-        candidatos={[anula, valida]}
-        pctApuradoTotal={99.5}
-        turno={2}
-      />,
-    );
+  // 🔴 2026-10-04 (ADR-0075) — a faixa só anuncia `eleitos_definidos`. A
+  // anulada nunca é anunciada, mesmo que um id dela venha no campo (o produtor
+  // não a emite; isto é a defesa da tela).
+  const anula = nacional(10, "ANULA", "NOVO", 55, { rank: 1, destino: "anulado" });
+  const valida = nacional(11, "VALIDA", "PT", 35, { rank: 2, p_vitoria: 0.2 });
+
+  it("🔴 nunca anuncia a anulada, nem com o id dela em `eleitos_definidos` [mutação: sem `compete` na lista nacional]", () => {
+    // `top_candidatos` SEM `destino` — o único que sabe que ela é anulada é a
+    // lista nacional. Sem o filtro do banner, ela seria "matematicamente eleita".
+    const uf = row([tc(10, "ANULA", "NOVO", 60, 61), tc(11, "VALIDA", "PT", 40, 39)], {
+      eleitos_definidos: [10],
+    });
+    const doc = parse(<NationalWinnerBanner candidatos={[anula, valida]} porUf={[uf]} turno={2} />);
+    expect(doc.body.textContent?.trim()).toBe("");
+  });
+
+  it("com a válida definida, anuncia a válida — nunca a anulada de `rank` 1", () => {
+    const uf = row(CURTA, { eleitos_definidos: [11] });
+    const doc = parse(<NationalWinnerBanner candidatos={[anula, valida]} porUf={[uf]} turno={2} />);
     const texto = doc.body.textContent ?? "";
     expect(texto).toContain("VALIDA");
     expect(texto).not.toContain("ANULA");

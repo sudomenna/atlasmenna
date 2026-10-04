@@ -192,59 +192,66 @@ function parse(node: React.ReactElement): Document {
 // A. Cartões da capa `/senador`
 // ===========================================================================
 
-describe("A. <GovernorCard cargo='sen'> — '● ELEITO' nos dois ocupantes de vaga", () => {
-  /** Nome de cada linha que leva o selo de eleito (`b[data-s="e"]`). */
-  function eleitosNoCartao(doc: Document): string[] {
+// 🔴 2026-10-04 (dono, auditoria P1) — o cartão NÃO diz mais "● ELEITO" pela
+// projeção: os ocupantes de vaga levam "Vaga projetada" (selo neutro, a base
+// dita). "Matematicamente eleito" só por `eleitos_definidos` — casos em
+// `GovernorCard.eleitosDefinidos.test.tsx`. A regra de QUEM ocupa as vagas
+// (os dois que disputam, anulada fora) é a mesma de sempre.
+describe("A. <GovernorCard cargo='sen'> — 'Vaga projetada' nos dois ocupantes de vaga", () => {
+  /** Nome de cada linha que leva o selo de vaga da projeção. */
+  function vagasNoCartao(doc: Document): string[] {
     return [...doc.querySelectorAll("li")]
-      .filter((li) => li.querySelector("b[data-s='e']") != null)
+      .filter((li) => li.querySelector("b")?.textContent === "Vaga projetada")
       .map((li) => li.textContent ?? "");
   }
 
   it("marca os DOIS primeiros da projeção, nunca o 3º (mata 'só o rank 1' e 'vagas=1')", () => {
     const doc = parse(<GovernorCard uf={row(TOP_SEN)} candidatos={[]} cargo="sen" />);
-    const eleitos = eleitosNoCartao(doc);
-    expect(eleitos).toHaveLength(VAGAS_SENADO);
-    expect(eleitos[0]).toContain("ANA LIMA");
-    expect(eleitos[1]).toContain("BRUNO REIS");
-    expect(doc.body.textContent).not.toMatch(/VAI A 2T|EM APURAÇÃO/);
+    const vagas = vagasNoCartao(doc);
+    expect(vagas).toHaveLength(VAGAS_SENADO);
+    expect(vagas[0]).toContain("ANA LIMA");
+    expect(vagas[1]).toContain("BRUNO REIS");
+    expect(doc.body.textContent).not.toMatch(/VAI A 2T|EM APURAÇÃO|eleito/i);
+    expect(doc.querySelectorAll("b[data-s='e']")).toHaveLength(0);
     const aria = doc.querySelector("article")?.getAttribute("aria-label") ?? "";
-    expect(aria).toMatch(/eleitos: ANA LIMA .* e BRUNO REIS /);
+    expect(aria).toMatch(/vaga projetada: ANA LIMA .* e BRUNO REIS /);
+    expect(aria).not.toMatch(/eleito/i);
   });
 
   it("anulada não ocupa vaga — o 3º que disputa sobe (mata 'anulada contada')", () => {
     const doc = parse(<GovernorCard uf={row(TOP_SEN_ANULADA)} candidatos={[]} cargo="sen" />);
-    const eleitos = eleitosNoCartao(doc);
-    expect(eleitos).toHaveLength(VAGAS_SENADO);
-    expect(eleitos.join(" | ")).toContain("ANA LIMA");
-    expect(eleitos.join(" | ")).toContain("BRUNO REIS");
-    expect(eleitos.join(" | ")).not.toContain("NINA ANULADA");
+    const vagas = vagasNoCartao(doc);
+    expect(vagas).toHaveLength(VAGAS_SENADO);
+    expect(vagas.join(" | ")).toContain("ANA LIMA");
+    expect(vagas.join(" | ")).toContain("BRUNO REIS");
+    expect(vagas.join(" | ")).not.toContain("NINA ANULADA");
   });
 
-  it("uma só que disputa + anulada: a anulada NUNCA é eleita, nem sobrando vaga", () => {
+  it("uma só que disputa + anulada: a anulada NUNCA ocupa vaga, nem sobrando vaga", () => {
     // O caso acima não alcança o filtro do ponto único: `anuladasAoFim` já põe
     // a anulada no fim do cartão. Aqui ela é a 2ª linha mesmo depois disso —
     // só o filtro de `ocupantesDasVagas` a separa da 2ª vaga.
     const top = [tc(13, "ANA LIMA", "PT", 60, 60), tc(9, "NINA ANULADA", "PP", 40, 40, "anulado")];
-    const eleitos = eleitosNoCartao(
-      parse(<GovernorCard uf={row(top)} candidatos={[]} cargo="sen" />),
-    );
-    expect(eleitos).toHaveLength(1);
-    expect(eleitos[0]).toContain("ANA LIMA");
+    const vagas = vagasNoCartao(parse(<GovernorCard uf={row(top)} candidatos={[]} cargo="sen" />));
+    expect(vagas).toHaveLength(1);
+    expect(vagas[0]).toContain("ANA LIMA");
   });
 
   it("sem apuração começada não há projeção — nenhum selo (constituição § 1)", () => {
     const doc = parse(
       <GovernorCard uf={row(TOP_SEN, { pct_apurado: 0 })} candidatos={[]} cargo="sen" />,
     );
-    expect(eleitosNoCartao(doc)).toHaveLength(0);
+    expect(vagasNoCartao(doc)).toHaveLength(0);
+    expect(doc.querySelector("li b")).toBeNull();
   });
 
-  it("Governador NÃO muda: '● ELEITO' só no líder (mata 'governador ganha 2')", () => {
+  it("Governador NÃO ganha 2: 'Vence no 1º turno · projeção' só no líder, sem 'eleito'", () => {
     const gov = row(TOP_SEN, { vai_a_2t: false, bucket: "decidido_1t" });
     const doc = parse(<GovernorCard uf={gov} candidatos={[]} cargo="gov" />);
-    const eleitos = eleitosNoCartao(doc);
-    expect(eleitos).toHaveLength(1);
-    expect(eleitos[0]).toContain("ANA LIMA");
+    const comSelo = [...doc.querySelectorAll("li")].filter((li) => li.querySelector("b"));
+    expect(comSelo).toHaveLength(1);
+    expect(comSelo[0]?.textContent).toMatch(/ANA LIMA.*Vence no 1º turno · projeção/);
+    expect(doc.body.textContent).not.toMatch(/eleito/i);
   });
 });
 

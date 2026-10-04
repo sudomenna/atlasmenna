@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { EdgeCandidate, EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
 import { derivarEventos, MARCOS, mesclarHistorico, resumirEstado } from "@/lib/leitura/eventos";
 import type { EstadoResumo, EventoBoletim } from "@/lib/leitura/types";
-import { HISTORICO_MAX } from "@/lib/leitura/types";
+import { EstadoResumoSchema, HISTORICO_MAX } from "@/lib/leitura/types";
 
 const AGORA = "2026-10-04T21:00:00.000Z";
 const SIGLAS = [
@@ -70,6 +70,8 @@ interface Opts {
   turno?: 1 | 2;
   p2t?: number | null;
   chamadas?: Record<string, number>; // sigla → id do líder
+  /** ids em `eleitos_definidos` de TODAS as UFs (Brasil definido, ADR do dono 04/10). */
+  eleitos?: number[];
   cands?: EdgeCandidate[];
   pre?: boolean;
 }
@@ -83,6 +85,7 @@ function payload(o: Opts = {}): EdgePayload {
         pct_apurado: o.pct ?? 0,
         lider: o.chamadas?.[sigla] ?? cands[0]?.id ?? 0,
         chamada: o.chamadas ? sigla in o.chamadas : false,
+        ...(o.eleitos ? { eleitos_definidos: o.eleitos } : {}),
         top_candidatos: cands.map((c) => ({
           id: c.id,
           pct: c.pct_projetado,
@@ -131,6 +134,12 @@ describe("derivarEventos — sem apuração", () => {
     expect(r.eventos).toEqual([]);
     expect(r.estado.marcos).toEqual([1, 5]);
     expect(r.estado.chamadas).toEqual(["SP"]);
+    const r2 = derivarEventos(
+      estado({ definidos: [22] }),
+      payload({ pre: true, pct: 40, eleitos: [13] }),
+      AGORA,
+    );
+    expect(r2.estado.definidos).toEqual([22]);
   });
 
   it("0% não gera evento (anterior null ou não)", () => {
@@ -197,6 +206,10 @@ describe("derivarEventos — início e marcos", () => {
     );
     expect(ids(r.eventos)).toEqual(["inicio", "marco-50"]);
     expect(r.estado.chamadas).toEqual(["RJ", "SP"]);
+    // Definido com o Blob perdido também vai só para o estado, sem linha.
+    const r2 = derivarEventos(null, payload({ pct: 99, ufs: 27, eleitos: [13] }), AGORA);
+    expect(ids(r2.eventos)).toEqual(["inicio", "marco-99"]);
+    expect(r2.estado.definidos).toEqual([13]);
     expect(r.estado.marcos).toEqual([1, 5, 10, 25, 50]);
   });
 });
@@ -233,15 +246,68 @@ describe("derivarEventos — lideranças", () => {
 });
 
 describe("derivarEventos — chamadas, 2º turno, 27 UFs", () => {
-  it("UF chamada nova vira linha neutra com o nome de exibição", () => {
+  it("🔴 2026-10-04 — UF com `chamada` (projeção) e sem eleito definido: NENHUMA linha", () => {
     const r = derivarEventos(
       estado({ chamadas: ["RJ"] }),
-      payload({ pct: 30, ufs: 20, chamadas: { RJ: 13, SP: 22 } }),
+      payload({ pct: 30, ufs: 20, chamadas: { RJ: 13, SP: 22, MG: 22, BA: 13 } }),
       AGORA,
     );
-    expect(ids(r.eventos)).toEqual(["chamada_uf-SP"]);
-    expect(r.eventos[0]?.text).toBe("A projeção chama SP para FLÁVIO BOLSONARO (PL).");
-    expect(r.estado.chamadas).toEqual(["RJ", "SP"]);
+    expect(r.eventos).toEqual([]);
+    for (const e of r.eventos) expect(e.text).not.toMatch(/chama/i);
+    // O legado `chamadas` segue gravado (formato do estado), sem virar texto.
+    expect(r.estado.chamadas).toEqual(["BA", "MG", "RJ", "SP"]);
+    expect(r.estado.definidos).toEqual([]);
+  });
+
+  it("Brasil definido: UMA linha nacional, com o nome pelo id definido (não pelo líder projetado)", () => {
+    // A (13) lidera a projeção e é o `lider` de toda UF; o definido é B (22).
+    const r = derivarEventos(
+      estado(),
+      payload({ pct: 97, ufs: 27, eleitos: [22], chamadas: { SP: 13, RJ: 13 } }),
+      AGORA,
+    );
+    const definidos = r.eventos.filter((e) => e.tipo === "eleito_definido");
+    expect(definidos).toHaveLength(1);
+    expect(definidos[0]).toMatchObject({
+      id: "eleito_definido-22",
+      head: "Definido",
+      text: "FLÁVIO BOLSONARO (PL) matematicamente eleito pela contagem oficial do TSE.",
+      ts: AGORA,
+    });
+    expect(r.eventos.some((e) => e.tipo === "chamada_uf")).toBe(false);
+    expect(r.estado.definidos).toEqual([22]);
+    // Ciclo seguinte, mesmo estado: nada de novo.
+    const r2 = derivarEventos(
+      r.estado,
+      payload({ pct: 98, ufs: 27, eleitos: [22] }),
+      "2026-10-04T21:01:00.000Z",
+    );
+    expect(r2.eventos.filter((e) => e.tipo === "eleito_definido")).toEqual([]);
+  });
+
+  it("estado gravado no formato ANTIGO (com `chamadas`, sem `definidos`) não gera rajada", () => {
+    // 27 UFs chamadas pela projeção e nenhuma no estado antigo: o código antigo
+    // soltaria 27 linhas "A projeção chama …". O novo não solta nenhuma.
+    const todas = Object.fromEntries(SIGLAS.map((s) => [s, 13]));
+    const antigo = estado({ chamadas: [] });
+    expect("definidos" in antigo).toBe(false);
+    const r = derivarEventos(antigo, payload({ pct: 30, ufs: 20, chamadas: todas }), AGORA);
+    expect(r.eventos).toEqual([]);
+    // Com o Brasil já definido no primeiro ciclo: UMA linha (fato), não 27.
+    const r2 = derivarEventos(
+      antigo,
+      payload({ pct: 30, ufs: 20, chamadas: todas, eleitos: [13] }),
+      AGORA,
+    );
+    expect(ids(r2.eventos)).toEqual(["eleito_definido-13"]);
+  });
+
+  it("estado antigo passa no schema (sem `definidos`) e o novo também", () => {
+    const antigo = estado();
+    expect(EstadoResumoSchema.safeParse(antigo).success).toBe(true);
+    const novo = resumirEstado(payload({ pct: 30, ufs: 20, eleitos: [13] }), antigo);
+    expect(EstadoResumoSchema.safeParse(novo).success).toBe(true);
+    expect(novo.definidos).toEqual([13]);
   });
 
   it("P(2T) exatamente no limiar conta como cruzado; vários limiares no mesmo ciclo = só o maior", () => {

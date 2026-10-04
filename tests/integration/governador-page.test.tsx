@@ -178,8 +178,10 @@ let comParticipacao = true;
  *   - `turno2` — só a chave do 2º turno existe;
  *   - `chamada2t` — 27 UFs `bucket: "chamada"` com `vai_a_2t: true` (margem
  *     grande E 2º turno — ES, GO e MG do simulado de 26/09, RF-006.8).
+ *   - `definidos` — o `normal` + SP com `eleitos_definidos: [1]` e RJ com
+ *     `segundo_turno_definido` (faixa "AGORA", decisão do dono 04/10).
  */
-let modo: "normal" | "pre" | "vazio" | "turno2" | "chamada2t" = "normal";
+let modo: "normal" | "pre" | "vazio" | "turno2" | "chamada2t" | "definidos" = "normal";
 
 vi.mock("@/lib/edge-config/reader", () => ({
   readProjection: vi.fn(async (opts?: { cargo?: string; turno?: number }) => {
@@ -204,6 +206,14 @@ vi.mock("@/lib/edge-config/reader", () => ({
       for (let i = 0; i < 4; i++) buckets.push("indefinido");
       const p = buildPayload(buckets, comParticipacao);
       if (modo === "pre") p.fase = "pre_eleicao";
+      if (modo === "definidos") {
+        for (const uf of p.por_uf) {
+          // `lider: 1` em toda UF; o definido em SP é o 2 — o nome tem de sair
+          // do id definido, nunca do líder projetado.
+          if (uf.sigla === "SP") uf.eleitos_definidos = [2];
+          if (uf.sigla === "RJ") uf.segundo_turno_definido = true;
+        }
+      }
       return p;
     }
     return null;
@@ -260,8 +270,8 @@ describe("GovernadorGridPage (integration / smoke)", () => {
     // outro componente e outra regra — a guarda fica nos `data-testid` do
     // componente removido, que é o que ela sempre quis dizer.
 
-    expect(html).toContain("Decididos no 1º turno");
-    expect(html).toContain("Vão a 2º turno");
+    expect(html).toContain("1º turno pela projeção");
+    expect(html).toContain("2º turno pela projeção");
     // 27 UFs na fixture, sem filtro aplicado.
     expect(html).toContain("27 corridas");
   });
@@ -297,11 +307,31 @@ describe("GovernadorGridPage (integration / smoke)", () => {
     const node = await GovernadorGridPage({ searchParams: Promise.resolve({}) });
     const html = renderToStaticMarkup(node);
     expect(html).toContain("Em disputa");
-    expect(html).toContain("Decididos no 1º turno");
-    expect(html).toContain("Vão a 2º turno");
-    expect(html).toContain("Chamadas");
-    // Ticker emite chamada de SP via mock
-    expect(html).toContain("SP chamada para Tarcísio");
+    expect(html).toContain("1º turno pela projeção");
+    expect(html).toContain("2º turno pela projeção");
+    expect(html).toContain("Decididas pela projeção");
+    // 🔴 2026-10-04 — o payload traz `chamadas_recentes` ("SP chamada para
+    // Tarcísio") e nenhuma UF definida: a faixa "AGORA" não aparece.
+    expect(html).not.toContain("SP chamada para Tarcísio");
+    expect(html).not.toContain('data-testid="breaking-news-ticker"');
+  });
+
+  it("🔴 (f2) faixa AGORA: só UF matematicamente definida, nome pelo id definido, 2º turno definido", async () => {
+    modo = "definidos";
+    const node = await GovernadorGridPage({ searchParams: Promise.resolve({}) });
+    const html = renderToStaticMarkup(node);
+    expect(html).toContain('data-testid="breaking-news-ticker"');
+    // Rotativo no SSR: o primeiro item (ordem de sigla) é RJ.
+    expect(html).toContain("RJ: 2º turno definido");
+    expect(html).not.toContain("SP chamada para");
+  });
+
+  it("🔴 (f3) 27 UFs com `chamada` (projeção) e nenhuma definida: sem faixa AGORA", async () => {
+    modo = "chamada2t";
+    const node = await GovernadorGridPage({ searchParams: Promise.resolve({}) });
+    const html = renderToStaticMarkup(node);
+    expect(html).not.toContain('data-testid="breaking-news-ticker"');
+    expect(html).not.toContain("chamada para");
   });
 
   it("(g) filtro decididos_1t restringe lista para 9 UFs", async () => {
@@ -417,7 +447,7 @@ describe("GovernadorGridPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
       (f) => f.getAttribute("aria-current") === "page",
     );
     expect(ativos).toHaveLength(1);
-    expect(ativos[0]?.textContent).toBe("Vão a 2º turno");
+    expect(ativos[0]?.textContent).toBe("2º turno pela projeção");
     expect(ativos[0]?.getAttribute("data-active")).toBe("true");
   });
 
@@ -534,8 +564,10 @@ describe("GovernadorGridPage — painel '1º ou 2º turno' (RF-006.6/7/8)", () =
     modo = "chamada2t";
     const doc = await render();
     const texto = doc.body.textContent ?? "";
-    expect(texto).not.toContain("● ELEITO");
-    expect((texto.match(/VAI A 2T/g) ?? []).length).toBeGreaterThanOrEqual(27);
+    // 2026-10-04 — o selo diz a base ("2º turno · projeção"); "eleito" só
+    // com `eleitos_definidos` (auditoria P1).
+    expect(texto).not.toMatch(/● ELEITO|Vence no 1º turno · projeção/);
+    expect((texto.match(/2º turno · projeção/g) ?? []).length).toBeGreaterThanOrEqual(27);
     expect(
       doc.querySelector(
         '[data-testid="placar-turno"][data-base="projecao"] [data-desfecho="segundo_turno"] [data-testid="placar-numero"]',

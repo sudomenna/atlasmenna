@@ -210,6 +210,14 @@ export interface HoverCardProps {
   /** % apurado da região, 0–100. */
   apurado?: number;
   rows: readonly HoverCardRow[];
+  /**
+   * 2026-10-04 (dono) — uma linha discreta de rodapé, sob a tabela. Usada para
+   * a atribuição da marca de eleito do Senado ("Cálculo do AtlasMenna sobre a
+   * contagem do TSE", decidida pelo caller). Não alarga o cartão: a caixa tem
+   * `contain: inline-size`, então ocupa a largura que a tabela já deu e quebra
+   * linha dentro dela. Ausente ⇒ nada.
+   */
+  nota?: string;
   className?: string;
   style?: CSSProperties;
 }
@@ -365,6 +373,7 @@ export function HoverCard({
   kicker,
   apurado,
   rows,
+  nota,
   className,
   style,
 }: HoverCardProps) {
@@ -741,7 +750,8 @@ export function HoverCard({
                     {row.vaga}
                   </span>
                 ) : null}
-                <DestinoEtiqueta destino={row.destino} />
+                {/* Sobre a faixa do eleito, a etiqueta herda a tinta dela. */}
+                <DestinoEtiqueta destino={row.destino} sobreFaixa={isCalledWinner} />
               </span>
               {partido ? (
                 <span
@@ -807,6 +817,23 @@ export function HoverCard({
           );
         })}
       </div>
+      {nota ? (
+        <div
+          data-testid="hover-card-nota"
+          style={{
+            // `inline-size` contido: o tamanho intrínseco da nota é zero, então
+            // ela nunca alarga o cartão (`width: max-content`) — só quebra
+            // linha na largura que a tabela já definiu.
+            contain: "inline-size",
+            marginTop: "var(--space-2)",
+            font: "var(--type-body-sm)",
+            fontSize: "var(--text-xs)",
+            color: "var(--text-muted)",
+          }}
+        >
+          {nota}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -354,14 +354,16 @@ describe("eleitos definidos (por_uf da moldura do mapa)", () => {
     publicar("gov", linhaPorUf({ eleitos_definidos: [ANA] }));
     for (const b of ["parcial", "proj"] as const) {
       base(b);
-      expect(status()).toBe("Matematicamente eleito");
+      // 🔴 2026-10-04 (auditoria P1) — o município não elege: o texto diz o
+      // escopo ("No estado: …"), no status e no rótulo do ✓.
+      expect(status()).toBe("No estado: matematicamente eleito");
       const marca = eleitoEm("Ana Lima") as HTMLElement | null;
       expect(marca).not.toBeNull();
       expect(marca?.getAttribute("style")).toContain("var(--party-pt-chip)");
       expect(marca?.getAttribute("style")).toContain("var(--party-pt-ink)");
       const check = marca?.querySelector('[role="img"]');
       expect(check?.textContent).toBe("✓");
-      expect(check?.getAttribute("aria-label")).toBe("Matematicamente eleito");
+      expect(check?.getAttribute("aria-label")).toBe("No estado: matematicamente eleito");
       expect(eleitoEm("Bruno Reis")).toBeNull();
     }
   });
@@ -369,7 +371,11 @@ describe("eleitos definidos (por_uf da moldura do mapa)", () => {
   it("2 eleitos (Senado): 'Matematicamente eleitos'", () => {
     montar({ selo: SEN, cargo: "sen" });
     publicar("sen", linhaPorUf({ eleitos_definidos: [ANA, BRUNO] }));
-    expect(status()).toBe("Matematicamente eleitos");
+    expect(status()).toBe("No estado: matematicamente eleitos");
+    // Senado: a conta é do AtlasMenna — a atribuição aparece com a marca.
+    expect(folha()?.querySelector('[data-testid="municipio-sheet-atribuicao"]')?.textContent).toBe(
+      "Cálculo do AtlasMenna sobre a contagem do TSE",
+    );
     expect(eleitoEm("Ana Lima")).not.toBeNull();
     expect(eleitoEm("Bruno Reis")).not.toBeNull();
     expect(eleitoEm("Célia Mota")).toBeNull();
@@ -378,16 +384,31 @@ describe("eleitos definidos (por_uf da moldura do mapa)", () => {
   it("2º turno definido: status sem fundo em ninguém", () => {
     montar({ selo: GOV, cargo: "gov" });
     publicar("gov", linhaPorUf({ segundo_turno_definido: true }));
-    expect(status()).toBe("2º turno definido");
+    expect(status()).toBe("No estado: 2º turno definido");
     expect(folha()?.querySelectorAll('[data-testid="municipio-sheet-eleito"]')).toHaveLength(0);
+    expect(folha()?.querySelector('[data-testid="municipio-sheet-atribuicao"]')).toBeNull();
   });
 
   it("Presidente: só lê o campo — eleito definido aparece mesmo sem selo de base", () => {
     montar({ selo: PRES, cargo: "pres" });
     publicar("pres", linhaPorUf({ eleitos_definidos: [BRUNO] }));
-    expect(status()).toBe("Matematicamente eleito");
+    // Presidente: quem decide é o país, não o estado nem o município.
+    expect(status()).toBe("No país: matematicamente eleito");
+    expect(folha()?.querySelector('[data-testid="municipio-sheet-atribuicao"]')).toBeNull();
     expect(eleitoEm("Bruno Reis")).not.toBeNull();
     expect(todosOsSelos()).toEqual([]);
+  });
+
+  it("🔴 'Sub judice' eleito: a etiqueta sobre a faixa herda a tinta dela (auditoria a11y 04/10) [mutação: tirar `sobreFaixa`]", () => {
+    const sub = CORRIDA.map((c) =>
+      c.id === ANA || c.id === BRUNO ? { ...c, destino: "sub_judice" as const } : c,
+    );
+    montar({ selo: GOV, cargo: "gov", candidatos: sub });
+    publicar("gov", linhaPorUf({ eleitos_definidos: [ANA] }));
+    const naFaixa = eleitoEm("Ana Lima")?.querySelector('[data-testid="destino-etiqueta"]');
+    expect(naFaixa?.getAttribute("style")).toMatch(/color:\s*inherit/);
+    const fora = linhaDe("Bruno Reis")?.querySelector('[data-testid="destino-etiqueta"]');
+    expect(fora?.getAttribute("style")).toContain("var(--text-primary)");
   });
 
   it("linha de OUTRO cargo ou de OUTRA UF não marca nada", () => {

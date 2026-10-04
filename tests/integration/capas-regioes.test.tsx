@@ -382,8 +382,8 @@ describe("/governador — cartões nas duas bases (04/10/2026)", () => {
     expect(porProj[0]?.id).not.toBe(porAtual[0]?.id); // a fixture discrimina
     expect(proj[0]).toContain(formatPercentTrim(porProj[0]?.pct as number));
     expect(parcial[0]).toContain(formatPercentTrim(porAtual[0]?.pct_atual as number));
-    expect(parcial[0]).toMatch(/IRIA AO 2T|FECHARIA NO 1T/);
-    expect(parcial.join(" ")).not.toMatch(/ELEITO|VAI A 2T|EM APURAÇÃO/);
+    expect(parcial[0]).toMatch(/2º turno · na parcial|Venceria no 1º turno · na parcial/);
+    expect(parcial.join(" ")).not.toMatch(/eleito|projeção|EM APURAÇÃO/i);
     // O filtro por etiqueta conta `[data-etq]` por cartão: continua 1 por UF.
     expect(doc.querySelectorAll("[data-regiao] article").length).toBe(27);
   });
@@ -457,28 +457,139 @@ describe("home de Presidente — seção por região", () => {
   });
 });
 
+/**
+ * A cor que `GovernorCard.module.css` dá a um nó — cascata EMULADA: das regras
+ * com `color` cujo seletor casa com o nó (`.c` vira `[class*="_c_"]`, o nome
+ * que o vitest dá à classe do módulo), vale a de MAIOR especificidade e, no
+ * empate, a última. O happy-dom não aplica a folha do módulo, então quem
+ * decide é este laço — e ele usa `Element.matches` com o seletor REAL do
+ * arquivo, não uma cópia escrita no teste.
+ */
+function corDoCartao(el: Element): string | undefined {
+  const css = readFileSync(
+    resolve(__dirname, "../../components/blocks/GovernorCard.module.css"),
+    "utf8",
+  )
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\s+/g, " ");
+  const especificidade = (sel: string): number => {
+    const attrs = (sel.match(/\[[^\]]+\]/g) ?? []).length;
+    const semAttr = sel.replace(/\[[^\]]+\]/g, "");
+    const classes = (semAttr.match(/\.[\w-]+/g) ?? []).length;
+    const pseudos = (semAttr.match(/:(?!:)[\w-]+/g) ?? []).length;
+    const tipos = (
+      semAttr.replace(/:[\w-]+(\([^)]*\))?/g, "").match(/(^|[\s>+~])[a-z][\w-]*/g) ?? []
+    ).length;
+    return (attrs + classes + pseudos) * 100 + tipos;
+  };
+  let melhor: { esp: number; cor: string } | undefined;
+  for (const m of css.matchAll(/(?<=^|\}) ?([^{}@]+?) ?\{([^}]*)\}/g)) {
+    const cor = /(?:^|;) ?color: ([^;]+?) ?(?:;|$)/.exec(m[2] ?? "")?.[1];
+    if (!cor) continue;
+    for (const sel of (m[1] ?? "").split(",").map((s) => s.trim())) {
+      const real = sel.replace(/\.c(?![\w-])/g, '[class*="_c_"]');
+      let casa = false;
+      try {
+        casa = el.matches(real);
+      } catch {
+        casa = false;
+      }
+      if (!casa) continue;
+      const esp = especificidade(sel);
+      if (!melhor || esp >= melhor.esp) melhor = { esp, cor: cor.trim() };
+    }
+  }
+  return melhor?.cor;
+}
+
+describe("home de Presidente — cartões nas duas bases (04/10/2026, à tarde)", () => {
+  // O defeito da captura do dono: sob o resumo "Parcial · % dos votos válidos
+  // em disputa" da região, cada cartão de UF listava LULA 44,4%, FLAVIO
+  // 32,5% (AL) — a PROJEÇÃO (`pct`), em ocre. O apurado de AL na fixture é
+  // 41,31% / 35,87%. Na visão Parcial o cartão tem de mostrar o apurado, na
+  // cor da parcial; na Projeção, a projeção, na cor da projeção.
+  const pctsDe = (el: Element | null | undefined) =>
+    [...(el?.querySelectorAll(":scope > ul > li > span:nth-child(4)") ?? [])] as Element[];
+
+  it("🔴 os 27 cartões: Parcial com `pct_atual` (ordem do apurado), Projeção com `pct`", async () => {
+    const doc = await render(HomePage());
+    const links = [...doc.querySelectorAll('a[data-testid="corrida-uf-pres"]')];
+    expect(links).toHaveLength(27);
+    for (const a of links) {
+      const art = a.querySelector("article");
+      expect(art?.querySelectorAll(":scope > [data-view-only='proj'] > ul")).toHaveLength(1);
+      expect(art?.querySelectorAll(":scope > [data-view-only='parcial'] > ul")).toHaveLength(1);
+    }
+    const al = pres.por_uf.find((u) => u.sigla === "AL") as EdgeUfRow;
+    const art = doc.querySelector('a[data-uf="AL"] article');
+    const proj = pctsDe(art?.querySelector(":scope > [data-view-only='proj']"));
+    const parcial = pctsDe(art?.querySelector(":scope > [data-view-only='parcial']"));
+    const porAtual = [...al.top_candidatos]
+      .filter((t) => t.destino !== "anulado")
+      .sort(
+        (a, b) => (b.pct_atual as number) - (a.pct_atual as number) || b.pct - a.pct || a.id - b.id,
+      );
+    // a fixture discrimina: projetado ≠ apurado no líder de AL
+    expect(al.top_candidatos[0]?.pct).not.toBe(al.top_candidatos[0]?.pct_atual);
+    expect(proj[0]?.textContent).toBe(formatPercentTrim(al.top_candidatos[0]?.pct as number));
+    expect(parcial[0]?.textContent).toBe(formatPercentTrim(porAtual[0]?.pct_atual as number));
+    // Presidente segue sem selo de UF também na Parcial (ADR-0055).
+    expect(art?.textContent).not.toMatch(
+      /VAI A 2T|ELEITO|EM APURAÇÃO|FECHARIA|IRIA AO 2T|turno|Vaga/,
+    );
+    expect(
+      art?.querySelector(":scope > [data-view-only='parcial'] > ul")?.getAttribute("aria-label"),
+    ).toMatch(/^Na parcial, na frente no estado: /);
+  });
+
+  it("🔴 a cor segue o número: Parcial ⇒ `--color-pct-votos`; Projeção ⇒ `--color-pct-proj`", async () => {
+    const doc = await render(HomePage());
+    const arts = [...doc.querySelectorAll('a[data-testid="corrida-uf-pres"] article')];
+    let medidos = 0;
+    for (const art of arts) {
+      for (const el of pctsDe(art.querySelector(":scope > [data-view-only='parcial']"))) {
+        expect(corDoCartao(el), `${art.getAttribute("aria-label")}: parcial`).toBe(
+          "var(--color-pct-votos)",
+        );
+        medidos++;
+      }
+      for (const el of pctsDe(art.querySelector(":scope > [data-view-only='proj']"))) {
+        expect(corDoCartao(el), `${art.getAttribute("aria-label")}: projeção`).toBe(
+          "var(--color-pct-proj)",
+        );
+        medidos++;
+      }
+    }
+    // 27 UFs × (4 + Outros) × 2 bases — o laço mediu de verdade.
+    expect(medidos).toBeGreaterThanOrEqual(27 * 4 * 2);
+  });
+});
+
 describe("<GovernorCard cargo='pres'>", () => {
   it("sem selo e sem status no aria-label; gov no mesmo dado tem selo", () => {
     const uf = clone(gov.por_uf.find((u) => u.vai_a_2t === true) as EdgeUfRow);
     const pres = renderToStaticMarkup(<GovernorCard uf={uf} candidatos={[]} cargo="pres" />);
     const govHtml = renderToStaticMarkup(<GovernorCard uf={uf} candidatos={[]} />);
-    expect(govHtml).toContain("VAI A 2T");
-    expect(pres).not.toMatch(/VAI A 2T|ELEITO|EM APURAÇÃO/);
+    expect(govHtml).toContain("2º turno · projeção");
+    expect(pres).not.toMatch(/VAI A 2T|ELEITO|EM APURAÇÃO|turno|eleito/i);
     expect(pres).not.toMatch(/vai ao segundo turno|em apuração/);
     expect(pres).toMatch(/aria-label="[^"]*na frente no estado: /);
   });
 });
 
 describe("<GovernorCard> — markup enxuto (2026-09-28)", () => {
-  it("o selo sai UMA vez, na linha do líder que compete", () => {
+  it("o selo sai no líder que compete — e, no 2º turno pela projeção, também no 2º", () => {
+    // 2026-10-04 (auditoria P1) — "2º turno · projeção" marca os DOIS
+    // finalistas (o par do `<ResultPanel>`); os demais desfechos, só o líder.
     for (const uf of gov.por_uf) {
       const doc = new DOMParser().parseFromString(
         renderToStaticMarkup(<GovernorCard uf={uf} candidatos={[]} />),
         "text/html",
       );
-      const selos = doc.querySelectorAll("b[data-s]");
-      expect(selos).toHaveLength(1);
-      expect(selos[0]?.closest("li")?.firstElementChild?.textContent).toBe("1°");
+      const selos = [...doc.querySelectorAll("b[data-s]")];
+      const posicoes = selos.map((b) => b.closest("li")?.firstElementChild?.textContent);
+      if (uf.vai_a_2t === true) expect(posicoes).toEqual(["1°", "2°"]);
+      else expect(posicoes).toEqual(["1°"]);
     }
   });
 

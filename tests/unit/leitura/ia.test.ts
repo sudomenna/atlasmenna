@@ -134,23 +134,68 @@ describe("montarEntradaIA", () => {
     expect((entrada.nacional as Record<string, unknown>).prob_haver_2t_pct).toBe(65);
   });
 
-  it("traz as 27 UFs em tabela: sigla, apurado, líder da projeção por nome, margem e chamada", () => {
+  it("traz as 27 UFs em tabela: sigla, apurado, líder da projeção por nome e margem — sem `chamada`", () => {
     const entrada = montarEntradaIA(payloadBase(), [], null, AGORA);
     expect(entrada.ufs_colunas).toEqual([
       "uf",
       "apurado_pct",
       "lider_projecao",
       "margem_projecao_pp",
-      "chamada",
     ]);
     const ufs = entrada.ufs as unknown[][];
     expect(ufs).toHaveLength(27);
     const ac = ufs.find((u) => u[0] === "AC");
+    expect(ac).toHaveLength(4);
     expect(ac?.[1]).toBe(18);
     expect(ac?.[3]).toBe(10.5);
-    expect(ac?.[4]).toBe(false);
     expect(typeof ac?.[2]).toBe("string");
     expect(String(ac?.[2])).not.toMatch(/^candidato \d+$/);
+  });
+
+  it("🔴 2026-10-04 — `chamada` nas UFs sem eleito definido: nada de definição vai para a IA", () => {
+    const p = payloadBase();
+    for (const u of p.por_uf) u.chamada = true;
+    const entrada = montarEntradaIA(p, [], null, AGORA);
+    expect((entrada.nacional as Record<string, unknown>).eleitos_matematicamente).toBeUndefined();
+    expect(JSON.stringify(entrada)).not.toMatch(/chamad/i);
+  });
+
+  it("Brasil definido: `nacional.eleitos_matematicamente` traz o nome pelo id definido", () => {
+    const p = payloadBase();
+    const segundo = [...p.national.candidatos].sort((a, b) => a.rank - b.rank)[1] as EdgeCandidate;
+    for (const u of p.por_uf) {
+      u.top_candidatos = [
+        ...(u.top_candidatos ?? []).filter((t) => t.id !== segundo.id),
+        { id: segundo.id, pct: 1, nome: segundo.nome, partido: segundo.partido },
+      ] as EdgeUfRow["top_candidatos"];
+      u.eleitos_definidos = [segundo.id];
+    }
+    const entrada = montarEntradaIA(p, [], null, AGORA);
+    const eleitos = (entrada.nacional as Record<string, unknown>).eleitos_matematicamente;
+    expect(eleitos).toHaveLength(1);
+    expect(String((eleitos as string[])[0])).not.toMatch(/^candidato \d+$/);
+  });
+
+  it("eventos legados `chamada_uf` do histórico gravado não vão para a IA", () => {
+    const hist: EventoBoletim[] = [
+      {
+        id: "chamada_uf-SP",
+        ts: "2026-10-04T21:00:00.000Z",
+        head: "Chamada",
+        text: "A projeção chama SP para X.",
+        tipo: "chamada_uf",
+      },
+      {
+        id: "marco-25",
+        ts: "2026-10-04T20:59:00.000Z",
+        head: "Apuração",
+        text: "25,0% das seções apuradas.",
+        tipo: "marco",
+      },
+    ];
+    const entrada = montarEntradaIA(payloadBase(), hist, null, AGORA);
+    const ev = entrada.eventos_recentes as Array<{ titulo: string }>;
+    expect(ev.map((e) => e.titulo)).toEqual(["Apuração"]);
   });
 
   it("hora do dado do TSE em Brasília quando há dado_ts; ausente quando não há", () => {

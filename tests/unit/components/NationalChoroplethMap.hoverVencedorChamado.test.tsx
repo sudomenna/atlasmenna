@@ -230,9 +230,12 @@ describe("hover do mapa nacional — fundo cheio + ✓ só para MATEMATICAMENTE 
     expect(c?.textContent).toContain("✓");
     expect(c?.innerHTML).toContain("--party-pt-chip");
     expect(c?.innerHTML).toContain("--party-pt-ink");
-    expect(c?.textContent).toContain("Matematicamente eleito");
-    expect(c?.textContent).not.toContain("Matematicamente eleitos");
+    // Presidente (cargo padrão do `montar`): o escopo é o PAÍS (auditoria
+    // P1, 2026-10-04) — e sem a atribuição, que é só do Senado.
+    expect(c?.textContent).toContain("No país: matematicamente eleito");
+    expect(c?.textContent).not.toContain("matematicamente eleitos");
     expect(c?.textContent).not.toContain("Chamada");
+    expect(host.querySelector("[data-testid='hover-card-nota']")).toBeNull();
 
     act(() => root.unmount());
     host.remove();
@@ -243,7 +246,7 @@ describe("hover do mapa nacional — fundo cheio + ✓ só para MATEMATICAMENTE 
     disparaHoverEmSp();
 
     expect(card(host)?.textContent).toContain("✓");
-    expect(card(host)?.textContent).toContain("Matematicamente eleito");
+    expect(card(host)?.textContent).toContain("No país: matematicamente eleito");
 
     act(() => root.unmount());
     host.remove();
@@ -290,13 +293,21 @@ describe("hover do mapa nacional — fundo cheio + ✓ só para MATEMATICAMENTE 
     host.remove();
   });
 
-  it("dois ids — dois ✓ e cabeçalho no plural 'Matematicamente eleitos'", () => {
-    const { host, root } = montar(rowSp(true, "PT", { eleitos_definidos: [13, 22] }));
+  it("dois ids (Senado) — dois ✓, cabeçalho no plural 'Matematicamente eleitos', sem prefixo, com a atribuição", () => {
+    const { host, root } = montar(
+      rowSp(true, "PT", { eleitos_definidos: [13, 22] }),
+      "proj",
+      "sen",
+    );
     disparaHoverEmSp();
 
     const c = card(host);
     expect((c?.textContent?.match(/✓/g) ?? []).length).toBe(2);
     expect(c?.textContent).toContain("Matematicamente eleitos");
+    expect(c?.textContent).not.toContain("No país");
+    expect(host.querySelector("[data-testid='hover-card-nota']")?.textContent).toBe(
+      "Cálculo do AtlasMenna sobre a contagem do TSE",
+    );
     expect(c?.innerHTML).toContain("--party-pl-chip");
 
     act(() => root.unmount());
@@ -410,6 +421,10 @@ describe("hover do mapa nacional — selo de base por cargo (selosDaBase)", () =
     disparaHoverEmSp();
     expect(selos(host)).toEqual({ "FERNANDA DA SILVA": "Vence no 1º turno · projeção" });
     expect(card(host)?.textContent).toContain("✓");
+    // Governador: sem prefixo (o balão já é do estado) e sem a atribuição do
+    // Senado — a fonte é o aviso do TSE.
+    expect(card(host)?.textContent).toMatch(/^Matematicamente eleito/);
+    expect(host.querySelector("[data-testid='hover-card-nota']")).toBeNull();
     act(() => root.unmount());
     host.remove();
   });

@@ -25,9 +25,14 @@ function cand(
   } as EdgeCandidate;
 }
 
+/**
+ * `chamadas`: quantas UFs com `chamada: true` (leitura da PROJEÇÃO) — por
+ * padrão 3, para provar que ela NÃO vira frase. `eleito`: id que o produtor
+ * declara em `eleitos_definidos` em toda UF (Brasil definido).
+ */
 function entrada(
   cands: EdgeCandidate[],
-  o: { pct?: number; p2t?: number | null; chamadas?: number } = {},
+  o: { pct?: number; p2t?: number | null; chamadas?: number; eleito?: number } = {},
 ): Entrada {
   return {
     pct_apurado_total: o.pct ?? 40,
@@ -35,6 +40,9 @@ function entrada(
     por_uf: Array.from({ length: 27 }, (_, i) => ({
       sigla: `U${i}`,
       chamada: i < (o.chamadas ?? 3),
+      lider: cands.find((c) => c.rank === 1)?.id,
+      top_candidatos: cands.map((c) => ({ id: c.id, nome: c.nome, partido: c.partido })),
+      ...(o.eleito !== undefined ? { eleitos_definidos: [o.eleito] } : {}),
     })),
   } as unknown as Entrada;
 }
@@ -46,7 +54,7 @@ describe("insightsPresidenteDoPayload", () => {
     expect(insightsPresidenteDoPayload(entrada([b, a]))).toEqual([
       "LULA (PT) à frente com 46,0% — intervalo de 44,0% a 48,0% com 40,0% apurado.",
       "LULA abre 6,0 pp sobre FLÁVIO BOLSONARO (PL), acima da margem de incerteza.",
-      "P(2º turno) = 65,0%. 3 de 27 unidades federativas já chamadas.",
+      "P(2º turno) = 65,0%.",
     ]);
   });
 
@@ -59,14 +67,34 @@ describe("insightsPresidenteDoPayload", () => {
     );
   });
 
-  it("P(2T) nulo: a frase de probabilidade sai, a de chamadas fica", () => {
+  it("🔴 2026-10-04 — `chamada` (projeção) em 27 UFs, sem eleito definido: nenhuma frase de definição", () => {
+    const r = insightsPresidenteDoPayload(
+      entrada([cand(13, "LULA", "PT", 1, 46, 44, 48), cand(22, "X", "PL", 2, 40, 38, 42)], {
+        chamadas: 27,
+      }),
+    );
+    expect(r[2]).toBe("P(2º turno) = 65,0%.");
+    for (const f of r) expect(f).not.toMatch(/chamad|eleit/i);
+  });
+
+  it("P(2T) nulo e nada definido: a terceira frase não existe", () => {
     const r = insightsPresidenteDoPayload(
       entrada([cand(13, "LULA", "PT", 1, 46, 44, 48), cand(22, "X", "PL", 2, 40, 38, 42)], {
         p2t: null,
-        chamadas: 0,
+        chamadas: 27,
       }),
     );
-    expect(r[2]).toBe("0 de 27 unidades federativas já chamadas.");
+    expect(r).toHaveLength(2);
+  });
+
+  it("Brasil definido: nomeia o eleito pelo id de `eleitos_definidos`, mesmo não sendo o rank 1", () => {
+    const r = insightsPresidenteDoPayload(
+      entrada([cand(13, "LULA", "PT", 1, 46, 44, 48), cand(22, "X", "PL", 2, 40, 38, 42)], {
+        p2t: null,
+        eleito: 22,
+      }),
+    );
+    expect(r[2]).toBe("X (PL) matematicamente eleito pela contagem oficial do TSE.");
   });
 
   it("menos de 2 candidatos ou 0% apurado: vazio", () => {
@@ -86,9 +114,9 @@ describe("insightsPresidenteDoPayload", () => {
     const r = insightsPresidenteDoPayload(fixture as unknown as Entrada);
     expect(r).toHaveLength(3);
     expect(r[0]).toMatch(/^Candidato PT \(PT\) à frente com 43,2%/);
-    expect(r[2]).toBe(
-      `P(2º turno) = 65,0%. ${(fixture.por_uf as unknown as EdgeUfRow[]).filter((u) => u.chamada).length} de 27 unidades federativas já chamadas.`,
-    );
+    // A fixture tem UFs com `chamada: true` e nenhum `eleitos_definidos`.
+    expect((fixture.por_uf as unknown as EdgeUfRow[]).some((u) => u.chamada)).toBe(true);
+    expect(r[2]).toBe("P(2º turno) = 65,0%.");
     for (const f of r) expect(f).not.toMatch(/expressiv|esmagador|consolid/i);
   });
 });

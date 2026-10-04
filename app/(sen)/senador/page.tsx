@@ -612,9 +612,11 @@ export default async function SenadoPage() {
           </div>
         ) : payload.por_uf.length > 0 ? (
           <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
-            {/* 🔴 2026-09-29 (decisão do dono) — "● ELEITO" nos DOIS ocupantes
-                de vaga de cada cartão (spec 016, emenda do RF-105); a frase
-                abaixo diz que é pela projeção, não oficial (constituição § 1).
+            {/* 🔴 2026-10-04 (dono, auditoria P1) — o "● ELEITO" de 29/09 nos
+                dois ocupantes de vaga projetados virou "Vaga projetada"; o selo
+                verde "Matematicamente eleito" só sai de `eleitos_definidos`
+                (`<GovernorCard>`). A frase abaixo acompanha. Era: "● ELEITO"
+                nos DOIS ocupantes de vaga (spec 016, emenda do RF-105).
 
                 🔴 2026-09-27 (decisão do dono) — o MESMO cartão de
                 `/governador` (`<GovernorCard cargo="sen">`): as quatro
@@ -634,8 +636,9 @@ export default async function SenadoPage() {
               style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
             >
               Os quatro mais votados de cada estado e a soma dos demais, em percentual dos votos
-              válidos. São duas vagas por estado: ficam com elas as duas primeiras posições, que
-              levam o selo de eleito pela projeção — não é o resultado oficial.
+              válidos. São duas vagas por estado: pela projeção, ficam com elas as duas primeiras
+              posições, que levam o selo "vaga projetada" — não é o resultado oficial. O selo
+              "matematicamente eleito" só aparece quando a contagem já garante a vaga.
             </p>
             <p
               className="max-w-prose"

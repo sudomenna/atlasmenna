@@ -190,6 +190,7 @@ import { readArchivedProjection, readNationalProjection } from "@/lib/edge-confi
 import type { EdgePayload } from "@/lib/edge-config/types";
 import { insightsPresidenteDoPayload } from "@/lib/insights/presidente";
 import { LEITURA_VAZIA, lerLeituraParaTela } from "@/lib/leitura/ler";
+import { itensFaixaAgora } from "@/lib/utils/anuncios-definidos";
 import { queCompetem } from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -632,6 +633,7 @@ export default async function HomePage() {
   // O orchestrator grava `insights: []` (api/model/project.py) — sem esta
   // reserva a caixa "Análise" nunca aparecia em produção.
   const frasesRegra = insights.length > 0 ? insights : insightsPresidenteDoPayload(payload);
+  const faixaAgora = itensFaixaAgora(payload);
   const analiseIA = leitura.ia;
 
   /**
@@ -726,21 +728,10 @@ export default async function HomePage() {
   // não foi gravada (pré-virada de turno) — degrade gracioso.
   const recap1T = turno === 2 ? await readArchivedProjection({ cargo: "pres", turno: 1 }) : null;
 
-  // Sinal `vai_a_2t` agregado nacional. S06/F4d Fase 5 promoveu a derivação ao
-  // orchestrator (`national.vai_a_2t_nacional`); aqui usamos direto quando
-  // presente, com fallback à derivação local pra payloads pré-Fase 5.
-  // Semântica alinhada com o NOME do campo: `true` ⇔ vai a 2T ⇔ P(2T) alta.
-  // O `<NationalWinnerBanner />` gate é `vaiA2t === false` (decisão 1T).
-  //
-  // Fix Fase 5: a heurística antiga local emitia `vaiA2tNacional = p < 0.01`,
-  // ou seja, **true quando NÃO vai a 2T** — invertido em relação ao nome.
-  // Com isso o banner NUNCA renderizava no caminho decisão-1T (sempre `!==
-  // false` ⇒ early return). Cobertura desse caminho passa a existir após
-  // Fase 5. Pré-Fase 5: payloads sem o campo agora caem em derivação
-  // SEMANTICAMENTE CORRETA (`>= 0.01`), corrigindo o gate retroativamente.
-  const pSegundoTurno = national.p_segundo_turno_overall;
-  const vaiA2tNacional: boolean | null =
-    national.vai_a_2t_nacional ?? (pSegundoTurno == null ? null : pSegundoTurno >= 0.01);
+  // 🔴 2026-10-04 (ADR-0075) — o `vaiA2tNacional` que vivia aqui (derivado de
+  // `national.vai_a_2t_nacional` / `p_segundo_turno_overall`, leitura da
+  // PROJEÇÃO) só alimentava o gate do `<NationalWinnerBanner />`. A faixa
+  // agora só aparece com `EdgeUfRow.eleitos_definidos`; a variável saiu.
 
   // O mapping `candidato_id → rank` (paleta N-way, ADR-0013) era construído
   // aqui e passado ao mapa. Com o mapa na moldura (ADR-0033 § 1), quem o
@@ -875,29 +866,27 @@ export default async function HomePage() {
           nenhuma, mas a guarda é o que protege contra um payload semeado a
           mais no futuro (spec 019 § D7: as duas defesas coexistem de
           propósito). */}
-      {!pre && (national.chamadas_recentes ?? []).length > 0 && (
-        <BreakingNewsTicker chamadas={national.chamadas_recentes ?? []} />
-      )}
+      {/* 🔴 2026-10-04 (dono) — a faixa só anuncia o que está MATEMATICAMENTE
+          definido (`lib/utils/anuncios-definidos.ts`): no Presidente, um item
+          nacional quando o Brasil inteiro definiu. `national.chamadas_recentes`
+          não é mais lido — o texto dele saía da `chamada` da projeção. */}
+      {!pre && faixaAgora.length > 0 && <BreakingNewsTicker chamadas={faixaAgora} />}
 
       {/* O mapa NÃO está mais aqui (ADR-0033 § 1). Ele é a coluna persistente
           do `<AppShellSplit>` — à direita no desktop, faixa de 52vh acima dos
           painéis no mobile — montada por `app/(pres)/layout.tsx`, e sobrevive
           à navegação para `/uf/[sigla]` e de volta. */}
 
-      {/* S06/F4d — Banner "ELEITO" nacional. Aparece quando threshold de
-          chamada final atingido (p_vitoria >= 0.99 ou apurado >= 99%). Fica
-          fora de `<Panel>`: é uma faixa de estado, não uma seção editorial —
-          e se auto-anula, o que deixaria um filete órfão. ADR-0029 § 1: logo
-          abaixo do mapa, antes do painel de resultado. */}
-      {/* `!pre`: o banner "ELEITO" é a proclamação de um vencedor. */}
+      {/* S06/F4d — faixa nacional do eleito. 🔴 2026-10-04 (ADR-0075): só
+          aparece quando o Brasil está MATEMATICAMENTE definido
+          (`EdgeUfRow.eleitos_definidos`, via `eleitosNacionais`) — nunca por
+          `p_vitoria` nem por % apurado. Fica fora de `<Panel>`: é uma faixa de
+          estado, não uma seção editorial — e se auto-anula, o que deixaria um
+          filete órfão. ADR-0029 § 1: logo abaixo do mapa, antes do painel de
+          resultado. */}
+      {/* `!pre`: a faixa é a proclamação de um vencedor. */}
       {!pre && (
-        <NationalWinnerBanner
-          national={national}
-          candidatos={national.candidatos}
-          pctApuradoTotal={pct_apurado_total}
-          turno={turno}
-          vaiA2t={vaiA2tNacional}
-        />
+        <NationalWinnerBanner candidatos={national.candidatos} porUf={por_uf} turno={turno} />
       )}
 
       {/* Kicker de trilha (ADR-0019). Fica FORA do `<Panel>` e imediatamente
@@ -1213,11 +1202,21 @@ export default async function HomePage() {
                             className="block"
                             style={{ color: "inherit", textDecoration: "none" }}
                           >
+                            {/* 🔴 04/10/2026 (dono) — `duasBases`: o cartão
+                                acompanha a chave "Parcial / Projeção", como os
+                                de `/governador` e `/senador`. Até aqui ele
+                                mostrava SÓ a projeção (`pct`, em ocre) logo
+                                abaixo do resumo "Parcial · …" da região — o
+                                leitor via, na visão Parcial, um número que não
+                                era a parcial. Agora: Parcial ⇒ `pct_atual`, cor
+                                `--color-pct-votos`, ordem do apurado; Projeção
+                                ⇒ a lista de sempre, em `--color-pct-proj`. */}
                             <GovernorCard
                               uf={uf}
                               candidatos={national.candidatos}
                               cargo="pres"
                               nivelTitulo={4}
+                              duasBases
                             />
                           </a>
                         </li>

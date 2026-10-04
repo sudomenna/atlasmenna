@@ -35,6 +35,7 @@ import { logWarn } from "@/lib/tse/log";
 import { interpretarInterruptorLeitura } from "./interruptor";
 import {
   type AnaliseIA,
+  EVENTOS_LEGADOS_OCULTOS,
   type EventoBoletim,
   type InterruptorLeitura,
   type LeituraNoite,
@@ -170,9 +171,16 @@ function filtrarNoticias(
   return selecionadas.length > 0 ? selecionadas : null;
 }
 
+/**
+ * 🔴 2026-10-04 (dono) — linhas de tipo legado ({@link EVENTOS_LEGADOS_OCULTOS}:
+ * "A projeção chama <UF> para …") não vão para a tela: a tela só anuncia o que
+ * está matematicamente definido. Filtro SÓ de leitura — o Blob não é
+ * reescrito, e o cron mescla o histórico gravado inteiro como sempre.
+ */
 function filtrarHistorico(historico: EventoBoletim[], ligado: boolean): EventoBoletim[] | null {
-  if (!ligado || historico.length === 0) return null;
-  return historico;
+  if (!ligado) return null;
+  const visiveis = historico.filter((e) => !EVENTOS_LEGADOS_OCULTOS.has(e.tipo));
+  return visiveis.length === 0 ? null : visiveis;
 }
 
 /**

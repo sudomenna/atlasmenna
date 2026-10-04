@@ -200,3 +200,47 @@ describe("gaveta — selos de base (selosDaBase), por cargo", () => {
     expect([...l.values()].some((x) => x.selo != null)).toBe(false);
   });
 });
+
+// 2026-10-04 (auditoria constitucional P1/P8 + a11y) — escopo, atribuição e a
+// etiqueta de destino sobre a faixa.
+describe("gaveta — escopo do status e atribuição do Senado", () => {
+  const atribuicao = (host: HTMLElement) =>
+    host.querySelector("[data-testid='state-sheet-atribuicao']")?.textContent ?? null;
+
+  it("Presidente: 'No país: matematicamente eleito' (quem decide é o Brasil), sem atribuição", () => {
+    const h = render({ row: mkRow({ eleitos_definidos: [100] }), cargo: "pres" });
+    expect(status(h)).toBe("No país: matematicamente eleito");
+    expect(h.querySelector(".sr-only")?.parentElement?.textContent).toContain(
+      ", no país: matematicamente eleito",
+    );
+    expect(atribuicao(h)).toBeNull();
+  });
+
+  it("Governador: sem prefixo e sem atribuição (a fonte é o aviso do TSE)", () => {
+    const h = render({ row: mkRow({ eleitos_definidos: [100] }), cargo: "gov" });
+    expect(status(h)).toBe("Matematicamente eleito");
+    expect(atribuicao(h)).toBeNull();
+  });
+
+  it("🔴 Senado com eleito: a atribuição 'Cálculo do AtlasMenna sobre a contagem do TSE'", () => {
+    const h = render({ row: mkRow({ eleitos_definidos: [100, 101] }), cargo: "sen" });
+    expect(status(h)).toBe("Matematicamente eleitos");
+    expect(atribuicao(h)).toBe("Cálculo do AtlasMenna sobre a contagem do TSE");
+  });
+
+  it("Senado SEM eleito: nem status nem atribuição", () => {
+    const h = render({ row: mkRow(), cargo: "sen" });
+    expect(status(h)).toBeNull();
+    expect(atribuicao(h)).toBeNull();
+  });
+
+  it("🔴 'Sub judice' eleito: a etiqueta herda a tinta da faixa; fora da faixa, a de sempre [mutação: tirar `sobreFaixa`]", () => {
+    const row = mkRow({ eleitos_definidos: [100] });
+    row.top_candidatos = row.top_candidatos.map((t) => ({ ...t, destino: "sub_judice" as const }));
+    const l = linhas(render({ row, cargo: "gov" }));
+    expect(l.get("ALFA")?.html).toMatch(/data-testid="destino-etiqueta"[^>]*color:\s*inherit/);
+    expect(l.get("BETA")?.html).toMatch(
+      /data-testid="destino-etiqueta"[^>]*color:\s*var\(--text-primary\)/,
+    );
+  });
+});

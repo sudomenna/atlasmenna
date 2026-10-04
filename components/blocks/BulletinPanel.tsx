@@ -27,16 +27,16 @@
  *     `<details>` (zero JS).
  *
  * As frases descrevem, não julgam: "aparece com", "a diferença projetada é
- * de", "a projeção indica", "já foram chamadas". Nenhum adjetivo de mérito
+ * de", "a projeção indica", "matematicamente eleito". Nenhum adjetivo de mérito
  * ("expressiva", "esmagadora", "consolida") entra aqui — a constituição § 2
  * proíbe, e uma vez que a frase existe no código ela é dita a noite inteira.
  *
  * ===== Relação com os blocos vizinhos =====
- *   - `<BreakingNewsTicker />` (topo da página) rotaciona UMA chamada por vez.
- *     Este bloco lista as mesmas chamadas em ordem cronológica, junto dos
- *     fatos derivados. Ticker é alerta; boletim é registro. As chamadas vêm
- *     prontas do orchestrator (`national.chamadas_recentes[].texto`) — este
- *     componente as repassa literalmente, sem reescrever.
+ *   - `<BreakingNewsTicker />` (topo da página) rotaciona UM resultado
+ *     definido por vez. Ticker é alerta; boletim é registro. Desde
+ *     2026-10-04 nenhum dos dois lê `national.chamadas_recentes` nem
+ *     `EdgeUfRow.chamada`: a definição vem de `eleitos_definidos`
+ *     (`lib/utils/anuncios-definidos.ts`), a regra do balão do mapa.
  *   - `<InsightCard />` (RF-044) segue existindo com as frases de
  *     `payload.insights`, geradas server-side — ou, com a leitura da noite
  *     ligada, com a análise escrita por IA (ADR-0072). Não há sobreposição:
@@ -51,6 +51,7 @@
 
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { EdgeNational, EdgeUfRow, Turno } from "@/lib/edge-config/types";
+import { eleitosNacionais, fraseEleitos } from "@/lib/utils/anuncios-definidos";
 import { formatCI, formatPercent, formatPp, formatTimeHMS } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 
@@ -65,7 +66,10 @@ export interface BulletinPanelProps {
   ts: string;
   turno: Turno;
   totalUfs?: number;
-  /** Máximo de chamadas do orchestrator listadas abaixo dos fatos. */
+  /**
+   * @deprecated 2026-10-04 — sem efeito: `national.chamadas_recentes` não é
+   * mais repassado (o texto saía da `chamada` da projeção).
+   */
   maxChamadas?: number;
   /**
    * Histórico da leitura da noite (ADR-0072) — `EventoBoletim[]` entra direto
@@ -109,7 +113,6 @@ export function buildBulletin({
   ts,
   turno,
   totalUfs = 27,
-  maxChamadas = 3,
 }: Omit<BulletinPanelProps, "className" | "historico">): BulletinItem[] {
   const items: BulletinItem[] = [];
 
@@ -166,26 +169,27 @@ export function buildBulletin({
     });
   }
 
-  const chamadas = rows.filter((r) => r.chamada).length;
+  // 🔴 2026-10-04 (dono) — a linha de definição segue a regra do balão do mapa:
+  // só afirma quem está MATEMATICAMENTE eleito (`EdgeUfRow.eleitos_definidos`,
+  // via `lib/utils/anuncios-definidos.ts`), nunca a `chamada` da projeção. Até
+  // esta data dizia "N unidades federativas já foram chamadas para o líder
+  // local", contando `chamada === true`. Este painel é o da corrida NACIONAL
+  // (Presidente): o eleito só existe quando o Brasil inteiro está definido, e
+  // aí vira UMA frase, não uma contagem de UFs.
+  const eleitos = eleitosNacionais(rows);
+  const fraseEleito = eleitos.length > 0 ? fraseEleitos(eleitos, rows, national) : null;
   items.push({
-    id: "chamadas",
+    id: "definicao",
     ts,
-    head: "Chamadas",
-    text:
-      chamadas === 0
-        ? "Nenhuma unidade federativa foi chamada para o líder local até agora."
-        : chamadas === 1
-          ? "1 unidade federativa já foi chamada para o líder local."
-          : `${chamadas} unidades federativas já foram chamadas para o líder local.`,
+    head: "Definição",
+    text: fraseEleito
+      ? `${fraseEleito} pela contagem oficial do TSE.`
+      : "Nenhuma candidatura está matematicamente eleita até agora.",
   });
 
-  // Chamadas do orchestrator: texto pronto, repassado literalmente (ADR-0005).
-  // Ordem canônica do campo é `ts` DESC; aqui invertemos para o boletim correr
-  // no sentido da leitura (mais antigo em cima, como em qualquer registro).
-  const recentes = (national.chamadas_recentes ?? []).slice(0, maxChamadas);
-  for (const [i, c] of [...recentes].reverse().entries()) {
-    items.push({ id: `chamada-${i}`, ts: c.ts, head: "Boletim", text: c.texto });
-  }
+  // `national.chamadas_recentes` NÃO é mais repassado: o texto pronto dele
+  // ("AP chamada para …") saía da `chamada` da projeção (decisão do dono,
+  // 2026-10-04). `maxChamadas` fica na assinatura só por compatibilidade.
 
   return items;
 }

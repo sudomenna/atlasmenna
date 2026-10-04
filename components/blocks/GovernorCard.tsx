@@ -6,9 +6,13 @@
  *   - Header: "Nome do estado · SIGLA    pct% apur"
  *   - Top-4 candidatos com nome + partido + barra colorida pela SIGLA
  *   - 5ª linha "Outros" agregando o restante
- *   - Chip de status à direita do líder (● ELEITO / VAI A 2T / EM APURAÇÃO);
- *     no Senado (`cargo="sen"`), "● ELEITO" nos DOIS ocupantes de vaga
- *     (2026-09-29, decisão do dono)
+ *   - Selo de status ao lado do nome. 🔴 2026-10-04 (dono, auditoria
+ *     constitucional P1): "Matematicamente eleito" (verde) SÓ para quem o
+ *     produtor declarou definido (`EdgeUfRow.eleitos_definidos`, via
+ *     `definicaoDaUf`); fora disso, o status DA BASE de cada lista, com os
+ *     textos de `lib/utils/selo-resultado.ts` ("Vaga projetada" / "Vaga na
+ *     parcial"; "Vence no 1º turno · projeção" / "2º turno · na parcial"…).
+ *     Nunca "Eleito" solto pela projeção (era "● ELEITO" até esta data).
  *
  * **Eram 3 candidatos + "Outros" até 2026-09-19.** O dono decidiu naquele dia
  * que as três telas de resumo de UF (esta, a ficha `<StateResultSheet>` e a
@@ -40,11 +44,22 @@ import { vagasDaCorrida } from "@/lib/config/cargos";
 import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
 import { normalizarSqcand } from "@/lib/etiquetas/formato";
 import type { EtiquetasDaCorrida } from "@/lib/etiquetas/telas";
-import { classificarContagem, classificarProjecao } from "@/lib/utils/desfecho-governador";
+import {
+  classificarContagem,
+  classificarProjecao,
+  type DesfechoGovernador,
+} from "@/lib/utils/desfecho-governador";
 import { anuladasAoFim, compete, exibePercentual, votosDaAnulada } from "@/lib/utils/destino-voto";
+import {
+  atribuicaoDaDefinicao,
+  comEscopo,
+  definicaoDaUf,
+  ROTULO_ELEITO,
+} from "@/lib/utils/eleitos-definidos";
 import { formatPercentTrim } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { rankByParcial } from "@/lib/utils/rank-parcial";
+import { type BaseSelo, TURNO_LABEL, VAGA_LABEL } from "@/lib/utils/selo-resultado";
 import { vagasDaUfNaParcial } from "@/lib/utils/senado-parcial";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
@@ -112,6 +127,12 @@ export interface GovernorCardProps {
    * objeção de 27/09 era o selo só no líder; com ele nos dois, ela cai. O
    * `aria-label` diz "eleitos" e nomeia os dois.
    *
+   * 🔴 2026-10-04 (dono, auditoria constitucional P1) — o "● ELEITO" pela
+   * projeção SAIU. Os ocupantes de vaga levam "Vaga projetada" / "Vaga na
+   * parcial" (o selo da base daquela lista); "Matematicamente eleito" só para
+   * quem está em `EdgeUfRow.eleitos_definidos`, com a atribuição "Cálculo do
+   * AtlasMenna sobre a contagem do TSE" abaixo das listas.
+   *
    * 🔴 2026-09-28 (ADR-0057 item 6) — `"pres"`: o cartão por estado da seção
    * regional da home de Presidente. **Sem selo** de turno (ADR-0055: o 2º
    * turno de Presidente é fato NACIONAL — "VAI A 2T" ou "● ELEITO" num estado
@@ -139,7 +160,9 @@ export interface GovernorCardProps {
    * `/governador` e `/senador`: a lista sai nas duas bases, cada uma sob
    * `data-view-only`. Na Parcial, `pct_atual` (cor `--color-pct-votos`), na
    * ordem do apurado, com o selo da mesma base; na Projeção, a lista de
-   * sempre. Ausente ⇒ o cartão de antes, uma lista só (a home de Presidente).
+   * sempre. Ausente ⇒ o cartão de antes, uma lista só. A home de Presidente
+   * passou a usar também (04/10, à tarde): sem isto, o cartão mostrava a
+   * projeção sob o resumo "Parcial · …" da região.
    */
   duasBases?: boolean;
 }
@@ -150,49 +173,75 @@ export interface GovernorCardProps {
  */
 const VAGAS_SENADO = vagasDaCorrida(5);
 
-/**
- * 2026-09-29 — o selo de eleito do SENADO, o MESMO desenho e o mesmo texto do
- * de governador (`chipFor`, variante `e`), em cada ocupante de vaga. Pela
- * projeção (a ordem do cartão), e só com apuração começada: sem voto contado
- * não há projeção, e "● ELEITO" seria fabricado (constituição § 1).
- */
-const CHIP_ELEITO_SENADO: StatusChip = { label: "● ELEITO", s: "e", ariaText: "eleitos" };
-
 /** Nenhum ocupante de vaga — as variantes de vaga única (`"gov"`, `"pres"`). */
 const SEM_OCUPANTES: ReadonlySet<number> = new Set();
 
 interface StatusChip {
   label: string;
   /**
-   * Variante do selo em `GovernorCard.module.css` (`b[data-s]`): `e` eleito,
-   * `t` 2º turno, `a` em apuração. As cores (fundo `-strong` + tinta pareada
-   * por tema, nunca branco fixo — o axe mediu 1,62:1 e 1,85:1 no tema escuro
-   * com branco cravado, 2026-09-10) moram lá desde 2026-09-28.
+   * Variante do selo em `GovernorCard.module.css` (`b[data-s]`): `e`
+   * matematicamente eleito (verde — reservado a isso desde 2026-10-04), `t`
+   * 2º turno, `a` neutro (em apuração, vaga, vence no 1º turno pela base). As
+   * cores (fundo `-strong` + tinta pareada por tema, nunca branco fixo — o axe
+   * mediu 1,62:1 e 1,85:1 no tema escuro com branco cravado, 2026-09-10)
+   * moram lá desde 2026-09-28.
    */
   s: "e" | "t" | "a";
   ariaText: string;
 }
 
 /**
- * Selo de status da UF — spec 006, RF-006.8 (2026-09-27).
- *
- * 🔴 **Era um `switch` sobre `bucket` até esta data, e `"chamada"` saía como
- * "● ELEITO".** `chamada` é só "margem grande" — ortogonal ao turno
- * (`EdgeUfRow.bucket`) —, então um líder com 38,5% e 13pp de folga ganhava o
- * selo de eleito na mesma linha em que o payload dizia `vai_a_2t: true` (ES,
- * GO e MG no simulado de 26/09). O desfecho agora vem de
- * `classificarProjecao` (`lib/utils/desfecho-governador.ts`), a mesma regra do
- * filtro "Decididos no 1º turno" e dos gráficos de `/governador`: selo,
- * filtro e gráfico não podem discordar.
+ * "EM APURAÇÃO" — o desfecho `em_aberto` da projeção (2º turno da eleição,
+ * payload legado, ou ordem 1º/2º indefinida). Não afirma nada.
  */
-function chipFor(uf: Pick<EdgeUfRow, "vai_a_2t" | "bucket">): StatusChip {
-  switch (classificarProjecao(uf)) {
+const CHIP_EM_APURACAO: StatusChip = { label: "EM APURAÇÃO", s: "a", ariaText: "em apuração" };
+
+/**
+ * O selo de vaga do SENADO numa base — o MESMO texto do `<VagaBadge>` e do
+ * `<ResultPanel>` (`VAGA_LABEL`, `lib/utils/selo-resultado.ts`). Variante
+ * neutra: verde é a cor de "matematicamente eleito", e isto não é.
+ */
+function chipVaga(base: BaseSelo): StatusChip {
+  return {
+    label: VAGA_LABEL[base],
+    s: "a",
+    ariaText: base === "proj" ? "vaga projetada" : "vaga na parcial",
+  };
+}
+
+/**
+ * O selo de turno de GOVERNADOR numa base — spec 006, RF-006.8.
+ *
+ * QUEM recebe e QUAL desfecho continuam saindo de `classificarProjecao` /
+ * `classificarContagem` (`lib/utils/desfecho-governador.ts`), a mesma regra
+ * do filtro "Decididos no 1º turno" e dos gráficos de `/governador`: selo,
+ * filtro e gráfico não podem discordar (o defeito de 27/09: `chamada` saía
+ * como "● ELEITO" com `vai_a_2t: true` na mesma linha). 🔴 2026-10-04 — o
+ * TEXTO passou a ser o de `TURNO_LABEL` (`selo-resultado.ts`), com a base
+ * sempre dita: "Vence no 1º turno · projeção", "Venceria no 1º turno · na
+ * parcial", "2º turno · …". Até esta data a projeção dizia "● ELEITO" — uma
+ * proclamação que a apuração não tinha feito (constituição § 1).
+ */
+function chipTurno(desfecho: DesfechoGovernador, base: BaseSelo): StatusChip | null {
+  switch (desfecho) {
     case "eleito_1t":
-      return { label: "● ELEITO", s: "e", ariaText: "eleito" };
+      return {
+        label: TURNO_LABEL.primeiro[base],
+        s: "a",
+        ariaText:
+          base === "proj" ? "vence no 1º turno pela projeção" : "venceria no 1º turno na parcial",
+      };
     case "segundo_turno":
-      return { label: "VAI A 2T", s: "t", ariaText: "vai ao segundo turno" };
+      return {
+        label: TURNO_LABEL.segundo[base],
+        s: "t",
+        ariaText: base === "proj" ? "2º turno pela projeção" : "2º turno na parcial",
+      };
+    case "em_aberto":
+      return base === "proj" ? CHIP_EM_APURACAO : null;
     default:
-      return { label: "EM APURAÇÃO", s: "a", ariaText: "em apuração" };
+      // `aguardando` — não há contagem a resumir.
+      return null;
   }
 }
 
@@ -241,34 +290,6 @@ function ordemParcial(uf: EdgeUfRow): TopCandidato[] | null {
   return anuladasAoFim(ranking.slice(0, 4).map((r) => porId.get(r.id) as TopCandidato));
 }
 
-/**
- * O selo de governador na Parcial — "se a apuração parasse agora", a MESMA
- * regra de `<GovernadoresPlacarTurno base="contagem">` (`classificarContagem`,
- * `lib/utils/desfecho-governador.ts`) e o mesmo condicional dos rótulos dele.
- * Nunca "eleito". `aguardando` ⇒ sem selo: não há contagem a resumir.
- */
-function chipContagem(uf: EdgeUfRow): StatusChip | null {
-  switch (classificarContagem(uf)) {
-    case "eleito_1t":
-      return { label: "FECHARIA NO 1T", s: "e", ariaText: "fecharia no 1º turno" };
-    case "segundo_turno":
-      return { label: "IRIA AO 2T", s: "t", ariaText: "iria ao 2º turno" };
-    default:
-      return null;
-  }
-}
-
-/**
- * O selo de vaga do SENADO na Parcial — sempre com a base dita, como o
- * `VAGA_LABEL.parcial` do `<ResultPanel>` (`lib/utils/selo-resultado.ts`).
- * Variante neutra: verde é a cor de "eleito", e isto não é.
- */
-const CHIP_VAGA_PARCIAL: StatusChip = {
-  label: "VAGA NA PARCIAL",
-  s: "a",
-  ariaText: "nas vagas na parcial",
-};
-
 export function GovernorCard({
   uf,
   candidatos,
@@ -279,7 +300,19 @@ export function GovernorCard({
 }: GovernorCardProps) {
   const senado = cargo === "sen";
   const presidente = cargo === "pres";
-  const chip = senado || presidente ? null : chipFor(uf);
+  // 🔴 2026-10-04 — quem está MATEMATICAMENTE eleito (ponto único,
+  // `lib/utils/eleitos-definidos.ts`): igual nas duas bases, casado por `id`.
+  const definicao = definicaoDaUf(uf);
+  // "Matematicamente eleito" — em Presidente, "No país: …" (quem decide é o
+  // Brasil, não o estado do cartão).
+  const rotuloEleito = comEscopo(ROTULO_ELEITO, { cargo, superficie: "estado" });
+  const chipEleito: StatusChip = {
+    label: rotuloEleito,
+    s: "e",
+    ariaText: rotuloEleito.toLocaleLowerCase("pt-BR"),
+  };
+  // Senado: a conta é do AtlasMenna (o TSE não publica a marca na apuração).
+  const atribuicao = atribuicaoDaDefinicao(cargo, definicao);
   const Titulo = `h${nivelTitulo}` as "h3" | "h4";
   const nomeUf = UF_NAMES[uf.sigla] ?? uf.sigla;
   const candIndex = new Map(candidatos.map((c) => [c.id, c] as const));
@@ -381,36 +414,98 @@ export function GovernorCard({
   const rows: Row[] = outros ? [...top, linhaOutros(outros.pct)] : top;
 
   const liderRow = top.find(compete);
+
+  /**
+   * Os selos de UMA lista (`id` → selo), na ordem em que ela é exibida.
+   *
+   *  1. Quem está em `definicao.eleitos` ⇒ "Matematicamente eleito". É o ÚNICO
+   *     caminho para o selo verde, e não depende da base.
+   *  2. Senado ⇒ "Vaga projetada"/"Vaga na parcial" nos `ocupantesBase` que
+   *     não estão eleitos, até completar as vagas (um eleito ocupa a sua).
+   *  3. Governador sem eleito ⇒ o selo de turno da base no líder (`eleito_1t`,
+   *     `em_aberto`) ou nos dois primeiros que disputam (`segundo_turno`) — o
+   *     par do `<ResultPanel>`. Com eleito, a corrida de vaga única está
+   *     decidida: nenhum outro selo.
+   *  4. Presidente ⇒ só o (1) (ADR-0055: nenhum selo de UF).
+   */
+  const selosDaLista = (
+    linhas: readonly Row[],
+    base: BaseSelo,
+    ocupantesBase: ReadonlySet<number>,
+    desfecho: DesfechoGovernador | null,
+  ): Map<number, StatusChip> => {
+    const selos = new Map<number, StatusChip>();
+    const disputam: number[] = [];
+    for (const r of linhas) if (r.id !== null && compete(r)) disputam.push(r.id);
+    for (const id of disputam) if (definicao.eleitos.has(id)) selos.set(id, chipEleito);
+    if (senado) {
+      let livres = VAGAS_SENADO - selos.size;
+      for (const id of disputam) {
+        if (livres <= 0) break;
+        if (selos.has(id) || !ocupantesBase.has(id)) continue;
+        selos.set(id, chipVaga(base));
+        livres -= 1;
+      }
+      return selos;
+    }
+    if (presidente || selos.size > 0 || desfecho === null) return selos;
+    const chip = chipTurno(desfecho, base);
+    if (chip === null) return selos;
+    for (const id of disputam.slice(0, desfecho === "segundo_turno" ? 2 : 1)) selos.set(id, chip);
+    return selos;
+  };
+  const seloPor =
+    (selos: ReadonlyMap<number, StatusChip>) =>
+    (r: Row): StatusChip | null =>
+      r.id === null ? null : (selos.get(r.id) ?? null);
+
   // 2026-09-29 — Senado: quem ocupa as vagas, pelo ponto único
   // (`lib/utils/vagas-eleitas.ts`) sobre a ORDEM DO CARTÃO (a da projeção,
   // anulada no fim). É o mesmo conjunto do hemiciclo de 2027 e do balão do
-  // mapa na base "Projeção".
+  // mapa na base "Projeção". O selo de vaga só com apuração começada: sem
+  // voto contado não há projeção (constituição § 1).
   const ocupantes = senado ? idsDasVagas(topCandidatos, VAGAS_SENADO) : SEM_OCUPANTES;
-  const chipSenado = senado && uf.pct_apurado > 0 ? CHIP_ELEITO_SENADO : null;
-  /** O selo desta linha: o de turno no líder (gov), o de eleito em cada vaga (sen). */
-  const seloDe = (r: Row): StatusChip | null => {
-    if (r.id === null) return null;
-    if (senado) return ocupantes.has(r.id) ? chipSenado : null;
-    return r.id === liderRow?.id ? chip : null;
-  };
+  const selosProj = selosDaLista(
+    rows,
+    "proj",
+    uf.pct_apurado > 0 ? ocupantes : SEM_OCUPANTES,
+    senado || presidente ? null : classificarProjecao(uf),
+  );
+  const seloDe = seloPor(selosProj);
+
   // 🔊 `aria-label` — sigla INTEIRA, de propósito (2026-09-19). A abreviação
   // resolve largura, e aqui não há largura: "REPUBLICANOS" dito por inteiro é
   // exatamente o que o TSE publica. A regra está em `lib/utils/sigla-partido.ts`.
-  // Senado: os que ocupam as vagas pela ordem do cartão — não "o líder".
-  const destaque = senado
-    ? top.filter((r) => r.id !== null && ocupantes.has(r.id))
-    : liderRow
-      ? [liderRow]
-      : [];
   const descreve = (r: Row) =>
     `${r.nome} (${r.partido}) com ${r.pct === null ? "—" : formatPercentTrim(r.pct)}`;
+  /** "vaga projetada: A e B, matematicamente eleito: C" — agrupado pelo selo. */
+  const descreveSelos = (linhas: readonly Row[], selos: ReadonlyMap<number, StatusChip>) => {
+    const grupos = new Map<string, Row[]>();
+    for (const r of linhas) {
+      const c = r.id === null ? undefined : selos.get(r.id);
+      if (!c) continue;
+      grupos.set(c.ariaText, [...(grupos.get(c.ariaText) ?? []), r]);
+    }
+    return [...grupos].map(([t, rs]) => `${t}: ${rs.map(descreve).join(" e ")}`).join(", ");
+  };
   const apurado = `${formatPercentTrim(uf.pct_apurado)} apurado`;
+  const gProj = descreveSelos(rows, selosProj);
+  const maisVotados = top.filter((r) => r.id !== null && ocupantes.has(r.id));
   const descricaoProj = senado
-    ? `${destaque.length > 0 ? `, ${chipSenado ? chipSenado.ariaText : "mais votados"}: ${destaque.map(descreve).join(" e ")}` : ""}`
+    ? gProj
+      ? `, ${gProj}`
+      : maisVotados.length > 0
+        ? `, mais votados: ${maisVotados.map(descreve).join(" e ")}`
+        : ""
     : presidente
-      ? `${liderRow ? `, na frente no estado: ${descreve(liderRow)}` : ""}`
-      : `, ${chip?.ariaText}${liderRow ? `, líder: ${descreve(liderRow)}` : ""}`;
+      ? `${liderRow ? `, na frente no estado: ${descreve(liderRow)}` : ""}${gProj ? `, ${gProj}` : ""}`
+      : `${gProj ? `, ${gProj}` : ""}${liderRow ? `, líder: ${descreve(liderRow)}` : ""}`;
   const ariaLabel = `${nomeUf}${descricaoProj}, ${apurado}`;
+
+  /** A atribuição do Senado, uma vez por cartão, perto dos selos. */
+  const notaAtribuicao = atribuicao ? (
+    <p data-testid="governor-card-atribuicao">{atribuicao}</p>
+  ) : null;
 
   /** Uma lista de linhas — a de sempre, ou a da Parcial no modo de duas bases. */
   const lista = (
@@ -506,6 +601,7 @@ export function GovernorCard({
             "Outros") vale em TODA largura; a linha única do celular saiu. */}
         {cabecalho}
         {lista(rows, seloDe)}
+        {notaAtribuicao}
       </article>
     );
   }
@@ -533,26 +629,33 @@ export function GovernorCard({
   const ocupantesParcial: ReadonlySet<number> = senado
     ? new Set(vagasDaUfNaParcial(uf, VAGAS_SENADO).ocupantes.map((c) => c.id))
     : SEM_OCUPANTES;
-  const chipParcialGov = senado || presidente ? null : chipContagem(uf);
-  const seloParcial = (r: Row): StatusChip | null => {
-    if (r.id === null) return null;
-    if (senado) return ocupantesParcial.has(r.id) ? CHIP_VAGA_PARCIAL : null;
-    return r.id === liderParcial?.id ? chipParcialGov : null;
-  };
-  const destaqueParcial = senado
-    ? topParcial.filter((r) => r.id !== null && ocupantesParcial.has(r.id))
-    : liderParcial
-      ? [liderParcial]
-      : [];
+  // Governador: "se a apuração parasse agora" — `classificarContagem`, a
+  // mesma regra de `<GovernadoresPlacarTurno base="contagem">`.
+  const selosParcial = selosDaLista(
+    rowsParcial,
+    "parcial",
+    ocupantesParcial,
+    senado || presidente ? null : classificarContagem(uf),
+  );
+  const seloParcial = seloPor(selosParcial);
+  const gParcial = descreveSelos(rowsParcial, selosParcial);
   const descricaoParcial = !usaParcial
-    ? ", na parcial: aguardando apuração"
+    ? // Sem parcial medida: "Na parcial, aguardando apuração" (era "Na
+      // parcial, na parcial: …" até 2026-10-04 — auditoria de a11y).
+      `, aguardando apuração${gParcial ? `, ${gParcial}` : ""}`
     : senado
-      ? destaqueParcial.length > 0
-        ? `, ${CHIP_VAGA_PARCIAL.ariaText}: ${destaqueParcial.map(descreve).join(" e ")}`
+      ? gParcial
+        ? `, ${gParcial}`
         : ""
-      : `, se a apuração parasse agora${chipParcialGov ? `: ${chipParcialGov.ariaText}` : ""}${
-          liderParcial ? `, na frente: ${descreve(liderParcial)}` : ""
-        }`;
+      : presidente
+        ? // Presidente: nenhum selo de UF (ADR-0055) — só quem está à frente
+          // no apurado do estado, o par do "na frente no estado" da projeção.
+          `${liderParcial ? `, na frente no estado: ${descreve(liderParcial)}` : ""}${
+            gParcial ? `, ${gParcial}` : ""
+          }`
+        : `, se a apuração parasse agora${gParcial ? `: ${gParcial}` : ""}${
+            liderParcial ? `, na frente: ${descreve(liderParcial)}` : ""
+          }`;
 
   return (
     <article aria-label={`${nomeUf}, ${apurado}`} className={styles.c} {...dataEtq}>
@@ -561,6 +664,7 @@ export function GovernorCard({
       <div data-view-only="parcial">
         {lista(rowsParcial, seloParcial, `Na parcial${descricaoParcial}`)}
       </div>
+      {notaAtribuicao}
     </article>
   );
 }

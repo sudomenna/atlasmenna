@@ -569,6 +569,27 @@ export default async function SobreOModeloPage() {
               </tr>
             </tbody>
           </table>
+
+          {/* 2026-10-04 (dono, auditoria constitucional P8) — o que quer dizer
+              a marca "Matematicamente eleito" (balão do mapa, gavetas, cartões
+              de estado). SEM `<h2>` novo: a página tem oito e o teste de
+              estrutura conta. A regra do Senado é a de `api/model/definidos.py`
+              (`votos_k − votos_(vagas+1) > R`, R = eleitores que ainda podem
+              votar); Governador e Presidente seguem o `md` do TSE. */}
+          <p style={S.body} data-testid="sobre-o-modelo-matematicamente-eleito">
+            Nenhuma faixa da agulha, por mais alta, faz o site chamar alguém de eleito: a projeção
+            nunca marca ninguém como eleito. A marca <strong>Matematicamente eleito</strong> só
+            aparece quando a própria contagem já não deixa outro desfecho. Para Governador e
+            Presidente, seguimos o aviso oficial do TSE de eleição matematicamente definida — e, em
+            Presidente, a marca vale para o país inteiro, nunca para um estado sozinho. Para o
+            Senado, o TSE não publica esse aviso durante a apuração, e a conta é nossa: cada
+            candidato a uma das duas vagas só é marcado quando a vantagem dele sobre o terceiro
+            colocado é maior que o número de eleitores que ainda podem votar no estado (os das
+            seções ainda não totalizadas, inclusive as que ainda não foram apuradas). Basta essa
+            comparação porque cada eleitor dá no máximo um voto a um mesmo candidato: nem que todos
+            os eleitores restantes votassem no terceiro, ele não alcançaria quem está marcado.
+            Depois da totalização final, vale a marca oficial do TSE.
+          </p>
         </section>
 
         {/* 5. Cadeiras — a faixa do proporcional (RF-127; ADR-0036, ADR-0037).

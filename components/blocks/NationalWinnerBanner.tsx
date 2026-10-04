@@ -1,78 +1,63 @@
 /**
  * components/blocks/NationalWinnerBanner.tsx
  *
- * Banner nacional "ELEITO" — análogo ao `<WinnerBanner />` (UF), mas pro
- * agregado nacional. Aparece quando o líder atinge threshold de chamada
- * (p_vitoria >= 0.99 ou apuração >= 99%).
+ * Faixa nacional do Presidente MATEMATICAMENTE eleito — análoga ao
+ * `<WinnerBanner />` (UF), mas para o agregado nacional.
+ *
+ * 🔴 2026-10-04 (dono, ADR-0075) — a faixa só aparece quando a eleição está
+ * DEFINIDA, e a única fonte é `EdgeUfRow.eleitos_definidos`, lida pelo ponto
+ * único {@link eleitosNacionais} (`lib/utils/anuncios-definidos.ts`). O
+ * produtor só emite o campo no cargo 1 quando o arquivo NACIONAL do TSE diz
+ * `md='e'` ou depois da totalização final (`tf='s'`); aí o eleito aparece em
+ * todas as UFs, e a união dá UM id.
+ *
+ * Até 04/10 a faixa dizia "ELEITO" / "Presidente eleito" quando
+ * `p_vitoria ≥ 0,99` OU apurado ≥ 99% — a primeira é opinião do MODELO, a
+ * segunda é aritmética incompleta (1% do Brasil são ~1,5 milhão de votos).
+ * Constituição § 1: a tela não proclama o que não está decidido. Nada aqui
+ * olha `p_vitoria`, `pct_apurado_total`, `rank`, `candidato_a_id`, `vai_a_2t`
+ * ou a base do seletor — por isso o texto é o mesmo nas duas bases.
  *
  * Cobertura
- *   - Inspirado em RF-032 (WinnerBanner UF) — versão nacional para o
- *     placar presidencial. Próximo nível semântico: "chamada final".
- *   - ADR-0024 (cor por PARTIDO). ⚠️ Até 19/09 este banner citava o ADR-0013
- *     (cor por rank) e pintava por colocação — ver a nota acima de `style`.
- *   - Constituição § 2 (neutralidade — cor via token, nunca partidária).
+ *   - ADR-0075 (marca de eleito só com eleição matematicamente definida);
+ *     ADR-0055 (nunca "Eleito" solto vindo de projeção).
+ *   - ADR-0053 / RF-213 — anulada nunca é anunciada (defensivo: o produtor não
+ *     a emite, `definicaoDaUf` a descarta, e aqui ela é descartada de novo
+ *     pelo `destino` da lista nacional).
+ *   - ADR-0024 (cor por PARTIDO). Constituição § 2 (cor via token).
  *
- * Server Component puro. Caller passa o slice nacional + total apurado.
+ * Identidade, nunca posição: o nome e a cor saem do **id definido**, mesmo
+ * que o líder projetado seja outro.
  *
- * Gate de renderização
- *   - Em 1T: só renderiza se `vai_a_2t === false` (sinal binário do
- *     payload — orchestrator declara que NÃO vai a 2T no agregado
- *     nacional) E threshold atingido.
- *   - Em 2T: qualquer threshold atingido (não há "vai a 2T" — o 2T já é).
- *   - Threshold combinado (OR): `p_vitoria_lider >= 0.99` OU
- *     `pct_apurado_total >= 99.0`. A primeira é probabilística (modelo
- *     muito confiante), a segunda é factual (apuração quase 100%).
- *   - `national.candidato_a_id == null` → null (pré-apuração).
- *
- * Como o líder é resolvido
- *   - Procuramos o candidato com `rank === 1` no array. Se ausente,
- *     fallback para `national.candidato_a_id` (lookup por id). Se ambos
- *     falharem, não renderiza (degradação silenciosa).
+ * Server Component puro.
  *
  * A11y
- *   - `role="status"` + `aria-live="polite"` — quando o banner aparecer
- *     mid-apuração, screen readers anunciam de forma não-intrusiva.
+ *   - `role="status"` + `aria-live="polite"`.
  *   - Fundo e tinta saem do MESMO par medido, `partyChipInk(sigla)`.
- *     ⚠️ Até 19/09 a tinta era escolhida pelo `rank` ("1–2 = fundo escuro =
- *     texto branco"), premissa que só valia na paleta por colocação. Padrão
- *     do `<WinnerBanner />` UF.
  */
 
 import type { CSSProperties } from "react";
 
-import type { EdgeCandidate, EdgeNational, Turno } from "@/lib/edge-config/types";
+import type { EdgeCandidate, EdgeUfRow, Turno } from "@/lib/edge-config/types";
+import { eleitosNacionais, fraseEleitos } from "@/lib/utils/anuncios-definidos";
 import { compete } from "@/lib/utils/destino-voto";
-import { formatPercent } from "@/lib/utils/format";
-import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { partyChipInk } from "@/lib/utils/party-color";
-import { siglaExibicao } from "@/lib/utils/sigla-partido";
 
-/** Threshold mínimo de p_vitoria do líder para "chamada final". */
-export const NATIONAL_WIN_P_THRESHOLD = 0.99;
-/** Threshold mínimo de apuração total para "chamada final". */
-export const NATIONAL_WIN_PCT_APURADO_THRESHOLD = 99.0;
+/** Atribuição discreta sob o nome — de onde vem a definição. */
+export const ATRIBUICAO_TSE = "pela contagem oficial do TSE";
 
 export interface NationalWinnerBannerProps {
-  national: EdgeNational;
-  /** Lista completa de candidatos do payload (alimenta lookup por id). */
+  /**
+   * Lista nacional de candidatos (`EdgePayload.national.candidatos`) — só
+   * para nome, partido e `destino` do id definido. Ordem e `rank` ignorados.
+   */
   candidatos: EdgeCandidate[];
-  /**
-   * % total apurado da corrida (0–100). Vem do `EdgePayload.pct_apurado_total`.
-   * O caller é responsável por passar — não está em `EdgeNational`.
-   */
-  pctApuradoTotal: number;
-  /** Turno (1 ou 2). Em 1T exige `vai_a_2t === false` no payload (não há aqui — caller filtra). */
+  /** `EdgePayload.por_uf` — de onde sai `eleitos_definidos`. */
+  porUf: ReadonlyArray<
+    Pick<EdgeUfRow, "sigla" | "top_candidatos" | "eleitos_definidos" | "segundo_turno_definido">
+  >;
+  /** Turno (1 ou 2) — só muda o complemento "no 1º turno". */
   turno: Turno;
-  /**
-   * Sinal binário do orchestrator: a eleição NÃO vai a 2T no agregado
-   * nacional. Em 1T, exigimos `false` para renderizar. Em 2T, ignorado.
-   * Convenção: `null` é tratado como `undefined` (sem sinal, não renderiza
-   * em 1T por segurança). Em 2T sempre passa.
-   *
-   * Source: derivado de `p_segundo_turno_overall` no caller — quando
-   * o caller passa esta prop, ele já decidiu o status do agregado.
-   */
-  vaiA2t?: boolean | null;
   className?: string;
 }
 
@@ -87,50 +72,41 @@ export interface NationalWinnerBannerProps {
 // usar este fundo com tinta de outro lugar desfaz a garantia.
 
 export function NationalWinnerBanner({
-  national,
   candidatos,
-  pctApuradoTotal,
+  porUf,
   turno,
-  vaiA2t,
   className,
 }: NationalWinnerBannerProps) {
-  // Gate 1: sem líder identificado.
-  if (national.candidato_a_id == null) return null;
+  // O único gatilho: o id (ou ids) que o produtor declarou definido(s).
+  // Anulada fora também pela lista nacional (defensivo — ADR-0053).
+  const ids = eleitosNacionais(porUf).filter((id) => {
+    const c = candidatos.find((x) => x.id === id);
+    return c === undefined || compete(c);
+  });
+  // Presidente elege UM. Mais de um id é dado incoerente: não anunciar.
+  if (ids.length !== 1) return null;
+  const id = ids[0] as number;
 
-  // Resolve líder: rank 1 primeiro, fallback por id.
-  //
-  // 🔴 ADR-0053 / RF-213 — `rank` conta a candidatura anulada (é publicado
-  // sobre `vvc`). Com ela em `rank` 1, o banner diria "Presidente eleito:
-  // <anulada>" assim que `pct_apurado_total` passasse do limiar. O `rank` 1
-  // só vale se COMPETE; senão, `candidato_a_id`, que o modelo já escolhe
-  // entre as que competem.
-  const lider =
-    candidatos.find((c) => (c.rank ?? -1) === 1 && compete(c)) ??
-    candidatos.find((c) => c.id === national.candidato_a_id);
-  if (!lider) return null;
+  // "NOME (PARTIDO) matematicamente eleito" pelo id. `null` ⇒ sem nome em
+  // lugar nenhum ⇒ nunca anunciar um eleito sem nome.
+  const frase = fraseEleitos([id], porUf, { candidatos });
+  if (frase === null) return null;
 
-  // Gate 2 (turno 1): exige `vai_a_2t === false` (não vai a 2T no agregado).
-  // null/undefined em 1T = sem sinal → não renderiza por segurança.
-  if (turno === 1 && vaiA2t !== false) return null;
+  const partido =
+    candidatos.find((c) => c.id === id)?.partido ??
+    porUf.flatMap((r) => r.top_candidatos ?? []).find((t) => t.id === id)?.partido ??
+    "";
 
-  // Gate 3: threshold (p_vitoria OR pct_apurado_total).
-  const meetsPVitoria = lider.p_vitoria >= NATIONAL_WIN_P_THRESHOLD;
-  const meetsApurado = pctApuradoTotal >= NATIONAL_WIN_PCT_APURADO_THRESHOLD;
-  if (!meetsPVitoria && !meetsApurado) return null;
-
-  // Cor do PARTIDO, com a tinta que o gerador mediu contra ela. Esta é a
-  // frase mais forte do produto — e era pintada pela colocação do líder.
-  const { background, ink } = partyChipInk(lider.partido);
+  // Cor do PARTIDO do eleito, com a tinta que o gerador mediu contra ela.
+  const { background, ink } = partyChipInk(partido);
   const style: CSSProperties = {
     backgroundColor: background,
     color: ink,
   };
 
-  const pctLabel = formatPercent(lider.pct_projetado, 1);
-  // Um nome só para o `aria-label` e para o `<strong>`: é a frase mais forte
-  // do produto inteiro, e não pode dizer uma coisa na tela e outra no ouvido.
-  const nome = nomeExibicao(lider.nome, lider.sqcand);
-  const ariaLabel = `Presidente eleito: ${nome} (${lider.partido}) com ${pctLabel}.`;
+  // Uma frase só para tela e ouvido.
+  const texto = turno === 1 ? `${frase} no 1º turno` : frase;
+  const ariaLabel = `Presidente: ${texto}, ${ATRIBUICAO_TSE}.`;
   const containerClass = ["flex flex-col gap-1 rounded-md px-6 py-5", className]
     .filter(Boolean)
     .join(" ");
@@ -143,18 +119,9 @@ export function NationalWinnerBanner({
       className={containerClass}
       style={style}
     >
-      <span className="text-xs font-semibold uppercase tracking-wider opacity-90">ELEITO</span>
-      <strong className="text-3xl font-semibold leading-tight md:text-4xl">
-        {nome} é {turno === 2 ? "eleito" : "eleito no 1º turno"}
-      </strong>
-      <span className="text-sm opacity-90">
-        {/* Desenhado ⇒ abreviado (2026-09-19); o `aria-label` acima mantém a
-            sigla inteira. É a única divergência visto/ouvido desta faixa, e ela
-            é deliberada: a frase do `<strong>` — o nome da pessoa eleita — é
-            idêntica nos dois canais, e é ela que o comentário logo acima manda
-            manter igual. A sigla é o dado ao lado, não a frase. */}
-        {siglaExibicao(lider.partido)} · {pctLabel}
-      </span>
+      <span className="text-xs font-semibold uppercase tracking-wider opacity-90">Presidente</span>
+      <strong className="text-3xl font-semibold leading-tight md:text-4xl">{texto}</strong>
+      <span className="text-sm opacity-90">{ATRIBUICAO_TSE}</span>
     </div>
   );
 }

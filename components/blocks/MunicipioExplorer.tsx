@@ -88,7 +88,13 @@ import type { EdgeCandidate, EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge
 import { usePorUfStore } from "@/lib/state/por-uf-store";
 import { useViewMode } from "@/lib/state/view-mode-client";
 import { compete, haAnulada, NOTA_ANULADAS_SEM_REGRA_1T } from "@/lib/utils/destino-voto";
-import { definicaoDaUf, ROTULO_ELEITO } from "@/lib/utils/eleitos-definidos";
+import {
+  atribuicaoDaDefinicao,
+  comEscopo,
+  definicaoDaUf,
+  ROTULO_ELEITO,
+  rotuloComEscopo,
+} from "@/lib/utils/eleitos-definidos";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import {
   type MunicipioVotoCandidato as FolhaRow,
@@ -144,6 +150,11 @@ interface StatusDaLinha {
   selo?: string | undefined;
   /** Id em `eleitos_definidos` desta UF ⇒ fundo cheio + ✓. */
   eleito?: boolean;
+  /**
+   * O que o leitor de tela ouve no ✓ — com o escopo ("No estado: …" /
+   * "No país: …"): o município não elege ninguém. Ausente ⇒ o texto puro.
+   */
+  rotuloEleito?: string;
 }
 
 const SEM_SELO: OpcoesSelo = { regra: "nenhum" };
@@ -271,7 +282,11 @@ function FolhaLinha({
         >
           {eleito ? (
             // O ✓ é a marca; o rótulo é o que o leitor de tela ouve.
-            <span role="img" aria-label={ROTULO_ELEITO} className="flex-none">
+            <span
+              role="img"
+              aria-label={status.rotuloEleito ?? ROTULO_ELEITO}
+              className="flex-none"
+            >
               ✓
             </span>
           ) : null}
@@ -281,7 +296,7 @@ function FolhaLinha({
           >
             {row.nome}
           </span>
-          <DestinoEtiqueta destino={row.destino} />
+          <DestinoEtiqueta destino={row.destino} sobreFaixa={eleito} />
           <span
             className="flex-none"
             style={{
@@ -418,6 +433,13 @@ export function MunicipioExplorer({
     cargo ? s.porCargo[cargo]?.find((r) => r.sigla === ufSigla) : undefined,
   );
   const definicao = useMemo(() => (linhaUf ? definicaoDaUf(linhaUf) : null), [linhaUf]);
+  // 2026-10-04 (auditoria P1/P8) — o status é da corrida do ESTADO (ou do
+  // PAÍS, em Presidente), nunca do município: o texto diz o escopo. No Senado,
+  // a atribuição da conta (o TSE não publica a marca de eleito do Senado).
+  const escopo = cargo ? ({ cargo, superficie: "municipio" } as const) : null;
+  const rotuloStatus = definicao && escopo ? rotuloComEscopo(definicao, escopo) : undefined;
+  const rotuloEleito = escopo ? comEscopo(ROTULO_ELEITO, escopo) : undefined;
+  const atribuicao = definicao && cargo ? atribuicaoDaDefinicao(cargo, definicao) : undefined;
 
   // O slot do kit é "Eleitores" (`App.jsx:203`). Desde 11/09 o payload publica
   // `eleitores` por município (ADR-0035 D2) — mas como campo OPCIONAL, então o
@@ -451,20 +473,35 @@ export function MunicipioExplorer({
           title={municipio.nome}
           headingLevel={3}
         >
-          {definicao?.rotulo ? (
+          {rotuloStatus ? (
             // Status da corrida no ESTADO, sem fundo — o fundo é só de quem
             // está eleito, na linha dele.
-            <p
-              data-testid="municipio-sheet-status"
-              style={{
-                margin: "0 0 var(--space-3)",
-                font: "var(--type-body-sm)",
-                fontWeight: 600,
-                color: "var(--text-primary)",
-              }}
-            >
-              {definicao.rotulo}
-            </p>
+            <div style={{ margin: "0 0 var(--space-3)" }}>
+              <p
+                data-testid="municipio-sheet-status"
+                style={{
+                  margin: 0,
+                  font: "var(--type-body-sm)",
+                  fontWeight: 600,
+                  color: "var(--text-primary)",
+                }}
+              >
+                {rotuloStatus}
+              </p>
+              {atribuicao ? (
+                <p
+                  data-testid="municipio-sheet-atribuicao"
+                  style={{
+                    margin: "var(--space-1) 0 0",
+                    font: "var(--type-body-sm)",
+                    fontSize: "var(--text-xs)",
+                    color: "var(--text-muted)",
+                  }}
+                >
+                  {atribuicao}
+                </p>
+              ) : null}
+            </div>
           ) : null}
           <div
             className="grid grid-cols-2"
@@ -487,6 +524,7 @@ export function MunicipioExplorer({
                   status={{
                     selo: selosAtivos.get(l.id),
                     eleito: definicao?.eleitos.has(l.id) === true,
+                    ...(rotuloEleito ? { rotuloEleito } : {}),
                   }}
                 />
               ))}

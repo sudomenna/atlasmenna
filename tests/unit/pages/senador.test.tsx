@@ -358,7 +358,10 @@ describe("/senador (T-09)", () => {
     expect(doc.querySelector("a[data-uf='SP']")?.getAttribute("href")).toBe("/uf/SP/senador");
   });
 
-  it("🔴 (g) '● ELEITO' nos DOIS ocupantes de vaga, nunca no 3º; sem selo de turno", async () => {
+  it("🔴 (g) 'Vaga projetada' nos DOIS ocupantes de vaga, nunca no 3º; sem selo de turno nem 'eleito'", async () => {
+    // 🔴 2026-10-04 (dono, auditoria P1) — o selo de 29/09 dizia "● ELEITO"
+    // pela projeção; virou "Vaga projetada" (a base dita). "Matematicamente
+    // eleito" só com `eleitos_definidos` (`GovernorCard.eleitosDefinidos`).
     // 2026-09-29 (dono: "são 2 senadores eleitos") — até esta data este caso
     // afirmava o CONTRÁRIO (nenhum "ELEITO" no cartão): a decisão de 27/09
     // tirou o selo porque ele só existia no líder. Agora ele volta nos dois.
@@ -371,10 +374,11 @@ describe("/senador (T-09)", () => {
     expect(lista?.textContent ?? "").not.toMatch(/VAI A 2T|EM APURAÇÃO/);
 
     const sp = linhasDoCartao(doc, "SP");
-    expect(sp[0]).toMatch(/Ana Lima.*● ELEITO/);
-    expect(sp[1]).toMatch(/Bruno Reis.*● ELEITO/);
-    expect(sp[2]).not.toContain("ELEITO");
-    expect(doc.querySelectorAll("[data-uf='SP'] article b[data-s='e']")).toHaveLength(VAGAS_SENADO);
+    expect(sp[0]).toMatch(/Ana Lima.*Vaga projetada/);
+    expect(sp[1]).toMatch(/Bruno Reis.*Vaga projetada/);
+    expect(sp[2]).not.toContain("Vaga");
+    expect(doc.querySelectorAll("[data-uf='SP'] article b[data-s='e']")).toHaveLength(0);
+    expect(lista?.textContent ?? "").not.toMatch(/eleito/i);
 
     // O rótulo acessível diz "eleitos" e nomeia os DOIS, não "o líder".
     // Desde 04/10/2026 (cartão nas duas bases) a descrição da projeção mora na
@@ -383,7 +387,8 @@ describe("/senador (T-09)", () => {
       doc
         .querySelector("[data-uf='SP'] article [data-view-only='proj'] > ul")
         ?.getAttribute("aria-label") ?? "";
-    expect(aria).toMatch(/eleitos: Ana Lima .* e Bruno Reis /);
+    expect(aria).toMatch(/vaga projetada: Ana Lima .* e Bruno Reis /);
+    expect(aria).not.toMatch(/eleito/i);
     expect(aria).not.toContain("Célia Mota");
     expect(aria).not.toMatch(/líder/);
   });
@@ -770,28 +775,29 @@ describe("/senador — Parcial × Projeção (04/10)", () => {
     expect(doc.querySelectorAll("#senado-2027-heading")).toHaveLength(1);
   });
 
-  it("🔴 cartões: Projeção com '● ELEITO' e % projetado; Parcial com o apurado e 'VAGA NA PARCIAL'", async () => {
+  it("🔴 cartões: Projeção com 'Vaga projetada' e % projetado; Parcial com o apurado e 'Vaga na parcial'", async () => {
     readProjectionMock.mockResolvedValue(comApurado());
     const doc = await render(SenadoPage());
     const cartao = doc.querySelector("[data-uf='SP'] article");
     const proj = itens(cartao?.querySelector("[data-view-only='proj']"));
     const parcial = itens(cartao?.querySelector("[data-view-only='parcial']"));
-    expect(proj[0]).toMatch(/^1° ?Ana Lima ?PT.*● ELEITO.*40%$/);
-    expect(proj[1]).toMatch(/^2° ?Bruno Reis ?PL.*● ELEITO.*30%$/);
-    expect(parcial[0]).toMatch(/^1° ?Bruno Reis ?PL.*VAGA NA PARCIAL.*35%$/);
-    expect(parcial[1]).toMatch(/^2° ?Célia Mota ?MDB.*VAGA NA PARCIAL.*33%$/);
+    expect(proj[0]).toMatch(/^1° ?Ana Lima ?PT.*Vaga projetada.*40%$/);
+    expect(proj[1]).toMatch(/^2° ?Bruno Reis ?PL.*Vaga projetada.*30%$/);
+    expect(parcial[0]).toMatch(/^1° ?Bruno Reis ?PL.*Vaga na parcial.*35%$/);
+    expect(parcial[1]).toMatch(/^2° ?Célia Mota ?MDB.*Vaga na parcial.*33%$/);
     expect(parcial[2]).toMatch(/^3° ?Ana Lima ?PT.*25%$/);
-    expect(parcial.join(" ")).not.toContain("ELEITO");
+    expect([...proj, ...parcial].join(" ")).not.toMatch(/eleito/i);
     // RJ sem `pct_atual`: ordem da projeção, "—", nenhum selo.
     const rj = itens(doc.querySelector("[data-uf='RJ'] article [data-view-only='parcial']"));
     expect(rj.every((l) => l.endsWith("—"))).toBe(true);
-    expect(rj.join(" ")).not.toContain("VAGA");
+    expect(rj.join(" ")).not.toContain("Vaga");
     // O texto acima da lista segue a base.
     const textos = [...doc.querySelectorAll("p[data-view-only]")].map((p) => [
       p.getAttribute("data-view-only"),
       p.textContent ?? "",
     ]);
-    expect(textos.find(([b]) => b === "proj")?.[1]).toContain("eleito pela projeção");
+    expect(textos.find(([b]) => b === "proj")?.[1]).toContain('selo "vaga projetada"');
+    expect(textos.find(([b]) => b === "proj")?.[1]).not.toContain("eleito pela projeção");
     expect(textos.find(([b]) => b === "parcial")?.[1]).toContain("Se a apuração parasse agora");
   });
 

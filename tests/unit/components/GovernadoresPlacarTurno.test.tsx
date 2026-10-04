@@ -104,7 +104,7 @@ describe("<GovernadoresPlacarTurno />", () => {
     expect(item?.querySelector(".sr-only")?.textContent).toBe("São Paulo");
   });
 
-  it("(e) projeção fala 'eleitos'; contagem fala no condicional e NUNCA 'eleito'", () => {
+  it("(e) projeção fala 'vence' (ADR-0075: nunca 'eleito' da projeção); contagem no condicional", () => {
     const porUf = [
       row("SP", {
         vai_a_2t: false,
@@ -118,7 +118,8 @@ describe("<GovernadoresPlacarTurno />", () => {
     ];
     const proj = parse(<GovernadoresPlacarTurno porUf={porUf} base="projecao" />).body.textContent;
     const cont = parse(<GovernadoresPlacarTurno porUf={porUf} base="contagem" />).body.textContent;
-    expect(proj).toContain("eleito no 1º turno");
+    expect(proj).toContain("vence no 1º turno");
+    expect(proj?.toLowerCase()).not.toContain("eleito");
     expect(proj).toContain("vai ao 2º turno");
     expect(cont).toContain("fecharia no 1º turno");
     expect(cont).toContain("iria ao 2º turno");

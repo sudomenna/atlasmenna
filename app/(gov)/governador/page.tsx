@@ -134,6 +134,7 @@ import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
 import { lerEtiquetas } from "@/lib/etiquetas/leitor";
 import { editorialDaCapa } from "@/lib/etiquetas/telas";
+import { itensFaixaAgora } from "@/lib/utils/anuncios-definidos";
 import { classificarProjecao } from "@/lib/utils/desfecho-governador";
 import { haAnulada, NOTA_ANULADAS } from "@/lib/utils/destino-voto";
 import govFixture from "@/tests/fixtures/edge-config/gov-current.json" with { type: "json" };
@@ -165,9 +166,9 @@ type StatusFilter = "todas" | "em_disputa" | "decididos_1t" | "vai_2t" | "chamad
 const FILTER_LABELS: Record<StatusFilter, string> = {
   todas: "Todas",
   em_disputa: "Em disputa",
-  decididos_1t: "Decididos no 1º turno",
-  vai_2t: "Vão a 2º turno",
-  chamadas: "Chamadas",
+  decididos_1t: "1º turno pela projeção",
+  vai_2t: "2º turno pela projeção",
+  chamadas: "Decididas pela projeção",
 };
 
 const FILTER_ORDER: StatusFilter[] = ["todas", "em_disputa", "decididos_1t", "vai_2t", "chamadas"];
@@ -368,12 +369,16 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
   // sabemos") e não um dos dois reais.
   const pre = isPreEleicao(payload);
 
-  const { national, por_uf, pct_apurado_total, chamadas_recentes } = {
+  const { national, por_uf, pct_apurado_total } = {
     national: payload.national,
     por_uf: payload.por_uf,
     pct_apurado_total: payload.pct_apurado_total,
-    chamadas_recentes: payload.national.chamadas_recentes ?? [],
   };
+  // 🔴 2026-10-04 (dono) — a faixa "AGORA" segue a regra do balão do mapa: só
+  // anuncia UF com eleito MATEMATICAMENTE definido ou 2º turno definido pelo
+  // TSE (`lib/utils/anuncios-definidos.ts`). `national.chamadas_recentes` não
+  // é mais lido — o texto dele saía da `chamada` da projeção.
+  const faixaAgora = itensFaixaAgora(payload);
 
   const ufsFiltradas = por_uf.filter((uf) => passesFilter(uf, status));
 
@@ -411,9 +416,9 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
       {pre ? <SeloFasePreStyle /> : null}
 
       {/* Breaking news no topo — faixa fina entre o shell e o mapa
-          (ADR-0029 § 1). Só renderiza se há chamadas — e nenhuma corrida é
-          chamada antes de a votação acontecer. */}
-      {!pre && chamadas_recentes.length > 0 && <BreakingNewsTicker chamadas={chamadas_recentes} />}
+          (ADR-0029 § 1). Só renderiza se há UF com resultado matematicamente
+          definido — e nenhuma está antes de a votação acontecer. */}
+      {!pre && faixaAgora.length > 0 && <BreakingNewsTicker chamadas={faixaAgora} />}
 
       {/* O cartograma hexagonal — o "mapa" desta rota — saiu daqui e virou a
           coluna persistente do `<AppShellSplit>` (ADR-0033 § 1), montada por

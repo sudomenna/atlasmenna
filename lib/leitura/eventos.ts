@@ -15,6 +15,7 @@
 
 import { isPreEleicao } from "@/lib/config/fase";
 import type { EdgeCandidate, EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
+import { eleitosNacionais, fraseEleitos } from "@/lib/utils/anuncios-definidos";
 import { compete } from "@/lib/utils/destino-voto";
 import { formatCI, formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -70,6 +71,12 @@ function liderProjecao(candidatos: readonly EdgeCandidate[] | undefined): EdgeCa
   return (lista[0] as { c: EdgeCandidate }).c;
 }
 
+/**
+ * LEGADO — só alimenta `EstadoResumo.chamadas`, mantido com a regra de sempre
+ * para o estado gravado continuar no formato que uma versão anterior do cron
+ * sabe ler (rollback sem rajada). **Não gera evento nem texto** desde
+ * 2026-10-04: quem dispara linha é `eleitosNacionais` (abaixo).
+ */
 function siglasChamadas(porUf: readonly EdgeUfRow[] | undefined): string[] {
   return (porUf ?? []).filter((r) => r.chamada === true).map((r) => r.sigla);
 }
@@ -86,8 +93,8 @@ function marcosCruzados(pct: number): number[] {
 }
 
 /**
- * Resume o payload para o próximo ciclo comparar. `marcos` e `chamadas` são
- * cumulativos: nunca perdem item (um marco anunciado não se "desanuncia").
+ * Resume o payload para o próximo ciclo comparar. `marcos`, `definidos` e o
+ * legado `chamadas` são cumulativos: nunca perdem item (um marco anunciado não se "desanuncia").
  * Sem apuração (pré-eleição ou 0%), os dois ficam exatamente como o anterior.
  */
 export function resumirEstado(payload: EdgePayload, anterior: EstadoResumo | null): EstadoResumo {
@@ -95,6 +102,7 @@ export function resumirEstado(payload: EdgePayload, anterior: EstadoResumo | nul
   const pct = Number.isFinite(payload.pct_apurado_total) ? payload.pct_apurado_total : 0;
   const marcosAnt = anterior?.marcos ?? [];
   const chamadasAnt = anterior?.chamadas ?? [];
+  const definidosAnt = anterior?.definidos ?? [];
   const p2t = payload.national?.p_segundo_turno_overall;
   return {
     ts: payload.ts,
@@ -104,6 +112,9 @@ export function resumirEstado(payload: EdgePayload, anterior: EstadoResumo | nul
     lider_projecao_id: sem ? null : (liderProjecao(payload.national?.candidatos)?.id ?? null),
     p2t: typeof p2t === "number" && Number.isFinite(p2t) ? p2t : null,
     chamadas: sem ? [...chamadasAnt] : uniaoOrdenada(chamadasAnt, siglasChamadas(payload.por_uf)),
+    definidos: sem
+      ? [...definidosAnt]
+      : uniaoOrdenada(definidosAnt, eleitosNacionais(payload.por_uf)),
     marcos: sem ? [...marcosAnt] : uniaoOrdenada(marcosAnt, marcosCruzados(pct)),
   };
 }
@@ -119,16 +130,6 @@ function rotulo(nome: string | undefined, partido: string | undefined, sqcand?: 
 
 function textoApuracao(pct: number, ufs: number): string {
   return `${formatPercent(pct, 1)} das seções apuradas, com boletim em ${ufs} de ${TOTAL_UFS} unidades federativas.`;
-}
-
-/** Nome do líder projetado de uma UF: `top_candidatos` primeiro, `national` depois. */
-function rotuloLiderUf(row: EdgeUfRow, national: EdgePayload["national"]): string | null {
-  const id = row.lider;
-  const top = (row.top_candidatos ?? []).find((t) => t.id === id);
-  const nac = (national?.candidatos ?? []).find((c) => c.id === id);
-  const nome = top?.nome ?? nac?.nome;
-  if (!nome) return null;
-  return rotulo(nome, top?.partido ?? nac?.partido, top?.sqcand ?? nac?.sqcand);
 }
 
 // ---------------------------------------------------------------------------
@@ -173,8 +174,8 @@ export function derivarEventos(
     });
   }
 
-  // Blob perdido no meio da noite: só `inicio` + maior marco. As chamadas já
-  // estão no `estado` (resumirEstado) e não viram uma linha por UF.
+  // Blob perdido no meio da noite: só `inicio` + maior marco. Os definidos (e o
+  // legado `chamadas`) já estão no `estado` (resumirEstado) e não viram linha.
   if (anterior === null) return { eventos, estado };
 
   const candidatos = payload.national?.candidatos ?? [];
@@ -216,18 +217,25 @@ export function derivarEventos(
     }
   }
 
-  // chamada_uf — uma linha por UF nova.
-  const chamadasAnt = new Set(anterior.chamadas);
-  for (const row of payload.por_uf ?? []) {
-    if (row.chamada !== true || chamadasAnt.has(row.sigla)) continue;
-    const quem = rotuloLiderUf(row, payload.national);
-    eventos.push({
-      id: `chamada_uf-${row.sigla}`,
-      ts,
-      head: "Chamada",
-      text: quem ? `A projeção chama ${row.sigla} para ${quem}.` : `A projeção chama ${row.sigla}.`,
-      tipo: "chamada_uf",
-    });
+  // eleito_definido — 🔴 2026-10-04 (dono): substitui `chamada_uf`. O
+  // histórico só anuncia o que está MATEMATICAMENTE definido, a mesma regra do
+  // balão do mapa; nunca a `chamada` da projeção. No Presidente o eleito só
+  // existe quando o Brasil inteiro definiu, então é UMA linha nacional, não
+  // uma por UF. Estado antigo sem `definidos` conta como `[]`: no pior caso,
+  // UMA linha (verdadeira) no primeiro ciclo — nunca uma rajada.
+  const definidosAnt = new Set(anterior.definidos ?? []);
+  const definidos = estado.definidos ?? [];
+  if (definidos.some((id) => !definidosAnt.has(id))) {
+    const frase = fraseEleitos(definidos, payload.por_uf ?? [], payload.national);
+    if (frase) {
+      eventos.push({
+        id: `eleito_definido-${definidos.join("-")}`,
+        ts,
+        head: "Definido",
+        text: `${frase} pela contagem oficial do TSE.`,
+        tipo: "eleito_definido",
+      });
+    }
   }
 
   // segundo_turno — só no 1º turno; um evento por ciclo (o limiar mais alto cruzado).

@@ -185,3 +185,13 @@
 .c [data-view-only="parcial"] li > span:nth-child(4) {
   color: var(--color-pct-votos);
 }
+
+/* 2026-10-04 (auditoria P8) — a atribuição da marca de eleito do SENADO
+ * ("Cálculo do AtlasMenna sobre a contagem do TSE"), uma vez por cartão,
+ * logo abaixo das listas. Só existe com alguém matematicamente eleito. */
+.c > p {
+  margin: 0.5rem 0 0;
+  font-size: var(--text-xs);
+  line-height: 1.3;
+  color: var(--color-text-muted);
+}

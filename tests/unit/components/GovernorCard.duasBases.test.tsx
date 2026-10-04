@@ -66,7 +66,7 @@ describe("<GovernorCard duasBases> — governador", () => {
     expect(doc.querySelector("[data-view-only]")).toBeNull();
     expect(doc.querySelectorAll("article > ul")).toHaveLength(1);
     expect(doc.querySelector("article")?.getAttribute("aria-label")).toBe(
-      "São Paulo, vai ao segundo turno, líder: Ana Lima (PT) com 40%, 62% apurado",
+      "São Paulo, 2º turno pela projeção: Ana Lima (PT) com 40% e Bruno Reis (PL) com 30%, líder: Ana Lima (PT) com 40%, 62% apurado",
     );
   });
 
@@ -94,15 +94,19 @@ describe("<GovernorCard duasBases> — governador", () => {
     ]);
   });
 
-  it("o selo da Parcial é o da CONTAGEM, no líder do apurado — nunca 'ELEITO'", () => {
+  it("o selo da Parcial é o da CONTAGEM, nos 2 primeiros do apurado — nunca 'eleito'", () => {
     const doc = parse(<GovernorCard uf={uf()} candidatos={[]} duasBases />);
-    // Projeção: o selo de sempre, no líder da projeção.
-    expect(linhas(lista(doc, "proj"))[0]).toContain("VAI A 2T");
-    // Parcial: Célia lidera com 36% (< 50) ⇒ "iria ao 2º turno", nela.
+    // Projeção: "2º turno · projeção" nos dois primeiros da projeção.
+    const proj = linhas(lista(doc, "proj"));
+    expect(proj[0]).toContain("2º turno · projeção");
+    expect(proj[1]).toContain("2º turno · projeção");
+    expect(proj.slice(2).join(" ")).not.toContain("2º turno");
+    // Parcial: Célia lidera com 36% (< 50) ⇒ "2º turno · na parcial" em Célia e Ana.
     const parcial = linhas(lista(doc, "parcial"));
-    expect(parcial[0]).toContain("IRIA AO 2T");
-    expect(parcial.slice(1).join(" ")).not.toMatch(/IRIA|FECHARIA|VAI A 2T|ELEITO/);
-    expect(lista(doc, "parcial")?.textContent).not.toMatch(/ELEITO|VAI A 2T/);
+    expect(parcial[0]).toMatch(/Célia Mota.*2º turno · na parcial/);
+    expect(parcial[1]).toMatch(/Ana Lima.*2º turno · na parcial/);
+    expect(parcial.slice(2).join(" ")).not.toMatch(/turno/);
+    expect(lista(doc, "parcial")?.textContent).not.toMatch(/eleito|projeção/i);
 
     const maioria = uf({
       top_candidatos: [
@@ -111,7 +115,10 @@ describe("<GovernorCard duasBases> — governador", () => {
       ],
     });
     const doc2 = parse(<GovernorCard uf={maioria} candidatos={[]} duasBases />);
-    expect(linhas(lista(doc2, "parcial"))[0]).toMatch(/Célia Mota.*FECHARIA NO 1T/);
+    expect(linhas(lista(doc2, "parcial"))[0]).toMatch(
+      /Célia Mota.*Venceria no 1º turno · na parcial/,
+    );
+    expect(lista(doc2, "parcial")?.textContent).not.toMatch(/eleito/i);
   });
 
   it("🔴 sem apurado: a Parcial cai INTEIRA na ordem da projeção, com '—' — nunca 0", () => {
@@ -134,6 +141,10 @@ describe("<GovernorCard duasBases> — governador", () => {
     expect(lista(doc, "parcial")?.textContent).not.toMatch(/\d%/);
     // Nenhum selo de contagem sem contagem.
     expect(lista(doc, "parcial")?.querySelector("b")).toBeNull();
+    // Rótulo sem a repetição "Na parcial, na parcial: …" (auditoria a11y 04/10).
+    expect(lista(doc, "parcial")?.getAttribute("aria-label")).toBe(
+      "Na parcial, aguardando apuração",
+    );
   });
 
   it("'Outros' da Parcial é `outros.pct_atual`; ausente ⇒ '—'", () => {
@@ -147,10 +158,10 @@ describe("<GovernorCard duasBases> — governador", () => {
     const doc = parse(<GovernorCard uf={uf()} candidatos={[]} duasBases />);
     expect(doc.querySelector("article")?.getAttribute("aria-label")).toBe("São Paulo, 62% apurado");
     expect(lista(doc, "proj")?.getAttribute("aria-label")).toBe(
-      "Pela projeção, vai ao segundo turno, líder: Ana Lima (PT) com 40%",
+      "Pela projeção, 2º turno pela projeção: Ana Lima (PT) com 40% e Bruno Reis (PL) com 30%, líder: Ana Lima (PT) com 40%",
     );
     expect(lista(doc, "parcial")?.getAttribute("aria-label")).toBe(
-      "Na parcial, se a apuração parasse agora: iria ao 2º turno, na frente: Célia Mota (MDB) com 36%",
+      "Na parcial, se a apuração parasse agora: 2º turno na parcial: Célia Mota (MDB) com 36% e Ana Lima (PT) com 35%, na frente: Célia Mota (MDB) com 36%",
     );
     // Um cabeçalho só — o título não é duplicado.
     expect(doc.querySelectorAll("h3")).toHaveLength(1);
@@ -158,16 +169,18 @@ describe("<GovernorCard duasBases> — governador", () => {
 });
 
 describe("<GovernorCard cargo='sen' duasBases> — Senado", () => {
-  it("🔴 Projeção: '● ELEITO' nos 2 da projeção; Parcial: 'VAGA NA PARCIAL' nos 2 do apurado", () => {
+  it("🔴 Projeção: 'Vaga projetada' nos 2 da projeção; Parcial: 'Vaga na parcial' nos 2 do apurado — nunca 'eleito'", () => {
     const doc = parse(<GovernorCard uf={uf()} candidatos={[]} cargo="sen" duasBases />);
     const proj = linhas(lista(doc, "proj"));
-    expect(proj[0]).toMatch(/Ana Lima.*● ELEITO/);
-    expect(proj[1]).toMatch(/Bruno Reis.*● ELEITO/);
+    expect(proj[0]).toMatch(/Ana Lima.*Vaga projetada/);
+    expect(proj[1]).toMatch(/Bruno Reis.*Vaga projetada/);
+    expect(proj.slice(2).join(" ")).not.toContain("Vaga");
     const parcial = linhas(lista(doc, "parcial"));
-    expect(parcial[0]).toMatch(/Célia Mota.*VAGA NA PARCIAL/);
-    expect(parcial[1]).toMatch(/Ana Lima.*VAGA NA PARCIAL/);
-    expect(parcial.slice(2).join(" ")).not.toContain("VAGA");
-    expect(lista(doc, "parcial")?.textContent).not.toContain("ELEITO");
+    expect(parcial[0]).toMatch(/Célia Mota.*Vaga na parcial/);
+    expect(parcial[1]).toMatch(/Ana Lima.*Vaga na parcial/);
+    expect(parcial.slice(2).join(" ")).not.toContain("Vaga");
+    expect(doc.querySelector("article")?.textContent).not.toMatch(/eleito/i);
+    expect(doc.querySelectorAll("b[data-s='e']")).toHaveLength(0);
     // Selo neutro na Parcial: verde (`e`) é a cor de "eleito".
     expect(lista(doc, "parcial")?.querySelectorAll("b[data-s='e']")).toHaveLength(0);
     expect(lista(doc, "parcial")?.querySelectorAll("b[data-s='a']")).toHaveLength(2);

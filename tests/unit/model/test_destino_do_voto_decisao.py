@@ -101,6 +101,10 @@ def _envelope(
         "e": {
             "te": str(te),
             "esi": str(te),
+            # Arquivo 100% apurado, como o TSE o emite (o simulado de 2026 traz
+            # `esna` explícito, inclusive "0"). Só o Senado lê (`restantes`).
+            "esa": str(te),
+            "esna": "0",
             "c": str(comparecimento),
             "a": str(te - comparecimento),
         },

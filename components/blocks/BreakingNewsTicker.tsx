@@ -3,8 +3,14 @@
 /**
  * components/blocks/BreakingNewsTicker.tsx
  *
- * S06/F4d (Fase 3) — banner rotativo no topo com chamadas (broadcast-style).
- * Consome `national.chamadas_recentes` (S06+, opcional).
+ * S06/F4d (Fase 3) — banner rotativo no topo (broadcast-style).
+ *
+ * 🔴 2026-10-04 (dono) — os itens são os resultados MATEMATICAMENTE definidos
+ * (`lib/utils/anuncios-definidos.ts` → `itensFaixaAgora`), a mesma regra do
+ * balão do mapa. Até esta data vinham de `national.chamadas_recentes`, cujo
+ * texto ("AP chamada para …") saía da `chamada` da PROJEÇÃO. A prop continua
+ * se chamando `chamadas` só para não mexer nos chamadores; nenhum texto ao
+ * público diz "chamada".
  *
  * Comportamento
  *   - Auto-rotaciona 1 chamada a cada 5s (rotação cíclica).
@@ -84,7 +90,7 @@ export function BreakingNewsTicker({
       <section
         data-testid="breaking-news-ticker"
         data-mode="reduced"
-        aria-label="Chamadas recentes"
+        aria-label="Resultados definidos"
         className="flex flex-col gap-1 rounded-md border px-4 py-3"
         style={{
           borderColor: "var(--color-border)",
@@ -98,11 +104,13 @@ export function BreakingNewsTicker({
           // 2026-09-05, ver globals.css.
           style={{ color: "var(--color-warning-strong, #b45309)" }}
         >
-          ÚLTIMAS CHAMADAS
+          RESULTADOS DEFINIDOS
         </span>
         <ul className="flex flex-col gap-1">
           {chamadas.map((c) => (
-            <li key={c.ts} className="text-sm" style={{ color: "var(--color-text)" }}>
+            // `key` pelo texto: todos os itens carregam o MESMO `ts` (o do
+            // payload), e um por UF tem texto único.
+            <li key={c.texto} className="text-sm" style={{ color: "var(--color-text)" }}>
               <span className="mr-2 tabular-nums" style={{ color: "var(--color-text-muted)" }}>
                 {fmtTime(c.ts)}
               </span>
@@ -122,7 +130,7 @@ export function BreakingNewsTicker({
       data-mode="rotating"
       role="status"
       aria-live="polite"
-      aria-label="Chamadas recentes"
+      aria-label="Resultados definidos"
       className="flex items-center gap-3 rounded-md border px-4 py-2"
       style={{
         borderColor: "var(--color-border)",

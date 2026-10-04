@@ -15,6 +15,12 @@
  *   (cartão, página, fundo afundado). Pior caso medido nos dois temas — ver
  *   `tests/unit/components/DestinoEtiqueta.test.tsx`, que calcula a razão a
  *   partir dos valores de `app/globals.css` e não de um número copiado.
+ * - **Sobre a faixa do eleito** (`sobreFaixa`, 2026-10-04 — auditoria de
+ *   a11y): a faixa usa o par (fundo, tinta) do partido (`partyChipInk`,
+ *   medido ≥ 4,5:1 para a TINTA dele). `--text-primary`/`--border-strong`
+ *   fixos sobre esse fundo reprovavam em 20/29 partidos no claro e 28/29 no
+ *   escuro. Com a prop, a etiqueta herda a tinta da faixa (`inherit`) e a
+ *   moldura acompanha (`currentColor`). Sub judice compete — pode ser eleita.
  * - `"valido"` e ausente ⇒ **nada** (`null`). Destino ausente não é "válido"
  *   nem "anulado": é "o TSE ainda não publicou", e não há o que etiquetar.
  */
@@ -38,15 +44,31 @@ const ESTILO: CSSProperties = {
   whiteSpace: "nowrap",
 };
 
+/** A etiqueta sobre a faixa do eleito: tinta e moldura herdadas da faixa. */
+const ESTILO_SOBRE_FAIXA: CSSProperties = {
+  ...ESTILO,
+  color: "inherit",
+  borderColor: "currentColor",
+};
+
 export interface DestinoEtiquetaProps {
   destino: EdgeDestinoVoto | undefined;
+  /**
+   * A linha está sobre a faixa colorida do eleito (fundo do partido). Herda a
+   * tinta da faixa em vez de `--text-primary` — ver o cabeçalho.
+   */
+  sobreFaixa?: boolean;
 }
 
-export function DestinoEtiqueta({ destino }: DestinoEtiquetaProps) {
+export function DestinoEtiqueta({ destino, sobreFaixa = false }: DestinoEtiquetaProps) {
   const texto = etiquetaDestino(destino);
   if (texto === null) return null;
   return (
-    <span data-destino={destino} data-testid="destino-etiqueta" style={ESTILO}>
+    <span
+      data-destino={destino}
+      data-testid="destino-etiqueta"
+      style={sobreFaixa ? ESTILO_SOBRE_FAIXA : ESTILO}
+    >
       <span className="sr-only">, </span>
       {texto}
     </span>

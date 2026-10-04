@@ -60,7 +60,7 @@ export interface GovernadoresPorPartidoProps {
 export const PARTIDO_NAO_INFORMADO = "Partido não informado";
 
 const PALAVRA_ELEITOS: Record<BaseDesfecho, [string, string]> = {
-  projecao: ["eleito", "eleitos"],
+  projecao: ["vence no 1º turno", "vencem no 1º turno"],
   contagem: ["fecharia", "fechariam"],
 };
 

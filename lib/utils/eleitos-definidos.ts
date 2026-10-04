@@ -67,3 +67,89 @@ export function definicaoDaUf(
   }
   return { eleitos: NINGUEM, rotulo: undefined };
 }
+
+// ===========================================================================
+// 2026-10-04 (dono, auditoria constitucional P1/P8) — ESCOPO e ATRIBUIÇÃO
+// ===========================================================================
+//
+// As constantes acima ficam INTACTAS (outra frente as importa). O que muda é
+// o texto que cada SUPERFÍCIE escreve a partir delas:
+//
+//  - **Escopo.** Na gaveta de um MUNICÍPIO, "Matematicamente eleito" sozinho
+//    leria como "eleito neste município" — e município não elege ninguém. Lá o
+//    texto diz "No estado: …". Em Presidente quem decide é o país inteiro (o
+//    produtor só emite o campo com o `md='e'` do arquivo NACIONAL), então em
+//    toda superfície — balão, gaveta do estado, gaveta do município, cartão por
+//    UF — o texto diz "No país: …". Nas superfícies de UM estado de
+//    Governador/Senador (balão, gaveta do estado, cartão), o próprio título já
+//    é o estado: sem prefixo.
+//  - **Atribuição.** O TSE não publica a marca de eleito do Senado durante a
+//    apuração; a conta é do AtlasMenna (`api/model/definidos.py`). Onde a
+//    marca de Senado aparece, a superfície diz de quem é a conta
+//    (constituição § 8, transparência metodológica).
+
+/** O cargo da corrida, no vocabulário das superfícies (`UfPickerCargo`). */
+export type CargoDefinicao = "pres" | "gov" | "sen";
+
+/**
+ * Onde o texto vai: `"estado"` — balão do mapa nacional, gaveta do estado,
+ * cartão de UF (o título já nomeia o estado); `"municipio"` — gaveta de um
+ * município.
+ */
+export type SuperficieDefinicao = "estado" | "municipio";
+
+export interface OpcoesEscopo {
+  cargo: CargoDefinicao;
+  superficie: SuperficieDefinicao;
+}
+
+export const PREFIXO_PAIS = "No país";
+export const PREFIXO_ESTADO = "No estado";
+
+/**
+ * Atribuição da marca de Senado — a conta é do AtlasMenna, sobre os números
+ * que o TSE publica.
+ */
+export const ATRIBUICAO_SENADO = "Cálculo do AtlasMenna sobre a contagem do TSE";
+
+/** O prefixo de escopo de uma superfície; `undefined` ⇒ sem prefixo. */
+function prefixoDe({ cargo, superficie }: OpcoesEscopo): string | undefined {
+  if (cargo === "pres") return PREFIXO_PAIS;
+  if (superficie === "municipio") return PREFIXO_ESTADO;
+  return undefined;
+}
+
+/**
+ * Um texto de definição com o escopo da superfície: `"Matematicamente eleito"`
+ * ⇒ `"No estado: matematicamente eleito"` (município de Gov/Sen) ou
+ * `"No país: matematicamente eleito"` (Presidente, qualquer superfície). Sem
+ * prefixo, o texto sai intacto.
+ */
+export function comEscopo(texto: string, opcoes: OpcoesEscopo): string {
+  const prefixo = prefixoDe(opcoes);
+  if (prefixo === undefined) return texto;
+  return `${prefixo}: ${texto.charAt(0).toLocaleLowerCase("pt-BR")}${texto.slice(1)}`;
+}
+
+/**
+ * {@link DefinicaoDaUf.rotulo} com o escopo da superfície. `undefined` quando
+ * não há definição — nunca um texto vazio.
+ */
+export function rotuloComEscopo(
+  definicao: Pick<DefinicaoDaUf, "rotulo">,
+  opcoes: OpcoesEscopo,
+): string | undefined {
+  return definicao.rotulo === undefined ? undefined : comEscopo(definicao.rotulo, opcoes);
+}
+
+/**
+ * A atribuição a escrever perto da marca de eleito: só no Senado, e só quando
+ * HÁ marca (alguém em `eleitos`). Governador e Presidente seguem o aviso do
+ * próprio TSE — sem nota.
+ */
+export function atribuicaoDaDefinicao(
+  cargo: CargoDefinicao,
+  definicao: Pick<DefinicaoDaUf, "eleitos">,
+): string | undefined {
+  return cargo === "sen" && definicao.eleitos.size > 0 ? ATRIBUICAO_SENADO : undefined;
+}

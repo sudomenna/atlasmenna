@@ -2,15 +2,21 @@
 /**
  * tests/unit/components/NationalWinnerBanner.test.tsx
  *
- * Cobre thresholds (p_vitoria >= 0.99 OR pct_apurado_total >= 99) +
- * gate vai_a_2t em 1T + cor adaptativa por rank + aria-live.
+ * 🔴 2026-10-04 (dono, ADR-0075) — a faixa nacional só aparece com eleição
+ * MATEMATICAMENTE definida (`EdgeUfRow.eleitos_definidos`, via
+ * `eleitosNacionais`). Até então ela dizia "ELEITO" / "Presidente eleito"
+ * com `p_vitoria ≥ 0,99` OU apurado ≥ 99% — leitura da projeção. Os casos
+ * (a)–(c) existem para matar a volta desse gatilho.
+ *
+ * Também: identidade pelo id (nunca o líder projetado), anulada nunca, cor do
+ * PARTIDO do eleito com a tinta do mesmo par, aria-live.
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
-import { NationalWinnerBanner } from "@/components/blocks/NationalWinnerBanner";
-import type { EdgeCandidate, EdgeNational } from "@/lib/edge-config/types";
+import { ATRIBUICAO_TSE, NationalWinnerBanner } from "@/components/blocks/NationalWinnerBanner";
+import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 
 function parse(node: React.ReactElement): Document {
   return new DOMParser().parseFromString(renderToStaticMarkup(node), "text/html");
@@ -36,196 +42,164 @@ function makeCand(overrides: Partial<EdgeCandidate>): EdgeCandidate {
   };
 }
 
-function makeNational(lider: EdgeCandidate, overrides: Partial<EdgeNational> = {}): EdgeNational {
+const LULA = makeCand({});
+const BOLS = makeCand({ id: 22, nome: "Bolsonaro", partido: "PL", rank: 2, pct_projetado: 46.8 });
+
+function ufRow(sigla: string, over: Partial<EdgeUfRow> = {}): EdgeUfRow {
   return {
-    candidatos: [lider],
-    needle_position: 1,
-    needle_band: "very_likely_a",
-    candidato_a_id: lider.id,
-    candidato_b_id: null,
-    p_segundo_turno_overall: 0.0,
-    cenarios_2t: [],
-    ...overrides,
+    sigla,
+    pct_apurado: 99.5,
+    lider: 13,
+    margem_atual: 0,
+    margem_projetada: 0,
+    margem_projetada_ci: [0, 0],
+    chamada: true,
+    swing_vs_2022: null,
+    top_candidatos: [
+      { id: 13, nome: "Lula", partido: "PT", pct: 53.2, pct_atual: 53, votos_atuais: 53000 },
+      { id: 22, nome: "Bolsonaro", partido: "PL", pct: 46.8, pct_atual: 47, votos_atuais: 47000 },
+    ],
+    vai_a_2t: false,
+    bucket: "chamada",
+    ...over,
   };
 }
 
-describe("<NationalWinnerBanner />", () => {
-  it("(a) renderiza em 2T com p_vitoria >= 0.99", () => {
-    const lider = makeCand({ p_vitoria: 0.99 });
-    const doc = parse(
-      <NationalWinnerBanner
-        national={makeNational(lider)}
-        candidatos={[lider]}
-        pctApuradoTotal={75}
-        turno={2}
-      />,
-    );
-    const text = doc.body.textContent ?? "";
-    expect(text).toContain("ELEITO");
-    expect(text).toContain("Lula");
-    expect(text).toContain("PT");
-    expect(text).toContain("53,2%");
-  });
+/** Brasil definido: o produtor põe o eleito em TODA UF onde ele está no top. */
+function brasilDefinido(id: number): EdgeUfRow[] {
+  return [ufRow("SP", { eleitos_definidos: [id] }), ufRow("BA", { eleitos_definidos: [id] })];
+}
 
-  it("(b) renderiza em 2T com pct_apurado_total >= 99 mesmo com p_vitoria baixo", () => {
-    const lider = makeCand({ p_vitoria: 0.85 });
-    const doc = parse(
-      <NationalWinnerBanner
-        national={makeNational(lider)}
-        candidatos={[lider]}
-        pctApuradoTotal={99.5}
-        turno={2}
-      />,
-    );
-    expect(doc.body.textContent).toContain("ELEITO");
-  });
+/** Brasil NÃO definido: projeção e apuração no limite, campo ausente. */
+const SEM_DEFINICAO: EdgeUfRow[] = [ufRow("SP"), ufRow("BA")];
 
-  it("(c) NÃO renderiza quando ambos thresholds abaixo", () => {
-    const lider = makeCand({ p_vitoria: 0.85 });
-    const doc = parse(
-      <NationalWinnerBanner
-        national={makeNational(lider)}
-        candidatos={[lider]}
-        pctApuradoTotal={75}
-        turno={2}
-      />,
-    );
-    expect(doc.body.textContent?.trim()).toBe("");
-  });
+const vazio = (doc: Document) => (doc.body.textContent ?? "").trim() === "";
 
-  it("(d) em 1T, exige vai_a_2t === false (não renderiza se null)", () => {
-    const lider = makeCand({ p_vitoria: 0.999, pct_projetado: 55 });
-    const doc = parse(
-      <NationalWinnerBanner
-        national={makeNational(lider)}
-        candidatos={[lider]}
-        pctApuradoTotal={90}
-        turno={1}
-        vaiA2t={null}
-      />,
-    );
-    expect(doc.body.textContent?.trim()).toBe("");
-  });
-
-  it("(e) em 1T com vai_a_2t === false E threshold atingido, renderiza", () => {
-    const lider = makeCand({ p_vitoria: 0.999, pct_projetado: 55 });
-    const doc = parse(
-      <NationalWinnerBanner
-        national={makeNational(lider)}
-        candidatos={[lider]}
-        pctApuradoTotal={90}
-        turno={1}
-        vaiA2t={false}
-      />,
-    );
-    expect(doc.body.textContent).toContain("ELEITO");
-    expect(doc.body.textContent).toContain("eleito no 1º turno");
-  });
-
-  it("(f) em 1T com vai_a_2t === true, não renderiza mesmo se threshold bater", () => {
-    const lider = makeCand({ p_vitoria: 0.999 });
-    const doc = parse(
-      <NationalWinnerBanner
-        national={makeNational(lider)}
-        candidatos={[lider]}
-        pctApuradoTotal={99}
-        turno={1}
-        vaiA2t={true}
-      />,
-    );
-    expect(doc.body.textContent?.trim()).toBe("");
-  });
-
-  it("(g) o fundo vem do PARTIDO do líder, não da colocação", () => {
-    // 🔴 Este caso AFIRMAVA O DEFEITO até 2026-09-19: exigia `--color-cand-1`,
-    // a paleta por COLOCAÇÃO que o ADR-0024 aposentou em 07/09. A fixture segue
-    // trazendo essa `cor` de propósito — o que se prova é que ela é ignorada.
-    //
-    // Esta é a faixa mais forte do produto: a que declara o eleito.
-    const lider = makeCand({ p_vitoria: 0.99, cor: "var(--color-cand-1)" });
-    const doc = parse(
-      <NationalWinnerBanner
-        national={makeNational(lider)}
-        candidatos={[lider]}
-        pctApuradoTotal={75}
-        turno={2}
-      />,
-    );
-    const banner = doc.querySelector('[role="status"]') as HTMLElement | null;
-    const style = banner?.getAttribute("style") ?? "";
-    expect(style).toContain("var(--party-pt-chip)");
-    expect(style).not.toContain("--color-cand-");
-  });
-
-  it("(h) aria-live='polite' + role='status' (anúncio acessível)", () => {
-    const lider = makeCand({ p_vitoria: 0.99 });
-    const doc = parse(
-      <NationalWinnerBanner
-        national={makeNational(lider)}
-        candidatos={[lider]}
-        pctApuradoTotal={75}
-        turno={2}
-      />,
-    );
-    const banner = doc.querySelector('[role="status"]');
-    expect(banner?.getAttribute("aria-live")).toBe("polite");
-    expect(banner?.getAttribute("aria-label")).toContain("Presidente eleito: Lula (PT)");
-  });
-
-  it("(i) fundo e tinta saem do MESMO par medido — nunca de fontes diferentes", () => {
-    // Substitui os dois casos anteriores, "(i) texto branco quando rank=1" e
-    // "(j) texto escuro quando rank >= 3". Os dois testavam
-    // `shouldUseDarkText(rank)`, que supunha "rank 1 e 2 têm fundo escuro
-    // (vermelho/azul)" — verdade só enquanto o fundo era a cor de COLOCAÇÃO.
-    //
-    // Com a cor do partido, a claridade do fundo é função da SIGLA: um rank 1 de
-    // partido claro receberia texto branco sobre fundo claro. A garantia certa é
-    // outra e é mais forte — `partyChipInk` devolve fundo e tinta como par
-    // MEDIDO pelo gerador da paleta, e a docstring dele avisa que separá-los
-    // desfaz a medição.
-    for (const rank of [1, 2, 3, 7]) {
-      const lider = makeCand({ p_vitoria: 0.99, rank, cor: `var(--color-cand-${rank})` });
+describe("<NationalWinnerBanner /> — gatilho é só `eleitos_definidos` (ADR-0075)", () => {
+  it("(a) p_vitoria 0,995 SEM definido ⇒ nada, e nenhuma palavra 'eleito' [mutação: `p_vitoria ≥ 0,99`]", () => {
+    for (const turno of [1, 2] as const) {
+      const lider = makeCand({ p_vitoria: 0.995 });
       const doc = parse(
-        <NationalWinnerBanner
-          national={makeNational(lider)}
-          candidatos={[lider]}
-          pctApuradoTotal={75}
-          turno={2}
-        />,
+        <NationalWinnerBanner candidatos={[lider, BOLS]} porUf={SEM_DEFINICAO} turno={turno} />,
+      );
+      expect(vazio(doc), `turno ${turno}`).toBe(true);
+      expect((doc.body.textContent ?? "").toLowerCase()).not.toContain("eleito");
+    }
+  });
+
+  it("(b) apurado 99,5% em todas as UFs SEM definido ⇒ nada [mutação: `pct_apurado ≥ 99`]", () => {
+    const rows = SEM_DEFINICAO.map((r) => ({ ...r, pct_apurado: 99.5 }));
+    for (const turno of [1, 2] as const) {
+      const doc = parse(
+        <NationalWinnerBanner candidatos={[LULA, BOLS]} porUf={rows} turno={turno} />,
+      );
+      expect(vazio(doc), `turno ${turno}`).toBe(true);
+    }
+  });
+
+  it("(c) sem `por_uf` (pré-apuração) ⇒ nada", () => {
+    const doc = parse(
+      <NationalWinnerBanner candidatos={[makeCand({ p_vitoria: 1 })]} porUf={[]} turno={2} />,
+    );
+    expect(vazio(doc)).toBe(true);
+  });
+
+  it("(d) definido no 2º turno ⇒ 'NOME (P) matematicamente eleito' + atribuição ao TSE", () => {
+    const doc = parse(
+      <NationalWinnerBanner candidatos={[LULA, BOLS]} porUf={brasilDefinido(13)} turno={2} />,
+    );
+    const strong = doc.querySelector("strong")?.textContent ?? "";
+    expect(strong).toBe("Lula (PT) matematicamente eleito");
+    expect(doc.body.textContent).toContain(ATRIBUICAO_TSE);
+    expect(ATRIBUICAO_TSE).toBe("pela contagem oficial do TSE");
+    // Nunca o "ELEITO" solto nem "Presidente eleito".
+    expect(doc.body.textContent).not.toContain("ELEITO");
+    expect(doc.body.textContent).not.toContain("Presidente eleito");
+  });
+
+  it("(e) definido no 1º turno ⇒ '… matematicamente eleito no 1º turno'", () => {
+    const doc = parse(
+      <NationalWinnerBanner candidatos={[LULA, BOLS]} porUf={brasilDefinido(13)} turno={1} />,
+    );
+    expect(doc.querySelector("strong")?.textContent).toBe(
+      "Lula (PT) matematicamente eleito no 1º turno",
+    );
+  });
+
+  it("(f) o nome sai do ID definido, mesmo com outro líder projetado e p_vitoria 0,999 [mutação: `rank === 1` / `candidato_a_id`]", () => {
+    const liderProjetado = makeCand({ p_vitoria: 0.999, rank: 1 });
+    const definido = makeCand({ ...BOLS, p_vitoria: 0.001, rank: 2 });
+    const doc = parse(
+      <NationalWinnerBanner
+        candidatos={[liderProjetado, definido]}
+        porUf={brasilDefinido(22)}
+        turno={2}
+      />,
+    );
+    const texto = doc.body.textContent ?? "";
+    expect(texto).toContain("Bolsonaro (PL) matematicamente eleito");
+    expect(texto).not.toContain("Lula");
+    // A cor também é a do partido do DEFINIDO.
+    const style = doc.querySelector('[role="status"]')?.getAttribute("style") ?? "";
+    expect(style).toContain("var(--party-pl-chip)");
+  });
+
+  it("(g) anulada nunca, nem com o id dela em `eleitos_definidos`", () => {
+    const anulada = makeCand({ destino: "anulado" });
+    const rows = brasilDefinido(13).map((r) => ({
+      ...r,
+      top_candidatos: r.top_candidatos.map((t) =>
+        t.id === 13 ? { ...t, destino: "anulado" as const } : t,
+      ),
+    }));
+    for (const porUf of [rows, brasilDefinido(13)]) {
+      const doc = parse(
+        <NationalWinnerBanner candidatos={[anulada, BOLS]} porUf={porUf} turno={2} />,
+      );
+      expect(vazio(doc)).toBe(true);
+    }
+  });
+
+  it("(h) dois ids definidos (dado incoerente para Presidente) ⇒ nada", () => {
+    const rows = [
+      ufRow("SP", { eleitos_definidos: [13] }),
+      ufRow("BA", { eleitos_definidos: [22] }),
+    ];
+    const doc = parse(<NationalWinnerBanner candidatos={[LULA, BOLS]} porUf={rows} turno={2} />);
+    expect(vazio(doc)).toBe(true);
+  });
+
+  it("(i) id definido sem nome em lugar nenhum ⇒ nada (nunca anunciar eleito sem nome)", () => {
+    const doc = parse(
+      <NationalWinnerBanner candidatos={[LULA]} porUf={brasilDefinido(99)} turno={2} />,
+    );
+    expect(vazio(doc)).toBe(true);
+  });
+});
+
+describe("<NationalWinnerBanner /> — cor e acessibilidade", () => {
+  it("(j) fundo e tinta do MESMO par medido, do partido — nunca da colocação", () => {
+    for (const rank of [1, 2, 3, 7]) {
+      const lider = makeCand({ rank, cor: `var(--color-cand-${rank})` });
+      const doc = parse(
+        <NationalWinnerBanner candidatos={[lider]} porUf={brasilDefinido(13)} turno={2} />,
       );
       const style = doc.querySelector('[role="status"]')?.getAttribute("style") ?? "";
       expect(style, `rank ${rank}`).toContain("var(--party-pt-chip)");
       expect(style, `rank ${rank}`).toContain("var(--party-pt-ink)");
-      // A tinta antiga, escolhida pelo rank, não pode sobreviver em canto nenhum.
-      expect(style, `rank ${rank}`).not.toContain("#ffffff");
-      expect(style, `rank ${rank}`).not.toContain("var(--color-text)");
+      expect(style, `rank ${rank}`).not.toContain("--color-cand-");
     }
   });
 
-  it("(k) candidato_a_id null → não renderiza (pré-apuração)", () => {
-    const lider = makeCand({ p_vitoria: 0.99 });
-    const national: EdgeNational = { ...makeNational(lider), candidato_a_id: null };
+  it("(k) aria-live='polite' + role='status', e o ouvido ouve a mesma frase da tela", () => {
     const doc = parse(
-      <NationalWinnerBanner
-        national={national}
-        candidatos={[lider]}
-        pctApuradoTotal={75}
-        turno={2}
-      />,
+      <NationalWinnerBanner candidatos={[LULA, BOLS]} porUf={brasilDefinido(13)} turno={2} />,
     );
-    expect(doc.body.textContent?.trim()).toBe("");
-  });
-
-  it("(l) líder ausente do array candidatos → não renderiza", () => {
-    const lider = makeCand({ p_vitoria: 0.99 });
-    const doc = parse(
-      <NationalWinnerBanner
-        national={makeNational(lider)}
-        candidatos={[]}
-        pctApuradoTotal={75}
-        turno={2}
-      />,
-    );
-    expect(doc.body.textContent?.trim()).toBe("");
+    const banner = doc.querySelector('[role="status"]');
+    expect(banner?.getAttribute("aria-live")).toBe("polite");
+    const aria = banner?.getAttribute("aria-label") ?? "";
+    expect(aria).toContain("Lula (PT) matematicamente eleito");
+    expect(aria).toContain(ATRIBUICAO_TSE);
+    expect(aria).not.toContain("Presidente eleito");
   });
 });
