@@ -9547,10 +9547,10 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                 ),
                 anulados=anulados,
             )
-            post_edge_write(edge_payload, payloads_uf=uf_payloads)
             # 🔴 04/10/2026 — nacional = `pst` oficial do arquivo BR do TSE.
             if "BR" in pct_oficial and isinstance(edge_payload, dict):
                 edge_payload["pct_apurado_total"] = pct_oficial["BR"]
+            post_edge_write(edge_payload, payloads_uf=uf_payloads)
         except Exception as edge_exc:  # noqa: BLE001 — never block the response
             _log(
                 "warn",
