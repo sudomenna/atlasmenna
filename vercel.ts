@@ -201,51 +201,51 @@ const config: VercelProjectConfig = {
     // simulado (12-19 UTC).
     {
       path: "/api/ingest/deputado-federal/1",
-      schedule: "0,30 20-23,0-7 * * *",
+      schedule: "0,15,30,45 20-23,0-7 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/2",
-      schedule: "5,35 20-23,0-7 * * *",
+      schedule: "2,17,32,47 20-23,0-7 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/3",
-      schedule: "10,40 20-23,0-7 * * *",
+      schedule: "5,20,35,50 20-23,0-7 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/4",
-      schedule: "15,45 20-23,0-7 * * *",
+      schedule: "7,22,37,52 20-23,0-7 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/5",
-      schedule: "20,50 20-23,0-7 * * *",
+      schedule: "10,25,40,55 20-23,0-7 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/6",
-      schedule: "25,55 20-23,0-7 * * *",
+      schedule: "12,27,42,57 20-23,0-7 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/1",
-      schedule: "0,30 12-19 * * *",
+      schedule: "0,15,30,45 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/2",
-      schedule: "5,35 12-19 * * *",
+      schedule: "2,17,32,47 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/3",
-      schedule: "10,40 12-19 * * *",
+      schedule: "5,20,35,50 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/4",
-      schedule: "15,45 12-19 * * *",
+      schedule: "7,22,37,52 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/5",
-      schedule: "20,50 12-19 * * *",
+      schedule: "10,25,40,55 12-19 * * *",
     },
     {
       path: "/api/ingest/deputado-federal/6",
-      schedule: "25,55 12-19 * * *",
+      schedule: "12,27,42,57 12-19 * * *",
     },
     // ── Deputado Estadual (7) e Distrital (8) — spec 027 Fase 1, ADR-0067 ──
     //

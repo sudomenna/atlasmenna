@@ -89,7 +89,7 @@ export const CADENCIA_SEGUNDOS: Readonly<Record<CargoTse, number>> = {
   1: 300,
   3: 300,
   5: 300,
-  6: 1800,
+  6: 900, // 🔴 04/10/2026 18h: 30→15 min por ordem do dono (6 fatias a cada 15 min)
   7: 300,
   8: 300,
 };
