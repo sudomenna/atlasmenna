@@ -375,7 +375,11 @@ async function lerChave(
   } catch (e) {
     return { erroHttp: `rede: ${e instanceof Error ? e.message : String(e)}` };
   }
-  if (res.status === 404) return { lido: interpretarInterruptor({ estado: "ausente" }) };
+  // Chave inexistente: a API real responde **204 sem corpo** (medido em
+  // 03/10/2026 no store de produção), não 404 — os dois são "ausente".
+  if (res.status === 404 || res.status === 204) {
+    return { lido: interpretarInterruptor({ estado: "ausente" }) };
+  }
   if (!res.ok) return { erroHttp: `HTTP ${res.status}` };
   let corpo: unknown;
   try {

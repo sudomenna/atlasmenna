@@ -58,6 +58,9 @@ function apiFalsa(opts: {
   falharMeta?: boolean;
   /** A chave que este store "tem". Default: a do federal. */
   chave?: string;
+  /** Como a API responde a chave AUSENTE. A real (medido em 03/10/2026) dá
+   *  **204 sem corpo**; 404 fica coberto também. Default: 404. */
+  ausenteComo?: 204 | 404;
 }) {
   const chave = opts.chave ?? "interruptor-projecao-dep";
   const estado: { valor: unknown } = { valor: opts.valor };
@@ -72,7 +75,11 @@ function apiFalsa(opts: {
       return Response.json({ id: opts.id, slug: opts.slug, sizeInBytes: 2 });
     }
     if (u.pathname === `/v1/edge-config/${opts.id}/item/${chave}`) {
-      if (estado.valor === undefined) return new Response("{}", { status: 404 });
+      if (estado.valor === undefined) {
+        return opts.ausenteComo === 204
+          ? new Response(null, { status: 204 })
+          : new Response("{}", { status: 404 });
+      }
       return Response.json({ key: chave, value: estado.valor });
     }
     if (u.pathname === `/v1/edge-config/${opts.id}/items` && metodo === "PATCH") {
@@ -214,6 +221,21 @@ describe("executar — o store certo, ou nada", () => {
     expect(d.linhas.join("\n")).toMatch(/PRODUÇÃO/);
     expect(d.linhas.join("\n")).toMatch(/AUSENTE ⇒ desligada/);
     expect(patches(api)).toHaveLength(0);
+  });
+
+  it("🔴 chave ausente como a API REAL responde (204 sem corpo) ⇒ desligada, não erro", async () => {
+    // Medido em 03/10/2026 contra o store de produção: `GET .../item/<chave>`
+    // de chave inexistente devolve 204, não 404. Antes desta correção o status
+    // saía com "resposta que não é JSON" (código 1) — e o `--ligar` da véspera
+    // não passava da leitura.
+    const api = apiFalsa({ id: PRODUCAO, slug: "salacofre-edge-config", ausenteComo: 204 });
+    const d = deps([], api);
+    expect(await executar(d)).toBe(0);
+    expect(d.linhas.join("\n")).toMatch(/AUSENTE ⇒ desligada/);
+
+    const api2 = apiFalsa({ id: PRODUCAO, slug: "salacofre-edge-config", ausenteComo: 204 });
+    expect(await executar(deps(["--ligar", "--confirmar", PRODUCAO], api2))).toBe(0);
+    expect(api2.estado.valor).toMatchObject({ ligada: true });
   });
 
   it("🔴 store de ENSAIO sem `--ensaio` ⇒ recusa (3), sem nem ler a chave", async () => {
