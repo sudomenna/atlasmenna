@@ -139,6 +139,16 @@ export function LegendaMarcas({
               Não é resultado do TSE; "apertada" marca a vaga que ainda pode mudar de mão.
             </li>
           ) : null}
+          {projecaoVisivel ? (
+            // Spec 026 RF-297 — o número sob o voto apurado. Só existe com a
+            // projeção visível (o mesmo par de leituras da marca acima).
+            <li data-testid="dep-legenda-voto-projetado">
+              "projeção ≈ 652 mil · não oficial", sob os votos: o voto que estimamos para o
+              candidato ao fim da apuração {territorio.doTerritorio}, arredondado. Aparece nos
+              marcados como eleitos e nos 7 seguintes de cada agremiação. Não é resultado do TSE e
+              não muda a ordem da lista, que é sempre a dos votos apurados.
+            </li>
+          ) : null}
         </>
       )}
       {temDestino ? (

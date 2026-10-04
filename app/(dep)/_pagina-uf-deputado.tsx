@@ -133,9 +133,10 @@ import {
   fraseCorteCabecalho,
   fraseEstadoProjecao,
   L,
+  linhasCompactasDaAgremiacao,
   linhasCompactasDoV1,
+  maisVotadosComVotoProjetado,
   marcasDaLinha,
-  paraLinhaCompacta,
   projecaoVisivel,
 } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatTimeHMS, formatVotes } from "@/lib/utils/format";
@@ -144,6 +145,7 @@ import { colorForParty } from "@/lib/utils/party-color";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 
 import { lerCandidaturasAguardando, lerDadosDaCasa, lerFotosDaCasa } from "./_dados-da-casa";
+import painel from "./_painel-desktop.module.css";
 
 /** `generateStaticParams` do cargo: uma rota por UF que tem a casa (27 · 26 · só o DF). */
 export function paramsEstaticosDaCasa(cargo: CargoProporcional): Array<{ sigla: string }> {
@@ -327,20 +329,6 @@ export async function renderPaginaUfDeputado(
       : null;
   const detail = detalheSaneado ? aplicarInterruptorProjecao(detalheSaneado, interruptor) : null;
 
-  // Spec 027, decisão do dono de 03/10 — estadual e distrital levam ao
-  // documento, por agremiação, os eleitos + 5 (mínimo 10); o resto vem pela
-  // rota da lista, no clique (`lib/deputado/lista-documento.ts`). O corte é
-  // medido no objeto ANTES do interruptor: a rota, que não lê o interruptor,
-  // chega ao mesmo R. O federal não passa por aqui (três faixas, spec 026).
-  const duasFaixas = listaEmDuasFaixas(cargo);
-  const ultimoRankPorCod = new Map(
-    duasFaixas && detalheSaneado
-      ? detalheSaneado.agremiacoes.map(
-          (a) => [a.cod, ultimoRankNoDocumento(a, detalheSaneado.totalizacao_final)] as const,
-        )
-      : [],
-  );
-
   // Nem resumo nem detalhe: não há o que dizer sobre esta UF ainda.
   if (!row && !detail) {
     // RF-149 — o cargo nesta UF. No federal é a maior grade do produto (1.131
@@ -354,7 +342,7 @@ export async function renderPaginaUfDeputado(
     return (
       <main
         data-trilha="dep"
-        className="mx-auto flex min-h-screen max-w-page flex-col px-5 py-6"
+        className={`mx-auto flex min-h-screen max-w-page flex-col px-5 py-6 ${painel.main}`}
         style={{ gap: "var(--space-6)" }}
       >
         {/* Spec 027 RF-283 — o seletor existe também sem dado: é navegação,
@@ -416,6 +404,19 @@ export async function renderPaginaUfDeputado(
     totalizacaoFinal: detail?.totalizacao_final === true,
     projecaoVisivel: visivel,
   };
+  // Spec 027 — estadual e distrital levam ao documento, por agremiação, só o
+  // conjunto visível por padrão: os eleitos + 7 (emenda 04/10, decisão do
+  // dono; `lib/deputado/lista-documento.ts`). O resto vem pela rota da lista,
+  // no clique. "Eleito" aqui é o da tela — com a projeção visível, conta o
+  // eleito na projeção; a rota, que não lê o interruptor, corta no R sem
+  // projeção (nunca maior que este) e o cliente une por `sqcand`. O federal
+  // não passa por aqui: leva 1–60 e recolhe por CSS fora do mesmo conjunto.
+  const duasFaixas = listaEmDuasFaixas(cargo);
+  const ultimoRankPorCod = new Map(
+    duasFaixas && detalheSaneado
+      ? detalheSaneado.agremiacoes.map((a) => [a.cod, ultimoRankNoDocumento(a, ctx)] as const)
+      : [],
+  );
   const temDestino = agremiacoes.some((a) => a.candidatos?.some((c) => c.destino !== undefined));
   const linhasDaUf = agremiacoes.flatMap((a) => a.candidatos ?? []);
   const nomePorSqcand = new Map(
@@ -425,7 +426,10 @@ export async function renderPaginaUfDeputado(
     linhasDaUf.map((c) => [c.sqcand, bitsDasMarcas(marcasDaLinha(c, ctx))] as const),
   );
   const maisVotados = detail
-    ? maisVotadosDaUf(detail).map((d) => ({ ...d, marcas: marcasPorSqcand.get(d.sqcand) ?? 0 }))
+    ? maisVotadosComVotoProjetado(maisVotadosDaUf(detail), agremiacoes, ctx).map((d) => ({
+        ...d,
+        marcas: marcasPorSqcand.get(d.sqcand) ?? 0,
+      }))
     : [];
   // RF-291 — a mini-foto só dos eleitos; cada bloco recebe só o mapa dele.
   const fotosMaisVotados = fotosDosEleitos(
@@ -475,7 +479,7 @@ export async function renderPaginaUfDeputado(
   return (
     <main
       data-trilha="dep"
-      className="mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10"
+      className={`mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10 ${painel.main}`}
       style={{ gap: "var(--space-8)" }}
     >
       {/* ADR-0038 D4. Só quando o resumo nacional chegou: sem ele não há
@@ -638,23 +642,28 @@ export async function renderPaginaUfDeputado(
           voto apurado, nas duas visões, sem "aguardando projeção" nem "zona".
           Pelo objeto, não pelo cargo — a mesma regra do `modoResumo` da
           metodologia abaixo. */}
-      <VotacaoEleitorado
-        kicker={`${rotulo} · ${sigla}`}
-        votacao={detail?.votacao}
-        titleId="votacao-uf-heading"
-        semProjecao={detail?.granularidade === "uf"}
-      />
+      {/* ADR-0073 — par lado a lado a partir de 1280px; abaixo disso o
+          invólucro é `display: contents` e os dois blocos seguem no fluxo do
+          `<main>` como antes. */}
+      <div className={painel.par}>
+        <VotacaoEleitorado
+          kicker={`${rotulo} · ${sigla}`}
+          votacao={detail?.votacao}
+          titleId="votacao-uf-heading"
+          semProjecao={detail?.granularidade === "uf"}
+        />
 
-      {/* Spec 026 RF-270 — os 10 mais votados da UF, do próprio objeto da UF
+        {/* Spec 026 RF-270 — os 10 mais votados da UF, do próprio objeto da UF
           (nunca da lista 61+). Objeto v1 ⇒ nenhum (o bloco não aparece). */}
-      <DeputadoMaisVotados
-        cargo={cargo}
-        escopo="uf"
-        uf={sigla}
-        linhas={maisVotados.length > 0 ? maisVotados : undefined}
-        fotos={fotosMaisVotados}
-        titleId="mais-votados-uf-heading"
-      />
+        <DeputadoMaisVotados
+          cargo={cargo}
+          escopo="uf"
+          uf={sigla}
+          linhas={maisVotados.length > 0 ? maisVotados : undefined}
+          fotos={fotosMaisVotados}
+          titleId="mais-votados-uf-heading"
+        />
+      </div>
 
       {/* Seção 2 — a bancada da UF. RF-122, RF-125.1, RF-127, RF-130.
           O bloco NUNCA sai do DOM (ADR-0017): sem o Blob ele diz por quê. */}
@@ -677,6 +686,7 @@ export async function renderPaginaUfDeputado(
             />
             <ul
               data-testid="uf-agremiacoes"
+              className={painel.agremiacoes}
               style={{ listStyle: "none", margin: 0, padding: 0, display: "grid" }}
             >
               {agremiacoes.map((agr) => {
@@ -689,13 +699,16 @@ export async function renderPaginaUfDeputado(
                   mostrarPartido: federacao,
                 };
                 // v2: `candidatos` na ordem do rank; v1: eleitos + suplentes (RF-276).
-                // Assembleias: só o que vai ao documento (eleitos + 5, mín. 10).
+                // Assembleias: só o que vai ao documento (eleitos + 7, emenda 04/10).
                 const ultimoRank = ultimoRankPorCod.get(agr.cod);
                 const linhas = agr.candidatos
-                  ? (ultimoRank === undefined
-                      ? agr.candidatos
-                      : linhasNoDocumento(agr.candidatos, ultimoRank)
-                    ).map((l) => paraLinhaCompacta(l, ctx, exibicao))
+                  ? linhasCompactasDaAgremiacao(
+                      ultimoRank === undefined
+                        ? agr.candidatos
+                        : linhasNoDocumento(agr.candidatos, ultimoRank),
+                      ctx,
+                      exibicao,
+                    )
                   : linhasCompactasDoV1(agr, exibicao);
                 const corte = corteCompacto(agr, ctx.totalizacaoFinal);
                 const projetadas = visivel ? agr.cadeiras_projetadas : undefined;
@@ -717,13 +730,13 @@ export async function renderPaginaUfDeputado(
                     <div
                       className="grid items-baseline"
                       style={{
-                        gridTemplateColumns: "3rem minmax(0, 1fr) auto",
+                        gridTemplateColumns: "minmax(3rem, max-content) minmax(0, 1fr) auto",
                         columnGap: "var(--space-3)",
                       }}
                     >
                       {/* Rótulo IRMÃO do número — ver a nota gêmea na tela
                           nacional para o porquê de não ser filho. */}
-                      <span style={{ font: "var(--type-figure-sm)" }}>
+                      <span style={{ font: "var(--type-kpi-sm)" }}>
                         <span data-testid="uf-cadeiras">{agr.cadeiras}</span>
                         <span className="sr-only"> cadeiras na parcial</span>
                       </span>
@@ -997,7 +1010,7 @@ function ResumoItem({ rotulo, valor, nota }: { rotulo: string; valor: string; no
       >
         {rotulo}
       </dt>
-      <dd style={{ margin: 0, font: "var(--type-figure-sm)" }}>{valor}</dd>
+      <dd style={{ margin: 0, font: "var(--type-kpi)" }}>{valor}</dd>
       {nota ? (
         <dd
           style={{

@@ -1,72 +1,77 @@
 /**
- * lib/deputado/lista-documento.ts — spec 027, decisão do dono de 03/10: o que
- * a lista de candidatos de uma agremiação leva ao DOCUMENTO nas assembleias
- * (cargos 7 e 8), e o que fica para a rota `GET /uf/<UF>/<slug>/lista`.
+ * lib/deputado/lista-documento.ts — spec 027: o que a lista de candidatos de
+ * uma agremiação leva ao DOCUMENTO nas assembleias (cargos 7 e 8), e o que
+ * fica para a rota `GET /uf/<UF>/<slug>/lista`.
  *
- * ## A regra
+ * ## A regra — "eleitos + 7" (emenda 04/10, decisão do dono)
  *
- * Por agremiação, o documento traz **os eleitos na parcial e os 5 seguintes
- * por rank, com mínimo de 10** — agremiação sem eleito: 10; com menos
- * candidaturas que isso: todas. Nada oculto no DOM: o resto (do primeiro fora
- * do documento até o fim) só chega quando o leitor aciona "mostrar todos".
+ * Por agremiação, o documento traz o conjunto VISÍVEL POR PADRÃO, o mesmo do
+ * federal e do voto projetado: rank ≤ maior rank eleito + 7
+ * (`ultimoRankVisivel` em `lib/utils/deputado-marcas.ts`, onde mora a regra e
+ * o porquê de contar a partir do MAIOR rank eleito, e posições em vez de
+ * linhas válidas). Agremiação sem eleito: as 7 primeiras; com menos
+ * candidaturas que isso: todas. Nada oculto no DOM: o resto
+ * só chega quando o leitor aciona "mostrar todos".
  *
- * O motivo é peso, medido pela frente S em 03/10 com o servidor falso: as três
- * faixas da spec 026 (20 visíveis + 21–60 recortadas no DOM, ADR-0065) levavam
- * `/uf/SP/deputado-estadual` a 724 KiB de documento (1.570 linhas, ~470 B cada)
- * e `/uf/DF/deputado-distrital` a 446 KiB, contra o teto global de 300 KiB.
+ * Até 03/10 eram "eleitos + 5, mínimo 10". O mínimo de 10 caiu: com a regra
+ * única, agremiação sem eleito mostra 7 em toda tela de deputado, e o 10
+ * existia só para que as menores não parecessem vazias ao lado das 20 do
+ * federal — que também deixaram de existir.
  *
- * O federal (cargo 6) NÃO usa este módulo: continua nas três faixas.
+ * O motivo de cortar no documento (e não recolher por CSS como o federal) é
+ * peso, medido pela frente S em 03/10 com o servidor falso: as três faixas da
+ * spec 026 levavam `/uf/SP/deputado-estadual` a 724 KiB de documento.
  *
- * ## "Os 5 seguintes" contam a partir do MAIOR rank eleito
- *
- * Os eleitos de uma agremiação não são sempre os ranks 1..k: uma candidatura
- * anulada ou sub judice tem rank (é ordenada pelo voto apurado) e nunca se
- * elege. Contar k + 5 abriria um buraco; contar a partir do último eleito
- * mantém o documento CONTÍGUO (ranks 1..R), que é o que permite à rota
- * devolver exatamente "rank > R" sem repetir nem pular ninguém.
+ * O federal (cargo 6) NÃO usa este módulo: leva 1–60 ao documento e recolhe
+ * por CSS o que está fora do conjunto visível (`DeputadoListaAgremiacao`).
  *
  * ## Quem conta como eleito
  *
- *   - parcial (`totalizacao_final` falso): `parcial` presente;
- *   - "Eleito (TSE)" (`tf = "s"`): um dos três rótulos de eleito do TSE —
- *     a mesma regra de {@link ehTseEleito} que desenha a marca.
+ * Quem tem marca de eleito NA TELA (`marcasDaLinha`): na parcial; na projeção,
+ * só com a projeção visível; com a totalização final, só "Eleito (TSE)".
  *
- * ## Duas extensões, ambas para que NENHUMA marca fique atrás do clique
+ * ## Página e rota: a rota usa o R SEM projeção
  *
- * ADR-0065 D1: o que vem pela rota nunca carrega marca. Por isso R também
- * cobre, fora da totalização final:
+ * A página sabe se a projeção está visível (estado + interruptor); a rota não
+ * lê o interruptor. Por isso a rota corta no R calculado SEM projeção — que
+ * nunca é maior que o da página (`ultimoRankVisivel` é monótona). Com a
+ * projeção visível, a rota devolve algumas linhas que a página já tem; o
+ * cliente une por `sqcand` e a linha da página vence (`unirPorSqcand`). Nunca
+ * há buraco — o oposto (rota com R maior) pularia candidatos em silêncio.
  *
- *   - o `corte.primeiro_fora` (RF-272) — a linha de corte precisa dos dois
- *     nomes, e o primeiro de fora pode estar além de "último eleito + 5"
- *     quando os seguintes são anulados;
- *   - toda linha com `projecao` no objeto CRU (antes do interruptor). Lida do
- *     objeto cru de propósito: a rota não lê o interruptor, e as duas pontas
- *     (página e rota) precisam chegar ao MESMO R.
+ * ## Uma extensão, para que a linha de corte tenha os dois nomes
  *
- * Nos dois casos, na prática, R não muda (a fixture das assembleias não tem
- * nenhum que mude); são redes para o caso raro, não a regra.
+ * Fora da totalização final, R cobre também o `corte.primeiro_fora` (RF-272).
+ * Na prática ele vem logo depois do último eleito na parcial e já está no
+ * conjunto; só fica de fora com 7+ linhas com `destino` no meio. Rede para o
+ * caso raro, não a regra. Vale igual na página e na
+ * rota (não depende da projeção).
  */
 
 import type { DeputadoUfDetail, DeputadoUfLinha, DeputadoUfLista } from "@/lib/blob/deputado-uf";
 import type { CargoProporcional } from "@/lib/config/cargos";
-import { ehTseEleito } from "@/lib/utils/deputado-marcas";
-
-/** Mínimo de linhas no documento por agremiação (decisão do dono, 03/10). */
-export const MINIMO_NO_DOCUMENTO = 10;
-
-/** Quantas linhas depois do último eleito entram no documento. */
-export const SEGUINTES_AO_ULTIMO_ELEITO = 5;
+import { type ContextoMarcas, ultimoRankVisivelDasLinhas } from "@/lib/utils/deputado-marcas";
 
 /**
  * As casas cuja lista vai ao documento em DUAS faixas (documento + rota). O
- * federal fica nas três faixas da spec 026, sem mudança de um byte.
+ * federal fica no documento 1–60, recolhido por CSS fora do conjunto visível.
  */
 export function listaEmDuasFaixas(cargo: CargoProporcional): boolean {
   return cargo === 7 || cargo === 8;
 }
 
 /** O que {@link ultimoRankNoDocumento} lê de uma linha. */
-type LinhaParaCorte = Pick<DeputadoUfLinha, "sqcand" | "rank" | "parcial" | "projecao" | "tse">;
+type LinhaParaCorte = Pick<
+  DeputadoUfLinha,
+  | "sqcand"
+  | "rank"
+  | "parcial"
+  | "indefinido"
+  | "projecao"
+  | "projecao_apertada"
+  | "tse"
+  | "destino"
+>;
 
 /** O que {@link ultimoRankNoDocumento} lê de uma agremiação. */
 export interface AgremiacaoParaCorte {
@@ -78,22 +83,16 @@ export interface AgremiacaoParaCorte {
  * O maior rank que vai ao documento nesta agremiação (R). O documento leva as
  * linhas de rank ≤ R do objeto da UF; a rota devolve as de rank > R.
  *
- * Pode passar do total de candidaturas (agremiação de 7 com mínimo de 10):
- * cortar por "rank ≤ R" leva todas, que é a regra.
+ * Pode passar do total de candidaturas (agremiação de 5 sem eleito): cortar
+ * por "rank ≤ R" leva todas, que é a regra.
+ *
+ * `ctx.projecaoVisivel` é o da PÁGINA; a rota passa `false` (ver o cabeçalho).
  */
-export function ultimoRankNoDocumento(agr: AgremiacaoParaCorte, totalizacaoFinal: boolean): number {
+export function ultimoRankNoDocumento(agr: AgremiacaoParaCorte, ctx: ContextoMarcas): number {
   const linhas = agr.candidatos ?? [];
-  let r = MINIMO_NO_DOCUMENTO;
-  let ultimoEleito = 0;
-  for (const l of linhas) {
-    const eleito = totalizacaoFinal ? ehTseEleito(l.tse) : l.parcial !== undefined;
-    if (eleito && l.rank > ultimoEleito) ultimoEleito = l.rank;
-    // Extensão: marca de projeção nunca atrás do clique (ver o cabeçalho).
-    if (!totalizacaoFinal && l.projecao !== undefined && l.rank > r) r = l.rank;
-  }
-  if (ultimoEleito > 0) r = Math.max(r, ultimoEleito + SEGUINTES_AO_ULTIMO_ELEITO);
+  let r = ultimoRankVisivelDasLinhas(linhas, ctx);
   // Extensão: o primeiro de fora da linha de corte (RF-272) sempre no documento.
-  if (!totalizacaoFinal && agr.corte) {
+  if (!ctx.totalizacaoFinal && agr.corte) {
     const primeiroFora = linhas.find((l) => l.sqcand === agr.corte?.primeiro_fora);
     if (primeiroFora && primeiroFora.rank > r) r = primeiroFora.rank;
   }
@@ -128,7 +127,11 @@ export function restanteForaDoDocumento(
   for (const agr of detalhe.agremiacoes) {
     // Objeto v1 (sem `candidatos`): a página não corta nada, nada a devolver.
     if (!agr.candidatos) continue;
-    const r = ultimoRankNoDocumento(agr, detalhe.totalizacao_final);
+    // R SEM projeção — o piso do R de qualquer página (ver o cabeçalho).
+    const r = ultimoRankNoDocumento(agr, {
+      totalizacaoFinal: detalhe.totalizacao_final,
+      projecaoVisivel: false,
+    });
     // "Fora do documento" é "fora do que a página levou", e não "rank > R":
     // as linhas do objeto de lista nunca estão no documento, mesmo que R
     // passe de 60 (agremiação que elegesse 56+ — o objeto da UF só tem

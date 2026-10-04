@@ -22,7 +22,7 @@ import { CSS_LISTAS_DEPUTADO_VISIVEIS, SELETOR_LISTA_DEPUTADO } from "./_isencoe
  *      "não consegui decidir" (`bgOverlap` e afins) e segue.
  *
  * Por isso aqui cada lista é TRAZIDA à tela (rolagem em passos até o fim),
- * fechada e aberta (21–60 visíveis), a 375 e a 320 px. Asserções: zero
+ * fechada e aberta (as recolhidas até a 60ª visíveis), a 375 e a 320 px. Asserções: zero
  * rolagem horizontal com a página como ela é servida; zero violação do axe
  * na página como ela é servida; e, com o `content-visibility` DESLIGADO
  * (todas as agremiações montadas), zero violação e nenhum contraste
@@ -39,7 +39,8 @@ import { CSS_LISTAS_DEPUTADO_VISIVEIS, SELETOR_LISTA_DEPUTADO } from "./_isencoe
  * onde há lista 61+, carregar o resto e receber o foco na 61ª.
  *
  * Spec 027, decisão do dono de 03/10: as assembleias levam ao documento, por
- * agremiação, os eleitos + 5 (mínimo 10), tudo visível — nada recortado, sem
+ * agremiação, os eleitos + 7 (emenda 04/10; até 03/10, eleitos + 5 com mínimo
+ * de 10), tudo visível — nada recortado, sem
  * "ver mais" (`lib/deputado/lista-documento.ts`). Nelas o estado "abertas" é
  * "todas as listas com o resto carregado" (cada "mostrar todos" clicado; a
  * rota responde uma vez por aba), e o percurso por teclado vai direto ao
@@ -96,7 +97,11 @@ for (const ROTA of ROTAS) {
   for (const largura of LARGURAS) {
     for (const abertas of [false, true]) {
       const duas = DUAS_FAIXAS.has(ROTA);
-      const estado = abertas ? (duas ? "com o resto carregado" : "abertas (21–60)") : "fechadas";
+      const estado = abertas
+        ? duas
+          ? "com o resto carregado"
+          : "abertas (até a 60ª)"
+        : "fechadas";
       test(`listas de Deputado em ${ROTA} @ ${largura}px, ${estado}: sem rolagem horizontal, axe limpo`, async ({
         page,
         baseURL,
@@ -157,7 +162,7 @@ for (const ROTA of ROTAS) {
           const n = await botoes.count();
           expect(
             n,
-            "nenhum 'mais candidatos' — a fixture de SP perdeu a faixa 21–60?",
+            "nenhum 'mais candidatos' — a fixture de SP perdeu as linhas recolhidas?",
           ).toBeGreaterThan(0);
           for (let i = 0; i < n; i++) {
             const b = botoes.nth(i);
@@ -165,21 +170,22 @@ for (const ROTA of ROTAS) {
             await b.click();
             await expect(b).toHaveAttribute("aria-expanded", "true");
           }
-          // Toda lista que tinha faixa 2 está aberta, e as linhas 21+ têm altura.
-          const alturaDa21: number[] = await page.evaluate((sel) => {
+          // Toda lista que tinha linhas recolhidas está aberta, e a primeira
+          // delas tem altura. (Até 04/10 a régua era a linha 21; com "eleitos
+          // + 7" o recorte começa em R + 1, que varia por agremiação.)
+          const alturaDaRecolhida: number[] = await page.evaluate((sel) => {
             return [...document.querySelectorAll(`${sel} ol`)]
-              .filter((ol) => ol.querySelector('li[data-rank="21"]'))
+              .filter((ol) => ol.querySelector("li[data-f]"))
               .map((ol) => {
                 ol.scrollIntoView();
-                return (
-                  ol.querySelector('li[data-rank="21"]') as HTMLElement
-                ).getBoundingClientRect().height;
+                return (ol.querySelector("li[data-f]") as HTMLElement).getBoundingClientRect()
+                  .height;
               });
           }, SELETOR_LISTA_DEPUTADO);
-          expect(alturaDa21.length).toBeGreaterThan(0);
+          expect(alturaDaRecolhida.length).toBeGreaterThan(0);
           expect(
-            alturaDa21.filter((h) => h <= 0),
-            "linha 21 sem altura com a lista aberta",
+            alturaDaRecolhida.filter((h) => h <= 0),
+            "linha recolhida sem altura com a lista aberta",
           ).toEqual([]);
         }
 

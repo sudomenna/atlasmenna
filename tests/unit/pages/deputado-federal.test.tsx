@@ -945,8 +945,9 @@ describe("/uf/[sigla]/deputado-federal (T-12)", () => {
     expect(textoV1).toContain("Eva Prado");
     expect(textoV1).not.toMatch(/suplente/i);
 
-    // v2 de SP: PL com 71 candidatos — 60 no documento, na ordem do rank, 20
-    // visíveis e 40 recortadas; o resto só no clique.
+    // v2 de SP: PL com 71 candidatos — 60 no documento, na ordem do rank,
+    // eleitos + 7 visíveis (25 eleitos ⇒ 32; emenda 04/10) e 28 recortadas; o
+    // resto só no clique.
     readDeputadoUfDetailMock.mockResolvedValue(ok(v2("SP")));
     const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
     const pl = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='22']");
@@ -954,7 +955,7 @@ describe("/uf/[sigla]/deputado-federal (T-12)", () => {
     expect(linhas.map((l) => Number(l.getAttribute("data-rank")))).toEqual(
       Array.from({ length: 60 }, (_, i) => i + 1),
     );
-    expect(linhas.filter((l) => !l.hasAttribute("data-f"))).toHaveLength(20);
+    expect(linhas.filter((l) => !l.hasAttribute("data-f"))).toHaveLength(32);
     const votos = linhas.map((l) =>
       Number((l.children[2]?.firstChild?.textContent ?? "").replace(/\./g, "")),
     );
@@ -1602,12 +1603,14 @@ describe("spec 026 — /uf/[sigla]/deputado-federal", () => {
     expect(itens[0]?.textContent).toContain("Araújo SP-22-01");
   });
 
-  it("🔴 M36 — RF-272: o corte do PL (depois do 25º, na faixa recortada) está repetido no cabeçalho", async () => {
+  it("🔴 M36 — RF-272: o corte do PL (depois do 25º, visível desde a emenda de 04/10) está repetido no cabeçalho", async () => {
     readDeputadoProjectionMock.mockResolvedValue(nacional());
     readDeputadoUfDetailMock.mockResolvedValue(ok(v2("SP")));
     const doc = await render(UFDeputadoFederalPage(PARAMS_SP));
     const pl = doc.querySelector("[data-testid='uf-agremiacao'][data-cod='22']");
-    expect(pl?.querySelector("[data-testid='dep-corte']")?.hasAttribute("data-f")).toBe(true);
+    // Eleitos + 7: o último eleito está sempre no conjunto visível, e o corte
+    // também. A repetição no cabeçalho continua (lista fechada ou não).
+    expect(pl?.querySelector("[data-testid='dep-corte']")?.hasAttribute("data-f")).toBe(false);
     expect(pl?.querySelector("[data-testid='uf-corte-cabecalho']")?.textContent).toBe(
       "Corte: 599 votos entre o último eleito na parcial e o primeiro de fora.",
     );

@@ -53,9 +53,14 @@ export const SELETOR_LISTA_DEPUTADO = '[data-testid="dep-lista-agremiacao"]';
  *     agremiação: no WebKit a 375 px o 1º parágrafo dele sai
  *     `elmPartiallyObscuring` pelo mesmo motivo (some com o
  *     `content-visibility` desligado).
+ *   - `uf-conferencia` (04/10) — o parágrafo de conferência, que também vem
+ *     depois das agremiações: com a linha "projeção ≈ N mil · não oficial"
+ *     (RF-297) as linhas ficaram mais altas, a fronteira do trecho montado
+ *     mudou, e ele passou a sair `elmPartiallyObscuring` a 1280 px nos dois
+ *     navegadores. Some com o `content-visibility` desligado (medido 04/10).
  */
 export const SELETOR_AGREMIACAO_DEPUTADO =
-  '[data-testid="uf-agremiacao"], [data-testid="dep-regras"]';
+  '[data-testid="uf-agremiacao"], [data-testid="dep-regras"], [data-testid="uf-conferencia"]';
 
 /**
  * CSS que desliga o `content-visibility` das listas — para a PROVA: com ele, o
@@ -73,7 +78,11 @@ export const CSS_LISTAS_DEPUTADO_VISIVEIS = `${SELETOR_LISTA_DEPUTADO}{content-v
  *   `bgOverlap` .............. ~140 nós (1280 px): o miolo da lista pulada;
  *   `elmPartiallyObscuring` .. cabeçalho da agremiação colado na lista pulada;
  *   `elmPartiallyObscured` ... linhas na fronteira do trecho montado (375 px);
- *   `shortTextContent` ....... votos da 20ª linha, a última antes do recorte.
+ *   `shortTextContent` ....... votos da 20ª linha, a última antes do recorte;
+ *   `imgNode` (04/10) ........ `<small>nº …</small>` de linha de agremiação no
+ *                               WebKit (375 e 1280 px), depois da linha de voto
+ *                               projetado (RF-297) — zero com o
+ *                               `content-visibility` desligado, nos dois temas.
  *
  * Com `CSS_LISTAS_DEPUTADO_VISIVEIS` aplicado, a MESMA página cai para UM nó
  * indecidido — a marca do masthead, isenta desde 18/09. Ou seja: os quatro
@@ -88,6 +97,7 @@ export const MOTIVOS_CONTENT_VISIBILITY: readonly string[] = [
   "elmPartiallyObscured",
   "elmPartiallyObscuring",
   "shortTextContent",
+  "imgNode",
 ];
 
 /**

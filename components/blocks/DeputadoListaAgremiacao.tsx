@@ -7,13 +7,16 @@
  * A lista de candidatos de UMA agremiação (partido ou federação) numa UF, em
  * três faixas:
  *
- *   1. posições 1–20 ........ visíveis;
- *   2. 21–60 (e toda linha com marca que o produtor tenha posto no objeto) —
- *      no documento, recortadas por CSS até o leitor pedir ("ver mais"). Nenhum
- *      nó sai do DOM, da árvore de acessibilidade ou da busca da página
- *      (ADR-0034 D21, ADR-0065 D1) — com UMA exceção declarada, a do
- *      `content-visibility: auto` nas agremiações longe da tela (decisão do
- *      dono, 30/09; ver o CSS Module);
+ *   1. o conjunto VISÍVEL POR PADRÃO — rank ≤ maior rank eleito + 7
+ *      (`ultimoRankVisivelDasTuplas`; emenda 04/10, decisão do dono:
+ *      "eleitos + 7"). Até 03/10 eram as posições 1–20;
+ *   2. o resto das posições 1–60 (e toda linha com marca que o produtor tenha
+ *      posto no objeto) — no documento, recortadas por CSS (`li[data-f]`) até
+ *      o leitor pedir ("Mais N candidatos"). Nenhum nó sai do DOM, da árvore
+ *      de acessibilidade ou da busca da página (ADR-0034 D21, ADR-0065 D1) —
+ *      com UMA exceção declarada, a do `content-visibility: auto` nas
+ *      agremiações longe da tela (decisão do dono, 30/09; ver o CSS Module).
+ *      Se eleitos + 7 passa de 60, tudo o que está no documento fica visível;
  *   3. 61 em diante ......... fora do documento; buscadas UMA vez por aba, por
  *      cargo e por UF na rota `GET /uf/<UF>/<slug do cargo>/lista` (a
  *      {@link DeputadoListaAgremiacaoProps.rotaLista}), só no clique.
@@ -21,8 +24,8 @@
  * ## Duas faixas — as assembleias (spec 027, decisão do dono de 03/10)
  *
  * Com {@link DeputadoListaAgremiacaoProps.duasFaixas} (cargos 7 e 8), a página
- * já cortou as linhas: por agremiação, os eleitos + 5, mínimo 10
- * (`lib/deputado/lista-documento.ts`). Todas ficam VISÍVEIS — nada recortado
+ * já cortou as linhas: por agremiação, o MESMO conjunto visível por padrão,
+ * eleitos + 7 (`lib/deputado/lista-documento.ts`). Todas ficam VISÍVEIS — nada recortado
  * por CSS, nenhum "ver mais" —, e "mostrar todos" busca o RESTO na rota da
  * casa (tudo o que não está no documento, e não só 61+). A busca, o cache por
  * rota, o foco na primeira linha nova, `aria-busy`, a região viva e o "tentar
@@ -46,7 +49,7 @@
  * nunca duplica — e reaplica a ordem do próprio `rank`.
  */
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { DestinoDeputadoTexto, MarcaDeputado } from "@/components/atoms/badges/MarcaDeputado";
 import { Button } from "@/components/atoms/controls/Button";
@@ -61,6 +64,8 @@ import {
   marcasDosBits,
   ordenarPorRank,
   paraLinhaCompacta,
+  textoVotoProjetado,
+  ultimoRankVisivelDasTuplas,
   unirPorSqcand,
 } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatTimeHMS, formatVotes } from "@/lib/utils/format";
@@ -68,9 +73,6 @@ import { siglaNaFrase } from "@/lib/utils/termo-territorio";
 
 import { AvatarEleito } from "./AvatarEleito";
 import styles from "./DeputadoListaAgremiacao.module.css";
-
-/** Posições visíveis sem clique (ADR-0065 D1). */
-export const FAIXA_VISIVEL = 20;
 
 /** Última posição que o objeto da UF traz sem clique; daí em diante é a rota 61+. */
 export const FAIXA_DOCUMENTO = 60;
@@ -117,7 +119,7 @@ export interface DeputadoListaAgremiacaoProps {
   semPercentual?: boolean;
   /**
    * Spec 027 (decisão do dono de 03/10) — assembleias: as linhas recebidas são
-   * TODO o documento (eleitos + 5, mínimo 10), visíveis; a rota traz o resto.
+   * TODO o documento (eleitos + 7), visíveis; a rota traz o resto.
    * Ausente no federal, que fica nas três faixas.
    */
   duasFaixas?: boolean;
@@ -237,9 +239,31 @@ export function DeputadoListaAgremiacao({
   const listaId = useId();
   const listaRef = useRef<HTMLOListElement>(null);
   const [aberta, setAberta] = useState(false);
+  /**
+   * O que chegou da rota "mostrar todos" — e SÓ isso é estado. As linhas da
+   * página são derivadas das props a cada render.
+   *
+   * 🔴 Até 04/10 as linhas inteiras moravam num `useState` inicializado com as
+   * props: o primeiro render congelava a lista. Com a atualização automática
+   * (`<AtualizacaoAutomatica>`, `router.refresh()` a cada minuto) as props
+   * passam a mudar com o componente montado — voto, rank, marcas e corte novos
+   * chegariam e a lista continuaria mostrando os do carregamento.
+   *
+   * Na união, a linha da PÁGINA vence a da rota (`unirPorSqcand`): ela é a do
+   * objeto mais recente. Guardamos TODAS as linhas da resposta, e não só as
+   * que faltavam no clique, para que a união seja refeita contra as linhas de
+   * cada refresh.
+   *
+   * ⚠️ Limite conhecido: a resposta da rota é do momento do clique e não é
+   * buscada de novo. Um candidato que saia do documento num refresh posterior
+   * (ex.: 60º → 61º) e não estava naquela resposta some da lista "todos" até
+   * o leitor recarregar a página.
+   */
+  const [extras, setExtras] = useState<readonly LinhaCompacta[]>([]);
   // A ordem é a do `rank` — reaplicada aqui, e não herdada da ordem de chegada.
-  const [linhas, setLinhas] = useState<readonly LinhaCompacta[]>(() =>
-    ordenarPorRank(linhasIniciais),
+  const linhas = useMemo(
+    () => unirPorSqcand(ordenarPorRank(linhasIniciais), extras).linhas,
+    [linhasIniciais, extras],
   );
   const [busca, setBusca] = useState<EstadoBusca>({ fase: "ociosa" });
   /**
@@ -263,8 +287,12 @@ export function DeputadoListaAgremiacao({
     listaRef.current?.querySelector<HTMLLIElement>('li[tabindex="-1"]')?.focus();
   }, [focoEm]);
 
-  // Duas faixas: nada recortado, então nunca "ver mais".
-  const naFaixa2 = duasFaixas ? 0 : linhas.filter((l) => l[L.RANK] > FAIXA_VISIVEL).length;
+  // O conjunto visível por padrão (eleitos + 7, emenda 04/10): visível ⇔
+  // rank ≤ R. As linhas da rota nunca carregam marca (ADR-0065 D1): não
+  // mudam R. Duas faixas: o documento JÁ é o conjunto, nada recortado, nunca
+  // "ver mais".
+  const ultimoVisivel = duasFaixas ? Number.POSITIVE_INFINITY : ultimoRankVisivelDasTuplas(linhas);
+  const naFaixa2 = linhas.filter((l) => l[L.RANK] > ultimoVisivel).length;
   const restantes =
     rotaLista !== null &&
     haListaRestante &&
@@ -288,8 +316,8 @@ export function DeputadoListaAgremiacao({
       const daAgremiacao = lista.agremiacoes.find((a) => a.cod === cod)?.candidatos ?? [];
       const ctx = { totalizacaoFinal, projecaoVisivel };
       const novas = daAgremiacao.map((l) => paraLinhaCompacta(l, ctx, exibicao));
-      const { linhas: unidas, acrescentadas } = unirPorSqcand(linhas, novas);
-      setLinhas(unidas);
+      const { acrescentadas } = unirPorSqcand(linhas, novas);
+      setExtras(novas);
       const primeira = [...acrescentadas].sort((a, b) => a[L.RANK] - b[L.RANK])[0];
       setBusca({
         fase: "pronta",
@@ -334,6 +362,7 @@ export function DeputadoListaAgremiacao({
     const pct = l[L.PCT];
     const numero = l[L.NUMERO];
     const partido = l[L.PARTIDO];
+    const votosProjetados = l[L.VOTOS_PROJ];
     const meta = [numero === null ? null : `nº ${numero}`, partido || null]
       .filter(Boolean)
       .join(" · ");
@@ -341,7 +370,7 @@ export function DeputadoListaAgremiacao({
       <li
         key={l[L.SQCAND]}
         data-rank={rank}
-        data-f={!duasFaixas && rank > FAIXA_VISIVEL ? "" : undefined}
+        data-f={rank > ultimoVisivel ? "" : undefined}
         tabIndex={focoEm === l[L.SQCAND] ? -1 : undefined}
       >
         {/* Texto montado como UMA string: `{rank}º` sairia `21<!-- -->º` no
@@ -369,6 +398,12 @@ export function DeputadoListaAgremiacao({
           ) : semPercentual ? null : (
             <small>—</small>
           )}
+          {/* Spec 026 RF-297 — o voto projetado, a mais, sob o apurado: nunca
+              o substitui nem muda a ordem (ADR-0063 D5). A posição 9 da tupla
+              só existe nas linhas "eleitos + 7" com a projeção visível. */}
+          {votosProjetados !== undefined ? (
+            <small>{textoVotoProjetado(votosProjetados)}</small>
+          ) : null}
         </span>
       </li>,
     );
@@ -377,7 +412,7 @@ export function DeputadoListaAgremiacao({
         <li
           key="corte"
           data-corte=""
-          data-f={!duasFaixas && rank > FAIXA_VISIVEL ? "" : undefined}
+          data-f={rank > ultimoVisivel ? "" : undefined}
           data-testid="dep-corte"
         >
           {textoCorte}

@@ -13,8 +13,13 @@
  * contrato existe.
  *
  * Mutações que estes testes derrubam (tasks 026): M28 (lista reordenada pela
- * projeção), M31 ("eleito" sozinho), M32 (faixa 21–60 removida do DOM), M33
- * (segundo "mostrar todos" refaz o fetch).
+ * projeção), M31 ("eleito" sozinho), M32 (faixa recolhida removida do DOM), M33
+ * (segundo "mostrar todos" refaz o fetch). Emenda 04/10 ("eleitos + 7", o
+ * visível por padrão): "7" virando "6" e "eleito na projeção ignorado" — os
+ * dois aplicados à mão em 04/10, derrubados pelo bloco "visível por padrão".
+ *
+ * A fixture de contrato: SP/PL tem 25 eleitos na parcial e a projeção de SP
+ * está "aguardando" ⇒ visível 1..32, recolhidas 33..60.
  */
 
 import { act } from "react";
@@ -147,16 +152,16 @@ describe("DeputadoListaAgremiacao — o documento antes do clique (RF-260)", () 
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it("🔴 M32 — SP/PL (71 candidatos): as 60 linhas estão no DOM, 20 fora do recorte, e nenhuma busca", () => {
+  it("🔴 M32 — SP/PL (71 candidatos): as 60 linhas estão no DOM, eleitos + 7 (32) fora do recorte, e nenhuma busca", () => {
     const doc = estatico(props("SP", "22"));
     const ls = linhasDoc(doc);
     expect(ls).toHaveLength(60);
     expect(ls.map((l) => Number(l.dataset.rank))).toEqual(
       Array.from({ length: 60 }, (_, i) => i + 1),
     );
-    // Recorte: as 20 primeiras sem `data-f`, as 40 seguintes com.
-    expect(ls.filter((l) => !l.hasAttribute("data-f"))).toHaveLength(20);
-    expect(ls.filter((l) => l.hasAttribute("data-f"))).toHaveLength(40);
+    // Recorte: os 25 eleitos + 7 sem `data-f`, as 28 seguintes com.
+    expect(ls.filter((l) => !l.hasAttribute("data-f"))).toHaveLength(32);
+    expect(ls.filter((l) => l.hasAttribute("data-f"))).toHaveLength(28);
     expect(doc.querySelector("ol")?.getAttribute("data-collapsed")).toBe("true");
     // O recorte é por CSS — nenhum mecanismo que tira da árvore.
     expect(doc.querySelector("details, [hidden]")).toBeNull();
@@ -173,20 +178,20 @@ describe("DeputadoListaAgremiacao — o documento antes do clique (RF-260)", () 
     expect(ver?.getAttribute("aria-controls")).toBe(ol?.id);
     // Rótulo estável (padrão disclosure da APG): o estado vai só no
     // `aria-expanded`; a seta é CSS (pseudo-elemento), fora do nome e do texto.
-    expect(ver?.textContent).toBe("Mais 40 candidatos de PL");
+    expect(ver?.textContent).toBe("Mais 28 candidatos de PL");
     const todos = doc.querySelector("[data-testid='dep-mostrar-todos']");
     expect(todos?.textContent).toBe("Mostrar todos os 71 candidatos de PL");
     // Região viva existe antes de ter texto — senão o anúncio se perde.
     expect(doc.querySelector("[role='status']")).not.toBeNull();
   });
 
-  it("até 20 candidatos: nenhum botão", () => {
+  it("eleitos + 7 cobre a agremiação inteira (RR/PL, 9 linhas, 4 eleitos): nenhum botão", () => {
     const doc = estatico(props("RR", "22"));
     expect(linhasDoc(doc)).toHaveLength(9);
     expect(doc.querySelector("button")).toBeNull();
   });
 
-  it("entre 21 e 60 sem lista 61+: só o 'ver mais'", () => {
+  it("linhas fora do conjunto visível, sem lista 61+: só o 'Mais N'", () => {
     const doc = estatico(props("SP", "13")); // federação com 40
     expect(linhasDoc(doc)).toHaveLength(40);
     expect(doc.querySelector("[data-testid='dep-ver-mais']")).not.toBeNull();
@@ -308,11 +313,11 @@ describe("DeputadoListaAgremiacao — o documento antes do clique (RF-260)", () 
     expect(corte?.hasAttribute("data-rank")).toBe(false);
   });
 
-  it("RF-272 — SP/PL: o corte (depois do 25º) fica na faixa recortada", () => {
+  it("RF-272 — SP/PL: o corte (depois do 25º) fica VISÍVEL — o último eleito sempre está no conjunto", () => {
     const doc = estatico(props("SP", "22"));
     const corte = doc.querySelector("[data-testid='dep-corte']");
     expect(corte?.previousElementSibling?.getAttribute("data-rank")).toBe("25");
-    expect(corte?.hasAttribute("data-f")).toBe(true);
+    expect(corte?.hasAttribute("data-f")).toBe(false);
   });
 
   it("RF-276 — v1 (sem %): a legenda da coluna não promete percentual", () => {
@@ -382,7 +387,7 @@ describe("DeputadoListaAgremiacao — cliques (RF-260)", () => {
     ) as HTMLElement;
   }
 
-  it("'ver mais' abre a faixa 21–60 e 'mostrar menos' fecha — sem busca", async () => {
+  it("'ver mais' abre as recolhidas (33–60) e 'mostrar menos' fecha — sem busca", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);
     await montar(props("SP", "22"));
@@ -391,7 +396,7 @@ describe("DeputadoListaAgremiacao — cliques (RF-260)", () => {
     expect(ver?.getAttribute("aria-expanded")).toBe("true");
     expect(lista().querySelector("ol")?.getAttribute("data-collapsed")).toBe("false");
     // O rótulo NÃO muda — só o `aria-expanded` (padrão disclosure da APG).
-    expect(ver?.textContent).toBe("Mais 40 candidatos de PL");
+    expect(ver?.textContent).toBe("Mais 28 candidatos de PL");
     await act(async () => ver?.click());
     expect(ver?.getAttribute("aria-expanded")).toBe("false");
     expect(linhasDoc(lista())).toHaveLength(60);
@@ -495,7 +500,7 @@ describe("DeputadoListaAgremiacao — cliques (RF-260)", () => {
     vi.stubGlobal("fetch", fetchSpy);
     await montar(props("SP", "22", true, { rotaLista: null }));
     expect(lista().querySelector("[data-testid='dep-mostrar-todos']")).toBeNull();
-    // A faixa 21–60 continua: "ver mais" não depende da rota.
+    // As recolhidas continuam: "ver mais" não depende da rota.
     expect(lista().querySelector("[data-testid='dep-ver-mais']")).not.toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
   });
@@ -620,17 +625,20 @@ describe("DeputadoListaAgremiacao — cliques (RF-260)", () => {
 
 /**
  * SP/PL da fixture de contrato como a página de uma ASSEMBLEIA o monta: as
- * linhas cortadas em eleitos + 5 (mínimo 10) pela MESMA função da página, e
- * a resposta da rota montada pela MESMA função da rota. 25 eleitos ⇒ 30 no
- * documento, 41 pela rota (31..71).
+ * linhas cortadas em eleitos + 7 (emenda 04/10) pela MESMA função da página,
+ * e a resposta da rota montada pela MESMA função da rota. 25 eleitos ⇒ 32 no
+ * documento, 39 pela rota (33..71).
  */
 function propsAssembleia(
   over: Partial<DeputadoListaAgremiacaoProps> = {},
 ): DeputadoListaAgremiacaoProps {
   const d = UFS.SP as UfFixture;
   const a = agr("SP", "22");
-  const r = ultimoRankNoDocumento(a, d.totalizacao_final);
   const base = props("SP", "22");
+  const r = ultimoRankNoDocumento(a, {
+    totalizacaoFinal: d.totalizacao_final,
+    projecaoVisivel: base.projecaoVisivel,
+  });
   return {
     ...base,
     linhas: base.linhas.filter((l) => l[0] <= r),
@@ -685,15 +693,15 @@ describe("DeputadoListaAgremiacao — duas faixas (assembleias, 03/10)", () => {
   const raiz = () => container.querySelector("[data-testid='dep-lista-agremiacao']") as HTMLElement;
   const botao = () => raiz().querySelector<HTMLButtonElement>("[data-testid='dep-mostrar-todos']");
 
-  it("🔴 documento: as 30 linhas visíveis, nada recortado, nunca 'ver mais', e o botão conta o que falta", () => {
+  it("🔴 documento: as 32 linhas visíveis, nada recortado, nunca 'ver mais', e o botão conta o que falta", () => {
     const doc = estatico(propsAssembleia());
     const ranks = linhasDoc(doc).map((l) => Number(l.dataset.rank));
-    expect(ranks).toEqual(Array.from({ length: 30 }, (_, i) => i + 1));
+    expect(ranks).toEqual(Array.from({ length: 32 }, (_, i) => i + 1));
     expect(doc.querySelector("[data-f]")).toBeNull();
     expect(doc.querySelector("ol")?.hasAttribute("data-collapsed")).toBe(false);
     expect(doc.querySelector("[data-testid='dep-ver-mais']")).toBeNull();
     expect(doc.querySelector("[data-testid='dep-mostrar-todos']")?.textContent).toBe(
-      "Mostrar todos — mais 41 candidatos de PL",
+      "Mostrar todos — mais 39 candidatos de PL",
     );
     // RF-272 — a linha de corte continua: o 1º de fora (26º) está no documento.
     expect(doc.querySelector("[data-testid='dep-corte']")).not.toBeNull();
@@ -703,7 +711,7 @@ describe("DeputadoListaAgremiacao — duas faixas (assembleias, 03/10)", () => {
     expect(textoMostrarTodosDuasFaixas(1, "PT")).toBe("Mostrar todos — mais 1 candidato de PT");
   });
 
-  it("🔴 'mostrar todos': busca a rota da casa, aria-busy, região viva, foco na 31ª, 1..71 sem duplicata", async () => {
+  it("🔴 'mostrar todos': busca a rota da casa, aria-busy, região viva, foco na 33ª, 1..71 sem duplicata", async () => {
     let soltar: (r: Response) => void = () => {};
     const fetchSpy = vi.fn((_url: string) => new Promise<Response>((r) => (soltar = r)));
     vi.stubGlobal("fetch", fetchSpy);
@@ -724,9 +732,9 @@ describe("DeputadoListaAgremiacao — duas faixas (assembleias, 03/10)", () => {
 
     const ranks = linhasDoc(raiz()).map((l) => Number(l.dataset.rank));
     expect(ranks).toEqual(Array.from({ length: 71 }, (_, i) => i + 1));
-    expect(raiz().querySelector("[role='status']")?.textContent).toBe("41 candidatos carregados.");
-    const r31 = raiz().querySelector<HTMLLIElement>("li[data-rank='31']");
-    expect(document.activeElement).toBe(r31);
+    expect(raiz().querySelector("[role='status']")?.textContent).toBe("39 candidatos carregados.");
+    const r33 = raiz().querySelector<HTMLLIElement>("li[data-rank='33']");
+    expect(document.activeElement).toBe(r33);
     // Nada recortado, nem as que chegaram.
     expect(raiz().querySelector("[data-f]")).toBeNull();
     expect(raiz().querySelector("ol")?.hasAttribute("data-collapsed")).toBe(false);
@@ -734,7 +742,7 @@ describe("DeputadoListaAgremiacao — duas faixas (assembleias, 03/10)", () => {
     expect(raiz().textContent).not.toMatch(/cálculo gravado às/);
   });
 
-  it("erro: 'tentar de novo', as 30 do documento ficam; o segundo clique busca de verdade", async () => {
+  it("erro: 'tentar de novo', as 32 do documento ficam; o segundo clique busca de verdade", async () => {
     const fetchSpy = vi
       .fn()
       .mockResolvedValueOnce(resposta({ erro: "x" }, 502))
@@ -743,13 +751,13 @@ describe("DeputadoListaAgremiacao — duas faixas (assembleias, 03/10)", () => {
     await act(async () => root.render(<DeputadoListaAgremiacao {...propsAssembleia()} />));
     await act(async () => botao()?.click());
     await esperar(() => botao()?.textContent === "Tentar de novo");
-    expect(linhasDoc(raiz())).toHaveLength(30);
+    expect(linhasDoc(raiz())).toHaveLength(32);
     await act(async () => botao()?.click());
     await esperar(() => linhasDoc(raiz()).length === 71);
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
 
-  it("resto de outro ciclo: o aviso das duas horas cita a 1ª posição que chegou (31ª), não a 61ª", async () => {
+  it("resto de outro ciclo: o aviso das duas horas cita a 1ª posição que chegou (33ª), não a 61ª", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => resposta({ ...restoSP(), ts: "2026-10-04T23:11:00Z" })),
@@ -757,6 +765,6 @@ describe("DeputadoListaAgremiacao — duas faixas (assembleias, 03/10)", () => {
     await act(async () => root.render(<DeputadoListaAgremiacao {...propsAssembleia()} />));
     await act(async () => botao()?.click());
     await esperar(() => linhasDoc(raiz()).length === 71);
-    expect(raiz().textContent).toMatch(/a partir da 31ª vêm do cálculo gravado às 20:11:00/);
+    expect(raiz().textContent).toMatch(/a partir da 33ª vêm do cálculo gravado às 20:11:00/);
   });
 });

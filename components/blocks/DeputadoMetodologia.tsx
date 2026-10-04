@@ -360,6 +360,12 @@ export function DeputadoMetodologia({
               {temFaixaProjetada
                 ? null
                 : " As cadeiras da projeção são um número pontual: a faixa delas ainda não é calculada, e a faixa que aparece ao lado de cada bancada é a da parcial."}
+              {/* RF-297 / constituição § 8 — o voto projetado por candidatura
+                (emenda de 04/10 ao ADR-0063) também é pontual, e mais instável
+                que o das cadeiras: voto de deputado se concentra em redutos. */}
+              {
+                " O voto projetado de cada candidato, que é não oficial, também é um número pontual, arredondado e sem faixa de incerteza. Ele é mais instável que o das cadeiras: o voto de deputado se concentra em redutos, e um reduto ainda não apurado pode mudar bastante o total de um nome."
+              }
             </p>
           </section>
         ) : null}

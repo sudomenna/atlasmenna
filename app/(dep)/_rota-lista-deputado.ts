@@ -8,7 +8,7 @@
  * primeiros; o resto só é buscado quando o leitor pede "mostrar todos".
  *
  * Estadual e distrital (7 e 8, decisão do dono de 03/10): TUDO o que a página
- * não levou ao documento — ela leva eleitos + 5, mínimo 10 por agremiação
+ * não levou ao documento — ela leva eleitos + 7 por agremiação (emenda 04/10)
  * (`lib/deputado/lista-documento.ts`). Ver {@link responderRestante}.
  *
  * Cada arquivo `lista/route.ts` é uma casca: o Next lê `runtime` e `dynamic`
@@ -76,8 +76,9 @@ export async function responderListaDeputado(
 /**
  * Casas de DUAS faixas (estadual e distrital — decisão do dono de 03/10,
  * `lib/deputado/lista-documento.ts`): a resposta é TUDO o que a página não
- * levou ao documento — as linhas do objeto da UF depois do corte (eleitos + 5,
- * mínimo 10) e as 61+ do objeto de lista —, por agremiação, por rank. Sem
+ * levou ao documento — as linhas do objeto da UF depois do corte (eleitos + 7,
+ * contado SEM a projeção: o piso do corte da página, ver `lista-documento.ts`)
+ * e as 61+ do objeto de lista —, por agremiação, por rank. Sem
  * isso, "mostrar todos" pularia do 10º ao 61º.
  *
  *   - 200 — o resto, no envelope `DeputadoUfLista` (o `ts` é o do objeto da UF);

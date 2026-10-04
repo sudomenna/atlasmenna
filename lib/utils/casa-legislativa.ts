@@ -180,8 +180,8 @@ export function hrefDaCasa(cargo: CargoProporcional, uf?: string | null): string
  * design § 7.2), ou `null` quando a casa não tem rota de lista.
  *
  * As três casas têm desde 03/10: no federal a rota devolve as posições 61+;
- * nas assembleias, tudo o que a página não levou ao documento (eleitos + 5,
- * mínimo 10 — `lib/deputado/lista-documento.ts`). Até 03/10 a Câmara
+ * nas assembleias, tudo o que a página não levou ao documento (eleitos + 7
+ * desde 04/10 — `lib/deputado/lista-documento.ts`). Até 03/10 a Câmara
  * Legislativa do DF (8) devolvia `null` aqui: nenhuma agremiação passa de 60
  * candidaturas lá, e o objeto da UF ia inteiro ao documento. O `null` continua
  * no tipo para a casa que um dia não tiver rota. Sem `default`: cargo

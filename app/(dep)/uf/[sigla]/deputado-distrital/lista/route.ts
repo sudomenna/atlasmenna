@@ -8,7 +8,7 @@
  * Até 03/10 o distrital não tinha rota de lista: nenhuma agremiação do DF
  * passa de 60 candidaturas, e a página levava as 25 de cada uma ao documento
  * (446 KiB, contra o teto global de 300). Com o corte das assembleias —
- * eleitos na parcial + 5, mínimo 10 por agremiação
+ * eleitos + 7 por agremiação desde 04/10 (até 03/10, eleitos + 5, mínimo 10)
  * (`lib/deputado/lista-documento.ts`) —, o resto passa a vir por aqui, no
  * clique em "mostrar todos".
  *

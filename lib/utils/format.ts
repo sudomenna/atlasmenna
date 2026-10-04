@@ -167,7 +167,9 @@ export function formatVotes(votes: number): string {
 export function formatVotesCompact(votes: number): string {
   if (Number.isNaN(votes) || !Number.isFinite(votes)) return "—";
   const abs = Math.abs(votes);
-  if (abs >= 1_000_000) {
+  // 999.500–999.999 arredondam para 1.000 mil: sobem para "1 mi" (o mesmo
+  // formato do milhão), nunca "1.000 mil" (spec 026 RF-297, 04/10).
+  if (abs >= 1_000_000 || Math.round(abs / 1_000) >= 1_000) {
     const m = votes / 1_000_000;
     return `${formatador(undefined, 1).format(m)} mi`;
   }

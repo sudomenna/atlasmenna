@@ -9,7 +9,8 @@
  * e cinco classes por linha seriam ~200 KiB só de atributo. Por isso as linhas
  * não têm classe: o estilo desce da `<ol>` por seletor de filho, e a linha
  * carrega só `data-rank` (a posição, usada para o foco e para os testes) e
- * `data-f` quando é da faixa 2/3.
+ * `data-f` quando está fora do conjunto visível por padrão (eleitos + 7,
+ * emenda 04/10 — até 03/10, rank > 20).
  *
  * ## O recorte (ADR-0034 D21, ADR-0065 D1)
  *
@@ -215,3 +216,75 @@
 /* Sem `:empty { display: none }`: a região viva precisa existir na árvore de
  * acessibilidade ANTES de o texto mudar, senão o anúncio se perde. Vazia, ela
  * não tem altura. */
+
+/* =============================================================================
+ * Desktop (≥ 960px) — hierarquia de painel para o telão (ADR-0073).
+ *
+ * Abaixo de 960px nada muda: o celular segue com as regras acima ao pixel.
+ * No desktop o número de votos é o dado principal da linha e vira o maior
+ * texto dela (mono 600 `--text-lg`, ~22,5px a 1920), acima do nome
+ * (`--text-md` 600, ~20px); posição, "nº · partido" e % ficam em `--text-xs`
+ * (~15px). Com a página em várias colunas (`app/(dep)/_painel-desktop`), cada
+ * lista tem ~600px a 1920, e o voto fica perto do nome.
+ *
+ * 🔴 Os `<small>` herdam 80% do pai (preflight do Tailwind): o % saía em 8,8px.
+ * A correção é só AQUI, no escopo ≥960 — no preflight global ela mudaria o
+ * celular.
+ *
+ * Nenhuma classe nova por linha (ver o topo: ~1.000 linhas em SP). Tudo desce
+ * da `<ol>`. As larguras em `em` (da posição) acompanham a fonte da linha (`--text-sm`),
+ * que cresce com a janela. O recorte da faixa 2 (`[data-collapsed]`, mais
+ * específico) continua vencendo o `padding` daqui.
+ * ========================================================================== */
+@media (min-width: 960px) {
+  .lista > li {
+    grid-template-columns: 2.5em minmax(0, 1fr) auto;
+    column-gap: var(--space-4);
+    padding: var(--space-2) 0;
+    font-size: var(--text-sm);
+  }
+
+  .lista > li > span:nth-child(2) > b {
+    font-size: var(--text-md);
+    font-weight: 600;
+  }
+
+  .lista > li > span:nth-child(2) > small,
+  .lista > li > span:nth-child(3) > small {
+    font-size: var(--text-xs);
+    font-weight: 400;
+  }
+
+  .lista > li > span:nth-child(3) {
+    font: 600 var(--text-lg) / 1.15 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .lista > li[data-corte] {
+    padding-left: calc(2.5em + var(--space-4));
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    margin-block: -8px;
+  }
+
+  .legendaColunas,
+  .status {
+    font-size: var(--text-sm);
+  }
+}
+
+/* ── Spec 026 RF-297 — voto projetado por candidatura (início) ───────────────
+ * O `<small>` "projeção ≈ 652 mil · não oficial" vem DEPOIS do % (ou do
+ * destino/"—") na coluna de votos: é sempre o segundo `<small>` dela. Seletor
+ * de irmão em vez de classe por linha — nenhum byte a mais por linha no
+ * documento (o cabeçalho deste arquivo explica o peso). Cor de projeção,
+ * a mesma de todo número projetado (decisão do dono 04/10, `1e41005`);
+ * `--color-pct-proj` mede 5,12:1 (claro) e 9,51:1 (escuro).
+ * Vale também para `<DeputadoMaisVotados>`, que usa este módulo. */
+.lista > li > span:nth-child(3) > small + small {
+  color: var(--color-pct-proj);
+}
+/* ── Spec 026 RF-297 — voto projetado por candidatura (fim) ──────────────── */

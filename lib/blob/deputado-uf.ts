@@ -596,6 +596,17 @@ function sanearLinha(
   }
   if ("tse" in bruta && !MARCAS_TSE.has(bruta.tse as string)) descartar("tse");
   if ("destino" in bruta && !DESTINOS.has(bruta.destino as string)) descartar("destino");
+  // Spec 026 RF-297 — inteiro não negativo; voto projetado em linha não
+  // válida (com `destino`) não existe no contrato e sai.
+  if (
+    "votos_projetados" in bruta &&
+    (!ehNumero(bruta.votos_projetados) ||
+      !Number.isInteger(bruta.votos_projetados) ||
+      bruta.votos_projetados < 0 ||
+      "destino" in (saida ?? bruta))
+  ) {
+    descartar("votos_projetados");
+  }
 
   return (saida ?? bruta) as unknown as DeputadoUfLinha;
 }
@@ -845,6 +856,7 @@ export function maisVotadosDaUf(detail: DeputadoUfDetail): EdgeDeputadoDestaque[
       votos: linha.votos,
       pct_validos: linha.pct_validos,
       ...(linha.destino !== undefined ? { destino: linha.destino } : {}),
+      ...(linha.votos_projetados !== undefined ? { votos_projetados: linha.votos_projetados } : {}),
     });
   }
   return saida;
@@ -1040,8 +1052,12 @@ export function efeitoDoInterruptor(
 }
 
 function semProjecaoNaLinha(linha: DeputadoUfLinha): DeputadoUfLinha {
-  if (!("projecao" in linha) && !("projecao_apertada" in linha)) return linha;
-  const { projecao: _p, projecao_apertada: _a, ...resto } = linha;
+  if (!("projecao" in linha) && !("projecao_apertada" in linha) && !("votos_projetados" in linha)) {
+    return linha;
+  }
+  // Spec 026 RF-297 — o voto projetado da candidatura sai junto: é o que
+  // desliga o número na tela sem deploy (RF-265).
+  const { projecao: _p, projecao_apertada: _a, votos_projetados: _vp, ...resto } = linha;
   return resto;
 }
 
@@ -1057,7 +1073,7 @@ function comEfeito(projecao: DeputadoProjecaoUf, efeito: EfeitoDoInterruptor): D
 /**
  * O detalhe de UF com o interruptor aplicado. Sem efeito, devolve o **mesmo
  * objeto**; com efeito, uma cópia sem NENHUM campo de projeção —
- * `projecao`/`projecao_apertada` em toda linha de `candidatos` e
+ * `projecao`/`projecao_apertada`/`votos_projetados` em toda linha de `candidatos` e
  * `votos_projetados`/`cadeiras_projetadas(_ci95)` em toda agremiação — e com
  * `projecao.estado`/`motivo` dizendo por quê.
  *

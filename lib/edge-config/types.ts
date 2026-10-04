@@ -2361,6 +2361,19 @@ export interface DeputadoUfLinha {
   tse?: DeputadoMarcaTse;
   /** Só quando NÃO é voto nominal válido (ADR-0064). */
   destino?: DeputadoDestinoProporcional;
+  /**
+   * Spec 026 RF-297 (emenda do ADR-0063 D1) — voto PROJETADO da candidatura,
+   * inteiro: o voto nominal dela na mesma conta que deu `cadeiras_projetadas`.
+   *
+   * Só no Deputado Federal (cargo 6), só com `projecao.estado === "liberada"`
+   * na UF, só em linha válida (sem `destino`) e só nas marcadas como eleitas
+   * (parcial ou projeção) + as 7 primeiras sem marca da agremiação, por rank
+   * (decisão do dono, 04/10/2026). **Nunca** em `lista_restante` /
+   * `deputado/uf-lista/<UF>.json`: a rota 61+ serve o JSON cru e não lê o
+   * interruptor (RF-265). O interruptor desligado o remove na leitura
+   * (`aplicarInterruptorProjecao`). Nunca muda `rank` (ADR-0063 D5).
+   */
+  votos_projetados?: number;
 }
 
 /** Os três estados da trava (RF-264, ADR-0063 D3). */
@@ -2513,6 +2526,12 @@ export interface EdgeDeputadoDestaque {
   /** % dos válidos DA UF DO CANDIDATO — o único denominador com sentido. */
   pct_validos: number | null;
   destino?: DeputadoDestinoProporcional;
+  /**
+   * Spec 026 RF-297 — só nos mais votados DA UF (`maisVotadosDaUf`), repassado
+   * de {@link DeputadoUfLinha.votos_projetados}. O nacional nunca o publica
+   * (projeção nos mais votados do país está fora do escopo).
+   */
+  votos_projetados?: number;
 }
 
 /** Puxador do nacional (até 30, RF-273). */

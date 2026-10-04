@@ -30,12 +30,13 @@ import type { EdgeDeputadoDestaque } from "@/lib/blob/deputado-uf";
 import type { CargoProporcional } from "@/lib/config/cargos";
 import type { FotosDosEleitos } from "@/lib/deputado/fotos-eleitos";
 import { rotuloCargo } from "@/lib/utils/casa-legislativa";
-import { marcasDosBits } from "@/lib/utils/deputado-marcas";
+import { marcasDosBits, textoVotoProjetado } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import { siglaNaFrase } from "@/lib/utils/termo-territorio";
 
+import { AvatarDestaque } from "./AvatarDestaque";
 import { AvatarEleito } from "./AvatarEleito";
 import styles from "./DeputadoListaAgremiacao.module.css";
 
@@ -62,7 +63,8 @@ export interface DeputadoMaisVotadosProps {
   linhas: readonly LinhaMaisVotados[] | undefined;
   /**
    * Spec 026 RF-291 — `sqcand → URL` das fotos dos eleitos (só a página de
-   * UF passa). Ausente ⇒ nenhum avatar: a capa nacional fica como estava.
+   * UF passa). Ignorado no país: a capa põe avatar em toda linha
+   * (`<AvatarDestaque>`, decisão do dono de 04/10), sem mapa.
    */
   fotos?: FotosDosEleitos;
   titleId: string;
@@ -119,12 +121,18 @@ export function DeputadoMaisVotados({
               <li key={`${l.uf}:${l.sqcand}`} data-rank={i + 1} data-uf={l.uf}>
                 <span>{`${i + 1}º`}</span>
                 <span>
-                  <AvatarEleito
-                    nome={nome}
-                    sqcand={l.sqcand}
-                    marcas={l.destino === undefined ? (l.marcas ?? 0) : 0}
-                    fotos={fotos}
-                  />
+                  {/* Capa (decisão do dono de 04/10): avatar em TODA linha do
+                      país, pela URL de (uf, sqcand). UF: só eleito (RF-291). */}
+                  {noPais ? (
+                    <AvatarDestaque nome={nome} uf={l.uf} sqcand={l.sqcand} />
+                  ) : (
+                    <AvatarEleito
+                      nome={nome}
+                      sqcand={l.sqcand}
+                      marcas={l.destino === undefined ? (l.marcas ?? 0) : 0}
+                      fotos={fotos}
+                    />
+                  )}
                   <b>{nome}</b>
                   <small>{quem}</small>
                   {l.destino === undefined && l.marcas
@@ -153,6 +161,12 @@ export function DeputadoMaisVotados({
                   ) : (
                     <small>—</small>
                   )}
+                  {/* Spec 026 RF-297 — só na UF, só em linha válida; quem
+                      chama já aplicou a regra "eleitos + 7" e a visibilidade
+                      (`maisVotadosComVotoProjetado`). */}
+                  {!noPais && l.destino === undefined && l.votos_projetados !== undefined ? (
+                    <small>{textoVotoProjetado(l.votos_projetados)}</small>
+                  ) : null}
                 </span>
               </li>
             );

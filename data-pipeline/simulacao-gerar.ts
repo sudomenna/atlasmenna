@@ -257,6 +257,7 @@ import type {
   NeedleBand,
 } from "@/lib/edge-config/types";
 import { colorForRank } from "@/lib/utils/cand-color";
+import { ultimoRankVisivelDasLinhas } from "@/lib/utils/deputado-marcas";
 import { getPool } from "./_tse-common.ts";
 import { ANO_PLEITO } from "./candidatos-parse.ts";
 
@@ -4754,6 +4755,31 @@ function linhaDeputado(
   };
 }
 
+/**
+ * Spec 026 RF-297 — `{sqcand: voto projetado}` das linhas que o publicam: as
+ * válidas do conjunto visível por padrão com a projeção visível — "eleitos +
+ * 7" (emenda 04/10): rank ≤ o MAIOR rank marcado na parcial ou na projeção +
+ * 7 (`ultimoRankVisivelDasLinhas`, a mesma função da tela; espelho de
+ * `deputado_payload.py`). Vazio sem projeção.
+ */
+function votosProjetadosElegiveis(
+  linhasPorRank: readonly DeputadoUfLinha[],
+  votosProjCand: ReadonlyMap<number, number>,
+): Map<number, number> {
+  const saida = new Map<number, number>();
+  if (votosProjCand.size === 0) return saida;
+  const r = ultimoRankVisivelDasLinhas(linhasPorRank, {
+    totalizacaoFinal: false,
+    projecaoVisivel: true,
+  });
+  for (const l of linhasPorRank) {
+    const vp = votosProjCand.get(l.sqcand);
+    if (l.destino !== undefined || vp === undefined || l.rank > r) continue;
+    saida.set(l.sqcand, vp);
+  }
+  return saida;
+}
+
 /** A linha tem marca de eleito (parcial, projeção ou TSE)? — ADR-0065 D1. */
 function linhaMarcada(l: DeputadoUfLinha): boolean {
   return (
@@ -4968,10 +4994,13 @@ export function montarDeputado(
         : undefined;
     const cadeirasProj = new Map<string, number>();
     const votosProj = new Map<string, number>();
+    // Spec 026 RF-297 — o voto projetado de cada candidatura válida.
+    const votosProjCand = new Map<number, number>();
     if (proj !== undefined) {
       for (const a of proj.ags) {
         cadeirasProj.set(a.cod, proj.res.cadeiras[a.cod] ?? 0);
         votosProj.set(a.cod, a.votosNominais + a.votosLegenda);
+        for (const c of a.candidatos) votosProjCand.set(c.sqcand, c.votos);
       }
     }
 
@@ -5009,13 +5038,21 @@ export function montarDeputado(
         );
         const corte = corteDaAgremiacao(todas, res.qe);
         const puxadores = puxadoresDaAgremiacao(todas, res.qe);
-        const naPagina = todas.filter(
+        const naPaginaSemProj = todas.filter(
           (l) =>
             l.rank <= DEP_RANK_MAXIMO_NA_PAGINA ||
             linhaMarcada(l) ||
             l.sqcand === corte?.primeiro_fora,
         );
-        const resto = todas.filter((l) => !naPagina.includes(l));
+        const resto = todas.filter((l) => !naPaginaSemProj.includes(l));
+        // Spec 026 RF-297 — `votos_projetados` só no objeto da UF (nunca na
+        // lista 61+) e só nas "eleitos + 7" — a regra do produtor
+        // (`deputado_payload.py::NAO_ELEITOS_COM_VOTO_PROJETADO`).
+        const comProj = votosProjetadosElegiveis(todas, votosProjCand);
+        const naPagina = naPaginaSemProj.map((l) => {
+          const vp = comProj.get(l.sqcand);
+          return vp === undefined ? l : { ...l, votos_projetados: vp };
+        });
         if (resto.length > 0) listaRestante.push({ cod: a.cod, candidatos: resto });
         for (const l of todas) {
           todasAsLinhas.push({ uf: ctx.uf, cod: a.cod, sigla: a.sigla, linha: l });

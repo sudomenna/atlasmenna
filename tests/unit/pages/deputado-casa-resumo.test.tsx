@@ -21,7 +21,9 @@
  *     todos' no DF". Desde a decisão do dono de 03/10 o DF TEM rota de lista,
  *     e o caso se inverteu;
  *   - (03/10) o documento das assembleias sem o corte (60 por agremiação) ou
- *     com o mínimo de 10 removido — cai "eleitos + 5 (mínimo 10)".
+ *     com o mínimo de 10 removido — caía "eleitos + 5 (mínimo 10)". Desde a
+ *     emenda de 04/10 (decisão do dono) a regra é "eleitos + 7", sem mínimo,
+ *     e o caso cai com o corte removido ou com o 7 trocado.
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -217,7 +219,7 @@ describe("listas: rota por casa e número de urna de 5 dígitos", () => {
     expect(doc.querySelector("[data-testid='dep-mostrar-todos']")).not.toBeNull();
   });
 
-  it("🔴 assembleias: o documento leva eleitos + 5 (mínimo 10) por agremiação, tudo visível", async () => {
+  it("🔴 assembleias: o documento leva eleitos + 7 por agremiação (emenda 04/10), tudo visível", async () => {
     for (const [cargo, uf] of [
       [7, "SP"],
       [8, "DF"],
@@ -233,10 +235,7 @@ describe("listas: rota por casa e número de urna de 5 dígitos", () => {
       for (const agr of d.agremiacoes) {
         const eleitos = (agr.candidatos ?? []).filter((c) => c.parcial !== undefined);
         const ultimo = Math.max(0, ...eleitos.map((c) => c.rank));
-        const esperado = Math.min(
-          agr.candidatos?.length ?? 0,
-          Math.max(10, ultimo > 0 ? ultimo + 5 : 0),
-        );
+        const esperado = Math.min(agr.candidatos?.length ?? 0, ultimo + 7);
         const lista = doc.querySelector(
           `[data-testid='dep-lista-agremiacao'][data-cod='${agr.cod}']`,
         );
@@ -257,8 +256,8 @@ describe("listas: rota por casa e número de urna de 5 dígitos", () => {
           `Mostrar todos — mais ${faltam} ${faltam === 1 ? "candidato" : "candidatos"} de ${agr.sigla}`,
         );
       }
-      // As duas ampliadas: 3 eleitos ⇒ 10 (de 40); 12 eleitos ⇒ 17 (de 30).
-      expect(cortadas.slice(0, 2), uf).toEqual([10, 17]);
+      // As duas ampliadas: 3 eleitos ⇒ 10 (de 40); 12 eleitos ⇒ 19 (de 30).
+      expect(cortadas.slice(0, 2), uf).toEqual([10, 19]);
     }
   });
 

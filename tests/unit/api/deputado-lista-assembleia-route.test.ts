@@ -84,7 +84,11 @@ const ate = (k: number) => Array.from({ length: k }, (_, i) => i + 1);
 /** Por agremiação: os ranks que a página leva + os que a rota devolve. */
 function costura(detalhe: DeputadoUfDetail, resposta: DeputadoUfLista) {
   return detalhe.agremiacoes.map((agr) => {
-    const r = ultimoRankNoDocumento(agr, detalhe.totalizacao_final);
+    // A página com a projeção oculta — o mesmo R da rota (o piso).
+    const r = ultimoRankNoDocumento(agr, {
+      totalizacaoFinal: detalhe.totalizacao_final,
+      projecaoVisivel: false,
+    });
     const doc = linhasNoDocumento(agr.candidatos ?? [], r).map((l) => l.rank);
     const rest =
       resposta.agremiacoes.find((a) => a.cod === agr.cod)?.candidatos.map((l) => l.rank) ?? [];

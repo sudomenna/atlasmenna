@@ -202,8 +202,19 @@ const BUDGET_DOCUMENT_BYTES = 300 * KIB;
  * 30/09: SP 532.994 B (520,5 KiB) · RJ 453.476 B (442,8) · MG 451.813 B
  * (441,2) · RS 360 · BA 353 · PR 332 · PE 321 KiB. Os 480 KiB de 29/09 eram
  * escolha, não medida (ADR-0065, negativas), e SP os passava em 8%.
+ *
+ * ↳ **576 KiB** desde 04/10 — decisão do dono, 04/10: voto projetado por
+ * candidatura no Deputado Federal nos "eleitos + 7" de cada agremiação (spec
+ * 026 RF-297, emenda do ADR-0063 D1). Cada linha que o mostra leva "projeção ≈
+ * 652 mil · não oficial" (~57 B no HTML + o número no payload RSC). Medido com
+ * `renderToStaticMarkup` sobre a fixture do simulado (listas + mais votados +
+ * legenda): SP +13.598 B em 218 linhas · RJ +11.532 B (184) · MG +11.628 B
+ * (184), mais ~1 KB de payload RSC dos componentes de servidor. Sobre os
+ * 557.972 B de SP em 03/10, a estimativa é ~572.600 B (~559,2 KiB): a 0,8 KiB
+ * dos 560 — folga nenhuma para a noite. Os 576 deixam ~17 KiB. O número real
+ * sai deste portão na integração.
  */
-const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
+const TETO_DOCUMENTO_DEPUTADO_UF = 576 * KIB;
 
 /**
  * Tetos de documento PRÓPRIOS de uma rota — exceção nomeada, nunca
@@ -228,6 +239,17 @@ const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
  *   343.081 B (335,0 KiB) com as 11 agremiações do simulado, 983 B abaixo dos
  *   336. Cada agremiação a mais custa ~230 B (×2 pelo payload RSC); os 8 KiB
  *   extras cobrem ~15 agremiações a mais na noite da apuração.
+ *   ↳ **368 KiB** desde 04/10 — decisão do dono, 04/10: avatares na capa
+ *   ("Mais votados do país" e "Puxadores de voto", `<AvatarDestaque>`). Cada
+ *   avatar é uma `<img>` com a URL do Blob: em produção (host do store de 16
+ *   caracteres, `sqcand` de 12 dígitos, classe `…-module__M341ba__avatar`)
+ *   são 277 B no HTML + 344 B no payload RSC (escapado) = **621 B por
+ *   avatar**. A fixture do simulado tem 10 + 10 = 20 linhas: +12.420 B sobre
+ *   os 343.081 B de 03/10 ⇒ ~355.500 B (~347,2 KiB), acima dos 344. O pior
+ *   caso da noite é 10 + 30 = 40 avatares: +24.840 B ⇒ ~367.900 B
+ *   (~359,3 KiB). Os 368 deixam ~8 KiB para o crescimento da noite, a mesma
+ *   folga da emenda anterior. Medido no `build:e2e` de 04/10 (fixture, 20
+ *   avatares): 356.255 B (347,9 KiB).
  *
  * `/uf/SP/deputado-estadual` e `/uf/DF/deputado-distrital` — 400 KiB (abaixo).
  * O RF-289 previa o global de 300 KiB. Em 03/10 a
@@ -251,11 +273,12 @@ const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
  *   fotos — 1,6% acima dos 400. DF: 376.297 B (367,5 KiB). Em produção a URL
  *   do Blob é ~30 B mais longa que a do falso e o `sqcand` tem 12 dígitos (8
  *   no simulado): ~+7 KB em SP, ~413 KiB. Os 424 deixam ~10 KiB para a noite.
- *   (O federal de SP mediu 557.972 B, 544,9 KiB, com fotos: segue nos 560.)
+ *   (O federal de SP mediu 557.972 B, 544,9 KiB, com fotos: seguiu nos 560
+ *   até 04/10 — ver {@link TETO_DOCUMENTO_DEPUTADO_UF}.)
  */
 const TETO_DOCUMENTO_ASSEMBLEIA_UF = 424 * KIB;
 const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> = {
-  "/deputado-federal": 344 * KIB,
+  "/deputado-federal": 368 * KIB,
   "/uf/SP/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/RJ/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/MG/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
@@ -274,6 +297,12 @@ const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> 
   // dentro do client `RegiaoRecolhivel` ⇒ cada byte vai também no payload
   // RSC. 480 KiB deixam ~29 KiB para a noite. Enxugar é a próxima tarefa.
   "/senador": 480 * KIB,
+  // 04/10 — decisão do dono: avatares na capa das assembleias ("Mais votados"
+  // e "Puxadores", `<AvatarDestaque>`, ~621 B cada com o payload RSC). A
+  // fixture já traz o pior caso da noite (10 + 30 = 40 avatares): o
+  // `build:e2e` mediu 309.047 B (301,8 KiB) contra 285.005 B sem eles — 1.847 B
+  // acima do global de 300 KiB. 312 KiB deixam ~10 KiB para a noite.
+  "/deputado-estadual": 312 * KIB,
 };
 
 function tetoDoDocumento(route: (typeof ROUTES)[number]): number {

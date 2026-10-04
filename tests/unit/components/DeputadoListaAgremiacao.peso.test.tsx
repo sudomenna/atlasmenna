@@ -42,16 +42,38 @@ const KIB = 1024;
  * Medido neste pior caso: 343,4 KiB sem as fotos, **368,2 KiB** com as 69
  * linhas eleitas levando `<img>` no HTML e a URL no RSC (+24,8 KiB, ~368 B por
  * eleito). A folga que sobra (~16 KiB) é a mesma ordem da de antes.
+ *
+ * 04/10 — spec 026 RF-297 (decisão do dono: voto projetado nos eleitos + 7):
+ * **379,2 KiB** medido neste pior caso, com 188 linhas levando "projeção ≈
+ * 999 mil · não oficial" (+11,0 KiB, ~60 B por linha entre HTML e RSC). Cabe
+ * no teto de 384 KiB sem mexer nele; a folga cai para ~4,8 KiB.
+ *
+ * 04/10 — emenda "eleitos + 7" (decisão do dono: o visível por padrão deixa de
+ * ser 1–20 e passa a ser maior rank eleito + 7): as linhas no documento são as
+ * MESMAS (1–60); muda só quem leva `data-f=""` (10 B) e quais agremiações
+ * pequenas ganham o botão "Mais N". Neste pior caso: 379,2 → **380,7 KiB**
+ * (+1,5 KiB — as 14 agremiações sem eleito recolhem do 8º em vez do 21º).
+ * Folga ~3,3 KiB.
  */
 const TETO_LISTAS_BYTES = 384 * KIB;
 
 /** 30 caracteres, 10 deles acentuados — o nome de urna mais pesado plausível. */
 const NOME_PIOR = "JOÃO CONCEIÇÃO MAGALHÃES ÁVILA";
 
+/**
+ * Spec 026 RF-297 — o voto projetado no pior caso de bytes: "999 mil" é o
+ * texto compacto mais longo (7 caracteres; "1,2 mi" tem 6) e 999.499 tem 6
+ * dígitos no RSC — "999 mil" + 6 dígitos empata com "1,2 mi" + 7 dígitos.
+ */
+const VOTOS_PROJ_PIOR = 999_499;
+/** Decisão do dono, 04/10: maior rank eleito + 7, por agremiação (o visível por padrão). */
+const NAO_ELEITOS_COM_PROJ = 7;
+
 function agremiacao(i: number, n: number): DeputadoListaAgremiacaoProps {
+  const marcadas = i < 3 ? 23 : 0; // 69 linhas com as duas marcas
   const linhas: LinhaCompacta[] = Array.from({ length: n }, (_, k) => {
     const rank = k + 1;
-    const marcada = i < 3 && rank <= 23; // 69 linhas com as duas marcas
+    const marcada = rank <= marcadas;
     const marcas = marcada
       ? BIT_MARCA.PARCIAL |
         BIT_MARCA.PARCIAL_SOBRA |
@@ -60,7 +82,7 @@ function agremiacao(i: number, n: number): DeputadoListaAgremiacaoProps {
         BIT_MARCA.PROJECAO_SOBRA |
         BIT_MARCA.PROJECAO_APERTADA
       : 0;
-    return [
+    const base = [
       rank,
       10_002_630_000 + i * 100 + rank,
       NOME_PIOR,
@@ -71,6 +93,8 @@ function agremiacao(i: number, n: number): DeputadoListaAgremiacaoProps {
       marcas,
       0,
     ] as const;
+    // Eleitos + 7 levam a posição 9 (69 + 17 × 7 = 188 linhas).
+    return rank <= marcadas + NAO_ELEITOS_COM_PROJ ? [...base, VOTOS_PROJ_PIOR] : base;
   });
   return {
     uf: "SP",
@@ -115,6 +139,8 @@ describe("peso das listas de SP no documento (RF-277, ADR-0065 D5)", () => {
 
   it("~1.000 linhas no pior caso cabem no teto das listas (HTML + RSC)", () => {
     expect(totalLinhas).toBe(1000);
+    // RF-297 — o pior caso inclui o voto projetado nas 188 linhas "eleitos + 7".
+    expect(listas.flatMap((p) => p.linhas).filter((l) => l[9] !== undefined)).toHaveLength(188);
     const html = listas
       .map((p) => renderToStaticMarkup(<DeputadoListaAgremiacao {...p} />))
       .join("");

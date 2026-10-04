@@ -85,7 +85,7 @@ describe("isencaoAgremiacaoDeputadoPulada — content-visibility nas listas de D
   it("os seletores são os `data-testid` do componente e da página — não classe com hash", () => {
     expect(SELETOR_LISTA_DEPUTADO).toBe('[data-testid="dep-lista-agremiacao"]');
     expect(SELETOR_AGREMIACAO_DEPUTADO).toBe(
-      '[data-testid="uf-agremiacao"], [data-testid="dep-regras"]',
+      '[data-testid="uf-agremiacao"], [data-testid="dep-regras"], [data-testid="uf-conferencia"]',
     );
     // A prova desliga o content-visibility exatamente no elemento que o tem.
     expect(CSS_LISTAS_DEPUTADO_VISIVEIS).toBe(

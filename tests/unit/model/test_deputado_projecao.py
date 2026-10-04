@@ -1345,6 +1345,11 @@ def test_peso_do_objeto_de_sp_e_do_post_de_escrita() -> None:
     O design estimava ~180 KB para SP; o realista dá ~219 KB. O POST com o
     `json.dumps` padrão (ASCII escapado) dava 4,28 MB no pior caso — daí
     `corpo_edge_write` compacto. Os tetos abaixo são guarda de regressão.
+
+    04/10 — spec 026 RF-297 (voto projetado nas "eleitos + 7"): pior caso
+    288.418 B no objeto de SP (260 linhas com o campo, +6,5 KB) e POST de
+    2.620.136 B. Sem a regra (campo em toda linha válida do objeto) eram
+    313.864 B — passava do teto abaixo; a regra é também a do peso.
     """
     from api.model.project import AVISO_CORPO_EDGE_WRITE_BYTES, corpo_edge_write
 

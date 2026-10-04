@@ -129,6 +129,20 @@ CONTRATO_V2 = 2
 #: resto vai para `lista_restante` (Blob `deputado/uf-lista/<UF>.json`).
 POSICOES_NO_BLOB = 60
 
+#: Código TSE do Deputado Federal — o único cargo com voto projetado por
+#: candidatura (spec 026 RF-297; decisão do dono, 04/10/2026).
+CARGO_DEPUTADO_FEDERAL = 6
+
+#: Quantas posições abaixo do último eleito ficam visíveis por padrão em
+#: cada agremiação — e levam o voto projetado (decisão do dono, 04/10/2026:
+#: "eleitos + 7" em toda tela de deputado). A mesma regra é reaplicada na tela
+#: (`lib/utils/deputado-marcas.ts::VISIVEIS_ABAIXO_DO_CORTE`,
+#: `ultimoRankVisivel`).
+VISIVEIS_ABAIXO_DO_CORTE = 7
+
+#: Nome antigo do mesmo número (spec 026 RF-297).
+NAO_ELEITOS_COM_VOTO_PROJETADO = VISIVEIS_ABAIXO_DO_CORTE
+
 #: Mais votados da UF e do país (RF-270, RF-271).
 MAX_MAIS_VOTADOS = 10
 
@@ -501,11 +515,29 @@ class _Linha:
     projecao: str | None = None
     projecao_apertada: bool = False
     tse: str | None = None
+    #: Voto PROJETADO da candidatura (spec 026 RF-297, emenda do ADR-0063 D1):
+    #: o `votos_nominais` dela em `ProjecaoUf.entrada`. Só nas linhas válidas,
+    #: só com a projeção liberada e só no cargo 6. NUNCA entra no rank
+    #: (`_chave_rank` lê `votos`, o apurado — ADR-0063 D5).
+    votos_projetados: int | None = None
 
     @property
     def marcada(self) -> bool:
         """Tem marca de eleito — na parcial, na projeção ou pelo TSE."""
         return self.parcial is not None or self.projecao is not None or self.tse in _TSE_ELEITO
+
+
+def _ultimo_rank_visivel(linhas: list[_Linha]) -> int:
+    """O maior rank visível por padrão numa agremiação, com a projeção visível.
+
+    Espelho de `lib/utils/deputado-marcas.ts::ultimoRankVisivel` (decisão do
+    dono, 04/10/2026): o maior rank marcado eleito (parcial ou projeção; 0 se
+    nenhum) + 7 posições — com ou sem `destino`, como a tela as mostra.
+    """
+    ultimo_eleito = max(
+        (i.rank for i in linhas if i.parcial is not None or i.projecao is not None), default=0
+    )
+    return ultimo_eleito + VISIVEIS_ABAIXO_DO_CORTE
 
 
 def _ordem_destino(linha: _Linha) -> int:
@@ -617,10 +649,20 @@ def _numero(ident: IdentidadeCandidato) -> int | None:
 
 
 def _linha_payload(
-    entrada: EntradaProporcional, linha: _Linha, votos_validos_uf: int
+    entrada: EntradaProporcional,
+    linha: _Linha,
+    votos_validos_uf: int,
+    *,
+    com_votos_projetados: bool = False,
 ) -> dict[str, Any]:
     """`DeputadoUfLinha` (design 026 § 2.2). Opcionais OMITIDOS, nunca `null`
-    (exceto `pct_validos`, em que `null` é o dado)."""
+    (exceto `pct_validos`, em que `null` é o dado).
+
+    `com_votos_projetados` só é verdadeiro para as linhas do OBJETO da UF
+    (`candidatos`). A `lista_restante` (61+) é servida crua pela rota
+    `app/(dep)/_rota-lista-deputado.ts`, que não lê o interruptor da
+    projeção — o voto projetado ali escaparia do desligamento sem deploy
+    (RF-265). Por isso ele nunca vai para lá."""
     ident = _identidade_cand(entrada, linha.sqcand)
     saida: dict[str, Any] = {
         "sqcand": linha.sqcand,
@@ -646,6 +688,8 @@ def _linha_payload(
         saida["tse"] = linha.tse
     if linha.destino is not None:
         saida["destino"] = linha.destino
+    if com_votos_projetados and linha.votos_projetados is not None:
+        saida["votos_projetados"] = linha.votos_projetados
     return saida
 
 
@@ -898,6 +942,10 @@ def construir_detalhe_uf(
                 status_tse=status_tse if tf_uf else None,
                 projecao=projecao,
                 apertadas_projecao=apertadas_projecao,
+                # Spec 026 RF-297 — voto projetado por candidatura só no
+                # Deputado Federal (decisão do dono 04/10; o Estadual não
+                # tem projeção, spec 027 Fase 1).
+                votos_por_candidatura=cargo == CARGO_DEPUTADO_FEDERAL,
                 cadeiras_projetadas_ci95=dados.cadeiras_projetadas_ci95,
                 fora_por_agremiacao=fora_por_agremiacao,
                 votos_validos_uf=votos_validos_uf,
@@ -992,6 +1040,7 @@ def _agremiacao_v2(
     fora_por_agremiacao: dict[str, list[int]],
     votos_validos_uf: int,
     todas_as_linhas: list[tuple[str, _Linha]],
+    votos_por_candidatura: bool = False,
 ) -> list[dict[str, Any]]:
     """Os campos v2 de UMA agremiação, escritos em `linha`; devolve as linhas > 60.
 
@@ -1009,6 +1058,15 @@ def _agremiacao_v2(
         if projecao is not None
         else {}
     )
+    # Spec 026 RF-297 — o voto projetado de cada candidatura válida, lido da
+    # MESMA conta que deu as cadeiras projetadas (`projecao.entrada`). Só as
+    # válidas: anulado/sub judice/válido-legenda não são `Candidato` na
+    # projeção (`deputado_projecao._plano`) e não têm voto projetado próprio.
+    proj_por_sq: dict[int, int] = {}
+    if projecao is not None and votos_por_candidatura:
+        agr_proj_cand = next((a for a in projecao.entrada.agremiacoes if a.cod == cod), None)
+        if agr_proj_cand is not None:
+            proj_por_sq = {c.cod: int(c.votos_nominais) for c in agr_proj_cand.candidatos}
     for item in linhas:
         if item.sqcand in parcial:
             item.parcial, item.indefinido = parcial[item.sqcand]
@@ -1017,6 +1075,14 @@ def _agremiacao_v2(
         if status_tse is not None:
             item.tse = status_tse.get(item.sqcand)
         todas_as_linhas.append((cod, item))
+    # "Eleitos + 7" (emenda 04/10): as linhas válidas do conjunto visível por
+    # padrão — rank ≤ maior rank marcado na parcial ou na projeção + 7
+    # (`_ultimo_rank_visivel`). Laço SEPARADO do das marcas: o corte lê as
+    # marcas já postas.
+    ultimo_visivel = _ultimo_rank_visivel(linhas)
+    for item in linhas:
+        if item.valido and item.sqcand in proj_por_sq and item.rank <= ultimo_visivel:
+            item.votos_projetados = proj_por_sq[item.sqcand]
 
     qe = resultado.quociente_eleitoral if resultado is not None else 0
     corte = _corte(linhas, qe) if resultado is not None else None
@@ -1033,7 +1099,10 @@ def _agremiacao_v2(
         if not (item.rank <= POSICOES_NO_BLOB or item.marcada or item.sqcand == primeiro_fora)
     ]
 
-    linha["candidatos"] = [_linha_payload(entrada, item, votos_validos_uf) for item in no_blob]
+    linha["candidatos"] = [
+        _linha_payload(entrada, item, votos_validos_uf, com_votos_projetados=True)
+        for item in no_blob
+    ]
     linha["total_candidatos"] = len(linhas)
     if projecao is not None:
         linha["cadeiras_projetadas"] = len(projecao.resultado.eleitos.get(cod, []))

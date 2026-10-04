@@ -7,8 +7,10 @@
  * (`<DeputadoListaAgremiacao>`, cliente; `<DeputadoMaisVotados>`, servidor) só
  * a chamam:
  *
- *   - `fotos` ausente ⇒ nada. É opt-in: só a página de UF passa o mapa — a
- *     capa nacional e qualquer outro consumidor ficam como estavam;
+ *   - `fotos` ausente ⇒ nada. É opt-in: só a página de UF passa o mapa. (A
+ *     capa nacional tem avatar em toda linha desde 04/10, mas pelo irmão
+ *     `<AvatarDestaque>`, sem a regra de eleito — o payload nacional não
+ *     leva marca);
  *   - linha que não é eleita ({@link ehEleitoNosBits}: nem parcial nem TSE) ⇒
  *     nada, e a linha fica idêntica à de antes;
  *   - eleita com foto no mapa ⇒ a foto; eleita sem foto no mapa (o TSE não

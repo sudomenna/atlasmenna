@@ -31,6 +31,7 @@ import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import { siglaNaFrase } from "@/lib/utils/termo-territorio";
 
+import { AvatarDestaque } from "./AvatarDestaque";
 import styles from "./DeputadoListaAgremiacao.module.css";
 
 function quocientesTexto(n: number): string {
@@ -99,11 +100,14 @@ export function DeputadoPuxadores({ cargo, rotulo, puxadores, titleId }: Deputad
             {puxadores.map((p, i) => {
               const partido = siglaExibicao(p.partido);
               const agremiacao = siglaExibicao(p.sigla);
+              const nome = nomeExibicao(p.nome, String(p.sqcand));
               return (
                 <li key={`${p.uf}:${p.sqcand}`} data-rank={i + 1} data-uf={p.uf}>
                   <span>{i + 1}º</span>
                   <span>
-                    <b>{nomeExibicao(p.nome, String(p.sqcand))}</b>
+                    {/* Decisão do dono de 04/10: avatar em toda linha da capa. */}
+                    <AvatarDestaque nome={nome} uf={p.uf} sqcand={p.sqcand} />
+                    <b>{nome}</b>
                     <small>
                       {agremiacao === partido ? agremiacao : `${partido} · ${agremiacao}`} · {p.uf}
                     </small>

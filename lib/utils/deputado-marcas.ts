@@ -54,7 +54,7 @@ import type {
   DeputadoMarcaTse,
   DeputadoVia,
 } from "@/lib/edge-config/types";
-import { formatPercentTrim } from "@/lib/utils/format";
+import { formatPercentTrim, formatVotesCompact } from "@/lib/utils/format";
 import { TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
 
 // ---------------------------------------------------------------------------
@@ -93,6 +93,8 @@ export interface LinhaDeputado extends LinhaParaMarca {
   votos: number;
   rank: number;
   pct_validos: number | null;
+  /** Spec 026 RF-297 — voto projetado da candidatura (ver {@link VotoProjetado}). */
+  votos_projetados?: number;
 }
 
 /** Contexto da UF que decide a precedência. */
@@ -400,6 +402,12 @@ export type LinhaCompacta = readonly [
   pctValidos: number | null,
   marcas: number,
   destino: CodigoDestino,
+  /**
+   * Spec 026 RF-297 — voto PROJETADO, inteiro. OPCIONAL de propósito: só
+   * existe nas linhas que o mostram ({@link elegiveisAoVotoProjetado}); um
+   * `null` em ~1.000 linhas de SP seria peso sem leitor.
+   */
+  votosProjetados?: number,
 ];
 
 /** Índices da {@link LinhaCompacta}, para ninguém ler `linha[6]` sem nome. */
@@ -413,7 +421,139 @@ export const L = {
   PCT: 6,
   MARCAS: 7,
   DESTINO: 8,
+  /** Opcional — ausente quando a linha não mostra voto projetado. */
+  VOTOS_PROJ: 9,
 } as const;
+
+// ---------------------------------------------------------------------------
+// Visível por padrão — "eleitos + 7" (decisão do dono, 04/10/2026)
+// ---------------------------------------------------------------------------
+
+/**
+ * Quantas posições abaixo do último eleito ficam visíveis por padrão em cada
+ * agremiação, em todas as telas de deputado (federal, estadual,
+ * distrital; celular e computador). Decisão do dono, 04/10/2026: "o padrão do
+ * sistema será sempre exibir os eleitos e + 7 abaixo do corte; a partir
+ * desses, só tocando no botão".
+ *
+ * Substitui as faixas fixas de antes: no federal, as posições 1–20 visíveis
+ * (ADR-0065 D1, spec 026 RF-260); nas assembleias, eleitos + 5 com mínimo de
+ * 10 (spec 027, decisão de 03/10). O MESMO número do produtor
+ * (`api/model/deputado_payload.py::VISIVEIS_ABAIXO_DO_CORTE`).
+ */
+export const VISIVEIS_ABAIXO_DO_CORTE = 7;
+
+/**
+ * Nome antigo do mesmo número (spec 026 RF-297): o voto projetado sai
+ * exatamente nas linhas válidas do conjunto visível por padrão — ver
+ * {@link elegiveisAoVotoProjetado}.
+ */
+export const NAO_ELEITOS_COM_VOTO_PROJETADO = VISIVEIS_ABAIXO_DO_CORTE;
+
+/** O que {@link ultimoRankVisivel} lê de uma linha. */
+export interface LinhaParaVisibilidade {
+  rank: number;
+  /** Tem marca de eleito NA TELA: parcial, projeção visível ou TSE — já com a precedência. */
+  eleita: boolean;
+}
+
+/**
+ * O maior rank visível por padrão numa agremiação (R). Visível ⇔ `rank ≤ R`:
+ *
+ *     R = (maior rank entre as linhas ELEITAS, ou 0 se nenhuma) + 7
+ *
+ * Contar a partir do MAIOR rank eleito, e não "k eleitos + 7": uma linha com
+ * `destino` (anulado, sub judice, válido-legenda) tem rank — é ordenada pelo
+ * voto apurado — e nunca se elege; e o eleito na projeção nem sempre é
+ * contíguo ao da parcial. A partir do último eleito o conjunto é CONTÍGUO
+ * (ranks 1..R): nenhum buraco entre linhas visíveis, e a rota das assembleias
+ * devolve exatamente "rank > R" (`lib/deputado/lista-documento.ts`).
+ *
+ * As 7 são POSIÇÕES, com ou sem `destino` — é o que o leitor vê: sete linhas
+ * abaixo do corte. Contar só as válidas foi medido e descartado (04/10): uma
+ * agremiação com a candidatura inteira anulada (DRAP indeferido — 3 das 26 no
+ * simulado do estadual de SP) nunca chegaria a 7 válidas e abriria as 60
+ * linhas, +150 linhas no documento de SP.
+ *
+ * Agremiação sem eleito: as 7 primeiras. Com menos de R linhas: todas.
+ * Monótona: mais linhas eleitas nunca diminuem R — é o que permite à rota das
+ * assembleias, que não lê o interruptor da projeção, usar o R SEM projeção
+ * como piso seguro.
+ */
+export function ultimoRankVisivel(linhas: readonly LinhaParaVisibilidade[]): number {
+  let ultimoEleito = 0;
+  for (const l of linhas) if (l.eleita && l.rank > ultimoEleito) ultimoEleito = l.rank;
+  return ultimoEleito + VISIVEIS_ABAIXO_DO_CORTE;
+}
+
+/**
+ * {@link ultimoRankVisivel} sobre linhas do contrato: "eleita" é ter alguma
+ * marca em {@link marcasDaLinha} — a MESMA precedência que desenha os selos
+ * (destino ⇒ nenhuma; totalização final ⇒ só TSE; projeção só se visível).
+ */
+export function ultimoRankVisivelDasLinhas(
+  linhas: readonly (LinhaParaMarca & { rank: number })[],
+  ctx: ContextoMarcas,
+): number {
+  return ultimoRankVisivel(
+    linhas.map((l) => ({ rank: l.rank, eleita: marcasDaLinha(l, ctx).length > 0 })),
+  );
+}
+
+/**
+ * {@link ultimoRankVisivel} sobre as tuplas do componente: os bits JÁ são o
+ * resultado de {@link marcasDaLinha} no mesmo contexto, então "eleita" é
+ * `marcas ≠ 0` — o mesmo R que {@link ultimoRankVisivelDasLinhas} daria.
+ */
+export function ultimoRankVisivelDasTuplas(linhas: readonly LinhaCompacta[]): number {
+  return ultimoRankVisivel(linhas.map((l) => ({ rank: l[L.RANK], eleita: l[L.MARCAS] !== 0 })));
+}
+
+// ---------------------------------------------------------------------------
+// Voto projetado por candidatura — spec 026 RF-297 (emenda do ADR-0063 D1)
+// ---------------------------------------------------------------------------
+
+/**
+ * Os `sqcand` de UMA agremiação que podem mostrar o voto projetado: as linhas
+ * VÁLIDAS (sem `destino`) do conjunto visível por padrão
+ * ({@link ultimoRankVisivelDasLinhas}) — eleitos + 7 —, ou nada se a projeção
+ * não está visível ({@link projecaoVisivel}) ou a UF tem totalização final (o
+ * resultado oficial tem precedência, RF-267).
+ *
+ * Com a projeção visível, "eleita" é marcada na parcial OU na projeção. A
+ * ordem é sempre a do `rank` (nunca a do voto projetado — ADR-0063 D5).
+ *
+ * Emenda 04/10 (visível por padrão): até aqui eram "as marcadas + as 7
+ * primeiras válidas sem marca" contadas do TOPO; agora são as 7 posições
+ * depois do último eleito (uma linha com `destino` entre elas ocupa a posição
+ * e não leva o número), e as sem marca ENTRE eleitos também o levam. É o
+ * conjunto que fica visível sem clique, menos as linhas com `destino` —
+ * nenhuma linha válida visível fica sem o número e nenhuma recolhida o leva.
+ *
+ * Recebe TODAS as linhas da agremiação que a página tem; no servidor são as
+ * posições 1–60 + marcadas. A lista 61+ nunca traz o campo (RF-265).
+ */
+export function elegiveisAoVotoProjetado(
+  linhas: readonly LinhaDeputado[],
+  ctx: ContextoMarcas,
+): ReadonlySet<number> {
+  const saida = new Set<number>();
+  if (!ctx.projecaoVisivel || ctx.totalizacaoFinal) return saida;
+  const r = ultimoRankVisivelDasLinhas(linhas, ctx);
+  for (const linha of linhas) {
+    if (codigoDoDestino(linha.destino) === 0 && linha.rank <= r) saida.add(linha.sqcand);
+  }
+  return saida;
+}
+
+/**
+ * O texto do voto projetado — "projeção ≈ 652 mil · não oficial". "projeção"
+ * e "não oficial" no MESMO elemento (RF-266): o número arredondado nunca
+ * aparece sem dizer que é estimativa nossa.
+ */
+export function textoVotoProjetado(votos: number): string {
+  return `projeção ≈ ${formatVotesCompact(votos)} · não oficial`;
+}
 
 /** Funções de exibição que {@link paraLinhaCompacta} aplica. Identidade quando ausentes. */
 export interface ExibicaoLinha {
@@ -441,6 +581,7 @@ export function paraLinhaCompacta(
   linha: LinhaDeputado,
   ctx: ContextoMarcas,
   exibicao: ExibicaoLinha = {},
+  elegiveisVotoProjetado?: ReadonlySet<number>,
 ): LinhaCompacta {
   const destino = codigoDoDestino(linha.destino);
   const nome = exibicao.nome ? exibicao.nome(linha.nome, String(linha.sqcand)) : linha.nome;
@@ -450,7 +591,7 @@ export function paraLinhaCompacta(
       : exibicao.partido
         ? exibicao.partido(linha.partido)
         : linha.partido;
-  return [
+  const base = [
     linha.rank,
     linha.sqcand,
     nome,
@@ -462,7 +603,63 @@ export function paraLinhaCompacta(
       : linha.pct_validos,
     bitsDasMarcas(marcasDaLinha(linha, ctx)),
     destino,
-  ];
+  ] as const;
+  // Spec 026 RF-297 — a posição 9 só existe quando a linha MOSTRA o voto
+  // projetado: projeção visível, sem totalização final, linha válida e no
+  // conjunto "eleitos + 7" da agremiação. Sem o conjunto (a rota 61+, que
+  // nunca traz o campo), nunca.
+  const vp = linha.votos_projetados;
+  if (
+    elegiveisVotoProjetado?.has(linha.sqcand) === true &&
+    ctx.projecaoVisivel &&
+    !ctx.totalizacaoFinal &&
+    destino === 0 &&
+    typeof vp === "number" &&
+    Number.isFinite(vp) &&
+    vp >= 0
+  ) {
+    return [...base, vp];
+  }
+  return base;
+}
+
+/**
+ * Os mais votados DA UF com o voto projetado só onde a lista de agremiações o
+ * mostraria — a mesma regra de {@link elegiveisAoVotoProjetado}, aplicada
+ * agremiação por agremiação. Fora dela o campo SAI do destaque (não fica
+ * `undefined`). Não reordena nem muda nenhum outro campo.
+ */
+export function maisVotadosComVotoProjetado<
+  T extends { sqcand: number; votos_projetados?: number },
+>(
+  destaques: readonly T[],
+  agremiacoes: readonly { candidatos?: readonly LinhaDeputado[] }[],
+  ctx: ContextoMarcas,
+): T[] {
+  const elegiveis = new Set<number>();
+  for (const a of agremiacoes) {
+    for (const sq of elegiveisAoVotoProjetado(a.candidatos ?? [], ctx)) elegiveis.add(sq);
+  }
+  return destaques.map((d) => {
+    if (d.votos_projetados === undefined || elegiveis.has(d.sqcand)) return d;
+    const { votos_projetados: _vp, ...resto } = d;
+    return resto as T;
+  });
+}
+
+/**
+ * As linhas de UMA agremiação → tuplas, com o conjunto do voto projetado
+ * ({@link elegiveisAoVotoProjetado}) calculado sobre elas. É o que a página
+ * usa no servidor; a ordem da saída é a da entrada (quem ordena é
+ * {@link ordenarPorRank}).
+ */
+export function linhasCompactasDaAgremiacao(
+  linhas: readonly LinhaDeputado[],
+  ctx: ContextoMarcas,
+  exibicao: ExibicaoLinha = {},
+): LinhaCompacta[] {
+  const elegiveis = elegiveisAoVotoProjetado(linhas, ctx);
+  return linhas.map((l) => paraLinhaCompacta(l, ctx, exibicao, elegiveis));
 }
 
 /**

@@ -217,8 +217,11 @@ describe("as listas — avatar nas linhas eleitas e em nenhuma outra", () => {
     expect(avatares[0]?.closest("li")?.getAttribute("data-rank")).toBe("1");
   });
 
-  it("<DeputadoMaisVotados> no país (sem fotos): nenhum avatar", () => {
+  it("<DeputadoMaisVotados> no país: a regra de eleito NÃO vale — toda linha tem avatar (04/10)", () => {
+    // A capa não tem marca de eleito; desde a decisão do dono de 04/10 ela
+    // põe o avatar em todas as linhas (`<AvatarDestaque>`). O detalhe está em
+    // `AvatarDestaque.test.tsx`.
     const d = doc(<DeputadoMaisVotados cargo={6} escopo="pais" linhas={top} titleId="t" />);
-    expect(d.querySelectorAll('[data-testid^="candidate-avatar"]')).toHaveLength(0);
+    expect(d.querySelectorAll('[data-testid^="candidate-avatar"]')).toHaveLength(top.length);
   });
 });
