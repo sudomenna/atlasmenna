@@ -5,8 +5,9 @@
  * extenso — o formato que o dono pediu para o painel "Estado a estado".
  *
  * Server Component puro, zero JavaScript de cliente: é uma `<ul>` de `<a href>`
- * mais um sprite `<symbol>` embutido. Sem `<Link>` do `next/link`, pela mesma
- * razão de `UfLinksGrid`: esta trilha não tem moldura de mapa persistente
+ * com um `<img>` de bandeira por item (arquivo estático do próprio site —
+ * `components/atoms/data/UfFlag.tsx`, ADR-0070). Sem `<Link>` do `next/link`,
+ * pela mesma razão de `UfLinksGrid`: esta trilha não tem moldura de mapa persistente
  * (ADR-0033 § 1), então não há instância MapLibre a preservar, e um `<a>` cru
  * não arrasta o runtime do roteador para uma tela cujo orçamento de aplicação
  * é zero.
@@ -31,22 +32,22 @@
  * apuração em curso —, e mistura rótulo com resumo de corrida. Alterar aquele
  * componente para servir aos dois casos desfaria a justificativa dele.
  *
- * ## Bandeira ausente é o caminho normal
+ * ## A bandeira é acréscimo
  *
- * `<UfFlag>` devolve `null` quando a sigla não está na fonte gerada — hoje,
- * todas. O item renderiza só o nome e a sigla, sem buraco no layout e sem
- * ícone quebrado. Ver `components/atoms/data/UfFlag.tsx`.
+ * As 27 bandeiras existem desde 2026-10-03 (`public/bandeiras/`). `<UfFlag>`
+ * devolve `null` para qualquer sigla fora das 27 — o item fica com nome e
+ * sigla em texto, sem buraco no layout e sem ícone quebrado.
  *
  * ## Acessibilidade
  *
  * `aria-label="Acre (AC)"` no link, nome por extenso **e** sigla em texto
- * visível, bandeira `aria-hidden` e `focusable="false"`, alvo de toque
+ * visível, bandeira com `alt=""` (decorativa, fora da árvore de acessibilidade), alvo de toque
  * `--tap-min` (RNF-023/024). A ordem é alfabética por nome — a mesma do
  * `<UfPicker>` e do `<UfLinksGrid>`: é a ordem que o leitor procura numa lista
  * de estados e não carrega juízo nenhum sobre as corridas (constituição § 2).
  */
 
-import { UfFlag, UfFlagSprite } from "@/components/atoms/data/UfFlag";
+import { UfFlag } from "@/components/atoms/data/UfFlag";
 import { ufsPorNome } from "@/components/atoms/maps/_shared";
 import { type CargoTse, cargoInfo } from "@/lib/config/cargos";
 
@@ -124,7 +125,6 @@ export function UfBandeirasGrid({
       className={className}
       data-testid="uf-bandeiras-grid"
     >
-      <UfFlagSprite />
       <ul
         className="grid"
         style={{
@@ -155,8 +155,7 @@ export function UfBandeirasGrid({
                   textDecoration: "none",
                 }}
               >
-                {/* Decorativa. Quando o arquivo não existe, some inteira — não
-                    vira caixa vazia nem espaço reservado. */}
+                {/* Decorativa (`alt=""`): nome e sigla seguem em texto ao lado. */}
                 <UfFlag sigla={uf.sigla} />
 
                 <span className="min-w-0 flex flex-col" style={{ gap: "var(--space-1)" }}>

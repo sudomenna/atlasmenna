@@ -84,6 +84,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LegendaMarcas } from "@/components/atoms/badges/MarcaDeputado";
 import { DadoParadoBanner } from "@/components/atoms/banners/DadoParadoBanner";
+import { UfFlag } from "@/components/atoms/data/UfFlag";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import { DeputadoConferencia } from "@/components/blocks/DeputadoConferencia";
 import {
@@ -360,6 +361,7 @@ export async function renderPaginaUfDeputado(
 
         <div>
           <h1 className="mt-4 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <UfFlag sigla={sigla} width={34} height={24} eager inline />
             {rotulo} {sigla} — Aguardando dados
           </h1>
           <p
@@ -484,7 +486,13 @@ export async function renderPaginaUfDeputado(
       {/* Seção 1 — o resumo. Sobrevive à ausência do Blob (RF-129). */}
       <Panel
         kicker="Atlas Menna · apuração ao vivo · não oficial"
-        title={`${rotulo} ${sigla}`}
+        title={
+          <>
+            {/* Bandeira decorativa (`alt=""`); o texto do título não muda. */}
+            <UfFlag sigla={sigla} width={25} height={18} eager inline />
+            {`${rotulo} ${sigla}`}
+          </>
+        }
         titleId="resumo-heading"
         headingLevel={1}
       >

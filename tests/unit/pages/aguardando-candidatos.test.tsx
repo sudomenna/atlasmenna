@@ -344,7 +344,10 @@ describe("RF-149 — a grade de espera desenha no máximo 60", () => {
     // É a página que media 4.015.398 bytes de HTML prerenderizado.
     const doc = await spDep();
     expect(doc.querySelectorAll('[data-testid="candidate-card"]')).toHaveLength(60);
-    expect(doc.querySelectorAll("img")).toHaveLength(60);
+    // As FOTOS — dentro dos cartões. Desde 2026-10-03 o `<h1>` da página tem
+    // também a bandeira da UF (um `<img>` a mais, fora da grade).
+    expect(doc.querySelectorAll('[data-testid="candidate-card"] img')).toHaveLength(60);
+    expect(doc.querySelectorAll("img")).toHaveLength(61);
   });
 
   it("(n) a contagem continua dizendo 1.061 — o corte é de exibição", async () => {

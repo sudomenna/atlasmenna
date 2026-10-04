@@ -285,6 +285,13 @@ describe("UFPage SSR (S07/Fase 2 — ADR-0018 + ADR-0019)", () => {
     expect(doc.querySelector('nav[aria-label="Breadcrumb"]')).toBeNull();
     // A UF continua nomeada — pelo `<h1>` do painel de resultado.
     expect(doc.querySelector("h1")?.textContent).toContain("SP");
+    // 2026-10-03 — e ganhou a bandeira, UMA para os dois textos alternados
+    // (parcial/projeção), decorativa e carregada já (acima da dobra).
+    const bandeiras = doc.querySelectorAll("h1 img");
+    expect(bandeiras).toHaveLength(1);
+    expect(bandeiras[0]?.getAttribute("src")).toBe("/bandeiras/SP.webp");
+    expect(bandeiras[0]?.getAttribute("alt")).toBe("");
+    expect(bandeiras[0]?.hasAttribute("loading")).toBe(false);
   });
 
   // 2026-09-09 (D23): consequência declarada e aceita do corte dos termômetros

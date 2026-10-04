@@ -1,133 +1,103 @@
 /**
  * components/atoms/data/UfFlag.tsx
  *
- * As bandeiras das 27 unidades federativas, como **sprite `<symbol>` embutido**:
- * `<UfFlagSprite />` uma vez por documento, `<UfFlag sigla="SP" />` em cada
- * item da grade.
+ * A bandeira de uma das 27 unidades federativas: um `<img>` comum apontando
+ * para `public/bandeiras/<SIGLA>.webp`, servido pelo próprio site.
  *
- * ## Por que sprite embutido, e não `<img src>` de `public/` nem do Blob
+ * ## Por que arquivo em `public/` e `<img>` — e não mais sprite embutido
  *
- * `/deputado-federal` tem orçamento de JavaScript de aplicação **zero**, e o
- * argumento inteiro do hemiciclo é não pagar rede. Vinte e sete `<img>`
- * acrescentariam 27 round-trips a essa tela; e uma falha de CDN na noite da
- * apuração produziria 27 imagens quebradas ao lado de um resultado eleitoral —
- * o pior momento possível para o produto parecer avariado. Embutido, cada item
- * custa ~70 bytes de `<use>`, os `<symbol>` saem uma vez, e não há requisição
- * que possa falhar.
+ * Até 2026-10-03 a arquitetura era um sprite `<symbol>` embutido no HTML
+ * (`UfFlagSprite`, gerado de SVG por `scripts/gen-uf-flags.ts`). Ela não
+ * sobreviveu às bandeiras reais: depois de otimizadas, as que têm brasão pesam
+ * AL 147 KB, RJ 66, RN 54, PR 37 KB…, contra um teto de 4 KB por bandeira, e
+ * `/deputado-federal` já media 307,8 de 320 KiB do teto do documento — com o
+ * sprite contado DUAS vezes (HTML + payload RSC). Decisão do dono, 03/10:
+ * bandeiras viram arquivos rasterizados pequenos (WebP, 60 px de altura,
+ * 0,5–1,9 KB cada) no nosso domínio, referenciados por `<img>`.
  *
- * É a mesma razão que descarta `next/image` (Client Component no App Router,
- * traria runtime para uma tela que não tem nenhum — ver
- * `components/atoms/data/CandidateAvatar.tsx`), só que sem precisar do `<img>`.
+ * - **Sem CDN de terceiro**: a bandeira sai do mesmo domínio que a página.
+ * - **Zero JavaScript de aplicação**: é markup puro, serve em Server e em
+ *   Client Component (não importa dado nenhum — o `UfPicker` é cliente).
+ * - **O HTML só ganha a tag** (~110 bytes por bandeira). A imagem vai para o
+ *   cache do navegador uma vez e serve a todas as telas.
+ * - Sem `next/image`: ele é Client Component no App Router e traria runtime e
+ *   o otimizador de imagem para um arquivo que já está no tamanho final (ver
+ *   `CandidateAvatar.tsx`).
  *
- * ## 🔴 O caminho SEM bandeira é o caminho normal, não a borda
- *
- * Em 2026-09-18 os 27 arquivos **não existem**: `UF_FLAGS` está vazio. Então
- * `<UfFlag>` devolve `null` — não um `<svg>` vazio, não um `<use>` órfão (que
- * renderiza uma caixa em branco e parece defeito), não um espaço reservado.
- * Nada. A grade de estados fica com o nome e a sigla em texto, sem buraco no
- * layout e sem ícone quebrado, e é **esse** o estado que vai ao ar até os
- * arquivos chegarem. Por isso ele é tratado como caminho principal e testado
- * como tal.
+ * Proveniência e receita de regeneração: `scripts/data/bandeiras-uf/PROVENIENCIA.md`.
  *
  * ## Acessibilidade: a bandeira é decorativa, e tem de ser
  *
- * `aria-hidden="true"` + `focusable="false"`. O nome do estado por extenso
- * **e** a sigla continuam em texto ao lado — que é o que reconcilia esta
- * superfície com a justificativa de `UfLinksGrid.tsx` (RF-162/163: os dois
- * rótulos são texto). A bandeira não acrescenta informação; ela ajuda o
- * reconhecimento. Um `role="img"` com `aria-label="Bandeira de São Paulo"` faria
- * o leitor de tela anunciar o estado duas vezes por item, 27 vezes na página.
+ * `alt=""` tira a imagem da árvore de acessibilidade. Em TODO lugar onde ela
+ * aparece, o nome do estado e/ou a sigla estão em texto ao lado — é o que
+ * reconcilia esta superfície com RF-162/163 e com a constituição § 4: a
+ * bandeira ajuda o reconhecimento, não carrega informação. Um `alt="Bandeira
+ * de São Paulo"` faria o leitor de tela anunciar o estado duas vezes por item,
+ * 27 vezes numa página.
  *
- * `focusable="false"` não é redundante: sem ele, o IE/Edge legado punha cada
- * `<svg>` na ordem de tabulação, e o padrão continua sendo declará-lo em SVG
- * decorativo.
+ * ## Sigla desconhecida ⇒ nada
+ *
+ * Fora das 27 (inclusive "BR", vazio, lixo), devolve `null` — nunca um `<img>`
+ * apontando para um arquivo que não existe, que viraria ícone quebrado ao lado
+ * de um resultado eleitoral.
  */
 
-import { UF_FLAGS } from "@/lib/data/uf-flags.generated";
+import { UF_NOMES } from "@/components/atoms/maps/_shared";
+import styles from "./UfFlag.module.css";
 
-/** `id` do `<symbol>` de uma UF. Um lugar só — o sprite e o `<use>` leem daqui. */
-export function ufFlagSymbolId(sigla: string): string {
-  return `uf-flag-${sigla.toUpperCase()}`;
+/** Caminho público da bandeira. Um lugar só — o componente e os testes leem daqui. */
+export function ufFlagSrc(sigla: string): string {
+  return `/bandeiras/${sigla.toUpperCase()}.webp`;
 }
 
-/** Existe bandeira para esta sigla? É a guarda de existência, e é única. */
+/** É uma das 27 UFs? É a guarda de existência, e é única. */
 export function temBandeira(sigla: string): boolean {
-  return Object.hasOwn(UF_FLAGS, sigla.toUpperCase());
-}
-
-/**
- * Os `<symbol>` de todas as bandeiras disponíveis, uma vez por documento.
- *
- * Devolve `null` quando não há nenhuma — um `<svg>` escondido e vazio no topo
- * de toda página seria lixo sem função.
- *
- * O `<svg>` hospedeiro fica com `display: none`: `<symbol>` nunca é pintado
- * diretamente, então esconder o hospedeiro não afeta os `<use>` que o
- * referenciam, e evita que ele ocupe uma linha em branco no fluxo.
- */
-export function UfFlagSprite() {
-  const siglas = Object.keys(UF_FLAGS).sort();
-  if (siglas.length === 0) return null;
-
-  return (
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      data-testid="uf-flag-sprite"
-      style={{ display: "none" }}
-    >
-      {siglas.map((sigla) => {
-        const flag = UF_FLAGS[sigla];
-        if (!flag) return null;
-        return (
-          <symbol
-            key={sigla}
-            id={ufFlagSymbolId(sigla)}
-            viewBox={flag.viewBox}
-            preserveAspectRatio="xMidYMid meet"
-            // Conteúdo GERADO e validado por `scripts/gen-uf-flags.ts`, que
-            // recusa `<script>`, `on*=`, `javascript:` e referência externa, e
-            // prefixa todo `id` com `ufflag-<SIGLA>-`. Não é entrada de
-            // usuário nem conteúdo remoto: é dado-fonte versionado no
-            // repositório, do mesmo tipo de `party-official-hexes.json`.
-            // biome-ignore lint/security/noDangerouslySetInnerHtml: SVG gerado e validado pelo próprio gerador — ver scripts/gen-uf-flags.ts
-            dangerouslySetInnerHTML={{ __html: flag.corpo }}
-          />
-        );
-      })}
-    </svg>
-  );
+  return Object.hasOwn(UF_NOMES, sigla.toUpperCase());
 }
 
 export interface UfFlagProps {
   sigla: string;
-  /** Largura em px. A altura sai da proporção declarada no `<symbol>`. */
+  /** Largura em px. As bandeiras têm proporção ~1,4 (de 1,38 a 1,50). */
   width?: number;
   height?: number;
+  /**
+   * Carregar já, sem `loading="lazy"` — para a bandeira acima da dobra (o
+   * `<h1>` das páginas de UF). Nas grades, o padrão `lazy` deixa o navegador
+   * buscar só as que entram na tela.
+   */
+  eager?: boolean;
+  /**
+   * A bandeira está dentro de texto corrido (título, cabeçalho de cartão), e
+   * não num contêiner flex: alinha ao corpo das letras e ganha o espaço até o
+   * texto seguinte.
+   */
+  inline?: boolean;
   className?: string;
 }
 
-/**
- * A bandeira de uma UF, ou `null` se ela ainda não existe na fonte.
- *
- * Exige `<UfFlagSprite />` no mesmo documento — sem ele o `<use>` não resolve.
- */
-export function UfFlag({ sigla, width = 21, height = 15, className }: UfFlagProps) {
-  const chave = sigla.toUpperCase();
-  if (!temBandeira(chave)) return null;
+/** A bandeira de uma UF, ou `null` se a sigla não é uma das 27. */
+export function UfFlag({
+  sigla,
+  width = 21,
+  height = 15,
+  eager = false,
+  inline = false,
+  className,
+}: UfFlagProps) {
+  if (!temBandeira(sigla)) return null;
+
+  const classes = [styles.f, inline ? styles.t : null, className].filter(Boolean).join(" ");
 
   return (
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      className={className}
-      data-testid="uf-flag"
-      data-sigla={chave}
+    // biome-ignore lint/performance/noImgElement: arquivo estático já no tamanho final; `next/image` traria runtime de cliente — ver o cabeçalho
+    <img
+      src={ufFlagSrc(sigla)}
       width={width}
       height={height}
-      style={{ flex: "none", display: "block" }}
-    >
-      <use href={`#${ufFlagSymbolId(chave)}`} />
-    </svg>
+      alt=""
+      decoding="async"
+      loading={eager ? undefined : "lazy"}
+      className={classes}
+    />
   );
 }

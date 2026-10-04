@@ -1,0 +1,30 @@
+/*
+ * components/atoms/data/UfFlag.module.css — a moldura da bandeira de UF.
+ *
+ * Classe, e não `style={}`: a bandeira entra em até 27 itens por tela (grade de
+ * estados, cartões de governador, seletor de UF), e `/deputado-federal` mora a
+ * poucos KiB do teto do documento HTML (docs/nfr/performance.md). Cada byte de
+ * estilo repetido no markup sairia 27 vezes — e duas, quando o item também
+ * viaja no payload RSC.
+ */
+
+.f {
+  flex: none;
+  display: inline-block;
+  /* As bandeiras têm proporções entre 1,38 e 1,50; a caixa é fixa (sem salto
+     de layout) e `cover` corta no máximo ~3% de cada lado em vez de achatar. */
+  object-fit: cover;
+  /* Filete: as bandeiras de campo branco (DF, MG, ES, PE, RJ, SC) sumiriam
+     contra o fundo claro. `--ink-3` é o cinza decorativo do kit, reservado a
+     ícone e borda (docs/design-system/tokens.md); é redefinido no tema escuro.
+     `outline` não ocupa espaço: a caixa continua com `width`×`height`. */
+  outline: 1px solid var(--ink-3);
+}
+
+/* Dentro de texto corrido (título, cabeçalho de cartão): alinha ao corpo das
+   maiúsculas e separa do texto que vem depois. Em contêiner flex, o `gap` do
+   pai já faz esse papel e esta classe não entra. */
+.t {
+  vertical-align: -0.12em;
+  margin-inline-end: 0.35em;
+}

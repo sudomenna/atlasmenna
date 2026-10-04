@@ -310,6 +310,11 @@ describe("UFGovernadorPage (integration / smoke)", () => {
     expect(h1).toHaveLength(1);
     expect(h1[0]?.textContent).toContain("Governador SP — Resultado parcial");
     expect(h1[0]?.textContent).toContain("Governador SP — Projeção Atlas Menna");
+    // 2026-10-03 — e a bandeira da UF, UMA para os dois textos, decorativa.
+    const bandeiras = h1[0]?.querySelectorAll("img") ?? [];
+    expect(bandeiras).toHaveLength(1);
+    expect(bandeiras[0]?.getAttribute("src")).toBe("/bandeiras/SP.webp");
+    expect(bandeiras[0]?.getAttribute("alt")).toBe("");
     // 2026-09-09 (decisão D23): o `<UFBreadcrumb>` (RF-031) saiu — não existe
     // no protótipo do kit. A volta para a grade das 27 corridas fica com o
     // `<CargoTabs>` do shell (`app/layout.tsx`), que este teste não monta.

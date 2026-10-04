@@ -79,6 +79,26 @@ describe("ufHref()", () => {
   });
 });
 
+describe("<UfPickerGrid /> — bandeira", () => {
+  // 🔴 MUTAÇÃO (2026-10-03): tirar o `<UfFlag>` do item — morre na contagem.
+  it("cada uma das 27 opções tem a bandeira da PRÓPRIA UF, decorativa, antes do nome", () => {
+    const doc = parse(<UfPickerGrid cargo="pres" />);
+    const lista = itens(doc);
+    expect(lista).toHaveLength(27);
+    for (const item of lista) {
+      const sigla = item.getAttribute("data-sigla");
+      const img = item.querySelector("img");
+      expect(img?.getAttribute("src"), sigla ?? "").toBe(`/bandeiras/${sigla}.webp`);
+      expect(img?.getAttribute("alt")).toBe("");
+    }
+    // A sigla continua sendo o último filho (o `space-between` a empurra à
+    // direita), e o nome segue em texto.
+    const ap = lista.find((i) => i.getAttribute("data-sigla") === "AP");
+    expect(ap?.lastElementChild?.textContent).toBe("AP");
+    expect(ap?.textContent).toBe("AmapáAP");
+  });
+});
+
 describe("<UfPickerGrid />", () => {
   it("(e) as 27 UFs são links de verdade — nenhuma desabilitada", () => {
     const doc = parse(<UfPickerGrid cargo="pres" />);

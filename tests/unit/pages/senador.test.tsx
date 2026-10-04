@@ -835,6 +835,12 @@ describe("/uf/[sigla]/senador (T-10)", () => {
     expect(doc.querySelector("main")?.getAttribute("data-trilha")).toBe("sen");
     expect(doc.querySelectorAll("h1").length).toBe(1);
     expect(doc.querySelector("main footer")).not.toBeNull();
+    // 2026-10-03 — a bandeira da UF no `<h1>`: uma só, decorativa, sem `lazy`.
+    const bandeiras = doc.querySelectorAll("h1 img");
+    expect(bandeiras).toHaveLength(1);
+    expect(bandeiras[0]?.getAttribute("src")).toBe("/bandeiras/SP.webp");
+    expect(bandeiras[0]?.getAttribute("alt")).toBe("");
+    expect(bandeiras[0]?.hasAttribute("loading")).toBe(false);
   });
 
   it("(u) payload sem `vagas` (gravado antes da spec 016) cai na tabela canônica", async () => {

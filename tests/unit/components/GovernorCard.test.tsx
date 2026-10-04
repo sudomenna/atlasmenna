@@ -212,6 +212,22 @@ describe("<GovernorCard />", () => {
     expect(doc.body.textContent ?? "").toContain("São Paulo");
   });
 
+  // 🔴 MUTAÇÃO (2026-10-03): tirar o `<UfFlag>` do título — morre no `img`.
+  it("(i2) bandeira decorativa no título, antes do nome; o texto do título não muda", () => {
+    const uf = mkUf({ sigla: "RJ", bucket: "chamada" });
+    const doc = parse(<GovernorCard uf={uf} candidatos={candidatos} />);
+    const titulo = doc.querySelector("header > h3");
+    const img = titulo?.querySelector("img");
+    expect(img?.getAttribute("src")).toBe("/bandeiras/RJ.webp");
+    expect(img?.getAttribute("alt")).toBe("");
+    expect(img?.getAttribute("loading")).toBe("lazy");
+    expect(titulo?.firstElementChild).toBe(img);
+    // `alt=""` não acrescenta texto: nome e sigla seguem sendo o rótulo.
+    expect(titulo?.textContent).toBe("Rio de Janeiro· RJ");
+    // Uma só por cartão — nenhuma bandeira nas linhas de candidatura.
+    expect(doc.querySelectorAll("img")).toHaveLength(1);
+  });
+
   // -------------------------------------------------------------------
   // Spec 018 / ADR-0042 — identidade pelo par (UF, número)
   // -------------------------------------------------------------------

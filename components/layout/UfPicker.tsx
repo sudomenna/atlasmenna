@@ -51,6 +51,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/atoms/controls/Button";
+import { UfFlag } from "@/components/atoms/data/UfFlag";
 import { ufsPorNome } from "@/components/atoms/maps/_shared";
 import { Sheet } from "@/components/atoms/overlays/Sheet";
 import { cargoFromToken, vagasDaCorrida } from "@/lib/config/cargos";
@@ -239,7 +240,13 @@ export function UfPickerGrid({
                 onClick={onNavigate}
                 style={eAtual ? ITEM_ATUAL_STYLE : ITEM_STYLE}
               >
-                <span className="min-w-0 truncate">{uf.nome}</span>
+                {/* Bandeira decorativa (`alt=""`) antes do nome — nome e sigla
+                    continuam em texto. Embrulhada com o nome para o
+                    `space-between` seguir empurrando só a sigla à direita. */}
+                <span className="flex min-w-0 items-center" style={{ gap: "var(--space-2)" }}>
+                  <UfFlag sigla={uf.sigla} />
+                  <span className="min-w-0 truncate">{uf.nome}</span>
+                </span>
                 <span className="flex-none" style={{ font: "var(--type-figure-sm)" }}>
                   {uf.sigla}
                 </span>

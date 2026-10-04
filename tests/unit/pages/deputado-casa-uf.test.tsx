@@ -98,6 +98,12 @@ describe("RF-281 — a página da casa acompanha o cargo", () => {
     expect(lerDadosDaCasaMock).toHaveBeenCalledWith(7, "SP");
 
     expect(doc.querySelector("h1")?.textContent).toBe("Deputado Estadual SP");
+    // 2026-10-03 — bandeira da UF no `<h1>`, decorativa e sem `lazy` (acima
+    // da dobra). O texto do título acima não mudou por causa dela.
+    const bandeira = doc.querySelector("h1 img");
+    expect(bandeira?.getAttribute("src")).toBe("/bandeiras/SP.webp");
+    expect(bandeira?.getAttribute("alt")).toBe("");
+    expect(bandeira?.hasAttribute("loading")).toBe(false);
     // RF-284 — o nome da casa na frase das vagas.
     expect(doc.querySelector("[data-testid='uf-vagas-label']")?.textContent).toContain(
       "em disputa na Assembleia Legislativa de São Paulo",
@@ -171,6 +177,7 @@ describe("RF-281 — a página da casa acompanha o cargo", () => {
 
     const df = await render(8, "DF");
     expect(df.querySelector("h1")?.textContent).toBe("Deputado Distrital DF — Aguardando dados");
+    expect(df.querySelector("h1 img")?.getAttribute("src")).toBe("/bandeiras/DF.webp");
     expect(df.querySelector("[data-testid='uf-dep-aguardando']")?.textContent).toContain(
       "A apuração do Distrito Federal",
     );

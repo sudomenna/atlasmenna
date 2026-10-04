@@ -2,19 +2,18 @@
 /**
  * tests/unit/components/UfBandeirasGrid.test.tsx — as 27 corridas com bandeira.
  *
- * 🔴 O fio condutor é que **o caminho SEM bandeira é o caminho normal**, não a
- * borda: em 2026-09-18 os 27 arquivos ainda não existem, e é este estado que
- * vai ao ar. Então ele é o primeiro bloco, e é testado como comportamento
- * declarado — não como acidente que "por enquanto funciona".
+ * Desde 2026-10-03 as 27 bandeiras existem, como `<img>` de arquivo estático
+ * do próprio site (ADR-0070); o contrato do `<UfFlag>` em si (sigla
+ * desconhecida ⇒ nada, tamanho dos arquivos) está em `UfFlag.test.tsx`.
  *
- * O segundo fio é que a grade **não pode perder dado**. Ela substituiu uma
+ * O fio condutor é que a grade **não pode perder dado**. Ela substituiu uma
  * lista textual que carregava maior bancada, empates, vagas sem candidato
  * elegível e placar de cadeiras; trocar isso por um ícone bonito é o defeito
  * que o ADR-0017 nomeia.
  */
 
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { UfBandeirasGrid } from "@/components/blocks/UfBandeirasGrid";
 
@@ -67,63 +66,34 @@ describe("UfBandeirasGrid — os 27 estados, sempre", () => {
   });
 });
 
-describe("UfBandeirasGrid — 🔴 sem bandeira, o item degrada para texto", () => {
-  // 🔴 MUTAÇÃO: remover a guarda de existência de `<UfFlag>` (o
-  // `if (!temBandeira(chave)) return null`). Passam a sair 27 `<svg>` com
-  // `<use href="#uf-flag-XX">` apontando para `<symbol>` que não existe —
-  // caixas vazias no layout, que é justamente o "ícone quebrado" que o
-  // requisito proíbe.
-  it("hoje (fonte vazia) não há `<svg>` de bandeira nem `<use>` órfão", () => {
+describe("UfBandeirasGrid — a bandeira é acréscimo, o rótulo continua texto", () => {
+  // 🔴 MUTAÇÃO (2026-10-03): tirar o `<UfFlag>` do item — (a) morre. Trocar o
+  // `src` por um caminho que não existe — (a) morre no `src`.
+  it("(a) um `<img>` decorativo por item, apontando para o arquivo da própria UF", () => {
     const doc = parse(<UfBandeirasGrid cargo={6} resumos={resumos} />);
-    expect(doc.querySelectorAll('[data-testid="uf-flag"]')).toHaveLength(0);
-    expect(doc.querySelectorAll("use")).toHaveLength(0);
-    expect(doc.querySelectorAll('[data-testid="uf-flag-sprite"]')).toHaveLength(0);
+    expect(doc.querySelectorAll("img")).toHaveLength(27);
+    const sp = doc.querySelector('[data-uf="SP"] img');
+    expect(sp?.getAttribute("src")).toBe("/bandeiras/SP.webp");
+    expect(sp?.getAttribute("alt")).toBe("");
+    expect(sp?.getAttribute("loading")).toBe("lazy");
+    // O sprite `<symbol>` (até 2026-10-03) saiu inteiro: nada de `<svg>`/`<use>`.
+    expect(doc.querySelectorAll("svg, use, symbol")).toHaveLength(0);
   });
 
-  it("e mesmo assim nome por extenso e sigla continuam em TEXTO, nos 27", () => {
+  it("(b) com `ufs` filtrado, só as UFs mostradas ganham bandeira", () => {
+    const doc = parse(<UfBandeirasGrid cargo={7} ufs={["SP", "RJ"]} />);
+    const srcs = [...doc.querySelectorAll("img")].map((i) => i.getAttribute("src"));
+    expect(srcs.sort()).toEqual(["/bandeiras/RJ.webp", "/bandeiras/SP.webp"]);
+  });
+
+  it("(c) nome por extenso e sigla continuam em TEXTO, nos 27", () => {
     // É isto que reconcilia a grade com RF-162/163: o rótulo é texto. A
-    // bandeira, quando chegar, é reconhecimento, não informação.
+    // bandeira é reconhecimento, não informação — por isso `alt=""`.
     const doc = parse(<UfBandeirasGrid cargo={6} />);
     const ac = doc.querySelector('[data-uf="AC"]');
     expect(ac?.textContent).toContain("Acre");
     expect(ac?.textContent).toContain("AC");
     expect(ac?.getAttribute("aria-label")).toBe("Acre (AC)");
     expect(doc.querySelector('[data-uf="SP"]')?.textContent).toContain("São Paulo");
-  });
-});
-
-describe("UfBandeirasGrid — com bandeiras na fonte, o sprite entra uma vez só", () => {
-  it("emite um `<symbol>` por bandeira e um `<use>` por item que a tem", async () => {
-    // A fonte gerada é substituída para exercitar o outro ramo — os arquivos
-    // reais ainda não existem, e esperar por eles deixaria metade do
-    // componente sem teste até uma data que ninguém controla.
-    vi.resetModules();
-    vi.doMock("@/lib/data/uf-flags.generated", () => ({
-      UF_FLAG_VIEWBOX: "0 0 70 100",
-      UF_FLAGS: {
-        SP: { viewBox: "0 0 700 1000", corpo: '<path id="ufflag-SP-a" d="M0 0h1v1z"/>' },
-        RJ: { viewBox: "0 0 700 1000", corpo: '<path id="ufflag-RJ-a" d="M0 0h1v1z"/>' },
-      },
-    }));
-    const { UfBandeirasGrid: Grade } = await import("@/components/blocks/UfBandeirasGrid");
-    const doc = parse(<Grade cargo={6} />);
-
-    expect(doc.querySelectorAll('[data-testid="uf-flag-sprite"]')).toHaveLength(1);
-    expect(doc.querySelectorAll("symbol")).toHaveLength(2);
-    expect(doc.querySelectorAll('[data-testid="uf-flag"]')).toHaveLength(2);
-    expect(doc.querySelector('[data-uf="SP"] use')?.getAttribute("href")).toBe("#uf-flag-SP");
-
-    // As 25 sem arquivo continuam sem `<svg>` — a degradação é por item.
-    expect(doc.querySelector('[data-uf="AC"] svg')).toBeNull();
-    expect(doc.querySelector('[data-uf="AC"]')?.textContent).toContain("Acre");
-
-    // A bandeira é decorativa: o nome do estado já está em texto ao lado, e um
-    // `aria-label` na imagem faria o leitor de tela dizê-lo duas vezes por item.
-    const flag = doc.querySelector('[data-testid="uf-flag"]');
-    expect(flag?.getAttribute("aria-hidden")).toBe("true");
-    expect(flag?.getAttribute("focusable")).toBe("false");
-
-    vi.doUnmock("@/lib/data/uf-flags.generated");
-    vi.resetModules();
   });
 });

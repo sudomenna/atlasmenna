@@ -217,6 +217,11 @@ const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
  *   emenda): mediu 315.242 B (307,8 KiB), 2,6% acima do global, com o
  *   hemiciclo de 513 cadeiras, os mais votados do país, os puxadores e o selo
  *   por UF.
+ *   ↳ **336 KiB** desde 03/10 (decisão do dono, ADR-0070): as 27 bandeiras da
+ *   grade "Estado a estado" somam 8.288 B (tag `<img>` no HTML + no payload
+ *   RSC); no build:e2e de 03/10 a página mediu 320.684 B (313,2 KiB) sem
+ *   elas e 328.972 B (321,3 KiB) com elas. Comprimido, as bandeiras custam 586 B.
+ *   A folga restante (~15 KiB) é para o crescimento da noite da apuração.
  *
  * `/uf/SP/deputado-estadual` e `/uf/DF/deputado-distrital` — 400 KiB (abaixo).
  * O RF-289 previa o global de 300 KiB. Em 03/10 a
@@ -234,7 +239,7 @@ const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
  */
 const TETO_DOCUMENTO_ASSEMBLEIA_UF = 400 * KIB;
 const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> = {
-  "/deputado-federal": 320 * KIB,
+  "/deputado-federal": 336 * KIB,
   "/uf/SP/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/RJ/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/MG/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,

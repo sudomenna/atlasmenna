@@ -34,6 +34,7 @@ import type { CSSProperties } from "react";
 
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { EtiquetasLinha } from "@/components/atoms/data/EtiquetasLinha";
+import { UfFlag } from "@/components/atoms/data/UfFlag";
 import { candidateColor } from "@/components/blocks/_candidateColor";
 import { vagasDaCorrida } from "@/lib/config/cargos";
 import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
@@ -365,6 +366,9 @@ export function GovernorCard({
           "Outros") vale em TODA largura; a linha única do celular saiu. */}
       <header>
         <Titulo>
+          {/* Bandeira decorativa (`alt=""`): o nome do estado e a sigla
+              continuam em texto. Classe, não `style` — 27 cartões por tela. */}
+          <UfFlag sigla={uf.sigla} width={17} height={12} inline />
           {nomeUf}
           <span>· {uf.sigla}</span>
         </Titulo>

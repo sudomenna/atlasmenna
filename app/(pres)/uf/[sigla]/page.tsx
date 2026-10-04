@@ -124,6 +124,7 @@ import { notFound } from "next/navigation";
 import { TurnoBadge } from "@/components/atoms/badges/TurnoBadge";
 import { DadoParadoBanner } from "@/components/atoms/banners/DadoParadoBanner";
 import { SerieApuracaoChart } from "@/components/atoms/charts/SerieApuracaoChart";
+import { UfFlag } from "@/components/atoms/data/UfFlag";
 import {
   DetailFreshness,
   DetailUnavailable,
@@ -171,6 +172,8 @@ import nationalFixture from "@/tests/fixtures/edge-config/projection-current.jso
 function ResultTitle({ sigla }: { sigla: string }) {
   return (
     <>
+      {/* Bandeira decorativa (`alt=""`), uma só para os dois textos. */}
+      <UfFlag sigla={sigla} width={25} height={18} eager inline />
       <span data-view-only="parcial">{sigla} — Resultado parcial</span>
       <span data-view-only="proj">{sigla} — Projeção Atlas Menna</span>
     </>
@@ -512,6 +515,7 @@ export default async function UFPage({ params }: UFPageProps) {
             para a mesma rota. Quem volta usa o `<CargoTabs>` do shell. */}
         <div>
           <h1 className="mt-4 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <UfFlag sigla={sigla} width={34} height={24} eager inline />
             {sigla} — Aguardando dados
           </h1>
           <p

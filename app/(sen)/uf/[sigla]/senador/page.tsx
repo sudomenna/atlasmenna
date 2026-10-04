@@ -66,6 +66,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { SerieApuracaoChart } from "@/components/atoms/charts/SerieApuracaoChart";
+import { UfFlag } from "@/components/atoms/data/UfFlag";
 import {
   DetailFreshness,
   DetailUnavailable,
@@ -214,6 +215,8 @@ export async function generateMetadata({ params }: UFSenadorPageProps): Promise<
 function ResultTitle({ sigla }: { sigla: string }) {
   return (
     <>
+      {/* Bandeira decorativa (`alt=""`), uma só para os dois textos. */}
+      <UfFlag sigla={sigla} width={25} height={18} eager inline />
       <span data-view-only="parcial">Senado {sigla} — Resultado parcial</span>
       <span data-view-only="proj">Senado {sigla} — Projeção Atlas Menna</span>
     </>
@@ -406,6 +409,7 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
       >
         <div>
           <h1 className="mt-4 text-3xl" style={{ fontFamily: "var(--font-serif)" }}>
+            <UfFlag sigla={sigla} width={34} height={24} eager inline />
             Senado {sigla} — Aguardando dados
           </h1>
           <p
