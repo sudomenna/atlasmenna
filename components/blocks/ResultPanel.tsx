@@ -752,7 +752,11 @@ export function ResultPanel({
   // do selo de turno, não a de vaga.
   const vagasParcial = multiVaga && !zerado ? idsDasVagas(porParcial, nVagas) : SEM_VAGAS;
   const vagasProj = multiVaga && !zerado ? idsDasVagas(porProj, nVagas) : SEM_VAGAS;
-  const classeLista = `${styles.list} ${LISTA_PAINEL_CLASSES.lista}`;
+  // ADR-0076 — no placar zerado a lista não tem os dois cartões do topo: a
+  // ordem é sorteio, e cartão maior seria destaque por acaso.
+  const classeLista = `${styles.list} ${LISTA_PAINEL_CLASSES.lista}${
+    zerado ? ` ${LISTA_PAINEL_CLASSES.zerada}` : ""
+  }`;
 
   const linhas = identidade
     ? candidatos.map((c) => (
@@ -868,6 +872,7 @@ export function ResultPanel({
               // lista e os dois cartões dizem a posição. `rank` segue
               // alimentando só a COR de fallback (ver acima).
               variant="kit"
+              zerado={zerado}
             />
           </li>
         );

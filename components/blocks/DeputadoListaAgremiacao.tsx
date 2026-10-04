@@ -416,7 +416,9 @@ export function DeputadoListaAgremiacao({
       >
         {/* Texto montado como UMA string: `{rank}º` sairia `21<!-- -->º` no
             HTML — 8 bytes × ~1.000 linhas no documento de SP (G6, 30/09). */}
-        <span>{`${rank}º`}</span>
+        {/* ADR-0076 — no placar zerado a ordem é SORTEIO: "1º, 2º" leria como
+            colocação. A célula fica (vazia) para a grade não mudar. */}
+        <span>{avatarEmTodos ? "" : `${rank}º`}</span>
         <span>
           <AvatarEleito
             nome={l[L.NOME]}

@@ -411,3 +411,95 @@
 .pedaco {
   white-space: nowrap;
 }
+
+/* ------------------------------------------------- o placar zerado (ADR-0076)
+ *
+ * Antes do primeiro boletim a ordem da lista é SORTEIO: os dois cartões do topo
+ * dariam destaque por acaso a quem caiu na frente. Aqui toda candidatura é
+ * LINHA, no cartão único. As regras de cima ficam intactas; estas vencem por
+ * especificidade (`.lista.listaZerada > li:nth-child(n)` > `.lista > li:nth-child(-n + 2)`).
+ */
+.lista.listaZerada > li:nth-child(n) {
+  grid-column: 1 / -1;
+  padding: 0 14px;
+  margin-bottom: 0;
+  border-radius: 0;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-card);
+  --corte-topo: 0;
+  --corte-base: 0;
+  clip-path: inset(var(--corte-topo, 0) -24px var(--corte-base, 0));
+}
+
+.lista.listaZerada > li:nth-child(n):first-child {
+  --corte-topo: -24px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+.lista.listaZerada > li:nth-child(n):last-child {
+  --corte-base: -24px;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+.lista.listaZerada > li:nth-child(n) > .linha {
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "foto id num"
+    "foto id votos"
+    ". barra barra";
+  row-gap: normal;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-hairline);
+}
+
+.lista.listaZerada > li:nth-child(n):first-child > .linha {
+  padding-top: 16px;
+  border-top: 0;
+}
+
+.lista.listaZerada > li:nth-child(n):last-child > .linha {
+  padding-bottom: 16px;
+}
+
+.lista.listaZerada > li:nth-child(n) .id {
+  margin-top: 0;
+}
+
+.lista.listaZerada > li:nth-child(n) .foto {
+  width: 44px;
+  height: 44px;
+}
+
+.lista.listaZerada > li:nth-child(n) .nome {
+  font-size: var(--text-md);
+}
+
+.lista.listaZerada > li:nth-child(n) .num {
+  margin-top: 0;
+  text-align: right;
+}
+
+.lista.listaZerada > li:nth-child(n) .pct {
+  font-size: calc(var(--text-xl) * 10 / 11);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.lista.listaZerada > li:nth-child(n) .barra {
+  height: 8px;
+  margin-top: 8px;
+}
+
+.lista.listaZerada > li:nth-child(n) .votos {
+  margin-top: 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.lista.listaZerada > li:nth-child(n) .selo,
+.lista.listaZerada > li:nth-child(n) .apurados {
+  display: none;
+}

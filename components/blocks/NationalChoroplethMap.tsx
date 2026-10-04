@@ -461,8 +461,7 @@ export function buildCandidateLegendSummary(
  * mostra a MESMA legenda em fluxo, fora do overlay do desktop.
  */
 export function GeografiaLegend({ className }: { className?: string }) {
-  const texto =
-    "As 27 unidades federativas. Nenhuma tem voto contado: a votação ainda não começou.";
+  const texto = "As 27 unidades federativas. Nenhuma tem voto contado ainda.";
   return (
     <div
       aria-label={texto}

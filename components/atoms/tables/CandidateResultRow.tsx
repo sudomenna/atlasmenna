@@ -244,6 +244,12 @@ export interface CandidateResultRowProps {
    * abaixo do nome. Ausente ⇒ linha idêntica à de antes.
    */
   etiquetas?: ReactNode;
+  /**
+   * **Só `variant="kit"`.** ADR-0076 — placar zerado: um percentual só (o
+   * apurado, 0,0%), sem a projeção nem o "apurado X%" repetido embaixo —
+   * nenhum modelo rodou, então não há projeção a afirmar.
+   */
+  zerado?: boolean;
 }
 
 /**
@@ -561,6 +567,7 @@ type LinhaPainelProps = Pick<
   | "numero"
   | "selos"
   | "etiquetas"
+  | "zerado"
 >;
 
 /**
@@ -617,6 +624,7 @@ function LinhaPainel({
   numero,
   selos,
   etiquetas,
+  zerado = false,
 }: LinhaPainelProps) {
   const atual = clampPct(pctAtual);
   const projetado = clampPct(pctProjetado);
@@ -681,6 +689,11 @@ function LinhaPainel({
             data-testid="result-pct-anulada"
           >
             —
+          </div>
+        ) : zerado ? (
+          <div className={s.pct}>
+            <span className="sr-only">apurado </span>
+            {formatPercent(atual, 1)}
           </div>
         ) : (
           <>
@@ -804,7 +817,7 @@ export function SeloPilula({ texto, testId }: { texto: string; testId?: string }
  * `data-anulado` — é o que a folha lê para saber quem fecha o cartão único
  * quando a lista está recolhida (ver o cabeçalho do módulo).
  */
-export const LISTA_PAINEL_CLASSES = { lista: s.lista } as const;
+export const LISTA_PAINEL_CLASSES = { lista: s.lista, zerada: s.listaZerada } as const;
 
 export function CandidateResultRow({
   rank,
@@ -823,6 +836,7 @@ export function CandidateResultRow({
   numero,
   selos,
   etiquetas,
+  zerado,
 }: CandidateResultRowProps) {
   if (variant === "kit") {
     return (
@@ -839,6 +853,7 @@ export function CandidateResultRow({
         selos={selos}
         votos={votos}
         votosProjetados={votosProjetados}
+        zerado={zerado}
       />
     );
   }
