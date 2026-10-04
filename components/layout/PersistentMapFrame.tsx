@@ -299,7 +299,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
       return;
     }
     let vivo = true;
-    (async () => {
+    const buscar = async () => {
       try {
         const res = await fetch(`/api/projection?uf=${sigla}&cargo=${cargo}`);
         if (!res.ok) return;
@@ -308,9 +308,14 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
       } catch {
         // Idem: a etiqueta fica sem o percentual, o mapa não muda.
       }
-    })();
+    };
+    void buscar();
+    // 🔴 04/10 noite — renova sozinho (pedido do dono), mesma cadência do
+    // payload nacional acima.
+    const id = setInterval(() => void buscar(), REFRESH_MS);
     return () => {
       vivo = false;
+      clearInterval(id);
     };
   }, [sigla, cargo]);
 
@@ -340,20 +345,34 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
     }
     let vivo = true;
     setMunicipioDetalhe(null);
-    (async () => {
+    // 🔴 04/10 noite — renova sozinho a cada `REFRESH_MS` (pedido do dono: o
+    // mapa municipal só mudava ao recarregar a página). Numa renovação, falha
+    // NÃO substitui o último dado bom — o mapa não volta a cinza por um
+    // soluço de rede (três estados e não-regressão, decisão de 14/09). O
+    // "indisponível" só aparece se nunca houve dado bom nesta UF/cargo.
+    const buscar = async () => {
       try {
         const res = await fetch(`/api/projection/municipios?uf=${sigla}&cargo=${cargo}`);
         if (!res.ok) return;
         const json = (await res.json()) as
           | { status: "ok"; municipios: EdgeUfMunicipio[] }
           | { status: "unavailable"; reason: DetailUnavailableReason };
-        if (vivo) setMunicipioDetalhe(json);
+        if (!vivo) return;
+        setMunicipioDetalhe((anterior) =>
+          json.status !== "ok" && anterior?.status === "ok" ? anterior : json,
+        );
       } catch {
-        if (vivo) setMunicipioDetalhe({ status: "unavailable", reason: "fetch_error" });
+        if (!vivo) return;
+        setMunicipioDetalhe((anterior) =>
+          anterior?.status === "ok" ? anterior : { status: "unavailable", reason: "fetch_error" },
+        );
       }
-    })();
+    };
+    void buscar();
+    const id = setInterval(() => void buscar(), REFRESH_MS);
     return () => {
       vivo = false;
+      clearInterval(id);
     };
   }, [sigla, cargo]);
 
