@@ -831,8 +831,8 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
     // as localidades (embaixadas, consulados) não têm geometria no país, e
     // inventar uma posição seria afirmar uma geografia que não existe. A
     // moldura mantém o cromo (← Brasil + seletor) e diz onde estão os números.
-    // O seletor recebe `atual={null}`: ele lista as 27 UFs, e mostrar "ZZ" no
-    // botão seria a sigla crua do TSE na tela.
+    // O seletor lista o Exterior no fim (cargo pres) e o botão diz "Exterior",
+    // nunca a sigla crua "ZZ" do TSE (`rotuloDaUnidade`).
     return (
       <>
         <section aria-label="Exterior — sem mapa" className={mapFrameStyles.canvasFill}>
@@ -869,7 +869,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
               </Link>
             </div>
             <div className="pointer-events-auto flex-none">
-              <UfPicker cargo="pres" atual={null} />
+              <UfPicker cargo="pres" atual={sigla} />
             </div>
           </div>
         </section>
@@ -879,7 +879,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
               ← Brasil
             </Link>
             <div className={mapFrameStyles.barSpacer} />
-            <UfPicker cargo="pres" atual={null} />
+            <UfPicker cargo="pres" atual={sigla} />
           </div>
         </div>
       </>

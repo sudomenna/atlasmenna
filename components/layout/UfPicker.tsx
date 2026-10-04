@@ -52,9 +52,14 @@ import { useState } from "react";
 
 import { Button } from "@/components/atoms/controls/Button";
 import { UfFlag } from "@/components/atoms/data/UfFlag";
-import { ufsPorNome } from "@/components/atoms/maps/_shared";
+import { NOME_EXTERIOR, rotuloDaUnidade, ufsPorNome } from "@/components/atoms/maps/_shared";
 import { Sheet } from "@/components/atoms/overlays/Sheet";
-import { cargoFromToken, vagasDaCorrida } from "@/lib/config/cargos";
+import {
+  cargoExisteNaUf,
+  cargoFromToken,
+  SIGLA_EXTERIOR,
+  vagasDaCorrida,
+} from "@/lib/config/cargos";
 import { ariaRessalvaVagas, margemSegundaVaga } from "@/lib/utils/margem-senado";
 import { type UfPickerCargo, ufHref } from "@/lib/utils/uf-href";
 
@@ -212,7 +217,12 @@ export function UfPickerGrid({
   atual?: string | null;
   onNavigate?: () => void;
 }) {
-  const ufs = ufsPorNome();
+  // ADR-0045 — o Exterior entra no fim da grade só onde a corrida o abrange
+  // (Presidente, `cargoExisteNaUf`). Fora da ordem alfabética de propósito: não
+  // é estado, e o leitor o procura depois deles. `UF_NOMES` segue com 27.
+  const ufs = cargoExisteNaUf(cargoFromToken(cargo), SIGLA_EXTERIOR)
+    ? [...ufsPorNome(), { sigla: SIGLA_EXTERIOR, nome: NOME_EXTERIOR }]
+    : ufsPorNome();
   const atualUpper = atual?.toUpperCase() ?? null;
 
   return (
@@ -247,9 +257,12 @@ export function UfPickerGrid({
                   <UfFlag sigla={uf.sigla} />
                   <span className="min-w-0 truncate">{uf.nome}</span>
                 </span>
-                <span className="flex-none" style={{ font: "var(--type-figure-sm)" }}>
-                  {uf.sigla}
-                </span>
+                {/* O Exterior não tem sigla para o leitor ("ZZ" é código do TSE). */}
+                {uf.sigla === SIGLA_EXTERIOR ? null : (
+                  <span className="flex-none" style={{ font: "var(--type-figure-sm)" }}>
+                    {uf.sigla}
+                  </span>
+                )}
               </Link>
             </li>
           );
@@ -275,7 +288,7 @@ export function UfPicker({ cargo, atual }: UfPickerProps) {
         // equivalente (`App.jsx:316`), aqui via token.
         style={{ background: "var(--surface-card)" }}
       >
-        {atualUpper ?? "Escolher UF"}
+        {atualUpper ? rotuloDaUnidade(atualUpper) : "Escolher UF"}
       </Button>
 
       {aberto ? (
@@ -295,8 +308,9 @@ export function UfPicker({ cargo, atual }: UfPickerProps) {
               color: "var(--text-muted)",
             }}
           >
-            As 27 unidades federativas, em ordem alfabética de nome. Abrir uma delas troca a página
-            sem recarregar o mapa.
+            {cargoExisteNaUf(cargoFromToken(cargo), SIGLA_EXTERIOR)
+              ? "As 27 unidades federativas, em ordem alfabética de nome, e o Exterior. Abrir uma delas troca a página sem recarregar o mapa."
+              : "As 27 unidades federativas, em ordem alfabética de nome. Abrir uma delas troca a página sem recarregar o mapa."}
           </p>
         </Sheet>
       ) : null}

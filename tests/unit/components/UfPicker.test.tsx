@@ -82,7 +82,7 @@ describe("ufHref()", () => {
 describe("<UfPickerGrid /> — bandeira", () => {
   // 🔴 MUTAÇÃO (2026-10-03): tirar o `<UfFlag>` do item — morre na contagem.
   it("cada uma das 27 opções tem a bandeira da PRÓPRIA UF, decorativa, antes do nome", () => {
-    const doc = parse(<UfPickerGrid cargo="pres" />);
+    const doc = parse(<UfPickerGrid cargo="gov" />);
     const lista = itens(doc);
     expect(lista).toHaveLength(27);
     for (const item of lista) {
@@ -100,11 +100,11 @@ describe("<UfPickerGrid /> — bandeira", () => {
 });
 
 describe("<UfPickerGrid />", () => {
-  it("(e) as 27 UFs são links de verdade — nenhuma desabilitada", () => {
+  it("(e) as 27 UFs (e o Exterior, no presidente) são links de verdade — nenhuma desabilitada", () => {
     const doc = parse(<UfPickerGrid cargo="pres" />);
     const links = itens(doc);
 
-    expect(links).toHaveLength(27);
+    expect(links).toHaveLength(28);
     for (const a of links) {
       expect(a.tagName).toBe("A");
       expect(a.getAttribute("href")).toMatch(/^\/uf\/[A-Z]{2}$/);
@@ -131,9 +131,10 @@ describe("<UfPickerGrid />", () => {
 
   it("(g) a ordem no DOM é a ordem por nome", () => {
     const doc = parse(<UfPickerGrid cargo="pres" />);
-    expect(itens(doc).map((a) => a.getAttribute("data-sigla"))).toEqual(
-      ufsPorNome().map((u) => u.sigla),
-    );
+    expect(itens(doc).map((a) => a.getAttribute("data-sigla"))).toEqual([
+      ...ufsPorNome().map((u) => u.sigla),
+      "ZZ",
+    ]);
   });
 
   it("(h) a UF corrente ganha aria-current=page e só ela", () => {
@@ -200,13 +201,13 @@ describe("<UfPicker /> — abrir e fechar", () => {
   const botao = () => container.querySelector<HTMLElement>('[data-testid="button"]');
   const folha = () => container.querySelector('[data-testid="sheet"]');
 
-  it("(l) o botão abre a folha com as 27 UFs e o kicker do protótipo", () => {
+  it("(l) o botão abre a folha com as 27 UFs + Exterior e o kicker do protótipo", () => {
     expect(folha()).toBeNull();
     act(() => botao()?.click());
 
     expect(folha()).not.toBeNull();
     expect(folha()?.textContent).toContain("Escolher UF");
-    expect(container.querySelectorAll('[data-testid="uf-picker-item"]')).toHaveLength(27);
+    expect(container.querySelectorAll('[data-testid="uf-picker-item"]')).toHaveLength(28);
     expect(botao()?.getAttribute("aria-expanded")).toBe("true");
   });
 
@@ -253,5 +254,36 @@ describe("<UfPicker /> — abrir e fechar", () => {
     expect(mg?.getAttribute("href")).toBe("/uf/MG");
     act(() => mg?.click());
     expect(folha()).toBeNull();
+  });
+});
+
+describe("<UfPickerGrid /> — Exterior (ADR-0045)", () => {
+  it("no presidente o Exterior é o último item, leva a /uf/ZZ, sem bandeira e sem a sigla ZZ", () => {
+    const lista = itens(parse(<UfPickerGrid cargo="pres" />));
+    const ultimo = lista[lista.length - 1];
+    expect(ultimo?.getAttribute("data-sigla")).toBe("ZZ");
+    expect(ultimo?.getAttribute("href")).toBe("/uf/ZZ");
+    expect(ultimo?.textContent).toBe("Exterior");
+    expect(ultimo?.querySelector("img")).toBeNull();
+  });
+
+  it("governador e senador NÃO listam o Exterior", () => {
+    for (const cargo of ["gov", "sen"] as const) {
+      const siglas = itens(parse(<UfPickerGrid cargo={cargo} />)).map((a) =>
+        a.getAttribute("data-sigla"),
+      );
+      expect(siglas, cargo).toHaveLength(27);
+      expect(siglas, cargo).not.toContain("ZZ");
+    }
+  });
+
+  it("na página do Exterior o item fica marcado e o botão diz Exterior, nunca ZZ", () => {
+    const lista = itens(parse(<UfPickerGrid cargo="pres" atual="zz" />));
+    expect(
+      lista.find((a) => a.getAttribute("data-sigla") === "ZZ")?.getAttribute("aria-current"),
+    ).toBe("page");
+    const html = renderToStaticMarkup(<UfPicker cargo="pres" atual="ZZ" />);
+    expect(html).toContain("Exterior");
+    expect(html).not.toContain(">ZZ<");
   });
 });
