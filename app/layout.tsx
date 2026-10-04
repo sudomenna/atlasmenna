@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, JetBrains_Mono, Spectral } from "next/font/google";
 import { ThemeToggle } from "@/components/atoms/controls/ThemeToggle";
+import { AtualizacaoAutomatica } from "@/components/layout/AtualizacaoAutomatica";
 import { CargoTabs } from "@/components/layout/CargoTabs";
 import { ShellControls } from "@/components/layout/ShellControls";
 import { ShellLiveBadge } from "@/components/layout/ShellLiveBadge";
@@ -50,6 +51,8 @@ export const metadata: Metadata = {
  *          └── turno · parcial/projeção       — (ADR-0029 § 2)
  *   `{children}`                          — `<main data-trilha>` + `<Footer>`
  *   `<CargoTabs placement="bottom">`      — só <960px, barra fixa no rodapé
+ *   `<AtualizacaoAutomatica>`             — sem marcação; `router.refresh()`
+ *                                           a cada minuto nas rotas de apuração
  *
  * O que este layout deliberadamente NÃO faz:
  *   - não lê `cookies()`, `headers()` nem `searchParams` — qualquer um deles
@@ -70,10 +73,12 @@ export const metadata: Metadata = {
  * flash e sem depender de hidratação. Precisa casar com `VIEW_MODE_DEFAULT`
  * — por isso vem da constante, não de um literal.
  *
- * O JS de aplicação que este shell acrescenta são DOIS componentes client:
- * `<ViewModeSwitch>` dentro de `<ShellControls>` e `<ThemeToggle>` no slot
- * direito da barra. `TopBar`, `CargoTabs`, `TabBar`, `TurnoSwitch` e
- * `ShellLiveBadge` continuam RSC puros.
+ * O JS de aplicação que este shell acrescenta são TRÊS componentes client:
+ * `<ViewModeSwitch>` dentro de `<ShellControls>`, `<ThemeToggle>` no slot
+ * direito da barra e `<AtualizacaoAutomatica>` (04/10/2026), que não renderiza
+ * nada e só agenda `router.refresh()` — o controle de pausa dela mora no
+ * `<Footer>` de cada página (`<PausaAtualizacao>`). `TopBar`, `CargoTabs`,
+ * `TabBar`, `TurnoSwitch` e `ShellLiveBadge` continuam RSC puros.
  *
  * ## O tema, e por que ele começa por um `<script>` cru (ADR-0025 § 5)
  *
@@ -126,6 +131,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </TopBar>
         {children}
         <CargoTabs placement="bottom" />
+        <AtualizacaoAutomatica />
       </body>
     </html>
   );

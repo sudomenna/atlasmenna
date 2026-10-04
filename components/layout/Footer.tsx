@@ -4,12 +4,16 @@
  * Footer constitucional § 1 — "Não oficial. Fonte: TSE." precisa estar
  * em TODAS as páginas da AtlasMenna.
  *
- * Server Component puro. Minimal por design — o spec-implementer da spec
+ * Server Component. A única ilha cliente é `<PausaAtualizacao>` — o
+ * "Pausar / Retomar" da atualização automática (WCAG 2.2.2), que só aparece
+ * nas rotas que se atualizam. Minimal por design — o spec-implementer da spec
  * 003 (home) ou um shared agent pode evoluir com mais links (sobre o
  * modelo, dados abertos, etc.).
  */
 
 import Link from "next/link";
+
+import { PausaAtualizacao } from "@/components/layout/PausaAtualizacao";
 
 export function Footer() {
   return (
@@ -32,6 +36,7 @@ export function Footer() {
         </a>
         . AtlasMenna 2026.
       </p>
+      <PausaAtualizacao />
       {/*
         `/candidatos` (spec 018, T-13) entra AQUI e não no `<CargoTabs>`: o
         próprio `CargoTabs.tsx` registra que "Deputado Federal" já não cabe em

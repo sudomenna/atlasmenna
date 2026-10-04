@@ -46,10 +46,25 @@
  * `<PersistentMapFrame>` não alcança este painel. As linhas chegam a
  * `<CandidateListCollapse>` por `children`, já renderizadas pelo servidor.
  *
- * ⚠️ **A invariante de que isso depende**: a lista é emitida pelo servidor
- * numa ordem fixa e nunca re-renderizada com ordem diferente. Se algum dia o
- * painel virar Client Component, ou passar a receber dado novo por polling,
- * este módulo passa a brigar com a reconciliação e precisa ser repensado.
+ * ⚠️ **A invariante de que isso dependia**: a lista é emitida pelo servidor
+ * numa ordem fixa e nunca re-renderizada com ordem diferente.
+ *
+ * 🔴 **Deixou de valer em 04/10/2026** com `<AtualizacaoAutomatica>`
+ * (`router.refresh()` a cada minuto): o servidor reemite o painel com dado
+ * novo, e a ordem da Projeção pode mudar entre dois refreshes. O React então
+ * MOVE nós — calculando a posição a partir da vdom dele, que não sabe da
+ * reordenação imperativa —, e a lista pode sair do refresh na ordem da
+ * Projeção, ou numa mistura, com a base "Parcial" ativa. Com o efeito preso a
+ * `[base]`, nada a consertava até o leitor trocar de base.
+ *
+ * Daí o efeito SEM array de dependências: roda depois de todo commit em que
+ * este componente renderiza — e ele renderiza a cada refresh, porque o
+ * servidor o reemite como elemento novo (props novas; não há `memo`). Como o
+ * efeito de layout roda depois de TODAS as mutações do commit, ele enxerga o
+ * DOM já reconciliado e recoloca a ordem da base ativa antes da pintura. O
+ * custo é `reordenarLista`, que é idempotente e sai sem tocar no DOM quando a
+ * ordem já está certa (uma ordenação de algumas dezenas de `<li>` por lista,
+ * uma vez por minuto).
  *
  * ## 🔴 O foco do teclado PRECISA ser devolvido
  *
@@ -106,7 +121,8 @@ export { ATRIBUTO_LISTA, reordenarLista };
 
 /**
  * Componente sem marcação. Montado por `<ResultPanel>`, reordena **todas** as
- * listas marcadas do documento a cada troca de base.
+ * listas marcadas do documento a cada troca de base e a cada refresh do
+ * servidor.
  *
  * Reordenar todas, e não só "a sua", é deliberado: uma instância não tem
  * referência ao `<ol>` irmão (as linhas atravessam a fronteira servidor →
@@ -117,11 +133,14 @@ export { ATRIBUTO_LISTA, reordenarLista };
 export function ReordenaListaPorBase() {
   const base = useViewMode();
 
+  // Sem array de dependências DE PROPÓSITO — ver "Deixou de valer em
+  // 04/10/2026" no topo. `base` muda → o componente renderiza → o efeito roda;
+  // refresh do servidor → o componente renderiza → o efeito roda.
   useEfeitoDeLayout(() => {
     for (const lista of document.querySelectorAll<HTMLElement>(`[${ATRIBUTO_LISTA}]`)) {
       reordenarLista(lista, base);
     }
-  }, [base]);
+  });
 
   return null;
 }

@@ -47,6 +47,8 @@ const SHELL_FILES = [
   "components/layout/TurnoSwitch.tsx",
   "components/atoms/controls/ViewModeSwitch.tsx",
   "components/atoms/controls/ThemeToggle.tsx",
+  "components/layout/AtualizacaoAutomatica.tsx",
+  "components/layout/atualizacao-estado.ts",
 ] as const;
 
 /**
@@ -62,6 +64,11 @@ const DYNAMIC_APIS: ReadonlyArray<{ nome: string; padrao: RegExp }> = [
   { nome: "connection()", padrao: /\bconnection\s*\(\s*\)/ },
   { nome: "searchParams (prop)", padrao: /searchParams\s*[:}]/ },
   { nome: 'import de "next/headers"', padrao: /from\s+["']next\/headers["']/ },
+  // Não torna a rota dinâmica, mas num Client Component do shell faz o Next
+  // desistir do pré-render até o `<Suspense>` mais próximo — no layout, a
+  // página inteira vira render de cliente. `<AtualizacaoAutomatica>` lê só
+  // `usePathname()` por isso.
+  { nome: "useSearchParams()", padrao: /\buseSearchParams\s*\(/ },
 ];
 
 function read(rel: string): string {
@@ -157,18 +164,42 @@ describe("shell estático (ADR-0029 § 2 — restrição dura)", () => {
     expect(read("app/(pres)/page.tsx")).toContain("--live-pct-label");
   });
 
-  it("(e) só DOIS componentes do shell são Client Component — o custo em JS é eles", () => {
-    // `<ViewModeSwitch>` (ADR-0029 § 2) e `<ThemeToggle>` (ADR-0025 § 5). Os
-    // dois têm a mesma forma: escrevem um atributo no `<html>` e deixam a
-    // cascata do `app/globals.css` resolver o resto, sem obrigar nenhum
-    // componente de dado — nem o `<TopBar>`, que os hospeda — a virar client.
-    // Qualquer terceiro nome aqui é um custo novo em JS acima da dobra em TODAS
+  it("(e) só TRÊS componentes do shell são Client Component — o custo em JS é eles", () => {
+    // `<ViewModeSwitch>` (ADR-0029 § 2) e `<ThemeToggle>` (ADR-0025 § 5)
+    // escrevem um atributo no `<html>` e deixam a cascata do `app/globals.css`
+    // resolver o resto, sem obrigar nenhum componente de dado — nem o
+    // `<TopBar>`, que os hospeda — a virar client.
+    //
+    // O terceiro, `<AtualizacaoAutomatica>` (04/10/2026, decisão do dono:
+    // atualização automática para todos), não renderiza nada: agenda
+    // `router.refresh()` a cada minuto nas rotas de apuração. Custa o próprio
+    // código — `next/navigation` e React já estão no bundle de toda rota.
+    // O contrato dele (`atualizacao-estado.ts`) é módulo neutro, SEM diretiva.
+    //
+    // Qualquer quarto nome aqui é um custo novo em JS acima da dobra em TODAS
     // as rotas, contra o teto de 150 KiB do RNF-007a: exige justificativa.
     const client = SHELL_FILES.filter((rel) => /^\s*["']use client["']/m.test(read(rel)));
     expect(client.slice().sort()).toEqual([
       "components/atoms/controls/ThemeToggle.tsx",
       "components/atoms/controls/ViewModeSwitch.tsx",
+      "components/layout/AtualizacaoAutomatica.tsx",
     ]);
+  });
+
+  it("(e2) o contrato da atualização é neutro, e o componente é montado depois das abas do rodapé", () => {
+    // Sem diretiva e sem React: se um Server Component (o `<Footer>`, por
+    // exemplo) importar uma constante daqui, ela continua sendo a constante —
+    // e não uma referência de cliente que lança (a armadilha de
+    // `components/blocks/_lista-por-base.ts`).
+    const contrato = stripComments(read("components/layout/atualizacao-estado.ts"));
+    expect(/^\s*["']use client["']/m.test(contrato)).toBe(false);
+    expect(/from\s+["']react["']/.test(contrato)).toBe(false);
+
+    const layout = stripComments(read("app/layout.tsx"));
+    expect(layout).toContain('from "@/components/layout/AtualizacaoAutomatica"');
+    expect(layout.indexOf('<CargoTabs placement="bottom" />')).toBeLessThan(
+      layout.indexOf("<AtualizacaoAutomatica />"),
+    );
   });
 
   it("(f) o tema é aplicado antes do primeiro paint, e persiste em localStorage", () => {

@@ -251,3 +251,101 @@ describe("<ReordenaListaPorBase /> — ligado à store de base", () => {
     expect(ordem(ol)).toEqual(["A", "B", "C"]);
   });
 });
+
+/**
+ * 🔴 **Refresh do servidor com a base "Parcial" ativa** (04/10/2026).
+ *
+ * Com `<AtualizacaoAutomatica>` (`router.refresh()` a cada minuto) o servidor
+ * reemite o painel com dado novo — e `<ReordenaListaPorBase>` junto, como
+ * elemento novo. Com o efeito preso a `[base]`, a base não mudava, o efeito
+ * não rodava, e a lista ficava na ordem do refresh ANTERIOR (ou na que o
+ * React deixou ao mover nós) até o leitor trocar de base.
+ *
+ * O `<Painel>` abaixo imita o que o RSC entrega: a `<ol>` marcada, `<li>` com
+ * chave e as duas custom properties, e o componente como irmão — re-renderizado
+ * pelo pai a cada "refresh".
+ *
+ * Mutação que morre: devolver `[base]` como dependência do efeito.
+ */
+describe("<ReordenaListaPorBase /> — refresh com dado novo (04/10)", () => {
+  type Item = readonly [nome: string, proj: number, parcial: number];
+
+  function Painel({ itens }: { itens: readonly Item[] }) {
+    // Emitido na ordem da Projeção, como o `<ResultPanel>`.
+    const emOrdem = [...itens].sort((a, b) => a[1] - b[1]);
+    return (
+      <>
+        <ol {...{ [ATRIBUTO_LISTA]: "" }}>
+          {emOrdem.map(([nome, proj, parcial]) => (
+            <li
+              key={nome}
+              style={{ "--ord-proj": proj, "--ord-parcial": parcial } as React.CSSProperties}
+            >
+              {nome}
+            </li>
+          ))}
+        </ol>
+        <ReordenaListaPorBase />
+      </>
+    );
+  }
+
+  function montarPainel(itens: readonly Item[]): HTMLOListElement {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    root = createRoot(host);
+    act(() => root?.render(<Painel itens={itens} />));
+    return host.querySelector("ol") as HTMLOListElement;
+  }
+
+  it("🔴 mesma ordem da Projeção, Parcial nova: a lista segue a Parcial nova", () => {
+    const ol = montarPainel([
+      ["A", 0, 2],
+      ["B", 1, 1],
+      ["C", 2, 0],
+    ]);
+    act(() => setViewMode("parcial"));
+    expect(ordem(ol)).toEqual(["C", "B", "A"]);
+
+    // Refresh: a Projeção não mudou; na Parcial, A passou à frente.
+    act(() =>
+      root?.render(
+        <Painel
+          itens={[
+            ["A", 0, 0],
+            ["B", 1, 2],
+            ["C", 2, 1],
+          ]}
+        />,
+      ),
+    );
+    expect(ordem(ol)).toEqual(["A", "C", "B"]);
+  });
+
+  it("🔴 a Projeção também mudou (o React move nós): a lista termina na ordem da Parcial", () => {
+    const ol = montarPainel([
+      ["A", 0, 2],
+      ["B", 1, 1],
+      ["C", 2, 0],
+    ]);
+    act(() => setViewMode("parcial"));
+    expect(ordem(ol)).toEqual(["C", "B", "A"]);
+
+    act(() =>
+      root?.render(
+        <Painel
+          itens={[
+            ["A", 2, 1],
+            ["B", 0, 2],
+            ["C", 1, 0],
+          ]}
+        />,
+      ),
+    );
+    expect(ordem(ol)).toEqual(["C", "A", "B"]);
+
+    // E voltar à Projeção segue a Projeção NOVA.
+    act(() => setViewMode("proj"));
+    expect(ordem(ol)).toEqual(["B", "C", "A"]);
+  });
+});
