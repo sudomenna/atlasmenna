@@ -544,11 +544,10 @@ projeção, se copiada tal e qual do molde de `/lista` (ADR-0065 D3), **não** o
   - **Desencontro entre fontes.** A linha vem do Edge Config (payload nacional, da última renderização da
     página) e a lista vem do Blob por UF; os dois podem ser de ciclos diferentes — o cargo 6 roda fatiado
     (ADR-0036). Somam-se o Data Cache de 60 s do Blob, o `s-maxage` de 60 s e o `stale-while-revalidate` de
-    300 s da rota e os 60 s da memória do cliente: de alguns segundos, no caso comum, a alguns minutos, no
+    60 s da rota e os 60 s da memória do cliente: de alguns segundos, no caso comum, a alguns minutos, no
     pior. O `cadeiras` da linha e a contagem de nomes da lista podem divergir por um ciclo, e nenhum dos dois
-    é ajustado para igualar o outro; cada um leva o seu nome. A janela de 300 s é a do molde `/lista`, cujo
-    dado muda pouco; aqui o dado muda a cada ciclo, e a janela pode ser apertada (por exemplo, SWR de 60 s)
-    sem mudar o desenho.
+    é ajustado para igualar o outro; cada um leva o seu nome. O molde `/lista` usa 300 s porque o
+    dado dele muda pouco; aqui o dado muda a cada ciclo, e a rota já sobe com SWR de 60 s.
   - **Fan-out de leitura.** Cada falha de cache faz 27 leituras de Blob e 1 de Edge Config. O CDN absorve em
     regime, mas o custo da primeira requisição de cada região depois de expirar não foi medido.
   - **Peso.** A ilha por linha entra no JS e no HTML da capa (botão e `aria-*` em cada linha). O teto de

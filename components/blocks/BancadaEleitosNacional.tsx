@@ -599,7 +599,7 @@ export function CenarioSemLinha() {
           </span>
           <span className="min-w-0 flex flex-col" style={ESTILO_MEIO}>
             <span style={{ font: "var(--type-body-sm)" }}>{a.sigla}</span>
-            <RotuloCenario cenario={a.cenario} parcial={0} visao={visao} />
+            <RotuloCenario cenario={a.cenario} parcial={0} />
           </span>
           <span />
         </li>
