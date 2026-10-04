@@ -209,7 +209,13 @@ export async function readUfDetail(
 
   let response: Response;
   try {
-    response = await fetch(url, { next: { revalidate: UF_DETAIL_REVALIDATE_SECONDS } });
+    response = await fetch(url, {
+      // 🔴 04/10 noite — `no-store`: o Data Cache do Next serve a cópia velha
+      // ao 1º leitor depois de um tempo ocioso (sem teto de idade) — UF pouco
+      // visitada mostrava municípios de 20 min atrás. O CDN do Blob já
+      // segura 60 s (`cacheControlMaxAge`), o custo não muda.
+      cache: "no-store",
+    });
   } catch {
     return { status: "unavailable", reason: "fetch_error", url };
   }
