@@ -101,7 +101,10 @@ export function ComposicaoVagasLista({
                 </span>
               </summary>
               <p>{selo} · não oficial</p>
-              <ol>
+              {/* `role="list"`: o VoiceOver/Safari tira a semântica de lista de
+                  `<ol>` com `list-style: none`. */}
+              {/* biome-ignore lint/a11y/noRedundantRoles: devolve a semântica perdida no Safari */}
+              <ol role="list">
                 {p.nomes.map((v, i) => (
                   // Índice como chave: a lista é derivada inteira a cada
                   // render, nunca reordenada no cliente.
