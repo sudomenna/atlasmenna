@@ -23,19 +23,17 @@ function parse(node: React.ReactElement): Document {
 }
 
 describe("<ShellControls />", () => {
-  it("(a) traz os dois controles globais do ADR-0029 § 2", () => {
+  it("(a) traz o controle parcial/projeção e NÃO traz o seletor de turno (retirado em 2026-10-04)", () => {
     const doc = parse(<ShellControls />);
     expect(doc.querySelector("[data-testid='shell-controls']")).not.toBeNull();
-    expect(doc.querySelector("[data-testid='turno-switch']")).not.toBeNull();
     expect(doc.querySelector("[data-testid='view-mode-switch']")).not.toBeNull();
+    // Decisão do dono no 1º turno: sem dado de 2º turno, o seletor sai da
+    // barra. Voltar com ele é decisão explícita — este teste tem que mudar junto.
+    expect(doc.querySelector("[data-testid='turno-switch']")).toBeNull();
   });
 
-  it("(b) os dois grupos têm nome acessível e estado exposto", () => {
+  it("(b) o controle tem nome acessível e estado exposto", () => {
     const doc = parse(<ShellControls />);
-
-    expect(doc.querySelector("[data-testid='turno-switch']")?.getAttribute("aria-label")).toBe(
-      "Turno da apuração",
-    );
 
     const view = doc.querySelector("[role='tablist']");
     expect(view?.getAttribute("aria-label")).toBe(
@@ -53,10 +51,10 @@ describe("<ShellControls />", () => {
     expect(doc.querySelector("nav[aria-label='Cargos']")).not.toBeNull();
   });
 
-  it("(d) alvo de toque >= --tap-min nos dois controles (constituição § 4)", () => {
+  it("(d) alvo de toque >= --tap-min no controle (constituição § 4)", () => {
     const html = renderToStaticMarkup(<ShellControls />);
-    // 2 do TurnoSwitch (min-height) + 2 do SegmentedControl size="md" (height).
-    expect([...html.matchAll(/var\(--tap-min\)/g)]).toHaveLength(4);
+    // 2 do SegmentedControl size="md" (height). Eram 4 com o TurnoSwitch.
+    expect([...html.matchAll(/var\(--tap-min\)/g)]).toHaveLength(2);
   });
 
   it("(e) os controles somem em rota sem corrida — via CSS, não via JS", () => {

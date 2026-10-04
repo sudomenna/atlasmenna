@@ -8,8 +8,17 @@
  * linha no desktop e os dois controles ocupam a largura toda no mobile.
  *
  * Server Component. O único pedaço client aqui dentro é o
- * `<ViewModeSwitch>`; `<TurnoSwitch>` e a navegação de cargo são RSC puros e
- * este wrapper não introduz fronteira nova.
+ * `<ViewModeSwitch>`; a navegação de cargo é RSC puro e este wrapper não
+ * introduz fronteira nova.
+ *
+ * ## ⚠️ 2026-10-04 — o seletor de turno saiu da barra
+ *
+ * Decisão do dono no dia do 1º turno: não há dado de 2º turno, então o
+ * `<TurnoSwitch>` deixou de ser montado aqui. O componente continua em
+ * `components/layout/TurnoSwitch.tsx` — devolvê-lo para o 2º turno é
+ * reimportar e recolocar a linha `<TurnoSwitch className={styles.control} />`
+ * antes do `<ViewModeSwitch>`. O turno corrente segue no subtítulo do
+ * `<TopBar>` (`app/layout.tsx`).
  *
  * ## Por que os controles somem em páginas sem corrida
  *
@@ -26,7 +35,6 @@
 
 import type { ReactNode } from "react";
 import { ViewModeSwitch } from "@/components/atoms/controls/ViewModeSwitch";
-import { TurnoSwitch } from "@/components/layout/TurnoSwitch";
 import styles from "./ShellControls.module.css";
 
 export interface ShellControlsProps {
@@ -43,7 +51,6 @@ export function ShellControls({ cargoNav }: ShellControlsProps) {
     <div className={styles.row}>
       {cargoNav}
       <div className={styles.controls} data-testid="shell-controls">
-        <TurnoSwitch className={styles.control} />
         {/* Duas classes: `.control` dá o layout, `.viewMode` dá o interruptor
             de visibilidade que a fase pré-eleição usa (RF-161 — ver o CSS). */}
         <ViewModeSwitch className={`${styles.control} ${styles.viewMode}`} />
