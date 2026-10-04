@@ -209,7 +209,10 @@ function CelulaUf({ row }: { row: EdgeUfRow }) {
         <span className="flex items-baseline justify-between gap-2">
           <span className="font-medium tabular-nums">{row.sigla}</span>
           <span className="text-xs tabular-nums" style={{ color: "var(--color-text-muted)" }}>
-            {formatPp(row.margem_projetada)} · {formatPercent(row.pct_apurado, 0)}
+            {/* 🔴 04/10 (dono): a margem é projetada ⇒ cor da projeção; o
+                % apurado ao lado segue na tinta apagada. */}
+            <span style={{ color: "var(--color-pct-proj)" }}>{formatPp(row.margem_projetada)}</span>{" "}
+            · {formatPercent(row.pct_apurado, 0)}
           </span>
         </span>
         {outros ? (
@@ -222,7 +225,10 @@ function CelulaUf({ row }: { row: EdgeUfRow }) {
                 que impede o rótulo de mentir por omissão: "Outros" sozinho não
                 diz se é gente ou arredondamento. */}
             <span className="truncate">Outros ({outros.n_candidatos})</span>
-            <span className="tabular-nums">{formatPercent(outros.pct, 1)}</span>
+            {/* `outros.pct` é Σ `pct_projetado` da cauda ⇒ cor da projeção (04/10). */}
+            <span className="tabular-nums" style={{ color: "var(--color-pct-proj)" }}>
+              {formatPercent(outros.pct, 1)}
+            </span>
           </span>
         ) : null}
       </UfHoverLink>

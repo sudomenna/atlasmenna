@@ -788,7 +788,8 @@ export async function renderPaginaUfDeputado(
                         {projetadas !== undefined ? (
                           <span
                             data-testid="uf-cadeiras-projetadas"
-                            style={{ font: "var(--type-data)", color: "var(--accent-text)" }}
+                            // Token de projeção (04/10) — mesmo ocre de antes.
+                            style={{ font: "var(--type-data)", color: "var(--color-pct-proj)" }}
                           >
                             {faixaProjetada
                               ? `${projetadas} ${projetadas === 1 ? "cadeira" : "cadeiras"} na projeção · não oficial (faixa provável da projeção: ${faixaProjetada})`

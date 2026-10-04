@@ -18,7 +18,7 @@
  *
  * | superfície | piso | o que usa |
  * |---|---|---|
- * | o número `text-3xl` | 4,5:1 — TEXTO (RNF-022 / const. § 4) | `--color-pct-votos` (desde 2026-10-03; era `textForParty`) |
+ * | o número `text-3xl` | 4,5:1 — TEXTO (RNF-022 / const. § 4) | `--color-pct-proj` (desde 2026-10-04 — é o projetado; 03/10 `--color-pct-votos`; antes `textForParty`) |
  * | o preenchimento da barra | 3:1 — não-texto com extensão (RNF-035) | `colorForParty` |
  *
  * Até esta data as duas saíam de `corResolvida`, a cor-base. Medido contra
@@ -131,7 +131,12 @@ export function CandidateBar({
   // 🔴 2026-10-03 — decisão do dono: o percentual de votos sai na cor ÚNICA
   // `--color-pct-votos` (neutra, constituição § 2), não mais na cor de texto
   // do partido (`textForParty`, até esta data). A cor do partido fica na barra.
-  const corTextoResolvida = "var(--color-pct-votos)";
+  //
+  // 🔴 2026-10-04 — emenda do dono: "sempre que exibir percentual projetado a
+  // cor deve ser a cor padrão para projeção". Este número É o projetado
+  // (`pctProjetado`, nas duas visões), então sai em `--color-pct-proj`, a mesma
+  // tinta para toda sigla. O CI95 do rodapé também.
+  const corTextoResolvida = "var(--color-pct-proj)";
   // 🔴 2026-10-03 — decisão do dono: votos PROJETADOS saem abreviados, com "≈"
   // e na cor da projeção (`<VotosProjetados>`), como no resto do site. Antes
   // eram o número cheio ("79.812.408 votos"), sem dizer que era projeção —
@@ -207,7 +212,9 @@ export function CandidateBar({
             <VotosProjetados dentroDaProjecao votos={votosProj} />
           )}
           {typeof pctLower === "number" && typeof pctUpper === "number" && (
-            <span className="tabular-nums">CI95: {formatCI(pctLower, pctUpper)}</span>
+            <span className="tabular-nums" style={{ color: "var(--color-pct-proj)" }}>
+              CI95: {formatCI(pctLower, pctUpper)}
+            </span>
           )}
         </div>
       )}

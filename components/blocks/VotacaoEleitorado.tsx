@@ -691,6 +691,17 @@ export interface ArcoProps {
    * `block`. Os estados vazios moram dentro da figura e somem com ela.
    */
   visao?: ViewMode;
+  /**
+   * O número grande do centro é PROJETADO (o total do círculo da projeção da
+   * corrida). ⇒ cor da projeção (decisão do dono, 2026-10-04). Default `false`
+   * — no arco 3 da votação o total é o eleitorado apto, que não é projeção.
+   */
+  totalProjetado?: boolean;
+  /**
+   * Os números da legenda ("38,0% · 41.234.567") são PROJETADOS ⇒ cor da
+   * projeção (decisão do dono, 2026-10-04). Default `false`.
+   */
+  fatiasProjetadas?: boolean;
 }
 
 /**
@@ -715,6 +726,8 @@ function ArcoFigura({
   total,
   fatias,
   vazio,
+  totalProjetado = false,
+  fatiasProjetadas = false,
 }: Omit<ArcoProps, "visao">) {
   // Não existe mais "denominador da geometria" separado do total. Ele existia
   // para o arco 3 fechar o anel quando as projeções não somavam `aptos`; desde
@@ -883,7 +896,7 @@ function ArcoFigura({
               style={{
                 font: "var(--type-figure)",
                 fontVariantNumeric: "tabular-nums",
-                color: "var(--text-primary)",
+                color: totalProjetado ? "var(--color-pct-proj)" : "var(--text-primary)",
                 lineHeight: 1.05,
               }}
             >
@@ -950,7 +963,7 @@ function ArcoFigura({
                     font: "var(--type-body-sm)",
                     fontSize: "var(--text-xs)",
                     fontVariantNumeric: "tabular-nums",
-                    color: "var(--text-secondary)",
+                    color: fatiasProjetadas ? "var(--color-pct-proj)" : "var(--text-secondary)",
                   }}
                 >
                   {formatPercent(f.pct, 1)} · {formatVotes(f.abs)}
@@ -1156,6 +1169,8 @@ export function VotacaoEleitorado({
           <Arco
             visao="proj"
             id="votacao-circulo-3"
+            // O total é o eleitorado apto (medido); as fatias são a projeção.
+            fatiasProjetadas
             defsPrefix={titleId}
             titulo="Projeção para o fim da apuração"
             baseLabel={base3}

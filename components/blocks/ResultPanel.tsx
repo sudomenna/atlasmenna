@@ -888,16 +888,22 @@ export function ResultPanel({
           {temDuelo ? (
             <>
               <span data-testid="result-margem-parcial" data-view-only="parcial">
+                {/* 🔴 04/10 (dono): todo número projetado na cor da projeção —
+                    aqui, a nota "projeção +3,2 pp" sob a margem apurada. */}
                 <Figure
                   label={rotuloMargem(dentroParcial)}
                   note={`projeção ${formatPp(margemProj)}`}
+                  noteColor="var(--color-pct-proj)"
                   size="lg"
                   unit="pp"
                   value={ppSemUnidade(margemParcial)}
                 />
               </span>
               <span data-testid="result-margem-proj" data-view-only="proj">
+                {/* A margem PROJETADA, grande, na cor da projeção (04/10); a
+                    nota "parcial …" segue na tinta apagada de sempre. */}
                 <Figure
+                  color="var(--color-pct-proj)"
                   label={rotuloMargem(dentroProj)}
                   note={`parcial ${formatPp(margemParcial)}`}
                   size="lg"
@@ -927,8 +933,11 @@ export function ResultPanel({
             />
           </div>
           <div data-view-only="proj">
+            {/* Os rótulos "NOME 38,0%" desta barra são percentuais
+                PROJETADOS ⇒ o número na cor da projeção (dono, 04/10). */}
             <VoteBar
               marker={50}
+              pctLabelColor="var(--color-pct-proj)"
               segments={segmentos(duploProj[0], duploProj[1], "projetado", corDe)}
             />
           </div>

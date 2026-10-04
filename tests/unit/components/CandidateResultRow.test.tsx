@@ -913,3 +913,68 @@ describe("🔴 votos projetados na visão Projeção (decisão do dono, 2026-10-
     expect(css.match(/rotuloProj/g)).toHaveLength(1);
   });
 });
+
+describe("🔴 a cor do número grande por visão (decisão do dono, 2026-10-04)", () => {
+  // "Sempre que exibir percentual projetado a cor deve ser a cor padrão para
+  // projeção." O projetado grande (visão Projeção) sai em `--color-pct-proj`;
+  // o apurado grande (visão Parcial) segue em `--color-pct-votos`. E dois
+  // partidos diferentes saem com a MESMA tinta em cada visão.
+  //
+  // A cor do `kit` vem da FOLHA (`.pct` / `.pctProj`), então o teste emula a
+  // cascata do módulo: das regras de classe simples (`.x { … }`) que casam com
+  // as classes do nó, vale a ÚLTIMA declarada no arquivo (mesma
+  // especificidade ⇒ ordem decide) — que é exatamente como o navegador
+  // resolve `.pct.pctProj`.
+  const MODULO = readFileSync(
+    resolve(process.cwd(), "components/atoms/tables/CandidateResultRow.module.css"),
+    "utf-8",
+  )
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\s+/g, " ");
+  const REGRAS = [...MODULO.matchAll(/(?<=^|\}) ?\.([A-Za-z]+) \{([^}]*)\}/g)].flatMap((m) => {
+    const cor = /(?:^|;) ?color: ([^;]+?) ?(?:;|$)/.exec(m[2] ?? "")?.[1];
+    return cor ? [{ nome: m[1] as string, cor: cor.trim() }] : [];
+  });
+
+  /** A cor que a folha do módulo dá ao nó — a última regra simples que casa. */
+  function corDaFolha(el: Element | null): string | undefined {
+    const classes = (el?.getAttribute("class") ?? "").split(/\s+/).filter(Boolean);
+    const casa = (nome: string) => classes.some((c) => c === nome || c.startsWith(`_${nome}_`));
+    return REGRAS.filter((r) => casa(r.nome)).at(-1)?.cor;
+  }
+
+  const kit = (partido: string) =>
+    parse(<CandidateResultRow {...BASE} partido={partido} numero={15} variant="kit" />);
+  const densa = (partido: string) => parse(<CandidateResultRow {...BASE} partido={partido} />);
+
+  it("kit: Projeção ⇒ `--color-pct-proj`; Parcial ⇒ `--color-pct-votos` — iguais para PT e PL", () => {
+    for (const partido of ["PT", "PL"]) {
+      const doc = kit(partido);
+      const proj = doc.querySelector('[data-view-only="proj"] > [class*="pct"]');
+      const parcial = doc.querySelector('[data-view-only="parcial"] > [class*="pct"]');
+      // Os nós certos: o grande de cada visão, com o número de cada base.
+      expect(proj?.textContent).toBe("projeção 9,1%");
+      expect(parcial?.textContent).toBe("apurado 8,4%");
+      // Nenhum `style` inline que pudesse vencer a folha.
+      expect(proj?.getAttribute("style")).toBeNull();
+      expect(parcial?.getAttribute("style")).toBeNull();
+      expect(corDaFolha(proj), `${partido}: projetado`).toBe("var(--color-pct-proj)");
+      expect(corDaFolha(parcial), `${partido}: apurado`).toBe("var(--color-pct-votos)");
+    }
+  });
+
+  it("densa: a coluna da Projeção ⇒ `--color-pct-proj`; a da Parcial não", () => {
+    const cores = ["PT", "PL"].map((partido) => {
+      const doc = densa(partido);
+      const proj = doc.querySelector('[data-view-only="proj"] > div');
+      const parcial = doc.querySelector('[data-view-cell="parcial"] > div');
+      expect(proj?.textContent).toBe("9,1%");
+      expect(parcial?.textContent).toBe("8,4%");
+      expect(estilo(proj)).toContain("color:var(--cell-ink,var(--color-pct-proj))");
+      expect(estilo(parcial)).not.toContain("--color-pct-proj");
+      return [estilo(proj), estilo(parcial)].join("|");
+    });
+    // Dois partidos ⇒ a mesma tinta, coluna a coluna.
+    expect(cores[0]).toBe(cores[1]);
+  });
+});

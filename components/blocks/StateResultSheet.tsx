@@ -549,10 +549,13 @@ export function StateResultSheet({
                 Presidente/Governador (1 vaga), mas não decide nada em Senado
                 (2 vagas). Menos de 3 candidatos no top-3 → `NaN` →
                 `formatPp` devolve "—" (nunca "0,0 pp": ausência, não zero). */}
+            {/* A margem é PROJETADA (`margem_projetada` / 2º→3º sobre
+                `top_candidatos[].pct`) ⇒ cor da projeção (dono, 04/10). */}
             <Figure
               label={margemLabel(cargo)}
               value={formatPp(margemParaExibir(cargo, row))}
               size="md"
+              color="var(--color-pct-proj)"
             />
           </div>
 
@@ -805,7 +808,8 @@ export function StateResultSheet({
                       <span
                         data-testid="state-sheet-cand-proj"
                         className="flex-none"
-                        style={{ color: "var(--color-pct-votos)", whiteSpace: "nowrap" }}
+                        // 🔴 04/10 (dono): percentual projetado ⇒ cor da projeção.
+                        style={{ color: "var(--color-pct-proj)", whiteSpace: "nowrap" }}
                       >
                         {formatPercent(tc.pct, 1)}
                         {/* Abreviado na tela (a linha é estreita), por extenso

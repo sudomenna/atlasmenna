@@ -163,6 +163,9 @@ export interface ProjectionThermometerProps {
    * percentual de votos (decisão do dono, 2026-10-03; ver `corTextoResolvida`)
    * — e nunca cai em `cor`. Só passe esta prop para o que NÃO é percentual de
    * votos de candidato (participação).
+   *
+   * 🔴 Desde 2026-10-04 vale SÓ para o número da visão Parcial (o apurado): o
+   * número da visão Projeção sai sempre em `--color-pct-proj` (decisão do dono).
    */
   corTexto?: string;
   /**
@@ -331,6 +334,13 @@ export function ProjectionThermometer({
   const hero = size === "hero";
   const railHeight = hero ? 14 : 12;
   const figureSize = hero ? "lg" : "md";
+  // 🔴 2026-10-04 — decisão do dono: "sempre que exibir percentual projetado a
+  // cor deve ser a cor padrão para projeção". O número da visão PROJEÇÃO sai em
+  // `--color-pct-proj` em TODO termômetro — candidatura, "Outros" e também
+  // participação (brancos e nulos, abstenção são percentuais projetados). A
+  // cadeia de `corTextoResolvida` acima passa a valer só para o número da
+  // visão Parcial (o apurado). Aguardando ⇒ não há número, tinta apagada.
+  const numeroCorProj = aguardando ? "var(--text-faint)" : "var(--color-pct-proj)";
   const numeroCor = aguardando ? "var(--text-faint)" : corTextoResolvida;
 
   return (
@@ -366,7 +376,7 @@ export function ProjectionThermometer({
         </div>
         <div className="flex flex-none flex-col items-end">
           <Numero
-            cor={numeroCor}
+            cor={numeroCorProj}
             rotulo="Projeção"
             size={figureSize}
             valor={aguardando ? null : projetado}
@@ -487,8 +497,15 @@ export function ProjectionThermometer({
           <>aguardando projeção · {label}</>
         ) : (
           <>
-            {semIC ? "IC indisponível" : `IC95 ${formatCI(loRaw, hiRaw)}`} ·{" "}
-            {atual === null ? "sem apuração" : `apurado ${formatPercent(atual, 1)}`} · {label}
+            {/* O IC95 é número da PROJEÇÃO ⇒ cor da projeção (2026-10-04). */}
+            {semIC ? (
+              "IC indisponível"
+            ) : (
+              <span data-testid="thermometer-ic" style={{ color: "var(--color-pct-proj)" }}>
+                IC95 {formatCI(loRaw, hiRaw)}
+              </span>
+            )}{" "}
+            · {atual === null ? "sem apuração" : `apurado ${formatPercent(atual, 1)}`} · {label}
           </>
         )}
       </p>

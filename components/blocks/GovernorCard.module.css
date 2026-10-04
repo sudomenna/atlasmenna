@@ -165,9 +165,13 @@
   white-space: nowrap;
 }
 
-/* percentual */
+/* percentual — é o PROJETADO (`top_candidatos[].pct` / `outros.pct`, nas duas
+ * visões) ⇒ cor da projeção (decisão do dono, 2026-10-04: "sempre que exibir
+ * percentual projetado a cor deve ser a cor padrão para projeção"). O cartão
+ * é `--color-bg` (= `--surface-card`), onde o ocre mede 5,45:1 / 8,75:1. */
 .c li > span:nth-child(4) {
   flex: none;
   width: 2.5rem;
   text-align: right;
+  color: var(--color-pct-proj);
 }

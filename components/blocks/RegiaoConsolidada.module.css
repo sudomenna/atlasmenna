@@ -175,6 +175,13 @@
   color: var(--color-pct-votos);
 }
 
+/* No resumo da PROJEÇÃO os percentuais da legenda são projetados ⇒ cor da
+ * projeção (decisão do dono, 2026-10-04). Mais específica que a regra acima
+ * pelo atributo, então vence sem depender da ordem. */
+.resumo[data-view-only="proj"] > ul > li > span {
+  color: var(--color-pct-proj);
+}
+
 .corpo {
   padding: 0 var(--space-3) var(--space-3);
 }

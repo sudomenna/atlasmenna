@@ -181,9 +181,14 @@ describe("<ProjectionThermometer />", () => {
     expect(estilo('[data-testid="thermometer-tick"]')).toContain("var(--party-psol)");
     expect(band(doc)?.getAttribute("style") ?? "").toContain("var(--party-psol-1)");
     // O número é TEXTO e, desde 2026-10-03 (decisão do dono), não leva cor de
-    // partido nenhuma: sai na cor única `--color-pct-votos`. A identidade fica
-    // no tick e na faixa; o número não pode trazer uma terceira tinta.
-    expect(estilo('[data-testid="thermometer-numero"]')).toContain("var(--color-pct-votos)");
+    // partido nenhuma. Desde 2026-10-04 o da Projeção sai na cor da projeção
+    // (`--color-pct-proj`) e o da Parcial na cor única `--color-pct-votos`. A
+    // identidade fica no tick e na faixa; o número não traz uma terceira tinta.
+    expect(estilo('[data-testid="thermometer-numero"]')).toContain("var(--color-pct-proj)");
+    expect(estilo('[data-testid="thermometer-numero-parcial"]')).toContain(
+      "var(--color-pct-votos)",
+    );
+    expect(estilo('[data-testid="thermometer-numero-parcial"]')).not.toContain("--party-");
     expect(estilo('[data-testid="thermometer-numero"]')).not.toContain("--party-");
   });
 
@@ -217,8 +222,9 @@ describe("<ProjectionThermometer />", () => {
     // era `strongForRank(rank)` (a paleta por COLOCAÇÃO na variante escura),
     // passou a `textForParty(sigla)` e, desde 2026-10-03 (decisão do dono), é a
     // cor ÚNICA `--color-pct-votos` para todo percentual de votos.
+    // Emenda de 2026-10-04: o da Projeção (este) sai em `--color-pct-proj`.
     const comSigla = render({ cor: "var(--party-mdb)", corBand: undefined, partido: "MDB" });
-    expect(numero(comSigla)).toContain("var(--color-pct-votos)");
+    expect(numero(comSigla)).toContain("var(--color-pct-proj)");
     expect(numero(comSigla)).not.toContain("--party-mdb");
 
     // Passar `rank` não muda mais nada — nem aqui, nem em lugar nenhum.
@@ -232,7 +238,7 @@ describe("<ProjectionThermometer />", () => {
 
     // Sem nada: a mesma cor única — sigla nenhuma não muda a tinta.
     const semNada = render({ cor: undefined, corBand: undefined });
-    expect(numero(semNada)).toContain("var(--color-pct-votos)");
+    expect(numero(semNada)).toContain("var(--color-pct-proj)");
 
     // O preenchimento continua sendo `cor` — a correção é no texto, não na
     // identidade visual da faixa/tick.
@@ -254,21 +260,29 @@ describe("<ProjectionThermometer />", () => {
     });
     const style =
       doc.querySelector('[data-testid="thermometer-numero"]')?.getAttribute("style") ?? "";
-    expect(style).toContain("var(--color-pct-votos)");
+    // Desde 2026-10-04 o número da Projeção sai em `--color-pct-proj` (ocre).
+    expect(style).toContain("var(--color-pct-proj)");
     // E NÃO a base: `--party-psol` (#d6a400) mede 2,08:1 como tinta.
     expect(style).not.toContain("color:var(--party-psol)");
     expect(doc.body.textContent ?? "").toContain("4,5%");
   });
 
-  it("(e4) corTexto explícito vence; sem ele, a cor única — igual para partidos diferentes", () => {
+  it("(e4) corTexto explícito vence NA PARCIAL; sem ele, a cor única — igual para partidos diferentes", () => {
     const explicito = render({
       cor: "var(--party-pl)",
       rank: 2,
       corTexto: "var(--color-text)",
     });
+    // 🔴 2026-10-04 (dono): `corTexto` só pinta o número da Parcial (o
+    // apurado); o da Projeção é SEMPRE a cor da projeção.
+    expect(
+      explicito
+        .querySelector('[data-testid="thermometer-numero-parcial"]')
+        ?.getAttribute("style") ?? "",
+    ).toContain("var(--color-text)");
     expect(
       explicito.querySelector('[data-testid="thermometer-numero"]')?.getAttribute("style") ?? "",
-    ).toContain("var(--color-text)");
+    ).toContain("var(--color-pct-proj)");
 
     // Sem corTexto, o número sai na cor ÚNICA de percentual de votos (decisão
     // do dono, 2026-10-03) — e dois partidos diferentes saem IGUAIS.
@@ -276,9 +290,31 @@ describe("<ProjectionThermometer />", () => {
       render({ cor: undefined, corBand: undefined, partido })
         .querySelector('[data-testid="thermometer-numero"]')
         ?.getAttribute("style") ?? "";
-    expect(numeroDe("PSOL")).toContain("var(--color-pct-votos)");
+    expect(numeroDe("PSOL")).toContain("var(--color-pct-proj)");
     expect(numeroDe("PT")).toBe(numeroDe("PL"));
     expect(numeroDe("PT")).toBe(numeroDe("PSOL"));
+  });
+
+  it("(e5) 2026-10-04: projeção (número + IC95) na cor da projeção; apurado e aguardando não", () => {
+    const doc = render({ partido: "PT", corTexto: "var(--color-part-abstencao)" });
+    const estilo = (sel: string) => doc.querySelector(sel)?.getAttribute("style") ?? "";
+    // Mesmo com `corTexto` (participação), o número projetado é ocre.
+    expect(estilo('[data-testid="thermometer-numero"]')).toContain("var(--color-pct-proj)");
+    expect(estilo('[data-testid="thermometer-numero-parcial"]')).toContain(
+      "var(--color-part-abstencao)",
+    );
+    const ic = doc.querySelector('[data-testid="thermometer-ic"]');
+    expect(ic?.textContent ?? "").toMatch(/^IC95 \[/);
+    expect(ic?.getAttribute("style") ?? "").toContain("var(--color-pct-proj)");
+    // O rodapé continua legível como uma frase só.
+    expect(doc.body.textContent ?? "").toMatch(/IC95 \[[^\]]+\] · apurado/);
+
+    // Aguardando: sem número, tinta apagada — nada de cor de projeção.
+    const ag = render({ aguardando: true, pctAtual: null });
+    expect(
+      ag.querySelector('[data-testid="thermometer-numero"]')?.getAttribute("style") ?? "",
+    ).toContain("var(--text-faint)");
+    expect(ag.querySelector('[data-testid="thermometer-ic"]')).toBeNull();
   });
 
   it("(f) faz clamp de valores fora de [0, scaleMax]", () => {

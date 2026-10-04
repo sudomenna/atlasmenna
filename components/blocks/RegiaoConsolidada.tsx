@@ -181,7 +181,15 @@ function Resumo({
         {lider ? (
           <b data-testid="regiao-lider" style={{ color: textForParty(lider.partido) }}>
             {rotuloDe(lider, chave)}{" "}
-            <span style={{ color: "var(--color-pct-votos)" }}>{formatPercentTrim(lider.pct)}</span>
+            {/* 🔴 04/10 (dono): no resumo da Projeção o % é projetado ⇒ cor
+                da projeção; no da Parcial, o apurado, na cor única de votos. */}
+            <span
+              style={{
+                color: base === "proj" ? "var(--color-pct-proj)" : "var(--color-pct-votos)",
+              }}
+            >
+              {formatPercentTrim(lider.pct)}
+            </span>
           </b>
         ) : (
           <b data-testid="regiao-lider">—</b>

@@ -53,6 +53,13 @@ export interface FigureProps {
    * `var(--token)`; vence `tone`.
    */
   color?: string;
+  /**
+   * Cor da `note`. Default `--text-muted`. Para quando a nota carrega um
+   * número da PROJEÇÃO (ex. "projeção +3,2 pp"): `var(--color-pct-proj)`
+   * (decisão do dono, 2026-10-04). Precisa ser um `var(--token)` medido como
+   * texto.
+   */
+  noteColor?: string;
   className?: string;
   style?: CSSProperties;
 }
@@ -92,6 +99,7 @@ export function Figure({
   align = "left",
   tone = "default",
   color,
+  noteColor,
   className,
   style,
 }: FigureProps) {
@@ -148,7 +156,7 @@ export function Figure({
       {note ? (
         <div
           data-testid="figure-note"
-          style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}
+          style={{ font: "var(--type-body-sm)", color: noteColor ?? "var(--text-muted)" }}
         >
           {note}
         </div>

@@ -788,6 +788,9 @@ export function CorridaTresCirculos({
         <Arco
           visao="proj"
           id="corrida-projecao"
+          // Total e fatias são projeção ⇒ cor da projeção (dono, 04/10).
+          totalProjetado
+          fatiasProjetadas
           defsPrefix={titleId}
           titulo="Projeção para o fim da apuração"
           baseLabel="votos em disputa (projetado)"

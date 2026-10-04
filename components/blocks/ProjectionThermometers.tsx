@@ -342,7 +342,8 @@ export function ProjectionThermometers({
               subtitulo={siglaExibicao(c.partido)}
               base={base}
               // `cor` é preenchimento (faixa + tick). O número grande NÃO usa
-              // esta cor: sai na cor ÚNICA `--color-pct-votos` (decisão do
+              // esta cor: na Projeção sai em `--color-pct-proj` (2026-10-04),
+              // na Parcial na cor ÚNICA `--color-pct-votos` (decisão do
               // dono, 2026-10-03; até então era `textForParty` pela sigla —
               // ver o docblock de `<ProjectionThermometer />`).
               // Era daqui que vinha a violação `serious` do axe de 2026-09-07 —
@@ -495,7 +496,9 @@ function ParticipacaoTermometro({
   corBand: string;
   /** Obrigatório aqui de propósito: participação NÃO é percentual de votos de
    *  candidato, então não pode cair no default do átomo (`--color-pct-votos`,
-   *  a cor única dos percentuais de votos desde 2026-10-03). */
+   *  a cor única dos percentuais de votos desde 2026-10-03). Desde 2026-10-04
+   *  vale só para o número da Parcial: o da Projeção sai em `--color-pct-proj`
+   *  como todo percentual projetado (decisão do dono). */
   corTexto: string;
   metric?: EdgeParticipacaoMetric;
 }) {

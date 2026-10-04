@@ -77,6 +77,31 @@ describe("contraste da linha 'proj' da visão Parcial (2026-10-03)", () => {
     expect(GLOBALS).toMatch(/--surface-card:\s*var\(--paper-0\)\s*;/);
   });
 
+  // 🔴 2026-10-04 (dono): "sempre que exibir percentual projetado a cor deve
+  // ser a cor padrão para projeção". As folhas que passaram a usar o token, e
+  // o fundo de cada uma — todas sobre `--surface-card`/`--color-bg` (=
+  // `--paper-0`) ou `--surface-page`, os dois fundos medidos em (2). Nenhum
+  // número projetado foi pintado sobre fundo de partido, `--surface-inverse` ou
+  // `--surface-sunken` (o ocre mede 3,19:1 sobre `--ink-0` e 4,72:1 sobre
+  // `--paper-2` no claro — ver o relatório de 04/10).
+  it("(1b) as folhas dos números projetados usam o token, sobre fundos medidos", () => {
+    const folha = (p: string) =>
+      readFileSync(resolve(RAIZ, p), "utf-8")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/\s+/g, " ");
+    expect(GLOBALS).toMatch(/--color-bg:\s*var\(--paper-0\)\s*;/);
+    const lista = folha("components/atoms/tables/CandidateResultRow.module.css");
+    expect(lista).toMatch(/\.pctProj \{[^}]*color: var\(--color-pct-proj\)/);
+    const gov = folha("components/blocks/GovernorCard.module.css");
+    expect(gov).toMatch(/\.c li > span:nth-child\(4\) \{[^}]*color: var\(--color-pct-proj\)/);
+    expect(gov).toMatch(/\.c \{[^}]*background-color: var\(--color-bg\)/);
+    const regiao = folha("components/blocks/RegiaoConsolidada.module.css");
+    expect(regiao).toMatch(
+      /\.resumo\[data-view-only="proj"\] > ul > li > span \{[^}]*color: var\(--color-pct-proj\)/,
+    );
+    expect(regiao).toMatch(/\.regiao \{[^}]*background-color: var\(--color-bg\)/);
+  });
+
   for (const [tema, t] of Object.entries(TEMAS)) {
     it(`(2) ${tema}: ≥ 4,5:1 sobre --surface-page e sobre --surface-card`, () => {
       const page = contraste(t.proj, t.page);

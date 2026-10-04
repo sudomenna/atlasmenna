@@ -218,6 +218,15 @@
   color: var(--color-pct-votos);
 }
 
+/* O percentual PROJETADO (bloco `data-view-only="proj"`) — na cor que, no
+   sistema inteiro, quer dizer "projeção" (decisão do dono, 2026-10-04: "sempre
+   que exibir percentual projetado a cor deve ser a cor padrão para projeção").
+   Mesma especificidade de `.pct` e declarada DEPOIS dela: vence por ordem.
+   O apurado (`.pct` sozinho) segue em `--color-pct-votos`. */
+.pctProj {
+  color: var(--color-pct-proj);
+}
+
 /* A anulada: "—" no lugar do percentual, em tinta neutra. */
 .pctNulo {
   color: var(--text-secondary);

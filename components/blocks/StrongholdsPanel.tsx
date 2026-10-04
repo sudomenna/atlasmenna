@@ -344,6 +344,13 @@ const CELL: React.CSSProperties = {
   borderTop: "1px solid var(--border-hairline)",
 };
 
+/** Célula de número da PROJEÇÃO — cor da projeção (decisão do dono, 2026-10-04). */
+const NUMERO_PROJETADO: React.CSSProperties = {
+  font: "var(--type-figure-sm)",
+  textAlign: "right",
+  color: "var(--color-pct-proj)",
+};
+
 const HEAD_CELL: React.CSSProperties = {
   font: "var(--type-kicker)",
   letterSpacing: "var(--tracking-caps)",
@@ -492,14 +499,14 @@ function CandidateTable({
                   />
                 </span>
               </td>
-              <td style={{ ...CELL, font: "var(--type-figure-sm)", textAlign: "right" }}>
+              {/* 🔴 04/10 (dono): as duas colunas numéricas são PROJEÇÃO
+                  (margem projetada local e % projetado) ⇒ cor da projeção. */}
+              <td style={{ ...CELL, ...NUMERO_PROJETADO }}>
                 {porVotos && l.diffVotos !== null
                   ? formatVotosDiferenca(l.diffVotos)
                   : formatPp(l.diff)}
               </td>
-              <td style={{ ...CELL, font: "var(--type-figure-sm)", textAlign: "right" }}>
-                {formatPercent(l.pct, 1)}
-              </td>
+              <td style={{ ...CELL, ...NUMERO_PROJETADO }}>{formatPercent(l.pct, 1)}</td>
             </tr>
           ))
         )}

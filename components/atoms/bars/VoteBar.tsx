@@ -53,6 +53,12 @@ export interface VoteBarProps {
   marker?: number | null;
   /** Linha de rótulos abaixo da barra (primeiro segmento, marcador, segundo). */
   showLabels?: boolean;
+  /**
+   * Cor do PERCENTUAL nos rótulos de baixo (o nome segue em `--text-secondary`).
+   * Ausente ⇒ o rótulo sai inteiro na cor de sempre. Para a barra da projeção:
+   * `var(--color-pct-proj)` (decisão do dono, 2026-10-04).
+   */
+  pctLabelColor?: string;
   /** Sobrescreve o texto alternativo gerado a partir dos segmentos. */
   ariaLabel?: string;
   className?: string;
@@ -69,11 +75,27 @@ export function voteBarLabel(segments: readonly VoteBarSegment[]): string {
   return segments.map((s) => `${s.label} ${formatPercent(s.pct)}`).join(", ");
 }
 
+/**
+ * Um rótulo de baixo: "NOME 38,0%". Sem `pctColor`, o texto de sempre (string
+ * única); com ele, o percentual num `<span>` próprio na cor pedida — o texto
+ * renderizado é o mesmo nos dois casos.
+ */
+function rotuloSegmento(seg: VoteBarSegment | undefined, pctColor: string | undefined) {
+  if (!seg) return "";
+  if (!pctColor) return `${seg.label} ${formatPercent(seg.pct)}`;
+  return (
+    <>
+      {seg.label} <span style={{ color: pctColor }}>{formatPercent(seg.pct)}</span>
+    </>
+  );
+}
+
 export function VoteBar({
   segments,
   height = 14,
   marker = 50,
   showLabels = true,
+  pctLabelColor,
   ariaLabel,
   className,
   style,
@@ -158,9 +180,9 @@ export function VoteBar({
             color: "var(--text-secondary)",
           }}
         >
-          <span>{first ? `${first.label} ${formatPercent(first.pct)}` : ""}</span>
+          <span>{rotuloSegmento(first, pctLabelColor)}</span>
           <span>{marker != null ? `${Math.round(clampPct(marker))}%` : ""}</span>
-          <span>{second ? `${second.label} ${formatPercent(second.pct)}` : ""}</span>
+          <span>{rotuloSegmento(second, pctLabelColor)}</span>
         </div>
       ) : null}
     </div>

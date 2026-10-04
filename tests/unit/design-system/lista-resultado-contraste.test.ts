@@ -142,6 +142,14 @@ describe("a folha da lista usa os tokens nos papéis medidos", () => {
     expect(MODULO).not.toContain("var(--cor-texto");
     expect(GLOBALS).toMatch(/--color-pct-votos:\s*var\(--text-primary\)\s*;/);
   });
+
+  // 🔴 Emenda do dono, 2026-10-04: o percentual PROJETADO (bloco da visão
+  // Projeção) sai na cor da projeção. O contraste do token sobre o cartão está
+  // em `projecao-indicador-contraste.test.ts` (5,45:1 claro, ≥ 8,7:1 escuro).
+  it("o percentual projetado lê a cor da PROJEÇÃO (`.pctProj`, declarada depois de `.pct`)", () => {
+    expect(MODULO).toMatch(/\.pctProj \{[^}]*color: var\(--color-pct-proj\)/);
+    expect(MODULO.indexOf(".pctProj {")).toBeGreaterThan(MODULO.indexOf(".pct {"));
+  });
 });
 
 describe.each(Object.entries(TEMAS))("contraste — tema %s", (_tema, t) => {

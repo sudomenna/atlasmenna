@@ -245,12 +245,19 @@ describe("<ProjectionThermometers />", () => {
       expect(preenchimentos, `número "${el.textContent}"`).not.toContain(corDoNumero(el));
     }
 
-    // 🔴 Decisão do dono, 2026-10-03: os QUATRO percentuais de votos (três
-    // candidaturas de partidos diferentes + "Outros candidatos") saem na MESMA
-    // cor, `--color-pct-votos`. Participação (brancos e nulos, abstenção) não
-    // é percentual de votos de candidato e mantém as suas.
-    const votos = numeros.slice(0, 4).map(corDoNumero);
-    expect(new Set(votos)).toEqual(new Set(["--color-pct-votos"]));
+    // 🔴 Decisão do dono, 2026-10-04: TODO percentual projetado sai na cor da
+    // projeção — os seis números da visão Projeção (candidaturas, "Outros" e
+    // participação) usam `--color-pct-proj`.
+    expect(new Set(numeros.map(corDoNumero))).toEqual(new Set(["--color-pct-proj"]));
+
+    // E na visão Parcial (o apurado) nada muda: os QUATRO percentuais de votos
+    // (2026-10-03) na cor única `--color-pct-votos`; participação nas suas.
+    const parciais = Array.from(
+      doc.querySelectorAll('[data-testid="thermometer-numero-parcial"]'),
+    ).map(corDoNumero);
+    expect(parciais.length).toBe(6);
+    expect(new Set(parciais.slice(0, 4))).toEqual(new Set(["--color-pct-votos"]));
+    expect(parciais.slice(4)).toEqual(["--color-part-brancos-nulos", "--color-part-abstencao"]);
   });
 
   it("(b) sem `participacao` → ainda 6 meters no DOM (ADR-0017)", () => {

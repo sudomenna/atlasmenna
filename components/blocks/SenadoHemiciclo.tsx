@@ -269,7 +269,18 @@ export function SenadoHemiciclo({
               >
                 <Amostra forma={item.forma} />
                 <span style={{ minWidth: 0 }}>
-                  <strong style={{ fontWeight: 600 }}>{item.n}</strong> {item.texto}
+                  {/* 🔴 04/10 (dono): a contagem das vagas PELA PROJEÇÃO é número
+                      projetado ⇒ cor da projeção. As demais são medidas. */}
+                  <strong
+                    style={
+                      item.id === "projetada"
+                        ? { fontWeight: 600, color: "var(--color-pct-proj)" }
+                        : { fontWeight: 600 }
+                    }
+                  >
+                    {item.n}
+                  </strong>{" "}
+                  {item.texto}
                 </span>
               </li>
             ))}

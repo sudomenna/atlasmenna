@@ -594,6 +594,10 @@ type LinhaPainelProps = Pick<
  * votos, direto na folha de estilo (`.pct`). Até então vinha de uma segunda
  * custom property, `--cor-texto` = `candidateMarkerColor(partido)`.
  *
+ * 🔴 Emenda do dono, 2026-10-04: o percentual grande da visão PROJEÇÃO (o
+ * projetado) sai em `--color-pct-proj` (`.pctProj`); o apurado continua em
+ * `--color-pct-votos`. Dois partidos ⇒ a mesma tinta, em cada visão.
+ *
  * ## Anulada (ADR-0053, emenda "opção A")
  *
  * "—" no lugar do percentual, nas duas bases; só os votos; trilho vazio, sem
@@ -682,7 +686,10 @@ function LinhaPainel({
           <>
             {/* Projeção: o projetado grande, o apurado pequeno embaixo. */}
             <div data-view-only="proj">
-              <div className={s.pct}>
+              {/* 🔴 04/10 (dono): todo percentual PROJETADO sai na cor da
+                  projeção (`.pctProj` → `--color-pct-proj`); o apurado, logo
+                  abaixo e no bloco da Parcial, segue em `--color-pct-votos`. */}
+              <div className={`${s.pct} ${s.pctProj}`}>
                 <span className="sr-only">projeção </span>
                 {formatPercent(projetado, 1)}
               </div>
@@ -1024,7 +1031,8 @@ export function CandidateResultRow({
           acessibilidade — e um leitor de tela anunciaria, na visão Parcial, um
           número que a tela não mostra. */}
           <div className="text-right" data-view-only="proj" style={{ minWidth: "3.5rem" }}>
-            <div style={{ ...numeroStyle, color: "var(--cell-ink, var(--color-pct-votos))" }}>
+            {/* 🔴 04/10 (dono): o número PROJETADO sai na cor da projeção. */}
+            <div style={{ ...numeroStyle, color: "var(--cell-ink, var(--color-pct-proj))" }}>
               {projLabel}
             </div>
             <div

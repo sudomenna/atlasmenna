@@ -767,7 +767,10 @@ export function HoverCard({
                     paddingBlock: CELULA_PADDING_BLOCK,
                     font: "var(--type-figure-sm)",
                     textAlign: "right",
-                    color: "var(--color-pct-votos)",
+                    // 🔴 04/10 (dono): percentual projetado ⇒ cor da projeção.
+                    // A faixa do vencedor cobre só a coluna do nome; esta
+                    // célula fica sobre o `--surface-card` do balão.
+                    color: "var(--color-pct-proj)",
                   }}
                 >
                   {fmt(row.proj)}
