@@ -763,6 +763,10 @@ export default async function UFPage({ params }: UFPageProps) {
               municipios={municipios}
               rows={municipioRows}
               candidatos={payload.candidatos}
+              // 2026-10-04, pedido do dono (mesmo corte de governador e
+              // senador): só os 25 maiores colégios eleitorais na lista; o
+              // resto abre pelo mapa.
+              limiteLista={25}
             />
           </div>
         ) : (

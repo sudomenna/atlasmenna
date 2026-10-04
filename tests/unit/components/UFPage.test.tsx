@@ -702,6 +702,20 @@ describe("UFPage — degradação do detalhe municipal (ADR-0032)", () => {
     expect(doc.querySelectorAll('[data-testid="municipio-open"]').length).toBeGreaterThan(0);
   });
 
+  it("(r2) 🔴 só os 25 maiores municípios, sem 'mostrar mais' (pedido do dono, 04/10)", async () => {
+    // Mesmo recorte de governador e senador. Mutação que morre aqui: tirar
+    // `limiteLista={25}` da página (volta a 20 + botão).
+    const doc = await render(detalheOk(645));
+    expect(doc.querySelector("#municipios-heading")?.textContent).toBe(
+      "Municípios — 25 maiores de 645",
+    );
+    expect(doc.querySelectorAll('[data-testid="municipio-open"]')).toHaveLength(25);
+    expect(doc.querySelector('[data-testid="municipios-carregar-mais"]')).toBeNull();
+    expect(doc.querySelector('[data-testid="municipios-status"]')?.textContent).toBe(
+      "Mostrando 25 de 645 municípios.",
+    );
+  });
+
   it("(s) detalhe atrasado em relação ao resumo: a defasagem é dita, não silenciada", async () => {
     // Resumo às 18:00 (fixture), detalhe às 17:51 → 9 min de defasagem.
     const doc = await render(detalheOk(2, "2026-10-04T17:51:00-03:00"));
