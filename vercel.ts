@@ -319,7 +319,8 @@ const config: VercelProjectConfig = {
   // sobra margem.
   functions: {
     "api/model/project.py": {
-      maxDuration: 60,
+      // 🔴 04/10/2026 17h55: 60 s cortava Senado e Deputado no meio da noite.
+      maxDuration: 300,
       // Bundle Python tende a inflar com numpy. Excluímos artefatos comuns
       // que não são necessários em runtime.
       excludeFiles: "{tests/**,__tests__/**,**/*.test.py,**/test_*.py,**/__pycache__/**,**/*.pyc}",

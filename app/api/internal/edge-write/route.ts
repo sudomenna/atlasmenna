@@ -83,7 +83,7 @@ export const runtime = "nodejs";
  * sob `Promise.allSettled`. 30 s deixa margem confortável mesmo com retries
  * implícitos do runtime fetch.
  */
-export const maxDuration = 30;
+export const maxDuration = 120;
 
 // ---------------------------------------------------------------------------
 // Tamanho do corpo — spec 026

@@ -7953,7 +7953,7 @@ AVISO_CORPO_EDGE_WRITE_BYTES = 3_500_000
 #: continua best-effort: loga e segue, e o próximo ciclo republica. O servidor
 #: não é cancelado quando o cliente desiste — a escrita pode completar mesmo
 #: assim.
-TIMEOUT_EDGE_WRITE_S = 25
+TIMEOUT_EDGE_WRITE_S = 110
 
 
 def corpo_edge_write(
