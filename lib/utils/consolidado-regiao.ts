@@ -204,8 +204,18 @@ export function consolidarRegiao(
   const projOk = totaisProj.every(numero);
   const somaProj = projOk ? (totaisProj as number[]).reduce((a, b) => a + b, 0) : 0;
   const somaContado = contagemOk ? (contados as number[]).reduce((a, b) => a + b, 0) : 0;
+  // 🔴 04/10/2026 noite do 1º turno — por ordem do dono, o % apurado tem que
+  // bater com o TSE (seções totalizadas). Média do `pct_apurado` OFICIAL de
+  // cada UF (`s.st/s.ts`), ponderada pelo total projetado da UF (proxy do
+  // eleitorado). Antes: votos contados ÷ total projetado — outra grandeza.
   const pctApurado =
-    projOk && contagemOk && somaProj > 0 ? Math.min(100, (somaContado / somaProj) * 100) : null;
+    projOk && somaProj > 0
+      ? Math.min(
+          100,
+          ufs.reduce((a, r, i) => a + (Number(r.pct_apurado) || 0) * (totaisProj[i] as number), 0) /
+            somaProj,
+        )
+      : null;
 
   const votosContados = contagemOk ? somaContado : null;
 
