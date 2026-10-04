@@ -236,6 +236,29 @@ describe("build:e2e — a marca que o start:e2e exige (29/09)", () => {
 describe("montarBlobs — o CDN do Blob, a partir das fixtures", () => {
   const blobs = montarBlobs();
 
+  it("spec 026 RF-291 — fatia de candidaturas sintetizada por casa, toda com foto_ok (pior caso de peso)", () => {
+    for (const [cargo, token, sigla] of [
+      [6, "dep", "SP"],
+      [7, "est", "SP"],
+      [8, "dis", "DF"],
+    ] as const) {
+      const detalhe = blobs.get(deputadoUfBlobPathname(cargo, sigla)) as {
+        agremiacoes: Array<{ candidatos?: Array<{ sqcand: number }> }>;
+      };
+      const fatia = blobs.get(`candidatos/uf/${sigla}/${token}.json`) as {
+        uf: string;
+        cargo: string;
+        candidatos: Array<{ sqcand: string; foto_ok: boolean }>;
+      };
+      expect([fatia?.uf, fatia?.cargo]).toEqual([sigla, token]);
+      const doDetalhe = detalhe.agremiacoes.flatMap((a) =>
+        (a.candidatos ?? []).map((c) => String(c.sqcand)),
+      );
+      expect(fatia.candidatos.map((c) => c.sqcand)).toEqual(doDetalhe);
+      expect(fatia.candidatos.every((c) => c.foto_ok === true)).toBe(true);
+    }
+  });
+
   it("serve o detalhe de Deputado das 27 UFs, no caminho que o leitor monta", () => {
     for (const sigla of ["SP", "RR", "DF"]) {
       const d = blobs.get(deputadoUfBlobPathname(6, sigla)) as {

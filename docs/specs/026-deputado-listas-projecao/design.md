@@ -624,7 +624,10 @@ O registro em `docs/design-system/components.md` é do `spec-syncer`, na barreir
   `--space-2` para o círculo não invadir o filete vizinho. O recorte da faixa 2 (federal) continua
   vencendo (seletor mais específico).
 - **Peso** (decisão do dono, 03/10): ~368 B por eleito com foto (HTML + RSC); o teto das listas no
-  teste de unidade subiu de 360 para 384 KiB com a medida escrita ao lado.
+  teste de unidade subiu de 360 para 384 KiB com a medida escrita ao lado. No e2e o servidor falso
+  sintetiza a fatia de candidaturas com `foto_ok` em toda linha (pior caso); SP estadual mediu
+  406,5 KiB e o teto das assembleias subiu de 400 para 424 KiB; o federal de SP (544,9 KiB) segue
+  nos 560.
 
 ### 8.3 Tuplas compactas (contrato interno da frente U — não trafega no Blob)
 

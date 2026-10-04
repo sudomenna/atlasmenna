@@ -448,7 +448,9 @@ e fechada).
   listas (eleitos + 5, mínimo 10 — ADR-0065, emenda 03/10) mediram SP estadual 373,6 KiB e DF distrital
   356,3 KiB (o resto é o cabeçalho das agremiações); as DUAS páginas de UF têm teto próprio de **400 KiB**
   em `tests/e2e/perf-budget.spec.ts`. A capa `/deputado-estadual` cabe no global. Enxugar os cabeçalhos
-  fica para depois do 1º turno.
+  fica para depois do 1º turno. ⚠️ **Emenda 2026-10-03, noite (dono):** a mini-foto dos eleitos (RF-291
+  da spec 026) levou SP estadual a 406,5 KiB com as fotos servidas pelo falso; o teto das duas subiu
+  para **424 KiB** ("não se preocupar com o tamanho em KB").
 - Given o axe, then zero violações nas três, com a lista aberta e fechada.
 - Given `/uf/SP/deputado-federal`, then continua cabendo nos seus 480 KiB (sem regressão).
 

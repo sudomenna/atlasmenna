@@ -106,6 +106,11 @@
  *   `/blob/deputado-estadual/uf/<UF>.json`       ← `deputado-estadual-uf.json[UF]`
  *   `/blob/deputado-estadual/uf-lista/<UF>.json` ← `deputado-estadual-uf-lista.json[UF]`
  *   `/blob/deputado-distrital/uf/DF.json`        ← `deputado-distrital-uf.json.DF`
+ *   `/blob/candidatos/uf/<UF>/<dep|est|dis>.json` ← SINTETIZADA de cada objeto
+ *     de UF acima (spec 026 RF-291, 03/10): toda candidatura da lista com
+ *     `foto_ok: true`, para o portão de peso medir as linhas eleitas com a
+ *     `<img>` e a URL da foto — o formato da noite — e não com as iniciais.
+ *     A foto em si continua 404 (`PREFIXO_FOTO_SEM_LOG`).
  *     (spec 027 RF-289; arquivos de `data-pipeline/simulacao-assembleias.py`,
  *     todos opcionais. O caminho sai de `deputadoUfBlobPathname(cargo, UF)`,
  *     que LANÇA para UF fora da casa — o DF no 7, qualquer outra no 8.)
@@ -154,7 +159,11 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { deputadoUfBlobPathname, deputadoUfListaBlobPathname } from "@/lib/blob/paths";
+import {
+  candidatosUfBlobPathname,
+  deputadoUfBlobPathname,
+  deputadoUfListaBlobPathname,
+} from "@/lib/blob/paths";
 import type { Cargo } from "@/lib/config/calendar";
 import type { CargoProporcional } from "@/lib/config/cargos";
 import {
@@ -308,6 +317,46 @@ export function montarChaves(opts: OpcoesChaves = {}): Map<string, unknown> {
 }
 
 /**
+ * Spec 026 RF-291 — a fatia de candidaturas (`CandidatosUfSlice`) que a página
+ * de UF lê para saber quem tem foto, sintetizada do objeto de UF do simulado:
+ * cada candidatura das listas, com `foto_ok: true` — o pior caso de peso (toda
+ * linha eleita vira `<img>` com URL). `null` quando o objeto não tem listas.
+ * Só identidade: nenhum número de resultado sai daqui.
+ */
+export function fatiaDeFotosDoObjeto(
+  sigla: string,
+  token: Extract<Cargo, "dep" | "est" | "dis">,
+  objeto: unknown,
+): unknown | null {
+  if (!ehObjeto(objeto) || !Array.isArray(objeto.agremiacoes)) return null;
+  const candidatos: unknown[] = [];
+  for (const agr of objeto.agremiacoes) {
+    if (!ehObjeto(agr) || !Array.isArray(agr.candidatos)) continue;
+    for (const c of agr.candidatos) {
+      if (!ehObjeto(c) || c.sqcand === undefined) continue;
+      candidatos.push({
+        sqcand: String(c.sqcand),
+        numero: typeof c.numero === "number" ? c.numero : 0,
+        nome_urna: String(c.nome ?? ""),
+        nome: String(c.nome ?? ""),
+        partido: String(c.partido ?? ""),
+        sob_ressalva: false,
+        foto_ok: true,
+        situacao_julgamento: "DEFERIDO",
+      });
+    }
+  }
+  if (candidatos.length === 0) return null;
+  return {
+    uf: sigla,
+    cargo: token,
+    fonte_ts: "2026-10-03T00:00:00.000Z",
+    gerado_ts: "2026-10-03T00:00:00.000Z",
+    candidatos,
+  };
+}
+
+/**
  * Monta o mapa pathname do Blob → objeto, a partir das fixtures. Os caminhos
  * vêm de `lib/blob/paths.ts` — o mesmo construtor que o leitor usa.
  */
@@ -319,6 +368,8 @@ export function montarBlobs(opts: Pick<OpcoesChaves, "dir"> = {}): Map<string, u
   if (!ehObjeto(porUf)) throw new Error("deputado-uf.json não é um mapa UF → detalhe");
   for (const [sigla, detalhe] of Object.entries(porUf)) {
     blobs.set(deputadoUfBlobPathname(6, sigla), detalhe);
+    const fatia = fatiaDeFotosDoObjeto(sigla, "dep", detalhe);
+    if (fatia !== null) blobs.set(candidatosUfBlobPathname(sigla, "dep"), fatia);
   }
 
   const listas = lerJsonOpcional(dir, "deputado-uf-lista");
@@ -329,7 +380,7 @@ export function montarBlobs(opts: Pick<OpcoesChaves, "dir"> = {}): Map<string, u
     }
   }
 
-  for (const { cargo, base } of ARQUIVOS_ASSEMBLEIA) {
+  for (const { cargo, token, base } of ARQUIVOS_ASSEMBLEIA) {
     for (const [sufixo, caminho] of [
       ["uf", deputadoUfBlobPathname],
       ["uf-lista", deputadoUfListaBlobPathname],
@@ -341,6 +392,10 @@ export function montarBlobs(opts: Pick<OpcoesChaves, "dir"> = {}): Map<string, u
         // Lança para UF fora da casa (o DF no 7, outra UF no 8): fixture
         // errada não vira objeto no endereço de outra casa.
         blobs.set(caminho(cargo, sigla), objeto);
+        if (sufixo === "uf") {
+          const fatia = fatiaDeFotosDoObjeto(sigla, token, objeto);
+          if (fatia !== null) blobs.set(candidatosUfBlobPathname(sigla, token), fatia);
+        }
       }
     }
   }

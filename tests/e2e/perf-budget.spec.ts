@@ -236,8 +236,18 @@ const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
  * (~1,7 KB cada, no HTML e no payload RSC). O dono aprovou em 03/10 um teto
  * próprio de **400 KiB** para as duas ({@link TETO_DOCUMENTO_ASSEMBLEIA_UF});
  * enxugar os cabeçalhos fica para depois do 1º turno.
+ *   ↳ **424 KiB** desde 03/10 à noite — decisão do dono, 03/10: avatares dos
+ *   eleitos (spec 026 RF-291), "não se preocupar com o tamanho em KB". O
+ *   falso passou a servir a fatia de candidaturas com `foto_ok` em todas as
+ *   linhas (pior caso: toda linha eleita é `<img>` + URL no RSC). No
+ *   build:e2e de 03/10, SP estadual: ~381.383 B (372,4 KiB) sem avatar,
+ *   399.986 B (390,6 KiB) com as iniciais, **416.290 B (406,5 KiB)** com as
+ *   fotos — 1,6% acima dos 400. DF: 376.297 B (367,5 KiB). Em produção a URL
+ *   do Blob é ~30 B mais longa que a do falso e o `sqcand` tem 12 dígitos (8
+ *   no simulado): ~+7 KB em SP, ~413 KiB. Os 424 deixam ~10 KiB para a noite.
+ *   (O federal de SP mediu 557.972 B, 544,9 KiB, com fotos: segue nos 560.)
  */
-const TETO_DOCUMENTO_ASSEMBLEIA_UF = 400 * KIB;
+const TETO_DOCUMENTO_ASSEMBLEIA_UF = 424 * KIB;
 const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> = {
   "/deputado-federal": 336 * KIB,
   "/uf/SP/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
