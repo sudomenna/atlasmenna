@@ -307,7 +307,13 @@ redirecionar para `/uf/DF/deputado-distrital`.
   todos (N)" busca `GET /uf/SP/deputado-estadual/lista`, que devolve do primeiro candidato fora do
   documento em diante; a rota responde 404 para sigla fora das 26. O DF tem a sua, em
   `/uf/DF/deputado-distrital/lista`. **Emenda 2026-10-03 (ADR-0065, emenda de 03/10):** substitui o
-  "1–60, 20 visíveis" e o "distrital não tem rota de lista".
+  "1–60, 20 visíveis" e o "distrital não tem rota de lista". ⚠️ **Emenda 04/10 (decisão do dono):
+  eleitos + 7.** O documento passa a trazer, por agremiação, rank ≤ (maior rank eleito na tela, ou 0)
+  + 7 — o mesmo conjunto visível por padrão do federal (RF-260 da 026, emenda 04/10) —, **sem o mínimo
+  de 10**: agremiação sem eleito leva 7. "Eleito na tela" inclui o da projeção quando ela está visível;
+  a rota, que não lê o interruptor, corta no R sem projeção (nunca maior que o da página) e o cliente
+  une por `sqcand`. Na fixture do simulado, SP estadual: 260 → 276 linhas no documento (+3,0 KB de
+  listas, HTML + payload RSC).
 - Given o leitor abriu a lista 61+ de SP no federal e depois abre a de SP no estadual, na mesma aba,
   when a segunda busca roda, then ela **faz** a requisição — o cache em memória é chaveado por
   `slug:UF`, nunca só por UF.
@@ -445,7 +451,7 @@ e fechada).
   como exceção nomeada — proposto pelo `a11y-perf-auditor` a partir da medição e aprovado pelo dono,
   como os 480 KiB do federal (ADR-0065 D5); o teto global de 300 KiB não muda.
 - Given as outras duas rotas, then cabem no teto global. ⚠️ **Emenda 2026-10-03 (dono):** com o corte das
-  listas (eleitos + 5, mínimo 10 — ADR-0065, emenda 03/10) mediram SP estadual 373,6 KiB e DF distrital
+  listas (eleitos + 5, mínimo 10 — ADR-0065, emenda 03/10; eleitos + 7 desde 04/10, RF-281) mediram SP estadual 373,6 KiB e DF distrital
   356,3 KiB (o resto é o cabeçalho das agremiações); as DUAS páginas de UF têm teto próprio de **400 KiB**
   em `tests/e2e/perf-budget.spec.ts`. A capa `/deputado-estadual` cabe no global. Enxugar os cabeçalhos
   fica para depois do 1º turno. ⚠️ **Emenda 2026-10-03, noite (dono):** a mini-foto dos eleitos (RF-291

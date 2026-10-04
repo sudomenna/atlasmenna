@@ -3,6 +3,7 @@ id: ADR-0002
 title: Polling com CDN cache, não SSE/WebSocket
 status: accepted
 date: 2026-05-17
+amended_by: ADR-0074 # só o mecanismo de cliente para o conteúdo das páginas
 ---
 
 # ADR-0002 — Polling com CDN cache, não SSE/WebSocket
@@ -10,6 +11,13 @@ date: 2026-05-17
 ## Status
 
 Aceito.
+
+> **Nota 2026-10-04 ([ADR-0074](0074-atualizacao-automatica-das-paginas-por-router-refresh.md)).** O
+> "SWR poll a cada 5 s em `GET /api/projection`" decidido abaixo nunca foi montado em nenhuma página
+> (`components/shared/swr-provider.tsx` não tem importadores); o mapa persistente busca
+> `/api/projection` a cada 60 s por conta própria. Para o **conteúdo das páginas**, o mecanismo passa a
+> ser `router.refresh()` a cada ~60 s, sem cache de CDN (as páginas são dinâmicas). A escolha de pull em
+> vez de push, e o cache de CDN para `/api/projection`, permanecem.
 
 ## Contexto
 

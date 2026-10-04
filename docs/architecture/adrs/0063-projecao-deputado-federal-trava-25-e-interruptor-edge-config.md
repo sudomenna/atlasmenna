@@ -12,6 +12,13 @@ amends: [0021, 0023]
 
 Aceito (2026-09-29) — plano aprovado pelo dono.
 
+> **Emenda 2026-10-04 (decisão do dono, manhã do 1º turno — voto projetado por candidatura, só
+> Deputado Federal).** A Decisão 1 listava "votos projetados por candidatura (chave `sqcand`)" entre o
+> que a projeção produz, mas o contrato publicado levava por linha só a marca "eleito na projeção" (e
+> `votos_projetados` por agremiação): o número de cada candidato ficava no modelo e nunca chegava à tela.
+> Passa a ser publicado e exibido, com as ressalvas abaixo. A Decisão 5 (nunca ordena, nunca substitui o
+> apurado) permanece. Texto no fim deste arquivo (§ "Emenda 2026-10-04 — Decisão").
+
 **Supera o D9 do design da spec 017** ("o número central é voto apurado, não voto projetado; no cargo 6
 não existe projeção de voto; a tela não pode chamar isso de projeção") **e a redação do D10**
 (`composition.model = 0`, justificado por "decorre de D9"), e **emenda o RF-127** (o intervalo de
@@ -342,6 +349,68 @@ parcial, que já existe, não é retirado.
 - **Fórmula exata do `% apurado` ponderado** (RF-275) e forma exata da imputação: design da
   spec 026.
 - **Medição do desligar → sumir em 60 s**: não feita; é o ensaio de 03/10.
+
+## Emenda 2026-10-04 — Decisão (voto projetado por candidatura, Deputado Federal)
+
+**Contexto.** O modelo calcula o voto projetado de cada candidato válido
+(`api/model/deputado_projecao.py:538-554`), mas só as cadeiras por agremiação e a marca "eleito na
+projeção" chegavam ao pacote publicado. Na noite da eleição o leitor pergunta quantos votos o modelo
+espera de quem está sendo eleito e de quem está logo abaixo do corte. Deputado não tem 2º turno: o que
+não subir hoje não sobe mais. Isto vale **só para o Federal**; o Estadual e o Distrital não têm projeção
+(Fase 2 da spec 027).
+
+**Decisão.**
+
+1. **Publicação (Decisão 1 emendada).** Com `projecao.estado === "liberada"`, o campo `votos_projetados`
+   (inteiro) vai em cada linha de candidato válido de `candidatos` no objeto da UF. **Nunca** vai para
+   `lista_restante`: a rota 61+ serve esse JSON cru e não lê o interruptor (RF-265, ADR-0065 D1). Nunca
+   vai em linha com `destino` (anulado, sub judice, válido de legenda). Fora de `liberada`, ou com o
+   interruptor desligado, o campo não existe: a leitura da página o remove no mesmo ponto em que já remove
+   `projecao` e `projecao_apertada` de cada linha, então "desligar → sumir" continua agindo na regeneração
+   da página (alvo de 60 s, Decisão 4). Vale a ressalva do runbook para os demais campos de projeção: o
+   arquivo JSON público do Blob da UF ainda traz o campo até o ciclo seguinte do modelo (até 30 min).
+2. **Exibição.** Sob o voto apurado, no mesmo elemento do rótulo, "projeção ≈ 652 mil · não oficial" (§ 1,
+   Decisão 5), na cor de projeção, em forma compacta e arredondada a milhar ("mil", "mi"), nunca ao voto.
+   Aparece em três conjuntos: as linhas **eleitas** (na parcial ou na projeção), os **7 primeiros não
+   marcados por agremiação**, por `rank` de apuração (escolha do dono, "eleitos + 7"), e o "Mais votados
+   da UF". Nunca em página nacional. O critério é o mesmo para toda agremiação e depende só do voto
+   apurado, sem juízo editorial (§ 2).
+3. **A Decisão 5 permanece.** O número convive com o apurado, cada um com o seu nome: nunca reordena a
+   lista, nunca substitui o voto contado, nunca é "eleito" sozinho. A legenda de marcas ganha uma linha.
+4. **Formatação.** Valores de 999.500 a 999.999 saem hoje como "1.000 mil" (`lib/utils/format.ts:167`) e
+   passam a sair como "1 mi".
+
+**Ressalva estatística (registrada, não resolvida).** Voto de deputado é **concentrado em redutos**: a
+imputação por estrato de tamanho (ADR-0023) não enxerga geografia dentro do estrato, e o risco de "voto de
+reduto" que as Negativas acima nomeiam é maior no nível do candidato do que no da agremiação — a legenda
+soma muitos candidatos e zonas, a pessoa depende de onde estão os seus. O número por candidato é, portanto,
+**mais instável** que o de cadeiras. Ele é arredondado a milhar para não vender precisão e sai **sem faixa
+de incerteza**: o intervalo já havia sido adiado até para as cadeiras (emenda de 29/09) e nunca existiu
+bootstrap por candidato. Isso não é coberto pela letra da Decisão 8 (que fala de cadeiras), mas contraria o
+seu espírito — número central sozinho —, e fica aceito pelo dono com o rótulo, o "≈", a trava de 25%, o
+interruptor e a metodologia como únicas mitigações; nenhuma delas é estatística.
+
+**Peso do documento.** No pior caso de SP são ~280 linhas × ~62 B ≈ 17 KB, acima da folga de ~15,5 KB sob
+o teto da emenda de 30/09 do [ADR-0065](0065-listas-proporcionais-em-tres-faixas.md). O teto das páginas
+de UF de Deputado (SP, RJ e MG) sobe de 560 KiB para **~590 KiB**; o valor final é o **medido** pelo
+implementador com o pior caso de cada campo (nomes acentuados, "999 mil"), e o teto do teste de peso das
+listas (`DeputadoListaAgremiacao.peso.test.tsx`, 384 KiB) sobe na mesma medida. O novo valor entra em
+`docs/nfr/performance.md` e em `tests/e2e/perf-budget.spec.ts`, com o motivo ao lado. O dono aprovou o
+custo ao escolher "eleitos + 7".
+
+**Consequências desta emenda.**
+
+- *Positivas*: responde à pergunta da noite no nível da pessoa; o interruptor continua desligando tudo
+  (campo removido na leitura); nada do modelo muda além da publicação (o replay presidencial permanece
+  idêntico, G5).
+- *Negativas*: um número pontual **por pessoa**, inclusive de quem não está marcado como eleito, publicado
+  em rede aberta; quem lê "projeção ≈ 640 mil" ao lado de um candidato fora do corte pode lê-lo como
+  "quase eleito". O erro de uma pessoa fica visível individualmente, e não diluído numa bancada. O arquivo
+  público do Blob guarda o campo até o ciclo seguinte ao desligar. O teto de peso sobe de novo
+  (560 → ~590 KiB), o segundo aumento em poucos dias (o primeiro foi a emenda de 30/09 do ADR-0065).
+- *Propagação*: spec 026 (RF-297), spec 011 (`/sobre-o-modelo` e `<DeputadoMetodologia>` precisam dizer
+  que o número por candidato é pontual e sem faixa — constituição § 8), `docs/specs/026-.../design.md` §
+  2.2 (campo na linha), runbook (a ressalva do Blob cobre o campo novo).
 
 ## Cross-refs
 

@@ -18,6 +18,12 @@ requirements: [RF-278, RF-279, RF-280, RF-281, RF-282, RF-283, RF-284, RF-285, R
 > (modo simulado) e **Fase 2**. A forma do JSON continua sendo a do [design 026](../026-deputado-listas-projecao/design.md)
 > § 2; este arquivo só diz **o que muda por cargo** e os dois acréscimos aditivos do § 3.2. O que muda
 > aqui muda o contrato: combine antes.
+>
+> **Emenda 2026-10-04 (decisão do dono, manhã do 1º turno — eleitos + 7).** As faixas de visibilidade
+> da lista de candidatos (1–20 visíveis na tela, +40 por toque) herdam o padrão de 026. Com a emenda
+> de visibilidade de votos projetados por candidatura (RF-297), a regra muda para **eleitos + 7**
+> (não há mínimo): se a agremiação tem 5 eleitos, mostra até 12; se tem 2, mostra até 9. Ver design 026
+> emenda 04/10.
 
 ## 0. O que muda em relação às specs 017 e 026
 

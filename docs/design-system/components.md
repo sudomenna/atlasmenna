@@ -119,6 +119,7 @@ Notas dos atoms não construídos:
 | `<ReordenaListaPorBase />` | ✅ S08 | RF-181 (reordenação no DOM conforme base ativa, ADR-0051) | `components/blocks/ReordenaListaPorBase.tsx` | `tests/unit/components/ReordenaListaPorBase.test.tsx` (10 casos: reordenação real no DOM, foco preservado, idempotência, fase pré intocada, ausência de regra `order` em globals.css) |
 | `<ChancesPanel />` | ✅ S07+ | RF-030.7, RF-107 (migrado de `TwoRoundIndicator`, ADR-0034 D21) | `components/blocks/ChancesPanel.tsx` | `tests/unit/components/ChancesPanel.test.tsx` (S07: refator para exibir composição de vagas projetadas por partido/federação em Senador nível nacional (54 vagas) e para Deputado também exibir `eleitos` por agremiação) |
 | `<DeputadoMetodologia />` | ✅ S07 | RF-127, RF-128 | `components/blocks/DeputadoMetodologia.tsx` | — (Server Component sem testes dedicados; integrado em rotas de Deputado Federal). ⚠️ Propósito: explicar por que o cargo 6 **não usa** `<ForecastTransparency>` (design.md § D9) — não há modelo, só aritmética do ADR-0027 sobre voto apurado. Cadência (RF-128) vem do payload, nunca literal. |
+| `<AvatarDestaque />` | ✅ 04/10 | RF-291, RF-298 (spec 026 — avatares na capa das eleições por cargo nas rotas da home, listas de Deputado) | `components/blocks/AvatarDestaque.tsx` | `tests/unit/components/AvatarDestaque.test.tsx` (dimensões, fallback, CSS Grid layout) |
 | `<NationalMapBlock />` | ✅ S07+ | RF-030.1-4 (Presidente, refator layout ADR-0033, cromo em fluxo mobile ADR-0056), RF-006.3 (Governador, ADR-0048, cromo em fluxo mobile ADR-0056), RF-104-106 (Senador, ADR-0048, cromo em fluxo mobile ADR-0056) | `components/blocks/NationalMapBlock.tsx` | — (não tem componente separado de teste; coberto pelo smoke de home e governador/senador pages) |
 | `<CandidatosGrid />` | ✅ | RF-146, RF-148, RF-149 | `components/blocks/CandidatosGrid.tsx` | `tests/unit/components/CandidatosGrid.test.tsx` |
 | `<CandidaturasFonte />` | ✅ | RF-150 | `components/blocks/CandidaturasFonte.tsx` | — (sem teste dedicado; coberto indiretamente por `tests/unit/pages/candidatos.test.tsx`) |
@@ -160,12 +161,14 @@ Notas dos atoms não construídos:
 | `<PersistentMapFrame />` | ✅ S07 | RF-030.1-4 (moldura persistente, ADR-0033 § 1); cromo em fluxo no celular em vez de overlay (ADR-0056) | `components/layout/PersistentMapFrame.tsx` | — (coberto por smoke de UF pages) |
 | `<UfPicker />` | ✅ S07 | (controle de UF no shell, ADR-0033) | `components/layout/UfPicker.tsx` | — (coberto por smoke de UF navigation) |
 | `<ThemeToggle />` | ✅ S07 | (tema claro/escuro no masthead; persistência em `localStorage`, nunca cookie — ADR-0025 § 5) | `components/atoms/controls/ThemeToggle.tsx` | `tests/unit/state/theme.test.ts`, `tests/unit/shell/static-shell.test.ts` |
+| `<AtualizacaoAutomatica />` | ✅ 04/10 | RF-296 (ADR-0074 — atualização automática a cada minuto via `router.refresh()`, gerenciada pelo shell) | `components/layout/AtualizacaoAutomatica.tsx` + `atualizacao-estado.ts` | `tests/unit/shell/atualizacao-automatica.test.tsx` |
+| `<PausaAtualizacao />` | ✅ 04/10 | RF-296 (ADR-0074 — pausa manual da atualização automática, botão no rodapé) | `components/layout/PausaAtualizacao.tsx` | (coberto por `atualizacao-automatica.test.tsx`) |
 
 ## Shared
 
 | Componente | Status | RFs atendidos | Arquivo | Testes |
 |---|---|---|---|---|
-| `<SWRProvider />` / `useProjection()` | ✅ | RF-027 | `components/shared/swr-provider.tsx` | — (sem teste dedicado) |
+| `<SWRProvider />` / `useProjection()` | ⛔ código morto | ~~RF-027~~ | `components/shared/swr-provider.tsx` | — (sem importador em produção; ADR-0074 substitui por `router.refresh()`, RF-296) |
 | `useMunicipioSheetStore` | ✅ S07 | (estado da folha de município entre o mapa e a página) | `components/shared/municipio-sheet-store.ts` | `tests/unit/components/MunicipioExplorer.test.tsx` |
 | `selosDaBase()` | ✅ S08 | (ADR-0055 — calcula rótulo do selo conforme cargo, turno, rota e base ativa) | `lib/utils/selo-resultado.ts` | `tests/unit/utils/selo-resultado.test.ts` |
 | `consolidarRegiao()` | ✅ S09 | (ADR-0057 — agrega votos de uma região IBGE por partido/candidato; retorna top-6 + "Outros" com base em votos em disputa) | `lib/utils/consolidado-regiao.ts` | `tests/unit/utils/consolidado-regiao.test.ts` |

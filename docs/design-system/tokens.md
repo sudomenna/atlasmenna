@@ -762,6 +762,33 @@ Moram em `components/blocks/PalanquesMapa.module.css`. Sem fundo; hachura (padr�
 
 Regra: texto **nunca é cor-only**; a hachura é sempre redundante (padrão em SVG), e o contorno casado/dividido é linha contínua vs tracejada + código "=" / "≠" (spec 025 RF-251 design). ΔE76 contra toda cor de partido nos dois temas, testado em `tests/unit/design-system/palanques-mapa-contraste.test.tsx`.
 
+## Escala Tipográfica — Fluida no Desktop (ADR-0073)
+
+**Desde 2026-10-04**, a escala tipográfica desdobra-se em dois modos:
+
+- **< 960px (mobile e tablet pequeno)**: escala fixa do design system Atlas Menna (11px `xs` … 64px `5xl`).
+- **≥ 960px (desktop e telão)**: escala fluida calculada por `clamp()`, cresce linearmente com a largura da janela.
+
+Valores por breakpoint:
+
+| Token | 960 | 1280 | 1440 | 1920 | 2560 |
+|---|---|---|---|---|---|
+| `xs` | 11 | 12,5 | 13,2 | 15,4 | 18,3 |
+| `sm` | 13 | 14,7 | 15,6 | 18,2 | 21,7 |
+| `md` | 15 | 16,7 | 17,5 | 20 | 23,3 |
+| `lg` | 18 | 19,3 | 20 | 22,1 | 24,9 |
+| `xl` | 22 | 23,8 | 24,8 | 27,5 | 31,2 |
+| `2xl` | 28 | 29,6 | 30,6 | 33,5 | 37,6 |
+| `3xl` | 36 | 37,2 | 38 | 40,5 | 44,8 |
+| `4xl` | 48 | 52 | 54 | 60 | 68 |
+| `5xl` | 64 | 64 | 64 | 64 | 64 |
+
+**Tokens de KPI** (números em destaque, `--type-kpi` e `--type-kpi-sm`):
+- **< 960px**: `--type-kpi` = `--type-figure-sm` (Spectral 600, 32px), `--type-kpi-sm` = `--text-lg` (18px)
+- **≥ 960px**: `--type-kpi` = Spectral 600, `--text-2xl` (valor fluido), `--type-kpi-sm` = mono 600, `--text-xl` (valor fluido)
+
+Implementação: redefinição de `--text-*` em `app/globals.css` dentro de `@media (min-width: 960px)`, depois do `@theme static`. Nenhuma classe ou atributo novo por elemento; todas as mudanças são via CSS variables.
+
 ### Restrições da constituição 1.6
 
 - § 2(d): paleta neutra com piso de ΔE76 ≥ 10 contra cores de partido — aqui garantido por teste.

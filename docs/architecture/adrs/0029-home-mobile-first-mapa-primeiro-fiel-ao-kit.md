@@ -3,7 +3,7 @@ id: ADR-0029
 title: Home mobile-first com mapa primeiro e abas de cargo no rodapé, não pilha de blocos com hero de texto no topo — fidelidade ao protótipo do kit Atlas Menna
 status: accepted
 date: 2026-09-07
-amended_by: ADR-0034 # fecha a pendência D17 (nota de ADR-0033): a reversão do hero é de conteúdo, não só posição — ADR-0018 fica superseded
+amended_by: [ADR-0034, ADR-0074] # 0034: fecha a pendência D17 (nota de ADR-0033): a reversão do hero é de conteúdo, não só posição — ADR-0018 fica superseded; 0074: terceiro componente de cliente no shell (Decisão 2)
 ---
 
 # ADR-0029 — Home mobile-first com mapa primeiro e abas de cargo no rodapé, não pilha de blocos com hero de texto no topo
@@ -33,6 +33,12 @@ Aceito. Este ADR **emenda parcialmente** o ADR-0018 (só a **posição** do hero
 > isso o ADR-0018 fica `superseded` (ver a nota correspondente no próprio ADR-0018). Os itens 1–5 e
 > 7–9 desta Decisão permanecem intocados; o item 7 (`<CandidateResultRow>` com parcial/projeção lado
 > a lado) é, na prática, absorvido pelo `<ResultPanel>`, que usa a mesma linha internamente.
+
+> **Nota 2026-10-04 ([ADR-0074](0074-atualizacao-automatica-das-paginas-por-router-refresh.md)).** A
+> restrição de que o shell global carrega só **dois** componentes de cliente (`<ViewModeSwitch>` e
+> `<ThemeToggle>`, a Decisão 2 e a expectativa (e) de `tests/unit/shell/static-shell.test.ts`) passa a
+> admitir um **terceiro**, `<AtualizacaoAutomatica>`, que chama `router.refresh()` a cada minuto. A
+> proibição de `cookies()`, `headers()` e `searchParams` no shell permanece intacta.
 
 ## Contexto
 

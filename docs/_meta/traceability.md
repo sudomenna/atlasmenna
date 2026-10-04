@@ -60,7 +60,7 @@ Atualizada a cada PR. Fonte de verdade para cobertura.
 | RF-024 | UFs decisivas (top 6) | M | ~~[003](../specs/003-home-nacional/)~~ | ⚠️ **sem cobertura** — removido em 08/09 (ADR-0033, D2) | — |
 | RF-025 | Tabela 27 UFs com dot-plot | M | [003](../specs/003-home-nacional/), [006](../specs/006-grid-governadores/) | `<UFForecastTable />`, `<DotPlotRange />` | deferred S05 |
 | RF-026 | Timestamp última atualização | M | [003](../specs/003-home-nacional/) | `<LiveBadge />` | unit |
-| RF-027 | Atualização sem reload | M | [003](../specs/003-home-nacional/), [006](../specs/006-grid-governadores/) | (SWR) | unit |
+| RF-027 | Atualização sem reload | M | [003](../specs/003-home-nacional/), [006](../specs/006-grid-governadores/) | (ADR-0074 — `router.refresh()` com pausa manual) | unit |
 | RF-028 | "Ao vivo" pulsante | S | [003](../specs/003-home-nacional/) | `<LiveBadge />` | unit |
 | RF-029 | Tabs Pres/Gov | M | [003](../specs/003-home-nacional/), [006](../specs/006-grid-governadores/) | `<Tabs />` | unit |
 | RF-030 | Switch 1T/2T | M (no 2T) | [003](../specs/003-home-nacional/) | (Tabs/Switch) | unit |
@@ -183,6 +183,9 @@ Atualizada a cada PR. Fonte de verdade para cobertura.
 | RF-174 | Antes de 04/10 o gráfico desenha os eixos e diz que ainda não é hora | M | [020](../specs/020-evolucao-da-apuracao/) | `<SerieApuracaoChart />` | ✅ unit (`tests/unit/components/serie-apuracao-chart.test.tsx`, 4 casos): sem traçado, “projeção” ausente de toda superfície, régua de 0–50% e horários do protótipo. ✅ integration: as 4 rotas conferem `data-estado="antes-do-dia"` quando o payload **nacional** traz a fase. |
 | RF-175 | Três estados degradados, nenhum silencioso | M | [020](../specs/020-evolucao-da-apuracao/) | `<SerieApuracaoChart />`, `<DetailUnavailable />` | ✅ unit (`tests/unit/components/serie-apuracao-chart.test.tsx`, blocos “T3” e “T5”): 0/1/**2** pontos (o caso NO limiar), traço interrompido em dois segmentos no furo, nenhuma coordenada na linha de zero e a célula dizendo “sem medição”. Mutação `?? 0` aplicada e morta. |
 | RF-176 | Tabela completa para leitor de tela, com as duas bases | M | [020](../specs/020-evolucao-da-apuracao/) | `<SerieApuracaoChart />` | ✅ unit (`tests/unit/components/serie-apuracao-chart.test.tsx`, bloco “RF-176”, 4 casos): uma linha por instante, hora legível (nunca ISO cru), legenda declarando a projeção como não oficial, SVG com papel de imagem. ⚠️ O item (e) — axe nas 4 rotas × 2 temas × 2 viewports — **ainda não foi rodado**. |
+| RF-296 | Atualização automática por `router.refresh()` com interruptor de pausa | M | [003](../specs/003-home-nacional/) | `components/layout/AtualizacaoAutomatica.tsx`, `PausaAtualizacao.tsx`, `atualizacao-estado.ts` | ✅ unit (`tests/unit/shell/atualizacao-automatica.test.tsx`); implementado nas 4 rotas (home e UFs Pres/Gov/Sen) — ADR-0074 |
+| RF-297 | Marcas de voto projetado por candidatura em Deputado Federal (eleito na projeção) | M | [026](../specs/026-deputado-listas-projecao/) | `lib/utils/deputado-marcas.ts`, `components/blocks/DeputadoListaAgremiacao.tsx`, `DeputadoMaisVotados.tsx`, `MarcaDeputado.tsx`, `api/model/deputado_payload.py` | ✅ unit (`tests/unit/utils/deputado-voto-projetado.test.tsx`, `tests/unit/model/test_deputado_voto_projetado.py`); emenda ADR-0063 D1 (04/10) — `votos_projetados` por `sqcand` publicado e exibido nas listas |
+| RF-298 | Painel desktop com escala de tipografia fluida e tokens de KPI | M | [026](../specs/026-deputado-listas-projecao/) | `app/globals.css`, `app/(dep)/_painel-desktop.module.css`, `components/layout/AppShellSplit.module.css`, `DeputadoListaAgremiacao.module.css` | ✅ e2e (`tests/e2e/perf-budget.spec.ts`, `deputado-listas.spec.ts`, `tokens.spec.ts`); ADR-0073 — escala em duas colunas (<960 px fixa; ≥960 fluida) + tokens `--type-kpi`/`--type-kpi-sm` |
 
 ## RFs adicionados pelas specs (não estavam no PRD)
 
@@ -219,6 +222,7 @@ Atualizada a cada PR. Fonte de verdade para cobertura.
 | RF-030.9 | Cenários 2º turno | [003](../specs/003-home-nacional/) — ⚠️ **cortado em 08/09** (ADR-0033); esta tabela registra a ORIGEM do RF, não que ele esteja vigente. Ver a linha dele na matriz principal |
 | RF-061 | Hero seis termômetros 1T | [003](../specs/003-home-nacional/) |
 | RF-063 | Identidade visual por trilha | [003](../specs/003-home-nacional/) |
+| RF-296 | Atualização automática com pausa | [003](../specs/003-home-nacional/) |
 | RF-100 | Ingestão do cargo 5 em granularidade de zona | [016](../specs/016-senador/) |
 | RF-101 | Suplentes preservados no snapshot | [016](../specs/016-senador/) |
 | RF-102 | Projeção por regra de três, zona a zona | [016](../specs/016-senador/) |
@@ -241,6 +245,27 @@ Atualizada a cada PR. Fonte de verdade para cobertura.
 | RF-129 | Drill-down por UF vem do Blob | [017](../specs/017-deputado-federal/) |
 | RF-130 | Voto de legenda visível | [017](../specs/017-deputado-federal/) |
 | RF-131 | Hemiciclo da Câmara | [017](../specs/017-deputado-federal/) |
+| RF-260 | Listas de candidatos por agremiação em cada estado | [026](../specs/026-deputado-listas-projecao/) |
+| RF-261 | Marca "eleito na parcial" em cada linha | [026](../specs/026-deputado-listas-projecao/) |
+| RF-262 | Marca "eleito na projeção" em cada linha | [026](../specs/026-deputado-listas-projecao/) |
+| RF-263 | Marca "eleito" do TSE | [026](../specs/026-deputado-listas-projecao/) |
+| RF-264 | Percentual dos válidos por candidatura | [026](../specs/026-deputado-listas-projecao/) |
+| RF-265 | Interruptor de projeção em Global Config | [026](../specs/026-deputado-listas-projecao/) |
+| RF-266 | Trava de 25% apurado para liberar projeção | [026](../specs/026-deputado-listas-projecao/) |
+| RF-267 | Mais votados do estado | [026](../specs/026-deputado-listas-projecao/) |
+| RF-268 | Mais votados do país | [026](../specs/026-deputado-listas-projecao/) |
+| RF-269 | Linha de corte (quociente eleitoral) visível | [026](../specs/026-deputado-listas-projecao/) |
+| RF-270 | Puxadores de voto (votação concentrada na abertura) | [026](../specs/026-deputado-listas-projecao/) |
+| RF-271 | Regras aplicadas com o número da UF | [026](../specs/026-deputado-listas-projecao/) |
+| RF-272 | Conferência contra TSE em modo resumo (designação via agregado) | [026](../specs/026-deputado-listas-projecao/) |
+| RF-273 | Método de cálculo transparente em card | [026](../specs/026-deputado-listas-projecao/) |
+| RF-274 | Cadência de 30 minutos com 6 fatias visível | [026](../specs/026-deputado-listas-projecao/) |
+| RF-275 | Versão Blob estável entre rotas — UF e nacional idênticos | [026](../specs/026-deputado-listas-projecao/) |
+| RF-276 | Compatibilidade com payload v1 (sem campos novos) | [026](../specs/026-deputado-listas-projecao/) |
+| RF-277 | Três correções: anulado fora, legenda separada, dvt v2 | [026](../specs/026-deputado-listas-projecao/) |
+| RF-291 | Avatares nas capas de cargas e nas listas puxadores+deputados | [026](../specs/026-deputado-listas-projecao/) |
+| RF-297 | Marcas de voto projetado por candidatura | [026](../specs/026-deputado-listas-projecao/) |
+| RF-298 | Painel desktop com escala fluida e tokens KPI | [026](../specs/026-deputado-listas-projecao/) |
 | RF-140 | Ingestão do cadastro de candidaturas | [018](../specs/018-identidade-candidatura/) |
 | RF-141 | Publicabilidade fail-closed | [018](../specs/018-identidade-candidatura/) |
 | RF-142 | Foto de candidato no Blob | [018](../specs/018-identidade-candidatura/) |

@@ -5,7 +5,7 @@ status: implementing
 priority: M
 personas: [P1, P2, P3]
 screens: [T-11, T-12]
-requirements: [RF-260, RF-261, RF-262, RF-263, RF-264, RF-265, RF-266, RF-267, RF-268, RF-269, RF-270, RF-271, RF-272, RF-273, RF-274, RF-275, RF-276, RF-277, RF-291]
+requirements: [RF-260, RF-261, RF-262, RF-263, RF-264, RF-265, RF-266, RF-267, RF-268, RF-269, RF-270, RF-271, RF-272, RF-273, RF-274, RF-275, RF-276, RF-277, RF-291, RF-297, RF-298]
 depends_on: [017-deputado-federal, 018-identidade-candidatura]
 amends: [017-deputado-federal, 011-sobre-o-modelo]
 apis: [GET /uf/[sigla]/deputado-federal/lista]
@@ -15,7 +15,7 @@ nfr: [RNF-002, RNF-003, RNF-006, RNF-007a, RNF-012, RNF-022, RNF-023, RNF-024, R
 #   ADR-0063 — Projeção de deputado com trava de 25% e interruptor no Edge Config
 #   ADR-0064 — Destino do voto no proporcional
 #   ADR-0065 — Listas de candidaturas proporcionais em três faixas
-adrs: [0001, 0005, 0017, 0021, 0023, 0026, 0027, 0034, 0036, 0038, 0049, 0053, 0063, 0064, 0065]
+adrs: [0001, 0005, 0017, 0021, 0023, 0026, 0027, 0034, 0036, 0038, 0049, 0053, 0063, 0064, 0065, 0073, 0074]
 ship_blocked_on: [ADR-0063, ADR-0064 e ADR-0065 aceitos, G2 (replay sintético) reportado ao dono antes de ligar o interruptor, portões e2e de peso e acessibilidade em /uf/SP/deputado-federal com o Blob servido]
 opens_after: 2026-09-29
 ---
@@ -61,6 +61,7 @@ estimativa nossa e o que é o resultado oficial.
 ### Dentro
 
 - Lista de candidatos por agremiação em três faixas (20 visíveis · 21–60 na página · 61+ sob demanda).
+  *Emenda 04/10: visíveis = eleitos + 7 (RF-260).*
 - As três marcas, com precedência do resultado oficial.
 - Projeção de votos e de cadeiras por UF, zona a zona, com trava automática e interruptor sem deploy.
 - Mais votados do estado e do país, linha de corte, puxadores, regras com os números do estado.
@@ -103,18 +104,38 @@ fora da vista até o leitor pedir, sem remover nó do DOM (ADR-0034 D21); e SHAL
 diante só quando o leitor pedir, pela rota `GET /uf/[sigla]/deputado-federal/lista`, guardando a
 resposta em memória na aba (ADR-0065).
 
+> ⚠️ **Emenda 04/10 (decisão do dono): eleitos + 7.** "Para todas as telas de deputados federais e
+> estaduais o padrão do sistema será sempre exibir os eleitos e + 7 abaixo do corte; a partir desses,
+> só tocando no botão." A primeira faixa deixa de ser "os 20 primeiros" e passa a ser o **conjunto
+> visível por padrão** de cada agremiação: rank ≤ **R = (maior rank eleito na tela, ou 0) + 7** — com
+> "eleito na tela" = marca na parcial; na projeção, só com a projeção visível (RF-265); com a
+> totalização final, só "Eleito (TSE)" (RF-267). As 7 são posições (uma linha com `destino` entre elas
+> ocupa uma; contá-las só entre as válidas abriria as 60 linhas de uma agremiação com a candidatura
+> inteira anulada). Agremiação sem eleito: as 7 primeiras. As linhas 1–60 continuam todas no
+> documento; o que muda é quem fica recolhido (`li[data-f]`) e o N de "Mais N candidatos". Se R passa
+> de 60, tudo o que está no documento fica visível. O voto projetado por candidatura (RF-297) sai
+> exatamente nas linhas válidas desse conjunto. Regra única em `lib/utils/deputado-marcas.ts`
+> (`ultimoRankVisivel`), espelhada no produtor (`api/model/deputado_payload.py`). Vale no celular e no
+> computador; o 61+ segue pela rota.
+
 **Aceitação**:
 - Given uma agremiação de SP com 71 candidatos, when a página carrega, then as linhas de rank 1 a 60
-  estão no documento, 20 visíveis, e **nenhuma** requisição à rota da lista foi feita.
+  estão no documento, 20 visíveis, e **nenhuma** requisição à rota da lista foi feita. *(Emenda 04/10:
+  visíveis = eleitos + 7 — o PL de SP da fixture de contrato, com 25 eleitos, mostra 1–32 e recolhe
+  33–60, "Mais 28 candidatos de PL".)*
 - Given o leitor aciona "ver mais", when a faixa abre, then as linhas 21–60 ficam visíveis e o botão
-  passa a `aria-expanded="true"`.
+  passa a `aria-expanded="true"`. *(Emenda 04/10: as linhas recolhidas, de R + 1 a 60.)*
 - Given o leitor aciona "mostrar todos", when a busca roda, then a lista tem `aria-busy="true"`
   durante, uma região viva anuncia quantos candidatos chegaram, o foco vai para a primeira linha nova
   (rank 61) e um segundo acionamento **não** refaz a requisição.
 - Given a rota responde erro, when a busca falha, then aparece a mensagem com "tentar de novo" e as
   60 linhas continuam na tela.
 - Given uma agremiação com até 20 candidatos, when renderiza, then nenhum botão aparece; com até 60,
-  só o "ver mais".
+  só o "ver mais". *(Emenda 04/10: nenhum botão quando eleitos + 7 cobre a agremiação inteira; sem
+  eleito e com 8+ candidatos, "Mais N" aparece a partir do 8º.)*
+- *(Emenda 04/10)* Given agremiações com 0, 1 e 15 eleitos, when renderizam, then mostram 7, 8 e 22
+  linhas; given a projeção visível elegendo também o 10º de uma agremiação com 3 eleitos na parcial,
+  then mostra 17 (oculta: 10); given 56 eleitos, then as 60 do documento ficam visíveis, sem "Mais N".
 - ⚠️ **Só SP chega ao 61+.** Cada partido ou federação registra até 100% dos lugares mais 1 (Lei
   9.504 art. 10, redação da Lei 14.211/2021): SP (70 lugares) admite 71; MG (53), 54. A terceira
   faixa existe para SP, e com no máximo 11 linhas por agremiação — o que mantém a rota barata.
@@ -343,6 +364,8 @@ sobra aberta.
 **Aceitação**:
 - Given o corte na faixa 21–60 (o PL de SP com 25 eleitos), when a lista está fechada, then o
   cabeçalho da agremiação repete a diferença em texto — o corte não some porque a faixa está fechada.
+  *(Emenda 04/10: com "eleitos + 7" o último eleito está sempre no conjunto visível, e a linha de
+  corte também; a repetição no cabeçalho continua.)*
 - Given uma agremiação sem eleito, when renderiza, then não há linha de corte.
 
 **RF-273 — Puxadores**
@@ -426,6 +449,53 @@ avatar em linha não eleita (inclusive "eleito na projeção" sozinho), nem em p
   (constituição § 2).
 - Peso: decisão do dono de 03/10 ("não se preocupar com o tamanho em KB"); o teto que estourar sobe
   com o valor medido e o motivo escrito ao lado.
+- Nota de 04/10: o avatar de 28 px vale **abaixo de 960 px**; a partir dali é de 36 px (RF-298, ADR-0073).
+
+### Emenda de 04/10 — telão: voto projetado por candidato e painel desktop
+
+> **Numeração.** RF-296, RF-297 e RF-298 conferidos por grep em `docs/` em 2026-10-04 — nenhum uso
+> anterior (o último era RF-295, da spec 003). O RF-296 (atualização automática) mora na
+> [spec 003](../003-home-nacional/spec.md), junto do RF-027 que ele substitui; esta spec leva o RF-297 e o
+> RF-298. Como no RF-291, a página de UF é o mesmo módulo (`app/(dep)/_pagina-uf-deputado.tsx`) e a
+> [spec 027](../027-deputado-estadual-distrital/spec.md) herda o RF-298 (T-17, T-18); o RF-297 é **só do
+> Federal**.
+
+**RF-297 — Voto projetado por candidatura (só Deputado Federal)**
+
+WHILE a projeção de uma UF está liberada (RF-264), the system SHALL publicar `votos_projetados` (inteiro) em cada linha de candidato válido de `candidatos` do objeto da UF, and SHALL NOT publicá-lo em linha de `lista_restante` (rota 61+), nem em linha com `destino` (`anulado`, `sub_judice`, `valido_legenda`).
+WHEN uma página de UF de Deputado Federal renderiza uma linha **eleita na parcial ou na projeção**, OR uma das **7 primeiras linhas, por `rank`, sem marca de eleito** de cada agremiação — inclusive onde a linha reaparece no "Mais votados em {UF}" (RF-270), que repassa o campo —, and a projeção está visível (RF-265) e a UF não tem totalização final (RF-267), the system SHALL exibir sob o voto apurado, no mesmo elemento, "projeção ≈ N · não oficial", com N em forma compacta arredondada a milhar ("652 mil", "1,2 mi"), na cor de projeção, sem reordenar a lista e sem substituir o voto apurado (ADR-0063 Decisão 5 e emenda de 04/10).
+IF o interruptor está desligado, OR a UF não está `liberada`, OR a linha não está entre as acima, THEN the system SHALL NOT exibir o número, and a leitura da página SHALL remover o campo da linha.
+The system SHALL NOT exibir voto projetado por candidato no Deputado Estadual, no Distrital nem em página nacional.
+
+**Aceitação**:
+- Given uma UF `liberada` e uma agremiação com 3 eleitos na parcial, 1 eleito só na projeção e 20 candidatos, when a página renderiza, then os 4 marcados e os 7 primeiros por `rank` entre os não marcados mostram o número, e nenhum dos outros 9.
+- Given a mesma UF com o interruptor desligado, when a página renderiza, then nenhuma linha mostra o número, e a ordem das linhas é a mesma da página com ele ligado.
+- Given `lista_restante` de SP, when o ciclo publica, then nenhuma linha dela tem `votos_projetados` (teste de modelo e da rota 61+).
+- Given 100% apurado, when a projeção roda, then `votos_projetados` é igual ao voto apurado de cada candidato (identidade G1); given os mesmos snapshots e o mesmo estado do interruptor, when o ciclo roda duas vezes, then a saída é idêntica byte a byte.
+- Given um candidato `anulado` ou `sub_judice` entre os 7 primeiros por `rank`, when renderiza, then ele não mostra número e não ocupa uma das 7 posições.
+- Given a linha com o número, when o texto é lido, then "projeção" e "não oficial" estão no mesmo elemento (RF-266) e a legenda das marcas tem uma linha para ele.
+- Given `votos_projetados` de 999.500 a 999.999, when formatado, then sai "1 mi", nunca "1.000 mil".
+- Given `/uf/SP/deputado-federal` com o Blob servido, when o portão mede o documento, then o teto das páginas de UF de Deputado (SP, RJ, MG) é o valor medido pelo implementador (alvo ~590 KiB, ADR-0063 emenda de 04/10), registrado em `docs/nfr/performance.md` e em `tests/e2e/perf-budget.spec.ts` com o pior caso de cada campo.
+- Given `/uf/SP/deputado-estadual` e `/deputado-federal`, when renderizam, then nenhum voto projetado por candidato aparece.
+
+**RF-298 — Painel desktop: escala tipográfica fluida, coluna de painéis e telas de Deputado largas**
+
+WHILE a largura da janela é ≥ 960 px, the system SHALL escalar a tipografia do site com uma rampa fluida ancorada em 960 px — sem alterar nada nessa largura — de modo que, a 1920 px, os tamanhos pequenos (`--text-2xs` a `--text-sm`) cresçam ~40%, os médios (`--text-base`, `--text-md`) ~33% e os grandes (`--text-lg` a `--text-5xl`) ~25%, com tetos de 1,7× nos pequenos e 1,45× nos grandes (ADR-0073); and SHALL manter o texto de `<small>` nas linhas de lista no tamanho do texto do dado (`--text-xs`), e derivar de tokens os tamanhos de fonte em px literais dos componentes de linha de candidato.
+WHILE a largura da janela é ≥ 960 px, nas rotas com mapa, the system SHALL dimensionar a coluna de painéis como `clamp(400px, 36vw, 820px)`, mantendo `--container-page` e `--container-sidebar` inalterados.
+WHILE a largura da janela é ≥ 960 px, nas páginas de Deputado (`/deputado-federal`, `/uf/[sigla]/deputado-federal` e, por herança, as de Estadual e Distrital), the system SHALL: (i) alargar o conteúdo até 1920 px com margem lateral fluida; (ii) dispor as agremiações em grade de colunas de ao menos 30 rem — 2 colunas a 1280–1440 px e 3 a 1920 px —, **na ordem do DOM**; (iii) dispor lado a lado, a partir de 1280 px, os pares Votação + Mais votados (e, nas capas, Câmara 2027 + Bancada, Mais votados + Puxadores); (iv) mostrar na linha do candidato o voto apurado em mono 600 maior que o nome, nº/partido e percentual em `--text-xs` e avatar de 36 px (RF-291 emendado **só ≥ 960 px**: abaixo disso o avatar continua de 28 px); (v) usar `--type-kpi` no resumo da UF e `--type-kpi-sm` no número de cadeiras do cabeçalho de cada agremiação; e (vi) deixar regras, conferência e metodologia em largura cheia, no fim.
+WHILE a largura da janela é < 960 px, the system SHALL NOT alterar tipografia, larguras nem leiaute.
+The system SHALL NOT acrescentar classe nem atributo por linha de candidato para esta frente.
+
+**Aceitação**:
+- Given 375 px, when se mede `/`, `/uf/SP`, `/governador`, `/senador`, `/deputado-federal` e `/uf/SP/deputado-federal`, then o histograma de tamanhos de fonte e o `scrollHeight` são idênticos aos medidos antes da mudança (base de 04/10).
+- Given 960 px, when se mede o corpo, then os tamanhos de fonte são os do kit (`--text-xs` = 11 px, `--text-md` = 15 px) e a coluna de painéis mede 400 px.
+- Given 1920 px em `/uf/SP/deputado-federal`, when se mede o texto de dado, then nenhum está abaixo de 14 px, e a distância entre o nome e o voto de uma linha é menor que 550 px (era 1.150 px) e o tamanho do voto é maior que o do nome.
+- Given `/uf/SP/deputado-federal`, when a janela mede 1920 px, then `[data-testid="uf-agremiacoes"]` tem 3 colunas; a 1280 px, 2; e em ambas a ordem das agremiações no DOM é a mesma de 375 px.
+- Given 1920 px nas rotas com mapa, when se mede a coluna de painéis, then ela mede ~691 px; a 1280 px, ~461 px; nunca acima de 820 px.
+- Given `tests/e2e/tokens.spec.ts`, when roda, then `--container-page` ainda vale 1280 px e o `<main>` de `/` também.
+- Given o axe a 1280 px nos dois temas e `deputado-listas` a 375 e 320 px, when rodam, then zero violações e nenhuma rolagem horizontal.
+- Given o documento de `/uf/SP/deputado-federal`, when se compara o peso antes e depois **desta frente** (só CSS), then o HTML não ganha bytes por linha.
+- Given um bloco `<small>` dentro de uma lista de candidato a 1920 px, when se mede, then seu `font-size` é o de `--text-xs` e não 80% dele.
 
 ## Requisitos Não-Funcionais
 

@@ -5,12 +5,12 @@ status: shipped
 priority: M
 personas: [P1, P2, P3, P4]
 screens: [T-01]
-requirements: [RF-021, RF-022, RF-023, RF-025, RF-026, RF-027, RF-028, RF-029, RF-030, RF-030.1, RF-030.2, RF-030.3, RF-030.4, RF-030.5, RF-030.6, RF-030.7, RF-030.8, RF-061, RF-062, RF-063, RF-177, RF-178, RF-180, RF-181, RF-185, RF-186, RF-187, RF-188, RF-189, RF-190, RF-191, RF-292, RF-293, RF-295]
+requirements: [RF-021, RF-022, RF-023, RF-025, RF-026, RF-027, RF-028, RF-029, RF-030, RF-030.1, RF-030.2, RF-030.3, RF-030.4, RF-030.5, RF-030.6, RF-030.7, RF-030.8, RF-061, RF-062, RF-063, RF-177, RF-178, RF-180, RF-181, RF-185, RF-186, RF-187, RF-188, RF-189, RF-190, RF-191, RF-292, RF-293, RF-295, RF-296]
 depends_on: [001-ingestao-tse, 002-modelo-estatistico, 008-interatividade-brushing]
 apis: [GET /api/projection]
-components: [HeadlineScore, NationalChoroplethMap, MapViewToggle, StateGroupedTable, NationalNeedle, ChancesPanel, InsightCard, ForecastTransparency, LiveBadge, Tabs, MinorCandidatesList, RaceTypeIndicator, TurnoBadge, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader, ApuracaoMeta, BreakingNewsTicker, NationalWinnerBanner, TurnoOneRecap, ResultPanel, CandidateListCollapse, MapZoomControls]
+components: [HeadlineScore, NationalChoroplethMap, MapViewToggle, StateGroupedTable, NationalNeedle, ChancesPanel, InsightCard, ForecastTransparency, LiveBadge, Tabs, MinorCandidatesList, RaceTypeIndicator, TurnoBadge, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader, ApuracaoMeta, BreakingNewsTicker, NationalWinnerBanner, TurnoOneRecap, ResultPanel, CandidateListCollapse, MapZoomControls, AtualizacaoAutomatica]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-007, RNF-008, RNF-022, RNF-023, RNF-024, RNF-025, RNF-026, RNF-028]
-adrs: [0001, 0002, 0003, 0004, 0005, 0010, 0012, 0013, 0014, 0017, 0018, 0019, 0025, 0033, 0034, 0038, 0050, 0051, 0053, 0055, 0056, 0057, 0071]
+adrs: [0001, 0002, 0003, 0004, 0005, 0010, 0012, 0013, 0014, 0017, 0018, 0019, 0025, 0033, 0034, 0038, 0050, 0051, 0053, 0055, 0056, 0057, 0071, 0073, 0074]
 shipped_with_carry_overs:
   - RF-025-UFForecastTable-completa-deferida-S05
   - RF-030.4-hachura-flip-MapLibre-sprite-deferida-S05
@@ -189,6 +189,32 @@ WHEN a home renderiza, the system SHALL exibir timestamp ISO da última ingestã
 **RF-027 — Atualização do payload sem reload**
 
 WHILE a página está aberta, the system SHALL fazer polling SWR de `/api/projection` a cada 5s e atualizar apenas componentes afetados.
+
+> **Nota de emenda (ADR-0074, 2026-10-04).** O mecanismo descrito acima — polling SWR de
+> `/api/projection` a cada 5 s — **nunca foi montado em página alguma**: o `<SwrProvider>` de
+> `components/shared/swr-provider.tsx` não é importado por nenhuma rota, e só o mapa persistente
+> (`PersistentMapFrame`) busca `/api/projection`, a cada 60 s. A atualização do conteúdo da página passa
+> a ser o **RF-296**. O texto do RF-027 fica como registro histórico, sem renumeração.
+
+**RF-296 — Atualização automática das páginas de apuração, com pausa**
+
+WHILE uma página de apuração — `/`, as capas de cargo (`/governador`, `/senador`, `/deputado-federal`, `/deputado-estadual`) e `/uf/[sigla]` com ou sem o cargo — está aberta numa aba **visível**, the system SHALL renovar o conteúdo renderizado no servidor a cada 60 s mais um atraso aleatório de 0 a 15 s, sem recarregar o documento e preservando o estado de interface do leitor (posição de rolagem, foco, listas abertas e candidatos já buscados, base de ordenação escolhida).
+WHEN uma aba volta a ficar visível e já passaram mais de 60 s desde a última atualização, the system SHALL atualizar a página imediatamente; WHILE a aba está oculta, the system SHALL NOT pedir nada ao servidor.
+IF o navegador declara `saveData`, OR a rota não está na lista acima (ex.: `/candidatos`, `/sobre-o-modelo`), OR o leitor pausou, THEN the system SHALL NOT atualizar automaticamente.
+WHERE a atualização automática está ativa, the system SHALL exibir no rodapé o controle "Esta página se atualiza a cada minuto · Pausar/Retomar", operável por teclado, cuja escolha persiste no `localStorage` do navegador (sem cookie, sem dado pessoal) — atendimento ao critério de sucesso 2.2.2 da WCAG (constituição § 4); IF a atualização está desligada pela rota ou por `saveData`, THEN the system SHALL NOT exibir a frase.
+IF uma atualização falha (rede, servidor), THEN the system SHALL manter o último conteúdo, sem mensagem de erro e sem encurtar o intervalo seguinte (constituição § 7).
+
+**Aceitação**:
+- Given `/uf/SP/deputado-federal` visível e sem pausa, when passam entre 60 e 75 s, then uma requisição RSC (`_rsc`) é feita, volta 200, e o documento não é recarregado.
+- Given a faixa "ver mais" de uma agremiação aberta e os candidatos 61+ já buscados, when a atualização roda, then a faixa continua aberta e as linhas buscadas continuam na lista; e as linhas passam a refletir os votos novos (as linhas derivam das props, não de um estado inicial congelado).
+- Given uma base de ordenação escolhida pelo leitor (ADR-0051), when a atualização roda, then a ordem das listas continua a da base escolhida.
+- Given uma aba oculta por 5 min, when volta a ficar visível, then atualiza na hora; e durante os 5 min nenhuma requisição foi feita.
+- Given duas abas abertas no mesmo instante, when se medem os disparos, then o atraso de cada uma está em [0, 15] s (o gerador aleatório é injetado no teste).
+- Given o leitor aciona "Pausar", when recarrega a página ou abre outra aba, then continua pausada, e "Retomar" volta a atualizar; o botão tem nome acessível e estado perceptível sem depender de cor.
+- Given `/candidatos` ou `/sobre-o-modelo`, when renderiza, then nenhuma atualização roda e nenhum controle aparece.
+- Given `navigator.connection.saveData === true`, when a página renderiza, then nenhuma atualização roda.
+- Given `DadoParadoBanner` visível numa página de Deputado, when o servidor passa a ter dado novo, then a atualização seguinte o remove sem ação do leitor.
+- Given `tests/unit/shell/static-shell.test.ts`, when roda, then lista três componentes de cliente no shell (ADR-0074) e nenhuma API dinâmica no código do shell.
 
 **RF-028 — Indicador "ao vivo" pulsante (Should)**
 
@@ -523,6 +549,15 @@ O painel "Votação" (RF-192..199) entra na tela `/` imediatamente após a lista
 ### Spec 022 — A corrida em três círculos (2026-09-26)
 
 O painel "A corrida" (RF-200..210) renderiza imediatamente **depois** do painel "Votação" (spec 021) na tela `/`, em seu próprio `<Panel>`.
+
+### ADR-0074 — Atualização automática das páginas (2026-10-04)
+
+O RF-027 (polling SWR de 5 s) nunca esteve no ar; o RF-296 o substitui por `router.refresh()` a cada
+minuto, com pausa no rodapé, para todas as páginas de apuração e todos os visitantes
+([ADR-0074](../../architecture/adrs/0074-atualizacao-automatica-das-paginas-por-router-refresh.md)). A
+coluna de painéis das rotas com mapa passa a ser proporcional à largura a partir de 960 px
+([ADR-0073](../../architecture/adrs/0073-painel-desktop-para-telao-escala-fluida-e-larguras.md), RF-298 na
+[spec 026](../026-deputado-listas-projecao/spec.md)).
 
 ### ADR-0053 — emenda 2026-09-27 (tarde): a lista passa a mostrar a base da disputa
 

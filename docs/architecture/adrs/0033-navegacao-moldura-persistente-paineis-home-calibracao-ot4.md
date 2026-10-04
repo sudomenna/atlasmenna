@@ -4,7 +4,7 @@ title: Moldura persistente para o mapa entre rotas de UF, não SPA do protótipo
 status: accepted
 date: 2026-09-08
 amends: 0029
-amended_by: [ADR-0050, ADR-0056] # 0050: premissa de clique da Decisão 1, só no desktop; 0056: variante `frame` sem cromo sobreposto, só no celular
+amended_by: [ADR-0050, ADR-0056, ADR-0073] # 0050: premissa de clique da Decisão 1, só no desktop; 0056: variante `frame` sem cromo sobreposto, só no celular; 0073: coluna de painéis proporcional à largura a partir de 960px
 ---
 
 # ADR-0033 — Moldura persistente para o mapa entre rotas de UF, não SPA nem troca de página inteira
@@ -30,6 +30,12 @@ vista, `<UfPicker>`, "← Brasil", legenda) sai da sobreposição e vai para flu
 (barra "Vista/Escolher UF" + legenda resumida + "Ver legenda" em folha). O restante da Decisão 1 —
 moldura persistente em `layout.tsx`, mapa nunca desmontando entre Brasil e UF do mesmo cargo,
 resolução client-side de `sigla` — não é tocado.
+
+**Nota 2026-10-04 (parcial, [ADR-0073](0073-painel-desktop-para-telao-escala-fluida-e-larguras.md)).**
+A coluna de painéis do `<AppShellSplit>` (a coluna de 400px, `--container-sidebar`, que o código atribui a
+esta Decisão 1) passa, a partir de 960px, a medir `clamp(400px, 36vw, 820px)` (461px a 1280, 691px a
+1920), numa variável própria, sem alterar `--container-sidebar` nem `--container-page`. Abaixo de 960px e
+em 960px nada muda. O restante da Decisão 1 — moldura persistente, mapa que não desmonta — não é tocado.
 
 Decisão 3 **implementada em 2026-09-11**: `scripts/replay-sensitivity.ts` (novo) roda o
 replay 2022 sob `REGIONAL_DELAY` ∈ {0, 1, 2, 3} timesteps (parametrizado via

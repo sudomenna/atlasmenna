@@ -18,6 +18,13 @@ requirements: [RF-260, RF-261, RF-262, RF-263, RF-264, RF-265, RF-266, RF-267, R
 > design 017, **este arquivo é a única fonte da forma do JSON** — não há tipo espelhado entre Python e
 > TypeScript. O que muda aqui muda o contrato: combine antes.
 >
+> **Emenda 2026-10-04 (decisão do dono, manhã do 1º turno — voto projetado por candidatura).**
+> A Decisão 1 listava "votos projetados por candidatura (chave `sqcand`)" entre o que a projeção produz,
+> mas o contrato publicado levava por linha só a marca "eleito na projeção" (e `votos_projetados` por
+> agremiação): o número de cada candidato ficava no modelo e nunca chegava à tela. Passa a ser publicado
+> e exibido (§ 2.2, RF-297), com as ressalvas: **eleitos + 7** em vez de "eleitos + 5, mínimo 10" (novas
+> faixas de visibilidade), sem reordenar (Decisão 5 permanece).
+>
 > Os fatos do feed citados vêm dos EA20 reais do simulado de 28/09
 > (`tests/fixtures/tse/2026-sim/dep/README.md`), não do dicionário do TSE.
 
@@ -109,6 +116,8 @@ interface DeputadoUfLinha {
   projecao?: "qp" | "sobra";
   /** Sobra apertada na projeção. Só com `projecao: "sobra"`. */
   projecao_apertada?: true;
+  /** Voto projetado do candidato (por `sqcand`). Só existe com `projecao.estado === "liberada"` (emenda 04/10, RF-297). */
+  votos_projetados?: number;
   /** `cand.st` mapeado. Só existe com totalização final (`tf = "s"`), e então em TODA linha. */
   tse?: "eleito_qp" | "eleito_media" | "eleito" | "suplente" | "nao_eleito";
   /** `cand.dvt` mapeado, só quando NÃO é voto nominal válido. Ausente = `Válido` ou `dvt` ainda não publicado. */

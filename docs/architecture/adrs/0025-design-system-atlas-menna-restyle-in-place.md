@@ -3,6 +3,7 @@ id: ADR-0025
 title: Adoção do design system Atlas Menna por restyle-in-place, não árvore v2 paralela
 status: accepted
 date: 2026-09-07
+amended_by: ADR-0073 # escala tipográfica fluida a partir de 960px (Decisão 3(a))
 ---
 
 # ADR-0025 — Adoção do design system Atlas Menna por restyle-in-place, não árvore v2 paralela
@@ -10,6 +11,12 @@ date: 2026-09-07
 ## Status
 
 Aceito.
+
+> **Nota 2026-10-04 ([ADR-0073](0073-painel-desktop-para-telao-escala-fluida-e-larguras.md)).** A
+> escala tipográfica em px fixos (10–64, Decisão 3(a)) continua valendo abaixo de 960px e passa a ser
+> **fluida a partir de 960px** (rampa ancorada no valor do kit, +40% / +33% / +25% a 1920px). O
+> `--container-page` de 1280px não muda. O ADR-0074 também admite um terceiro componente de cliente no
+> shell, tocando a Decisão 6 (RSC por padrão), sem alterar o restante.
 
 ## Contexto
 

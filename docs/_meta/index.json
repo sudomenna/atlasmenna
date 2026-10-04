@@ -3,7 +3,7 @@
   "name": "AtlasMenna Docs Index",
   "description": "Índice machine-readable da documentação SDD do AtlasMenna. Carregar este arquivo dá a um agente o mapa completo das specs, NFRs, ADRs e fontes canônicas.",
   "version": "1.0",
-  "last_updated": "2026-09-21",
+  "last_updated": "2026-10-04",
   "source_prd": "docs/PRD.md",
   "constitution": "docs/constitution.md",
   "conventions": "docs/_meta/conventions.md",
@@ -566,6 +566,22 @@
       "date": "2026-10-03",
       "note": "Decisão do dono em 03/10, véspera do 1º turno; commit único revertível, horário de corte 20h de 03/10 (senão 05/10). Emenda a regra de scrollZoom:false (S05) que nunca teve ADR — nada superseded. < 960px: cooperativeGestures (1 dedo rola a página, 2 dedos movem/ampliam, Ctrl/⌘+roda; aviso pt-BR); >= 960px: roda/pinça livre (coluna do mapa não rola). Duplo clique/toque duplo, boxZoom, teclado do canvas, rotação e world copies desligados (ADR-0050: 1º clique navega/abre ficha). Limites: minZoom = enquadramento (Brasil nunca abaixo de z2+0,15), maxZoom Brasil enquadramento+4 / estado z11, maxBounds ~25% de folga. Botões +/−/⟲ em MapZoomControls (components/atoms/maps/) via store Zustand lib/state/map-zoom-store.ts registrado pelo mapa ativo, fora do chunk (RNF-007b em ~285/300 KiB); sobre o mapa no desktop, na faixa abaixo no celular (ADR-0056). Animações sem essential:true (RNF-026). Canvas nacional sai da Tab (teclado usa os botões; tabela paralela RNF-025). Fora de escopo: flyTo Brasil→estado, mapas órfãos. Rejeitadas: NavigationControl nativo, 1 dedo move no celular, botões sobre o mapa no celular. Negativas: roda sem modificador amplia no desktop; descoberta do gesto de 2 dedos; pinça não emulável; store é o ponto frágil (desregistro); critério por largura e não por ponteiro; deploy na véspera (congelamento 16h-05h em 04/10, ADR-0063).",
       "path": "docs/architecture/adrs/0071-interacao-de-zoom-nos-mapas.md"
+    },
+    {
+      "id": "0074",
+      "title": "Atualização automática das páginas por `router.refresh()` a cada minuto, com pausa no rodapé — não SWR por componente, não refresh guiado por `dado_ts`, não modo telão opt-in",
+      "status": "accepted",
+      "date": "2026-10-04",
+      "note": "Decisão do dono na manhã do 1º turno (telão). Emenda ADR-0029 Decisão 2 (shell com 2 clientes passa a 3: AtualizacaoAutomatica) e ADR-0002 só no mecanismo de cliente (SWR 5s em /api/projection nunca foi montado em página: swr-provider.tsx sem importadores; RF-027 ✅ em traceability.md:63 descreve algo que nunca esteve no ar) — nada superseded. components/layout/AtualizacaoAutomatica.tsx em app/layout.tsx após CargoTabs bottom: router.refresh() a cada 60s + jitter 0-15s, só aba visível, catch-up ao voltar (>60s), lista de rotas permitidas (/, capas de cargo, /uf/XX[/cargo]; fora /candidatos e /sobre-*), não roda com saveData nem com pausa; pausa no Footer via localStorage (WCAG SC 2.2.2). Todos os visitantes. Consertos obrigatórios no mesmo commit: DeputadoListaAgremiacao (linhas derivadas das props + estado extras 61+ via unirPorSqcand) e ReordenaListaPorBase (efeito a cada commit). DadoParadoBanner reavaliado no servidor a cada minuto. Rejeitadas/adiadas: SWR por componente, refresh por dado_ts (sem sinal barato; /api/* passa pelo BotID), modo telão opt-in. Negativas: ~1 render/min por aba visível sem cache (~333/s a 20 mil abas, NÃO medido; RNF-005 só vale p/ /api/projection); defasagem pior caso ~155s vs RNF-006 <90s (estimativa); sem interruptor global sem deploy (só Instant Rollback); JS a mais no shell (RNF-007a); leitor de tela não é avisado; mapa e painéis com relógios separados; varredura de outros useState-de-prop não feita; deploy no dia do 1º turno antes do congelamento.",
+      "path": "docs/architecture/adrs/0074-atualizacao-automatica-das-paginas-por-router-refresh.md"
+    },
+    {
+      "id": "0073",
+      "title": "Painel desktop para telão — escala tipográfica fluida a partir de 960px, coluna de painéis proporcional nas rotas com mapa e páginas de Deputado largas em grade; mobile idêntico",
+      "status": "accepted",
+      "date": "2026-10-04",
+      "note": "Decisão do dono na manhã do 1º turno. Emenda ADR-0025 Decisão 3(a) (escala em px fixos 10-64 passa a fluida >=960px; o item 4 do ADR-0025 é fontes, não escala) e ADR-0033 Decisão 1 (coluna de painéis de 400px = --container-sidebar do kit, que o código atribui ao ADR-0033) — nada superseded; --container-page 1280 e --container-sidebar intocados (tokens.spec exige 1280 no <main> de /). Rampa ancorada em 960 (+40% pequenos / +33% md / +25% grandes a 1920; tetos 1,7x e 1,45x), tokens --type-kpi/--type-kpi-sm, <small> a 80% corrigido só no escopo >=960 (DeputadoListaAgremiacao, SenadoDe2027Panel), px literais -> calc(var(--text-xs)*12/11). Coluna de painéis clamp(400px,36vw,820px) (461@1280, 691@1920). Páginas de Deputado: .main até 1920, agremiações em grade 2-3 colunas na ordem do DOM, pares lado a lado >=1280, voto (mono 600 --text-lg) maior que o nome, avatar 36px (emenda RF-291 só >=960), sem classe nova por linha. Mobile <960 idêntico (medição de base a 375). Orientação ao operador: 1920x1080 estendido, tela cheia, zoom só ajuste fino (zoom >~200% a 1920 / ~150% a 1440 / ~142% a 1366 vira leiaute de celular). Negativas: mapa perde ~291px a 1920; site inteiro cresce >=960; componentes justos na coluna de 400 podem quebrar entre 960 e ~1100; texto em SVG/mapa fora do escopo; zoom rende menos que 1:1; content-visibility das agremiações em grade a conferir (CLS); deploy no dia do 1º turno.",
+      "path": "docs/architecture/adrs/0073-painel-desktop-para-telao-escala-fluida-e-larguras.md"
     }
   ],
   "nfr": {
@@ -954,7 +970,8 @@
         "RF-191",
         "RF-292",
         "RF-293",
-        "RF-295"
+        "RF-295",
+        "RF-296"
       ],
       "depends_on": ["001-ingestao-tse", "002-modelo-estatistico", "008-interatividade-brushing"],
       "apis": ["GET /api/projection"],
@@ -984,7 +1001,8 @@
         "CandidateListCollapse",
         "RegiaoConsolidada",
         "RegiaoRecolhivel",
-        "MapZoomControls"
+        "MapZoomControls",
+        "AtualizacaoAutomatica"
       ],
       "nfr": [
         "RNF-001",
@@ -1022,7 +1040,9 @@
         "0055",
         "0056",
         "0057",
-        "0071"
+        "0071",
+        "0074",
+        "0073"
       ],
       "shipped_with_carry_overs": ""
     },
@@ -1917,6 +1937,177 @@
         "revisão final da constituição 1.6 pelo dono"
       ],
       "path": "docs/specs/025-visoes-editoriais/"
+    },
+    {
+      "id": "026-deputado-listas-projecao",
+      "title": "Deputado Federal — listas por agremiação, projeção com trava, extras e três correções",
+      "status": "implementing",
+      "priority": "M",
+      "personas": ["P1", "P2", "P3"],
+      "screens": ["T-11", "T-12"],
+      "requirements": [
+        "RF-260",
+        "RF-261",
+        "RF-262",
+        "RF-263",
+        "RF-264",
+        "RF-265",
+        "RF-266",
+        "RF-267",
+        "RF-268",
+        "RF-269",
+        "RF-270",
+        "RF-271",
+        "RF-272",
+        "RF-273",
+        "RF-274",
+        "RF-275",
+        "RF-276",
+        "RF-277",
+        "RF-291",
+        "RF-297",
+        "RF-298"
+      ],
+      "depends_on": ["017-deputado-federal", "018-identidade-candidatura"],
+      "amends": ["017-deputado-federal", "011-sobre-o-modelo"],
+      "apis": ["GET /uf/[sigla]/deputado-federal/lista"],
+      "components": [
+        "DeputadoListaAgremiacao",
+        "MarcaDeputado",
+        "DeputadoMaisVotados",
+        "DeputadoPuxadores",
+        "DeputadoRegras",
+        "DeputadoConferencia",
+        "DeputadoMetodologia",
+        "CandidateListCollapse",
+        "VotacaoEleitorado",
+        "AvatarDestaque"
+      ],
+      "nfr": [
+        "RNF-002",
+        "RNF-003",
+        "RNF-006",
+        "RNF-007a",
+        "RNF-012",
+        "RNF-022",
+        "RNF-023",
+        "RNF-024",
+        "RNF-035"
+      ],
+      "adrs": [
+        "0001",
+        "0005",
+        "0017",
+        "0021",
+        "0023",
+        "0026",
+        "0027",
+        "0034",
+        "0036",
+        "0038",
+        "0049",
+        "0053",
+        "0063",
+        "0064",
+        "0065",
+        "0073",
+        "0074"
+      ],
+      "ship_blocked_on": [
+        "ADR-0063, ADR-0064 e ADR-0065 aceitos",
+        "G2 (replay sintético) reportado ao dono antes de ligar o interruptor",
+        "portões e2e de peso e acessibilidade em /uf/SP/deputado-federal com o Blob servido"
+      ],
+      "path": "docs/specs/026-deputado-listas-projecao/"
+    },
+    {
+      "id": "027-deputado-estadual-distrital",
+      "title": "Deputado Estadual e Distrital — as 27 casas legislativas, Fase 1 × Fase 2, orçamento de requisições",
+      "status": "implementing",
+      "priority": "M",
+      "personas": ["P1", "P2", "P3"],
+      "screens": ["T-17", "T-18", "T-11", "T-12"],
+      "requirements": [
+        "RF-278",
+        "RF-279",
+        "RF-280",
+        "RF-281",
+        "RF-282",
+        "RF-283",
+        "RF-284",
+        "RF-285",
+        "RF-286",
+        "RF-287",
+        "RF-288",
+        "RF-289",
+        "RF-290"
+      ],
+      "depends_on": [
+        "017-deputado-federal",
+        "026-deputado-listas-projecao",
+        "018-identidade-candidatura"
+      ],
+      "amends": ["017-deputado-federal", "018-identidade-candidatura", "011-sobre-o-modelo"],
+      "apis": [
+        "GET /uf/[sigla]/deputado-estadual/lista",
+        "GET /uf/DF/deputado-distrital/lista",
+        "GET /api/ingest/deputado-estadual",
+        "GET /api/ingest/deputado-distrital",
+        "GET /api/ingest/deputado-estadual/[fatia]"
+      ],
+      "components": [
+        "CargoTabs",
+        "DeputadoCasaSeletor",
+        "DeputadoBancadaPanel",
+        "UfBandeirasGrid",
+        "DeputadoListaAgremiacao",
+        "MarcaDeputado",
+        "DeputadoMaisVotados",
+        "DeputadoPuxadores",
+        "DeputadoRegras",
+        "DeputadoConferencia",
+        "DeputadoMetodologia",
+        "VotacaoEleitorado"
+      ],
+      "nfr": [
+        "RNF-002",
+        "RNF-003",
+        "RNF-006",
+        "RNF-007a",
+        "RNF-012",
+        "RNF-019",
+        "RNF-022",
+        "RNF-023",
+        "RNF-024",
+        "RNF-035"
+      ],
+      "adrs": [
+        "0001",
+        "0005",
+        "0012",
+        "0021",
+        "0023",
+        "0026",
+        "0027",
+        "0036",
+        "0038",
+        "0039",
+        "0044",
+        "0049",
+        "0063",
+        "0064",
+        "0065",
+        "0066",
+        "0067"
+      ],
+      "ship_blocked_on": [
+        "ADR-0066 e ADR-0067 aceitos",
+        "EA20 real de cargo 7 e 8 (Passo 0) ou primeiro ciclo vigiado em 04/10",
+        "portões e2e das três telas com o Blob servido",
+        "decisão do dono Fase 1 × Fase 2",
+        "G2 das assembleias reportado ao dono antes de ligar interruptor-projecao-est"
+      ],
+      "path": "docs/specs/027-deputado-estadual-distrital/"
     }
   ],
   "orquestracao_paralela": "docs/_meta/orquestracao-paralela.md",
