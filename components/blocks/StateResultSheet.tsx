@@ -805,7 +805,7 @@ export function StateResultSheet({
                       <span
                         data-testid="state-sheet-cand-proj"
                         className="flex-none"
-                        style={{ color: "var(--accent-text)", whiteSpace: "nowrap" }}
+                        style={{ color: "var(--color-pct-votos)", whiteSpace: "nowrap" }}
                       >
                         {formatPercent(tc.pct, 1)}
                         {/* Abreviado na tela (a linha é estreita), por extenso

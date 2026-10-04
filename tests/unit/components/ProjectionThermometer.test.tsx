@@ -180,10 +180,11 @@ describe("<ProjectionThermometer />", () => {
     const estilo = (sel: string) => doc.querySelector(sel)?.getAttribute("style") ?? "";
     expect(estilo('[data-testid="thermometer-tick"]')).toContain("var(--party-psol)");
     expect(band(doc)?.getAttribute("style") ?? "").toContain("var(--party-psol-1)");
-    // O número é TEXTO: a variante legível da mesma matiz (PSOL base mede
-    // 2,08:1 sobre o papel; `-text`, 4,51:1). Mesma sigla, superfície
-    // diferente — não é outra cadeia, é a mesma com o remédio de contraste.
-    expect(estilo('[data-testid="thermometer-numero"]')).toContain("var(--party-psol-text)");
+    // O número é TEXTO e, desde 2026-10-03 (decisão do dono), não leva cor de
+    // partido nenhuma: sai na cor única `--color-pct-votos`. A identidade fica
+    // no tick e na faixa; o número não pode trazer uma terceira tinta.
+    expect(estilo('[data-testid="thermometer-numero"]')).toContain("var(--color-pct-votos)");
+    expect(estilo('[data-testid="thermometer-numero"]')).not.toContain("--party-");
   });
 
   it("(e1b) a MESMA sigla em colocações diferentes recebe as MESMAS três cores", () => {
@@ -213,13 +214,12 @@ describe("<ProjectionThermometer />", () => {
       doc.querySelector('[data-testid="thermometer-numero"]')?.getAttribute("style") ?? "";
 
     // 🔴 2026-09-20 — as três formas continuam cobertas, mas o destino mudou:
-    // era `strongForRank(rank)` (a paleta por COLOCAÇÃO na variante escura) e
-    // passa a ser `textForParty(sigla)`. O degrau do rank ficava ANTES do da
-    // sigla na cadeia, então vencia sempre que o caller passasse `rank` — e
-    // `<ProjectionThermometers />` passa.
+    // era `strongForRank(rank)` (a paleta por COLOCAÇÃO na variante escura),
+    // passou a `textForParty(sigla)` e, desde 2026-10-03 (decisão do dono), é a
+    // cor ÚNICA `--color-pct-votos` para todo percentual de votos.
     const comSigla = render({ cor: "var(--party-mdb)", corBand: undefined, partido: "MDB" });
-    expect(numero(comSigla)).toContain("var(--party-mdb-text)");
-    expect(numero(comSigla)).not.toContain("color:var(--party-mdb)");
+    expect(numero(comSigla)).toContain("var(--color-pct-votos)");
+    expect(numero(comSigla)).not.toContain("--party-mdb");
 
     // Passar `rank` não muda mais nada — nem aqui, nem em lugar nenhum.
     const comRank = render({
@@ -230,9 +230,9 @@ describe("<ProjectionThermometer />", () => {
     });
     expect(numero(comRank)).toBe(numero(comSigla));
 
-    // Sem nada: neutro medido (#6e6e6e, 4,63:1 sobre --surface-page).
+    // Sem nada: a mesma cor única — sigla nenhuma não muda a tinta.
     const semNada = render({ cor: undefined, corBand: undefined });
-    expect(numero(semNada)).toContain("var(--color-cand-other)");
+    expect(numero(semNada)).toContain("var(--color-pct-votos)");
 
     // O preenchimento continua sendo `cor` — a correção é no texto, não na
     // identidade visual da faixa/tick.
@@ -241,11 +241,11 @@ describe("<ProjectionThermometer />", () => {
     ).toContain("var(--party-mdb)");
   });
 
-  it("(e3) o caso do axe, hoje: sem `cor` no payload, o número sai na variante legível da sigla", () => {
+  it("(e3) o caso do axe, hoje: sem `cor` no payload, o número sai na cor única, não na base", () => {
     // `--color-cand-3` (#c97c1f) media 2,99:1 sobre `--surface-page` e era o
     // caso concreto que o axe reprovou. O sucessor pela sigla tem o mesmo
-    // risco se alguém usar a base como tinta — daí a variante `-text`, medida
-    // em ≥ 4,5:1 nos 31 slugs.
+    // risco se alguém usar a base como tinta. Desde 2026-10-03 o número sai em
+    // `--color-pct-votos` (= `--text-primary`, ≥ 15:1), igual para toda sigla.
     const doc = render({
       cor: undefined,
       corBand: undefined,
@@ -254,13 +254,13 @@ describe("<ProjectionThermometer />", () => {
     });
     const style =
       doc.querySelector('[data-testid="thermometer-numero"]')?.getAttribute("style") ?? "";
-    expect(style).toContain("var(--party-psol-text)");
+    expect(style).toContain("var(--color-pct-votos)");
     // E NÃO a base: `--party-psol` (#d6a400) mede 2,08:1 como tinta.
     expect(style).not.toContain("color:var(--party-psol)");
     expect(doc.body.textContent ?? "").toContain("4,5%");
   });
 
-  it("(e4) corTexto explícito vence, e a sigla do partido é o fallback do ADR-0024", () => {
+  it("(e4) corTexto explícito vence; sem ele, a cor única — igual para partidos diferentes", () => {
     const explicito = render({
       cor: "var(--party-pl)",
       rank: 2,
@@ -270,12 +270,15 @@ describe("<ProjectionThermometer />", () => {
       explicito.querySelector('[data-testid="thermometer-numero"]')?.getAttribute("style") ?? "",
     ).toContain("var(--color-text)");
 
-    // Sem corTexto, a sigla resolve pela paleta de partido — que tem token de
-    // texto próprio, medido em ≥ 4,5:1 sobre o papel.
-    const porPartido = render({ cor: undefined, corBand: undefined, partido: "PSOL" });
-    expect(
-      porPartido.querySelector('[data-testid="thermometer-numero"]')?.getAttribute("style") ?? "",
-    ).toContain("var(--party-psol-text)");
+    // Sem corTexto, o número sai na cor ÚNICA de percentual de votos (decisão
+    // do dono, 2026-10-03) — e dois partidos diferentes saem IGUAIS.
+    const numeroDe = (partido: string) =>
+      render({ cor: undefined, corBand: undefined, partido })
+        .querySelector('[data-testid="thermometer-numero"]')
+        ?.getAttribute("style") ?? "";
+    expect(numeroDe("PSOL")).toContain("var(--color-pct-votos)");
+    expect(numeroDe("PT")).toBe(numeroDe("PL"));
+    expect(numeroDe("PT")).toBe(numeroDe("PSOL"));
   });
 
   it("(f) faz clamp de valores fora de [0, scaleMax]", () => {
@@ -307,5 +310,34 @@ describe("<ProjectionThermometer />", () => {
     expect(band(doc)).toBeNull();
     expect(doc.querySelector("#t-abstencao")?.getAttribute("data-estado")).toBe("aguardando");
     expect(doc.body.textContent ?? "").toContain("aguardando projeção");
+  });
+});
+
+describe("🔴 a projeção pequena sob o número da Parcial (decisão do dono, 2026-10-03)", () => {
+  const ind = (doc: Document) => doc.querySelector('[data-testid="projecao-indicador"]');
+
+  it('dentro do `<Numero view="parcial">`, nunca no da Projeção, com o MESMO projetado', () => {
+    const doc = render({ pctProjetado: 21.4, pctAtual: 20.1 });
+    const parcial = doc.querySelector('[data-testid="thermometer-numero-parcial"]');
+    const proj = doc.querySelector('[data-testid="thermometer-numero"]');
+    expect(parcial?.contains(ind(doc))).toBe(true);
+    expect(proj?.querySelector('[data-testid="projecao-indicador"]')).toBeNull();
+    expect(ind(doc)?.querySelector('[aria-hidden="true"]')?.textContent).toBe("↑ 21,4% proj");
+    // Abaixo: a seta inverte.
+    const abaixo = render({ pctProjetado: 18.2, pctAtual: 20.1 });
+    expect(ind(abaixo)?.querySelector('[aria-hidden="true"]')?.textContent).toBe("↓ 18,2% proj");
+  });
+
+  it("aguardando ⇒ nenhum indicador (não há projeção para mostrar)", () => {
+    expect(ind(render({ aguardando: true }))).toBeNull();
+  });
+
+  it("`indicadorProjecao={false}` (participação) ⇒ nenhum indicador", () => {
+    expect(ind(render({ indicadorProjecao: false }))).toBeNull();
+  });
+
+  it("sem apuração ⇒ a projeção sai sem seta (o apurado é '—')", () => {
+    const doc = render({ pctAtual: null });
+    expect(ind(doc)?.querySelector('[aria-hidden="true"]')?.textContent).toBe("21,4% proj");
   });
 });

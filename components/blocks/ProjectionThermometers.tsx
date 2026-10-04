@@ -342,8 +342,9 @@ export function ProjectionThermometers({
               subtitulo={siglaExibicao(c.partido)}
               base={base}
               // `cor` é preenchimento (faixa + tick). O número grande NÃO usa
-              // esta cor: o átomo deriva a tinta de texto da SIGLA via
-              // `textForParty` (ver o docblock de `<ProjectionThermometer />`).
+              // esta cor: sai na cor ÚNICA `--color-pct-votos` (decisão do
+              // dono, 2026-10-03; até então era `textForParty` pela sigla —
+              // ver o docblock de `<ProjectionThermometer />`).
               // Era daqui que vinha a violação `serious` do axe de 2026-09-07 —
               // `c.cor` do payload chega como `var(--color-cand-3)`, 2,99:1.
               //
@@ -384,11 +385,9 @@ export function ProjectionThermometers({
             base={base}
             cor="var(--color-cand-other)"
             corBand="var(--color-cand-band-other)"
-            // O neutro serve às duas coisas — e por medição, não por acaso:
-            // #6e6e6e dá 4,63:1 sobre --surface-page e 4,93:1 sobre
-            // --surface-card. Declarado aqui para que a igualdade com `cor`
-            // seja uma decisão medida e não a omissão que o axe pegou.
-            corTexto="var(--color-cand-other)"
+            // Sem `corTexto`: "Outros candidatos" é percentual de votos e cai
+            // na cor ÚNICA `--color-pct-votos` (decisão do dono, 2026-10-03).
+            // Até então o número saía no neutro `--color-cand-other`.
             pctProjetado={outros?.pct ?? 0}
             pctLower={outros?.lower ?? 0}
             pctUpper={outros?.upper ?? 0}
@@ -494,8 +493,9 @@ function ParticipacaoTermometro({
   base: ThermometerBase;
   cor: string;
   corBand: string;
-  /** Obrigatório aqui de propósito: participação não tem rank nem sigla, então
-   *  o átomo não teria de onde derivar a tinta e cairia no neutro. */
+  /** Obrigatório aqui de propósito: participação NÃO é percentual de votos de
+   *  candidato, então não pode cair no default do átomo (`--color-pct-votos`,
+   *  a cor única dos percentuais de votos desde 2026-10-03). */
   corTexto: string;
   metric?: EdgeParticipacaoMetric;
 }) {
@@ -513,6 +513,9 @@ function ParticipacaoTermometro({
       pctAtual={metric?.pct_atual ?? null}
       scaleMax={100}
       aguardando={metric === undefined}
+      // A linha "↑ X% proj" da Parcial (2026-10-03) é de percentual de votos
+      // de candidatura — participação fica fora, como fica da cor única.
+      indicadorProjecao={false}
     />
   );
 }

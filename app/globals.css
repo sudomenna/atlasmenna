@@ -297,6 +297,25 @@
   --text-muted: var(--ink-2);
   --text-faint: #626a75;
   --text-inverse: var(--paper-0);
+  /* Cor ÚNICA de todo percentual de votos de candidato/partido — o número da
+   * projeção e o do apurado/parcial (ambos % dos votos válidos), em toda tela
+   * e nos dois modos. Decisão do dono, 03/10/2026: o número deixa de herdar a
+   * cor do partido. Neutra pela constituição § 2 — qualquer matiz coincidiria
+   * com o de algum partido. Acompanha o tema porque `--text-primary` acompanha
+   * (`--ink-0` é redefinido em `[data-theme="dark"]`). A cor do partido segue
+   * nas barras, no mapa, nos assentos, nos anéis e na sigla — não no número. */
+  --color-pct-votos: var(--text-primary);
+  /* Cor ÚNICA que quer dizer "projeção" na visão Parcial — a linha pequena
+   * "↑ 38,0% proj" sob o percentual apurado (`<ProjecaoIndicador>`,
+   * `components/atoms/data/ProjecaoIndicador.tsx`). Decisão do dono,
+   * 03/10/2026: uma cor só no sistema inteiro, e as setas ↑/↓ vão na MESMA
+   * cor. NUNCA verde/vermelho para "sobe/desce": constituição § 2 — essas
+   * matizes são cores de partido. É o ocre de texto (`--accent-text`), o mesmo
+   * dos rótulos "PROJEÇÃO ATLAS MENNA · NÃO OFICIAL"; acompanha o tema porque
+   * `--accent-text` é redefinido em `[data-theme="dark"]`. Contraste medido
+   * nos dois temas sobre `--surface-page` e `--surface-card` em
+   * `tests/unit/design-system/projecao-indicador-contraste.test.ts`. */
+  --color-pct-proj: var(--accent-text);
   --border-hairline: var(--rule);
   --border-strong: var(--rule-strong);
   /* Para grade/eixo de gráfico, NUNCA `--border-hairline` — ver `--rule-chart`. */

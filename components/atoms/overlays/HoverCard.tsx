@@ -767,7 +767,7 @@ export function HoverCard({
                     paddingBlock: CELULA_PADDING_BLOCK,
                     font: "var(--type-figure-sm)",
                     textAlign: "right",
-                    color: "var(--accent-text)",
+                    color: "var(--color-pct-votos)",
                   }}
                 >
                   {fmt(row.proj)}

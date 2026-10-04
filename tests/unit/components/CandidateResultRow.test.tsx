@@ -270,31 +270,64 @@ describe("variant='kit' (versão D) — números, barra e selo por base", () => 
       [...doc.querySelectorAll(sel)].map((el) => el.textContent ?? "").join("|");
 
     expect(texto('[data-view-only="parcial"]')).toContain("8,4%");
-    expect(texto('[data-view-only="parcial"]')).not.toContain("9,1%");
     expect(texto('[data-view-only="proj"]')).toContain("9,1%");
     expect(texto('[data-view-only="proj"]')).toContain("apurado 8,4%");
-    // Todo nó de texto com o projetado está sob `data-view-only="proj"` —
-    // `display: none` tira da tela E da árvore de acessibilidade na Parcial.
+    // O número GRANDE da Parcial é só o apurado.
+    expect(texto('[data-view-only="parcial"] > [class*="pct"]')).toBe("apurado 8,4%");
+    // Todo nó de texto com o projetado está sob `data-view-only="proj"` (o
+    // grande) OU dentro do `<ProjecaoIndicador>` da Parcial (a linha pequena,
+    // emenda do dono de 2026-10-03) — e em nenhum outro lugar.
     const walker = doc.createTreeWalker(doc.body, 4 /* SHOW_TEXT */);
     let n = walker.nextNode();
-    let vistos = 0;
+    const donos: string[] = [];
     while (n) {
       if (n.textContent?.includes("9,1%")) {
-        vistos++;
-        expect(n.parentElement?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe(
-          "proj",
-        );
+        const base = n.parentElement?.closest("[data-view-only]")?.getAttribute("data-view-only");
+        const ind = n.parentElement?.closest('[data-testid="projecao-indicador"]') != null;
+        donos.push(`${base}${ind ? "+indicador" : ""}`);
       }
       n = walker.nextNode();
     }
-    expect(vistos).toBe(1);
+    // 1 no grande da Projeção; 2 no indicador (desenhado + `sr-only`).
+    expect(donos.sort()).toEqual(["parcial+indicador", "parcial+indicador", "proj"]);
   });
 
-  it("a cor: base no preenchimento, `-text` do partido no percentual — nunca a do payload", () => {
+  it("a cor: base no preenchimento; o percentual NÃO leva cor de partido (2026-10-03)", () => {
     const linha = kit().querySelector('[data-testid="candidate-result-row"]');
     const style = linha?.getAttribute("style") ?? "";
     expect(style).toContain("--cor-base:var(--color-cand-3)"); // a `cor` recebida
-    expect(style).toContain("--cor-texto:var(--party-mdb-text)"); // da SIGLA
+    // Decisão do dono, 2026-10-03: até aqui vinha `--cor-texto:var(--party-mdb-text)`.
+    expect(style).not.toContain("--cor-texto");
+    expect(style).not.toMatch(/--party-[a-z0-9-]+-text/);
+  });
+
+  it("🔴 dois partidos diferentes ⇒ o MESMO percentual: cor única `--color-pct-votos`", () => {
+    // Decisão do dono, 2026-10-03: todo percentual de votos (projeção e
+    // apurado) sai numa cor só. A cor vem da folha (`.pct`), e nada na linha
+    // pode sobrescrevê-la por partido — nem custom property, nem `style`.
+    const pctDe = (partido: string) => {
+      const doc = kit({ partido, cor: undefined });
+      const nos = [...doc.querySelectorAll('[data-view-only] > div, [data-view-only="parcial"]')]
+        .filter((el) => /%/.test(el.textContent ?? "") && !/apurado \d/.test(el.textContent ?? ""))
+        .map((el) => ({ classe: el.getAttribute("class"), style: el.getAttribute("style") }));
+      const linhaStyle =
+        doc.querySelector('[data-testid="candidate-result-row"]')?.getAttribute("style") ?? "";
+      return { nos, linhaStyle };
+    };
+    const pt = pctDe("PT");
+    const pl = pctDe("PL");
+    expect(pt.nos.length).toBeGreaterThan(0);
+    expect(pt.nos).toEqual(pl.nos); // mesma classe, nenhum `style` próprio
+    for (const n of [...pt.nos, ...pl.nos]) expect(n.style).toBeNull();
+    for (const ls of [pt.linhaStyle, pl.linhaStyle]) {
+      expect(ls).not.toContain("--cor-texto");
+      expect(ls).not.toMatch(/-text\)/);
+    }
+    const modulo = readFileSync(
+      resolve(process.cwd(), "components/atoms/tables/CandidateResultRow.module.css"),
+      "utf-8",
+    ).replace(/\s+/g, " ");
+    expect(modulo).toMatch(/\.pct \{[^}]*color: var\(--color-pct-votos\)/);
   });
 
   it("🔴 a barra: preenchimento = apurado; marca = projeção, só na Projeção, IRMÃ do recorte", () => {
@@ -710,5 +743,173 @@ describe("traço com projeção zerada", () => {
 
     expect(marcadorDaBase(doc, "proj")).not.toBeNull();
     expect(estilo(marcadorDaBase(doc, "proj"))).toContain("left:min(0.2%,");
+  });
+});
+
+describe("🔴 a projeção pequena na visão Parcial (decisão do dono, 2026-10-03)", () => {
+  const indicadores = (doc: Document) => [
+    ...doc.querySelectorAll('[data-testid="projecao-indicador"]'),
+  ];
+
+  it("kit: o indicador mora no bloco Parcial, logo abaixo do número grande — e nunca no da Projeção", () => {
+    const doc = parse(<CandidateResultRow {...BASE} variant="kit" />);
+    const [ind, ...resto] = indicadores(doc);
+    expect(resto).toHaveLength(0);
+    expect(ind?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe("parcial");
+    // Irmão seguinte do número grande da Parcial — "diretamente embaixo".
+    expect(ind?.previousElementSibling?.textContent).toBe("apurado 8,4%");
+    // 9,1 projetado > 8,4 apurado ⇒ seta para cima, com o MESMO número da Projeção.
+    expect(ind?.querySelector('[aria-hidden="true"]')?.textContent).toBe("↑ 9,1% proj");
+    const proj = doc.querySelector('[data-view-only="proj"]');
+    expect(proj?.querySelector('[data-testid="projecao-indicador"]')).toBeNull();
+  });
+
+  it("kit: projeção abaixo ⇒ ↓ (a seta não é decorativa: segue a direção)", () => {
+    const doc = parse(
+      <CandidateResultRow {...BASE} pctAtual={39.6} pctProjetado={38} variant="kit" />,
+    );
+    expect(indicadores(doc)[0]?.querySelector('[aria-hidden="true"]')?.textContent).toBe(
+      "↓ 38,0% proj",
+    );
+  });
+
+  it("kit: anulada (sem percentual) ⇒ nenhum indicador", () => {
+    const doc = parse(<CandidateResultRow {...BASE} destino="anulado" variant="kit" />);
+    expect(indicadores(doc)).toHaveLength(0);
+  });
+
+  it('densa: o indicador vai sob o parcial, dentro de `data-view-only="parcial"`', () => {
+    const doc = parse(<CandidateResultRow {...BASE} />);
+    const [ind, ...resto] = indicadores(doc);
+    expect(resto).toHaveLength(0);
+    expect(ind?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe("parcial");
+    expect(ind?.closest('[data-view-cell="parcial"]')).not.toBeNull();
+    expect(ind?.querySelector('[aria-hidden="true"]')?.textContent).toBe("↑ 9,1% proj");
+    expect(parse(<CandidateResultRow {...BASE} destino="anulado" />).body.innerHTML).not.toContain(
+      "projecao-indicador",
+    );
+  });
+});
+
+/**
+ * 🔴 A linha de VOTOS acompanha a visão (decisão do dono, 2026-10-03): na
+ * Parcial, o apurado de sempre; na Projeção, "≈ N votos projetados" na cor da
+ * projeção. O número projetado é o `votos_projetados` do payload — nunca
+ * derivado aqui.
+ *
+ * Os números de propósito DISTANTES (67.134 apurados × 172.418 projetados):
+ * qualquer troca de fonte muda o texto exibido, e a mutação "alimentar a linha
+ * projetada com o apurado" reprova (d).
+ */
+describe("🔴 votos projetados na visão Projeção (decisão do dono, 2026-10-03)", () => {
+  const VOTOS = { votos: 67_134, votosProjetados: 172_418 };
+
+  const proj = (doc: Document) => doc.querySelector('[data-testid="votos-projetados"]');
+  /** A linha de votos inteira da versão D (`.votos`, irmã do `.num`). */
+  const linhaKit = (doc: Document) =>
+    doc.querySelector('[data-testid="candidate-result-row"] > [class*="votos"]');
+
+  it("(a) kit: Projeção mostra '≈ 172 mil votos projetados' na tinta da projeção; Parcial, o apurado", () => {
+    const doc = parse(<CandidateResultRow {...BASE} {...VOTOS} variant="kit" />);
+    const linha = linhaKit(doc);
+    const p = proj(doc);
+    expect(p?.getAttribute("data-view-only")).toBe("proj");
+    expect(p?.textContent).toBe("≈ aproximadamente 172 mil votos projetados");
+    // Classe do átomo (`.votos` → `--color-pct-proj`, travado em
+    // `ProjecaoIndicador.test.tsx` e no teste de contraste), nada inline.
+    expect(p?.getAttribute("class")).toMatch(/votos/);
+    expect(p?.getAttribute("style")).toBeNull();
+    // Parcial: exatamente a linha de antes, por extenso, sob o seu `data-view-only`.
+    const parcial = linha?.querySelector(':scope > [data-view-only="parcial"]');
+    expect(parcial?.textContent).toBe("67.134 votos apurados");
+    expect(parcial?.querySelector('[class*="apurados"]')?.textContent).toBe(" apurados");
+    // Nada fora das duas versões: a troca é pura cascata.
+    expect([...(linha?.children ?? [])].map((c) => c.getAttribute("data-view-only"))).toEqual([
+      "parcial",
+      "proj",
+    ]);
+    // Na LINHA (3º em diante) o rótulo desce para baixo — a classe está nele.
+    expect(p?.querySelector('[class*="rotuloProj"]')?.textContent).toBe("projetados");
+  });
+
+  it("(a) densa: idem — '67 mil votos' na Parcial, '≈ 172 mil votos projetados' na Projeção", () => {
+    const doc = parse(<CandidateResultRow {...BASE} {...VOTOS} />);
+    const p = proj(doc);
+    expect(p?.getAttribute("data-view-only")).toBe("proj");
+    expect(p?.textContent).toBe("≈ aproximadamente 172 mil votos projetados");
+    expect(
+      p?.parentElement?.querySelector(':scope > [data-view-only="parcial"]')?.textContent,
+    ).toBe("67 mil votos");
+  });
+
+  it("(b) 🔴 sem projeção exibível (ausente, null, 0, NaN) ⇒ nenhuma linha projetada; a de sempre fica", () => {
+    for (const votosProjetados of [undefined, null, 0, Number.NaN]) {
+      const kit = parse(
+        <CandidateResultRow {...BASE} votosProjetados={votosProjetados} variant="kit" />,
+      );
+      expect(proj(kit)).toBeNull();
+      const linha = linhaKit(kit);
+      expect(linha?.textContent).toBe("1.234.567 votos apurados");
+      // Sem `data-view-only`: vale nas duas visões, como antes de 2026-10-03.
+      expect(linha?.querySelector("[data-view-only]")).toBeNull();
+
+      const densa = parse(<CandidateResultRow {...BASE} votosProjetados={votosProjetados} />);
+      expect(proj(densa)).toBeNull();
+      expect(densa.body.textContent).toContain("1,2 mi votos");
+      expect(densa.body.textContent).not.toContain("projetados");
+    }
+  });
+
+  it("(c) anulada: a linha de votos não muda, mesmo com `votosProjetados` no dado", () => {
+    const kit = parse(<CandidateResultRow {...BASE} {...VOTOS} destino="anulado" variant="kit" />);
+    expect(proj(kit)).toBeNull();
+    const anulada = kit.querySelector('[data-testid="candidate-result-votos-anulada"]');
+    expect(anulada?.textContent).toBe("67.134 votos apurados");
+    expect(anulada?.querySelector("[data-view-only]")).toBeNull();
+
+    const densa = parse(<CandidateResultRow {...BASE} {...VOTOS} destino="anulado" />);
+    expect(proj(densa)).toBeNull();
+    expect(
+      densa.querySelector('[data-testid="candidate-result-votos-anulada"]')?.textContent,
+    ).toContain("67 mil");
+  });
+
+  it("(d) 🔴 o número projetado É o `votos_projetados` da fonte — passando pelo adaptador", () => {
+    // Do payload à tela: `candidateResultRowProps` lê `votos_projetados`, e a
+    // linha formata exatamente esse número. Alimentar a linha com o apurado
+    // (ou com qualquer outro campo) muda o texto e reprova.
+    const fonte = {
+      nome: "Fulano",
+      partido: "PT",
+      pct_atual: 31.2,
+      pct_projetado: 38,
+      votos_atuais: 67_134,
+      votos_projetados: 1_512_345,
+    };
+    const props = candidateResultRowProps(fonte, 1);
+    expect(props.votosProjetados).toBe(1_512_345);
+    for (const variant of ["kit", "densa"] as const) {
+      const doc = parse(<CandidateResultRow {...props} variant={variant} />);
+      expect(proj(doc)?.textContent).toBe("≈ aproximadamente 1,5 mi votos projetados");
+      expect(proj(doc)?.textContent).not.toContain("67");
+    }
+    // Fonte sem o campo (payload legado, fonte montada à mão) ⇒ sem linha projetada.
+    const { votos_projetados: _, ...semCampo } = fonte;
+    expect(candidateResultRowProps(semCampo, 1).votosProjetados).toBeNull();
+    expect(
+      proj(parse(<CandidateResultRow {...candidateResultRowProps(semCampo, 1)} />)),
+    ).toBeNull();
+  });
+
+  it("o rótulo só desce de linha na LINHA (3º em diante), e só ele — nunca a raiz com `data-view-only`", () => {
+    const css = readFileSync(
+      resolve(process.cwd(), "components/atoms/tables/CandidateResultRow.module.css"),
+      "utf-8",
+    )
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\s+/g, " ");
+    expect(css).toContain(".lista > li:nth-child(n + 3) .rotuloProj { display: block; }");
+    // A única regra que cita `rotuloProj` é essa.
+    expect(css.match(/rotuloProj/g)).toHaveLength(1);
   });
 });

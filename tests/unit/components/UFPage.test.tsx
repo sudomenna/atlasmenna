@@ -406,8 +406,13 @@ describe("UFPage — recomposição S07/Bloco 2 (ADR-0029)", () => {
     expect(linhas[0]?.querySelector("[data-view-cell]")).toBeNull();
     // `pct_atual` do fixture é `pct - 1`; `pct_projetado` é `pct`.
     expect(linhas[0]?.querySelector('[data-view-only="parcial"]')?.textContent).toContain("40,0%");
-    expect(linhas[0]?.querySelector('[data-view-only="parcial"]')?.textContent).not.toContain(
-      "41,0%",
+    // 🔴 Emenda do dono, 2026-10-03: o projetado entra na Parcial só como a
+    // linha pequena "↑ 41,0% proj" do `<ProjecaoIndicador>` — o número grande
+    // da Parcial segue sendo o apurado.
+    const parcial0 = linhas[0]?.querySelector('[data-view-only="parcial"]');
+    expect(parcial0?.firstElementChild?.textContent).not.toContain("41,0%");
+    expect(parcial0?.querySelector('[data-testid="projecao-indicador"]')?.textContent).toContain(
+      "41,0% proj",
     );
     expect(linhas[0]?.querySelector('[data-view-only="proj"]')?.textContent).toContain("41,0%");
     expect(linhas[0]?.querySelector('[data-view-only="proj"]')?.textContent).toContain(

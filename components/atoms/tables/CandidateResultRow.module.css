@@ -212,9 +212,10 @@
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-  /* Cor de TEXTO do partido (`--party-<x>-text`, ≥ 4,5:1 nas duas superfícies)
-     — nunca a base, que reprova em PSOL, PSB, NOVO e Outros (ADR-0047). */
-  color: var(--cor-texto, var(--text-primary));
+  /* Cor ÚNICA de todo percentual de votos (decisão do dono, 2026-10-03) —
+     não mais a cor de texto do partido (`--cor-texto`, até esta data). A cor
+     do partido segue na barra (`--cor-base`). */
+  color: var(--color-pct-votos);
 }
 
 /* A anulada: "—" no lugar do percentual, em tinta neutra. */
@@ -302,6 +303,17 @@
   display: none;
 }
 
+/* "≈ 172 mil votos projetados" (visão Projeção, decisão do dono, 2026-10-03):
+   no cartão a frase quebra sozinha; na LINHA a coluna da direita é `auto` e
+   cresceria até a frase caber inteira numa linha (~172px a 11px), roubando a
+   largura do nome no celular de 375px. O rótulo desce para a linha de baixo —
+   "≈ 172 mil votos" / "projetados" —, e a coluna fica na largura de
+   "apurado 38,0%", a que já tinha. `display` aqui é do RÓTULO, nunca da raiz
+   do `<VotosProjetados>`: ela carrega `data-view-only`. */
+.lista > li:nth-child(n + 3) .rotuloProj {
+  display: block;
+}
+
 /* ---------------------------------------------------------------- o cartão */
 
 /* 🔴 A foto fica ACIMA do nome, não ao lado (2026-09-27, conferido no
@@ -348,6 +360,14 @@
 }
 
 .lista > li:nth-child(-n + 2) .sub {
+  margin-top: 4px;
+}
+
+/* A linha "↑ X% proj" da visão Parcial (`<ProjecaoIndicador>`, decisão do
+   dono, 2026-10-03) — o par do `.sub` da visão Projeção, com o mesmo respiro
+   no cartão. Só MARGEM aqui: fonte e cor (`--color-pct-proj`) são do átomo, e
+   repeti-las nesta folha faria a ordem de carga das duas decidir a tinta. */
+.lista > li:nth-child(-n + 2) .subProj {
   margin-top: 4px;
 }
 

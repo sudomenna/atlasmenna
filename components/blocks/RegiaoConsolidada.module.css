@@ -87,9 +87,9 @@
  * classe de módulo custa ~35 bytes por uso):
  *
  *   <div .resumo data-view-only>
- *     <p>Na região: <b>líder X%</b> · <span>andamento</span></p>
+ *     <p>Na região: <b>líder <span>X%</span></b> · <span>andamento</span></p>
  *     <div aria-hidden> <i style="--w;--cor"/> … </div>      ← barra empilhada
- *     <ul> <li style="--cor;--tx"><i/>SIGLA <span>X%</span></li> … </ul>
+ *     <ul> <li style="--cor"><i/>SIGLA <span>X%</span></li> … </ul>
  *     <p>nota (indisponível) | base</p>
  *   </div>
  *
@@ -168,9 +168,11 @@
   background: var(--cor);
 }
 
-/* percentual — TEXTO: `textForParty` (≥ 4,5:1) */
+/* percentual — TEXTO na cor ÚNICA de percentual de votos (decisão do dono,
+ * 2026-10-03; até então `--tx` = `textForParty`). Vale para os da legenda,
+ * "Outros" incluído; o do líder recebe a cor inline no TSX. */
 .resumo > ul > li > span {
-  color: var(--tx);
+  color: var(--color-pct-votos);
 }
 
 .corpo {

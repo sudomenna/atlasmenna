@@ -1,0 +1,41 @@
+/*
+ * components/atoms/data/ProjecaoIndicador.module.css
+ *
+ * A linha pequena "↑ 38,0% proj" sob o percentual apurado, na visão Parcial
+ * (decisão do dono, 2026-10-03). Ver `ProjecaoIndicador.tsx`.
+ *
+ * Classe na folha, e não `style` inline: o átomo sai uma vez por candidatura,
+ * em ~7–13 linhas por tela, e o HTML da home é o que o RNF-007a mede — o
+ * mesmo motivo de `CandidateResultRow.module.css`.
+ *
+ * Sem `display` na raiz: o átomo vive dentro de contêineres `data-view-only`
+ * e de frases (o resumo da região), e quem decide se ele é bloco ou trecho de
+ * linha é o caller (`.bloco`).
+ */
+
+.indicador {
+  font: 500 11px / 1.3 var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  white-space: nowrap;
+  /* Cor ÚNICA de "projeção" — seta e número na mesma tinta, nunca
+     verde/vermelho (constituição § 2). */
+  color: var(--color-pct-proj);
+}
+
+.md {
+  font-size: 13px;
+}
+
+.bloco {
+  display: block;
+}
+
+/* "≈ 172 mil votos projetados" (`<VotosProjetados>`, decisão do dono,
+   2026-10-03) — a contagem da visão Projeção. Só a TINTA da projeção: a fonte
+   é a da linha de votos onde ele entra, e a raiz não leva `display` (ela
+   carrega `data-view-only`, e quem a mostra ou esconde é a cascata). */
+.votos {
+  color: var(--color-pct-proj);
+  font-variant-numeric: tabular-nums;
+}

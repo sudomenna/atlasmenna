@@ -22,6 +22,12 @@
  * | **Parcial** | apurado | nenhum | só o parcial |
  * | **Projeção** | apurado | marca a projeção | parcial + projeção |
  *
+ * 🔴 **Emenda do dono, 2026-10-03:** na Parcial, sob o número do apurado, sai
+ * uma linha PEQUENA "↑ 38,0% proj" na cor da projeção (`--color-pct-proj`,
+ * `<ProjecaoIndicador>`). O número grande da Parcial continua sendo só o
+ * apurado; a projeção entra pequena, rotulada e na cor que significa
+ * "projeção" — e é o mesmo número da visão Projeção, nunca derivado aqui.
+ *
  * Parcial vira a visão limpa — o que o TSE contou, sem leitura do modelo em
  * cima. Projeção vira a visão de comparação, e é exatamente a tela que existia
  * na base `parcial` até esta data.
@@ -89,7 +95,12 @@
 import { type CSSProperties, Fragment, type ReactNode } from "react";
 import { CandidateAvatar } from "@/components/atoms/data/CandidateAvatar";
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
-import { candidateColor, candidateMarkerColor } from "@/components/blocks/_candidateColor";
+import {
+  ProjecaoIndicador,
+  VotosProjetados,
+  votosProjetadosExibiveis,
+} from "@/components/atoms/data/ProjecaoIndicador";
+import { candidateColor } from "@/components/blocks/_candidateColor";
 import type { EdgeCandidate, EdgeDestinoVoto } from "@/lib/edge-config/types";
 import { exibePercentual } from "@/lib/utils/destino-voto";
 import { formatPercent, formatVotes, formatVotesCompact } from "@/lib/utils/format";
@@ -137,6 +148,18 @@ export interface CandidateResultRowProps {
   pctProjetado: number;
   /** Votos apurados. `null`/omitido → a linha de votos não aparece. */
   votos?: number | null;
+  /**
+   * Votos PROJETADOS da candidatura — `votos_projetados` do payload, nunca
+   * derivado aqui (decisão do dono, 2026-10-03). Presente e exibível
+   * (`votosProjetadosExibiveis`: finito e > 0), a linha de votos passa a ter
+   * DUAS versões, cada uma sob o seu `data-view-only`: na Parcial, a de
+   * sempre (apurado); na Projeção, "≈ 172 mil votos projetados" na cor da
+   * projeção (`<VotosProjetados>`). Ausente, `null` ou `0` ⇒ a linha de
+   * sempre, nas duas visões — o apurado não afirma projeção nenhuma.
+   * Anulada (`destino: "anulado"`) ignora o campo: os votos dela não estão em
+   * disputa e não têm projeção.
+   */
+  votosProjetados?: number | null;
   /** Densidade reduzida — usada na Camada 3 em telas estreitas (ADR-0017). */
   compact?: boolean;
   /**
@@ -152,7 +175,8 @@ export interface CandidateResultRowProps {
    *   `"kit"` — a lista do `<ResultPanel>`, e SÓ dela. 🔴 **Desde 2026-09-27
    *     é a versão D do protótipo** (`docs/design-system/prototipos/
    *     apuracao-2026-09-27/`, decisão do dono): foto, "PARTIDO – nº", nome
-   *     em caixa alta, percentual grande na cor de texto do partido, barra e
+   *     em caixa alta, percentual grande (cor única `--color-pct-votos` desde
+   *     2026-10-03; era a cor de texto do partido), barra e
    *     votos — desenhada como CARTÃO quando a linha é a 1ª ou a 2ª da lista e
    *     como LINHA do 3º em diante, pela posição (`CandidateResultRow.module.css`).
    *     Ver {@link LinhaPainel}. Não tem número de colocação à esquerda nem
@@ -531,6 +555,7 @@ type LinhaPainelProps = Pick<
   | "pctAtual"
   | "pctProjetado"
   | "votos"
+  | "votosProjetados"
   | "avatar"
   | "destino"
   | "numero"
@@ -549,21 +574,25 @@ type LinhaPainelProps = Pick<
  *
  * | | grande | pequeno | barra | marca |
  * |---|---|---|---|---|
- * | **Parcial** | apurado | — | apurado | nenhuma |
+ * | **Parcial** | apurado | "↑ X% proj" (desde 03/10) | apurado | nenhuma |
  * | **Projeção** | projetado | "apurado X%" | apurado | projetado |
  *
- * O número projetado mora SÓ dentro de `data-view-only="proj"` — `display:
- * none` tira da tela e da árvore de acessibilidade ao mesmo tempo, então a
- * visão Parcial não mostra nem anuncia leitura nenhuma do modelo.
+ * O número projetado GRANDE mora SÓ dentro de `data-view-only="proj"` —
+ * `display: none` tira da tela e da árvore de acessibilidade ao mesmo tempo.
+ * Na Parcial ele aparece apenas como a linha pequena do `<ProjecaoIndicador>`
+ * (emenda do dono, 2026-10-03), dentro do bloco `data-view-only="parcial"`.
  *
  * ## Cor
  *
- * Duas custom properties por linha, e só elas inline: `--cor-base` (o
- * preenchimento da barra, cor base do partido) e `--cor-texto` (o percentual
- * grande, `--party-<x>-text`, ≥ 4,5:1 nas duas superfícies — a base reprova
- * como texto em PSOL, PSB, NOVO e Outros). As duas saem da SIGLA
- * (`candidateColor`/`candidateMarkerColor`), nunca do `cor` do payload, que é
- * cor por colocação (constituição § 2: "não muda por rank").
+ * Uma custom property por linha, e só ela inline: `--cor-base` (o
+ * preenchimento da barra, cor base do partido), que sai da SIGLA
+ * (`candidateColor`), nunca do `cor` do payload, que é cor por colocação
+ * (constituição § 2: "não muda por rank").
+ *
+ * 🔴 O percentual grande NÃO leva a cor do partido desde 2026-10-03 (decisão
+ * do dono): sai em `--color-pct-votos`, a cor ÚNICA de todo percentual de
+ * votos, direto na folha de estilo (`.pct`). Até então vinha de uma segunda
+ * custom property, `--cor-texto` = `candidateMarkerColor(partido)`.
  *
  * ## Anulada (ADR-0053, emenda "opção A")
  *
@@ -578,6 +607,7 @@ function LinhaPainel({
   pctAtual,
   pctProjetado,
   votos,
+  votosProjetados,
   avatar,
   destino,
   numero,
@@ -588,6 +618,15 @@ function LinhaPainel({
   const projetado = clampPct(pctProjetado);
   const semPercentual = !exibePercentual({ destino });
   const temVotos = typeof votos === "number" && Number.isFinite(votos) && votos >= 0;
+  // Anulada: sem projeção (os votos dela não estão em disputa) — a linha de
+  // votos fica a de sempre, nas duas visões.
+  const votosProj = semPercentual ? null : votosProjetadosExibiveis(votosProjetados);
+  const linhaApurado = temVotos ? (
+    <>
+      {formatVotes(votos)} votos
+      <span className={s.apurados}> apurados</span>
+    </>
+  ) : null;
   const sigla = siglaExibicao(partido);
   const identificacao =
     typeof numero === "number" && Number.isFinite(numero) ? `${sigla} – ${numero}` : sigla;
@@ -600,7 +639,6 @@ function LinhaPainel({
       style={
         {
           "--cor-base": cor,
-          "--cor-texto": candidateMarkerColor(partido),
         } as CSSProperties
       }
     >
@@ -650,24 +688,45 @@ function LinhaPainel({
               </div>
               <div className={s.sub}>apurado {formatPercent(atual, 1)}</div>
             </div>
-            {/* Parcial: só o apurado. */}
-            <div className={s.pct} data-view-only="parcial">
-              <span className="sr-only">apurado </span>
-              {formatPercent(atual, 1)}
+            {/* Parcial: o apurado grande; a projeção PEQUENA embaixo, na cor
+                da projeção (decisão do dono, 2026-10-03 — `<ProjecaoIndicador>`).
+                É o MESMO número que o bloco de Projeção acima exibe: nenhuma
+                projeção nasce aqui. */}
+            <div data-view-only="parcial">
+              <div className={s.pct}>
+                <span className="sr-only">apurado </span>
+                {formatPercent(atual, 1)}
+              </div>
+              <ProjecaoIndicador
+                bloco
+                className={s.subProj}
+                parcial={pctAtual}
+                projetado={pctProjetado}
+              />
             </div>
           </>
         )}
       </div>
 
-      {temVotos ? (
-        <div
-          className={s.votos}
-          data-testid={semPercentual ? "candidate-result-votos-anulada" : undefined}
-        >
-          {formatVotes(votos)} votos
-          <span className={s.apurados}> apurados</span>
+      {/* Votos. Sem projeção exibível: a linha de sempre, sem `data-view-only`
+          (vale nas duas visões). Com ela (decisão do dono, 2026-10-03): o
+          apurado na Parcial e "≈ N votos projetados" na Projeção, cada um sob
+          o seu `data-view-only` — troca pura de cascata, como o resto da linha. */}
+      {votosProj === null ? (
+        temVotos ? (
+          <div
+            className={s.votos}
+            data-testid={semPercentual ? "candidate-result-votos-anulada" : undefined}
+          >
+            {linhaApurado}
+          </div>
+        ) : null
+      ) : (
+        <div className={s.votos}>
+          {temVotos ? <span data-view-only="parcial">{linhaApurado}</span> : null}
+          <VotosProjetados rotuloClassName={s.rotuloProj} votos={votosProj} />
         </div>
-      ) : null}
+      )}
 
       {/* Barra: o preenchimento é SEMPRE o apurado; a marca preta é a projeção
           e só existe na visão de Projeção. Duas caixas pelo motivo de
@@ -749,6 +808,7 @@ export function CandidateResultRow({
   pctAtual,
   pctProjetado,
   votos,
+  votosProjetados,
   compact = false,
   variant = "densa",
   avatar,
@@ -771,6 +831,7 @@ export function CandidateResultRow({
         pctProjetado={pctProjetado}
         selos={selos}
         votos={votos}
+        votosProjetados={votosProjetados}
       />
     );
   }
@@ -782,6 +843,8 @@ export function CandidateResultRow({
   // Emenda "opção A" — ver a docstring de `destino`. Um booleano só, lido por
   // todos os pontos que desenham percentual (as duas colunas e a barra).
   const semPercentual = !exibePercentual({ destino });
+  // Mesma regra da versão D: anulada nunca tem projeção; ausente/0 ⇒ só o apurado.
+  const votosProj = semPercentual ? null : votosProjetadosExibiveis(votosProjetados);
   // O percentual de cada base, endereçável pelo nome dela. Os preenchimentos e
   // os traços leem daqui — é o que garante que "a barra desenha X" e "o traço
   // marca o oposto de X" continuem falando dos mesmos dois números.
@@ -907,9 +970,21 @@ export function CandidateResultRow({
               {siglaExibicao(partido)}
             </span>
           </div>
-          {votos != null && !compact && !semPercentual ? (
+          {/* Sem projeção exibível, a linha de sempre. Com ela (decisão do dono,
+              2026-10-03), o apurado na Parcial e "≈ N votos projetados" na
+              Projeção, cada um sob o seu `data-view-only`. */}
+          {!compact && !semPercentual && (votos != null || votosProj !== null) ? (
             <div style={{ font: "var(--type-data)", color: "var(--text-muted)", marginTop: 2 }}>
-              {formatVotesCompact(votos)} votos
+              {votosProj === null ? (
+                <>{formatVotesCompact(votos as number)} votos</>
+              ) : (
+                <>
+                  {votos != null ? (
+                    <span data-view-only="parcial">{formatVotesCompact(votos)} votos</span>
+                  ) : null}
+                  <VotosProjetados votos={votosProj} />
+                </>
+              )}
             </div>
           ) : null}
         </div>
@@ -930,6 +1005,12 @@ export function CandidateResultRow({
             <div style={{ ...numeroStyle, color: "var(--cell-ink, var(--text-primary))" }}>
               {atualLabel}
             </div>
+            {/* Só na visão Parcial: a projeção pequena, na cor da projeção
+                (decisão do dono, 2026-10-03). Na Projeção a coluna ao lado já
+                mostra o número grande, e repeti-lo aqui seria ruído. */}
+            <div data-view-only="parcial">
+              <ProjecaoIndicador bloco parcial={pctAtual} projetado={pctProjetado} />
+            </div>
             <div
               style={{ ...KICKER, color: "var(--cell-kicker, var(--text-muted))", marginTop: 3 }}
             >
@@ -943,7 +1024,7 @@ export function CandidateResultRow({
           acessibilidade — e um leitor de tela anunciaria, na visão Parcial, um
           número que a tela não mostra. */}
           <div className="text-right" data-view-only="proj" style={{ minWidth: "3.5rem" }}>
-            <div style={{ ...numeroStyle, color: "var(--cell-ink, var(--accent-text))" }}>
+            <div style={{ ...numeroStyle, color: "var(--cell-ink, var(--color-pct-votos))" }}>
               {projLabel}
             </div>
             <div
@@ -1073,7 +1154,11 @@ export type CandidateResultRowSource = Pick<
    * a página sabe de que UF a corrida é.
    */
   sqcand?: string;
-};
+} & Partial<
+    // Opcional: quem monta a fonte à mão (testes, fixtures) pode não tê-lo, e
+    // ausente ⇒ a linha de votos de sempre (ver `votosProjetados`).
+    Pick<EdgeCandidate, "votos_projetados">
+  >;
 
 /**
  * Adaptador para o shape do payload — evita repetir o mesmo mapeamento em
@@ -1124,6 +1209,8 @@ export function candidateResultRowProps(
     pctAtual: candidato.pct_atual,
     pctProjetado: candidato.pct_projetado,
     votos: candidato.votos_atuais ?? null,
+    // O campo do payload, como vem — `votosProjetadosExibiveis` decide na linha.
+    votosProjetados: candidato.votos_projetados ?? null,
     compact,
     // Só quando existe — `destino: undefined` explícito seria uma chave
     // presente valendo "não sei" nos props espalhados da linha.

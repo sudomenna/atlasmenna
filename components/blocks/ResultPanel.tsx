@@ -149,7 +149,11 @@ export type ResultPanelCandidate = Pick<
    * de `id`, e um `sqcand` ali apontaria para a foto de outra pessoa (RF-145).
    */
   sqcand?: string;
-};
+} & Partial<
+    // Opcional: a linha de votos da visão Projeção (decisão do dono, 2026-10-03)
+    // lê o campo do payload; ausente ⇒ a linha de sempre (`<CandidateResultRow>`).
+    Pick<EdgeCandidate, "votos_projetados">
+  >;
 
 /**
  * Spec 025 (RF-245) — as etiquetas editoriais de cada candidatura do painel,

@@ -259,8 +259,8 @@ describe("<ResultPanel />", () => {
     // margem parcial, margem proj, barra parcial, barra proj.
     expect(exclusivos).toEqual(["parcial", "proj", "parcial", "proj"]);
 
-    // 🔴 2026-09-20 (2ª rodada), refeito em 2026-09-27 (versão D) — a visão
-    // Parcial não mostra NENHUMA leitura do modelo. Na versão D a Parcial tem
+    // 🔴 2026-09-20 (2ª rodada), refeito em 2026-09-27 (versão D) e emendado
+    // em 2026-10-03 (ver abaixo). Na versão D a Parcial tem
     // o apurado grande (exclusivo dela) e a Projeção tem o projetado grande +
     // "apurado X%" pequeno (exclusivos dela). A intenção que continua sendo
     // medida: o número PROJETADO só existe dentro de `data-view-only="proj"`,
@@ -270,19 +270,24 @@ describe("<ResultPanel />", () => {
     const proj = [...(linha?.querySelectorAll('[data-view-only="proj"]') ?? [])];
     const parcial = [...(linha?.querySelectorAll('[data-view-only="parcial"]') ?? [])];
     expect(parcial.map((el) => el.textContent).join("|")).toContain("43,5%");
-    expect(parcial.map((el) => el.textContent).join("|")).not.toContain("43,2%");
     expect(proj.map((el) => el.textContent).join("|")).toContain("43,2%");
     expect(proj.map((el) => el.textContent).join("|")).toContain("apurado 43,5%");
-    // Mutação que morre: tirar o projetado de `data-view-only`. Todo nó de
-    // texto com "43,2%" tem um ancestral `data-view-only="proj"`.
+    // 🔴 Emenda do dono, 2026-10-03: na Parcial o projetado aparece SÓ como a
+    // linha pequena do `<ProjecaoIndicador>` ("↓ 43,2% proj") — nunca como o
+    // número grande. Todo nó de texto com "43,2%" está OU sob
+    // `data-view-only="proj"` OU dentro do indicador, e o indicador mora
+    // dentro de `data-view-only="parcial"`.
+    const indicador = linha?.querySelector('[data-testid="projecao-indicador"]');
+    expect(indicador?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe("parcial");
+    expect(indicador?.getAttribute("data-direcao")).toBe("abaixo");
     const walker = doc.createTreeWalker(linha as Node, 4 /* NodeFilter.SHOW_TEXT */);
     let achados = 0;
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
       if (!n.textContent?.includes("43,2%")) continue;
       achados++;
-      expect(n.parentElement?.closest("[data-view-only]")?.getAttribute("data-view-only")).toBe(
-        "proj",
-      );
+      const dono = n.parentElement?.closest("[data-view-only]")?.getAttribute("data-view-only");
+      const noIndicador = n.parentElement?.closest('[data-testid="projecao-indicador"]') != null;
+      expect(dono === "proj" || (dono === "parcial" && noIndicador)).toBe(true);
     }
     expect(achados).toBeGreaterThan(0);
     expect(
@@ -305,7 +310,7 @@ describe("<ResultPanel />", () => {
     expect(barras[0]?.querySelector('[data-testid="vote-bar-marker"]')).not.toBeNull();
   });
 
-  it("(i) versão D: 'PARTIDO – nº', votos por extenso, % na cor de TEXTO do partido", () => {
+  it("(i) versão D: 'PARTIDO – nº', votos por extenso, % na cor ÚNICA (não a do partido)", () => {
     const doc = parse(render());
     const linha = doc.querySelector('[data-testid="candidate-result-row"]');
     // A sigla em texto, com o número na urna (`id`, ADR-0042) — não mais a
@@ -313,9 +318,10 @@ describe("<ResultPanel />", () => {
     expect(linha?.textContent).toContain("PT – 1");
     expect(doc.querySelector('[data-testid="party-tag"]')).toBeNull();
     expect(doc.body.textContent).toContain("15.240.321 votos");
-    // O percentual pinta com `--party-<x>-text` (≥ 4,5:1), via custom
-    // property da linha; a base só no preenchimento.
-    expect(linha?.getAttribute("style")).toContain("--cor-texto:var(--party-pt-text)");
+    // 🔴 2026-10-03 (decisão do dono): o percentual NÃO leva mais a cor do
+    // partido — sai em `--color-pct-votos`, pela folha de estilo (`.pct`).
+    // A linha só carrega a base, que pinta o preenchimento da barra.
+    expect(linha?.getAttribute("style")).not.toContain("--cor-texto");
     expect(linha?.getAttribute("style")).toContain("--cor-base:var(--party-pt)");
   });
 

@@ -169,12 +169,113 @@ describe("/governador — agrupado por região", () => {
       expect(parcial?.querySelector('[data-testid="regiao-andamento"]')?.textContent).toBe(
         `${formatVotesCompact(contado)} votos contados`,
       );
-      expect(parcial?.textContent).not.toContain("apurado");
-      expect(parcial?.textContent).not.toContain(pctModelo);
+      // A linha "↓ X% proj" ao lado do líder (emenda do dono, 2026-10-03) é a
+      // ÚNICA leitura do modelo admitida na Parcial — e a fala dela diz "acima
+      // do apurado". Fora dela, a regra de 20/09 segue valendo.
+      const semIndicador = parcial?.cloneNode(true) as Element | undefined;
+      semIndicador?.querySelector('[data-testid="projecao-indicador"]')?.remove();
+      expect(semIndicador?.textContent).not.toContain("apurado");
+      expect(semIndicador?.textContent).not.toContain(pctModelo);
       expect(proj?.querySelector('[data-testid="regiao-andamento"]')?.textContent).toBe(
         `${pctModelo} apurado`,
       );
     }
+  });
+
+  it("🔴 Parcial: ao lado do líder, a projeção PEQUENA do mesmo partido (2026-10-03); Projeção: nenhuma", async () => {
+    const doc = await govPage();
+    for (const r of REGIOES) {
+      const parcial = doc.querySelector(`[data-regiao="${r.id}"] [data-view-only="parcial"]`);
+      const proj = doc.querySelector(`[data-regiao="${r.id}"] [data-view-only="proj"]`);
+      expect(proj?.querySelector('[data-testid="projecao-indicador"]')).toBeNull();
+      const ind = parcial?.querySelector('[data-testid="projecao-indicador"]');
+      // O líder da Parcial, e o % que a legenda da Projeção dá a ele.
+      const lider = (parcial?.querySelector('[data-testid="regiao-lider"]')?.textContent ?? "")
+        .replace(/\s+\d.*$/, "")
+        .trim();
+      const naProj = legenda(doc, r.id, "proj").find((l) => l.startsWith(`${lider} `));
+      if (naProj === undefined) {
+        // Fora das 6 da Projeção ⇒ sem número para mostrar ⇒ nada.
+        expect(ind).toBeNull();
+        continue;
+      }
+      const pctProj = Number(
+        naProj
+          .slice(lider.length + 1)
+          .replace("%", "")
+          .replace(",", "."),
+      );
+      const desenhado = ind?.querySelector('[aria-hidden="true"]')?.textContent ?? "";
+      expect(desenhado).toMatch(/^([↑↓] )?\d+,\d% proj$/);
+      const noIndicador = Number(
+        desenhado
+          .replace(/^[↑↓] /, "")
+          .replace("% proj", "")
+          .replace(",", "."),
+      );
+      expect(Math.abs(noIndicador - pctProj)).toBeLessThanOrEqual(0.05);
+    }
+  });
+
+  it("🔴 região sem total projetado ⇒ Parcial SEM o indicador (nunca um número de resgate)", async () => {
+    const semCampo = gov.por_uf.find((u) => u.sigla === "SP");
+    if (semCampo) delete semCampo.votos_disputa_projetados;
+    const doc = await govPage();
+    const parcial = doc.querySelector('[data-regiao="sudeste"] [data-view-only="parcial"]');
+    expect(parcial?.querySelector('[data-testid="regiao-lider"]')?.textContent).toMatch(/\d/);
+    expect(parcial?.querySelector('[data-testid="projecao-indicador"]')).toBeNull();
+    // As outras regiões seguem com ele.
+    expect(
+      doc.querySelector(
+        '[data-regiao="sul"] [data-view-only="parcial"] [data-testid="projecao-indicador"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("🔴 Projeção: '≈ N votos projetados' = Σ pct × votos_disputa_projetados (2026-10-03); Parcial: nenhum", async () => {
+    // Decisão do dono, 2026-10-03: ao trocar para Projeção, a contagem de votos
+    // vira a PROJETADA. Na região é o total do consolidado da projeção — a
+    // mesma soma que dá os % da legenda —, nunca `contado ÷ % apurado`.
+    const doc = await govPage();
+    for (const r of REGIOES) {
+      let total = 0;
+      for (const u of rowsDe(gov, r.id)) {
+        const tot = u.votos_disputa_projetados as number;
+        for (const t of u.top_candidatos) {
+          if (t.destino !== "anulado") total += (t.pct / 100) * tot;
+        }
+        if (u.outros) total += (u.outros.pct / 100) * tot;
+      }
+      const proj = doc.querySelector(`[data-regiao="${r.id}"] [data-view-only="proj"]`);
+      const parcial = doc.querySelector(`[data-regiao="${r.id}"] [data-view-only="parcial"]`);
+      const vp = proj?.querySelector('[data-testid="votos-projetados"]');
+      expect(vp?.textContent).toBe(
+        `≈ aproximadamente ${formatVotesCompact(total)} votos projetados`,
+      );
+      // Já dentro do resumo da Projeção: não repete o `data-view-only`.
+      expect(vp?.hasAttribute("data-view-only")).toBe(false);
+      // O "% apurado" da Projeção continua lá.
+      expect(proj?.querySelector('[data-testid="regiao-andamento"]')?.textContent).toMatch(
+        /apurado$/,
+      );
+      expect(parcial?.querySelector('[data-testid="votos-projetados"]')).toBeNull();
+    }
+  });
+
+  it("🔴 região sem total projetado ⇒ Projeção SEM votos projetados (nunca um número de resgate)", async () => {
+    const semCampo = gov.por_uf.find((u) => u.sigla === "SP");
+    if (semCampo) delete semCampo.votos_disputa_projetados;
+    const doc = await govPage();
+    expect(
+      doc.querySelector(
+        '[data-regiao="sudeste"] [data-view-only="proj"] [data-testid="votos-projetados"]',
+      ),
+    ).toBeNull();
+    expect(
+      doc.querySelector(
+        '[data-regiao="sul"] [data-view-only="proj"] [data-testid="votos-projetados"]',
+      ),
+    ).not.toBeNull();
   });
 
   it("Projeção de cada região = Σ pct × votos_disputa_projetados", async () => {

@@ -355,10 +355,11 @@ describe("<ResultPanel /> — a COR não acompanha a base (constituição § 2)"
     const linha = [...doc.querySelectorAll("li[data-ord]")].find((li) =>
       li.textContent?.includes(nomeCompleto),
     );
-    // Versão D (2026-09-27): a linha carrega a cor do partido DUAS vezes — a
+    // Versão D (2026-09-27): a linha carregava a cor do partido DUAS vezes — a
     // base (`--party-x`, preenchimento) e a de texto (`--party-x-text`, o
-    // percentual grande). São a MESMA identidade em dois papéis; o `-text` é
-    // normalizado para a base aqui, e o caso (m2) afirma o par explicitamente.
+    // percentual grande). Desde 2026-10-03 o percentual sai na cor única
+    // `--color-pct-votos` e só a base fica; a normalização do `-text` segue
+    // aqui por defesa (outros `-text` da linha, se houver, são da mesma sigla).
     for (const m of (linha?.innerHTML ?? "").matchAll(TOKEN)) {
       achadas.add(m[0].replace(/-text\)$/, ")"));
     }
@@ -421,13 +422,17 @@ describe("<ResultPanel /> — a COR não acompanha a base (constituição § 2)"
     expect([...bruno]).toEqual(["var(--party-psd)"]);
     expect([...celia]).toEqual(["var(--party-mdb)"]);
 
-    // E o percentual pinta com o token de TEXTO do mesmo partido, nunca com a
-    // base (que reprova contraste como texto em PSOL, PSB, NOVO e Outros).
+    // 🔴 2026-10-03 (decisão do dono): o percentual NÃO leva cor de partido
+    // nenhuma — sai na cor única `--color-pct-votos`, pela folha de estilo.
+    // A linha carrega só a base, que pinta a barra.
     const estiloDe = (nome: string) =>
       linhaDe(doc, nome)
         ?.querySelector('[data-testid="candidate-result-row"]')
         ?.getAttribute("style") ?? "";
-    expect(estiloDe("Ana Lima")).toContain("--cor-texto:var(--party-pt-text)");
+    for (const nome of ["Ana Lima", "Bruno Reis", "Célia Mota"]) {
+      expect(estiloDe(nome)).not.toContain("--cor-texto");
+      expect(estiloDe(nome)).not.toMatch(/-text\)/);
+    }
     expect(estiloDe("Ana Lima")).toContain("--cor-base:var(--party-pt)");
   });
 

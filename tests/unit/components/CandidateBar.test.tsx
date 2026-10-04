@@ -33,13 +33,14 @@ describe("<CandidateBar />", () => {
     expect(meter?.getAttribute("aria-label")).toContain("Lula");
     expect(meter?.getAttribute("aria-label")).toContain("PT");
     expect(meter?.getAttribute("aria-label")).toContain("53,2%");
+    expect(meter?.getAttribute("aria-label")).toContain("aproximadamente 79,8 mi votos projetados");
 
     // Texto visível
     const text = doc.body.textContent ?? "";
     expect(text).toContain("Lula");
     expect(text).toContain("PT");
     expect(text).toContain("53,2%");
-    expect(text).toContain("79.812.408");
+    expect(text).toContain("≈ aproximadamente 79,8 mi votos projetados");
   });
 
   it("(b) clamp: pct > 100 vira 100, < 0 vira 0", () => {
@@ -119,5 +120,13 @@ describe("<CandidateBar />", () => {
       const estilo = doc.querySelector('[role="meter"] > div')?.getAttribute("style") ?? "";
       expect(estilo).toContain("var(--party-outros)");
     }
+  });
+
+  it("(z) votos projetados 0 ⇒ não sabemos ⇒ sem linha de votos (2026-10-03)", () => {
+    const doc = parse(
+      <CandidateBar nome="Lula" partido="PT" cor="var(--color-pt)" pctProjetado={53.2} votos={0} />,
+    );
+    expect(doc.querySelector('[data-testid="votos-projetados"]')).toBeNull();
+    expect(doc.body.textContent).not.toContain("0 votos");
   });
 });

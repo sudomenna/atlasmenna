@@ -45,11 +45,11 @@
  *
  *   Correção: `cor` segue pintando faixa e tick (área e traço, onde WCAG pede
  *   3:1 de não-texto) e o número passa a usar `corTexto`. Quando o caller não
- *   passa `corTexto`, o componente **deriva** uma cor medida — `textForParty`
- *   pela sigla (ADR-0024) e o neutro `--color-cand-other` em último caso.
- *   Nenhum caminho devolve a cor de preenchimento, então nenhum caller
- *   consegue reintroduzir o defeito por omissão. (O degrau `strongForRank`
- *   que ficava no topo dessa cadeia saiu em 2026-09-20 — ver o corpo.)
+ *   passa `corTexto`, o número sai em `--color-pct-votos`, a cor ÚNICA de todo
+ *   percentual de votos (decisão do dono, 2026-10-03 — até então era
+ *   `textForParty` pela sigla). Nenhum caminho devolve a cor de
+ *   preenchimento, então nenhum caller consegue reintroduzir o defeito por
+ *   omissão.
  *
  * Server Component puro — sem `"use client"`, sem state, sem hooks e sem
  * `framer-motion` (RNF-007a: este bloco é above-the-fold). Qualquer
@@ -108,11 +108,14 @@
  *      apurado, os dois sempre desenhados.
  */
 
+import type { ReactNode } from "react";
+
 import { VoteBar } from "@/components/atoms/bars/VoteBar";
 import { Figure } from "@/components/atoms/data/Figure";
+import { ProjecaoIndicador } from "@/components/atoms/data/ProjecaoIndicador";
 import { formatCI, formatPercent } from "@/lib/utils/format";
 import { denominadorFrase, denominadorLabel } from "@/lib/utils/participacao";
-import { colorForParty, intensityForParty, textForParty } from "@/lib/utils/party-color";
+import { colorForParty, intensityForParty } from "@/lib/utils/party-color";
 
 /** Rótulos dos segmentos do `VoteBar` — âncoras estáveis para os testes. */
 const SEG_OFFSET = "antes do intervalo";
@@ -156,8 +159,10 @@ export interface ProjectionThermometerProps {
    * medidos em 6,67:1 e 8,19:1 sobre `--surface-page`). Passar aqui a mesma
    * cor de `cor` reintroduz o defeito que esta prop existe para impedir.
    *
-   * Ausente, o componente **deriva** uma cor segura (ver `corTextoResolvida`) —
-   * nunca cai em `cor`.
+   * Ausente, o número sai em `--color-pct-votos` — a cor ÚNICA de todo
+   * percentual de votos (decisão do dono, 2026-10-03; ver `corTextoResolvida`)
+   * — e nunca cai em `cor`. Só passe esta prop para o que NÃO é percentual de
+   * votos de candidato (participação).
    */
   corTexto?: string;
   /**
@@ -170,9 +175,9 @@ export interface ProjectionThermometerProps {
    */
   rank?: number;
   /**
-   * Sigla do partido, usada só como fallback de `corTexto` pelo eixo do
-   * ADR-0024 (`textForParty`). Não pinta preenchimento nenhum — quem quiser a
-   * identidade do partido na faixa/tick passa `cor`/`corBand` explicitamente.
+   * Sigla do partido — fallback de `cor`/`corBand` (ADR-0024). Desde
+   * 2026-10-03 NÃO escolhe mais a cor do número (decisão do dono: percentual
+   * de votos em cor única, `--color-pct-votos`).
    */
   partido?: string;
   /** % projetado (0–100). */
@@ -196,6 +201,14 @@ export interface ProjectionThermometerProps {
    * meter zerado (ADR-0017 proíbe esconder camadas); os números viram "—".
    */
   aguardando?: boolean;
+  /**
+   * A linha pequena "↑ X% proj" sob o número da Parcial (decisão do dono,
+   * 2026-10-03 — `<ProjecaoIndicador>`). Default `true`: todo percentual de
+   * votos de candidatura a recebe. `false` para o que NÃO é percentual de
+   * votos de candidato (participação: brancos e nulos, abstenção), que fica
+   * fora do pedido. Nunca aparece em `aguardando`.
+   */
+  indicadorProjecao?: boolean;
   className?: string;
 }
 
@@ -232,6 +245,7 @@ export function ProjectionThermometer({
   scaleMax = 100,
   size = "compact",
   aguardando = false,
+  indicadorProjecao = true,
   className,
 }: ProjectionThermometerProps) {
   const escala = Number.isFinite(scaleMax) && scaleMax > 0 ? scaleMax : 100;
@@ -251,37 +265,23 @@ export function ProjectionThermometer({
   // Cor de TEXTO do número grande — deliberadamente derivada de outra cadeia
   // que `corResolvida`, e nunca dela.
   //
-  // Por quê: `cor` é cor de preenchimento e a maior parte dessa paleta reprova
-  // o § 4 como texto. O axe pegou o caso concreto em 2026-09-07 na home —
-  // `--color-cand-3` (#c97c1f) no número de 4,5% mede **2,99:1** sobre
-  // `--surface-page`, abaixo até do piso de 3:1 de texto grande; e
-  // `--color-cand-1` (#d33732) mede 4,37:1, que passa 3:1 mas não os 4,5:1 que
-  // a constituição § 4 exige sem abrir exceção por tamanho de fonte.
+  // 🔴 **2026-10-03 — decisão do dono: o percentual de votos não leva mais a
+  // cor do partido.** Todo percentual de candidato (projeção e apurado) sai
+  // na cor única `--color-pct-votos` (`app/globals.css`), neutra pela
+  // constituição § 2. A cor do partido segue na faixa e no tick (`cor` /
+  // `corBand`), onde é área/traço. A cadeia, em ordem:
+  //   1. `corTexto` — o caller mediu e decidiu (participação usa isto: brancos
+  //      e nulos e abstenção NÃO são percentual de votos de candidato);
+  //   2. `--color-pct-votos` — qualquer candidatura, com ou sem sigla, e o
+  //      agregado "Outros candidatos".
   //
-  // A cadeia, em ordem:
-  //   1. `corTexto` — o caller mediu e decidiu (participação usa isto);
-  //   2. a sigla do partido, via `textForParty` (ADR-0024). Passa 4,5:1 nas
-  //      quatro superfícies e nos dois temas para os 31 slugs, e em 17 deles
-  //      ELA É a cor base;
-  //   3. `--color-cand-other` (#6e6e6e) — para quem não tem sigla nenhuma
-  //      (participação, "Outros candidatos"). É o único token daquela paleta
-  //      que serve às duas coisas, e por medição: 4,63:1 sobre
-  //      `--surface-page` e 4,93:1 sobre `--surface-card`.
-  //
-  // 🔴 **2026-09-20 — o degrau do RANK saiu da cadeia, e ele era o primeiro.**
-  // Era: `rank` (da prop, ou extraído de dentro do próprio `cor` por
-  // `rankFromColorVar`) → `strongForRank(rank)` → só então `textForParty`.
-  // Como o degrau do rank vinha ANTES, ele vencia sempre que o caller passasse
-  // `rank` — e `<ProjectionThermometers>` passa. O resultado, na `/uf/[sigla]`
-  // depois que o preenchimento migrou para a sigla: o mesmo termômetro com a
-  // faixa na cor do PARTIDO e o número grande na cor da COLOCAÇÃO, lado a
-  // lado, e o número trocando de tinta a cada ultrapassagem. Mesma pessoa,
-  // duas tintas, no mesmo widget.
+  // Histórico: até 2026-10-03 o degrau 2 era `textForParty(partido)` (e
+  // `--color-cand-other` sem sigla); até 2026-09-20 havia antes dele um degrau
+  // por RANK (`strongForRank`), que pintava o número na cor da COLOCAÇÃO.
   //
   // Nenhum ramo devolve `corResolvida`: é isso que impede um caller de cair na
   // cor de preenchimento por acidente.
-  const corTextoResolvida =
-    corTexto ?? (partido ? textForParty(partido) : "var(--color-cand-other)");
+  const corTextoResolvida = corTexto ?? "var(--color-pct-votos)";
 
   const projetado = clamp(pctProjetado, escala);
   // Ordena o par para tolerar payload com lower > upper (defensivo).
@@ -378,7 +378,19 @@ export function ProjectionThermometer({
             size={figureSize}
             valor={aguardando ? null : atual}
             view="parcial"
-          />
+          >
+            {/* A projeção pequena sob a Parcial — o MESMO `projetado` do
+                `<Numero view="proj">` acima. Em `aguardando` não há projeção
+                para mostrar, e o átomo não é montado. */}
+            {indicadorProjecao && !aguardando ? (
+              <ProjecaoIndicador
+                bloco
+                parcial={atual}
+                projetado={projetado}
+                size={hero ? "md" : "sm"}
+              />
+            ) : null}
+          </Numero>
         </div>
       </div>
 
@@ -506,18 +518,21 @@ function Numero({
   size,
   valor,
   view,
+  children,
 }: {
   cor: string;
   rotulo: string;
   size: "lg" | "md";
   valor: number | null;
   view: "proj" | "parcial";
+  /** Abaixo do número, dentro do mesmo `data-view-only` (o indicador da Parcial). */
+  children?: ReactNode;
 }) {
   return (
     <span
       data-view-only={view}
       data-testid={view === "proj" ? "thermometer-numero" : "thermometer-numero-parcial"}
-      style={{ color: cor }}
+      style={children ? { color: cor, textAlign: "right" } : { color: cor }}
     >
       <Figure
         align="right"
@@ -526,6 +541,7 @@ function Numero({
         size={size}
         value={valor === null ? "—" : formatPercent(valor, 1)}
       />
+      {children}
     </span>
   );
 }

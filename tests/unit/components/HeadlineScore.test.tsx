@@ -54,8 +54,8 @@ describe("<HeadlineScore />", () => {
     expect(text).toContain("Lula à frente");
     expect(text).toContain("53,2%");
     expect(text).toContain("46,8%");
-    expect(text).toContain("79.812.408");
-    expect(text).toContain("70.140.992");
+    expect(text).toContain("≈ aproximadamente 79,8 mi votos projetados");
+    expect(text).toContain("≈ aproximadamente 70,1 mi votos projetados");
     expect(text).toContain("[51,9; 54,5]");
   });
 
@@ -187,12 +187,24 @@ describe("<HeadlineScore />", () => {
     // hardcoded — a barra imprimia "0 votos". Com a extrapolação do apurado
     // o número passa a ser real (Σ zona → UF → BR); o componente já
     // formatava, então o teste trava o contrato de exibição.
+    // 2026-10-03 (decisão do dono): estimativa sai abreviada, com "≈" e
+    // "projetados" — o número cheio afirmava precisão que o modelo não tem.
     const binary = parse(<HeadlineScore candidatos={[lula, bolso]} mode="binary" />);
-    expect(binary.body.textContent).toContain("79.812.408 votos");
-    expect(binary.body.textContent).toContain("70.140.992 votos");
+    const linhas = [...binary.querySelectorAll('[data-testid="votos-projetados"]')].map(
+      (e) => e.textContent,
+    );
+    expect(linhas).toEqual([
+      "≈ aproximadamente 79,8 mi votos projetados",
+      "≈ aproximadamente 70,1 mi votos projetados",
+    ]);
+    expect(binary.body.textContent).not.toContain("79.812.408");
+    // O placar só mostra projeção: a linha não pode sumir na visão Parcial.
+    for (const e of binary.querySelectorAll('[data-testid="votos-projetados"]')) {
+      expect(e.closest("[data-view-only]")).toBeNull();
+    }
 
     const multi = parse(<HeadlineScore candidatos={[lula, bolso]} mode="multi-1t" turno={1} />);
-    expect(multi.body.textContent).toContain("79.812.408 votos");
+    expect(multi.body.textContent).toContain("79,8 mi votos projetados");
   });
 
   it("(o) subtítulo default descreve extrapolação do apurado, não comparação com 2022", () => {

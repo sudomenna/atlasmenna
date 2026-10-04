@@ -118,14 +118,28 @@ const participacaoComComparecimento: EdgeParticipacao = {
 // ---------------------------------------------------------------------------
 
 const ROOT = path.resolve(import.meta.dirname, "../../..");
-/** Todos os tokens de cor do produto, resolvidos para hex. */
+/**
+ * Todos os tokens de cor do produto, resolvidos para hex — inclusive os
+ * semânticos que são só apelido (`--color-pct-votos: var(--text-primary)` →
+ * `--text-primary: var(--ink-0)` → hex). Primeira declaração vence (tema claro).
+ */
 const HEXES: Map<string, string> = (() => {
   const map = new Map<string, string>();
+  const apelidos = new Map<string, string>();
   for (const file of ["app/globals.css", "app/tokens-party.css"]) {
     const css = readFileSync(path.join(ROOT, file), "utf8");
     for (const m of css.matchAll(/(--[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{6})\s*;/g)) {
       if (m[1] && m[2] && !map.has(m[1])) map.set(m[1], m[2].toLowerCase());
     }
+    for (const m of css.matchAll(/(--[a-z0-9-]+)\s*:\s*var\((--[a-z0-9-]+)\)\s*;/g)) {
+      if (m[1] && m[2] && !apelidos.has(m[1])) apelidos.set(m[1], m[2]);
+    }
+  }
+  for (const [nome] of apelidos) {
+    let alvo: string | undefined = nome;
+    for (let i = 0; i < 8 && alvo && !map.has(alvo); i++) alvo = apelidos.get(alvo);
+    const hex = alvo ? map.get(alvo) : undefined;
+    if (hex && !map.has(nome)) map.set(nome, hex);
   }
   return map;
 })();
@@ -230,6 +244,13 @@ describe("<ProjectionThermometers />", () => {
     for (const el of numeros) {
       expect(preenchimentos, `número "${el.textContent}"`).not.toContain(corDoNumero(el));
     }
+
+    // 🔴 Decisão do dono, 2026-10-03: os QUATRO percentuais de votos (três
+    // candidaturas de partidos diferentes + "Outros candidatos") saem na MESMA
+    // cor, `--color-pct-votos`. Participação (brancos e nulos, abstenção) não
+    // é percentual de votos de candidato e mantém as suas.
+    const votos = numeros.slice(0, 4).map(corDoNumero);
+    expect(new Set(votos)).toEqual(new Set(["--color-pct-votos"]));
   });
 
   it("(b) sem `participacao` → ainda 6 meters no DOM (ADR-0017)", () => {
@@ -512,5 +533,18 @@ describe("<ProjectionThermometers />", () => {
     expect(soParticipacao.querySelector('[data-testid="projecao-origem"]')?.textContent).toBe(
       "Projeção a partir do apurado · 1.234 zonas · 23,4% apurado",
     );
+  });
+
+  it("(o) 🔴 a projeção pequena da Parcial (2026-10-03): candidatos e Outros têm; participação não", () => {
+    const doc = parse(
+      <ProjectionThermometers candidatos={onzeCandidatos()} participacao={participacaoCompleta} />,
+    );
+    const com = (id: string) =>
+      doc.querySelector(`#${id} [data-testid="projecao-indicador"]`) !== null;
+    expect(com("termometro-cand-1001")).toBe(true);
+    expect(com("termometro-outros")).toBe(true);
+    // Participação NÃO é percentual de votos de candidatura — fora do pedido.
+    expect(com("termometro-brancos-nulos")).toBe(false);
+    expect(com("termometro-abstencao")).toBe(false);
   });
 });

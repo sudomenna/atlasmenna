@@ -18,7 +18,7 @@
  *
  * | superfície | piso | o que usa |
  * |---|---|---|
- * | o número `text-3xl` | 4,5:1 — TEXTO (RNF-022 / const. § 4) | `textForParty` |
+ * | o número `text-3xl` | 4,5:1 — TEXTO (RNF-022 / const. § 4) | `--color-pct-votos` (desde 2026-10-03; era `textForParty`) |
  * | o preenchimento da barra | 3:1 — não-texto com extensão (RNF-035) | `colorForParty` |
  *
  * Até esta data as duas saíam de `corResolvida`, a cor-base. Medido contra
@@ -52,8 +52,12 @@
  *   - Números em tabular-nums (CSS global).
  */
 
-import { formatCI, formatPercent, formatVotes } from "@/lib/utils/format";
-import { colorForParty, textForParty } from "@/lib/utils/party-color";
+import {
+  VotosProjetados,
+  votosProjetadosExibiveis,
+} from "@/components/atoms/data/ProjecaoIndicador";
+import { formatCI, formatPercent, formatVotesCompact } from "@/lib/utils/format";
+import { colorForParty } from "@/lib/utils/party-color";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 
 export interface CandidateBarProps {
@@ -124,17 +128,21 @@ export function CandidateBar({
   // como o defeito viveu até 2026-09-20 (`<HeadlineScore>` passa
   // `cor={candidateColor(...)}`). Ver a tabela das duas tintas no topo.
   //
-  // `partido` é prop OBRIGATÓRIA, então não há terceiro degrau a percorrer:
-  // sigla ausente, desconhecida ou de federação já cai em
-  // `--party-outros-text` (4,53:1) dentro de `textForParty`, e não na
-  // cor-base `--party-outros` (2,39:1), que reprovaria.
-  const corTextoResolvida: string = textForParty(partido);
+  // 🔴 2026-10-03 — decisão do dono: o percentual de votos sai na cor ÚNICA
+  // `--color-pct-votos` (neutra, constituição § 2), não mais na cor de texto
+  // do partido (`textForParty`, até esta data). A cor do partido fica na barra.
+  const corTextoResolvida = "var(--color-pct-votos)";
+  // 🔴 2026-10-03 — decisão do dono: votos PROJETADOS saem abreviados, com "≈"
+  // e na cor da projeção (`<VotosProjetados>`), como no resto do site. Antes
+  // eram o número cheio ("79.812.408 votos"), sem dizer que era projeção —
+  // precisão que o modelo não tem. Zero/ausente ⇒ não sabemos ⇒ sem linha.
+  const votosProj = votosProjetadosExibiveis(votos);
   const pctSafe = Number.isFinite(pctProjetado) ? Math.max(0, Math.min(100, pctProjetado)) : 0;
   const ariaLabel = `${nome} (${partido}): ${formatPercent(pctSafe)} projetado${
     typeof pctLower === "number" && typeof pctUpper === "number"
       ? ` — intervalo ${formatCI(pctLower, pctUpper)}`
       : ""
-  }${typeof votos === "number" ? `, ${formatVotes(votos)} votos` : ""}`;
+  }${votosProj !== null ? `, aproximadamente ${formatVotesCompact(votosProj)} votos projetados` : ""}`;
 
   const containerClass = ["flex flex-col gap-2", className].filter(Boolean).join(" ");
   const headerClass = alignRight
@@ -186,16 +194,17 @@ export function CandidateBar({
           }}
         />
       </div>
-      {(typeof votos === "number" ||
-        (typeof pctLower === "number" && typeof pctUpper === "number")) && (
+      {(votosProj !== null || (typeof pctLower === "number" && typeof pctUpper === "number")) && (
         <div
           className={`flex flex-wrap items-baseline gap-x-3 text-xs ${
             alignRight ? "justify-end" : ""
           }`}
           style={{ color: "var(--color-text-muted)" }}
         >
-          {typeof votos === "number" && (
-            <span className="tabular-nums">{formatVotes(votos)} votos</span>
+          {votosProj !== null && (
+            // `dentroDaProjecao`: o placar só mostra projeção, nas duas
+            // visões — sem `data-view-only`, a linha não some na Parcial.
+            <VotosProjetados dentroDaProjecao votos={votosProj} />
           )}
           {typeof pctLower === "number" && typeof pctUpper === "number" && (
             <span className="tabular-nums">CI95: {formatCI(pctLower, pctUpper)}</span>

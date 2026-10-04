@@ -33,7 +33,7 @@
  *
  * | superfície | piso | tem de usar | mutação que o mata |
  * |---|---|---|---|
- * | número `text-3xl` | 4,5:1 (RNF-022) | `--party-<slug>-text` | voltar para a cor-base |
+ * | número `text-3xl` | 4,5:1 (RNF-022) | `--color-pct-votos` (desde 2026-10-03; era `--party-<slug>-text`) | voltar para a cor-base |
  * | preenchimento da barra | 3:1 (RNF-035) | `--party-<slug>` (base) | escurecer junto com o número |
  *
  * A segunda linha não é zelo decorativo: o remédio óbvio — "troca tudo por
@@ -144,11 +144,13 @@ const TEMAS = [
     // `--surface-page` é declarado uma vez (`var(--paper-1)`) e muda de valor
     // porque o PRIMITIVO muda no bloco escuro — então é o primitivo que se lê.
     paginaHex: primitivo(GLOBALS_CSS, "paper-1"),
+    tintaHex: primitivo(GLOBALS_CSS, "ink-0"),
   },
   {
     id: "escuro",
     party: tokensDeParty(bloco(TOKENS_CSS, ':root[data-theme="dark"] {')),
     paginaHex: primitivo(GLOBALS_ESCURO, "paper-1"),
+    tintaHex: primitivo(GLOBALS_ESCURO, "ink-0"),
   },
 ] as const;
 
@@ -159,6 +161,21 @@ function hexDoToken(valorCss: string, tema: (typeof TEMAS)[number]): string {
   const hex = tema.party.get(m[1]);
   if (!hex) throw new Error(`--party-${m[1]} não existe no tema ${tema.id}`);
   return hex;
+}
+
+/** A cor ÚNICA dos percentuais de votos (decisão do dono, 2026-10-03). */
+const COR_PCT_VOTOS = "var(--color-pct-votos)";
+
+/**
+ * `var(--color-pct-votos)` → hex, no tema pedido. Segue a cadeia COMMITADA em
+ * `app/globals.css` (`--color-pct-votos` → `--text-primary` → `--ink-0`) em vez
+ * de supô-la: se alguém repontar o token, isto lança e o gate reprova.
+ */
+function hexDoNumero(valorCss: string, tema: (typeof TEMAS)[number]): string {
+  if (valorCss.trim() !== COR_PCT_VOTOS) return hexDoToken(valorCss, tema);
+  expect(GLOBALS_CSS).toMatch(/--color-pct-votos:\s*var\(--text-primary\)\s*;/);
+  expect(GLOBALS_CSS).toMatch(/--text-primary:\s*var\(--ink-0\)\s*;/);
+  return tema.tintaHex;
 }
 
 // ---------------------------------------------------------------------------
@@ -218,7 +235,7 @@ describe("o número do placar (<CandidateBar>) é TEXTO e respeita o piso de 4,5
     for (const tema of TEMAS) {
       for (const slug of SLUGS_BASE) {
         const { corTexto } = pinturas(slug.toUpperCase());
-        const razao = contraste(hexDoToken(corTexto, tema), tema.paginaHex);
+        const razao = contraste(hexDoNumero(corTexto, tema), tema.paginaHex);
         if (razao < PISO_TEXTO) {
           reprovados.push(`${tema.id}/${slug}: ${razao.toFixed(3)}`);
         }
@@ -231,7 +248,7 @@ describe("o número do placar (<CandidateBar>) é TEXTO e respeita o piso de 4,5
     for (const tema of TEMAS) {
       for (const sigla of SIGLAS_CRITICAS) {
         const { corTexto } = pinturas(sigla);
-        const razao = contraste(hexDoToken(corTexto, tema), tema.paginaHex);
+        const razao = contraste(hexDoNumero(corTexto, tema), tema.paginaHex);
         expect(
           razao,
           `${tema.id} · "${sigla}" mede ${razao.toFixed(3)}:1 contra ${tema.paginaHex}`,
@@ -241,19 +258,26 @@ describe("o número do placar (<CandidateBar>) é TEXTO e respeita o piso de 4,5
   });
 
   // O caso que DISCRIMINA contra a regressão exata de 2026-09-20: o PSOL é o
-  // pior da paleta, e é justamente onde a cor-base (2,08:1) e a variante
-  // `-text` (4,51:1) são tokens DIFERENTES. Sem esta asserção, um teste que só
-  // olhasse PT/PL ficaria verde com o defeito de volta.
-  it("🔴 o número usa a variante `-text`, não a cor-base (PSOL: 2,08 → 4,51)", () => {
+  // pior da paleta, e é justamente onde a cor-base (2,08:1) reprova. Desde
+  // 2026-10-03 (decisão do dono) o número nem leva mais a cor do partido: sai
+  // na cor única `--color-pct-votos`, a mesma para todas as siglas.
+  it("🔴 o número usa a cor única `--color-pct-votos`, não a cor-base (PSOL: 2,08:1)", () => {
     const { corTexto, corFill } = pinturas("PSOL");
-    expect(corTexto).toBe("var(--party-psol-text)");
+    expect(corTexto).toBe(COR_PCT_VOTOS);
     expect(corFill).toBe("var(--party-psol)");
 
     const claro = TEMAS[0];
     expect(contraste(hexDoToken(corFill, claro), claro.paginaHex)).toBeLessThan(PISO_TEXTO);
-    expect(contraste(hexDoToken(corTexto, claro), claro.paginaHex)).toBeGreaterThanOrEqual(
+    expect(contraste(hexDoNumero(corTexto, claro), claro.paginaHex)).toBeGreaterThanOrEqual(
       PISO_TEXTO,
     );
+  });
+
+  it("🔴 dois partidos diferentes ⇒ o MESMO número: a cor não varia por sigla", () => {
+    const tintas = ["PT", "PL", "PSOL", "NOVO", "PSDB/CIDADANIA", ""].map(
+      (sigla) => pinturas(sigla).corTexto,
+    );
+    expect(new Set(tintas)).toEqual(new Set([COR_PCT_VOTOS]));
   });
 
   // A OUTRA direção. O remédio errado — "troca tudo por `textForParty`" —
@@ -276,7 +300,7 @@ describe("o número do placar (<CandidateBar>) é TEXTO e respeita o piso de 4,5
 
     expect(comCor.corFill).toBe("var(--party-pt)");
     expect(comCor.corTexto).toBe(semCor.corTexto);
-    expect(comCor.corTexto).toBe("var(--party-psol-text)");
+    expect(comCor.corTexto).toBe(COR_PCT_VOTOS);
   });
 
   // ADR-0024 pelo eixo do contraste: a colocação não escolhe tinta nenhuma.

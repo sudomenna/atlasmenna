@@ -268,3 +268,30 @@ describe("mecânica posicional da versão D", () => {
     }
   });
 });
+
+describe("🔴 votos projetados na lista do painel (decisão do dono, 2026-10-03)", () => {
+  it("cada linha mostra o `votos_projetados` DELA na Projeção; sem o campo, a linha de sempre", () => {
+    // Números distantes por candidatura — trocar uma pela outra (ou pelo
+    // apurado) muda o texto. Davi fica SEM o campo: nada projetado nele.
+    const corrida = [
+      cand(13, "Ana Lima", "PT", 15, 38, { votos_projetados: 3_812_000 }),
+      cand(22, "Bruno Reis", "PL", 30, 33, { votos_projetados: 2_450_000 }),
+      cand(15, "Célia Mota", "MDB", 45, 20, { votos_projetados: 172_418 }),
+      cand(55, "Davi Nunes", "PSD", 10, 9),
+    ];
+    const doc = parse(
+      <ResultPanel candidatos={corrida} pctApurado={40} selo="turno" title="T" turno={1} />,
+    );
+    const vp = (nome: string) =>
+      linhaDe(doc, nome)?.querySelector('[data-testid="votos-projetados"]')?.textContent ?? null;
+    expect(vp("Ana Lima")).toBe("≈ aproximadamente 3,8 mi votos projetados");
+    expect(vp("Bruno Reis")).toBe("≈ aproximadamente 2,5 mi votos projetados");
+    expect(vp("Célia Mota")).toBe("≈ aproximadamente 172 mil votos projetados");
+    expect(vp("Davi Nunes")).toBeNull();
+    // A Parcial segue com o apurado (Célia: 45 × 10.000).
+    expect(
+      linhaDe(doc, "Célia Mota")?.querySelector('[data-view-only="parcial"] [class*="apurados"]')
+        ?.parentElement?.textContent,
+    ).toBe("450.000 votos apurados");
+  });
+});

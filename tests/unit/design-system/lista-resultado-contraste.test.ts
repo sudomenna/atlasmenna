@@ -4,15 +4,16 @@
  * Os pares de cor NOVOS da lista do `<ResultPanel>` na versão D (decisão do
  * dono, 2026-09-27; `components/atoms/tables/CandidateResultRow.module.css`).
  *
- * O percentual grande usa `--party-<x>-text`, que já tem gate próprio contra
- * `--surface-card` e `--surface-page` (`party-text-contrast.test.ts`). O que a
- * versão D trouxe e ninguém media:
+ * O percentual grande usa `--color-pct-votos` desde 2026-10-03 (decisão do
+ * dono; até então `--party-<x>-text`), que aponta para `--text-primary` — o
+ * par "nome, votos do cartão" abaixo cobre o contraste dele. O que a versão D
+ * trouxe e ninguém media:
  *
  * | elemento | frente | fundo | piso |
  * |---|---|---|---|
  * | selo em pílula | `--text-inverse` | `--surface-inverse` | 4,5 (texto) |
  * | "PT – 13", "apurado X%", votos | `--text-secondary` | `--surface-card` | 4,5 (texto) |
- * | nome, votos do cartão | `--text-primary` | `--surface-card` | 4,5 (texto) |
+ * | nome, votos do cartão, percentual | `--text-primary` | `--surface-card` | 4,5 (texto) |
  * | marca da projeção (sobra) | `--text-primary` | `--surface-card` | 3 (não-texto) |
  * | marca da projeção (trilho) | `--text-primary` | `--surface-sunken` | 3 (não-texto) |
  *
@@ -132,8 +133,14 @@ describe("a folha da lista usa os tokens nos papéis medidos", () => {
     expect(MODULO).toMatch(/\.sub, \.votos \{[^}]*color: var\(--text-secondary\)/);
   });
 
-  it("o percentual lê a cor de TEXTO do partido, com fallback neutro", () => {
-    expect(MODULO).toMatch(/\.pct \{[^}]*color: var\(--cor-texto, var\(--text-primary\)\)/);
+  // 🔴 Decisão do dono, 2026-10-03: o percentual de votos sai na cor ÚNICA
+  // `--color-pct-votos`, não mais na cor de texto do partido (`--cor-texto`).
+  // O token aponta para `--text-primary`, então o contraste dele é o do caso
+  // "texto primário sobre o cartão" medido abaixo, nos dois temas.
+  it("o percentual lê a cor ÚNICA de percentual de votos — nunca a do partido", () => {
+    expect(MODULO).toMatch(/\.pct \{[^}]*color: var\(--color-pct-votos\)/);
+    expect(MODULO).not.toContain("var(--cor-texto");
+    expect(GLOBALS).toMatch(/--color-pct-votos:\s*var\(--text-primary\)\s*;/);
   });
 });
 
