@@ -86,7 +86,38 @@
  * `<Button variant="primary">`; o fallback de rank (`colorForRank`) não tem
  * tinta medida e por isso não pinta pílula.
  *
+ * ===== 2026-10-03 — a chave "Ordenar por" (RF-295) =====
+ * Pedido do dono: além de "onde o candidato tem o maior percentual", ver onde
+ * ele é mais forte pelo NÚMERO LÍQUIDO DE VOTOS de diferença para o adversário
+ * da linha. Dois critérios, uma chave segmentada abaixo das pílulas:
+ *
+ *   - **Percentual** (padrão) — exatamente o comportamento anterior: ordena
+ *     pelo `pct` desc e a "Diferença" sai em pp.
+ *   - **Votos** — `diffVotos = (me.pct − contra.pct) / 100 ×
+ *     row.votos_disputa_projetados`, com o MESMO `contra` da diferença em pp.
+ *     É a fórmula do consolidado regional (`lib/utils/consolidado-regiao.ts`):
+ *     `votos_disputa_projetados` está na mesma base dos `pct` de
+ *     `top_candidatos[]` (ver o campo em `lib/edge-config/types.ts`), então o
+ *     produto é voto projetado, não um número de outra régua. Ordena por
+ *     `diffVotos` desc — maiores vantagens primeiro, depois as menores
+ *     desvantagens — com desempate pela sigla.
+ *
+ * 🔴 **UF sem `votos_disputa_projetados` não entra no modo Votos.** O tipo diz
+ * "ausente ⇒ nunca uma estimativa", e ausência não é zero (decisão do dono de
+ * 14/09): tratá-la como 0 poria a UF no meio da lista com "0" de diferença, um
+ * empate que ninguém mediu. A legenda da tabela declara quantas ficaram fora.
+ *
+ * A coluna "Projetado" (%), a barra e a COR (`candidateColorByMargin` pela
+ * diferença em pp) não mudam com o critério — o que muda é a ordem e a régua
+ * da coluna "Diferença". O critério é estado próprio, independente da pílula:
+ * trocar de candidato mantém o critério escolhido.
+ *
  * A11y (RNF-023)
+ *   - A chave de critério segue o mesmo padrão das pílulas: `<fieldset>` com
+ *     `<legend>` só para leitor de tela ("Ordenar por") e o mesmo texto
+ *     visível num `<span aria-hidden>` na fileira, `<button aria-pressed>` com
+ *     `aria-controls` para a tabela, e o `<caption>` nomeia o critério ativo
+ *     para o leitor de tela anunciar a troca.
  *   - As pílulas são um `<fieldset>` com `<legend>` só para leitor de tela, e
  *     cada uma é um `<button aria-pressed>` — alternância de filtro, não
  *     navegação, e todas alcançáveis por Tab. `aria-controls` aponta para a
@@ -106,7 +137,7 @@ import { PartyTag } from "@/components/atoms/data/PartyTag";
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { queCompetem } from "@/lib/utils/destino-voto";
-import { formatPercent, formatPp } from "@/lib/utils/format";
+import { formatPercent, formatPp, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { partyChipInk } from "@/lib/utils/party-color";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
@@ -154,17 +185,42 @@ export interface StrongholdRow {
   diff: number;
   /** Sigla de quem está do outro lado da diferença. */
   contraNome: string;
+  /**
+   * A mesma diferença em VOTOS projetados (RF-295): `diff / 100 ×
+   * row.votos_disputa_projetados`, arredondada para inteiro. `null` quando a
+   * UF não publica `votos_disputa_projetados` — nunca uma estimativa, nunca 0.
+   */
+  diffVotos: number | null;
+}
+
+/** Critério de ordenação do painel (RF-295). */
+export type StrongholdCriterio = "percentual" | "votos";
+
+/**
+ * Diferença em votos com sinal, em forma compacta: "+1,2 mi", "−340 mil".
+ * O sinal negativo é o MESMO caractere de `formatPp` (U+2212), para as duas
+ * réguas da coluna "Diferença" se lerem iguais.
+ */
+export function formatVotosDiferenca(votos: number): string {
+  if (!Number.isFinite(votos)) return "—";
+  const sign = votos > 0 ? "+" : votos < 0 ? "−" : "";
+  return `${sign}${formatVotesCompact(Math.abs(votos))}`;
 }
 
 /**
- * UFs em que `candidatoId` aparece nos `top_candidatos`, ordenadas por
- * percentual projetado desc (tie-breaker por sigla, para ser determinístico —
- * constituição § 6). Exportada para o teste medir a regra sem o DOM.
+ * UFs em que `candidatoId` aparece nos `top_candidatos`, ordenadas pelo
+ * critério (tie-breaker por sigla, para ser determinístico — constituição § 6).
+ * Exportada para o teste medir a regra sem o DOM.
+ *
+ *   - `"percentual"` (padrão): percentual projetado desc.
+ *   - `"votos"` (RF-295): `diffVotos` desc; UF com `diffVotos === null` fica
+ *     FORA da lista — ver o bloco de 2026-10-03 no topo.
  */
 export function strongholdsFor(
   candidatoId: number,
   rows: EdgeUfRow[],
   candidatosById: Map<number, EdgeCandidate>,
+  criterio: StrongholdCriterio = "percentual",
 ): StrongholdRow[] {
   const out: StrongholdRow[] = [];
 
@@ -195,14 +251,32 @@ export function strongholdsFor(
     // na origem é o que impede a célula de dizer "atrás de RONALDO CAIADO"
     // enquanto a pílula ao lado diz "CAIADO".
     const oponente = candidatosById.get(contra.id);
+    const diff = me.pct - contra.pct;
+
+    // RF-295 — a mesma `diff`, na régua de votos. Só com o total publicado:
+    // ausente (ou não finito) é `null`, e o modo Votos descarta a linha. Zero
+    // também: o produtor nunca publica 0 (ausente ≠ zero, decisão de 14/09), e
+    // um 0 vindo de bug viraria uma diferença de "0" votos que ninguém mediu.
+    const total = row.votos_disputa_projetados;
+    const diffVotos =
+      typeof total === "number" && Number.isFinite(total) && total > 0
+        ? Math.round((diff / 100) * total)
+        : null;
 
     out.push({
       sigla: row.sigla,
       posicao: i + 1,
       pct: me.pct,
-      diff: me.pct - contra.pct,
+      diff,
       contraNome: oponente ? nomeExibicao(oponente.nome, oponente.sqcand) : `#${contra.id}`,
+      diffVotos,
     });
+  }
+
+  if (criterio === "votos") {
+    return out
+      .filter((l): l is StrongholdRow & { diffVotos: number } => l.diffVotos !== null)
+      .sort((a, b) => b.diffVotos - a.diffVotos || a.sigla.localeCompare(b.sigla, "pt-BR"));
   }
 
   return out.sort((a, b) => b.pct - a.pct || a.sigla.localeCompare(b.sigla, "pt-BR"));
@@ -279,15 +353,43 @@ const HEAD_CELL: React.CSSProperties = {
   fontWeight: 600,
 };
 
+/** Rótulo VISÍVEL de cada critério na chave "Ordenar por". */
+const CRITERIOS: ReadonlyArray<{ valor: StrongholdCriterio; rotulo: string }> = [
+  { valor: "percentual", rotulo: "Percentual" },
+  { valor: "votos", rotulo: "Votos" },
+];
+
 interface CandidateTableProps {
   cand: EdgeCandidate;
   rank: number;
   lista: StrongholdRow[];
   totalUfsComDado: number;
   id: string;
+  criterio: StrongholdCriterio;
+  /**
+   * Quantas UFs o candidato tem no critério ativo, ANTES do corte em `topUfs`.
+   * O caption conta estas — contar as linhas exibidas dizia "10 de 27" para
+   * quem tem 27, como se só 10 tivessem dado.
+   */
+  naLista: number;
+  /**
+   * Só no modo Votos: quantas UFs do candidato saíram da lista por não terem
+   * `votos_disputa_projetados`. Declarado na legenda — o denominador real.
+   */
+  semVotos: number;
 }
 
-function CandidateTable({ cand, rank, lista, totalUfsComDado, id }: CandidateTableProps) {
+function CandidateTable({
+  cand,
+  rank,
+  lista,
+  totalUfsComDado,
+  id,
+  criterio,
+  naLista,
+  semVotos,
+}: CandidateTableProps) {
+  const porVotos = criterio === "votos";
   const cor = candidateColor(cand.partido, rank);
   const captionId = `${id}-caption`;
 
@@ -318,7 +420,22 @@ function CandidateTable({ cand, rank, lista, totalUfsComDado, id }: CandidateTab
             marginTop: "var(--space-1)",
           }}
         >
-          {lista.length} de {totalUfsComDado} UFs com percentual publicado para este candidato
+          {naLista} de {totalUfsComDado} UFs com{" "}
+          {porVotos ? "votos projetados" : "percentual publicado"} para este candidato
+          {porVotos && semVotos > 0
+            ? ` · ${semVotos} ${semVotos === 1 ? "UF" : "UFs"} sem total de votos projetado fora da lista`
+            : null}
+        </span>
+        {/* RF-295 — o critério ativo vive DENTRO do caption: é o que o leitor
+            de tela relê quando a chave troca a ordem da tabela. */}
+        <span
+          data-testid="stronghold-criterio"
+          className="block"
+          style={{ font: "var(--type-data)", color: "var(--text-secondary)" }}
+        >
+          {porVotos
+            ? "Ordenado pela diferença em votos projetados"
+            : "Ordenado pelo percentual projetado"}
         </span>
       </caption>
       <thead>
@@ -330,7 +447,7 @@ function CandidateTable({ cand, rank, lista, totalUfsComDado, id }: CandidateTab
             Posição
           </th>
           <th scope="col" style={{ ...HEAD_CELL, textAlign: "right" }}>
-            Diferença
+            {porVotos ? "Diferença em votos" : "Diferença"}
           </th>
           <th scope="col" style={{ ...HEAD_CELL, textAlign: "right" }}>
             Projetado
@@ -341,7 +458,9 @@ function CandidateTable({ cand, rank, lista, totalUfsComDado, id }: CandidateTab
         {lista.length === 0 ? (
           <tr>
             <td colSpan={4} style={{ ...CELL, font: "var(--type-body-sm)" }}>
-              Nenhuma UF publicou percentual para este candidato ainda.
+              {porVotos
+                ? "Nenhuma UF publicou total de votos projetado para este candidato ainda."
+                : "Nenhuma UF publicou percentual para este candidato ainda."}
             </td>
           </tr>
         ) : (
@@ -374,7 +493,9 @@ function CandidateTable({ cand, rank, lista, totalUfsComDado, id }: CandidateTab
                 </span>
               </td>
               <td style={{ ...CELL, font: "var(--type-figure-sm)", textAlign: "right" }}>
-                {formatPp(l.diff)}
+                {porVotos && l.diffVotos !== null
+                  ? formatVotosDiferenca(l.diffVotos)
+                  : formatPp(l.diff)}
               </td>
               <td style={{ ...CELL, font: "var(--type-figure-sm)", textAlign: "right" }}>
                 {formatPercent(l.pct, 1)}
@@ -406,6 +527,19 @@ export function StrongholdsPanel({
   // ciclos de 60s, o índice apontaria para outro candidato em silêncio.
   const [selecionadoId, setSelecionadoId] = useState<number | null>(null);
   const selecionado = pilulas.find((c) => c.id === selecionadoId) ?? pilulas[0];
+  // RF-295 — estado próprio, separado da pílula: trocar de candidato mantém o
+  // critério. Padrão = Percentual, o comportamento anterior à chave.
+  const [criterio, setCriterio] = useState<StrongholdCriterio>("percentual");
+
+  const listaCompleta = selecionado
+    ? strongholdsFor(selecionado.id, rows, candidatosById, criterio)
+    : [];
+  // Quantas UFs do candidato o modo Votos deixou de fora (sem total
+  // projetado). No modo Percentual não há descarte e o número não é usado.
+  const semVotos =
+    selecionado && criterio === "votos"
+      ? strongholdsFor(selecionado.id, rows, candidatosById).length - listaCompleta.length
+      : 0;
 
   const totalUfsComDado = rows.filter((r) => (r.top_candidatos ?? []).length > 0).length;
   const rotulos = chipLabels(pilulas);
@@ -464,12 +598,50 @@ export function StrongholdsPanel({
       ) : null}
 
       {selecionado ? (
+        <fieldset data-testid="strongholds-criterio" className={styles.ordem}>
+          {/* A `<legend>` nomeia o grupo para o leitor de tela; o rótulo
+              VISÍVEL é um `<span aria-hidden>` na fileira dos botões. Uma
+              legend flutuada (`float: left`) entra na fileira no Chromium, mas
+              o WebKit 26 ignora o float e a empilha acima do trilho (medido em
+              03/10 no Playwright, iPhone 14 e Safari desktop). */}
+          <legend className="sr-only">Ordenar por</legend>
+          <span aria-hidden="true" className={styles.ordemLegenda}>
+            Ordenar por
+          </span>
+          <span className={styles.segmentos}>
+            {CRITERIOS.map(({ valor, rotulo }) => {
+              const ativo = valor === criterio;
+              return (
+                <button
+                  key={valor}
+                  type="button"
+                  data-testid="stronghold-criterio-botao"
+                  data-criterio={valor}
+                  aria-pressed={ativo}
+                  aria-controls={tabelaId}
+                  className={[styles.segmento, ativo ? styles.segmentoOn : null]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onClick={() => setCriterio(valor)}
+                >
+                  {rotulo}
+                </button>
+              );
+            })}
+          </span>
+        </fieldset>
+      ) : null}
+
+      {selecionado ? (
         <CandidateTable
           id={tabelaId}
           cand={selecionado}
           rank={selecionado.rank ?? pilulas.indexOf(selecionado) + 1}
-          lista={strongholdsFor(selecionado.id, rows, candidatosById).slice(0, topUfs)}
+          lista={listaCompleta.slice(0, topUfs)}
           totalUfsComDado={totalUfsComDado}
+          criterio={criterio}
+          naLista={listaCompleta.length}
+          semVotos={semVotos}
         />
       ) : (
         <p style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
@@ -486,11 +658,12 @@ export function StrongholdsPanel({
           color: "var(--text-muted)",
         }}
       >
-        {topUfs} UFs com maior percentual projetado para o candidato escolhido acima. A diferença é
-        a margem projetada local: para quem está em 1º, a distância até o 2º; abaixo disso, a
-        distância até o 1º. O payload publica no máximo três candidatos por UF, então uma UF em que
-        o candidato esteja em 4º ou abaixo não entra na lista. Projeção não oficial; o resultado é
-        do TSE.
+        As {topUfs} UFs em que o candidato escolhido acima é mais forte. A diferença é a margem
+        projetada local — para quem está em 1º, a distância até o 2º; abaixo disso, a distância até
+        o 1º —, em pontos percentuais em “Percentual” e, em “Votos”, convertida em votos pelo total
+        projetado de votos em disputa da UF (UF sem esse total fica fora). Só entram UFs em que o
+        candidato esteja entre os {STRONGHOLD_POSICAO_MAX} primeiros colocados. Projeção não
+        oficial; o resultado é do TSE.
       </p>
     </Panel>
   );

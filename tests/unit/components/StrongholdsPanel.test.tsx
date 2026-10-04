@@ -33,6 +33,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   chipFillFor,
   chipLabels,
+  formatVotosDiferenca,
+  STRONGHOLD_POSICAO_MAX,
   StrongholdsPanel,
   strongholdsFor,
 } from "@/components/blocks/StrongholdsPanel";
@@ -201,10 +203,17 @@ describe("<StrongholdsPanel />", () => {
     expect(doc.body.textContent).toContain("Nenhuma UF publicou percentual para este candidato");
   });
 
-  it("(i) a nota declara o limite de três candidatos por UF e o caráter não oficial", () => {
+  it("(i) a nota declara o corte de posição (a constante, não um número solto) e o caráter não oficial", () => {
+    // 2026-10-03 — o texto antigo dizia "no máximo três candidatos por UF",
+    // obsoleto desde 19/09 (o corte é `STRONGHOLD_POSICAO_MAX`, 4). A frase
+    // agora sai da constante, então não pode voltar a mentir sozinha.
     const doc = parse(<StrongholdsPanel candidatos={candidatos} rows={rows} />);
     const nota = doc.querySelector('[data-testid="strongholds-nota"]')?.textContent ?? "";
-    expect(nota).toContain("no máximo três candidatos por UF");
+    expect(nota).toContain(`entre os ${STRONGHOLD_POSICAO_MAX} primeiros colocados`);
+    expect(nota).not.toContain("três");
+    // RF-295 — a nota explica os dois critérios.
+    expect(nota).toContain("“Percentual”");
+    expect(nota).toContain("“Votos”");
     expect(nota).toContain("não oficial");
   });
 
@@ -331,6 +340,11 @@ describe("<StrongholdsPanel />", () => {
     );
     const doc = parse(<StrongholdsPanel candidatos={[pt, pl]} rows={muitas} />);
     expect(doc.querySelectorAll("tbody tr")).toHaveLength(10);
+    // O caption conta as UFs do candidato ANTES do corte: "12 de 12", não
+    // "10 de 12" — este dizia que só 10 estados tinham dado.
+    expect(doc.querySelector("caption")?.textContent).toContain(
+      "12 de 12 UFs com percentual publicado",
+    );
   });
 });
 
@@ -462,5 +476,317 @@ describe("STRONGHOLD_POSICAO_MAX — o 4º colocado conta como reduto (2026-09-1
     // O 4º não lidera, então a régua é o 1º colocado (40 − 8 = 32pp negativos).
     // Mutação que morre: comparar com o vizinho de cima (18 − 8 = 10pp).
     expect(strongholdsFor(40, rowsCinco, byId5)[0]?.diff).toBe(-32);
+  });
+});
+
+/**
+ * RF-295 (2026-10-03) — a chave "Ordenar por": Percentual | Votos.
+ *
+ * O número em votos é `(me.pct − contra.pct) / 100 × votos_disputa_projetados`,
+ * com o MESMO `contra` da diferença em pp. As fixtures abaixo são escolhidas
+ * para que cada mutação plausível mude a saída:
+ *   - os totais das UFs são muito diferentes entre si, então a ordem por votos
+ *     DIVERGE da ordem por percentual (senão "ordenar por votos" passaria
+ *     ordenando por pct);
+ *   - há sinais mistos (o PT lidera em umas, perde em outras);
+ *   - há uma UF SEM `votos_disputa_projetados` — que tem de sumir, não virar 0;
+ *   - há um empate exato em votos para medir o desempate pela sigla.
+ */
+describe("RF-295 — strongholdsFor(..., 'votos')", () => {
+  function rowV(
+    sigla: string,
+    top: Array<{ id: number; pct: number; votos_atuais?: number }>,
+    total: number | undefined,
+  ): EdgeUfRow {
+    const r = makeRow(sigla, top as Array<{ id: number; pct: number }>);
+    return total === undefined ? r : { ...r, votos_disputa_projetados: total };
+  }
+
+  // PT (#13) × PL (#22), mais o #99 como 3º em uma delas.
+  const rowsV: EdgeUfRow[] = [
+    // PT lidera por 34pp num estado pequeno: 0,34 × 400.000 = +136.000
+    rowV(
+      "AC",
+      [
+        { id: 13, pct: 62, votos_atuais: 1 },
+        { id: 22, pct: 28, votos_atuais: 1 },
+      ],
+      400_000,
+    ),
+    // PT lidera por 4pp num estado enorme: 0,04 × 25.000.000 = +1.000.000
+    rowV(
+      "SP",
+      [
+        { id: 13, pct: 46, votos_atuais: 1 },
+        { id: 22, pct: 42, votos_atuais: 1 },
+        { id: 99, pct: 12, votos_atuais: 1 },
+      ],
+      25_000_000,
+    ),
+    // PT em 2º, perde por 10pp: −0,10 × 3.000.000 = −300.000
+    rowV(
+      "SC",
+      [
+        { id: 22, pct: 55 },
+        { id: 13, pct: 45 },
+      ],
+      3_000_000,
+    ),
+    // PT em 2º, perde por 30pp num estado pequeno: −0,30 × 500.000 = −150.000
+    rowV(
+      "RR",
+      [
+        { id: 22, pct: 60 },
+        { id: 13, pct: 30 },
+      ],
+      500_000,
+    ),
+    // PT lidera por 20pp, mas a UF NÃO publica o total → fora do modo Votos.
+    rowV(
+      "BA",
+      [
+        { id: 13, pct: 60 },
+        { id: 22, pct: 40 },
+      ],
+      undefined,
+    ),
+  ];
+
+  it("a fórmula: diff em pp / 100 × votos_disputa_projetados, arredondada", () => {
+    const porSigla = new Map(strongholdsFor(13, rowsV, byId, "votos").map((l) => [l.sigla, l]));
+    expect(porSigla.get("AC")?.diffVotos).toBe(136_000);
+    expect(porSigla.get("SP")?.diffVotos).toBe(1_000_000);
+    expect(porSigla.get("SC")?.diffVotos).toBe(-300_000);
+    expect(porSigla.get("RR")?.diffVotos).toBe(-150_000);
+  });
+
+  it("arredonda para inteiro (o produto raramente fecha)", () => {
+    const r = rowV(
+      "PI",
+      [
+        { id: 13, pct: 50.123 },
+        { id: 22, pct: 49.877 },
+      ],
+      1_234_567,
+    );
+    // 0,246 / 100 × 1.234.567 = 3.037,03 → 3.037
+    expect(strongholdsFor(13, [r], byId, "votos")[0]?.diffVotos).toBe(3037);
+  });
+
+  it("o `contra` é o mesmo da diferença em pp: em 1º, o 2º; abaixo, o 1º — nunca o vizinho", () => {
+    // O #99 está em 3º em SP; contra ele a diferença é contra o 1º (PT, 46).
+    // 12 − 46 = −34pp × 25.000.000 = −8.500.000. Contra o 2º (PL, 42) seriam
+    // −7.500.000 — a mutação "comparar com o vizinho de cima" morre aqui.
+    expect(strongholdsFor(99, rowsV, byId, "votos")[0]?.diffVotos).toBe(-8_500_000);
+    // E o líder mede contra o 2º, não contra o 3º: (46 − 42) e não (46 − 12).
+    expect(strongholdsFor(13, rowsV, byId, "votos").find((l) => l.sigla === "SP")?.diffVotos).toBe(
+      1_000_000,
+    );
+  });
+
+  it("ordena por diffVotos desc: maiores vantagens, depois menores desvantagens", () => {
+    expect(strongholdsFor(13, rowsV, byId, "votos").map((l) => l.sigla)).toEqual([
+      "SP", // +1.000.000
+      "AC", // +136.000
+      "RR", // −150.000
+      "SC", // −300.000
+    ]);
+    // Pré-condição de discriminação: por percentual a ordem é OUTRA.
+    expect(strongholdsFor(13, rowsV, byId).map((l) => l.sigla)).toEqual([
+      "AC",
+      "BA",
+      "SP",
+      "SC",
+      "RR",
+    ]);
+  });
+
+  it("🔴 UF sem votos_disputa_projetados fica FORA do modo Votos — nunca entra como 0", () => {
+    const lista = strongholdsFor(13, rowsV, byId, "votos");
+    expect(lista.map((l) => l.sigla)).not.toContain("BA");
+    // No modo Percentual ela continua lá, com `diffVotos` nulo (não 0).
+    const ba = strongholdsFor(13, rowsV, byId).find((l) => l.sigla === "BA");
+    expect(ba).toBeDefined();
+    expect(ba?.diffVotos).toBeNull();
+  });
+
+  it("total de votos projetado = 0 é tratado como ausente, não como diferença de 0 votos", () => {
+    const zero = rowV(
+      "AP",
+      [
+        { id: 13, pct: 70 },
+        { id: 22, pct: 30 },
+      ],
+      0,
+    );
+    const lista = strongholdsFor(13, [...rowsV, zero], byId, "votos");
+    expect(lista.map((l) => l.sigla)).not.toContain("AP");
+    expect(strongholdsFor(13, [zero], byId)[0]?.diffVotos).toBeNull();
+  });
+
+  it("empate exato em votos desempata pela sigla, independente da ordem de entrada", () => {
+    const empate = [
+      rowV(
+        "TO",
+        [
+          { id: 13, pct: 60 },
+          { id: 22, pct: 40 },
+        ],
+        1_000_000,
+      ),
+      rowV(
+        "AP",
+        [
+          { id: 13, pct: 70 },
+          { id: 22, pct: 30 },
+        ],
+        500_000,
+      ),
+    ];
+    // Os dois dão +200.000.
+    expect(strongholdsFor(13, empate, byId, "votos").map((l) => l.sigla)).toEqual(["AP", "TO"]);
+    expect(strongholdsFor(13, [...empate].reverse(), byId, "votos").map((l) => l.sigla)).toEqual([
+      "AP",
+      "TO",
+    ]);
+  });
+
+  it("formatVotosDiferenca: compacto, com o mesmo sinal negativo de formatPp (U+2212)", () => {
+    expect(formatVotosDiferenca(1_234_567)).toBe("+1,2 mi");
+    expect(formatVotosDiferenca(-340_000)).toBe("−340 mil");
+    expect(formatVotosDiferenca(-340_000).charCodeAt(0)).toBe(0x2212);
+    expect(formatVotosDiferenca(0)).toBe("0");
+    expect(formatVotosDiferenca(850)).toBe("+850");
+  });
+});
+
+describe("RF-295 — a chave 'Ordenar por' no painel montado", () => {
+  let container: HTMLElement;
+  let root: Root;
+
+  // Três UFs em que a ordem por votos é o INVERSO da ordem por percentual.
+  const rowsChave: EdgeUfRow[] = [
+    {
+      ...makeRow("AC", [
+        { id: 13, pct: 70 },
+        { id: 22, pct: 30 },
+      ]),
+      votos_disputa_projetados: 300_000,
+    }, // +120.000
+    {
+      ...makeRow("RJ", [
+        { id: 13, pct: 55 },
+        { id: 22, pct: 45 },
+      ]),
+      votos_disputa_projetados: 9_000_000,
+    }, // +900.000
+    {
+      ...makeRow("SP", [
+        { id: 13, pct: 51 },
+        { id: 22, pct: 49 },
+      ]),
+      votos_disputa_projetados: 25_000_000,
+    }, // +500.000
+    // PL lidera; sem total → some do modo Votos.
+    makeRow("SC", [
+      { id: 22, pct: 58 },
+      { id: 13, pct: 42 },
+    ]),
+  ];
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+    act(() => {
+      root.render(<StrongholdsPanel candidatos={candidatos} rows={rowsChave} />);
+    });
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+  });
+
+  const botoes = () =>
+    Array.from(
+      container.querySelectorAll<HTMLElement>('[data-testid="stronghold-criterio-botao"]'),
+    );
+  const botao = (c: string) => botoes().find((b) => b.getAttribute("data-criterio") === c);
+  const chips = () =>
+    Array.from(container.querySelectorAll<HTMLElement>('[data-testid="stronghold-chip"]'));
+  const caption = () => container.querySelector("caption")?.textContent ?? "";
+  const ufs = () =>
+    Array.from(container.querySelectorAll<HTMLElement>("tbody tr[data-uf]")).map((tr) =>
+      tr.getAttribute("data-uf"),
+    );
+  const diferencas = () =>
+    Array.from(container.querySelectorAll<HTMLElement>("tbody tr[data-uf]")).map(
+      (tr) => tr.querySelectorAll("td")[1]?.textContent,
+    );
+  const cabecalhoDiferenca = () => container.querySelectorAll("thead th")[2]?.textContent;
+
+  it("nasce em Percentual: ordem, régua em pp e aria-pressed", () => {
+    expect(botoes().map((b) => b.textContent)).toEqual(["Percentual", "Votos"]);
+    expect(botoes().map((b) => b.getAttribute("aria-pressed"))).toEqual(["true", "false"]);
+    expect(ufs()).toEqual(["AC", "RJ", "SP", "SC"]);
+    expect(diferencas()).toEqual(["+40,0 pp", "+10,0 pp", "+2,0 pp", "−16,0 pp"]);
+    expect(cabecalhoDiferenca()).toBe("Diferença");
+    expect(caption()).toContain("Ordenado pelo percentual projetado");
+  });
+
+  it("o grupo é um fieldset com legend 'Ordenar por' e aponta para a tabela", () => {
+    const grupo = container.querySelector('[data-testid="strongholds-criterio"]');
+    expect(grupo?.tagName).toBe("FIELDSET");
+    expect(grupo?.querySelector("legend")?.textContent).toBe("Ordenar por");
+    // O rótulo visível é um irmão `aria-hidden` dos botões, não a legend:
+    // legend flutuada não entra na fileira no WebKit.
+    const visivel = grupo?.querySelector('span[aria-hidden="true"]');
+    expect(visivel?.textContent).toBe("Ordenar por");
+    const tabelaId = container.querySelector('[data-testid="stronghold-column"]')?.id;
+    expect(tabelaId).toBeTruthy();
+    for (const b of botoes()) {
+      expect(b.getAttribute("type")).toBe("button");
+      expect(b.getAttribute("aria-controls")).toBe(tabelaId);
+    }
+  });
+
+  it("clicar em Votos reordena, troca a régua, o cabeçalho, o aria-pressed e o caption", () => {
+    act(() => botao("votos")?.click());
+
+    expect(botoes().map((b) => b.getAttribute("aria-pressed"))).toEqual(["false", "true"]);
+    expect(ufs()).toEqual(["RJ", "SP", "AC"]); // 900 mil, 500 mil, 120 mil; SC fora
+    expect(diferencas()).toEqual(["+900 mil", "+500 mil", "+120 mil"]);
+    expect(cabecalhoDiferenca()).toBe("Diferença em votos");
+    expect(caption()).toContain("Ordenado pela diferença em votos projetados");
+    expect(caption()).not.toContain("percentual projetado");
+    // O denominador real: 3 de 4 UFs, e a UF descartada é declarada.
+    expect(caption()).toContain("3 de 4 UFs com votos projetados para este candidato");
+    expect(caption()).toContain("1 UF sem total de votos projetado fora da lista");
+    // A coluna "Projetado" não muda de régua.
+    const projetado = Array.from(container.querySelectorAll("tbody tr[data-uf]")).map(
+      (tr) => tr.querySelectorAll("td")[2]?.textContent,
+    );
+    expect(projetado).toEqual(["55,0%", "51,0%", "70,0%"]);
+  });
+
+  it("trocar de candidato PRESERVA o critério escolhido", () => {
+    act(() => botao("votos")?.click());
+    act(() => chips()[1]?.click()); // PL
+
+    expect(caption()).toContain("Candidato PL");
+    expect(botao("votos")?.getAttribute("aria-pressed")).toBe("true");
+    // PL: RJ −900 mil, SP −500 mil, AC −120 mil (a ordem desc põe a menor
+    // desvantagem primeiro); SC (onde o PL lidera) fica fora por não ter total.
+    expect(ufs()).toEqual(["AC", "SP", "RJ"]);
+    expect(diferencas()).toEqual(["−120 mil", "−500 mil", "−900 mil"]);
+  });
+
+  it("voltar para Percentual restaura exatamente a tabela original", () => {
+    act(() => botao("votos")?.click());
+    act(() => botao("percentual")?.click());
+    expect(ufs()).toEqual(["AC", "RJ", "SP", "SC"]);
+    expect(diferencas()).toEqual(["+40,0 pp", "+10,0 pp", "+2,0 pp", "−16,0 pp"]);
+    expect(caption()).toContain("Ordenado pelo percentual projetado");
   });
 });

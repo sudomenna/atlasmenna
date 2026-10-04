@@ -74,8 +74,79 @@
   border-color: transparent;
 }
 
+/* ===== RF-295 — a chave "Ordenar por" (2026-10-03) =====
+ *
+ * Segundo grupo de botões, abaixo das pílulas. Mesmo reset de `<fieldset>` das
+ * pílulas (`.chips`). A `<legend>` é `sr-only`; o rótulo visível é um
+ * `<span aria-hidden>`, item flex comum ao lado do trilho. (Uma legend com
+ * `float: left` entra na fileira no Chromium, mas o WebKit 26 ignora o float e
+ * a empilha acima — medido em 03/10.) */
+.ordem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.ordemLegenda {
+  padding: 0;
+  font: var(--type-kicker);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* Trilho do controle segmentado: os dois botões dividem um contorno só. */
+.segmentos {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-pill);
+}
+
+.segmento {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-primary);
+  font: var(--type-label);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.segmento:hover {
+  background: var(--surface-sunken);
+}
+
+/* Ligado: o par inverso do shell — o mesmo fallback medido das pílulas
+ * (`chipFillFor` sem partido) e o preenchimento do `<Button variant="primary">`.
+ * O critério não tem partido, então não há par de partido a usar. */
+.segmento.segmentoOn,
+.segmento.segmentoOn:hover {
+  background: var(--surface-inverse);
+  color: var(--text-inverse);
+}
+
 @media (min-width: 960px) {
   .chip {
+    min-height: 32px;
+  }
+
+  .segmento {
     min-height: 32px;
   }
 }
