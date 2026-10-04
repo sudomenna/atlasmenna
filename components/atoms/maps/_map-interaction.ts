@@ -198,6 +198,97 @@ export function attachZoomControls(
   };
 }
 
+/** Limites de zoom/arraste de um mapa — mesma forma que `applyZoomLimits` recebe. */
+export interface ZoomLimits {
+  minZoom: number;
+  maxZoom: number;
+  base: Bbox;
+}
+
+/**
+ * Reenquadra o mapa quando o CONTÊINER muda de tamanho depois do mount (barra
+ * de endereço do celular, rotação, fonte, layout assentando).
+ *
+ * 🔴 Por que existe: o enquadramento só era calculado no mount e o `minZoom`
+ * ficava travado nele (ADR-0071). Se o contêiner encolhia, o Brasil/estado
+ * ficava cortado e nem pinça nem ⟲ conseguiam afastar o bastante; se crescia,
+ * ficava deslocado e o ⟲ nascia habilitado sem o usuário ter tocado.
+ *
+ * A cada `resize` do MapLibre:
+ *   1. `frame()` devolve o enquadramento do tamanho NOVO (ou `null` se o
+ *      contêiner está 0×0 — aba escondida: não faz nada).
+ *   2. Solta `maxBounds` e o piso (a caixa e o piso antigos, feitos para a
+ *      viewport antiga, travariam o `jumpTo` ou fariam o MapLibre ampliar).
+ *   3. Se a câmera estava no enquadramento ANTERIOR (o usuário não mexeu),
+ *      `jumpTo` no novo, sem animação. Se mexeu, a câmera fica onde está.
+ *   4. Reaplica os limites com o enquadramento novo (`applyZoomLimits`, depois
+ *      do `jumpTo`: a caixa de arraste é calculada com a vista já nova).
+ *
+ * "Estava no enquadramento" vem do último `moveend` (comparado com
+ * `HOME_EPSILON`), e não da câmera no instante do `resize`: o MapLibre já pode
+ * ter deslocado a câmera ao redimensionar a viewport, e o `moveend` que fecha o
+ * próprio `resize` dispara DEPOIS deste handler — é ele que atualiza o ⟲
+ * (`attachZoomControls`) e o estado "no enquadramento" para o tamanho novo.
+ *
+ * `initialHome` é a câmera efetiva em que o mapa está agora (zoom já com o
+ * piso aplicado). Devolve o "desligar" — chamar ANTES de `map.remove()`.
+ */
+export function attachReframeOnResize(
+  map: maplibregl.Map,
+  {
+    initialHome,
+    frame,
+    limits,
+  }: {
+    initialHome: HomeCamera;
+    frame: () => HomeCamera | null;
+    limits: (frame: HomeCamera) => ZoomLimits;
+  },
+): () => void {
+  let lastHome = initialHome;
+  let atHome = true;
+
+  const onMoveEnd = () => {
+    const c = map.getCenter();
+    atHome =
+      Math.abs(map.getZoom() - lastHome.zoom) <= HOME_EPSILON &&
+      Math.abs(c.lng - lastHome.lng) <= HOME_EPSILON &&
+      Math.abs(c.lat - lastHome.lat) <= HOME_EPSILON;
+  };
+
+  const onResize = () => {
+    // Nada aqui pode derrubar o mapa (constituição § 7).
+    try {
+      const f = frame();
+      if (!f || ![f.lng, f.lat, f.zoom].every(Number.isFinite)) return;
+      const lim = limits(f);
+      const home: HomeCamera = { lng: f.lng, lat: f.lat, zoom: Math.max(f.zoom, lim.minZoom) };
+
+      // Solta o que foi calculado para o tamanho antigo. Teto novo ANTES do
+      // piso novo (`setMinZoom` lança com piso > teto); piso 0 para o `jumpTo`
+      // não ser travado — `applyZoomLimits` põe o definitivo logo abaixo.
+      map.setMaxBounds(null);
+      map.setMinZoom(0);
+      map.setMaxZoom(lim.maxZoom);
+      // O novo enquadramento é marcado ANTES do `jumpTo`: o `moveend` do
+      // próprio `jumpTo` confere contra ele.
+      const usuarioMexeu = !atHome;
+      lastHome = home;
+      if (!usuarioMexeu) map.jumpTo({ center: [home.lng, home.lat], zoom: home.zoom });
+      applyZoomLimits(map, lim);
+    } catch (err) {
+      console.error("[mapa] reenquadramento no resize falhou (ADR-0071)", err);
+    }
+  };
+
+  map.on("moveend", onMoveEnd);
+  map.on("resize", onResize);
+  return () => {
+    map.off("moveend", onMoveEnd);
+    map.off("resize", onResize);
+  };
+}
+
 /** `LngLatLike` → `{ lng, lat }` (a câmera de `cameraForBounds` vem como `LngLat`; a reserva, como tupla). */
 export function toLngLat(c: maplibregl.LngLatLike): { lng: number; lat: number } {
   if (Array.isArray(c)) return { lng: c[0], lat: c[1] };

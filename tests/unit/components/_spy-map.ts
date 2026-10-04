@@ -48,6 +48,7 @@ export class SpyMap {
   ordem: string[] = [];
   zoom = 3;
   minZoom = 0;
+  maxZoom = 22;
   center = { lng: -51.415, lat: -14.24 };
   removido = false;
   canvas = {
@@ -69,8 +70,9 @@ export class SpyMap {
     this.ordem.push("setMinZoom");
     this.minZoom = z;
   });
-  setMaxZoom = vi.fn(() => {
+  setMaxZoom = vi.fn((z: number) => {
     this.ordem.push("setMaxZoom");
+    this.maxZoom = z;
   });
   setMaxBounds = vi.fn(() => {
     this.ordem.push("setMaxBounds");

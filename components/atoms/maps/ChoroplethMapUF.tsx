@@ -59,6 +59,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   applyZoomLimits,
   attachInteractionMode,
+  attachReframeOnResize,
   attachZoomControls,
   MAP_INTERACTION_OPTIONS,
   toLngLat,
@@ -462,11 +463,14 @@ export function ChoroplethMapUF({
     // a evitar (trocar de UF recria o mapa).
     let detachInteraction: (() => void) | null = null;
     let detachZoomControls: (() => void) | null = null;
+    let detachReframe: (() => void) | null = null;
     function desligarDoMapaVivo() {
       detachInteraction?.();
       detachZoomControls?.();
+      detachReframe?.();
       detachInteraction = null;
       detachZoomControls = null;
+      detachReframe = null;
     }
 
     // Self-heal — mesma causa raiz do mapa nacional (ver
@@ -632,12 +636,33 @@ export function ChoroplethMapUF({
         // piso + 2, para UF minúscula numa tela grande); sem arrastar para
         // longe da UF.
         const enquadramento = { ...map.getCenter(), zoom: map.getZoom() };
-        applyZoomLimits(map, {
-          // Piso também nunca abaixo de z3, o primeiro nível dos tiles
-          // municipais (contêiner 0×0 no `load` daria zoom ~0 e mapa em branco).
-          minZoom: Math.max(enquadramento.zoom, 3),
-          maxZoom: Math.max(11, enquadramento.zoom + 2),
+        // Piso também nunca abaixo de z3, o primeiro nível dos tiles
+        // municipais (contêiner 0×0 no `load` daria zoom ~0 e mapa em branco).
+        const limitesDaUF = (cam: { zoom: number }) => ({
+          minZoom: Math.max(cam.zoom, 3),
+          maxZoom: Math.max(11, cam.zoom + 2),
           base: bbox,
+        });
+        applyZoomLimits(map, limitesDaUF(enquadramento));
+        // Contêiner que muda de tamanho depois do mount: reenquadra e refaz os
+        // limites (ADR-0071). O ⟲ se atualiza no `moveend` que fecha o próprio
+        // `resize` (`attachZoomControls`).
+        detachReframe?.();
+        detachReframe = attachReframeOnResize(map, {
+          initialHome: {
+            lng: enquadramento.lng,
+            lat: enquadramento.lat,
+            zoom: limitesDaUF(enquadramento).minZoom,
+          },
+          frame: () => {
+            const caixa = container.getBoundingClientRect();
+            if (!(caixa.width > 0 && caixa.height > 0)) return null;
+            const cam = map.cameraForBounds(bbox, { padding: 16 });
+            return cam?.center != null && cam.zoom != null
+              ? { ...toLngLat(cam.center), zoom: cam.zoom }
+              : null;
+          },
+          limits: limitesDaUF,
         });
         // Botões +/−/⟲ (fora do chunk do mapa) via store. "Ver o estado
         // inteiro" refaz o mesmo `fitBounds` do construtor.

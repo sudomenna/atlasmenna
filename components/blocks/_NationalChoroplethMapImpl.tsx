@@ -100,6 +100,7 @@ import type { MapView } from "@/components/atoms/controls/MapViewToggle";
 import {
   applyZoomLimits,
   attachInteractionMode,
+  attachReframeOnResize,
   attachZoomControls,
   MAP_INTERACTION_OPTIONS,
   toLngLat,
@@ -1021,11 +1022,14 @@ export function NationalChoroplethMapImpl({
     // destruído é o erro a evitar.
     let detachInteraction: (() => void) | null = null;
     let detachZoomControls: (() => void) | null = null;
+    let detachReframe: (() => void) | null = null;
     function desligarDoMapaVivo() {
       detachInteraction?.();
       detachZoomControls?.();
+      detachReframe?.();
       detachInteraction = null;
       detachZoomControls = null;
+      detachReframe = null;
     }
 
     // Self-heal (2026-09-09, ver `_pmtiles-protocol.ts`): pmtiles@4.4.1
@@ -1182,10 +1186,34 @@ export function NationalChoroplethMapImpl({
       // Piso: o próprio enquadramento, e nunca abaixo do nível em que o
       // dataset some (`UFS_PMTILES_MIN_ZOOM` + folga — canvas em branco sem
       // erro nenhum). Teto: 4 níveis acima do enquadramento.
-      applyZoomLimits(map, {
-        minZoom: Math.max(frameCamera.zoom, UFS_PMTILES_MIN_ZOOM + ZOOM_SAFETY_MARGIN),
-        maxZoom: frameCamera.zoom + 4,
+      const limitesDoBrasil = (cam: { zoom: number }) => ({
+        minZoom: Math.max(cam.zoom, UFS_PMTILES_MIN_ZOOM + ZOOM_SAFETY_MARGIN),
+        maxZoom: cam.zoom + 4,
         base: BRAZIL_BOUNDS,
+      });
+      applyZoomLimits(map, limitesDoBrasil(frameCamera));
+
+      // Contêiner que muda de tamanho depois do mount (barra do navegador,
+      // rotação, layout assentando): reenquadra e refaz os limites — sem isso o
+      // piso ficava travado no enquadramento antigo (ADR-0071).
+      detachReframe = attachReframeOnResize(map, {
+        initialHome: {
+          ...toLngLat(frameCamera.center),
+          zoom: limitesDoBrasil(frameCamera).minZoom,
+        },
+        frame: () => {
+          const caixa = container.getBoundingClientRect();
+          if (!(caixa.width > 0 && caixa.height > 0)) return null;
+          const cam = computeFrameCamera(
+            map,
+            BRAZIL_BOUNDS,
+            caixa.width,
+            caixa.height,
+            framePaddingCeilingRef.current,
+          );
+          return { ...toLngLat(cam.center), zoom: cam.zoom };
+        },
+        limits: limitesDoBrasil,
       });
 
       hangTimer = window.setTimeout(() => {
