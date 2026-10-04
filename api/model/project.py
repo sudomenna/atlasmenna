@@ -2696,6 +2696,22 @@ NIVEL_BR = "br"
 NIVEIS_AGREGADOS = (NIVEL_UF, NIVEL_BR)
 
 
+def _pct_apurado_oficial(agregados: list[Any]) -> dict[str, float]:
+    """`{sigla: % apurado}` dos arquivos AGREGADOS do TSE (nível `uf` e
+    `br`), em `100 · s.st / s.ts` — o `pst` oficial. `BR` para o nacional.
+    Agregado sem `s.ts` fica de fora (quem lê mantém o número que já tinha).
+    """
+    out: dict[str, float] = {}
+    for a in agregados or []:
+        pct = pct_totalizado(a.get("payload"), -1.0)
+        if pct < 0:
+            continue
+        sigla = "BR" if nivel_do_snapshot(a) == NIVEL_BR else str(a.get("uf") or "").upper()
+        if sigla:
+            out[sigla] = pct
+    return out
+
+
 def nivel_do_snapshot(s: Mapping[str, Any]) -> str:
     """Nível de abrangência de uma linha de `snapshots`, normalizado.
 
@@ -9259,6 +9275,15 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                 )
             )
 
+            # 🔴 04/10/2026 noite do 1º turno — `% apurado` OFICIAL do TSE
+            # (`s.st/s.ts` do arquivo agregado da UF e do BR), por ordem do
+            # dono. A soma zona a zona inflava (o ingest grava `s.psa` ≈ 100%).
+            pct_oficial = _pct_apurado_oficial(agregados)
+            for _r in uf_rows:
+                _sig = str(_r.get("uf") or "").upper()
+                if _sig in pct_oficial:
+                    _r["pct_apurado"] = pct_oficial[_sig]
+
             # RF-014 — votos absolutos projetados, UF -> Brasil (regra de
             # três, `extrapolation.aggregate_national_votos`). Alimenta
             # `compute_national(..., votos_by_uf=...)` abaixo — sem isso
@@ -9523,6 +9548,9 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                 anulados=anulados,
             )
             post_edge_write(edge_payload, payloads_uf=uf_payloads)
+            # 🔴 04/10/2026 — nacional = `pst` oficial do arquivo BR do TSE.
+            if "BR" in pct_oficial and isinstance(edge_payload, dict):
+                edge_payload["pct_apurado_total"] = pct_oficial["BR"]
         except Exception as edge_exc:  # noqa: BLE001 — never block the response
             _log(
                 "warn",
