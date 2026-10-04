@@ -1,0 +1,52 @@
+/* =============================================================================
+ * components/blocks/RealceHemiciclo.module.css — a metade ESTÁTICA do realce
+ * por grupo nos plenários (spec 008, RF-294). A metade por chave sai do
+ * servidor, num `<style>` (`lib/utils/realce-hemiciclo.ts`).
+ *
+ * Tudo aqui tem especificidade 0,1,0 (o resto vai em `:where()`), para que a
+ * regra por chave (0,4,0) sempre vença sem `!important`.
+ *
+ * Transição: o APAGAR é imediato (atraso 0 enquanto há algo sob o ponteiro);
+ * o VOLTAR espera 80 ms. Andar de uma bolinha a outra do mesmo partido passa
+ * por um vão sem `:hover` — o atraso faz esse vão não piscar, porque o
+ * ponteiro volta a uma bolinha antes de a volta começar e a transição
+ * pendente é cancelada.
+ * ========================================================================== */
+
+.raiz :where(svg g[data-estado], li[data-cod], li[data-partido], li[data-bloco]) {
+  transition:
+    opacity var(--dur-fast) var(--ease-out) 80ms,
+    background-color var(--dur-fast) var(--ease-out) 80ms,
+    box-shadow var(--dur-fast) var(--ease-out) 80ms;
+}
+
+/* Fundo da linha realçada. A regra por chave só acende `--realce`; o fundo
+ * passa 3 px além do texto pela sombra, que não ocupa espaço no fluxo nem
+ * cria rolagem — padding com margem negativa empurrava a última coluna da
+ * grade da Câmara 3 px para fora da lista (medido em navegador, 03/10). */
+.raiz :where(li[data-cod], li[data-partido], li[data-bloco]) {
+  border-radius: 3px;
+  background-color: var(--realce, transparent);
+  box-shadow: 0 0 0 3px var(--realce, transparent);
+}
+
+@media (hover: hover) {
+  .raiz :where(svg g[data-estado], li[data-cod], li[data-partido], li[data-bloco]) {
+    cursor: default;
+  }
+
+  .raiz:where(:has(:is([data-cod], [data-partido], [data-bloco]):hover))
+    :where(svg g[data-estado], li[data-cod], li[data-partido], li[data-bloco]) {
+    transition-delay: 0s;
+  }
+
+  .raiz:where(:has(:is([data-cod], [data-partido], [data-bloco]):hover))
+    :where(svg g[data-estado]) {
+    opacity: 0.2;
+  }
+
+  .raiz:where(:has(:is([data-cod], [data-partido], [data-bloco]):hover))
+    :where(li[data-cod], li[data-partido], li[data-bloco]) {
+    opacity: 0.45;
+  }
+}

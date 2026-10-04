@@ -14,6 +14,12 @@
  * Medição de 2026-09-29 (`renderToStaticMarkup`, UTF-8, sem compressão):
  * painel inteiro no pior caso = 15.641 B (15,3 KiB); teto 18 KiB (18.432 B,
  * ~18% de folga).
+ *
+ * 2026-10-03 (spec 008, RF-294): o realce por partido acrescentou o invólucro
+ * e um `<style>` com uma regra por partido — 1.663 B de CSS no pior caso
+ * (13 grupos). Painel = 17.362 B (17,0 KiB), folga de ~1 KiB. O teto NÃO
+ * subiu: é por isso que o CSS tem uma regra por chave, e não três
+ * (`lib/utils/realce-hemiciclo.ts`).
  */
 
 import { renderToStaticMarkup } from "react-dom/server";

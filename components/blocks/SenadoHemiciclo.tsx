@@ -54,6 +54,7 @@ import {
   CONTORNO_NEUTRO,
   Hemiciclo,
 } from "@/components/blocks/Hemiciclo";
+import { RealceHemiciclo } from "@/components/blocks/RealceHemiciclo";
 import type { EdgePayload } from "@/lib/edge-config/types";
 import type { ValidacaoMandato2031 } from "@/lib/senado/mandato-2031";
 import { ARCOS_SENADO, layoutHemiciclo } from "@/lib/utils/hemiciclo";
@@ -362,7 +363,15 @@ export function SenadoHemicicloPanel({ payload, mandato }: SenadoHemicicloPanelP
             ? `Como fica o Senado a partir de 2027: as ${senado.vagasEmDisputa} vagas em disputa nesta eleição, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estão em disputa.`
             : `Como fica o Senado a partir de 2027: as ${senado.vagasEmDisputa} vagas em disputa, pela projeção de cada estado, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estão em disputa. Não oficial.`}
         </p>
-        <SenadoHemiciclo senado={senado} />
+        {/* RF-294 — realce por partido: ponteiro numa cadeira ou numa linha
+            da lista (`li[data-partido]`) esmaece as dos outros partidos. */}
+        <RealceHemiciclo
+          raiz="senado"
+          atributo="data-partido"
+          chaves={senado.partidos.map((p) => p.sigla)}
+        >
+          <SenadoHemiciclo senado={senado} />
+        </RealceHemiciclo>
       </div>
     </Panel>
   );

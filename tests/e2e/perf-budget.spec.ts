@@ -222,6 +222,12 @@ const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
  *   RSC); no build:e2e de 03/10 a página mediu 320.684 B (313,2 KiB) sem
  *   elas e 328.972 B (321,3 KiB) com elas. Comprimido, as bandeiras custam 586 B.
  *   A folga restante (~15 KiB) é para o crescimento da noite da apuração.
+ *   ↳ **344 KiB** desde 03/10 à noite (decisão do dono, emenda 2 do ADR-0070):
+ *   o realce por grupo do plenário (RF-294) — legenda compacta sob o
+ *   hemiciclo + um `<style>` com uma regra por agremiação — levou a página a
+ *   343.081 B (335,0 KiB) com as 11 agremiações do simulado, 983 B abaixo dos
+ *   336. Cada agremiação a mais custa ~230 B (×2 pelo payload RSC); os 8 KiB
+ *   extras cobrem ~15 agremiações a mais na noite da apuração.
  *
  * `/uf/SP/deputado-estadual` e `/uf/DF/deputado-distrital` — 400 KiB (abaixo).
  * O RF-289 previa o global de 300 KiB. Em 03/10 a
@@ -249,7 +255,7 @@ const TETO_DOCUMENTO_DEPUTADO_UF = 560 * KIB;
  */
 const TETO_DOCUMENTO_ASSEMBLEIA_UF = 424 * KIB;
 const TETO_DOCUMENTO_POR_ROTA: Partial<Record<(typeof ROUTES)[number], number>> = {
-  "/deputado-federal": 336 * KIB,
+  "/deputado-federal": 344 * KIB,
   "/uf/SP/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/RJ/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,
   "/uf/MG/deputado-federal": TETO_DOCUMENTO_DEPUTADO_UF,

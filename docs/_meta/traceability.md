@@ -108,6 +108,7 @@ Atualizada a cada PR. Fonte de verdade para cobertura.
 | RF-048 | Tooltip flutuante breakdown | M | [008](../specs/008-interatividade-brushing/) | `<HoverTooltip />` | e2e |
 | RF-049 | Mobile tap-to-select | M | [008](../specs/008-interatividade-brushing/) | (hover-store + isMobile) | e2e mobile |
 | RF-050 | Tooltip vira bottom-sheet mobile | M | [008](../specs/008-interatividade-brushing/) | `<BottomSheet />` | e2e mobile |
+| RF-294 | Realce por grupo nos plenários, ligado à legenda, sem JavaScript | M | [008](../specs/008-interatividade-brushing/) | `<RealceHemiciclo />`, `<LegendaHemicicloCamara />`; `lib/utils/realce-hemiciclo.ts` | unit (`tests/unit/components/RealceHemiciclo.test.tsx`, `tests/unit/components/LegendaHemicicloCamara.test.tsx`, `tests/unit/lib/realce-hemiciclo.test.ts`) |
 | RF-051 | OG image dinâmica | S | [009](../specs/009-compartilhamento-meta/) | `app/opengraph-image.tsx` | manual |
 | RF-052 | Botões de share | S | [009](../specs/009-compartilhamento-meta/) | `<ShareBar />` | manual |
 | RF-053 | URL com timestamp (snapshot) | C | [009](../specs/009-compartilhamento-meta/) | — | — |

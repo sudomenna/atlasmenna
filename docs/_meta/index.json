@@ -1236,7 +1236,7 @@
       "priority": "M",
       "personas": ["P1", "P2", "P3"],
       "screens": ["T-01", "T-02", "T-03", "T-04", "T-05"],
-      "requirements": ["RF-045", "RF-046", "RF-047", "RF-048", "RF-049", "RF-050"],
+      "requirements": ["RF-045", "RF-046", "RF-047", "RF-048", "RF-049", "RF-050", "RF-294"],
       "depends_on": [],
       "apis": [],
       "components": ["HoverTooltip", "BottomSheet"],

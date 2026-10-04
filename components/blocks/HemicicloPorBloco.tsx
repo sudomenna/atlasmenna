@@ -57,6 +57,7 @@ import {
   CONTORNO_NEUTRO,
   Hemiciclo,
 } from "@/components/blocks/Hemiciclo";
+import { RealceHemiciclo } from "@/components/blocks/RealceHemiciclo";
 import {
   type BlocoHemiciclo,
   ORDEM_BLOCOS_HEMICICLO,
@@ -271,8 +272,15 @@ export function HemicicloPorBloco({
 
   const empates = marcas.filter((m) => m.empate && m.raioCorte !== null);
 
+  // RF-294 — o próprio contêiner é o invólucro do realce por bloco. Chaves =
+  // os quatro blocos da legenda e do placar (sempre os quatro), que incluem os
+  // dos `<g>` (só os blocos com cadeira): o bloco sem cadeira apontado na
+  // legenda acende só a própria linha, em vez de apagar tudo.
   return (
-    <div
+    <RealceHemiciclo
+      raiz={idPrefixo}
+      atributo="data-bloco"
+      chaves={ORDEM_BLOCOS_HEMICICLO}
       data-testid="hemiciclo-por-bloco"
       data-casa={casa}
       data-total={visao.total}
@@ -388,7 +396,7 @@ export function HemicicloPorBloco({
         ))}{" "}
         {nota}
       </p>
-    </div>
+    </RealceHemiciclo>
   );
 }
 

@@ -148,3 +148,14 @@ Na mesma medição, outras rotas com bandeiras: `/` +9,4 KiB, `/governador` +9,4
 `/deputado-estadual` +7,9 (27 cartões ou itens de grade cada); páginas de UF +0,3 KiB (uma bandeira
 no título). `/` e `/uf/SP/senador` já estavam em `FALHAS_CONHECIDAS_DOCUMENTO`; `/governador` não é
 medida pelo portão; `/senador` e `/deputado-estadual` seguem abaixo dos seus tetos.
+
+## Emenda 2 — 2026-10-03 (noite), teto de `/deputado-federal` 336 → 344 KiB (decisão do dono)
+
+O realce por grupo nos plenários (spec 008, RF-294) acrescentou à capa uma legenda compacta sob o
+hemiciclo da Câmara e um `<style>` com uma regra por agremiação — zero JavaScript, custo só de HTML.
+No `build:e2e` de 03/10 (fixture do simulado, 11 agremiações com cadeira) a página mediu
+**343.081 B (335,0 KiB)**: o `<style>` 1.269 B e a legenda 1.380 B, escritos de novo no payload RSC.
+Ficaram **983 B** de folga sob os 336 KiB, e cada agremiação a mais na apuração real custa ~230 B
+(×2). Alternativas apresentadas: subir o teto; manter e enxugar a legenda. O dono escolheu **subir para
+344 KiB** (~15 agremiações a mais de folga). Alterados `TETO_DOCUMENTO_POR_ROTA` em
+`tests/e2e/perf-budget.spec.ts` e a linha da rota em `docs/nfr/performance.md`.

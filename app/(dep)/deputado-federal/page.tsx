@@ -97,6 +97,11 @@ import { DeputadoBancadaPanel } from "@/components/blocks/DeputadoBancadaPanel";
 import { DeputadoMaisVotados } from "@/components/blocks/DeputadoMaisVotados";
 import { DeputadoMetodologia } from "@/components/blocks/DeputadoMetodologia";
 import { DeputadoPuxadores } from "@/components/blocks/DeputadoPuxadores";
+import {
+  agremiacoesDaLegenda,
+  LegendaHemicicloCamara,
+} from "@/components/blocks/LegendaHemicicloCamara";
+import { RealceHemiciclo } from "@/components/blocks/RealceHemiciclo";
 import { UfBandeirasGrid } from "@/components/blocks/UfBandeirasGrid";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
@@ -317,7 +322,24 @@ export default async function DeputadoFederalPage() {
               `id` foi acrescentado lá para este `aria-describedby` ter alvo
               existente — apontar para o nada é pior que não apontar, porque
               parece resolvido. */}
-          <CamaraHemiciclo bancada={bancada} descritoPorId="bancada-agremiacoes" />
+          {/* Sem cadeira publicada o `<CamaraHemiciclo>` não desenha nada, e o
+              invólucro vazio somaria um vão à coluna. */}
+          {bancada.total_cadeiras >= 1 ? (
+            <RealceHemiciclo
+              raiz="camara"
+              atributo="data-cod"
+              chaves={agremiacoesDaLegenda(bancada).map((a) => a.cod)}
+              className="flex flex-col"
+              style={{ gap: "var(--space-3)" }}
+            >
+              <CamaraHemiciclo bancada={bancada} descritoPorId="bancada-agremiacoes" />
+              {/* RF-294 — legenda compacta sob o plenário, ligada ao realce por
+                agremiação (passar o mouse numa cadeira ou numa linha esmaece
+                as outras). `aria-hidden`: o equivalente textual continua sendo
+                `#bancada-agremiacoes`. */}
+              <LegendaHemicicloCamara bancada={bancada} />
+            </RealceHemiciclo>
+          ) : null}
 
           {/* RF-128 — o instante do payload. A frequência fica no bloco de
               metodologia, que é onde a explicação do método mora; aqui só o
