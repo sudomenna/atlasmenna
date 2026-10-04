@@ -594,13 +594,7 @@ def fetch_snapshots(
     sql = f"""
         WITH ranked AS (
             SELECT
-                uf,
-                cod_municipio_tse,
-                cod_zona,
-                COALESCE(nivel, 'zona') AS nivel,
-                pct_apurado,
-                payload,
-                ts,
+                id,
                 ROW_NUMBER() OVER (
                     PARTITION BY uf, cod_municipio_tse, cod_zona,
                                  COALESCE(nivel, 'zona')
@@ -609,9 +603,13 @@ def fetch_snapshots(
             FROM snapshots
             WHERE cargo = %s AND turno = %s{filtro_corte}
         )
-        SELECT uf, cod_municipio_tse, cod_zona, nivel, pct_apurado, payload, ts
-        FROM ranked
-        WHERE rn = 1
+        -- 🔴 04/10/2026 19h35: o payload fora da janela. Com ele dentro, o
+        -- Postgres ordenava 146 MB de JSON (45 mil linhas) e a leitura do
+        -- Presidente levava 226 s — o modelo estourava 300 s desde 19h11.
+        SELECT s.uf, s.cod_municipio_tse, s.cod_zona,
+               COALESCE(s.nivel, 'zona') AS nivel, s.pct_apurado, s.payload, s.ts
+        FROM ranked r JOIN snapshots s ON s.id = r.id
+        WHERE r.rn = 1
     """
     with conn.cursor() as cur:
         cur.execute(sql, tuple(params))
@@ -1953,12 +1951,7 @@ def fetch_municipio_aggregates(
     sql = f"""
         WITH ranked AS (
             SELECT
-                s.uf,
-                s.cod_municipio_tse,
-                s.cod_zona,
-                s.pct_apurado,
-                s.votos_total,
-                s.payload,
+                s.id,
                 ROW_NUMBER() OVER (
                     PARTITION BY s.uf, s.cod_municipio_tse, s.cod_zona
                     ORDER BY s.ts DESC, s.id DESC
@@ -1966,9 +1959,9 @@ def fetch_municipio_aggregates(
             FROM snapshots s
             WHERE s.cargo = %s AND s.turno = %s{filtro_corte}
         )
-        SELECT r.uf, r.cod_zona, r.pct_apurado, r.votos_total, r.payload,
-               r.cod_municipio_tse
-        FROM ranked r
+        SELECT x.uf, x.cod_zona, x.pct_apurado, x.votos_total, x.payload,
+               x.cod_municipio_tse
+        FROM ranked r JOIN snapshots x ON x.id = r.id
         WHERE r.rn = 1
     """
     try:
