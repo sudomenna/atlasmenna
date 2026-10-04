@@ -434,9 +434,15 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
 
   const municipiosDaUf =
     municipioDetalhe?.status === "ok" ? municipioDetalhe.municipios : ([] as EdgeUfMunicipio[]);
+  // 🔴 04/10 — município sem voto apurado vem com um `lider` de 0 votos (o
+  // primeiro candidato da lista); pintá-lo com essa cor inventava vencedor.
+  // Sem voto = `--map-uncounted`, mesmo cinza do placar zerado (ADR-0076).
   const choropleth = municipiosDaUf.map((m) => ({
     cod_ibge: m.cod_ibge,
-    cor: corPorCandidato[m.lider.candidato_id] ?? "var(--color-tossup)",
+    cor:
+      mapaCinza || !(m.pct_apurado > 0) || !(m.lider.votos > 0)
+        ? "var(--map-uncounted)"
+        : (corPorCandidato[m.lider.candidato_id] ?? "var(--color-tossup)"),
     pctApurado: m.pct_apurado,
   }));
 
