@@ -95,6 +95,47 @@ export interface Race {
  * declara o cargo (ADR-0028), e este calendário só responde pelo turno
  * presidencial.
  */
+/**
+ * Fechamento das urnas nos dois turnos de 2026 — 17h de Brasília (20h UTC).
+ * Antes disso, no dia da eleição, o TSE não publica apuração: o último dado é
+ * o boletim zerado da véspera, e "não avança" por definição. Quem mede atraso
+ * de dado (`avaliarFrescorDado`) conta a partir daqui (decisão do dono 04/10:
+ * o aviso de dado parado aparecia no Estadual às 9h, "há 19 horas").
+ */
+export const FECHAMENTO_URNAS_2026: readonly string[] = [
+  "2026-10-04T20:00:00Z",
+  "2026-10-25T20:00:00Z",
+];
+
+/** Janela antes do fechamento em que o dia já é "dia da eleição". */
+const DIA_DA_ELEICAO_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Desde quando o atraso de um dado do TSE pode ser cobrado, no instante
+ * `agoraMs`:
+ *
+ * - `"antes-do-fechamento"` — é dia de eleição e as urnas ainda não fecharam:
+ *   nenhum dado pode avançar, então não existe atraso a cobrar;
+ * - um número (ms) — o fechamento mais recente já passado: o atraso conta a
+ *   partir do MAIS NOVO entre ele e o dado (às 17h01 o dado de ontem não está
+ *   "parado há 20 horas" — a apuração acabou de começar);
+ * - `null` — nenhum fechamento passou ainda e não é dia de eleição (pré-1º
+ *   turno, simulados do TSE): o atraso conta a partir do próprio dado.
+ */
+export function inicioDaCobrancaDeAtraso(agoraMs: number): "antes-do-fechamento" | number | null {
+  let maisRecente: number | null = null;
+  for (const iso of FECHAMENTO_URNAS_2026) {
+    const fechamento = Date.parse(iso);
+    if (agoraMs < fechamento && agoraMs >= fechamento - DIA_DA_ELEICAO_MS) {
+      return "antes-do-fechamento";
+    }
+    if (fechamento <= agoraMs && (maisRecente === null || fechamento > maisRecente)) {
+      maisRecente = fechamento;
+    }
+  }
+  return maisRecente;
+}
+
 export const CALENDAR_2026: Race[] = [
   // Pré-apuração — alias default antes do 1T.
   { start: "2026-01-01T00:00:00-03:00", cargo: "pres", turno: 1 },

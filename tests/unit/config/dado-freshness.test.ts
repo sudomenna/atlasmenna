@@ -357,3 +357,47 @@ describe("a cadência da tabela bate com os crons reais de `vercel.ts` (ADR-0038
     }
   });
 });
+
+describe("avaliarFrescorDado — o atraso só é cobrado depois do fechamento das urnas (04/10)", () => {
+  // Boletim zerado da véspera, como o do Estadual em produção na manhã de 04/10.
+  const vespera = "2026-10-03T16:06:59-03:00";
+  const em = (iso: string) => Date.parse(iso);
+
+  it("🔴 dia da eleição antes das 17h: dado da véspera NÃO está parado (era 'há 19 horas' às 9h)", () => {
+    for (const cargo of [1, 7] as CargoTse[]) {
+      const f = avaliarFrescorDado(vespera, cargo, em("2026-10-04T09:07:00-03:00"));
+      expect(f.estado).toBe("fresco");
+    }
+    expect(avaliarFrescorDado(vespera, 1, em("2026-10-04T16:59:59-03:00")).estado).toBe("fresco");
+  });
+
+  it("🔴 às 17h01 o dado de ontem não está 'parado há 20 horas' — a cobrança começa no fechamento", () => {
+    expect(avaliarFrescorDado(vespera, 1, em("2026-10-04T17:01:00-03:00")).estado).toBe("fresco");
+    // Presidente: limiar de 180 s contados a partir das 17h.
+    expect(avaliarFrescorDado(vespera, 1, em("2026-10-04T17:03:00-03:00")).estado).toBe("fresco");
+    expect(avaliarFrescorDado(vespera, 1, em("2026-10-04T17:03:01-03:00")).estado).toBe("parado");
+  });
+
+  it("depois do fechamento, o dado mais novo que ele conta a partir de si mesmo", () => {
+    const dado = "2026-10-04T18:00:00-03:00";
+    expect(avaliarFrescorDado(dado, 1, em("2026-10-04T18:02:59-03:00")).estado).toBe("fresco");
+    expect(avaliarFrescorDado(dado, 1, em("2026-10-04T18:03:01-03:00")).estado).toBe("parado");
+  });
+
+  it("o texto continua com a idade REAL do dado — só a decisão muda", () => {
+    const f = avaliarFrescorDado(vespera, 1, em("2026-10-04T20:00:00-03:00"));
+    expect(f.estado).toBe("parado");
+    if (f.estado !== "parado") throw new Error("esperado parado");
+    expect(f.lagSegundos).toBe(Math.round((em("2026-10-04T20:00:00-03:00") - em(vespera)) / 1000));
+  });
+
+  it("dia do 2º turno antes das 17h: o dado final do 1º turno não está parado", () => {
+    const f = avaliarFrescorDado("2026-10-05T02:00:00-03:00", 1, em("2026-10-25T10:00:00-03:00"));
+    expect(f.estado).toBe("fresco");
+  });
+
+  it("fora do dia da eleição e antes do 1º fechamento (simulados), segue a regra antiga", () => {
+    const f = avaliarFrescorDado("2026-09-22T10:00:00-03:00", 1, em("2026-09-22T10:10:00-03:00"));
+    expect(f.estado).toBe("parado");
+  });
+});

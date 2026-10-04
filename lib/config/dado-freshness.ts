@@ -48,6 +48,7 @@
  * JSON — nenhuma chamada nova ao TSE, nenhuma query nova (ADR-0038 D4).
  */
 
+import { inicioDaCobrancaDeAtraso } from "@/lib/config/calendar";
 import type { CargoTse } from "@/lib/config/cargos";
 import { formatTimeHMS } from "@/lib/utils/format";
 
@@ -203,11 +204,21 @@ export function avaliarFrescorDado(
   // `DetailUnavailable.tsx` tinha (ADR-0038 D5).
   const lagSegundos = Math.max(0, Math.round((agoraMs - ms) / 1000));
 
+  // O atraso só é COBRADO a partir do fechamento das urnas (04/10, decisão do
+  // dono): antes das 17h do dia da eleição o TSE não publica apuração, e às
+  // 17h01 o boletim zerado da véspera não está "parado há 20 horas". O
+  // `lagSegundos` exibido continua sendo a idade real do dado.
+  const inicio = inicioDaCobrancaDeAtraso(agoraMs);
+  const atrasoCobrado =
+    inicio === "antes-do-fechamento"
+      ? 0
+      : Math.max(0, Math.round((agoraMs - (inicio === null ? ms : Math.max(ms, inicio))) / 1000));
+
   return {
     // `>`, não `>=`: o limiar é o último valor ainda tolerado. Exatamente três
     // cadências é o pior caso previsto pelo próprio ADR-0011 (dois ciclos
     // perdidos), não um incidente.
-    estado: lagSegundos > limiarSegundos ? "parado" : "fresco",
+    estado: atrasoCobrado > limiarSegundos ? "parado" : "fresco",
     dadoTs,
     lagSegundos,
     limiarSegundos,
