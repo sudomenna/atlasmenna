@@ -506,7 +506,8 @@ export default async function DeputadoFederalPage() {
               estado elege continua vindo do dado que o TSE publica, e nós conferimos uma coisa
               contra a outra. Cadeira contada é cadeira com candidato eleito: quando a conta de um
               partido dá direito a uma vaga que nenhum candidato dele pode ocupar, a vaga vai para
-              as sobras e não aparece aqui.
+              as sobras e não aparece aqui. Partidos e federações sem nenhuma cadeira na parcial
+              ficam fora da lista.
             </p>
           </>
         }
