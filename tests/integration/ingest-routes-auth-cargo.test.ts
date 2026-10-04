@@ -225,11 +225,22 @@ describe("rotas de ingestão — auth (Bearer/x-cron-secret) e cargo (segmento)"
       expect((await res.json()).ok).toBe(true);
     });
 
+    it("segmentos 'deputado-estadual' (7) e 'deputado-distrital' (8) → 200 ok:true", async () => {
+      // Estes casos eram exemplos de LIXO até 2026-09-29 (spec 027, ADR-0066):
+      // "deputado-estadual" e "7" esperavam 400. Viraram cargos de verdade, e
+      // os crons de `vercel.ts` chegam a eles por estes slugs (RF-285).
+      for (const segmento of ["deputado-estadual", "7", "deputado-distrital", "8"]) {
+        const res = await ingestCargoGet(buildReq("GET", bearerHeaders()), cargoContext(segmento));
+        expect(res.status, `segmento ${JSON.stringify(segmento)} deveria dar 200`).toBe(200);
+        expect((await res.json()).ok).toBe(true);
+      }
+    });
+
     it("segmento vazio/lixo → 400", async () => {
       // Cargos do TSE deliberadamente FORA do escopo do produto continuam 400:
-      // 7 = Deputado Estadual, 8 = Distrital, e os vices (2, 4) não têm votação
-      // própria. Ver `lib/config/cargos.ts`.
-      for (const lixo of ["", "  ", "vereador", "deputado-estadual", "7", "99"]) {
+      // os vices (2, 4) não têm votação própria, e vereador não está em 2026.
+      // Ver `lib/config/cargos.ts`.
+      for (const lixo of ["", "  ", "vereador", "4", "99"]) {
         const res = await ingestCargoGet(buildReq("GET", bearerHeaders()), cargoContext(lixo));
         expect(res.status, `segmento ${JSON.stringify(lixo)} deveria dar 400`).toBe(400);
       }
