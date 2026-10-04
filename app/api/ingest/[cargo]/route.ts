@@ -30,7 +30,7 @@ import { runIngestCycle } from "@/lib/tse/ingest-handler";
 export const runtime = "nodejs";
 
 /** Ver comentário em app/api/ingest/route.ts sobre por que 300s (ADR-0035 D3). */
-export const maxDuration = 300;
+export const maxDuration = 600; // 🔴 04/10 18h: TSE lento, volta de Presidente passou de 300 s e foi cortada
 
 interface RouteContext {
   params: Promise<{ cargo: string }>;

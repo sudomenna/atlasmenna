@@ -38,7 +38,7 @@ export const runtime = "nodejs";
  * o próximo ciclo do MESMO cargo nunca rode em paralelo mesmo que um ciclo
  * estoure o intervalo do cron.
  */
-export const maxDuration = 300;
+export const maxDuration = 600; // 🔴 04/10 18h: TSE lento, volta de Presidente passou de 300 s e foi cortada
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   return runIngestCycle(req);

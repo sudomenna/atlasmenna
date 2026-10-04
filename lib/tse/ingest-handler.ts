@@ -522,7 +522,7 @@ export async function runIngestCycle(
   // fail-open: um lock ilegível não deve travar o pipeline inteiro.
   // --------------------------------------------------------------------------
 
-  const OVERLAP_LOCK_WINDOW_MS = 6 * 60 * 1000;
+  const OVERLAP_LOCK_WINDOW_MS = 11 * 60 * 1000; // ≥ maxDuration 600 s (04/10 18h)
   const fatiaDoCiclo = opts.fatia?.indice;
 
   try {
