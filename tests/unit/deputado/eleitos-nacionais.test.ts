@@ -399,7 +399,7 @@ describe("RF-267 — totalização final", () => {
 });
 
 describe("as linhas — marca, partido e foto", () => {
-  it("só candidaturas com marca; partido só em federação; foto só de eleito na parcial/TSE com foto publicada", () => {
+  it("só candidaturas com marca; partido só em federação; foto em toda linha listada com foto publicada (emenda 04/10 do RF-291)", () => {
     const comFoto = new Set(["1", "4", "7"]);
     const leituras = misto().map((l) => ({ ...l, comFoto }));
     const saida = agregarEleitosNacionais(leituras, LIGADO);
@@ -409,8 +409,9 @@ describe("as linhas — marca, partido e foto", () => {
     const por = new Map(pt.linhas.map((l) => [l[LN.SQCAND], l]));
     // Eleito na parcial com foto ⇒ URL do construtor único.
     expect(por.get(1)?.[LN.FOTO]).toBe(`${BASE}/candidatos/foto/SP/1.jpg`);
-    // Só na projeção, mesmo com foto publicada ⇒ sem foto (RF-291).
-    expect(por.get(4)?.[LN.FOTO]).toBeUndefined();
+    // Só na projeção, com foto publicada ⇒ COM foto: na lista nacional todo
+    // nome listado está sendo eleito na base exibida (emenda 04/10 do RF-291).
+    expect(por.get(4)?.[LN.FOTO]).toBe(`${BASE}/candidatos/foto/SP/4.jpg`);
     // Eleito sem foto publicada ⇒ sem foto (o cliente cai nas iniciais).
     expect(por.get(2)?.[LN.FOTO]).toBeUndefined();
     // Federação: o partido de cada nome.

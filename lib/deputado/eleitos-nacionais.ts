@@ -47,7 +47,7 @@
  */
 
 import { aplicarInterruptorProjecao, type DeputadoUfDetail } from "@/lib/blob/deputado-uf";
-import { fotosDosEleitos } from "@/lib/deputado/fotos-eleitos";
+import { candidatoFotoUrl } from "@/lib/blob/paths";
 import type { InterruptorProjecaoLido } from "@/lib/edge-config/reader";
 import {
   BIT_MARCA,
@@ -71,8 +71,8 @@ import { siglaExibicao } from "@/lib/utils/sigla-partido";
  *   0 `uf` · 1 `sqcand` · 2 nome de exibição · 3 partido (`""` em partido
  *   isolado — a coluna só existe em federação) · 4 número de urna ou `null` ·
  *   5 voto APURADO · 6 % dos válidos da UF ou `null` · 7 bits de marca JÁ
- *   derivados (`BIT_MARCA`) · 8 URL da foto, só em eleito na parcial/TSE com
- *   foto publicada (RF-291), ausente nos demais.
+ *   derivados (`BIT_MARCA`) · 8 URL da foto, em toda linha listada com
+ *   foto publicada (RF-291, emenda de 04/10), ausente nas sem foto.
  *
  * Não há posição para voto projetado (RF-297).
  */
@@ -277,16 +277,11 @@ export function agregarEleitosNacionais(
       acc.cenario += liberada ? (agr.cadeiras_projetadas ?? agr.cadeiras) : agr.cadeiras;
 
       const linhas = linhasDaAgremiacao(uf, agr, ctx);
-      // RF-291 — a URL só para eleito na parcial/TSE com foto publicada.
-      const fotos = comFoto
-        ? fotosDosEleitos(
-            uf,
-            linhas.map(({ linha }) => [linha[1], linha[7]] as const),
-            comFoto,
-          )
-        : {};
+      // RF-291, emenda de 04/10: a URL para TODA linha listada com foto
+      // publicada — aqui todas estão sendo eleitas (parcial, projeção ou TSE).
       for (const { rank, linha } of linhas) {
-        const foto = fotos[String(linha[1])];
+        const sq = String(linha[1]);
+        const foto = comFoto?.has(sq) ? (candidatoFotoUrl(uf, sq) ?? undefined) : undefined;
         acc.linhas.push({ rank, tupla: foto ? [...linha, foto] : linha });
       }
     }

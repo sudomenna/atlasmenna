@@ -381,7 +381,7 @@ describe("RF-299 — Ver os eleitos (base Parcial)", () => {
     );
   });
 
-  it("avatar só nos eleitos (foto e iniciais); quem não é eleito na parcial/TSE não tem", async () => {
+  it("todo nome listado tem avatar (foto ou iniciais), inclusive quem é eleito só na projeção (emenda 04/10 do RF-291)", async () => {
     setViewMode("proj");
     await montar(<Painel />);
     await clicar(botao("13"));
@@ -395,7 +395,8 @@ describe("RF-299 — Ver os eleitos (base Parcial)", () => {
     ).not.toBeNull();
     const carla = linha("CARLA SÓ PROJEÇÃO");
     expect(carla).toBeDefined();
-    expect(carla?.querySelector("[data-testid^='candidate-avatar']")).toBeNull();
+    // Sem foto na resposta ⇒ iniciais no mesmo círculo — nunca linha sem avatar.
+    expect(carla?.querySelector("[data-testid^='candidate-avatar']")).not.toBeNull();
   });
 
   it("'Recolher' fecha a lista e devolve o foco ao botão de abrir", async () => {
@@ -503,8 +504,12 @@ describe("RF-300 — base Projeção, projeção ligada", () => {
     expect(pt?.querySelector("[data-testid='bancada-cadeiras']")?.textContent).toBe("3");
     // …e nomeada, no MESMO elemento do rótulo do cenário (RF-266).
     const rotulo = so(pt?.querySelector("[data-testid='bancada-cenario']")?.textContent);
-    expect(rotulo).toBe(
-      "4 no cenário · projeção · não oficial, pontual — projeção em 1 de 27 estados; no outro, a parcial; em 1, o resultado do TSE; 24 sem dado agora, fora da conta · 3 na parcial",
+    expect(rotulo).toBe("4 no cenário · projeção · não oficial · 3 na parcial");
+    // O misto sai UMA vez, na legenda da barra — não repetido por agremiação.
+    expect(
+      so(host?.querySelector("[data-testid='bancada-cenario-legenda']")?.textContent),
+    ).toContain(
+      "projeção em 1 de 27 estados; no outro, a parcial; em 1, o resultado do TSE; 24 sem dado agora, fora da conta",
     );
     // As duas versões sob a cascata `[data-view-only]` (RF-180).
     expect(
@@ -797,7 +802,7 @@ describe("ocultarSemCadeira — a lista só com quem tem cadeira na parcial", ()
     const pl = host?.querySelector("[data-testid='bancada-linha'][data-cod='22']");
     expect(pl?.querySelector("[data-testid='bancada-cadeiras-cenario']")?.textContent).toBe("0");
     expect(so(pl?.querySelector("[data-testid='bancada-cenario']")?.textContent)).toMatch(
-      /^0 no cenário · projeção · não oficial, pontual — .* · 2 na parcial$/,
+      /^0 no cenário · projeção · não oficial · 2 na parcial$/,
     );
   });
 });

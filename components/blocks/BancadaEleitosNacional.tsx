@@ -383,22 +383,17 @@ const ESTILO_MEIO = { gap: "var(--space-1)" } as const;
 
 /**
  * O rótulo do cenário de uma agremiação (RF-300): o número, "projeção · não
- * oficial", "pontual", o misto e a parcial COM O NOME DELA — tudo no mesmo
- * elemento (RF-266).
+ * oficial" e a parcial COM O NOME DELA — no mesmo elemento (RF-266).
+ *
+ * 04/10 (dono, revisão na tela): o misto ("projeção em X de 27 estados; nos
+ * outros Y, a parcial…") e o "pontual" saem UMA vez, na legenda da barra
+ * (`bancada-cenario-legenda`), e não repetidos em cada agremiação — eram
+ * quatro linhas em fonte de dado por partido, onze vezes.
  */
-function RotuloCenario({
-  cenario,
-  parcial,
-  visao,
-}: {
-  cenario: number;
-  parcial: number;
-  visao: VisaoDoCenario;
-}) {
+function RotuloCenario({ cenario, parcial }: { cenario: number; parcial: number }) {
   return (
     <span data-view-only="proj" className={estilos.rotuloCenario} data-testid="bancada-cenario">
-      <b>{cenario}</b> no cenário · projeção · não oficial, pontual — {rotuloDoMisto(visao)} ·{" "}
-      <b>{parcial}</b> na parcial
+      <b>{cenario}</b> no cenário · projeção · não oficial · <b>{parcial}</b> na parcial
     </span>
   );
 }
@@ -494,7 +489,7 @@ export function BancadaLinhaNacional({
       <span className="min-w-0 flex flex-col" style={ESTILO_MEIO}>
         {identidade}
         {cenario !== undefined && visao ? (
-          <RotuloCenario cenario={cenario} parcial={cadeiras} visao={visao} />
+          <RotuloCenario cenario={cenario} parcial={cadeiras} />
         ) : null}
       </span>
 

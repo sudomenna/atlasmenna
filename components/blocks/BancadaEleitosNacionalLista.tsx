@@ -30,6 +30,7 @@
  */
 
 import { MarcaDeputado } from "@/components/atoms/badges/MarcaDeputado";
+import { CandidateAvatar } from "@/components/atoms/data/CandidateAvatar";
 import {
   type EleitosNacionais,
   FRASE_NENHUMA_LIBERADA,
@@ -40,13 +41,12 @@ import {
   type VisaoDoCenario,
   visaoDoCenario,
 } from "@/lib/deputado/eleitos-nacionais-visao";
-import type { FotosDosEleitos } from "@/lib/deputado/fotos-eleitos";
 import type { ViewMode } from "@/lib/state/view-mode";
 import { BIT_MARCA, marcasDosBits } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
-
-import { AvatarEleito } from "./AvatarEleito";
+import { AVATAR_ELEITO_PX } from "./AvatarEleito";
 import estilos from "./BancadaEleitosNacional.module.css";
+import estilosAvatar from "./DeputadoListaAgremiacao.module.css";
 
 const BITS_PROJECAO = BIT_MARCA.PROJECAO | BIT_MARCA.PROJECAO_SOBRA | BIT_MARCA.PROJECAO_APERTADA;
 const BITS_ELEITO = BIT_MARCA.PARCIAL | BIT_MARCA.TSE;
@@ -146,8 +146,6 @@ function cabecalho(
   return `${plural(n, "eleito", "eleitos")} na parcial em ${estados} · eleito na parcial não é resultado oficial.`;
 }
 
-const SEM_FOTO: FotosDosEleitos = {};
-
 export interface BancadaEleitosNacionalListaProps {
   dados: EleitosNacionais;
   /** O interruptor lido pela PÁGINA (ADR-0063 D4) — desligado, a projeção da resposta é ignorada. */
@@ -222,13 +220,21 @@ export function BancadaEleitosNacionalLista({
                     return (
                       <li key={sq} data-sqcand={sq}>
                         <span>
-                          {/* RF-291 — avatar só de quem é eleito na parcial ou
-                              TSE, pelos bits ORIGINAIS da linha. */}
-                          <AvatarEleito
+                          {/* RF-291, emenda de 04/10 (dono, revisão na tela):
+                              aqui TODO nome listado está sendo eleito na base
+                              exibida, então todos levam o círculo — foto
+                              quando publicada, senão iniciais. A regra "só
+                              eleito na parcial/TSE" é das listas de UF, que
+                              mostram também quem não se elege. */}
+                          <CandidateAvatar
                             nome={l[LN.NOME]}
-                            sqcand={sq}
-                            marcas={bits}
-                            fotos={foto ? { [String(sq)]: foto } : SEM_FOTO}
+                            fotoUrl={foto ?? null}
+                            width={AVATAR_ELEITO_PX}
+                            height={AVATAR_ELEITO_PX}
+                            responsive={false}
+                            rounded
+                            semEstiloInline
+                            className={estilosAvatar.avatar}
                           />
                           <b>{l[LN.NOME]}</b>
                           {meta ? <small>{meta}</small> : null}

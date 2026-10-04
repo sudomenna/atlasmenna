@@ -239,9 +239,16 @@ export function DeputadoBancadaPanel({
           // O miolo da coluna do texto e a coluna da faixa. Com as ilhas
           // (capa federal) eles atravessam para `<BancadaLinhaNacional>`
           // prontos do servidor; sem elas, a linha é a de sempre.
+          // As `key` dos dois filhos: o fragmento atravessa a fronteira do
+          // cliente (`<BancadaLinhaNacional>`) como ARRAY, e o React avisa
+          // "Each child in a list should have a unique key" sem elas.
           const identidade = (
             <>
-              <span className="inline-flex items-center" style={{ gap: "var(--space-2)" }}>
+              <span
+                key="sigla"
+                className="inline-flex items-center"
+                style={{ gap: "var(--space-2)" }}
+              >
                 {/* O ponto de cor é redundante com o texto (WCAG 1.4.1). */}
                 <span
                   aria-hidden="true"
@@ -261,6 +268,7 @@ export function DeputadoBancadaPanel({
               </span>
 
               <span
+                key="texto"
                 style={{
                   font: "var(--type-body-sm)",
                   fontSize: "var(--text-xs)",
