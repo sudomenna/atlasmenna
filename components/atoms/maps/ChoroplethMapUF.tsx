@@ -368,6 +368,15 @@ export function ChoroplethMapUF({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const municipiosRef = useRef(municipios);
+  /**
+   * 🔴 04/10 noite — a instância que já disparou `load`. O repintar abaixo
+   * checava `map.loaded()`, que só é `true` com TODOS os tiles baixados: os
+   * municípios chegam pelo `fetch` enquanto o mapa ainda baixa tiles (o
+   * reenquadramento do `load` pede mais), o repintar era descartado e o
+   * estado inteiro ficava cinza até a próxima troca de dado. `setFeatureState`
+   * não precisa de tile carregado — só da fonte, que existe após o `load`.
+   */
+  const carregadoRef = useRef<maplibregl.Map | null>(null);
 
   /**
    * 2026-09-20 — "no toque só a gaveta" (pedido do dono). O `mount()` abaixo
@@ -630,6 +639,7 @@ export function ChoroplethMapUF({
 
       map.on("load", () => {
         window.clearTimeout(hangTimer);
+        carregadoRef.current = map;
         // ADR-0071 — limites DEPOIS do enquadramento inicial (o `fitBounds` do
         // construtor já rodou): piso = o próprio enquadramento da UF; teto = z11
         // (os tiles vão até z10, z11 é sobre-amostragem leve; nunca abaixo do
@@ -835,7 +845,7 @@ export function ChoroplethMapUF({
   // Update colors when municipios prop changes
   useEffect(() => {
     const map = mapRef.current;
-    if (!map?.loaded()) return;
+    if (!map || carregadoRef.current !== map) return;
     for (const m of municipios) {
       map.setFeatureState(
         { source: "municipios", sourceLayer: "municipios", id: m.cod_ibge },

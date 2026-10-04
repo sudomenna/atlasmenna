@@ -1491,7 +1491,9 @@ export function NationalChoroplethMapImpl({
   // Recolor when view, rows, rankByLider, candidatos or cargo change (zero re-fetch)
   useEffect(() => {
     const map = mapRef.current;
-    if (!map?.loaded()) return;
+    // 🔴 04/10 — `loaded()` exige todos os tiles baixados; com tile pendente o
+    // repintar era descartado em silêncio (mesmo bug do mapa municipal).
+    if (!map?.getSource("ufs")) return;
     applyColors(map, rows, view, effectiveRankByLider, candidatosById, viewMode, preEleicao, cargo);
   }, [view, viewMode, rows, effectiveRankByLider, candidatosById, preEleicao, cargo]);
 
