@@ -256,6 +256,40 @@
 }
 
 /* ============================================================================
+ * Escala tipográfica do desktop — rampa fluida a partir de 960px (ADR-0073).
+ *
+ * Abaixo de 960px NADA muda: os valores do `@theme static` acima valem, e o
+ * celular sai idêntico ao pixel. A partir de 960px cada `--text-*` cresce com a
+ * largura da janela, partindo EXATAMENTE do valor base em 960 (rampa contínua,
+ * sem salto no ponto de quebra):
+ *   - pequenos (2xs, xs, sm): +40% a 1920px — `calc(0.6B + 0.04167B·vw)`,
+ *     teto 1.7B. São os que mais sofrem num telão (11px a 3 metros).
+ *   - corpo (base, md): +33% a 1920px — `calc(0.667B + 0.03472B·vw)`, teto 1.55B.
+ *   - grandes (lg…5xl): +25% a 1920px — `calc(0.75B + 0.02604B·vw)`, teto 1.45B.
+ *
+ * Custom property FORA de `@layer`: o `@theme` emite em `@layer theme`, e
+ * declaração sem camada vence qualquer camada — o bloco ganha da origem sem
+ * depender da ordem. As utilitárias `text-*` e os `--type-*` leem estes nomes
+ * por `var()`, então o site inteiro acompanha. Os `--text-*--line-height` são
+ * multiplicadores sem unidade e não precisam mudar.
+ * ========================================================================= */
+@media (min-width: 960px) {
+  :root {
+    --text-2xs: clamp(10px, calc(6px + 0.4167vw), 17px);
+    --text-xs: clamp(11px, calc(6.6px + 0.4583vw), 18.7px);
+    --text-sm: clamp(13px, calc(7.8px + 0.5417vw), 22.1px);
+    --text-base: clamp(15px, calc(10px + 0.5208vw), 23.25px);
+    --text-md: clamp(15px, calc(10px + 0.5208vw), 23.25px);
+    --text-lg: clamp(18px, calc(13.5px + 0.4688vw), 26.1px);
+    --text-xl: clamp(22px, calc(16.5px + 0.5729vw), 31.9px);
+    --text-2xl: clamp(28px, calc(21px + 0.7292vw), 40.6px);
+    --text-3xl: clamp(36px, calc(27px + 0.9375vw), 52.2px);
+    --text-4xl: clamp(48px, calc(36px + 1.25vw), 69.6px);
+    --text-5xl: clamp(64px, calc(48px + 1.6667vw), 92.8px);
+  }
+}
+
+/* ============================================================================
  * Semânticos do kit — nomes usados pelo código portado de
  * `docs/design-system/atlas-menna/components/`.
  *
@@ -360,6 +394,10 @@
   --type-figure: 500 var(--text-xl) / 1 var(--font-mono);
   --type-figure-sm: 500 var(--text-sm) / 1 var(--font-mono);
   --type-data: 400 var(--text-xs) / 1.3 var(--font-mono);
+  /* Número-destaque de painel (resumo da UF, cadeiras por agremiação). No
+   * celular é exatamente `--type-figure-sm`; no desktop vira KPI (abaixo). */
+  --type-kpi: var(--type-figure-sm);
+  --type-kpi-sm: var(--type-figure-sm);
 
   /* Identidade de trilha (ADR-0019) — accent institucional por trilha de cargo,
    * consumido por kicker, borda-topo do header, tab ativa e LiveBadge. NÃO são
@@ -369,6 +407,13 @@
    * Fora do `@theme` porque são cascata condicional por página, não tema global. */
   --trilha-accent: var(--ink-0);
   --trilha-accent-soft: var(--paper-2);
+}
+
+@media (min-width: 960px) {
+  :root {
+    --type-kpi: 600 var(--text-2xl) / 1 var(--font-mono);
+    --type-kpi-sm: 600 var(--text-xl) / 1 var(--font-mono);
+  }
 }
 
 /* Trilha presidencial — azul-marinho institucional (#17365c: 11.10:1 sobre

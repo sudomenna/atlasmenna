@@ -123,6 +123,7 @@ import { ordenarBancada } from "@/lib/utils/bancada";
 import depFixture from "@/tests/fixtures/edge-config/dep-current.json" with { type: "json" };
 
 import { lerInterruptorDaTela } from "../_interruptor";
+import painel from "../_painel-desktop.module.css";
 
 /** Código TSE deste cargo. Tudo o que descreve o cargo sai da tabela canônica. */
 const CARGO_DEPUTADO = 6 as const;
@@ -234,7 +235,7 @@ export default async function DeputadoFederalPage() {
   return (
     <main
       data-trilha="dep"
-      className="mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10"
+      className={`mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10 ${painel.main}`}
       style={{ gap: "var(--space-8)" }}
     >
       {/* Escopo nacional (o payload é o do país inteiro), mas esta trilha **não
@@ -329,7 +330,7 @@ export default async function DeputadoFederalPage() {
               raiz="camara"
               atributo="data-cod"
               chaves={agremiacoesDaLegenda(bancada).map((a) => a.cod)}
-              className="flex flex-col"
+              className={`flex flex-col ${painel.plenario}`}
               style={{ gap: "var(--space-3)" }}
             >
               <CamaraHemiciclo bancada={bancada} descritoPorId="bancada-agremiacoes" />
@@ -373,60 +374,63 @@ export default async function DeputadoFederalPage() {
       {/* Spec 025 (RF-244) — "Câmara de 2027: quem terá maioria", depois do
           plenário por partido (que fica igual, sem marca de limiar — ADR-0049
           item 6 vale para ELE; as marcas moram só na visão por bloco). */}
-      <Camara2027Panel bancada={bancada} etiquetas={etiquetas} />
+      {/* ADR-0073 — lado a lado a partir de 1280px; abaixo, `display: contents`. */}
+      <div className={painel.par}>
+        <Camara2027Panel bancada={bancada} etiquetas={etiquetas} />
 
-      {/* Spec 021 RF-192 — EMENDADO em 2026-09-26 (noite), decisão do dono:
+        {/* Spec 021 RF-192 — EMENDADO em 2026-09-26 (noite), decisão do dono:
           "Votação" SAIU desta capa (repetia o eleitorado do Brasil da capa de
           Presidente). Vive em `/uf/[sigla]/deputado-federal`, com o dado DA
           UF. */}
 
-      {/* Seção 2 — a bancada. RF-122, RF-125.1, RF-127, RF-130. O painel
+        {/* Seção 2 — a bancada. RF-122, RF-125.1, RF-127, RF-130. O painel
           saiu para `<DeputadoBancadaPanel>` na spec 027 (design § 8.4): a capa
           das assembleias mostra o mesmo painel sobre a soma das 27 casas. */}
-      <DeputadoBancadaPanel
-        kicker="Bancada apurada"
-        title="Quem fica com as cadeiras"
-        titleId="bancada-heading"
-        agremiacoes={agremiacoes}
-        total={bancada.total_cadeiras}
-        atribuidas={bancada.cadeiras_atribuidas}
-        rotuloBarra={`Bancada de ${bancada.total_cadeiras} cadeiras`}
-        fraseAguardando={
-          <>
-            cadeiras ainda sem dono — {bancada.ufs_aguardando} de {TOTAL_UFS} estados sem boletim e
-            vagas que a distribuição ainda não fechou.
-          </>
-        }
-        nota={
-          <>
-            {/* Constituição § 8 — de onde vem o número. Os dois fatos que o
+        <DeputadoBancadaPanel
+          kicker="Bancada apurada"
+          title="Quem fica com as cadeiras"
+          titleId="bancada-heading"
+          agremiacoes={agremiacoes}
+          total={bancada.total_cadeiras}
+          atribuidas={bancada.cadeiras_atribuidas}
+          rotuloBarra={`Bancada de ${bancada.total_cadeiras} cadeiras`}
+          fraseAguardando={
+            <>
+              cadeiras ainda sem dono — {bancada.ufs_aguardando} de {TOTAL_UFS} estados sem boletim
+              e vagas que a distribuição ainda não fechou.
+            </>
+          }
+          nota={
+            <>
+              {/* Constituição § 8 — de onde vem o número. Os dois fatos que o
           leitor não tem como inferir da tela: que o agregado nacional é
           soma nossa, e que o próprio total de cadeiras é dado publicado,
           não constante. */}
-            <p
-              className="max-w-prose"
-              data-testid="bancada-nota"
-              style={{
-                margin: 0,
-                font: "var(--type-body-sm)",
-                fontSize: "var(--text-xs)",
-                color: "var(--text-muted)",
-                textWrap: "pretty",
-              }}
-            >
-              Esta contagem é a <strong>soma das {TOTAL_UFS} corridas estaduais</strong> — o TSE não
-              publica um arquivo nacional para este cargo, então não existe um número oficial a
-              reproduzir: o que existe são {TOTAL_UFS} apurações estaduais, e a soma é nossa. Já o
-              total de {bancada.total_cadeiras} cadeiras não é soma nenhuma: é o tamanho da Câmara,
-              fixo desde antes da urna abrir, e todas elas são renovadas nesta eleição. Quantas cada
-              estado elege continua vindo do dado que o TSE publica, e nós conferimos uma coisa
-              contra a outra. Cadeira contada é cadeira com candidato eleito: quando a conta de um
-              partido dá direito a uma vaga que nenhum candidato dele pode ocupar, a vaga vai para
-              as sobras e não aparece aqui.
-            </p>
-          </>
-        }
-      />
+              <p
+                className="max-w-prose"
+                data-testid="bancada-nota"
+                style={{
+                  margin: 0,
+                  font: "var(--type-body-sm)",
+                  fontSize: "var(--text-xs)",
+                  color: "var(--text-muted)",
+                  textWrap: "pretty",
+                }}
+              >
+                Esta contagem é a <strong>soma das {TOTAL_UFS} corridas estaduais</strong> — o TSE
+                não publica um arquivo nacional para este cargo, então não existe um número oficial
+                a reproduzir: o que existe são {TOTAL_UFS} apurações estaduais, e a soma é nossa. Já
+                o total de {bancada.total_cadeiras} cadeiras não é soma nenhuma: é o tamanho da
+                Câmara, fixo desde antes da urna abrir, e todas elas são renovadas nesta eleição.
+                Quantas cada estado elege continua vindo do dado que o TSE publica, e nós conferimos
+                uma coisa contra a outra. Cadeira contada é cadeira com candidato eleito: quando a
+                conta de um partido dá direito a uma vaga que nenhum candidato dele pode ocupar, a
+                vaga vai para as sobras e não aparece aqui.
+              </p>
+            </>
+          }
+        />
+      </div>
 
       {/* Seção 2b — destaques por template (ADR-0005, NUNCA LLM).
           **Hoje a lista vem vazia e isso não é erro** (design 017 § D10): os
@@ -473,17 +477,20 @@ export default async function DeputadoFederalPage() {
       {/* Spec 026 RF-271 / RF-273 — os mais votados e os puxadores do país,
           do payload nacional (autossuficiente). Payload anterior à spec 026
           não tem os campos, e os blocos não aparecem. */}
-      <DeputadoMaisVotados
-        cargo={CARGO_DEPUTADO}
-        escopo="pais"
-        linhas={payload.mais_votados}
-        titleId="mais-votados-pais-heading"
-      />
-      <DeputadoPuxadores
-        cargo={CARGO_DEPUTADO}
-        puxadores={payload.puxadores}
-        titleId="puxadores-heading"
-      />
+      {/* ADR-0073 — lado a lado a partir de 1280px; abaixo, `display: contents`. */}
+      <div className={painel.par}>
+        <DeputadoMaisVotados
+          cargo={CARGO_DEPUTADO}
+          escopo="pais"
+          linhas={payload.mais_votados}
+          titleId="mais-votados-pais-heading"
+        />
+        <DeputadoPuxadores
+          cargo={CARGO_DEPUTADO}
+          puxadores={payload.puxadores}
+          titleId="puxadores-heading"
+        />
+      </div>
 
       <Panel kicker="Corridas estaduais" title="Estado a estado" titleId="corridas-heading">
         <UfBandeirasGrid cargo={CARGO_DEPUTADO} resumos={resumosPorUf(payload, interruptor)} />
@@ -573,7 +580,7 @@ function AguardandoNacional() {
   return (
     <main
       data-trilha="dep"
-      className="mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10"
+      className={`mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10 ${painel.main}`}
       style={{ gap: "var(--space-8)" }}
     >
       {/* 🔴 RF-160/RF-163 — PRIMEIRO FILHO do `<main>`, acima do parágrafo

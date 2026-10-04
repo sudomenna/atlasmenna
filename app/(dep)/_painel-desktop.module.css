@@ -1,0 +1,67 @@
+/* =============================================================================
+ * app/(dep)/_painel-desktop.module.css — leiaute de painel das telas de
+ * deputado no desktop (ADR-0073, o telão de 04/10/2026).
+ *
+ * Abaixo de 960px NADA muda: toda regra que mexe em leiaute está dentro de um
+ * `@media (min-width: …)`, e a única regra fora dele (`.par`) é
+ * `display: contents`, que tira o invólucro da caixa e devolve os filhos ao
+ * `flex` do `<main>` exatamente como antes (mesmo `gap`, mesma ordem).
+ *
+ * Nenhuma feature sai e a ordem do DOM não muda — só a distribuição em
+ * colunas. Os parágrafos seguem presos em `max-w-prose`.
+ *
+ * CSS Module é unlayered e vence os utilitários do Tailwind (`@layer
+ * utilities`) sem depender de especificidade: é assim que `.main` substitui o
+ * `max-w-page` (1280px) e o `px-4 md:px-6` do `<main>`.
+ * ========================================================================== */
+
+.par {
+  display: contents;
+}
+
+@media (min-width: 960px) {
+  /* O conteúdo deixa de parar em 1280px numa tela de 1920: vai até 1920, com
+   * margem lateral que cresce com a janela (24px a 1200, 38px a 1920, 48px
+   * de teto). */
+  .main {
+    max-width: 1920px;
+    padding-inline: clamp(24px, 2vw, 48px);
+  }
+
+  /* As agremiações da UF em colunas: 2 a 1280–1440, 3 a 1920, cada uma com
+   * pelo menos 30rem (480px — em `rem`, que não cresce com a rampa
+   * tipográfica). `min(100%, …)` impede a coluna de estourar uma tela mais
+   * estreita que 30rem. A ordem segue a do DOM, linha a linha. */
+  .agremiacoes {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 30rem), 1fr));
+    column-gap: var(--space-8);
+    align-items: start;
+  }
+}
+
+@media (min-width: 1280px) {
+  /* Dois painéis lado a lado (Votação + Mais votados; nas capas, Câmara 2027
+   * + Bancada e Mais votados + Puxadores). Quando um dos dois não renderiza
+   * (bloco sem dado devolve `null`), o que sobra ocupa a linha inteira. */
+  .par {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  .par > :only-child {
+    grid-column: 1 / -1;
+  }
+
+  /* O plenário das 513 cadeiras é `w-full`: sozinho numa linha de 1920 ele
+   * mediu 1828 × 957 px (04/10) — mais alto que a tela do telão, e empurrava
+   * todo o resto para baixo da dobra. Lado a lado com a legenda, ele fica com
+   * ~2/3 da largura (~1.200 px, ~630 px de altura) e a legenda ganha a coluna
+   * que sobrava. A ordem do DOM (plenário, depois legenda) não muda. */
+  .plenario {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    align-items: center;
+  }
+}

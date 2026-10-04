@@ -125,9 +125,16 @@
     min-height: 0;
   }
 
+  /* Coluna de painéis fluida (ADR-0073, o telão de 04/10): 400px até ~1110px
+   * de janela, 36vw daí em diante (461px a 1280, 691px a 1920), teto de 820px.
+   * Propriedade LOCAL de propósito — `--container-sidebar` segue 400px no tema
+   * (é o piso desta coluna, e `tests/e2e/tokens.spec.ts` trava o resto do
+   * namespace `--container-*`). A tipografia do desktop cresce com a janela
+   * (`app/globals.css`), e a coluna cresce junto para o placar não apertar. */
   .split {
+    --largura-paineis: clamp(var(--container-sidebar), 36vw, 820px);
     display: grid;
-    grid-template-columns: var(--container-sidebar) 1fr;
+    grid-template-columns: var(--largura-paineis) 1fr;
     overflow: hidden;
   }
 
@@ -167,8 +174,10 @@
    * `utilities`; CSS Module é unlayered e vence a layer independente de
    * especificidade. */
   .split .panels > main {
-    padding-left: var(--space-4);
-    padding-right: var(--space-4);
+    /* 16px na coluna de 400px (o caso medido acima); cresce com a coluna até
+     * 32px, que é o respiro proporcional numa coluna de ~690px a 1920. */
+    padding-left: clamp(var(--space-4), 1.2vw, var(--space-8));
+    padding-right: clamp(var(--space-4), 1.2vw, var(--space-8));
   }
 
   .split .map {

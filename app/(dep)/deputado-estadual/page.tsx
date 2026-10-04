@@ -76,6 +76,7 @@ import { hrefDaCasa, nomeDaCasa, ufsDoCargo } from "@/lib/utils/casa-legislativa
 
 import { lerNacionalDaCasa } from "../_dados-da-casa";
 import { lerInterruptorDaTela } from "../_interruptor";
+import painel from "../_painel-desktop.module.css";
 
 export const revalidate = 60;
 
@@ -168,7 +169,7 @@ export default async function DeputadoEstadualPage() {
   return (
     <main
       data-trilha="dep"
-      className="mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10"
+      className={`mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10 ${painel.main}`}
       style={{ gap: "var(--space-8)" }}
     >
       {/* ADR-0038 D4 — um aviso de dado parado por fonte: são dois ciclos
@@ -299,19 +300,22 @@ export default async function DeputadoEstadualPage() {
       />
 
       {/* Seção 3 — mais votados e puxadores do país, dos dois payloads. */}
-      <DeputadoMaisVotados
-        cargo={7}
-        rotulo={ROTULO_LISTAS}
-        escopo="pais"
-        linhas={maisVotados}
-        titleId="mais-votados-pais-heading"
-      />
-      <DeputadoPuxadores
-        cargo={7}
-        rotulo={ROTULO_LISTAS}
-        puxadores={puxadores}
-        titleId="puxadores-heading"
-      />
+      {/* ADR-0073 — lado a lado a partir de 1280px; abaixo, `display: contents`. */}
+      <div className={painel.par}>
+        <DeputadoMaisVotados
+          cargo={7}
+          rotulo={ROTULO_LISTAS}
+          escopo="pais"
+          linhas={maisVotados}
+          titleId="mais-votados-pais-heading"
+        />
+        <DeputadoPuxadores
+          cargo={7}
+          rotulo={ROTULO_LISTAS}
+          puxadores={puxadores}
+          titleId="puxadores-heading"
+        />
+      </div>
 
       {/* Seção 4 — as 27 casas. Casa sem linha no payload cai em "aguardando
           apuração" / "vagas não publicadas" — nunca zero (RF-124). */}
@@ -370,7 +374,7 @@ function AguardandoAssembleias() {
   return (
     <main
       data-trilha="dep"
-      className="mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10"
+      className={`mx-auto flex min-h-screen max-w-page flex-col px-4 py-6 md:px-6 md:py-10 ${painel.main}`}
       style={{ gap: "var(--space-8)" }}
     >
       {/* RF-160 — primeiro filho do `<main>`; `sem_dados` é verdade em

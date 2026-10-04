@@ -119,7 +119,8 @@
   margin-left: 0.5rem;
   padding: 1px 6px;
   border-radius: 4px;
-  font-size: 0.65rem;
+  /* 0.65rem (10,4px) abaixo de 960px; acompanha a rampa no desktop. */
+  font-size: calc(var(--text-2xs) * 1.04);
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
