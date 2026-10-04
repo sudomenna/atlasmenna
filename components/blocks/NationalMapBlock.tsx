@@ -184,6 +184,12 @@ export interface NationalMapBlockProps {
    * medido a 375px que a faixa única resolveu (ver o comentário do overlay).
    */
   action?: ReactNode;
+  /**
+   * Turno da corrida (`EdgePayload.turno`) — 2026-10-04. Repassado ao balão e
+   * à gaveta só para os selos de base (`selosDaBase` desliga todo selo no 2º
+   * turno). Ausente ⇒ tratado como 1º turno, o default de `selosDaBase`.
+   */
+  turno?: number | null;
 }
 
 export function NationalMapBlock({
@@ -197,6 +203,7 @@ export function NationalMapBlock({
   scopeLabel,
   backHref,
   action,
+  turno,
 }: NationalMapBlockProps) {
   const [view, setView] = useState<MapView>("winner");
   const [legendSheetOpen, setLegendSheetOpen] = useState(false);
@@ -228,6 +235,7 @@ export function NationalMapBlock({
             viewMode={viewMode}
             preEleicao={preEleicao}
             cargo={cargo}
+            turno={turno}
             height="100%"
             legendPlacement="overlay"
             // `h-full` e NÃO `absolute inset-0`: a raiz do `<NationalChoroplethMap>`
@@ -463,6 +471,7 @@ export function NationalMapBlock({
         viewMode={viewMode}
         preEleicao={preEleicao}
         cargo={cargo}
+        turno={turno}
         height={hero ? HERO_HEIGHT : 420}
       />
     </section>

@@ -30,8 +30,10 @@
  * NYT): duas colunas novas, "Partido" e "Votos", com o mesmo tratamento
  * degradável de "Parcial" (some do cartão quando NENHUMA linha tem o dado —
  * ver `hasColumn` abaixo). E o tratamento da linha VENCEDORA (fundo cheio +
- * ✓), só quando `chamada === true` — ver a docstring de `HoverCard` mais
- * abaixo para o argumento completo de por que ele não pode aparecer sempre.
+ * ✓) — desde 2026-10-04 só para candidato MATEMATICAMENTE eleito
+ * (`EdgeUfRow.eleitos_definidos`, via `lib/utils/eleitos-definidos.ts`; até
+ * essa data era `chamada === true`, uma leitura da projeção) — ver a docstring
+ * de `winnerBackground` para por que ele não pode aparecer sempre.
  *
  * 2026-09-18 (mesmo dia, mapa MUNICIPAL) — "Proj." deixa de ser a única
  * coluna que TODA chamada deste átomo garante. Município não tem projeção:
@@ -138,8 +140,13 @@ export interface HoverCardRow {
    * inteira some quando NENHUMA linha tem o dado. */
   votos?: number;
   /**
-   * Par (fundo, tinta) já RESOLVIDO pelo caller para a linha do vencedor
-   * CHAMADO — nunca calculado aqui. Este átomo não conhece partido (teste
+   * Par (fundo, tinta) já RESOLVIDO pelo caller para a linha do candidato
+   * MATEMATICAMENTE eleito — nunca calculado aqui. 🔴 2026-10-04 (dono): o
+   * caller do mapa nacional (`buildHoverRows`) só o preenche para ids de
+   * `EdgeUfRow.eleitos_definidos` (`lib/utils/eleitos-definidos.ts`); até essa
+   * data preenchia por `chamada` (margem projetada > 10 pp). O texto abaixo,
+   * que fala em "chamado", é histórico — a regra do átomo (obedecer o campo,
+   * não o índice) continua a mesma. Este átomo não conhece partido (teste
    * (h), `HoverCard.test.tsx`): quem sabe se a UF foi chamada e qual token
    * de contraste usar é `_NationalChoroplethMapImpl.buildHoverRows`
    * (`partyChipInk`/`strongForRank`, medidos ≥4,5:1). `undefined` (o caso
@@ -168,12 +175,15 @@ export interface HoverCardRow {
   /**
    * 2026-09-29 (dono: "são 2 senadores eleitos") — o texto do selo de vaga
    * desta linha ("Vaga projetada" / "Vaga na parcial"), JÁ DECIDIDO pelo
-   * caller: quem sabe quantas vagas a corrida tem, em que base a lista foi
-   * ordenada e quem disputa é `buildHoverRows`
-   * (`_NationalChoroplethMapImpl.tsx`, via `lib/utils/vagas-eleitas.ts`).
-   * Este átomo só desenha a pílula — a mesma forma do `<SeloPilula>` dos
-   * cartões, em tamanho de balão. Ausente (o caso de Presidente, Governador e
-   * de quem está fora das vagas) ⇒ nada.
+   * caller. 🔴 2026-10-04 — o nome ficou, o conteúdo cresceu: é o selo de
+   * BASE da linha, qualquer que seja a regra — também o de turno de
+   * Governador ("2º turno · na parcial", "Vence no 1º turno · projeção"),
+   * decidido por `selosDaBase` (`lib/utils/selo-resultado.ts`) dentro de
+   * `buildHoverRows` (`_NationalChoroplethMapImpl.tsx`), que sabe a regra do
+   * cargo, a base em que a lista foi ordenada, o turno e quem disputa. Este
+   * átomo só desenha a pílula — a mesma forma do `<SeloPilula>` dos cartões,
+   * em tamanho de balão. Ausente (Presidente na UF, 2º turno, quem está fora
+   * dos dois primeiros/das vagas) ⇒ nada.
    */
   vaga?: string;
 }
@@ -229,6 +239,16 @@ const COLUNA_EXTRA_PX = 72;
  * linha mais larga e nome cortado, o nome ganha (decisão do dono, 14/09).
  */
 const SELO_VAGA_EXTRA_PX = 100;
+
+/**
+ * 2026-10-04 — o selo deixou de ser só o de vaga: Governador ganhou o de turno
+ * ("Venceria no 1º turno · na parcial", 33 caracteres, mais que o dobro de
+ * "Vaga projetada"). O acréscimo passa a acompanhar o MAIOR texto de selo do
+ * cartão — ~6px por caractere a 10px bold, mais o `padding` e o `gap` —, com
+ * {@link SELO_VAGA_EXTRA_PX} de piso, para o caso de vaga não mudar um pixel.
+ */
+const SELO_PX_POR_CARACTERE = 6;
+const SELO_FOLGA_PX = 20;
 
 /**
  * A pílula do selo de vaga — `--surface-inverse` + `--text-inverse`, o MESMO
@@ -381,6 +401,13 @@ export function HoverCard({
   // inofensivo, porque `width: max-content` já dimensiona pelo conteúdo real.
   const extras = [partido, votos, parcial].filter(Boolean).length;
   const temSeloVaga = rows.some((r) => r.kind !== "outros" && !!r.vaga);
+  const maiorSelo = rows.reduce(
+    (max, r) => (r.kind !== "outros" && r.vaga ? Math.max(max, r.vaga.length) : max),
+    0,
+  );
+  const seloExtraPx = temSeloVaga
+    ? Math.max(SELO_VAGA_EXTRA_PX, maiorSelo * SELO_PX_POR_CARACTERE + SELO_FOLGA_PX)
+    : 0;
   const colunas = [
     { chave: "nome", trilho: `minmax(${NOME_MIN_PX}px, 1fr)`, presente: true },
     { chave: "partido", trilho: "auto", presente: partido },
@@ -451,7 +478,7 @@ export function HoverCard({
         // ganha `COLUNA_EXTRA_PX`, e `min(92vw, …)` impede que o balão
         // ultrapasse a viewport — ele é posicionado junto ao cursor e um teto
         // em px puro sairia da tela em janela estreita.
-        maxWidth: `min(92vw, ${280 + extras * COLUNA_EXTRA_PX + (temSeloVaga ? SELO_VAGA_EXTRA_PX : 0)}px)`,
+        maxWidth: `min(92vw, ${280 + extras * COLUNA_EXTRA_PX + seloExtraPx}px)`,
         padding: "var(--space-3)",
         background: "var(--surface-card)",
         border: "1px solid var(--border-strong)",

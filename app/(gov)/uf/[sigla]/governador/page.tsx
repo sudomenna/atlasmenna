@@ -741,6 +741,12 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
               // 2026-10-03, pedido do dono: só os 25 maiores colégios
               // eleitorais na lista; o resto abre pelo mapa.
               limiteLista={25}
+              // 2026-10-04 (dono) — a folha mostra o status de cada candidato
+              // na corrida do estado: as MESMAS opções de selo do
+              // `<ResultPanel>` acima, e os eleitos definidos da linha `por_uf`
+              // desta UF no payload nacional de Governador.
+              cargo="gov"
+              selo={{ regra: "turno", turno: payload.turno }}
             />
           </div>
         ) : (

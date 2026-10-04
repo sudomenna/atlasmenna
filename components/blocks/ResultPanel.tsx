@@ -115,7 +115,12 @@ import { compete, haAnulada, notaAnuladas, queCompetem } from "@/lib/utils/desti
 import { formatPp, formatVotesCompact } from "@/lib/utils/format";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { ordensPorBase } from "@/lib/utils/rank-parcial";
-import { type BaseSelo, type RegraSelo, selosDaBase, VAGA_LABEL } from "@/lib/utils/selo-resultado";
+import {
+  type BaseSelo,
+  type RegraSelo,
+  selosPorBase,
+  VAGA_LABEL,
+} from "@/lib/utils/selo-resultado";
 import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
 
 import styles from "./ResultPanel.module.css";
@@ -725,8 +730,12 @@ export function ResultPanel({
   // quem quer o selo de turno (home, Governador por UF) pede.
   const regraSelo: RegraSelo = identidade ? "nenhum" : (selo ?? (multiVaga ? "vaga" : "nenhum"));
   const opcoesSelo = { regra: regraSelo, turno, vagas: nVagas };
-  const selosParcial = selosDaBase(porParcial, "parcial", opcoesSelo);
-  const selosProj = selosDaBase(porProj, "proj", opcoesSelo);
+  // 2026-10-04 — pelo ponto único `selosPorBase`, o MESMO que a folha do
+  // município (`<MunicipioExplorer>`) chama com a mesma lista e as mesmas
+  // opções: o selo da gaveta não pode divergir do cartão. Ele reordena com
+  // `ordensPorBase`, igual a `porParcial`/`porProj` acima (em `identidade` a
+  // regra é "nenhum" e os dois mapas saem vazios, como antes).
+  const { parcial: selosParcial, proj: selosProj } = selosPorBase(candidatos, opcoesSelo);
   // RF-105 — quem ocupa vaga em cada base, pelo ponto único
   // (`lib/utils/vagas-eleitas.ts`, 2026-09-29): os `nVagas` primeiros QUE
   // DISPUTAM daquela ordem. Vaga única não marca ninguém — ali a gramática é a

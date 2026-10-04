@@ -736,6 +736,11 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
               // 2026-10-03, pedido do dono (mesmo corte do governador): só os
               // 25 maiores colégios eleitorais na lista; o resto abre pelo mapa.
               limiteLista={25}
+              // 2026-10-04 (dono) — as MESMAS opções de selo do `<ResultPanel>`
+              // acima ("Vaga na parcial" / "Vaga projetada", `vagas` do
+              // payload), e os eleitos definidos da linha `por_uf` desta UF.
+              cargo="sen"
+              selo={{ regra: "vaga", vagas }}
             />
           </div>
         ) : (

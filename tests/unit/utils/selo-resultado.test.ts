@@ -11,7 +11,9 @@ import { describe, expect, it } from "vitest";
 import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
 import {
   type CandidatoSelo,
+  regraSeloNoMapaNacional,
   selosDaBase,
+  selosDoTopUf,
   TURNO_LABEL,
   VAGA_LABEL,
 } from "@/lib/utils/selo-resultado";
@@ -144,5 +146,57 @@ describe("constituição § 1 — todo selo diz de que base vem", () => {
       expect(t).not.toMatch(/eleit/i);
       expect(t).toMatch(/projeç|projetad|parcial/);
     }
+  });
+});
+
+describe("2026-10-04 — superfícies do mapa nacional (balão e gaveta)", () => {
+  it("regra por cargo: gov ⇒ turno, sen ⇒ vaga, pres ⇒ nenhum (decisão de 27/09)", () => {
+    expect(regraSeloNoMapaNacional("gov")).toBe("turno");
+    expect(regraSeloNoMapaNacional("sen")).toBe("vaga");
+    expect(regraSeloNoMapaNacional("pres")).toBe("nenhum");
+  });
+
+  it("selosDoTopUf traduz `pct` → projeção e `pct_atual` → parcial", () => {
+    // Projeção: 55 > 50 ⇒ só o líder, 1º turno. Parcial (mesma ordem): 45 ⇒ 2º turno.
+    const top = [
+      { id: 1, pct: 55, pct_atual: 45 },
+      { id: 2, pct: 30, pct_atual: 40 },
+      { id: 3, pct: 15, pct_atual: 15 },
+    ];
+    expect(comoObjeto(selosDoTopUf(top, "proj", { regra: "turno" }))).toEqual({
+      1: TURNO_LABEL.primeiro.proj,
+    });
+    expect(comoObjeto(selosDoTopUf(top, "parcial", { regra: "turno" }))).toEqual({
+      1: TURNO_LABEL.segundo.parcial,
+      2: TURNO_LABEL.segundo.parcial,
+    });
+  });
+
+  it("`pct_atual` ausente nunca vira maioria (NaN, não 0 nem número inventado)", () => {
+    const top = [
+      { id: 1, pct: 70 },
+      { id: 2, pct: 30 },
+    ];
+    expect(comoObjeto(selosDoTopUf(top, "parcial", { regra: "turno" }))).toEqual({
+      1: TURNO_LABEL.segundo.parcial,
+      2: TURNO_LABEL.segundo.parcial,
+    });
+  });
+
+  it("vaga e anulada passam intactas para selosDaBase", () => {
+    const top = [
+      { id: 1, pct: 40, pct_atual: 40 },
+      { id: 9, pct: 35, pct_atual: 35, destino: "anulado" as const },
+      { id: 2, pct: 20, pct_atual: 20 },
+    ];
+    expect(comoObjeto(selosDoTopUf(top, "proj", { regra: "vaga", vagas: 2 }))).toEqual({
+      1: VAGA_LABEL.proj,
+      2: VAGA_LABEL.proj,
+    });
+  });
+
+  it("2º turno ⇒ nenhum selo", () => {
+    const top = [{ id: 1, pct: 55, pct_atual: 55 }];
+    expect(selosDoTopUf(top, "proj", { regra: "turno", turno: 2 }).size).toBe(0);
   });
 });

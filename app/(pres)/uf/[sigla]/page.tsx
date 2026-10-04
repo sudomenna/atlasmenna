@@ -767,6 +767,12 @@ export default async function UFPage({ params }: UFPageProps) {
               // senador): só os 25 maiores colégios eleitorais na lista; o
               // resto abre pelo mapa.
               limiteLista={25}
+              // 2026-10-04 (dono) — SEM selo de base, como o `<ResultPanel>`
+              // acima (2º turno é decidido pelo Brasil). Só o eleito
+              // definido, que no Presidente o produtor emite apenas quando o
+              // Brasil inteiro está decidido.
+              cargo="pres"
+              selo={{ regra: "nenhum" }}
             />
           </div>
         ) : (

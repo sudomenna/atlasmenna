@@ -147,6 +147,7 @@ import { cargoFromToken } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
 import type { EdgePayload, EdgePayloadUf, EdgeUfMunicipio } from "@/lib/edge-config/types";
 import { useDadoFrescorStore } from "@/lib/state/dado-freshness-store";
+import { usePorUfStore } from "@/lib/state/por-uf-store";
 import { formatPercent } from "@/lib/utils/format";
 
 /** Mesma cadência de escrita do orchestrator (ADR-0011). */
@@ -220,6 +221,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
     // `getState()`, não o hook: as ações do Zustand têm referência estável, e
     // assinar a store aqui só rerrenderizaria a moldura à toa.
     const { registrarPoller, publicarDadoTs } = useDadoFrescorStore.getState();
+    const { publicarPorUf } = usePorUfStore.getState();
     // A baixa é dada no cleanup. O registro é o que AUTORIZA o banner a
     // reavaliar por tempo — sem ele, o banner fica com o veredito do servidor
     // em vez de inventar um a partir de uma semente que ninguém atualiza.
@@ -244,7 +246,14 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
         // mandar o relógio de um cargo para o banner de outro. Não publicar
         // deixa o último `dado_ts` conhecido valendo e o relógio de parede
         // andando — que é a degradação honesta.
-        if (json.cargo === cargoTse) publicarDadoTs(cargoTse, json.dado_ts);
+        if (json.cargo === cargoTse) {
+          publicarDadoTs(cargoTse, json.dado_ts);
+          // 2026-10-04 — o `por_uf` vai junto, com a MESMA guarda de cargo: a
+          // folha do município lê dele os eleitos definidos da UF
+          // (`lib/state/por-uf-store.ts`). Payload malformado sem a lista não
+          // publica nada — a folha fica sem o ✓, que é a omissão honesta.
+          if (Array.isArray(json.por_uf)) publicarPorUf(cargo, json.por_uf);
+        }
       } catch {
         // Silencioso de propósito: a moldura degrada para o esqueleto, e os
         // painéis da página (renderizados no servidor) seguem com o dado. Para
@@ -620,6 +629,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
     return (
       <NationalMapBlock
         rows={payload.por_uf}
+        turno={payload.turno}
         candidatoAId={payload.national.candidato_a_id}
         candidatos={payload.national.candidatos}
         variant="frame"
@@ -797,6 +807,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
     return (
       <NationalMapBlock
         rows={payload.por_uf}
+        turno={payload.turno}
         candidatoAId={payload.national.candidato_a_id}
         candidatos={payload.national.candidatos}
         variant="frame"
@@ -916,6 +927,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
   return (
     <NationalMapBlock
       rows={payload.por_uf}
+      turno={payload.turno}
       candidatoAId={payload.national.candidato_a_id}
       rankByLider={rankByLider}
       candidatos={payload.national.candidatos}

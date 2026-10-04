@@ -132,6 +132,7 @@ import { cargoFromToken, vagasDaCorrida } from "@/lib/config/cargos";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { useHoverStore } from "@/lib/state/hover-store";
 import type { ViewMode } from "@/lib/state/view-mode";
+import { definicaoDaUf } from "@/lib/utils/eleitos-definidos";
 // (Nada de `@/lib/utils/cand-color` aqui desde 2026-09-20: nenhuma cor deste
 // mapa deriva mais da COLOCAÇÃO do líder — ver `resolveColor` e
 // `buildHoverRows` abaixo, e o topo de `components/blocks/_candidateColor.ts`.)
@@ -157,12 +158,8 @@ import {
   resolvePartyHex,
   textForParty,
 } from "@/lib/utils/party-color";
-import { VAGA_LABEL } from "@/lib/utils/selo-resultado";
+import { type RegraSelo, regraSeloNoMapaNacional, selosDoTopUf } from "@/lib/utils/selo-resultado";
 import { ufHref } from "@/lib/utils/uf-href";
-import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
-
-/** Nenhum id marcado — UF não chamada, ou corrida de vaga única (selo de vaga). */
-const SEM_IDS: ReadonlySet<number> = new Set();
 
 const PMTILES_BASE = "https://jbtu251tioj3y57z.public.blob.vercel-storage.com";
 
@@ -285,6 +282,12 @@ export interface NationalChoroplethMapImplProps {
    * o valor que já estava cravado no código antes de virar prop.
    */
   cargo?: UfPickerCargo;
+  /**
+   * Turno da corrida (`EdgePayload.turno`) — 2026-10-04. Só alimenta os selos
+   * de base do balão (`selosDaBase` desliga todo selo no 2º turno). Ausente ⇒
+   * tratado como 1º turno, o mesmo default de `selosDaBase`.
+   */
+  turno?: number | null;
   /**
    * Teto de folga para `initialFramePadding` (2026-09-27, redesenho do mapa
    * no celular). **Default = os 160/120/32/32 de sempre** (ver a constante
@@ -576,22 +579,16 @@ function applyColors(
  * `top_candidatos` só tem `id`+`pct`) e para Presidente antes desta safra de
  * payloads, onde o nome só existia no bloco nacional.
  *
- * 🔴 **Tratamento de "vencedor" (fundo cheio + ✓) é sobre a IDENTIDADE do
- * líder PROJETADO, nunca sobre a posição 0 da lista exibida.** `row.chamada`
- * é calculado no produtor a partir da margem PROJETADA
- * (`api/model/project.py`, `chamada = margem > 10.0`, onde `margem` vem de
- * `pct_projetado`) — é uma leitura do MODELO, não do apurado. Até
- * 2026-09-20 isto colava com "índice 0" porque o balão só existia numa ordem
- * (a de projeção); agora que `ordenados` pode vir em ordem PARCIAL (ver
- * `viewMode` abaixo), o líder projetado pode estar em qualquer posição da
- * lista exibida, e o ✓ tem que segui-lo — nunca a linha do topo. `liderProjId`
- * fixa essa identidade ANTES de reordenar. Sem esta correção, alternar para
- * "Parcial" moveria o ✓ para quem quer que a apuração esteja favorecendo
- * agora — inventando uma "chamada" que o modelo nunca fez. Mesmo assim,
- * `isCalledWinner` marca no máximo `vagas` linhas — UMA em Presidente e
- * Governador, as DUAS vagas no Senado (2026-09-29, decisão do dono: "são 2
- * senadores eleitos"): a constituição § 1 continua proibindo publicar como
- * decidido o que não foi (o 2º de uma corrida de uma vaga, o 3º do Senado). O par (fundo, tinta) é resolvido
+ * 🔴 **Tratamento de "vencedor" (fundo cheio + ✓) é SÓ para quem está
+ * MATEMATICAMENTE eleito, e segue a IDENTIDADE, nunca a posição** (decisão do
+ * dono, 2026-10-04). A fonte é `row.eleitos_definidos`, lida pelo ponto único
+ * `definicaoDaUf` (`lib/utils/eleitos-definidos.ts`) — o mesmo que monta o
+ * cabeçalho do balão e o status da gaveta do celular. Até esta data a marca
+ * vinha de `row.chamada` (margem PROJETADA > 10 pp, uma leitura do MODELO),
+ * e MT a 27% apurado exibia dois senadores "eleitos" (constituição § 1).
+ * Como a marca casa por `id`, ela é IGUAL nas duas bases do seletor e cai na
+ * linha certa qualquer que seja a ordem em que `ordenados` venha. O par
+ * (fundo, tinta) é resolvido
  * AQUI, não em `<HoverCard>`: o átomo não conhece partido (teste (h) de
  * `HoverCard.test.tsx`) — `partyChipInk` já vem com o contraste medido
  * (≥4,5:1, docstring dele), inclusive para o par de `outros`.
@@ -615,38 +612,37 @@ function buildHoverRows(
   _rankByLider: Record<number, number> | undefined,
   viewMode: ViewMode = "proj",
   vagas = 1,
+  regraSelo: RegraSelo = vagas > 1 ? "vaga" : "nenhum",
+  turno?: number | null,
 ): HoverCardRow[] {
   const { ordenados, usouParcial } = ordenarTopCandidatosPorBase(row.top_candidatos, viewMode);
-  // Ver o comentário grande acima: o ✓ segue a IDENTIDADE de quem o modelo
-  // chamou, não a posição pós-reordenação.
-  //
-  // ADR-0053 / RF-213 — os do corte QUE COMPETEM, nunca `top_candidatos[0]`
-  // cru: o corte chega por `pct_projetado` sobre `vvc`, e uma anulada pode
-  // estar no topo dele. O modelo nunca a chama (`chamada` já a exclui), mas
-  // sem o filtro o ✓ não cairia em ninguém — ou, pior, na anulada.
-  //
-  // 🔴 2026-09-29 (dono: "são 2 senadores eleitos") — o ✓ vai para os
-  // `vagas` ocupantes das vagas PELA PROJEÇÃO (a ordem do array, a mesma que o
-  // modelo leu para decidir `chamada`), e não mais só para o líder. Em
-  // Presidente/Governador `vagas === 1` e o conjunto é o líder de sempre. No
-  // Senado o produtor passou, na mesma data, a chamar a corrida pela margem da
-  // 2ª vaga (2º − 3º, `api/model/project.py`) — com a margem do 1º sobre o 2º,
-  // marcar o 2º como eleito seria proclamar uma vaga que o modelo não decidiu.
-  // Ponto único: `lib/utils/vagas-eleitas.ts`.
-  const chamados = row.chamada === true ? idsDasVagas(row.top_candidatos, vagas) : SEM_IDS;
-  // 🔴 2026-09-29 — no Senado (mais de uma vaga), cada ocupante de vaga NA
-  // BASE DA LISTA leva o selo "Vaga projetada"/"Vaga na parcial", o mesmo da
-  // folha do celular (`<StateResultSheet>`) e da página da UF. O rótulo segue
-  // a base que a lista DE FATO usou (`usouParcial`), nunca `viewMode` cru:
-  // sem `pct_atual` a ordem cai na de projeção, e o selo diz "projetada".
-  const ocupantes = vagas > 1 ? idsDasVagas(ordenados, vagas) : SEM_IDS;
-  const seloVaga = VAGA_LABEL[usouParcial ? "parcial" : "proj"];
+  // 🔴 2026-10-04 (dono, dia do 1º turno) — o ✓ e o fundo cheio vão SÓ para
+  // quem o produtor declarou MATEMATICAMENTE eleito (`row.eleitos_definidos`),
+  // pelo ponto único `definicaoDaUf` (`lib/utils/eleitos-definidos.ts`). Não
+  // lê mais `row.chamada` — leitura da PROJEÇÃO (margem projetada > 10 pp) que
+  // punha dois senadores "eleitos" em MT a 27% apurado — e não depende de
+  // `viewMode`: casa por `id`, então segue a pessoa em qualquer ordem da lista.
+  // Anulada e id fora das linhas são descartados lá.
+  const { eleitos } = definicaoDaUf(row);
+  // 🔴 2026-09-29 / 2026-10-04 — o selo de BASE de cada linha, pelo ponto
+  // único dos cartões das páginas (`selosDaBase`, via `selosDoTopUf`,
+  // `lib/utils/selo-resultado.ts`): Senador ⇒ "Vaga projetada"/"Vaga na
+  // parcial" nos ocupantes das vagas; Governador ⇒ "2º turno · …"/"Vence(ria)
+  // no 1º turno · …"; Presidente na UF ⇒ nenhum (decisão de 27/09); 2º turno
+  // ⇒ nenhum. A base é a que a lista DE FATO usou (`usouParcial`), nunca
+  // `viewMode` cru: sem `pct_atual` a ordem cai na de projeção, e o selo diz
+  // "projeção". Independe do ✓ acima — uma linha eleita mantém o seu selo.
+  const selos = selosDoTopUf(ordenados, usouParcial ? "parcial" : "proj", {
+    regra: regraSelo,
+    turno,
+    vagas,
+  });
   const linhas: HoverCardRow[] = ordenados.map((tc) => {
     const cand = candidatosById.get(tc.id);
     const nomeBruto = tc.nome ?? cand?.nome;
     const partido = tc.partido ?? cand?.partido;
     const sqcand = tc.sqcand ?? cand?.sqcand;
-    const isCalledWinner = chamados.has(tc.id);
+    const isCalledWinner = eleitos.has(tc.id);
     // 🔴 2026-09-20 — `partyChipInk` sem desvio de rank. Ele já devolve o par
     // MEDIDO de `outros` (`--party-outros-chip` / `--party-outros-ink`) para
     // sigla ausente, desconhecida ou de federação; o desvio antigo caía em
@@ -689,7 +685,7 @@ function buildHoverRows(
       // ADR-0053 — etiqueta "Anulado"/"Sub judice" no balão. A ORDEM (anulada
       // no fim, antes de "Outros") já vem de `ordenarTopCandidatosPorBase`.
       ...(tc.destino ? { destino: tc.destino } : {}),
-      ...(ocupantes.has(tc.id) ? { vaga: seloVaga } : {}),
+      ...(selos.has(tc.id) ? { vaga: selos.get(tc.id) } : {}),
     };
   });
 
@@ -906,6 +902,7 @@ export function NationalChoroplethMapImpl({
   navegarNoClique = false,
   bloqueiaBalaoNoToque = false,
   cargo = "pres",
+  turno,
   framePaddingCeiling,
 }: NationalChoroplethMapImplProps) {
   const router = useRouter();
@@ -1727,7 +1724,10 @@ export function NationalChoroplethMapImpl({
             flip={tooltip.flip}
             flipY={tooltip.flipY}
             title={ufTitleFor(tooltip.sigla)}
-            kicker={tooltip.row.chamada ? "Chamada" : undefined}
+            // 🔴 2026-10-04 — "Chamada" saiu: o cabeçalho só afirma o que a
+            // apuração já decidiu ("Matematicamente eleito(s)" / "2º turno
+            // definido"), pelo mesmo ponto único que marca as linhas.
+            kicker={definicaoDaUf(tooltip.row).rotulo}
             apurado={tooltip.row.pct_apurado}
             rows={buildHoverRows(
               tooltip.row,
@@ -1735,6 +1735,8 @@ export function NationalChoroplethMapImpl({
               effectiveRankByLider,
               viewMode,
               vagasDaCorrida(cargoFromToken(cargo)),
+              regraSeloNoMapaNacional(cargo),
+              turno,
             )}
           />
         </div>

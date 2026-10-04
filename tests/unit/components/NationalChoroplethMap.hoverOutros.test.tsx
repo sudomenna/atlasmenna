@@ -285,9 +285,15 @@ describe("hover do mapa nacional — a linha Outros (2026-09-19)", () => {
     host.remove();
   });
 
-  it("(e) `chamada: true` marca só a linha 0 — nunca a de Outros [mutação: apagar `!isOutros` da guarda `isCalledWinner` em HoverCard.tsx]", () => {
+  // 🔴 2026-10-04 — a marca vem de `eleitos_definidos` (matematicamente
+  // eleito), não mais de `chamada`; a garantia sobre "Outros" é a mesma.
+  it("(e) eleito definido marca só a linha 0 — nunca a de Outros [mutação: apagar `!isOutros` da guarda `isCalledWinner` em HoverCard.tsx]", () => {
     const { host, root } = montar(
-      row({ chamada: true, outros: { pct: 9.9, pct_atual: 3.3, n_candidatos: 3 } }),
+      row({
+        chamada: true,
+        eleitos_definidos: [13],
+        outros: { pct: 9.9, pct_atual: 3.3, n_candidatos: 3 },
+      }),
     );
     disparaHoverEmSp();
 

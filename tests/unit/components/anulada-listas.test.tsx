@@ -336,8 +336,11 @@ describe("ordensPorBase", () => {
   });
 });
 
-describe("mapa nacional — o ✓ do vencedor chamado", () => {
-  it("com `chamada`, o ✓ vai para o 1º QUE COMPETE, nunca para a anulada do topo [mutação: `top_candidatos[0]`]", () => {
+// 🔴 2026-10-04 — o ✓ passou a vir de `eleitos_definidos` (matematicamente
+// eleito), não de `chamada`. A garantia de que a anulada nunca o recebe agora é
+// defensiva: mesmo que o produtor a liste por engano, `definicaoDaUf` a descarta.
+describe("mapa nacional — o ✓ do eleito definido", () => {
+  it("anulada listada em `eleitos_definidos` é descartada — o ✓ vai só para quem compete [mutação: tirar `compete(tc)` de definicaoDaUf]", () => {
     const host = document.createElement("div");
     document.body.appendChild(host);
     const root = createRoot(host);
@@ -346,7 +349,7 @@ describe("mapa nacional — o ✓ do vencedor chamado", () => {
         <NationalChoroplethMapImpl
           candidatoAId={11}
           candidatos={[nacional(10, "ANULA", "NOVO", 60), nacional(11, "VALIDA", "PT", 40)]}
-          rows={[row(CURTA, { chamada: true })]}
+          rows={[row(CURTA, { chamada: true, eleitos_definidos: [10, 11] })]}
           view="winner"
           cargo="gov"
         />,
@@ -363,6 +366,10 @@ describe("mapa nacional — o ✓ do vencedor chamado", () => {
       .map((s) => s.parentElement?.textContent ?? "");
     expect(linhasComCheck).toHaveLength(1);
     expect(linhasComCheck[0]).toContain("VALIDA");
+    // Um só eleito contado ⇒ cabeçalho no singular.
+    const cardTexto = host.querySelector('[data-testid="hover-card"]')?.textContent ?? "";
+    expect(cardTexto).toContain("Matematicamente eleito");
+    expect(cardTexto).not.toContain("Matematicamente eleitos");
     act(() => root.unmount());
   });
 });

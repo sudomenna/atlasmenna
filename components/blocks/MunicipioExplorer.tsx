@@ -85,13 +85,19 @@ import { type MunicipioRow, MunicipioTable } from "@/components/blocks/Municipio
 import { MunicipioWaffleGrid } from "@/components/blocks/MunicipioWaffleGrid";
 import { useMunicipioSheetStore } from "@/components/shared/municipio-sheet-store";
 import type { EdgeCandidate, EdgeUfCandidate, EdgeUfMunicipio } from "@/lib/edge-config/types";
+import { usePorUfStore } from "@/lib/state/por-uf-store";
+import { useViewMode } from "@/lib/state/view-mode-client";
 import { compete, haAnulada, NOTA_ANULADAS_SEM_REGRA_1T } from "@/lib/utils/destino-voto";
+import { definicaoDaUf, ROTULO_ELEITO } from "@/lib/utils/eleitos-definidos";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import {
   type MunicipioVotoCandidato as FolhaRow,
   votosPorCandidatoMunicipio,
 } from "@/lib/utils/municipio-votos";
+import { partyChipInk } from "@/lib/utils/party-color";
+import { type OpcoesSelo, selosPorBase } from "@/lib/utils/selo-resultado";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
+import type { UfPickerCargo } from "@/lib/utils/uf-href";
 
 export interface MunicipioExplorerProps {
   ufSigla: string;
@@ -115,7 +121,32 @@ export interface MunicipioExplorerProps {
   waffleCandidatos?: EdgeCandidate[];
   /** Repassado a `<MunicipioTable limite>` — corta a LISTA, nunca a folha. */
   limiteLista?: number;
+  /**
+   * 2026-10-04 (dono) — a regra do selo da CORRIDA DO ESTADO, a mesma que a
+   * página passa ao `<ResultPanel>` (`selo`, `turno`, `vagas`). A folha mostra
+   * ao lado de cada nome o selo que o cartão da página mostra na base ativa
+   * do seletor Parcial/Projeção — o município não elege nem tem projeção, então
+   * o status é sempre o do estado. Os dois chamam `selosPorBase` com a mesma
+   * lista (`candidatos`) e estas mesmas opções. Ausente ⇒ regra `"nenhum"`.
+   */
+  selo?: OpcoesSelo;
+  /**
+   * 2026-10-04 (dono) — o cargo da corrida, para achar a linha `por_uf` desta
+   * UF que a moldura do mapa publicou (`lib/state/por-uf-store.ts`) e dela os
+   * eleitos MATEMATICAMENTE definidos. Ausente ⇒ a folha nunca marca eleito.
+   */
+  cargo?: UfPickerCargo;
 }
+
+/** O que a folha desenha ao lado de um nome: selo da base e/ou eleito. */
+interface StatusDaLinha {
+  /** Texto do selo da base ativa (`selosPorBase`); ausente ⇒ sem selo. */
+  selo?: string | undefined;
+  /** Id em `eleitos_definidos` desta UF ⇒ fundo cheio + ✓. */
+  eleito?: boolean;
+}
+
+const SEM_SELO: OpcoesSelo = { regra: "nenhum" };
 
 // `FolhaRow` (o percentual sobre o total apurado NO MUNICÍPIO) e a função que
 // o calcula saíram daqui em 2026-09-18 — ver `lib/utils/municipio-votos.ts`.
@@ -162,8 +193,50 @@ function BarraFolha({ row }: { row: { pct: number; partido?: string | undefined 
   );
 }
 
+/**
+ * O selo da corrida do estado, em pílula — a forma do `<SeloPilula>` dos
+ * cartões (`CandidateResultRow.module.css`, `.pilula`: `--surface-inverse` sob
+ * `--text-inverse`, par já medido). Desenhado aqui com os mesmos tokens em vez
+ * de importado: aquele módulo é Server-only hoje e arrastaria a linha de
+ * resultado inteira (avatar, etiquetas) para o pacote do cliente desta rota
+ * (RNF-007a). O TEXTO vem pronto de `selosPorBase` e é lido pelo leitor de
+ * tela como está ("2º turno · projeção").
+ */
+function SeloFolha({ texto }: { texto: string }) {
+  return (
+    <span
+      data-testid="municipio-sheet-selo"
+      style={{
+        display: "inline-block",
+        padding: "2px var(--space-2)",
+        borderRadius: "var(--radius-pill)",
+        background: "var(--surface-inverse)",
+        color: "var(--text-inverse)",
+        font: "700 var(--text-xs) / 1.2 var(--font-sans)",
+      }}
+    >
+      {texto}
+    </span>
+  );
+}
+
 /** Uma linha da folha — parcial apenas, rotulada como parcial. */
-function FolhaLinha({ row, rank }: { row: FolhaRow; rank: number }) {
+function FolhaLinha({
+  row,
+  rank,
+  status = {},
+}: {
+  row: FolhaRow;
+  rank: number;
+  status?: StatusDaLinha;
+}) {
+  // ADR-0053 — anulada nunca é eleita nem tem selo, nem que um caller mande.
+  const eleito = status.eleito === true && compete(row);
+  const selo = compete(row) ? status.selo : undefined;
+  // Fundo cheio no NOME, como a faixa do vencedor no balão do mapa
+  // (`HoverCard.tsx`): o par `partyChipInk` foi medido (≥ 4,5:1) para texto
+  // sobre o chip. Só a coluna do nome — os números seguem sobre o papel.
+  const chip = eleito ? partyChipInk(row.partido) : null;
   return (
     <div
       data-testid="municipio-sheet-row"
@@ -180,28 +253,55 @@ function FolhaLinha({ row, rank }: { row: FolhaRow; rank: number }) {
         {/* ADR-0053 / RF-213 — a anulada vem no fim e não disputa colocação. */}
         {compete(row) ? rank : "—"}
       </span>
-      <div className="flex min-w-0 items-center" style={{ gap: "var(--space-2)" }}>
-        <span className="truncate" style={{ font: "var(--type-body-sm)", fontWeight: 500 }}>
-          {row.nome}
-        </span>
-        <DestinoEtiqueta destino={row.destino} />
-        <span
-          className="flex-none"
+      <div className="flex min-w-0 flex-col items-start" style={{ gap: "var(--space-1)" }}>
+        <div
+          className="flex min-w-0 max-w-full items-center"
+          data-testid={eleito ? "municipio-sheet-eleito" : undefined}
           style={{
-            font: "var(--type-kicker)",
-            letterSpacing: "var(--tracking-caps)",
-            textTransform: "uppercase",
-            color: "var(--text-secondary)",
+            gap: "var(--space-2)",
+            ...(chip
+              ? {
+                  background: chip.background,
+                  color: chip.ink,
+                  padding: "2px var(--space-2)",
+                  borderRadius: "var(--radius-xs)",
+                }
+              : {}),
           }}
         >
-          {/* 2026-09-18: o "—" agora é do RENDER, não do dado (ver docstring
+          {eleito ? (
+            // O ✓ é a marca; o rótulo é o que o leitor de tela ouve.
+            <span role="img" aria-label={ROTULO_ELEITO} className="flex-none">
+              ✓
+            </span>
+          ) : null}
+          <span
+            className="truncate"
+            style={{ font: "var(--type-body-sm)", fontWeight: eleito ? 600 : 500 }}
+          >
+            {row.nome}
+          </span>
+          <DestinoEtiqueta destino={row.destino} />
+          <span
+            className="flex-none"
+            style={{
+              font: "var(--type-kicker)",
+              letterSpacing: "var(--tracking-caps)",
+              textTransform: "uppercase",
+              // Sobre o chip a sigla herda a tinta medida dele.
+              color: chip ? "inherit" : "var(--text-secondary)",
+            }}
+          >
+            {/* 2026-09-18: o "—" agora é do RENDER, não do dado (ver docstring
               de `MunicipioVotoCandidato.partido` em `lib/utils/municipio-votos.ts`)
               — o texto na tela é idêntico a antes.
               2026-09-19: desenhado ⇒ abreviado. A abreviação roda DEPOIS do
               `??`, sobre o texto que vai à tela: o travessão não está na tabela
               e atravessa intacto. */}
-          {siglaExibicao(row.partido ?? "—")}
-        </span>
+            {siglaExibicao(row.partido ?? "—")}
+          </span>
+        </div>
+        {selo ? <SeloFolha texto={selo} /> : null}
       </div>
       <div className="text-right">
         {/* Emenda "opção A" ao ADR-0053 — `pct === null` é a anulada: sem
@@ -247,6 +347,8 @@ export function MunicipioExplorer({
   candidatos,
   waffleCandidatos,
   limiteLista,
+  selo = SEM_SELO,
+  cargo,
 }: MunicipioExplorerProps) {
   // Qual município está aberto vive FORA deste componente desde 2026-09-10:
   // o clique no mapa (`<ChoroplethMapUF>`) precisa abrir esta mesma folha, e o
@@ -291,6 +393,32 @@ export function MunicipioExplorer({
   );
   const totalVotos = linhas.reduce((acc, l) => acc + l.votos, 0);
 
+  // 2026-10-04 (dono) — o status de cada candidato na CORRIDA DO ESTADO.
+  //
+  // Selo: o mesmo do cartão do `<ResultPanel>` da página, na base ativa do
+  // seletor. `candidatos` é a MESMA lista que a página passa ao painel
+  // (`payload.candidatos`, a corrida da UF) e `selo` as mesmas opções; os
+  // dois passam por `selosPorBase`. Os `id` das linhas da folha são as chaves
+  // de `votos_reportados` do detalhe DESTA UF e DESTE cargo — o mesmo espaço
+  // de `id` de `candidatos` (é por ele que `votosPorCandidatoMunicipio` já
+  // resolve nome e partido). Quem aparece no município mas não recebe selo no
+  // estado fica sem selo.
+  const viewMode = useViewMode();
+  const { regra, turno, vagas } = selo;
+  const selos = useMemo(
+    () => selosPorBase(candidatos, { regra, turno, vagas }),
+    [candidatos, regra, turno, vagas],
+  );
+  const selosAtivos = selos[viewMode];
+
+  // Eleito: só o que o produtor declarou definido (`eleitos_definidos` da
+  // linha `por_uf` desta UF), igual nas duas bases. A linha é a que a moldura
+  // do mapa publicou para ESTE cargo — nunca a de outro.
+  const linhaUf = usePorUfStore((s) =>
+    cargo ? s.porCargo[cargo]?.find((r) => r.sigla === ufSigla) : undefined,
+  );
+  const definicao = useMemo(() => (linhaUf ? definicaoDaUf(linhaUf) : null), [linhaUf]);
+
   // O slot do kit é "Eleitores" (`App.jsx:203`). Desde 11/09 o payload publica
   // `eleitores` por município (ADR-0035 D2) — mas como campo OPCIONAL, então o
   // slot ainda tem de saber viver sem ele: um Blob gravado antes da migration
@@ -323,6 +451,21 @@ export function MunicipioExplorer({
           title={municipio.nome}
           headingLevel={3}
         >
+          {definicao?.rotulo ? (
+            // Status da corrida no ESTADO, sem fundo — o fundo é só de quem
+            // está eleito, na linha dele.
+            <p
+              data-testid="municipio-sheet-status"
+              style={{
+                margin: "0 0 var(--space-3)",
+                font: "var(--type-body-sm)",
+                fontWeight: 600,
+                color: "var(--text-primary)",
+              }}
+            >
+              {definicao.rotulo}
+            </p>
+          ) : null}
           <div
             className="grid grid-cols-2"
             style={{ gap: "var(--space-4)", marginBottom: "var(--space-4)" }}
@@ -337,7 +480,15 @@ export function MunicipioExplorer({
           {linhas.length > 0 ? (
             <>
               {linhas.map((l, i) => (
-                <FolhaLinha key={l.id} row={l} rank={i + 1} />
+                <FolhaLinha
+                  key={l.id}
+                  row={l}
+                  rank={i + 1}
+                  status={{
+                    selo: selosAtivos.get(l.id),
+                    eleito: definicao?.eleitos.has(l.id) === true,
+                  }}
+                />
               ))}
               {haAnulada(linhas) ? (
                 <p
@@ -366,6 +517,9 @@ export function MunicipioExplorer({
                 percentual apurado do município é a média dessas zonas ponderada pelo eleitorado de
                 cada par — não é um número que o TSE publique pronto por município. E não existe
                 projeção municipal: o modelo projeta por zona e agrega para o estado.{" "}
+                {selosAtivos.size > 0 || definicao?.rotulo
+                  ? "Os selos ao lado dos nomes e o status no topo são da corrida no estado inteiro, não deste município. "
+                  : null}
                 {eleitores !== null
                   ? "Os eleitores acima são a soma do eleitorado apto desses mesmos pares, como consta do cadastro do TSE."
                   : "O payload desta corrida não publica o eleitorado do município, então a segunda medida acima é o total de votos já apurados, não o total de eleitores."}

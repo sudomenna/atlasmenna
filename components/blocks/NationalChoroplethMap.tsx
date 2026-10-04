@@ -237,6 +237,12 @@ export interface NationalChoroplethMapProps {
    * "pres" é o comportamento que ele sempre teve.
    */
   cargo?: UfPickerCargo;
+  /**
+   * Turno da corrida (`EdgePayload.turno`) — 2026-10-04. Repassado ao balão e
+   * à gaveta só para os selos de base (`selosDaBase` desliga todo selo no 2º
+   * turno). Ausente ⇒ tratado como 1º turno, o default de `selosDaBase`.
+   */
+  turno?: number | null;
   className?: string;
 }
 
@@ -497,6 +503,7 @@ export function NationalChoroplethMap({
   height = 420,
   legendPlacement = "below",
   cargo = "pres",
+  turno,
   className,
 }: NationalChoroplethMapProps) {
   // RF-157 — a legenda de partido não é construída em fase pré. A decisão é
@@ -570,6 +577,7 @@ export function NationalChoroplethMap({
         bloqueiaBalaoNoToque={!temPonteiroFino}
         onSelectUf={setSelectedSigla}
         cargo={cargo}
+        turno={turno}
         framePaddingCeiling={chromeless ? MOBILE_FRAME_PADDING_CEILING : undefined}
       />
       {preEleicao ? (
@@ -618,6 +626,7 @@ export function NationalChoroplethMap({
         // `NationalMapBlock.tsx:179` (`useViewMode()`), a mesma assinatura viva
         // que já alimenta o coroplético: uma fonte, três superfícies.
         viewMode={viewMode}
+        turno={turno}
       />
     </div>
   );

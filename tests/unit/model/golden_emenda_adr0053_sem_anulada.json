@@ -2635,6 +2635,7 @@
       "por_uf": [
         {
           "sigla": "RJ",
+          "eleitos_definidos": [13, 22],
           "pct_apurado": 100.0,
           "lider": 13,
           "margem_atual": 15.976680000000002,
@@ -2693,6 +2694,7 @@
         },
         {
           "sigla": "SP",
+          "eleitos_definidos": [13, 22],
           "pct_apurado": 100.0,
           "lider": 13,
           "margem_atual": 15.976680000000002,

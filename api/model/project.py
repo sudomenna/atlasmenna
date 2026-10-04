@@ -100,6 +100,15 @@ from api.model.dado_ts import (
     relogio_do_dado,
     relogio_por_uf,
 )
+from api.model.definidos import (
+    CandidaturaContada,
+    Definicao,
+    Definidos,
+    LeituraAgregado,
+    campos_definidos,
+    definicao_senado,
+    definicao_vaga_unica,
+)
 from api.model.deputado import (
     ConferenciaTse,
     EntradaProporcional,
@@ -6450,6 +6459,123 @@ def build_uf_payloads(
     return out
 
 
+def ler_definicao_agregado(payload: Any, cargo: int) -> LeituraAgregado | None:
+    """Lê de UM EA20 agregado (`uf`/`br`) o que `api/model/definidos.py`
+    precisa: `md`, `tf`, `esae`, as candidaturas (id, votos, destino, `e`,
+    `st`) e `restantes = e.te − e.c − e.a`.
+
+    Os campos chegam crus até aqui: a ingestão grava o EA20 inteiro em
+    `snapshots.payload` (`lib/tse/ingest-handler.ts` → `insertSnapshot`), e o
+    `EA20Schema` é `passthrough` — `md`/`tf`/`esae` e `cand[].e`/`st` estão
+    declarados nele (`lib/tse/ea20-schema.ts`).
+
+    `restantes` sai do MESMO arquivo que os votos (`_extract_zone_participacao`,
+    o leitor de `e.te`/`e.c`/`e.a` que as contagens de RF-199 já usam): é a
+    garantia da regra do Senado que exige isso. Sem `e.te > 0` ⇒ `None`.
+
+    `None` quando o payload não é reconhecido. Candidatura sem número ou sem
+    `vap` legível fica fora — e, se faltar alguém, a regra do Senado pode
+    errar para MENOS (a 3ª colocada sumida vira 0 voto e infla a folga). Por
+    isso, qualquer candidatura ilegível derruba `restantes` para `None`: na
+    dúvida, nada é definido pela conta própria.
+    """
+    root = _payload_root(payload)
+    if root is None:
+        return None
+    candidaturas: list[CandidaturaContada] = []
+    ilegivel = False
+    vistos: set[int] = set()
+    for c in _iter_cands(payload, cargo=cargo):
+        try:
+            cod = int(c.get("n"))
+        except (TypeError, ValueError):
+            ilegivel = True
+            continue
+        votos = _parse_br_number(c.get("vap"))
+        if votos is None or votos < 0 or cod in vistos:
+            ilegivel = True
+            continue
+        vistos.add(cod)
+        item: CandidaturaContada = {"id": cod, "votos": int(round(votos))}
+        destino = destino_do_dvt(c.get("dvt"))
+        if destino is not None:
+            item["destino"] = destino
+        if c.get("e") is not None:
+            item["e"] = str(c.get("e"))
+        if c.get("st") is not None:
+            item["st"] = str(c.get("st"))
+        candidaturas.append(item)
+
+    restantes: int | None = None
+    bruto = _extract_zone_participacao(payload)
+    if bruto is not None and not ilegivel:
+        restantes = (
+            int(bruto["eleitores_aptos"])
+            - int(bruto["comparecimento"])
+            - int(bruto["abstencao"])
+        )
+
+    md_raw = root.get("md")
+    return LeituraAgregado(
+        md=str(md_raw).strip().lower() if md_raw is not None else None,
+        tf=str(root.get("tf") or "").strip().lower() == "s",
+        esae=str(root.get("esae") or "").strip().lower() == "s",
+        candidaturas=candidaturas,
+        restantes=restantes,
+    )
+
+
+def montar_definidos(
+    agregados: list[LatestSnapshot],
+    cargo: int,
+    turno: int,
+    vagas: int | None,
+) -> Definidos | None:
+    """`Definidos` do ciclo, a partir das linhas agregadas de `snapshots`.
+
+      - cargo 1: só a linha `br` (`_agregado_br`); sem ela ⇒ nada.
+      - cargo 3: cada linha `uf` (`_agregados_de_uf`), regra do `md`.
+      - cargo 5: cada linha `uf`, a conta própria de `definicao_senado`.
+
+    `None` para os demais cargos ou sem agregado nenhum.
+    """
+    cargo = int(cargo)
+    if cargo not in (1, 3, 5) or not agregados:
+        return None
+    if cargo == 1:
+        br = _agregado_br(agregados)
+        if br is None:
+            return None
+        leitura = ler_definicao_agregado(br[0]["payload"], cargo)
+        return Definidos(nacional=definicao_vaga_unica(leitura, turno=turno))
+    por_uf: dict[str, Definicao] = {}
+    for sigla, (snap, _bruto) in _agregados_de_uf(agregados).items():
+        leitura = ler_definicao_agregado(snap["payload"], cargo)
+        if cargo == 3:
+            definicao = definicao_vaga_unica(leitura, turno=turno)
+        else:
+            definicao = definicao_senado(leitura, vagas=int(vagas or 2))
+        if definicao.eleitos or definicao.segundo_turno:
+            por_uf[sigla] = definicao
+    return Definidos(por_uf=por_uf)
+
+
+def _montar_definidos_seguro(
+    agregados: list[LatestSnapshot],
+    cargo: int,
+    turno: int,
+    vagas: int | None,
+) -> Definidos | None:
+    """`montar_definidos` que NUNCA derruba a gravação do payload: uma exceção
+    aqui vira log `warn` e campos ausentes (o estado "não sabemos"), em vez de
+    levar junto o bloco `edge-write` inteiro do ciclo."""
+    try:
+        return montar_definidos(agregados, cargo, turno, vagas)
+    except Exception as exc:  # noqa: BLE001 — campo opcional, nunca bloqueia
+        _log("warn", "montar_definidos falhou; campos omitidos", error=str(exc), cargo=cargo)
+        return None
+
+
 #: Margem (pp, na base publicada) acima da qual a corrida é "chamada" —
 #: placeholder v1 do ADR-0017, o mesmo número de sempre.
 LIMIAR_CHAMADA_PP = 10.0
@@ -6519,8 +6645,17 @@ def build_edge_payload(
     votacao: dict[str, Any] | None = None,
     anulados: AnuladosNaDecisao | None = None,
     base_votaveis_by_uf: Mapping[str, int] | None = None,
+    definidos: Definidos | None = None,
 ) -> dict[str, Any]:
     """Monta o shape canônico `EdgePayload` (lib/edge-config/types.ts).
+
+    04/10/2026 (decisão do dono) acrescenta `definidos` (opcional, de
+    `montar_definidos`): cada `por_uf[]` dos cargos 1/3/5 ganha
+    `eleitos_definidos` (ids de `top_candidatos` matematicamente eleitos pela
+    contagem) e, só em Governador 1º turno, `segundo_turno_definido: true`.
+    Chaves AUSENTES quando nada está definido ou `definidos is None` — o payload
+    sai byte a byte igual ao de antes. `chamada` não muda. Regras em
+    `api/model/definidos.py`.
 
     ADR-0053 / RF-213 acrescenta `anulados`: em `por_uf[]`, `lider`, a margem
     (entre as duas primeiras que COMPETEM, em pp de `vvc`), `chamada`,
@@ -7375,6 +7510,14 @@ def build_edge_payload(
             )
             if total_disputa is not None:
                 linha_uf["votos_disputa_projetados"] = total_disputa
+        # 04/10 (decisão do dono) — `eleitos_definidos` / `segundo_turno_definido`:
+        # eleito pela CONTAGEM, não pela projeção (`api/model/definidos.py`).
+        # Chaves AUSENTES quando nada está definido — mesma regra de `outros`.
+        linha_uf.update(
+            campos_definidos(
+                cargo, turno, sigla, (t["id"] for t in top_candidatos), definidos
+            )
+        )
         por_uf.append(linha_uf)
 
     # S05/F4c (ADR-0014) — em 2T, métricas multi-candidato degeneram:
@@ -9219,6 +9362,12 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
                     uf: int(est["base_votaveis_projetada"])
                     for uf, est in cand_by_uf.items()
                 },
+                # 04/10 (decisão do dono) — eleito pela contagem, lido do
+                # agregado do TSE (`md`/`tf`/`cand.e`/`st`) ou, no Senado, da
+                # conta própria sobre `e.te − e.c − e.a`.
+                definidos=_montar_definidos_seguro(
+                    agregados, req.cargo, req.turno, vagas_do_cargo
+                ),
             )
             # S04/F2 — payloads UF ricos (candidatos com votos, municípios,
             # séries temporais). Envia junto do nacional; endpoint Node

@@ -33,6 +33,7 @@
  */
 
 import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
+import { ordensPorBase } from "@/lib/utils/rank-parcial";
 import { ocupantesDasVagas } from "@/lib/utils/vagas-eleitas";
 
 /** Qual gramática de selo a corrida usa. */
@@ -113,4 +114,81 @@ export function selosDaBase(
   }
   for (const c of disputam.slice(0, SELOS_MAX)) selos.set(c.id, TURNO_LABEL.segundo[base]);
   return selos;
+}
+
+/**
+ * Os selos das DUAS bases de uma corrida, a partir da lista crua.
+ *
+ * Ponto único de "que selo cada candidatura tem em cada base" — 2026-10-04
+ * (dono): a folha do município (`<MunicipioExplorer>`) passou a mostrar o
+ * status de cada candidato na corrida do ESTADO, e ele tem de ser EXATAMENTE
+ * o dos cartões do `<ResultPanel>` da mesma página. Os dois chamam esta
+ * função com a mesma lista (`payload.candidatos`) e as mesmas opções; a ordem
+ * de cada base sai de `ordensPorBase` (o mesmo ponto que o painel usa para a
+ * lista), e o texto de `selosDaBase`.
+ *
+ * Não recebe a lista já ordenada de propósito: quem chama não tem como errar
+ * a ordem da base, porque não é quem a escolhe.
+ */
+export function selosPorBase(
+  candidatos: readonly CandidatoSelo[],
+  opcoes: OpcoesSelo,
+): Record<BaseSelo, Map<number, string>> {
+  const ordens = ordensPorBase(candidatos);
+  return {
+    parcial: selosDaBase(ordens.parcial, "parcial", opcoes),
+    proj: selosDaBase(ordens.proj, "proj", opcoes),
+  };
+}
+
+/**
+ * 🔴 2026-10-04 (dono) — a regra de selo das superfícies do MAPA NACIONAL (o
+ * balão do desktop e a gaveta do celular), por cargo. É a MESMA gramática dos
+ * cartões da página de cada corrida: Governador por UF usa `"turno"`, Senador
+ * `"vaga"` e Presidente na UF `"nenhum"` (decisão de 27/09 — quem vai ao 2º
+ * turno é decidido pelo Brasil, não pelo estado; regra 5 acima).
+ */
+export function regraSeloNoMapaNacional(cargo: "pres" | "gov" | "sen"): RegraSelo {
+  if (cargo === "gov") return "turno";
+  if (cargo === "sen") return "vaga";
+  return "nenhum";
+}
+
+/** O mínimo de `EdgeUfRow.top_candidatos[]` que {@link selosDoTopUf} lê. */
+export interface TopUfSelo {
+  id: number;
+  /** Projeção (payload: `pct`). */
+  pct: number;
+  /** Parcial (payload: `pct_atual`); ausente ⇒ não finito, nunca 0. */
+  pct_atual?: number;
+  destino?: EdgeDestinoVoto;
+}
+
+/**
+ * {@link selosDaBase} sobre a lista de UMA UF do payload, já na ordem da base
+ * que a tela DE FATO usou (`ordenarTopCandidatosPorBase` → `ordenados`, com
+ * `base` derivada de `usouParcial` — nunca de `viewMode` cru). Só traduz os
+ * nomes de campo do payload (`pct` = projeção, `pct_atual` = parcial) para os
+ * de `CandidatoSelo`; a regra é a de cima, intacta.
+ *
+ * `pct_atual` ausente vira `NaN`, não `0`: a regra de maioria exige
+ * `Number.isFinite`, então ausência nunca vira "venceria no 1º turno" nem
+ * empurra ninguém para fora (e a base "parcial" só é usada quando TODO o
+ * corte tem `pct_atual` — ver `ordenarTopCandidatosPorBase`).
+ */
+export function selosDoTopUf(
+  ordenadaNaBase: readonly TopUfSelo[],
+  base: BaseSelo,
+  opcoes: OpcoesSelo,
+): Map<number, string> {
+  return selosDaBase(
+    ordenadaNaBase.map((c) => ({
+      id: c.id,
+      pct_atual: typeof c.pct_atual === "number" ? c.pct_atual : Number.NaN,
+      pct_projetado: c.pct,
+      ...(c.destino ? { destino: c.destino } : {}),
+    })),
+    base,
+    opcoes,
+  );
 }

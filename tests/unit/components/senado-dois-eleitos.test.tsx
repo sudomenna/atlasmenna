@@ -403,8 +403,18 @@ describe("C. balão do mapa nacional (desktop) — cargo='sen'", () => {
     return linhas;
   }
 
-  it("UF chamada: ✓ nos DOIS ocupantes da projeção, não no 3º (mata 'badge só no rank 1')", () => {
-    const l = balao(row(TOP_SEN), "proj");
+  // 🔴 2026-10-04 (dono) — o ✓ é SÓ de quem está MATEMATICAMENTE eleito
+  // (`eleitos_definidos`), não mais de `chamada` (leitura da projeção que pôs
+  // dois senadores "eleitos" em MT a 27% apurado).
+  it("🔴 UF chamada SEM eleitos_definidos (o caso MT 27%): nenhum ✓, mas as vagas seguem marcadas", () => {
+    const l = balao(row(TOP_SEN, { pct_apurado: 27 }), "proj");
+    expect([...l.values()].some((x) => x.check)).toBe(false);
+    expect(l.get("ANA LIMA")?.vaga).toBe("Vaga projetada");
+    expect(l.get("BRUNO REIS")?.vaga).toBe("Vaga projetada");
+  });
+
+  it("dois eleitos definidos: ✓ nos DOIS, não no 3º (mata 'badge só no rank 1')", () => {
+    const l = balao(row(TOP_SEN, { eleitos_definidos: [13, 22] }), "proj");
     expect(l.get("ANA LIMA")?.check).toBe(true);
     expect(l.get("BRUNO REIS")?.check).toBe(true);
     expect(l.get("CARLA MOTA")?.check).toBe(false);
@@ -420,8 +430,8 @@ describe("C. balão do mapa nacional (desktop) — cargo='sen'", () => {
     expect([...l.values()].some((x) => x.check)).toBe(false);
   });
 
-  it("Parcial: pílula 'Vaga na parcial' em CARLA e ANA; o ✓ segue quem o MODELO chamou", () => {
-    const l = balao(row(TOP_SEN), "parcial");
+  it("Parcial: pílula 'Vaga na parcial' em CARLA e ANA; o ✓ segue os ids eleitos, não a posição", () => {
+    const l = balao(row(TOP_SEN, { eleitos_definidos: [13, 22] }), "parcial");
     expect(l.get("CARLA MOTA")?.vaga).toBe("Vaga na parcial");
     expect(l.get("ANA LIMA")?.vaga).toBe("Vaga na parcial");
     expect(l.get("BRUNO REIS")?.vaga).toBeNull();
@@ -430,16 +440,20 @@ describe("C. balão do mapa nacional (desktop) — cargo='sen'", () => {
   });
 
   it("anulada não recebe ✓ nem vaga — BRUNO sobe (mata 'anulada contada')", () => {
-    const l = balao(row(TOP_SEN_ANULADA), "proj");
+    const l = balao(row(TOP_SEN_ANULADA, { eleitos_definidos: [13, 9, 22] }), "proj");
     expect(l.get("NINA ANULADA")).toEqual({ check: false, vaga: null });
     expect(l.get("ANA LIMA")).toEqual({ check: true, vaga: "Vaga projetada" });
     expect(l.get("BRUNO REIS")).toEqual({ check: true, vaga: "Vaga projetada" });
   });
 
-  it("Governador NÃO muda: ✓ só no líder, nenhuma pílula de vaga (mata 'governador ganha 2')", () => {
-    const l = balao(row(TOP_SEN), "proj", "gov");
+  it("Governador: ✓ só no eleito declarado, nenhuma pílula de VAGA — o selo é o de turno (2026-10-04)", () => {
+    const l = balao(row(TOP_SEN, { eleitos_definidos: [13] }), "proj", "gov");
     expect([...l.entries()].filter(([, x]) => x.check).map(([n]) => n)).toEqual(["ANA LIMA"]);
-    expect([...l.values()].some((x) => x.vaga != null)).toBe(false);
+    expect([...l.values()].some((x) => x.vaga?.startsWith("Vaga"))).toBe(false);
+    // ANA 45% na projeção: ninguém passa de 50 ⇒ os dois primeiros, "2º turno".
+    expect(l.get("ANA LIMA")?.vaga).toBe("2º turno · projeção");
+    expect(l.get("BRUNO REIS")?.vaga).toBe("2º turno · projeção");
+    expect(l.get("CARLA MOTA")?.vaga).toBeNull();
   });
 });
 
@@ -456,9 +470,9 @@ describe("D. /senador de ponta a ponta — o mesmo mapa, pelo wrapper", () => {
     );
   }
 
-  it("desktop (mouse): o balão marca as DUAS vagas", () => {
+  it("desktop (mouse): o balão marca os DOIS eleitos definidos", () => {
     temPonteiroFino = true;
-    const m = monta(mapa(row(TOP_SEN)));
+    const m = monta(mapa(row(TOP_SEN, { eleitos_definidos: [13, 22] })));
     passaOMouseEmSp();
     const l = linhasDoBalao(m.host);
     const comCheck = [...l.entries()].filter(([, x]) => x.check).map(([n]) => n);

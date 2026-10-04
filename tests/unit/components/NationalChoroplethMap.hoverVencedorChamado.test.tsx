@@ -24,6 +24,14 @@
  * uma candidatura não pode derivar da colocação (constituição § 2) — ver o topo
  * de `components/blocks/_candidateColor.ts`.
  *
+ * 🔴 2026-10-04 (dono, dia do 1º turno) — **a fonte mudou de `chamada` para
+ * `eleitos_definidos`.** `chamada` é leitura da PROJEÇÃO (margem projetada >
+ * 10 pp) e pôs dois senadores "eleitos" em MT a 27% apurado. Agora o fundo
+ * cheio + ✓ e o cabeçalho "Matematicamente eleito(s)" só aparecem para os ids
+ * que o produtor declarou matematicamente eleitos, e "Chamada" saiu do
+ * cabeçalho. Os casos de cor (partyChipInk, `outros`, federação) continuam,
+ * agora disparados por `eleitos_definidos`.
+ *
  * Harness idêntico a `NationalChoroplethMap.hoverIdentidadePorUf.test.tsx`.
  */
 
@@ -113,7 +121,11 @@ const CANDIDATOS_NACIONAIS: EdgeCandidate[] = [
   },
 ];
 
-function rowSp(chamada: boolean, partido: string | undefined): EdgeUfRow {
+function rowSp(
+  chamada: boolean,
+  partido: string | undefined,
+  extra: Partial<EdgeUfRow> = {},
+): EdgeUfRow {
   return {
     sigla: "SP",
     pct_apurado: 90,
@@ -130,10 +142,16 @@ function rowSp(chamada: boolean, partido: string | undefined): EdgeUfRow {
     ],
     vai_a_2t: null,
     bucket: chamada ? "chamada" : "indefinido",
+    ...extra,
   };
 }
 
-function montar(row: EdgeUfRow) {
+function montar(
+  row: EdgeUfRow,
+  viewMode: "proj" | "parcial" = "proj",
+  cargo: "pres" | "gov" | "sen" = "pres",
+  turno?: number,
+) {
   const host = document.createElement("div");
   document.body.appendChild(host);
   const root = createRoot(host);
@@ -144,7 +162,9 @@ function montar(row: EdgeUfRow) {
         candidatos={CANDIDATOS_NACIONAIS}
         rows={[row]}
         view="winner"
-        cargo="pres"
+        viewMode={viewMode}
+        cargo={cargo}
+        turno={turno}
       />,
     );
   });
@@ -173,64 +193,84 @@ afterEach(() => {
   document.body.innerHTML = "";
 });
 
-describe("hover do mapa nacional — fundo cheio + ✓ só quando EdgeUfRow.chamada === true", () => {
-  it("chamada: false — nenhum ✓, nenhum fundo de vencedor, mesmo com partido mapeado e líder à frente", () => {
+describe("hover do mapa nacional — fundo cheio + ✓ só para MATEMATICAMENTE eleito (eleitos_definidos)", () => {
+  it("chamada: false e sem eleitos_definidos — nenhum ✓, nenhum fundo, nenhum cabeçalho", () => {
     const { host, root } = montar(rowSp(false, "PT"));
     disparaHoverEmSp();
 
-    const card = host.querySelector('[data-testid="hover-card"]');
-    expect(card).not.toBeNull();
-    expect(card?.textContent).not.toContain("✓");
-    expect(card?.innerHTML).not.toContain("--party-pt-chip");
+    const c = card(host);
+    expect(c).not.toBeNull();
+    expect(c?.textContent).not.toContain("✓");
+    expect(c?.innerHTML).not.toContain("--party-pt-chip");
+    expect(c?.textContent).not.toContain("Matematicamente");
 
     act(() => root.unmount());
     host.remove();
   });
 
-  it("chamada: true + partido mapeado — ✓ aparece, e o fundo usa o par medido de contraste do partido (partyChipInk)", () => {
-    const { host, root } = montar(rowSp(true, "PT"));
+  it("🔴 o caso do dono (MT a 27%): chamada: true SEM eleitos_definidos — sem ✓, sem fundo, sem 'Chamada' [mutação: voltar a ler `chamada`]", () => {
+    const { host, root } = montar(rowSp(true, "PT", { pct_apurado: 27 }));
     disparaHoverEmSp();
 
-    const card = host.querySelector('[data-testid="hover-card"]');
-    expect(card?.textContent).toContain("✓");
-    expect(card?.innerHTML).toContain("--party-pt-chip");
-    expect(card?.innerHTML).toContain("--party-pt-ink");
+    const c = card(host);
+    expect(c?.textContent).not.toContain("✓");
+    expect(c?.innerHTML).not.toContain("--party-pt-chip");
+    expect(c?.textContent).not.toContain("Chamada");
+    expect(c?.textContent).not.toContain("Matematicamente");
 
     act(() => root.unmount());
     host.remove();
   });
 
-  it("chamada: true + partido NÃO mapeado — usa o par medido de `outros`, nunca o rank, e nunca some o ✓", () => {
+  it("eleitos_definidos [13] + partido mapeado — ✓, par medido do partido (partyChipInk) e cabeçalho 'Matematicamente eleito'", () => {
+    const { host, root } = montar(rowSp(true, "PT", { eleitos_definidos: [13] }));
+    disparaHoverEmSp();
+
+    const c = card(host);
+    expect(c?.textContent).toContain("✓");
+    expect(c?.innerHTML).toContain("--party-pt-chip");
+    expect(c?.innerHTML).toContain("--party-pt-ink");
+    expect(c?.textContent).toContain("Matematicamente eleito");
+    expect(c?.textContent).not.toContain("Matematicamente eleitos");
+    expect(c?.textContent).not.toContain("Chamada");
+
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("eleitos_definidos independe de `chamada` — chamada: false com eleito declarado mostra o ✓", () => {
+    const { host, root } = montar(rowSp(false, "PT", { eleitos_definidos: [13] }));
+    disparaHoverEmSp();
+
+    expect(card(host)?.textContent).toContain("✓");
+    expect(card(host)?.textContent).toContain("Matematicamente eleito");
+
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("eleitos_definidos + partido NÃO mapeado — usa o par medido de `outros`, nunca o rank, e nunca some o ✓", () => {
     // "ZZZ" não é sigla conhecida nem federação — `normalizePartySlug` cai no
     // fallback "outros". `undefined` não serviria aqui: `buildHoverRows` cairia
     // no FALLBACK de `candidatosById` (`tc.partido ?? cand?.partido`), que na
     // fixture nacional tem partido "PT" — testaria o caminho errado.
-    //
-    // 🔴 Mudou em 2026-09-20. Até então este ramo caía em
-    // `strongForRank(rank)` + `--text-inverse` — um par escolhido pela
-    // COLOCAÇÃO, e cujo contraste ninguém mediu para este caso. Agora é o par
-    // `--party-outros-chip` / `--party-outros-ink`, que o gerador mede como
-    // mede os outros 30. Ver o topo de `components/blocks/_candidateColor.ts`.
-    const { host, root } = montar(rowSp(true, "ZZZ"));
+    const { host, root } = montar(rowSp(true, "ZZZ", { eleitos_definidos: [13] }));
     disparaHoverEmSp();
 
-    const card = host.querySelector('[data-testid="hover-card"]');
-    expect(card?.textContent).toContain("✓");
-    expect(card?.innerHTML).toContain("--party-outros-chip");
-    expect(card?.innerHTML).toContain("--party-outros-ink");
-    expect(card?.innerHTML).not.toContain("--color-cand-");
+    const c = card(host);
+    expect(c?.textContent).toContain("✓");
+    expect(c?.innerHTML).toContain("--party-outros-chip");
+    expect(c?.innerHTML).toContain("--party-outros-ink");
+    expect(c?.innerHTML).not.toContain("--color-cand-");
 
     act(() => root.unmount());
     host.remove();
   });
 
-  it("chamada: true + FEDERAÇÃO — mesma cor em qualquer colocação do líder", () => {
-    // O caso que motivou a correção: "PSDB/CIDADANIA" não é partido único e
-    // não tem token próprio. Com o desvio de rank, o mesmo estado saía de uma
-    // cor no balão e de outra na lista ao lado — e trocava entre dois ciclos.
-    const primeiro = montar(rowSp(true, "PSDB/CIDADANIA"));
+  it("eleitos_definidos + FEDERAÇÃO — par de `outros`, nunca cor de colocação", () => {
+    const primeiro = montar(rowSp(true, "PSDB/CIDADANIA", { eleitos_definidos: [13] }));
     disparaHoverEmSp();
-    const html = primeiro.host.querySelector('[data-testid="hover-card"]')?.innerHTML ?? "";
+    const html = card(primeiro.host)?.innerHTML ?? "";
 
     expect(html).toContain("--party-outros-chip");
     expect(html).not.toContain("--color-cand-");
@@ -239,15 +279,158 @@ describe("hover do mapa nacional — fundo cheio + ✓ só quando EdgeUfRow.cham
     primeiro.host.remove();
   });
 
-  it("chamada: true — o ✓ aparece EXATAMENTE uma vez (só a linha 0, líder — 2º e 3º não são 'vencedores')", () => {
-    const { host, root } = montar(rowSp(true, "PT"));
+  it("eleitos_definidos [13] — o ✓ aparece EXATAMENTE uma vez", () => {
+    const { host, root } = montar(rowSp(true, "PT", { eleitos_definidos: [13] }));
     disparaHoverEmSp();
 
-    const card = host.querySelector('[data-testid="hover-card"]');
-    const checks = (card?.textContent?.match(/✓/g) ?? []).length;
+    const checks = (card(host)?.textContent?.match(/✓/g) ?? []).length;
     expect(checks).toBe(1);
 
     act(() => root.unmount());
     host.remove();
   });
+
+  it("dois ids — dois ✓ e cabeçalho no plural 'Matematicamente eleitos'", () => {
+    const { host, root } = montar(rowSp(true, "PT", { eleitos_definidos: [13, 22] }));
+    disparaHoverEmSp();
+
+    const c = card(host);
+    expect((c?.textContent?.match(/✓/g) ?? []).length).toBe(2);
+    expect(c?.textContent).toContain("Matematicamente eleitos");
+    expect(c?.innerHTML).toContain("--party-pl-chip");
+
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("id que não está nas linhas é ignorado — nenhum ✓ e nenhum cabeçalho", () => {
+    const { host, root } = montar(rowSp(true, "PT", { eleitos_definidos: [999] }));
+    disparaHoverEmSp();
+
+    const c = card(host);
+    expect(c?.textContent).not.toContain("✓");
+    expect(c?.textContent).not.toContain("Matematicamente");
+
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("Parcial com ordem diferente — o ✓ segue o id (JOÃO, 2º na projeção e 1º na parcial), não a posição", () => {
+    // Na parcial JOÃO (22) passa à frente; o eleito declarado é FERNANDA (13).
+    const row = rowSp(true, "PT", { eleitos_definidos: [13] });
+    row.top_candidatos = [
+      {
+        id: 13,
+        pct: 55,
+        nome: "FERNANDA DA SILVA",
+        partido: "PT",
+        votos_atuais: 400,
+        pct_atual: 35,
+      },
+      { id: 22, pct: 30, nome: "JOÃO DE SOUZA", partido: "PL", votos_atuais: 600, pct_atual: 50 },
+      { id: 33, pct: 15, nome: "MARIA LIMA", partido: "PSOL", votos_atuais: 200, pct_atual: 15 },
+    ];
+    const { host, root } = montar(row, "parcial");
+    disparaHoverEmSp();
+
+    const c = card(host);
+    const texto = c?.textContent ?? "";
+    // A lista está em ordem de parcial: JOÃO antes de FERNANDA.
+    expect(texto.indexOf("JOÃO")).toBeLessThan(texto.indexOf("FERNANDA"));
+    // O ✓ está imediatamente antes de FERNANDA, e o fundo é o do PT, não o do PL.
+    expect(texto).toMatch(/✓\s*FERNANDA/);
+    expect(c?.innerHTML).toContain("--party-pt-chip");
+    expect(c?.innerHTML).not.toContain("--party-pl-chip");
+
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("segundo_turno_definido — cabeçalho '2º turno definido' e NENHUM fundo/✓", () => {
+    const { host, root } = montar(rowSp(true, "PT", { segundo_turno_definido: true }));
+    disparaHoverEmSp();
+
+    const c = card(host);
+    expect(c?.textContent).toContain("2º turno definido");
+    expect(c?.textContent).not.toContain("✓");
+    expect(c?.innerHTML).not.toContain("-chip)");
+
+    act(() => root.unmount());
+    host.remove();
+  });
 });
+
+// 2026-10-04 (dono) — o balão traz o selo de BASE dos cartões das páginas
+// (`selosDaBase`), na ordem que a lista de fato usou. Independe do ✓.
+describe("hover do mapa nacional — selo de base por cargo (selosDaBase)", () => {
+  function selos(host: HTMLElement): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const cel of host.querySelectorAll("[data-testid='hover-card'] span.flex.min-w-0")) {
+      const nome = cel.querySelector("span.overflow-hidden")?.textContent ?? "";
+      const selo = cel.querySelector("[data-testid='hover-card-vaga']")?.textContent;
+      if (nome && selo) out[nome] = selo;
+    }
+    return out;
+  }
+
+  it("Governador em Projeção: FERNANDA 55% ⇒ só ela, 'Vence no 1º turno · projeção'", () => {
+    const { host, root } = montar(rowSp(true, "PT"), "proj", "gov");
+    disparaHoverEmSp();
+    expect(selos(host)).toEqual({ "FERNANDA DA SILVA": "Vence no 1º turno · projeção" });
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("Governador em Parcial com outra ordem: JOÃO 50% (não > 50) ⇒ JOÃO e FERNANDA, '2º turno · na parcial'", () => {
+    const row = rowSp(true, "PT");
+    row.top_candidatos = [
+      {
+        id: 13,
+        pct: 55,
+        nome: "FERNANDA DA SILVA",
+        partido: "PT",
+        votos_atuais: 400,
+        pct_atual: 35,
+      },
+      { id: 22, pct: 30, nome: "JOÃO DE SOUZA", partido: "PL", votos_atuais: 600, pct_atual: 50 },
+      { id: 33, pct: 15, nome: "MARIA LIMA", partido: "PSOL", votos_atuais: 200, pct_atual: 15 },
+    ];
+    const { host, root } = montar(row, "parcial", "gov");
+    disparaHoverEmSp();
+    expect(selos(host)).toEqual({
+      "JOÃO DE SOUZA": "2º turno · na parcial",
+      "FERNANDA DA SILVA": "2º turno · na parcial",
+    });
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("Governador: o eleito definido mantém o selo junto do ✓", () => {
+    const { host, root } = montar(rowSp(true, "PT", { eleitos_definidos: [13] }), "proj", "gov");
+    disparaHoverEmSp();
+    expect(selos(host)).toEqual({ "FERNANDA DA SILVA": "Vence no 1º turno · projeção" });
+    expect(card(host)?.textContent).toContain("✓");
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("Governador no 2º turno ⇒ nenhum selo", () => {
+    const { host, root } = montar(rowSp(true, "PT"), "proj", "gov", 2);
+    disparaHoverEmSp();
+    expect(selos(host)).toEqual({});
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("Presidente na UF ⇒ nenhum selo (decisão de 27/09)", () => {
+    const { host, root } = montar(rowSp(true, "PT"), "proj", "pres");
+    disparaHoverEmSp();
+    expect(selos(host)).toEqual({});
+    act(() => root.unmount());
+    host.remove();
+  });
+});
+
+function card(host: HTMLElement) {
+  return host.querySelector('[data-testid="hover-card"]');
+}

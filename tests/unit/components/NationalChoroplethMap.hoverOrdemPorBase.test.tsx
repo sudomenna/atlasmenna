@@ -229,8 +229,13 @@ describe("balão do mapa nacional — ordem das linhas segue o seletor Parcial/P
     host.remove();
   });
 
-  it('o ✓ de "chamada" segue a IDENTIDADE do líder projetado (ALFA), não a posição 0 — mesmo depois de reordenar por Parcial', () => {
-    const { host, root } = montar(rowSp(topCandidatosCompleto()), "parcial");
+  // 🔴 2026-10-04 — o ✓ passou a vir de `eleitos_definidos` (matematicamente
+  // eleito), não de `chamada`; a garantia de identidade é a mesma.
+  it("o ✓ do eleito definido segue a IDENTIDADE (ALFA), não a posição 0 — mesmo depois de reordenar por Parcial", () => {
+    const { host, root } = montar(
+      { ...rowSp(topCandidatosCompleto()), eleitos_definidos: [1] },
+      "parcial",
+    );
     disparaHoverEmSp();
     const card = host.querySelector('[data-testid="hover-card"]');
     const texto = card?.textContent ?? "";

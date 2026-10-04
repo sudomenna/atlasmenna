@@ -223,6 +223,7 @@ import type { CSSProperties } from "react";
 import { DestinoEtiqueta } from "@/components/atoms/data/DestinoEtiqueta";
 import { Figure } from "@/components/atoms/data/Figure";
 import { Sheet } from "@/components/atoms/overlays/Sheet";
+import { SeloPilula } from "@/components/atoms/tables/CandidateResultRow";
 import { candidateMarkerColor } from "@/components/blocks/_candidateColor";
 import { VagaBadge } from "@/components/blocks/ResultPanel";
 import {
@@ -241,11 +242,13 @@ import {
   notaAnuladas,
   votosDaAnulada,
 } from "@/lib/utils/destino-voto";
+import { definicaoDaUf } from "@/lib/utils/eleitos-definidos";
 import { formatPercent, formatPp } from "@/lib/utils/format";
 import { liderIdPorBase, ordenarTopCandidatosPorBase } from "@/lib/utils/lider-por-base";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
+import { partyChipInk } from "@/lib/utils/party-color";
+import { regraSeloNoMapaNacional, selosDoTopUf } from "@/lib/utils/selo-resultado";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
-import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
 
 /** Mesma tabela de `GovernorCard.tsx` — sem módulo compartilhado em `lib/utils/**`
  * pra este propósito, então repetida aqui (padrão já existente no repo). */
@@ -311,6 +314,12 @@ export interface StateResultSheetProps {
    * byte o comportamento anterior a esta data.
    */
   viewMode?: ViewMode;
+  /**
+   * Turno da corrida (`EdgePayload.turno`) — 2026-10-04. Só decide os selos de
+   * base (`selosDaBase` desliga todo selo no 2º turno). Ausente ⇒ 1º turno, o
+   * default de `selosDaBase`.
+   */
+  turno?: number | null;
 }
 
 /**
@@ -434,6 +443,7 @@ export function StateResultSheet({
   side = false,
   cargo,
   viewMode = "proj",
+  turno,
 }: StateResultSheetProps) {
   const candidatosById = new Map(candidatos.map((c) => [c.id, c]));
   const nomeUf = row ? (UF_NAMES[row.sigla] ?? row.sigla) : "Estado";
@@ -472,16 +482,24 @@ export function StateResultSheet({
   // um literal "2" solto aqui.
   const multiVaga = cargo === "sen";
   const vagas = multiVaga ? vagasPorCargo(cargo) : 1;
-  // 2026-09-29 — quem ocupa as vagas NA BASE DA LISTA, pelo ponto único
-  // (`lib/utils/vagas-eleitas.ts`): os `vagas` primeiros que disputam de
-  // `topPorBase`. É o mesmo conjunto que a página da UF (`<ResultPanel>`), o
-  // balão do mapa no desktop e os cartões de `/senador` marcam.
-  const ocupantes = multiVaga ? idsDasVagas(topPorBase, vagas) : new Set<number>();
   // O rótulo do marcador segue a base que a lista DE FATO usou (`usouParcial`,
   // não `viewMode`): "Vaga projetada" sobre uma lista ordenada pelo apurado
   // diria que o modelo projeta o que quem diz é o boletim. Até esta data a
   // folha chamava `<VagaBadge />` sem base — "Vaga projetada" nas duas.
   const baseDoMarcador = usouParcial ? "parcial" : "proj";
+  // 2026-09-29 / 2026-10-04 — o selo de BASE de cada linha, pelo ponto único
+  // dos cartões das páginas (`selosDaBase`, via `selosDoTopUf`): Senador ⇒ os
+  // ocupantes das vagas NA BASE DA LISTA (`ocupantesDasVagas`, o mesmo
+  // conjunto do `<ResultPanel>`, do balão e dos cartões de `/senador`);
+  // Governador ⇒ "2º turno · …"/"Vence(ria) no 1º turno · …"; Presidente na
+  // UF ⇒ nenhum (decisão de 27/09); 2º turno ⇒ nenhum.
+  const selos = row
+    ? selosDoTopUf(topPorBase, baseDoMarcador, {
+        regra: regraSeloNoMapaNacional(cargo),
+        turno,
+        vagas,
+      })
+    : new Map<number, string>();
   // 🔴 Identidade do líder — mesma regra de `resolveIdentidade` (RF-144/145):
   // a linha da própria UF (`top_candidatos`) primeiro, `candidatosById`
   // (nacional) só como fallback. `row.lider` é só o ID; o TOP_CANDIDATOS que
@@ -503,6 +521,14 @@ export function StateResultSheet({
   const liderTop = liderId != null ? topPorBase.find((tc) => tc.id === liderId) : undefined;
   const liderCand = liderId != null ? candidatosById.get(liderId) : undefined;
   const liderIdentidade = resolveIdentidade(liderTop, liderCand);
+  // 🔴 2026-10-04 (dono, dia do 1º turno) — a MESMA marca de vencedor do
+  // balão do desktop (fundo cheio + ✓), e só para quem o produtor declarou
+  // MATEMATICAMENTE eleito (`row.eleitos_definidos`). Ponto único:
+  // `definicaoDaUf` (`lib/utils/eleitos-definidos.ts`) — decide quem é marcado
+  // (por `id`, igual nas duas bases do seletor) e o texto de status
+  // ("Matematicamente eleito(s)" / "2º turno definido"). Nada aqui lê
+  // `chamada`, margem ou posição: projeção não elege ninguém (constituição § 1).
+  const definicao = row ? definicaoDaUf(row) : undefined;
 
   return (
     <Sheet
@@ -514,6 +540,23 @@ export function StateResultSheet({
     >
       {row ? (
         <>
+          {/* 2026-10-04 — status da definição, no topo e visível: o mesmo texto
+              do cabeçalho do balão do desktop. Só existe quando o produtor
+              emitiu o campo; sem ele, nada (nunca "Chamada"). */}
+          {definicao?.rotulo ? (
+            <p
+              data-testid="state-sheet-status"
+              style={{
+                margin: "0 0 var(--space-3)",
+                font: "var(--type-kicker)",
+                letterSpacing: "var(--tracking-caps)",
+                textTransform: "uppercase",
+                color: "var(--text-secondary)",
+              }}
+            >
+              {definicao.rotulo}
+            </p>
+          ) : null}
           {/* RF-106 — "2 vagas por estado" precisa estar em TODA tela de
               Senador, sem exceção de fase (spec 016:149-152). A ficha cobre o
               resto da página quando aberta (mobile: bottom sheet; desktop:
@@ -674,7 +717,12 @@ export function StateResultSheet({
               // (`ordenarTopCandidatosPorBase`) e nunca ocupa vaga nem
               // recebe colocação.
               const disputa = compete(tc);
-              const ocupaVaga = ocupantes.has(tc.id);
+              const selo = selos.get(tc.id);
+              // 2026-10-04 — matematicamente eleito (ver `definicao` acima).
+              // O par (fundo, tinta) é o do balão: `partyChipInk`, contraste
+              // medido ≥4,5:1 em todo partido e no par de `outros`.
+              const eleito = definicao?.eleitos.has(tc.id) === true;
+              const parEleito = eleito ? partyChipInk(identidade.partido) : undefined;
               return (
                 <li
                   key={tc.id}
@@ -683,9 +731,15 @@ export function StateResultSheet({
                     borderBottom: "1px solid var(--border-hairline)",
                   }}
                 >
-                  {ocupaVaga ? (
+                  {selo != null ? (
                     <div style={{ marginBottom: "var(--space-1)" }}>
-                      <VagaBadge base={baseDoMarcador} />
+                      {multiVaga ? (
+                        // Mesmo texto (`VAGA_LABEL[base]`) e mesmo `data-testid`
+                        // de sempre — o `<VagaBadge>` dos cartões.
+                        <VagaBadge base={baseDoMarcador} />
+                      ) : (
+                        <SeloPilula testId="state-sheet-selo" texto={selo} />
+                      )}
                     </div>
                   ) : null}
                   {/* 🔴 A identidade ocupa a LINHA INTEIRA, e os números vêm
@@ -702,8 +756,25 @@ export function StateResultSheet({
                       qualquer economia de altura compra. */}
                   <div
                     data-testid="state-sheet-cand-identidade"
+                    data-eleito={eleito ? "true" : undefined}
                     className="flex min-w-0 items-center"
-                    style={{ gap: "var(--space-2)" }}
+                    style={{
+                      gap: "var(--space-2)",
+                      // A faixa do eleito, como a do balão: fundo do partido e
+                      // tinta legível sobre ele. Sangra `--space-2` para os
+                      // lados (margem negativa + padding iguais) para que o
+                      // texto continue alinhado com as linhas sem faixa.
+                      ...(parEleito
+                        ? {
+                            background: parEleito.background,
+                            color: parEleito.ink,
+                            fontWeight: 600,
+                            paddingBlock: "var(--space-1)",
+                            paddingInline: "var(--space-2)",
+                            marginInline: "calc(-1 * var(--space-2))",
+                          }
+                        : {}),
+                    }}
                   >
                     {/* 🔴 A cor sai da SIGLA e só dela. `index` está bem
                         aqui ao lado e é a tentação: usá-lo para pintar
@@ -711,18 +782,33 @@ export function StateResultSheet({
                         2026-09-20 fechou — e devolveria já na forma pior,
                         porque desde `290b8de` a posição depende da base que
                         o leitor escolhe no botão Parcial/Projeção. */}
+                    {eleito ? (
+                      // ✓ no lugar do ponto, como no balão: a identidade
+                      // partidária já está no FUNDO da faixa.
+                      <span
+                        aria-hidden="true"
+                        data-testid="state-sheet-cand-check"
+                        className="flex-none"
+                      >
+                        ✓
+                      </span>
+                    ) : (
+                      <span
+                        aria-hidden="true"
+                        data-testid="state-sheet-cand-dot"
+                        style={{
+                          width: 8,
+                          height: 8,
+                          flex: "none",
+                          borderRadius: "var(--radius-xs)",
+                          background: candidateMarkerColor(identidade.partido),
+                        }}
+                      />
+                    )}
                     <span
                       aria-hidden="true"
-                      data-testid="state-sheet-cand-dot"
-                      style={{
-                        width: 8,
-                        height: 8,
-                        flex: "none",
-                        borderRadius: "var(--radius-xs)",
-                        background: candidateMarkerColor(identidade.partido),
-                      }}
-                    />
-                    <span aria-hidden="true" style={{ color: "var(--text-muted)" }}>
+                      style={{ color: eleito ? undefined : "var(--text-muted)" }}
+                    >
                       {disputa ? `${index + 1}.` : "—"}
                     </span>
                     {/* 🔴 Sem `truncate`: o nome QUEBRA em vez de cortar.
@@ -743,6 +829,7 @@ export function StateResultSheet({
                       }}
                     >
                       {nome}
+                      {eleito ? <span className="sr-only">, matematicamente eleito</span> : null}
                     </span>
                     <DestinoEtiqueta destino={tc.destino} />
                     {partido ? (
@@ -752,7 +839,9 @@ export function StateResultSheet({
                           font: "var(--type-kicker)",
                           letterSpacing: "var(--tracking-caps)",
                           textTransform: "uppercase",
-                          color: "var(--text-secondary)",
+                          // Sobre a faixa do eleito, a tinta da faixa (o
+                          // secundário não tem contraste medido sobre o chip).
+                          color: eleito ? undefined : "var(--text-secondary)",
                         }}
                       >
                         {/* Desenhado ⇒ abreviado (2026-09-19). */}

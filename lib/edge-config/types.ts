@@ -787,6 +787,40 @@ export interface EdgeUfRow {
    */
   chamada: boolean;
   /**
+   * 🔴 2026-10-04 (dono, dia do 1º turno) — ids de `top_candidatos[].id`
+   * **MATEMATICAMENTE eleitos** nesta UF. É a ÚNICA fonte do tratamento de
+   * vencedor (fundo cheio + ✓ + "Matematicamente eleito(s)") no balão do mapa
+   * nacional e na gaveta do celular — e vale IGUAL nas duas bases do seletor
+   * Parcial/Projeção, porque não é leitura de base nenhuma: é fato da apuração.
+   *
+   * Até esta data o balão pintava o vencedor por {@link EdgeUfRow.chamada},
+   * que é leitura da PROJEÇÃO (margem projetada > 10 pp) — e com isso Mato
+   * Grosso a 27% apurado mostrava dois senadores "eleitos" (constituição § 1).
+   * `chamada` continua no contrato para as outras telas; o vencedor sai daqui.
+   *
+   * Como o produtor (`api/model/`) decide, por cargo:
+   * - **Governador**: aviso oficial do TSE na UF (`md='e'`).
+   * - **Presidente**: só quando o Brasil inteiro está definido (`md='e'` no
+   *   arquivo nacional); aí o eleito vem em TODA UF onde está no top.
+   * - **Senador**: conta própria conservadora — a vantagem sobre o 3º maior
+   *   supera os eleitores que ainda podem votar; após a totalização final, a
+   *   marca de eleito do TSE.
+   *
+   * **Ausente ⇒ ninguém eleito** (nunca "não sabemos quem" com fallback em
+   * `chamada`). Consumidor: leia por `lib/utils/eleitos-definidos.ts`
+   * (`definicaoDaUf`), que ignora id fora das linhas, anulada, e não infere
+   * nada da posição.
+   */
+  eleitos_definidos?: number[];
+  /**
+   * 🔴 2026-10-04 — **só Governador**: o TSE (`md='s'`) já definiu que a UF
+   * vai ao 2º turno. Vira o cabeçalho "2º turno definido" no balão e na
+   * gaveta, SEM fundo em ninguém (ir ao 2º turno não é eleger). Ausente ⇒
+   * nada. Se vier junto com {@link EdgeUfRow.eleitos_definidos} não vazio, o
+   * eleito prevalece (`definicaoDaUf`).
+   */
+  segundo_turno_definido?: true;
+  /**
    * Swing em pp vs. 2022 (positivo = em favor do líder).
    *
    * S07/Fase 2 — o tipo passa a aceitar `null`: com a projeção extrapolada
