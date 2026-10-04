@@ -151,3 +151,38 @@ describe("proxy — portão de segredo antes do BotID", () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe("proxy — leitura pública do mapa liberada do BotID (04/10/2026)", () => {
+  function get(path: string): NextRequest {
+    return new NextRequest(`https://exemplo.test${path}`, { method: "GET" });
+  }
+
+  it.each([
+    "/api/projection",
+    "/api/projection?cargo=gov",
+    "/api/projection?uf=SP&cargo=sen",
+    "/api/projection/municipios?uf=SP&cargo=pres",
+  ])("GET %s passa mesmo com veredito de bot, sem consultar o BotID", async (path) => {
+    const res = await proxy(get(path));
+    expect(checkBotId).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+  });
+
+  it("POST em /api/projection continua no BotID", async () => {
+    const res = await proxy(req("/api/projection"));
+    expect(checkBotId).toHaveBeenCalledOnce();
+    expect(res.status).toBe(403);
+  });
+
+  it("GET em rota que só COMEÇA igual não é liberado", async () => {
+    const res = await proxy(get("/api/projectionx"));
+    expect(checkBotId).toHaveBeenCalledOnce();
+    expect(res.status).toBe(403);
+  });
+
+  it("GET em rota de máquina sem segredo continua no BotID", async () => {
+    const res = await proxy(get("/api/ingest/presidente"));
+    expect(checkBotId).toHaveBeenCalledOnce();
+    expect(res.status).toBe(403);
+  });
+});

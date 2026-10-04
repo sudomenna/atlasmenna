@@ -63,6 +63,23 @@ function ehRotaDeMaquina(caminho: string): boolean {
   return ROTAS_DE_MAQUINA.some((p) => caminho === p || caminho.startsWith(`${p}/`));
 }
 
+/**
+ * 🔴 04/10/2026, dia do 1º turno — rotas PÚBLICAS de leitura, liberadas do
+ * BotID no GET/HEAD. O site nunca ligou o script de cliente do BotID
+ * (`initBotId`), então TODO navegador era classificado como bot: o mapa da
+ * moldura (`PersistentMapFrame`, que busca `/api/projection*` no cliente) ficava
+ * no esqueleto cinza para todo leitor — o log da Vercel registrava "Possible
+ * misconfiguration of Vercel BotId" a cada pedido. O que essas rotas servem é o
+ * mesmo dado público que as páginas já mostram, com cache de CDN
+ * (`s-maxage=30`); o BotID segue valendo para qualquer outro método e rota.
+ */
+const ROTAS_PUBLICAS_DE_LEITURA = ["/api/projection"];
+
+function ehLeituraPublica(req: NextRequest, caminho: string): boolean {
+  if (req.method !== "GET" && req.method !== "HEAD") return false;
+  return ROTAS_PUBLICAS_DE_LEITURA.some((p) => caminho === p || caminho.startsWith(`${p}/`));
+}
+
 export async function proxy(req: NextRequest) {
   // Portão de autenticação ANTES do BotID: um segredo válido É a autorização.
   // O BotID existe para proteger endpoint público sem autenticação (RNF-018);
@@ -79,6 +96,8 @@ export async function proxy(req: NextRequest) {
       return NextResponse.next();
     }
   }
+
+  if (ehLeituraPublica(req, caminho)) return NextResponse.next();
 
   const verdict = await checkBotId();
   if (verdict.isBot && !verdict.isVerifiedBot) {
