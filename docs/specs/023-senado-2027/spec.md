@@ -111,6 +111,8 @@ em disputa", um hemiciclo de exatamente 81 cadeiras em 5 arcos, ordenado por par
 cadeiras desc → sigla asc, a mesma regra de `ordenarBancada`), em que cada cadeira tem um de quatro
 estados:
 
+> **Emenda 2026-10-04 (decisão do dono):** "As 54 vagas em disputa" desceu para o fim da capa, antes da metodologia (como "Quem fica com as cadeiras" em `/deputado-federal`); o hemiciclo das 81 fica no alto, antes de "Estado a estado". Onde este RF diz "logo depois do bloco 'As 54 vagas'", leia-se "antes de 'Estado a estado'". Teste: `tests/unit/pages/senador.test.tsx`, "ordem de 04/10".
+
 | estado | origem | aparência |
 |---|---|---|
 | `continua_2031` | um dos 27 mandatos da foto | cheia, na cor do partido |

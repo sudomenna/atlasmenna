@@ -396,6 +396,179 @@ export default async function SenadoPage() {
           sobre 27 eleições estaduais. Os dois painéis vivem em
           `/uf/[sigla]/senador`, com o dado DA UF. */}
 
+      {/* Spec 023 (RF-215..RF-218, ADR-0061 item 3) — o Senado de 2027: as 54
+          em disputa somadas aos 27 mandatos até 2031. Some sozinho se a conta
+          não fechar com `composicao_vagas` (RF-217). */}
+      <SenadoHemicicloPanel payload={payloadDosPaineis2027} mandato={MANDATO_2031} />
+
+      {/* Spec 025 (RF-242/243/249) — V1 (Senado de 2027 por bloco), V2
+          (impeachment de ministros do STF) e V4 (renovação). Cada uma só
+          aparece com a chave ligada, o critério publicado e o portão de
+          cobertura aberto; fechada, não desenha nada. */}
+      <SenadoDe2027Panel
+        payload={payloadDosPaineis2027}
+        mandato={MANDATO_2031}
+        etiquetas={etiquetas}
+      />
+      <RenovacaoPanel
+        payload={payloadDosPaineis2027}
+        mandato2027={MANDATO_2027}
+        etiquetas={etiquetas}
+      />
+
+      {/* Seção 3 — as corridas, estado a estado. A margem de cada linha é a
+          da 2ª vaga (RF-104): `top_candidatos[1].pct − top_candidatos[2].pct`.
+          É lista, não mapa: este cargo não tem dado municipal (ADR-0026). */}
+      {/* Constituição § 1 — o consolidado regional (ADR-0057) é número do
+          modelo: o kicker diz "não oficial" fora da fase pré (RF-161). O
+          `titleId` fica: é o alvo do `aria-describedby` do mapa do Senado. */}
+      <Panel
+        kicker={pre ? "Corridas estaduais" : "Corridas estaduais · não oficial"}
+        title="Estado a estado"
+        titleId="corridas-heading"
+      >
+        {/* 🔴 RF-162 — em fase pré esta lista é 27 links e nenhum nome. Cada
+            linha de hoje imprime os dois primeiros colocados de um estado e a
+            margem para a 2ª vaga: nome de candidato e medição, os dois. E os
+            nomes viriam de `top_candidatos`, que num payload semeado com
+            `por_uf: []` nem existe. A asserção do teste é NEGATIVA — nenhum
+            nome de candidatura no documento —, porque a positiva passaria com
+            uma grade de rostos logo abaixo. */}
+        {pre ? (
+          <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
+            <p
+              className="max-w-prose"
+              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+            >
+              São 27 disputas independentes, com candidaturas próprias em cada estado. Abra um
+              estado para ver quem concorre lá.
+            </p>
+            <UfLinksGrid cargo={CARGO_SENADOR} />
+          </div>
+        ) : payload.por_uf.length > 0 ? (
+          <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
+            {/* 🔴 2026-10-04 (dono, auditoria P1) — o "● ELEITO" de 29/09 nos
+                dois ocupantes de vaga projetados virou "Vaga projetada"; o selo
+                verde "Matematicamente eleito" só sai de `eleitos_definidos`
+                (`<GovernorCard>`). A frase abaixo acompanha. Era: "● ELEITO"
+                nos DOIS ocupantes de vaga (spec 016, emenda do RF-105).
+
+                🔴 2026-09-27 (decisão do dono) — o MESMO cartão de
+                `/governador` (`<GovernorCard cargo="sen">`): as quatro
+                primeiras posições e "Outros", sempre em % dos votos válidos do
+                estado (`top_candidatos[].pct` + `outros.pct` fecham 100 por
+                UF). Substitui a linha "ocupantes · Fora das vagas · margem p/
+                2ª vaga" de 19/09. A margem da 2ª vaga continua na tela do
+                estado (`/uf/[sigla]/senador`, RF-104). Cada cartão segue sendo
+                o link para essa tela, e a lista continua o alvo do
+                `aria-describedby` do mapa nacional (`corridas-heading`). */}
+            {/* 04/10/2026 (dono) — o texto acompanha a base dos cartões. Um
+                `<p>` não tem classe de `display`, então pode levar o
+                `data-view-only` direto. */}
+            <p
+              className="max-w-prose"
+              data-view-only="proj"
+              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+            >
+              Os quatro mais votados de cada estado e a soma dos demais, em percentual dos votos
+              válidos. São duas vagas por estado: pela projeção, ficam com elas as duas primeiras
+              posições, que levam o selo "vaga projetada" — não é o resultado oficial. O selo
+              "matematicamente eleito" só aparece quando a contagem já garante a vaga.
+            </p>
+            <p
+              className="max-w-prose"
+              data-view-only="parcial"
+              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+            >
+              Os quatro mais votados até agora em cada estado e a soma dos demais, em percentual dos
+              votos já apurados. Se a apuração parasse agora, as duas vagas ficariam com os que
+              levam o selo "vaga na parcial" — não é resultado nem projeção.
+            </p>
+            {/* Spec 025 (RF-247) — filtro por etiqueta: esconde corridas, nunca reordena. */}
+            {capa.filtro.length > 0 ? (
+              <EtiquetaFiltro grupos={capa.filtro} esconderRegiaoVazia />
+            ) : null}
+            {/* 🔴 ADR-0057 (2026-09-28, decisão do dono) — agrupado por
+                REGIÃO, com o consolidado por partido no topo de cada uma, em
+                "% dos votos" (cada eleitor vota duas vezes). A lista externa
+                mantém o rótulo de sempre e passa a ser a lista das cinco
+                regiões; cada região traz a própria lista de estados, e cada
+                cartão continua sendo o link para `/uf/[sigla]/senador`. */}
+            <ul
+              aria-label="Corridas estaduais de senador"
+              className="grid grid-cols-1 gap-3"
+              style={{ listStyle: "none", margin: 0, padding: 0 }}
+            >
+              {agruparPorRegiao(payload.por_uf).map((grupo) =>
+                grupo.rows.length > 0 ? (
+                  <li key={grupo.regiao.id}>
+                    <RegiaoConsolidada
+                      regiao={grupo.regiao}
+                      ufs={grupo.rows}
+                      chave="partido"
+                      senado
+                      nivel={3}
+                    >
+                      <ul
+                        aria-label={`Estados do ${grupo.regiao.nome}`}
+                        className="grid grid-cols-1 gap-3"
+                        style={{ listStyle: "none", margin: 0, padding: 0 }}
+                      >
+                        {grupo.rows.map((uf) => (
+                          <li key={uf.sigla} {...capa.atributos(uf.sigla)}>
+                            <a
+                              href={`/uf/${uf.sigla}/senador`}
+                              data-testid="corrida-uf"
+                              data-uf={uf.sigla}
+                              className="block"
+                              style={{ color: "inherit", textDecoration: "none" }}
+                            >
+                              <GovernorCard
+                                uf={uf}
+                                candidatos={payload.national.candidatos}
+                                cargo="sen"
+                                nivelTitulo={4}
+                                etiquetas={capa.chips(uf.sigla)}
+                                duasBases
+                                turno={payload.turno}
+                                zerado={zerado}
+                              />
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </RegiaoConsolidada>
+                  </li>
+                ) : null,
+              )}
+            </ul>
+            {/* ADR-0053 / RF-213 — só quando alguma UF tem anulada no corte. */}
+            {payload.por_uf.some((uf) => haAnulada(uf.top_candidatos)) ? (
+              <p
+                className="max-w-prose"
+                data-testid="senado-nota-anuladas"
+                style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-muted)" }}
+              >
+                {NOTA_ANULADAS_SEM_REGRA_1T}
+              </p>
+            ) : null}
+            {capa.aviso ? <EtiquetasAviso /> : null}
+          </div>
+        ) : (
+          <p
+            className="max-w-prose"
+            style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
+          >
+            Nenhum estado apurado ainda. As 27 corridas aparecem aqui conforme o TSE divulga os
+            primeiros boletins.
+          </p>
+        )}
+      </Panel>
+
+      {/* 2026-10-04 (decisão do dono): "As 54 vagas em disputa" desceu para o
+          fim, antes da metodologia — como "Quem fica com as cadeiras" na capa
+          de Deputados. Com o RF-301 cada partido abre com os nomes, e a lista
+          completa fecha a página. */}
       {/* Seção 2 — RF-107. A composição é AGREGAÇÃO, não estimativa nacional:
           o TSE não publica arquivo agregado para cargo 5 (`temArquivoBr:
           false`), então o número é a soma das 27 corridas. O texto diz isso,
@@ -578,175 +751,6 @@ export default async function SenadoPage() {
           >
             A contagem de vagas por partido aparece quando o primeiro estado tiver boletim apurado.
             São 54 vagas em disputa — duas por estado —, de um Senado de 81 cadeiras.
-          </p>
-        )}
-      </Panel>
-
-      {/* Spec 023 (RF-215..RF-218, ADR-0061 item 3) — o Senado de 2027: as 54
-          em disputa somadas aos 27 mandatos até 2031. Some sozinho se a conta
-          não fechar com `composicao_vagas` (RF-217). */}
-      <SenadoHemicicloPanel payload={payloadDosPaineis2027} mandato={MANDATO_2031} />
-
-      {/* Spec 025 (RF-242/243/249) — V1 (Senado de 2027 por bloco), V2
-          (impeachment de ministros do STF) e V4 (renovação). Cada uma só
-          aparece com a chave ligada, o critério publicado e o portão de
-          cobertura aberto; fechada, não desenha nada. */}
-      <SenadoDe2027Panel
-        payload={payloadDosPaineis2027}
-        mandato={MANDATO_2031}
-        etiquetas={etiquetas}
-      />
-      <RenovacaoPanel
-        payload={payloadDosPaineis2027}
-        mandato2027={MANDATO_2027}
-        etiquetas={etiquetas}
-      />
-
-      {/* Seção 3 — as corridas, estado a estado. A margem de cada linha é a
-          da 2ª vaga (RF-104): `top_candidatos[1].pct − top_candidatos[2].pct`.
-          É lista, não mapa: este cargo não tem dado municipal (ADR-0026). */}
-      {/* Constituição § 1 — o consolidado regional (ADR-0057) é número do
-          modelo: o kicker diz "não oficial" fora da fase pré (RF-161). O
-          `titleId` fica: é o alvo do `aria-describedby` do mapa do Senado. */}
-      <Panel
-        kicker={pre ? "Corridas estaduais" : "Corridas estaduais · não oficial"}
-        title="Estado a estado"
-        titleId="corridas-heading"
-      >
-        {/* 🔴 RF-162 — em fase pré esta lista é 27 links e nenhum nome. Cada
-            linha de hoje imprime os dois primeiros colocados de um estado e a
-            margem para a 2ª vaga: nome de candidato e medição, os dois. E os
-            nomes viriam de `top_candidatos`, que num payload semeado com
-            `por_uf: []` nem existe. A asserção do teste é NEGATIVA — nenhum
-            nome de candidatura no documento —, porque a positiva passaria com
-            uma grade de rostos logo abaixo. */}
-        {pre ? (
-          <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
-            <p
-              className="max-w-prose"
-              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-            >
-              São 27 disputas independentes, com candidaturas próprias em cada estado. Abra um
-              estado para ver quem concorre lá.
-            </p>
-            <UfLinksGrid cargo={CARGO_SENADOR} />
-          </div>
-        ) : payload.por_uf.length > 0 ? (
-          <div className="flex flex-col" style={{ gap: "var(--space-3)" }}>
-            {/* 🔴 2026-10-04 (dono, auditoria P1) — o "● ELEITO" de 29/09 nos
-                dois ocupantes de vaga projetados virou "Vaga projetada"; o selo
-                verde "Matematicamente eleito" só sai de `eleitos_definidos`
-                (`<GovernorCard>`). A frase abaixo acompanha. Era: "● ELEITO"
-                nos DOIS ocupantes de vaga (spec 016, emenda do RF-105).
-
-                🔴 2026-09-27 (decisão do dono) — o MESMO cartão de
-                `/governador` (`<GovernorCard cargo="sen">`): as quatro
-                primeiras posições e "Outros", sempre em % dos votos válidos do
-                estado (`top_candidatos[].pct` + `outros.pct` fecham 100 por
-                UF). Substitui a linha "ocupantes · Fora das vagas · margem p/
-                2ª vaga" de 19/09. A margem da 2ª vaga continua na tela do
-                estado (`/uf/[sigla]/senador`, RF-104). Cada cartão segue sendo
-                o link para essa tela, e a lista continua o alvo do
-                `aria-describedby` do mapa nacional (`corridas-heading`). */}
-            {/* 04/10/2026 (dono) — o texto acompanha a base dos cartões. Um
-                `<p>` não tem classe de `display`, então pode levar o
-                `data-view-only` direto. */}
-            <p
-              className="max-w-prose"
-              data-view-only="proj"
-              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-            >
-              Os quatro mais votados de cada estado e a soma dos demais, em percentual dos votos
-              válidos. São duas vagas por estado: pela projeção, ficam com elas as duas primeiras
-              posições, que levam o selo "vaga projetada" — não é o resultado oficial. O selo
-              "matematicamente eleito" só aparece quando a contagem já garante a vaga.
-            </p>
-            <p
-              className="max-w-prose"
-              data-view-only="parcial"
-              style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-            >
-              Os quatro mais votados até agora em cada estado e a soma dos demais, em percentual dos
-              votos já apurados. Se a apuração parasse agora, as duas vagas ficariam com os que
-              levam o selo "vaga na parcial" — não é resultado nem projeção.
-            </p>
-            {/* Spec 025 (RF-247) — filtro por etiqueta: esconde corridas, nunca reordena. */}
-            {capa.filtro.length > 0 ? (
-              <EtiquetaFiltro grupos={capa.filtro} esconderRegiaoVazia />
-            ) : null}
-            {/* 🔴 ADR-0057 (2026-09-28, decisão do dono) — agrupado por
-                REGIÃO, com o consolidado por partido no topo de cada uma, em
-                "% dos votos" (cada eleitor vota duas vezes). A lista externa
-                mantém o rótulo de sempre e passa a ser a lista das cinco
-                regiões; cada região traz a própria lista de estados, e cada
-                cartão continua sendo o link para `/uf/[sigla]/senador`. */}
-            <ul
-              aria-label="Corridas estaduais de senador"
-              className="grid grid-cols-1 gap-3"
-              style={{ listStyle: "none", margin: 0, padding: 0 }}
-            >
-              {agruparPorRegiao(payload.por_uf).map((grupo) =>
-                grupo.rows.length > 0 ? (
-                  <li key={grupo.regiao.id}>
-                    <RegiaoConsolidada
-                      regiao={grupo.regiao}
-                      ufs={grupo.rows}
-                      chave="partido"
-                      senado
-                      nivel={3}
-                    >
-                      <ul
-                        aria-label={`Estados do ${grupo.regiao.nome}`}
-                        className="grid grid-cols-1 gap-3"
-                        style={{ listStyle: "none", margin: 0, padding: 0 }}
-                      >
-                        {grupo.rows.map((uf) => (
-                          <li key={uf.sigla} {...capa.atributos(uf.sigla)}>
-                            <a
-                              href={`/uf/${uf.sigla}/senador`}
-                              data-testid="corrida-uf"
-                              data-uf={uf.sigla}
-                              className="block"
-                              style={{ color: "inherit", textDecoration: "none" }}
-                            >
-                              <GovernorCard
-                                uf={uf}
-                                candidatos={payload.national.candidatos}
-                                cargo="sen"
-                                nivelTitulo={4}
-                                etiquetas={capa.chips(uf.sigla)}
-                                duasBases
-                                turno={payload.turno}
-                                zerado={zerado}
-                              />
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </RegiaoConsolidada>
-                  </li>
-                ) : null,
-              )}
-            </ul>
-            {/* ADR-0053 / RF-213 — só quando alguma UF tem anulada no corte. */}
-            {payload.por_uf.some((uf) => haAnulada(uf.top_candidatos)) ? (
-              <p
-                className="max-w-prose"
-                data-testid="senado-nota-anuladas"
-                style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-muted)" }}
-              >
-                {NOTA_ANULADAS_SEM_REGRA_1T}
-              </p>
-            ) : null}
-            {capa.aviso ? <EtiquetasAviso /> : null}
-          </div>
-        ) : (
-          <p
-            className="max-w-prose"
-            style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
-          >
-            Nenhum estado apurado ainda. As 27 corridas aparecem aqui conforme o TSE divulga os
-            primeiros boletins.
           </p>
         )}
       </Panel>

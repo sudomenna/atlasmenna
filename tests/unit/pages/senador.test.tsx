@@ -601,15 +601,22 @@ describe("/senador — spec 023: as 81 cadeiras e a barra na paleta de partido",
 
   const hemiciclo = (doc: Document) => doc.querySelector("[data-testid='senado-hemiciclo']");
 
-  it("RF-216: o hemiciclo vem logo DEPOIS das 54 vagas, e a barra das 54 FICA", async () => {
+  // 2026-10-04 (decisão do dono): "As 54 vagas" desceu para o fim, antes da
+  // metodologia — como a bancada da capa de Deputados. O hemiciclo das 81
+  // fica no alto (como o plenário de Deputados) e vem antes das corridas.
+  it("ordem de 04/10: hemiciclo → estado a estado → as 54 vagas (por último); a barra das 54 FICA", async () => {
     readProjectionMock.mockResolvedValue(nacional());
     const doc = await render(SenadoPage());
 
     const ordem = ordemDosPaineis(doc);
-    const i = ordem.indexOf("composicao-heading");
-    expect(i).toBeGreaterThanOrEqual(0);
-    expect(ordem[i + 1]).toBe("senado-2027-heading");
-    expect(ordem[i + 2]).toBe("corridas-heading");
+    const h = ordem.indexOf("senado-2027-heading");
+    const c = ordem.indexOf("corridas-heading");
+    const v = ordem.indexOf("composicao-heading");
+    expect(h).toBeGreaterThanOrEqual(0);
+    expect(c).toBe(h + 1);
+    expect(v).toBeGreaterThan(c);
+    // As 54 vagas são o último painel com título (a metodologia não tem).
+    expect(v).toBe(ordem.length - 1);
     expect(doc.querySelector("[data-testid='vote-bar']")).not.toBeNull();
   });
 
