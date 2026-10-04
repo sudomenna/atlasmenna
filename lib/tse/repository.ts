@@ -323,7 +323,9 @@ export interface LastIngestRun {
  * escrita dos outros cargos — esse caso já falha aberto (não bloqueia, ver
  * docstring de `getLastIngestRun`), consistente com o resto do desenho.
  */
-const LAST_INGEST_RUN_SCAN_LIMIT = 10;
+// 🔴 04/10/2026 18h30: 10 linhas não cobriam 6 cargos + fatias — a linha do
+// cargo saía da janela, o lock lia "nada rodando" e os ciclos se empilhavam.
+const LAST_INGEST_RUN_SCAN_LIMIT = 400;
 
 /**
  * getLastIngestRun — lê as últimas linhas de `ingest_log` (por `ts` desc) e
@@ -375,6 +377,7 @@ export async function getLastIngestRun(
       .orderBy(desc(schema.ingestLog.ts))
       .limit(LAST_INGEST_RUN_SCAN_LIMIT);
 
+    let primeiroFim: LastIngestRun | null = null;
     for (const row of rows) {
       let notes: LastIngestRunNotes | null = null;
       if (row.notes) {
@@ -394,11 +397,23 @@ export async function getLastIngestRun(
       const cargoMatches = cargo === undefined ? rowCargo === undefined : rowCargo === cargo;
       const fatiaMatches = fatia === undefined ? rowFatia === undefined : rowFatia === fatia;
       if (cargoMatches && fatiaMatches) {
-        return { ts: row.ts, notes };
+        // Início mais recente sem um fim DEPOIS dele = ciclo em voo. Com
+        // ciclos sobrepostos a linha mais nova pode ser o FIM de um ciclo
+        // antigo enquanto outro roda — por isso não basta a primeira linha.
+        if (notes?.running === true) {
+          // Primeira linha da chave é um INÍCIO → em voo. Ou: a primeira foi
+          // o FIM de um ciclo antigo, mas houve um INÍCIO há < 4 min (um
+          // ciclo leva ≥ ~4 min) → há outro em voo.
+          if (primeiroFim === null || Date.now() - row.ts.getTime() < 240_000) {
+            return { ts: row.ts, notes };
+          }
+          return primeiroFim;
+        }
+        if (primeiroFim === null) primeiroFim = { ts: row.ts, notes };
       }
     }
 
-    return null;
+    return primeiroFim;
   } catch (err) {
     if (err instanceof IngestError) throw err;
     throw new IngestError("persist", "getLastIngestRun falhou ao consultar ingest_log", err);
