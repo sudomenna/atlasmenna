@@ -60,6 +60,7 @@ import { SeletorDeputado } from "@/components/layout/SeletorDeputado";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { aplicarInterruptorNoNacional } from "@/lib/blob/deputado-uf";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
+import { isPreEleicao } from "@/lib/config/fase";
 import { resumosPorUf } from "@/lib/deputado/resumos-por-uf";
 import {
   maisVotadosDasCasas,
@@ -74,7 +75,7 @@ import type { InterruptorProjecaoLido } from "@/lib/edge-config/reader";
 import type { EdgePayloadDeputado } from "@/lib/edge-config/types";
 import { hrefDaCasa, nomeDaCasa, ufsDoCargo } from "@/lib/utils/casa-legislativa";
 
-import { lerNacionalDaCasa } from "../_dados-da-casa";
+import { lerBancadaZerada, lerNacionalDaCasa, nacionalAusenteDaCasa } from "../_dados-da-casa";
 import { lerInterruptorDaTela } from "../_interruptor";
 import painel from "../_painel-desktop.module.css";
 
@@ -153,14 +154,32 @@ export default async function DeputadoEstadualPage() {
     lerInterruptorDaTela(7, simulacaoLigada()),
   ]);
 
-  if (!estLido && !disLido) return <AguardandoAssembleias />;
+  // ADR-0076 (decisão do dono, 04/10) — placar ZERADO: as duas chaves
+  // AUSENTES (ou em pré-eleição) abrem o layout da apuração a zero, com as
+  // agremiações do cadastro na ordem sorteada. 🔴 Leitura que FALHOU nunca
+  // zera: com qualquer das duas sem dizer "ausente", fica a espera honesta.
+  const pre = (p: EdgePayloadDeputado | null) => isPreEleicao(p);
+  const zerado =
+    (!estLido || pre(estLido)) &&
+    (!disLido || pre(disLido)) &&
+    (estLido !== null || (await nacionalAusenteDaCasa(7))) &&
+    (disLido !== null || (await nacionalAusenteDaCasa(8)));
+  if (!estLido && !disLido && !zerado) return <AguardandoAssembleias />;
 
   // O interruptor aplicado aos dois objetos ANTES de qualquer bloco os ver
   // (ADR-0063 D4): desligado, nenhum selo de projeção sobra na grade.
-  const est = estLido ? aplicarInterruptorNoNacional(estLido, interruptor) : null;
-  const dis = disLido ? aplicarInterruptorNoNacional(disLido, interruptor) : null;
+  const est = zerado ? null : estLido ? aplicarInterruptorNoNacional(estLido, interruptor) : null;
+  const dis = zerado ? null : disLido ? aplicarInterruptorNoNacional(disLido, interruptor) : null;
 
-  const soma = somaDasCasas(est, dis);
+  const somaLida = somaDasCasas(est, dis);
+  const soma = zerado
+    ? {
+        ...somaLida,
+        por_agremiacao: [...(await lerBancadaZerada(7)), ...(await lerBancadaZerada(8))].filter(
+          (a, i, todas) => todas.findIndex((b) => b.cod === a.cod) === i,
+        ),
+      }
+    : somaLida;
   const maisVotados = maisVotadosDasCasas(est, dis);
   const puxadores = puxadoresDasCasas(est, dis);
   const cadeirasEst = est?.bancada.total_cadeiras ?? TOTAL_CADEIRAS_DA_CASA[7];
@@ -227,23 +246,25 @@ export default async function DeputadoEstadualPage() {
 
           {/* Um relógio por fonte, com a cadência de cada uma — nunca um
               "atualizado às" único (ADR-0026 item 5). */}
-          <ul
-            data-testid="casas-atualizacao"
-            style={{
-              listStyle: "none",
-              margin: 0,
-              padding: 0,
-              display: "grid",
-              gap: "var(--space-1)",
-              font: "var(--type-data)",
-              color: "var(--text-muted)",
-            }}
-          >
-            <li data-cargo="7">Assembleias Legislativas: {fraseFrescor(est)}</li>
-            <li data-cargo="8">
-              {NOME_CLDF}: {fraseFrescor(dis)}
-            </li>
-          </ul>
+          {zerado ? null : (
+            <ul
+              data-testid="casas-atualizacao"
+              style={{
+                listStyle: "none",
+                margin: 0,
+                padding: 0,
+                display: "grid",
+                gap: "var(--space-1)",
+                font: "var(--type-data)",
+                color: "var(--text-muted)",
+              }}
+            >
+              <li data-cargo="7">Assembleias Legislativas: {fraseFrescor(est)}</li>
+              <li data-cargo="8">
+                {NOME_CLDF}: {fraseFrescor(dis)}
+              </li>
+            </ul>
+          )}
         </div>
       </Panel>
 
@@ -301,21 +322,23 @@ export default async function DeputadoEstadualPage() {
 
       {/* Seção 3 — mais votados e puxadores do país, dos dois payloads. */}
       {/* ADR-0073 — lado a lado a partir de 1280px; abaixo, `display: contents`. */}
-      <div className={painel.par}>
-        <DeputadoMaisVotados
-          cargo={7}
-          rotulo={ROTULO_LISTAS}
-          escopo="pais"
-          linhas={maisVotados}
-          titleId="mais-votados-pais-heading"
-        />
-        <DeputadoPuxadores
-          cargo={7}
-          rotulo={ROTULO_LISTAS}
-          puxadores={puxadores}
-          titleId="puxadores-heading"
-        />
-      </div>
+      {zerado ? null : (
+        <div className={painel.par}>
+          <DeputadoMaisVotados
+            cargo={7}
+            rotulo={ROTULO_LISTAS}
+            escopo="pais"
+            linhas={maisVotados}
+            titleId="mais-votados-pais-heading"
+          />
+          <DeputadoPuxadores
+            cargo={7}
+            rotulo={ROTULO_LISTAS}
+            puxadores={puxadores}
+            titleId="puxadores-heading"
+          />
+        </div>
+      )}
 
       {/* Seção 4 — as 27 casas. Casa sem linha no payload cai em "aguardando
           apuração" / "vagas não publicadas" — nunca zero (RF-124). */}

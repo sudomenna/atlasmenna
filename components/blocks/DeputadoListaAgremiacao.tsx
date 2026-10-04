@@ -151,6 +151,17 @@ export interface DeputadoListaAgremiacaoProps {
    * lista não têm foto no mapa: se uma delas for eleita, sai com as iniciais.
    */
   fotos?: FotosDosEleitos;
+  /**
+   * ADR-0076 (placar zerado, 04/10) — avatar em TODA linha (foto do mapa ou
+   * iniciais), não só nas eleitas. Ausente fora do placar zerado: a lista com
+   * dado real não muda.
+   */
+  avatarEmTodos?: {
+    /** `prefixoFotoDaUf` — `null` sem Blob (todas as linhas em iniciais). */
+    prefixo: string | null;
+    /** `sqcand` da agremiação SEM foto publicada (`foto_ok: false`) — iniciais. */
+    semFoto: readonly number[];
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +260,7 @@ export function DeputadoListaAgremiacao({
   duasFaixas = false,
   comArtigo = false,
   fotos,
+  avatarEmTodos,
 }: DeputadoListaAgremiacaoProps) {
   const naUf = siglaNaFrase(uf, comArtigo);
   const listaId = useId();
@@ -280,6 +292,20 @@ export function DeputadoListaAgremiacao({
     () => unirPorSqcand(ordenarPorRank(linhasIniciais), extras).linhas,
     [linhasIniciais, extras],
   );
+  // ADR-0076 — no placar zerado, a foto de TODA linha (inclusive as que chegam
+  // pela rota), montada aqui pelo prefixo: nenhum mapa de URL no payload.
+  const fotosDasLinhas = useMemo((): FotosDosEleitos | undefined => {
+    if (!avatarEmTodos) return fotos;
+    const { prefixo, semFoto } = avatarEmTodos;
+    const sem = new Set(semFoto);
+    const mapa: Record<string, string> = {};
+    if (prefixo) {
+      for (const l of linhas) {
+        if (!sem.has(l[L.SQCAND])) mapa[String(l[L.SQCAND])] = `${prefixo}${l[L.SQCAND]}.jpg`;
+      }
+    }
+    return mapa;
+  }, [avatarEmTodos, fotos, linhas]);
   const [busca, setBusca] = useState<EstadoBusca>({ fase: "ociosa" });
   /**
    * Quem recebe o foco depois da busca: o `sqcand` da primeira linha nova, ou
@@ -392,7 +418,13 @@ export function DeputadoListaAgremiacao({
             HTML — 8 bytes × ~1.000 linhas no documento de SP (G6, 30/09). */}
         <span>{`${rank}º`}</span>
         <span>
-          <AvatarEleito nome={l[L.NOME]} sqcand={l[L.SQCAND]} marcas={l[L.MARCAS]} fotos={fotos} />
+          <AvatarEleito
+            nome={l[L.NOME]}
+            sqcand={l[L.SQCAND]}
+            marcas={l[L.MARCAS]}
+            fotos={fotosDasLinhas}
+            todos={avatarEmTodos !== undefined}
+          />
           <b>{l[L.NOME]}</b>
           {meta ? <small>{meta}</small> : null}
           {marcasDosBits(l[L.MARCAS]).map((m) => (

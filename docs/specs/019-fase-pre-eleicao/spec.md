@@ -612,6 +612,8 @@ deixe de existir para aquele cargo.
 
 **RF-133 — Sem dado, a tela DIZ que não há dado, e não inventa número**
 
+> **Emendado pelo [ADR-0076](../../architecture/adrs/0076-placar-zerado-antes-do-primeiro-boletim.md) (04/10/2026):** nos casos chave ausente, `fase: "pre_eleicao"` ou lista de candidatos vazia, a tela abre no leiaute de apuração zerado (sem frase de espera); o texto de espera abaixo vale só para **falha de leitura**.
+
 > **Formalizado em 2026-09-19, e por isso fora da faixa desta spec (RF-153-166).**
 > O ID **já era citado** em `docs/reference/risks.md` desde 13/09, ao registrar a
 > correção do incidente em que `app/(pres)/page.tsx` renderizava a fixture do

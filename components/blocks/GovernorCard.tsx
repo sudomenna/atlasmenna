@@ -175,6 +175,12 @@ export interface GovernorCardProps {
    * base. Ausente ⇒ tratado como 1º turno, o mesmo default de `selosDaBase`.
    */
   turno?: number | null;
+  /**
+   * ADR-0076 — placar zerado: as candidaturas em 0 na ordem sorteada do dia.
+   * Sem selo nenhum ("EM APURAÇÃO", turno, vaga) e sem posição "1°/2°" — a
+   * ordem é sorteio, não colocação.
+   */
+  zerado?: boolean;
 }
 
 /**
@@ -308,6 +314,7 @@ export function GovernorCard({
   etiquetas,
   duasBases = false,
   turno,
+  zerado = false,
 }: GovernorCardProps) {
   const senado = cargo === "sen";
   const presidente = cargo === "pres";
@@ -450,6 +457,7 @@ export function GovernorCard({
     desfecho: DesfechoGovernador | null,
   ): Map<number, StatusChip> => {
     const selos = new Map<number, StatusChip>();
+    if (zerado) return selos;
     const disputam: number[] = [];
     for (const r of linhas) if (r.id !== null && compete(r)) disputam.push(r.id);
     for (const id of disputam) if (definicao.eleitos.has(id)) selos.set(id, chipEleito);
@@ -537,7 +545,9 @@ export function GovernorCard({
         const pctWidth = r.pct === null ? 0 : Math.max(0, Math.min(100, r.pct));
         return (
           <li key={r.id ?? `outros-${idx}`}>
-            <span aria-hidden="true">{r.id === null ? "" : compete(r) ? `${idx + 1}°` : "—"}</span>
+            <span aria-hidden="true">
+              {r.id === null || zerado ? "" : compete(r) ? `${idx + 1}°` : "—"}
+            </span>
             {/* Quebra, não corta (2026-09-28): selo e etiqueta descem
                 INTEIROS para a linha de baixo quando não cabem. */}
             <span>

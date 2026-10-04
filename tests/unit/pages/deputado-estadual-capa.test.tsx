@@ -24,6 +24,8 @@ import { cascaVaziaNoDocumento } from "@/tests/e2e/_apoio-local";
 import { agremiacao, destaque, linhaUf, payloadCasa, puxador } from "../deputado/_payload-casa";
 
 const readDeputadoProjectionMock = vi.fn();
+/** ADR-0076 — o estado da leitura (ausente × falha) que decide o placar zerado. */
+const readDeputadoProjectionResultMock = vi.fn();
 const readInterruptorProjecaoMock = vi.fn();
 const readDeputadoUfDetailMock = vi.fn();
 const readDeputadoUfListaMock = vi.fn();
@@ -36,6 +38,7 @@ vi.mock("@/lib/edge-config/reader", async (importOriginal) => {
   return {
     ...real,
     readDeputadoProjection: (cargo: number) => readDeputadoProjectionMock(cargo),
+    readDeputadoProjectionResult: (cargo: number) => readDeputadoProjectionResultMock(cargo),
     readInterruptorProjecao: (cargo: number) => readInterruptorProjecaoMock(cargo),
   };
 });
@@ -102,6 +105,10 @@ beforeEach(() => {
     m.mockReset();
   }
   readInterruptorProjecaoMock.mockResolvedValue(DESLIGADO);
+  // Padrão: a leitura FALHOU — a espera honesta de sempre. O placar zerado
+  // (chave ausente) tem os casos próprios abaixo.
+  readDeputadoProjectionResultMock.mockReset();
+  readDeputadoProjectionResultMock.mockResolvedValue({ estado: "falha", erro: new Error("x") });
   vi.stubGlobal("fetch", fetchSpy);
 });
 
@@ -230,7 +237,7 @@ describe("RF-282 — frescor por fonte, listas do país, grade, sem plenário", 
 });
 
 describe("nenhum payload — três estados, nunca zeros", () => {
-  it("diz que aguarda os dados, mostra as 27 casas em links, e não imprime número de cadeira", async () => {
+  it("leitura FALHOU: diz que aguarda os dados, mostra as 27 casas em links, e não imprime número de cadeira", async () => {
     porCargo(null, null);
     const doc = await render();
     expect(doc.querySelector("[data-testid='casas-aguardando']")?.textContent).toContain(
@@ -245,6 +252,33 @@ describe("nenhum payload — três estados, nunca zeros", () => {
     expect(t).not.toMatch(/1\.059|1\.035|\b0 cadeiras/);
     expect(doc.querySelector("[data-testid='bancada-linha']")).toBeNull();
     expect(doc.querySelector("main")?.getAttribute("data-trilha")).toBe("dep");
+  });
+
+  it("🔴 ADR-0076 — falha em UMA das duas chaves também não zera", async () => {
+    porCargo(null, null);
+    readDeputadoProjectionResultMock.mockImplementation(async (cargo: number) =>
+      cargo === 7 ? { estado: "ausente" } : { estado: "falha", erro: new Error("x") },
+    );
+    const doc = await render();
+    expect(doc.querySelector("[data-testid='casas-aguardando']")).not.toBeNull();
+    expect(textoDe(doc.body)).not.toMatch(/1\.059/);
+  });
+});
+
+describe("ADR-0076 — placar zerado (as duas chaves AUSENTES)", () => {
+  it("layout da apuração a zero: 1.059 cadeiras, 0 distribuídas, sem espera, sem mais votados", async () => {
+    porCargo(null, null);
+    readDeputadoProjectionResultMock.mockResolvedValue({ estado: "ausente" });
+    const doc = await render();
+    expect(doc.querySelector("[data-testid='casas-aguardando']")).toBeNull();
+    const t = textoDe(doc.body);
+    expect(t).toContain("1.059 cadeiras");
+    expect(doc.querySelector("[data-testid='casas-figuras']")?.textContent).toContain("0");
+    expect(doc.querySelector("[data-testid='casas-atualizacao']")).toBeNull();
+    expect(t).not.toMatch(/Aguardando os dados/);
+    expect(doc.querySelector("#mais-votados-pais-heading")).toBeNull();
+    expect(doc.querySelector("#puxadores-heading")).toBeNull();
+    expect(t).not.toMatch(/eleit[oa]s? na parcial/i);
   });
 });
 

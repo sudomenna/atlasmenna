@@ -86,6 +86,8 @@ import {
 import type { CargoMajoritario } from "@/lib/edge-config/reader";
 import { readNationalProjection, readProjection, readUfProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload, EdgePayloadUf, EdgeUfCandidate } from "@/lib/edge-config/types";
+import { payloadPedeZerado, resolverModoNacional, resolverModoUf } from "@/lib/zerado/majoritario";
+import { comMarcaZerado } from "@/lib/zerado/marca";
 import govFixture from "@/tests/fixtures/edge-config/gov-current.json" with { type: "json" };
 import nationalFixture from "@/tests/fixtures/edge-config/projection-current.json" with {
   type: "json",
@@ -342,10 +344,29 @@ export async function GET(req: Request): Promise<Response> {
 
     // Cargo explícito (ADR-0028) — e agora o do pedido, não mais o literal
     // `"pres"`. Quem resolve a chave é `readUfProjection`.
+    let lidoUf: EdgePayloadUf | null = null;
     for (const turno of spec.turnos()) {
       const payload = await readUfProjection(sigla, { cargo, turno });
-      if (payload) return NextResponse.json(payload, { headers: CACHE_HEADERS });
+      if (payload) {
+        if (!payloadPedeZerado(payload)) {
+          return NextResponse.json(payload, { headers: CACHE_HEADERS });
+        }
+        lidoUf = payload;
+        break;
+      }
     }
+
+    // 🔴 ADR-0076 — placar zerado: ausente, fase pré ou lista vazia ⇒ as
+    // candidaturas do cadastro em 0, com o marcador de tela. Falha de leitura
+    // NUNCA vira zero (segue para o 503 de sempre).
+    const turnoZ = spec.turnos()[0] ?? 1;
+    const z = await resolverModoUf(lidoUf, cargo, turnoZ, sigla, {
+      vagas: cargo === "sen" ? 2 : undefined,
+    });
+    if (z.zerado && z.payload) {
+      return NextResponse.json(comMarcaZerado(z.payload), { headers: CACHE_HEADERS });
+    }
+    if (lidoUf) return NextResponse.json(lidoUf, { headers: CACHE_HEADERS });
 
     // Em dev, sintetiza a UF a partir do fixture nacional DAQUELE cargo, para o
     // `/api/projection?uf=` funcionar sem precisar de fixtures per-UF separadas.
@@ -363,9 +384,15 @@ export async function GET(req: Request): Promise<Response> {
     const govSim = simulacaoLigada() ? simulacaoNacional("gov") : null;
     if (govSim) return NextResponse.json(govSim, { headers: CACHE_HEADERS });
     if (!simulacaoLigada()) {
-      const gov =
+      const govLido =
         (await readProjection({ cargo: "gov", turno: 1 })) ??
-        (await readProjection({ cargo: "gov", turno: 2 })) ??
+        (await readProjection({ cargo: "gov", turno: 2 }));
+      const zGov = await resolverModoNacional(govLido, "gov", 1);
+      if (zGov.zerado && zGov.payload) {
+        return NextResponse.json(comMarcaZerado(zGov.payload), { headers: CACHE_HEADERS });
+      }
+      const gov =
+        govLido ??
         fonteDev(
           () => null,
           () => govFixture as unknown as EdgePayload,
@@ -381,8 +408,13 @@ export async function GET(req: Request): Promise<Response> {
     const senSim = simulacaoLigada() ? simulacaoNacional("sen") : null;
     if (senSim) return NextResponse.json(senSim, { headers: CACHE_HEADERS });
     if (!simulacaoLigada()) {
+      const senLido = await readProjection({ cargo: "sen", turno: 1 });
+      const zSen = await resolverModoNacional(senLido, "sen", 1);
+      if (zSen.zerado && zSen.payload) {
+        return NextResponse.json(comMarcaZerado(zSen.payload), { headers: CACHE_HEADERS });
+      }
       const sen =
-        (await readProjection({ cargo: "sen", turno: 1 })) ??
+        senLido ??
         fonteDev(
           () => null,
           () => senFixture as unknown as EdgePayload,
@@ -395,8 +427,13 @@ export async function GET(req: Request): Promise<Response> {
   const presSim = simulacaoLigada() ? simulacaoNacional("pres") : null;
   if (presSim) return NextResponse.json(presSim, { headers: CACHE_HEADERS });
   if (!simulacaoLigada()) {
+    const presLido = await readNationalProjection();
+    const zPres = await resolverModoNacional(presLido, "pres", currentPresidentialTurno());
+    if (zPres.zerado && zPres.payload) {
+      return NextResponse.json(comMarcaZerado(zPres.payload), { headers: CACHE_HEADERS });
+    }
     const payload =
-      (await readNationalProjection()) ??
+      presLido ??
       fonteDev(
         () => null,
         () => nationalFixture as unknown as EdgePayload,

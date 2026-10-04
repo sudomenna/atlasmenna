@@ -107,7 +107,7 @@ import {
 } from "@/lib/blob/deputado-uf";
 import type { CargoProporcional } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
-import { fotosDosEleitos } from "@/lib/deputado/fotos-eleitos";
+import { fotosDosEleitos, prefixoFotoDaUf } from "@/lib/deputado/fotos-eleitos";
 import {
   linhasNoDocumento,
   listaEmDuasFaixas,
@@ -147,7 +147,12 @@ import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { colorForParty } from "@/lib/utils/party-color";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 
-import { lerCandidaturasAguardando, lerDadosDaCasa, lerFotosDaCasa } from "./_dados-da-casa";
+import {
+  lerCandidaturasAguardando,
+  lerDadosDaCasa,
+  lerFotosDaCasa,
+  lerZeradoSePermitido,
+} from "./_dados-da-casa";
 import painel from "./_painel-desktop.module.css";
 
 /** `generateStaticParams` do cargo: uma rota por UF que tem a casa (27 · 26 · só o DF). */
@@ -319,7 +324,7 @@ export async function renderPaginaUfDeputado(
   // desenvolvimento resolvidas — passa pelo adaptador, com o cargo na mão.
   const { nacional, detalhe, interruptor } = await lerDadosDaCasa(cargo, sigla);
 
-  const row: EdgeDeputadoUfRow | null =
+  const rowLida: EdgeDeputadoUfRow | null =
     nacional?.por_uf.find((u) => u.sigla === sigla.toUpperCase()) ?? null;
   // O interruptor é aplicado ao OBJETO antes de qualquer componente vê-lo:
   // desligado, a cópia sai sem nenhum campo de projeção (ADR-0063 D4). O
@@ -330,7 +335,21 @@ export async function renderPaginaUfDeputado(
         ? sanearDeputadoUfDetail(detalhe.detail)
         : detalhe.detail
       : null;
-  const detail = detalheSaneado ? aplicarInterruptorProjecao(detalheSaneado, interruptor) : null;
+  const detailLido = detalheSaneado
+    ? aplicarInterruptorProjecao(detalheSaneado, interruptor)
+    : null;
+
+  // ADR-0076 (decisão do dono, 04/10) — o placar ZERADO: antes do primeiro
+  // boletim (chave ausente, payload pré-eleição, ou payload sem esta UF), a
+  // tela abre no layout da apuração com todas as candidaturas a zero, em vez
+  // da espera. 🔴 Nunca quando uma leitura FALHOU (`lerZeradoSePermitido`
+  // decide) — falha continua no estado honesto, sem número.
+  const zerado =
+    detailLido && detailLido.agremiacoes.length > 0
+      ? null
+      : await lerZeradoSePermitido(cargo, sigla, nacional, detalhe);
+  const row = zerado ? null : rowLida;
+  const detail = zerado ? zerado.detail : detailLido;
 
   // Nem resumo nem detalhe: não há o que dizer sobre esta UF ainda.
   if (!row && !detail) {
@@ -381,7 +400,7 @@ export async function renderPaginaUfDeputado(
   // dados": naquele estado não há eleito, e a grade de candidaturas já lê a
   // mesma fatia (uma leitura só, RF-149). A fatia está no Data Cache (12 h);
   // indisponível ⇒ conjunto vazio ⇒ iniciais.
-  const comFoto = await lerFotosDaCasa(cargo, sigla);
+  const comFoto = zerado ? zerado.comFoto : await lerFotosDaCasa(cargo, sigla);
 
   // O resumo prefere o Global Config e cai no Blob — os dois carregam os
   // mesmos quatro números, e sobreviver à falta de um é o ponto de RF-129.
@@ -391,8 +410,31 @@ export async function renderPaginaUfDeputado(
   const cadeirasDefinidas =
     row?.cadeiras_definidas ?? detail?.agremiacoes.reduce((a, x) => a + x.cadeiras, 0) ?? 0;
   const vagasNaoPreenchidas = row?.vagas_nao_preenchidas ?? detail?.vagas_nao_preenchidas ?? 0;
-  const agremiacoes = detail ? ordenarAgremiacoes(detail.agremiacoes) : [];
-  const cadencia = nacional?.atualizacao_min ?? 0;
+  // Zerado: a ordem é a do sorteio do dia (ADR-0076) — reordenar por cadeiras
+  // e votos, todos zero, cairia na ordem alfabética.
+  const agremiacoes = zerado
+    ? (detail?.agremiacoes ?? [])
+    : detail
+      ? ordenarAgremiacoes(detail.agremiacoes)
+      : [];
+  const cadencia = zerado ? 0 : (nacional?.atualizacao_min ?? 0);
+  // ADR-0076 — fotos do placar zerado: o prefixo da UF e, por agremiação, os
+  // poucos `sqcand` sem foto publicada (inclusive os que só a rota traz).
+  const prefixoFotoUf = zerado ? prefixoFotoDaUf(sigla) : null;
+  const semFotoPorCod = new Map<string, number[]>(
+    zerado
+      ? agremiacoes.map((a) => {
+          const todas = [
+            ...(a.candidatos ?? []),
+            ...(zerado.lista?.agremiacoes.find((x) => x.cod === a.cod)?.candidatos ?? []),
+          ];
+          return [
+            a.cod,
+            todas.filter((l) => !zerado.comFoto.has(String(l.sqcand))).map((l) => l.sqcand),
+          ] as const;
+        })
+      : [],
+  );
 
   // ── Spec 026 — marcas, projeção, listas ──
   //
@@ -425,8 +467,10 @@ export async function renderPaginaUfDeputado(
   // não passa por aqui: leva 1–60 e recolhe por CSS fora do mesmo conjunto.
   const duasFaixas = listaEmDuasFaixas(cargo);
   const ultimoRankPorCod = new Map(
-    duasFaixas && detalheSaneado
-      ? detalheSaneado.agremiacoes.map((a) => [a.cod, ultimoRankNoDocumento(a, ctx)] as const)
+    duasFaixas && (zerado ? detail : detalheSaneado)
+      ? (zerado ? agremiacoes : (detalheSaneado?.agremiacoes ?? [])).map(
+          (a) => [a.cod, ultimoRankNoDocumento(a, ctx)] as const,
+        )
       : [],
   );
   const temDestino = agremiacoes.some((a) => a.candidatos?.some((c) => c.destino !== undefined));
@@ -437,12 +481,13 @@ export async function renderPaginaUfDeputado(
   const marcasPorSqcand = new Map(
     linhasDaUf.map((c) => [c.sqcand, bitsDasMarcas(marcasDaLinha(c, ctx))] as const),
   );
-  const maisVotados = detail
-    ? maisVotadosComVotoProjetado(maisVotadosDaUf(detail), agremiacoes, ctx).map((d) => ({
-        ...d,
-        marcas: marcasPorSqcand.get(d.sqcand) ?? 0,
-      }))
-    : [];
+  const maisVotados =
+    detail && !zerado
+      ? maisVotadosComVotoProjetado(maisVotadosDaUf(detail), agremiacoes, ctx).map((d) => ({
+          ...d,
+          marcas: marcasPorSqcand.get(d.sqcand) ?? 0,
+        }))
+      : [];
   // RF-291 — a mini-foto só dos eleitos; cada bloco recebe só o mapa dele.
   const fotosMaisVotados = fotosDosEleitos(
     sigla,
@@ -462,7 +507,7 @@ export async function renderPaginaUfDeputado(
   // ele desligado a projeção não existe na tela fora da metodologia (RF-265),
   // nem como aviso de estado.
   const fraseProjecao =
-    detail && interruptor.ligada && comProjecao
+    detail && !zerado && interruptor.ligada && comProjecao
       ? fraseEstadoProjecao(detail.projecao, detail.pct_apurado, territorio)
       : null;
 
@@ -483,10 +528,11 @@ export async function renderPaginaUfDeputado(
   // estado "ausente" (payload pré-ADR), e separá-los em duas variáveis abriria
   // a porta para alguém combinar o frescor de uma fonte com o `ts` da outra —
   // que é o defeito que esta linha acabou de consertar.
-  const resumoFrescor = nacional
-    ? { frescor: avaliarFrescorDado(nacional.dado_ts, nacional.cargo), ts: nacional.ts }
-    : null;
-  const detalheTs = detail?.ts ?? null;
+  const resumoFrescor =
+    nacional && !zerado
+      ? { frescor: avaliarFrescorDado(nacional.dado_ts, nacional.cargo), ts: nacional.ts }
+      : null;
+  const detalheTs = zerado ? null : (detail?.ts ?? null);
 
   return (
     <main
@@ -657,27 +703,29 @@ export async function renderPaginaUfDeputado(
       {/* ADR-0073 — par lado a lado a partir de 1280px; abaixo disso o
           invólucro é `display: contents` e os dois blocos seguem no fluxo do
           `<main>` como antes. */}
-      <div className={painel.par}>
-        <VotacaoEleitorado
-          kicker={`${rotulo} · ${sigla}`}
-          votacao={detail?.votacao}
-          titleId="votacao-uf-heading"
-          semProjecao={detail?.granularidade === "uf"}
-        />
+      {zerado ? null : (
+        <div className={painel.par}>
+          <VotacaoEleitorado
+            kicker={`${rotulo} · ${sigla}`}
+            votacao={detail?.votacao}
+            titleId="votacao-uf-heading"
+            semProjecao={detail?.granularidade === "uf"}
+          />
 
-        {/* Spec 026 RF-270 — os 10 mais votados da UF, do próprio objeto da UF
+          {/* Spec 026 RF-270 — os 10 mais votados da UF, do próprio objeto da UF
           (nunca da lista 61+). Objeto v1 ⇒ nenhum (o bloco não aparece). */}
-        <DeputadoMaisVotados
-          cargo={cargo}
-          escopo="uf"
-          uf={sigla}
-          linhas={maisVotados.length > 0 ? maisVotados : undefined}
-          fotos={fotosMaisVotados}
-          titleId="mais-votados-uf-heading"
-          separaBases={bases}
-          aviso={avisoBase}
-        />
-      </div>
+          <DeputadoMaisVotados
+            cargo={cargo}
+            escopo="uf"
+            uf={sigla}
+            linhas={maisVotados.length > 0 ? maisVotados : undefined}
+            fotos={fotosMaisVotados}
+            titleId="mais-votados-uf-heading"
+            separaBases={bases}
+            aviso={avisoBase}
+          />
+        </div>
+      )}
 
       {/* Seção 2 — a bancada da UF. RF-122, RF-125.1, RF-127, RF-130.
           O bloco NUNCA sai do DOM (ADR-0017): sem o Blob ele diz por quê. */}
@@ -688,19 +736,23 @@ export async function renderPaginaUfDeputado(
       >
         {detail ? (
           <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
-            {/* Uma legenda só para o painel inteiro (spec 026 § Telas item 5). */}
-            <LegendaMarcas
-              uf={sigla}
-              territorio={territorio}
-              projecaoVisivel={visivel}
-              totalizacaoFinal={ctx.totalizacaoFinal}
-              temDestino={temDestino}
-              semPercentual={!v2}
-              comArtigo={comArtigo}
-              aviso={avisoBase}
-            />
+            {/* Uma legenda só para o painel inteiro (spec 026 § Telas item 5).
+                Zerado: ninguém tem marca, e a legenda explicaria o vazio. */}
+            {zerado ? null : (
+              <LegendaMarcas
+                uf={sigla}
+                territorio={territorio}
+                projecaoVisivel={visivel}
+                totalizacaoFinal={ctx.totalizacaoFinal}
+                temDestino={temDestino}
+                semPercentual={!v2}
+                comArtigo={comArtigo}
+                aviso={avisoBase}
+              />
+            )}
             <ul
               data-testid="uf-agremiacoes"
+              data-zerado={zerado ? "" : undefined}
               className={painel.agremiacoes}
               style={{ listStyle: "none", margin: 0, padding: 0, display: "grid" }}
             >
@@ -904,11 +956,26 @@ export async function renderPaginaUfDeputado(
                         tsDetalhe={detail.ts}
                         semPercentual={!agr.candidatos}
                         // RF-291 — só os eleitos DESTA lista com foto publicada.
-                        fotos={fotosDosEleitos(
-                          sigla,
-                          linhas.map((l) => [l[L.SQCAND], l[L.MARCAS]] as const),
-                          comFoto,
-                        )}
+                        // Zerado (ADR-0076): a foto de TODA candidatura.
+                        // Zerado (ADR-0076): a foto de TODA candidatura, montada
+                        // no cliente pelo prefixo (`avatarEmTodos`), sem mapa.
+                        fotos={
+                          zerado
+                            ? undefined
+                            : fotosDosEleitos(
+                                sigla,
+                                linhas.map((l) => [l[L.SQCAND], l[L.MARCAS]] as const),
+                                comFoto,
+                              )
+                        }
+                        {...(zerado
+                          ? {
+                              avatarEmTodos: {
+                                prefixo: prefixoFotoUf,
+                                semFoto: semFotoPorCod.get(agr.cod) ?? [],
+                              },
+                            }
+                          : {})}
                         // Só nas assembleias: no federal as props nem existem, e o
                         // payload RSC dele não ganha um byte.
                         {...(duasFaixas ? { duasFaixas: true } : {})}
@@ -958,7 +1025,7 @@ export async function renderPaginaUfDeputado(
       {/* Spec 026 RF-274 — regras com os números da UF. Só em objeto v2: o v1
           não tem `regras`, e o RF-276 manda o bloco não aparecer (em vez de
           dizer "aguardando" sobre um dado que o objeto nunca carregaria). */}
-      {detail && v2 ? (
+      {detail && v2 && !zerado ? (
         <DeputadoRegras
           uf={sigla}
           regras={detail.regras}
@@ -972,7 +1039,7 @@ export async function renderPaginaUfDeputado(
           divergência aparece; e a frase "batem" só existe quando a comparação
           FOI feita — o componente decide pelo `comparou`, nunca pela lista
           vazia de divergências (o defeito de 29/09). */}
-      {detail ? (
+      {detail && !zerado ? (
         <DeputadoConferencia
           conferencia={detail.conferencia}
           divergenciasV1={detail.divergencias}
@@ -996,7 +1063,7 @@ export async function renderPaginaUfDeputado(
       <DeputadoMetodologia
         pctApurado={detail?.pct_apurado ?? pctApurado}
         cadenciaMinutos={cadencia}
-        temDado={detail !== null}
+        temDado={detail !== null && !zerado}
         temIntervalo={agremiacoes.some((a) => a.cadeiras_ci95 !== undefined)}
         variant="uf"
         uf={sigla}

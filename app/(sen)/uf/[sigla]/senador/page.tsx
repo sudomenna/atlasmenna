@@ -100,6 +100,7 @@ import { etiquetasDaLista } from "@/lib/etiquetas/telas";
 import { queCompetem } from "@/lib/utils/destino-voto";
 import { nomeExibicao, primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
 import { ordensPorBase } from "@/lib/utils/rank-parcial";
+import { resolverModoUf } from "@/lib/zerado/majoritario";
 import senUfFixture from "@/tests/fixtures/edge-config/sen-uf.json" with { type: "json" };
 
 /** Ver a nota em `app/(sen)/senador/page.tsx`: o fallback sai da tabela
@@ -348,7 +349,7 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
   // qualquer forma, então a lista vazia não muda nada do que se vê aqui.
   const emSimulacao = simulacaoLigada();
   const detalheSim = emSimulacao ? simulacaoMunicipiosUf(sigla, "sen", 1) : null;
-  const [payload, detalhe] = emSimulacao
+  const [lidoUf, detalhe] = emSimulacao
     ? [
         simulacaoSenadorUf(sigla),
         detalheSim
@@ -382,6 +383,13 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
    */
   const motivoSerie: DetailUnavailableReason =
     detalhe.status !== "ok" ? detalhe.reason : "sem_serie";
+
+  // 🔴 ADR-0076 — modo zerado: chave da UF ausente, fase pré ou lista vazia ⇒
+  // o layout da apuração com as candidaturas do cadastro em 0 (ordem sorteada).
+  // Leitura que FALHOU nunca entra aqui. Fora da simulação local.
+  const { payload, zerado } = emSimulacao
+    ? { payload: lidoUf, zerado: false }
+    : await resolverModoUf(lidoUf, "sen", 1, sigla, { vagas: VAGAS_PADRAO });
 
   if (!payload) {
     // RF-149 — cargo 5 nesta UF.
@@ -566,7 +574,11 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
         etiquetas={etiquetasDoPainel}
         headingLevel={1}
         kicker="Projeção Atlas Menna · não oficial"
-        note={`${vagas} vagas por estado, em turno único — as ${vagas} candidaturas mais votadas se elegem, sem diferença entre elas. A margem acima é a distância da ${vagas}ª vaga para a primeira candidatura fora dela. Projeção por regra de três sobre o boletim do estado.`}
+        note={
+          zerado
+            ? `${vagas} vagas por estado, em turno único — as ${vagas} candidaturas mais votadas se elegem, sem diferença entre elas.`
+            : `${vagas} vagas por estado, em turno único — as ${vagas} candidaturas mais votadas se elegem, sem diferença entre elas. A margem acima é a distância da ${vagas}ª vaga para a primeira candidatura fora dela. Projeção por regra de três sobre o boletim do estado.`
+        }
         pctApurado={payload.pct_apurado}
         // Versão D (2026-09-27) — "Vaga projetada" / "Vaga na parcial".
         selo="vaga"
@@ -574,6 +586,7 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
         titleId="resultado-heading"
         ufDaFoto={sigla}
         vagas={vagas}
+        variant={zerado ? "zerado" : "medicao"}
       />
 
       {/* Spec 021 RF-192 (EMENDADO em 2026-09-26, noite, decisão do dono) —
@@ -618,21 +631,25 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
               Senado em VOTOS, `votosPorEleitor` por eleitor (decisão do dono,
               27/09): o "aguardando" de 26/09 caiu quando as capturas reais do
               simulado mostraram `tv == 2 × c`. */}
-          <CorridaTresCirculos
-            kicker={`Senador · ${sigla}`}
-            modo="candidatura"
-            votacao={payload.votacao}
-            candidatos={payload.candidatos}
-            titleId="corrida-tres-circulos-heading"
-            votosPorEleitor={votosPorEleitor}
-          />
+          {zerado ? null : (
+            <CorridaTresCirculos
+              kicker={`Senador · ${sigla}`}
+              modo="candidatura"
+              votacao={payload.votacao}
+              candidatos={payload.candidatos}
+              titleId="corrida-tres-circulos-heading"
+              votosPorEleitor={votosPorEleitor}
+            />
+          )}
 
-          <VotacaoEleitorado
-            kicker={`Senador · ${sigla}`}
-            votacao={payload.votacao}
-            titleId="votacao-uf-heading"
-            votosPorEleitor={votosPorEleitor}
-          />
+          {zerado ? null : (
+            <VotacaoEleitorado
+              kicker={`Senador · ${sigla}`}
+              votacao={payload.votacao}
+              titleId="votacao-uf-heading"
+              votosPorEleitor={votosPorEleitor}
+            />
+          )}
         </>
       )}
 
@@ -693,13 +710,14 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
           chaves nacionais. A pergunta cara é feita no ramo de espera, acima, e
           só lá (RNF-002). */}
       <Panel kicker="Evolução da apuração">
-        {serie ? (
+        {serie || zerado ? (
           <SerieApuracaoChart
-            cadenciaMin={serie.cadencia_min}
-            candidatos={serie.candidatos}
-            eixo={serie.eixo}
+            cadenciaMin={serie ? serie.cadencia_min : 5}
+            candidatos={serie ? serie.candidatos : []}
+            eixo={serie ? serie.eixo : []}
             escopo={`Senado ${sigla}`}
             preEleicao={false}
+            zerado={zerado && !serie}
             titleId="serie-apuracao-heading"
             vagas={vagas === 2 ? 2 : 1}
           />

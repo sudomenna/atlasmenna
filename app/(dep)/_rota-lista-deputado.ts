@@ -41,7 +41,12 @@ import type { CargoProporcional } from "@/lib/config/cargos";
 import { listaEmDuasFaixas, restanteForaDoDocumento } from "@/lib/deputado/lista-documento";
 import { ufTemCasa } from "@/lib/utils/casa-legislativa";
 
-import { lerDetalheDaCasa, lerListaDaCasa } from "./_dados-da-casa";
+import {
+  lerDetalheDaCasa,
+  lerListaDaCasa,
+  lerNacionalDaCasa,
+  lerZeradoSePermitido,
+} from "./_dados-da-casa";
 
 const CACHE_OK = "public, s-maxage=60, stale-while-revalidate=300";
 const CACHE_ERRO = "no-store";
@@ -68,6 +73,17 @@ export async function responderListaDeputado(
     return NextResponse.json(lista.lista, { headers: { "Cache-Control": CACHE_OK } });
   }
   if (lista.reason === "not_found" || lista.reason === "not_configured") {
+    // ADR-0076 — placar zerado: o resto 61+ sai do cadastro, com o mesmo
+    // gatilho da página (nunca sobre leitura que falhou).
+    const zerado = await lerZeradoSePermitido(
+      cargo,
+      sigla,
+      await lerNacionalDaCasa(cargo),
+      await lerDetalheDaCasa(cargo, sigla),
+    );
+    if (zerado?.lista) {
+      return NextResponse.json(zerado.lista, { headers: { "Cache-Control": CACHE_OK } });
+    }
     return erro(404, { error: "lista_inexistente", uf: sigla, motivo: lista.reason });
   }
   return erro(502, { error: "blob_indisponivel", uf: sigla, motivo: lista.reason });
@@ -94,6 +110,18 @@ async function responderRestante(cargo: CargoProporcional, sigla: string): Promi
   const detalhe = await lerDetalheDaCasa(cargo, sigla);
   if (detalhe.status !== "ok") {
     if (detalhe.reason === "not_found" || detalhe.reason === "not_configured") {
+      // ADR-0076 — placar zerado: o resto (rank > R) sai do cadastro.
+      const zerado = await lerZeradoSePermitido(
+        cargo,
+        sigla,
+        await lerNacionalDaCasa(cargo),
+        detalhe,
+      );
+      if (zerado) {
+        return NextResponse.json(restanteForaDoDocumento(zerado.detail, null), {
+          headers: { "Cache-Control": CACHE_OK },
+        });
+      }
       return erro(404, { error: "lista_inexistente", uf: sigla, motivo: detalhe.reason });
     }
     return erro(502, { error: "blob_indisponivel", uf: sigla, motivo: detalhe.reason });

@@ -110,6 +110,7 @@ import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { aplicarInterruptorNoNacional } from "@/lib/blob/deputado-uf";
 import { cargoInfo } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
+import { isPreEleicao } from "@/lib/config/fase";
 import { resumosPorUf } from "@/lib/deputado/resumos-por-uf";
 import {
   resultadoEleitoral,
@@ -120,8 +121,10 @@ import { readDeputadoProjection } from "@/lib/edge-config/reader";
 import type { EdgePayloadDeputado } from "@/lib/edge-config/types";
 import { lerEtiquetas } from "@/lib/etiquetas/leitor";
 import { ordenarBancada } from "@/lib/utils/bancada";
+import { nacionalZeradoCamara } from "@/lib/zerado/deputado";
 import depFixture from "@/tests/fixtures/edge-config/dep-current.json" with { type: "json" };
 
+import { lerBancadaZerada, nacionalAusenteDaCasa } from "../_dados-da-casa";
 import { lerInterruptorDaTela } from "../_interruptor";
 import painel from "../_painel-desktop.module.css";
 
@@ -215,11 +218,19 @@ export default async function DeputadoFederalPage() {
     lerInterruptorDaTela(CARGO_DEPUTADO, simulacaoLigada()),
   ]);
 
-  if (!payloadLido) return <AguardandoNacional />;
-  const payload = aplicarInterruptorNoNacional(payloadLido, interruptor);
+  // ADR-0076 (decisão do dono, 04/10) — placar ZERADO: chave AUSENTE ou
+  // payload pré-eleição abrem o layout da apuração com 513 cadeiras sem dono
+  // e as agremiações a zero, na ordem sorteada. 🔴 Leitura que FALHOU nunca
+  // zera: `nacionalAusenteDaCasa` só diz "ausente" com a leitura dizendo isso.
+  const zerado = isPreEleicao(payloadLido) || (!payloadLido && (await nacionalAusenteDaCasa(6)));
+  if (!payloadLido && !zerado) return <AguardandoNacional />;
+  const payload = zerado
+    ? nacionalZeradoCamara(await lerBancadaZerada(6))
+    : aplicarInterruptorNoNacional(payloadLido as EdgePayloadDeputado, interruptor);
 
   const bancada = payload.bancada;
-  const agremiacoes = ordenarBancada(bancada.por_agremiacao);
+  // Zerado: a ordem do sorteio do dia — reordenar zeros cairia no alfabeto.
+  const agremiacoes = zerado ? bancada.por_agremiacao : ordenarBancada(bancada.por_agremiacao);
 
   // ADR-0038 D4. É nesta trilha que a diferença entre os dois relógios é maior:
   // o modelo roda e carimba `ts` muito mais vezes do que a varredura de 6
@@ -230,7 +241,7 @@ export default async function DeputadoFederalPage() {
 
   // Spec 025 (RF-244) — a Câmara de 2027 por bloco. Etiqueta lida no servidor
   // (Blob ou cópia do build), nunca do payload; desligada, o painel não sai.
-  const etiquetas = await lerEtiquetas();
+  const etiquetas = zerado ? null : await lerEtiquetas();
 
   return (
     <main
@@ -246,7 +257,7 @@ export default async function DeputadoFederalPage() {
           para sempre e o aviso acenderia falsamente em toda aba deixada aberta
           por mais de 90 min. Quando esta trilha ganhar um poller de 30 min,
           basta ele registrar-se na store — este JSX não muda. */}
-      <DadoParadoBanner frescor={frescorDado} />
+      {zerado ? null : <DadoParadoBanner frescor={frescorDado} />}
 
       {/* Spec 027 RF-283 — Federal · Estadual, antes do `<h1>`. */}
       <SeletorDeputado atual={CARGO_DEPUTADO} />
@@ -352,22 +363,24 @@ export default async function DeputadoFederalPage() {
               pré-ADR, em que a frase volta a ser exatamente a de antes
               ("Atualizado às HH:MM:SS"), porque durante o canary a tela se
               comporta como se comportava. */}
-          <p
-            data-testid="dep-atualizacao"
-            style={{
-              margin: 0,
-              font: "var(--type-data)",
-              color: "var(--text-muted)",
-            }}
-          >
-            {fraseFrescorDado(frescorDado, payload.ts)}
-            {payload.atualizacao_min > 0
-              ? `, a cada ${payload.atualizacao_min} ${
-                  payload.atualizacao_min === 1 ? "minuto" : "minutos"
-                }`
-              : ""}
-            .
-          </p>
+          {zerado ? null : (
+            <p
+              data-testid="dep-atualizacao"
+              style={{
+                margin: 0,
+                font: "var(--type-data)",
+                color: "var(--text-muted)",
+              }}
+            >
+              {fraseFrescorDado(frescorDado, payload.ts)}
+              {payload.atualizacao_min > 0
+                ? `, a cada ${payload.atualizacao_min} ${
+                    payload.atualizacao_min === 1 ? "minuto" : "minutos"
+                  }`
+                : ""}
+              .
+            </p>
+          )}
         </div>
       </Panel>
 
@@ -380,7 +393,7 @@ export default async function DeputadoFederalPage() {
           Sem o invólucro `.par` (ADR-0073): com uma criança só, ele não
           dispunha nada, e com o painel desligado (etiquetas fora) sobraria
           uma caixa vazia levando o `gap` do `<main>`. */}
-      <Camara2027Panel bancada={bancada} etiquetas={etiquetas} />
+      {etiquetas ? <Camara2027Panel bancada={bancada} etiquetas={etiquetas} /> : null}
 
       {/* Spec 021 RF-192 — EMENDADO em 2026-09-26 (noite), decisão do dono:
           "Votação" SAIU desta capa (repetia o eleitorado do Brasil da capa de
@@ -433,19 +446,21 @@ export default async function DeputadoFederalPage() {
           do payload nacional (autossuficiente). Payload anterior à spec 026
           não tem os campos, e os blocos não aparecem. */}
       {/* ADR-0073 — lado a lado a partir de 1280px; abaixo, `display: contents`. */}
-      <div className={painel.par}>
-        <DeputadoMaisVotados
-          cargo={CARGO_DEPUTADO}
-          escopo="pais"
-          linhas={payload.mais_votados}
-          titleId="mais-votados-pais-heading"
-        />
-        <DeputadoPuxadores
-          cargo={CARGO_DEPUTADO}
-          puxadores={payload.puxadores}
-          titleId="puxadores-heading"
-        />
-      </div>
+      {zerado ? null : (
+        <div className={painel.par}>
+          <DeputadoMaisVotados
+            cargo={CARGO_DEPUTADO}
+            escopo="pais"
+            linhas={payload.mais_votados}
+            titleId="mais-votados-pais-heading"
+          />
+          <DeputadoPuxadores
+            cargo={CARGO_DEPUTADO}
+            puxadores={payload.puxadores}
+            titleId="puxadores-heading"
+          />
+        </div>
+      )}
 
       <Panel kicker="Corridas estaduais" title="Estado a estado" titleId="corridas-heading">
         <UfBandeirasGrid cargo={CARGO_DEPUTADO} resumos={resumosPorUf(payload, interruptor)} />
@@ -472,15 +487,21 @@ export default async function DeputadoFederalPage() {
         total={bancada.total_cadeiras}
         atribuidas={bancada.cadeiras_atribuidas}
         rotuloBarra={`Bancada de ${bancada.total_cadeiras} cadeiras`}
-        eleitosNacionais={{
-          projecaoLigada: interruptor.ligada,
-          // Reserva do rótulo do cenário (sem salto): alguma UF já liberada
-          // no payload que a página leu — já com o interruptor aplicado.
-          cenarioEsperado:
-            interruptor.ligada && payload.por_uf.some((u) => u.projecao?.estado === "liberada"),
-        }}
+        {...(zerado
+          ? {}
+          : {
+              eleitosNacionais: {
+                projecaoLigada: interruptor.ligada,
+                // Reserva do rótulo do cenário (sem salto): alguma UF já liberada
+                // no payload que a página leu — já com o interruptor aplicado.
+                cenarioEsperado:
+                  interruptor.ligada &&
+                  payload.por_uf.some((u) => u.projecao?.estado === "liberada"),
+              },
+            })}
         // Decisão do dono, 04/10: só agremiação com cadeira na parcial.
-        ocultarSemCadeira
+        // Zerado (ADR-0076): todas, a zero.
+        ocultarSemCadeira={!zerado}
         fraseAguardando={
           <>
             cadeiras ainda sem dono — {bancada.ufs_aguardando} de {TOTAL_UFS} estados sem boletim e
@@ -512,8 +533,10 @@ export default async function DeputadoFederalPage() {
               estado elege continua vindo do dado que o TSE publica, e nós conferimos uma coisa
               contra a outra. Cadeira contada é cadeira com candidato eleito: quando a conta de um
               partido dá direito a uma vaga que nenhum candidato dele pode ocupar, a vaga vai para
-              as sobras e não aparece aqui. Partidos e federações sem nenhuma cadeira na parcial
-              ficam fora da lista.
+              as sobras e não aparece aqui.
+              {zerado
+                ? null
+                : " Partidos e federações sem nenhuma cadeira na parcial ficam fora da lista."}
             </p>
           </>
         }

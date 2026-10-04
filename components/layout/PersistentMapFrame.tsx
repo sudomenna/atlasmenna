@@ -149,6 +149,7 @@ import type { EdgePayload, EdgePayloadUf, EdgeUfMunicipio } from "@/lib/edge-con
 import { useDadoFrescorStore } from "@/lib/state/dado-freshness-store";
 import { usePorUfStore } from "@/lib/state/por-uf-store";
 import { formatPercent } from "@/lib/utils/format";
+import { ehPlacarZerado } from "@/lib/zerado/marca";
 
 /** Mesma cadência de escrita do orchestrator (ADR-0011). */
 const REFRESH_MS = 60_000;
@@ -407,6 +408,11 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
   // `fase` e NADA além dele: gatear em `pct_apurado_total === 0` poria o mapa
   // em cinza às 20h01 de 04/10, com a apuração já correndo (ADR-0043 D5).
   const preEleicao = isPreEleicao(payload);
+  // 🔴 ADR-0076 — placar zerado (marcado pela rota de leitura): o mapa é
+  // desenhado, todo em `--map-uncounted`, sem legenda de líder — a mesma
+  // supressão da fase pré, mas SEM a frase de espera no lugar do mapa.
+  const zerado = ehPlacarZerado(payload);
+  const mapaCinza = preEleicao || zerado;
 
   // Candidatos da UF (cor por candidato) — vem do resumo (ADR-0012), não do
   // detalhe municipal. Enquanto `ufResumo` ainda não chegou, o coroplético
@@ -634,6 +640,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
         candidatos={payload.national.candidatos}
         variant="frame"
         cargo="gov"
+        preEleicao={zerado}
         scopeLabel={escopo}
         action={<UfPicker cargo="gov" atual={sigla} />}
       />
@@ -812,6 +819,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
         candidatos={payload.national.candidatos}
         variant="frame"
         cargo="sen"
+        preEleicao={zerado}
         scopeLabel={escopo}
         action={<UfPicker cargo="sen" atual={sigla} />}
       />
@@ -932,7 +940,7 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
       rankByLider={rankByLider}
       candidatos={payload.national.candidatos}
       variant="frame"
-      preEleicao={preEleicao}
+      preEleicao={mapaCinza}
       cargo="pres"
       scopeLabel={escopo}
       backHref={sigla ? homeHref : undefined}

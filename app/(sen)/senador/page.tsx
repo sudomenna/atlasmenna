@@ -71,9 +71,9 @@ import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { cargoInfo } from "@/lib/config/cargos";
-import { isPreEleicao } from "@/lib/config/fase";
+import { FASE_PRE_ELEICAO, isPreEleicao } from "@/lib/config/fase";
 import { agruparPorRegiao } from "@/lib/config/regioes";
-import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
+import { resultadoEleitoral, simulacaoLigada, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload } from "@/lib/edge-config/types";
 import { lerEtiquetas } from "@/lib/etiquetas/leitor";
@@ -89,6 +89,7 @@ import {
   nomesNaProjecao,
 } from "@/lib/utils/senado-nomes-das-vagas";
 import { composicaoNaParcial } from "@/lib/utils/senado-parcial";
+import { resolverModoNacional } from "@/lib/zerado/majoritario";
 import senFixture from "@/tests/fixtures/edge-config/sen-current.json" with { type: "json" };
 
 /** Código TSE do cargo desta rota. A granularidade e as vagas saem da tabela
@@ -223,12 +224,19 @@ export default async function SenadoPage() {
   // 🔴 Simulação ligada ⇒ ela é a fonte de verdade e o Global Config nem é
   // lido. Ver a nota gêmea em `app/(gov)/governador/page.tsx`: uma resposta
   // vazia da fonte remota é uma resposta, e ela ganhava da simulação.
-  const payload = await resultadoEleitoral(
+  const lido = await resultadoEleitoral(
     () => simulacaoNacional("sen"),
     async () =>
       (await readProjection({ cargo: "sen", turno: 1 })) ??
       (process.env.NODE_ENV === "development" ? (senFixture as unknown as EdgePayload) : null),
   );
+
+  // 🔴 ADR-0076 — modo zerado: chave ausente, fase pré ou lista vazia ⇒ as 27
+  // corridas no layout da apuração, todas em 0 (cadastro do Blob, ordem
+  // sorteada). Leitura que FALHOU segue para a tela honesta, sem número.
+  const { payload, zerado } = simulacaoLigada()
+    ? { payload: lido, zerado: false }
+    : await resolverModoNacional(lido, "sen", 1);
 
   if (!payload) return <AguardandoSenado />;
 
@@ -236,6 +244,15 @@ export default async function SenadoPage() {
   // `app/(gov)/governador/page.tsx`. Ausência de payload **não** liga a fase
   // pré: ela leva ao ramo acima, que é o terceiro estado ("não sabemos").
   const pre = isPreEleicao(payload);
+  // Identidade fala, medição cala — no zerado como na fase pré.
+  const cala = pre || zerado;
+  // ADR-0076 — os três painéis do Senado de 2027 (hemiciclo, relação com o
+  // governo, renovação) derivam a fase do payload. No zerado eles leem a
+  // forma "pré" — 27 cadeiras que continuam + 54 cinza em disputa, sem
+  // vocabulário de apuração. Cópia LOCAL de tela: nunca vai a escritor.
+  const payloadDosPaineis2027: EdgePayload = zerado
+    ? { ...payload, fase: FASE_PRE_ELEICAO }
+    : payload;
 
   const composicao = payload.composicao_vagas;
 
@@ -246,7 +263,7 @@ export default async function SenadoPage() {
   const capa = editorialDaCapa(etiquetas, payload.por_uf, {
     cargo: CARGO_SENADOR,
     turno: 1,
-    preEleicao: pre,
+    preEleicao: cala,
     vagasUf: VAGAS,
   });
 
@@ -279,9 +296,9 @@ export default async function SenadoPage() {
   // bases, pelas MESMAS derivações da contagem (`lib/utils/senado-nomes-das-vagas.ts`).
   // Projeção: `null` quando a derivação não fecha com `composicao_vagas` ⇒ as
   // linhas ficam só com o número. Fase pré: nada a nomear.
-  const nomesProj = composicao && !pre ? nomesNaProjecao(payload, vagasPorUf) : null;
+  const nomesProj = composicao && !cala ? nomesNaProjecao(payload, vagasPorUf) : null;
   const nomesParcial =
-    parcial && !pre ? nomesNaParcial(payload.por_uf, vagasPorUf, vagasEmDisputa) : null;
+    parcial && !cala ? nomesNaParcial(payload.por_uf, vagasPorUf, vagasEmDisputa) : null;
   const linhasProj = composicao
     ? composicao.por_partido.map((p) => ({
         partido: p.partido,
@@ -568,14 +585,22 @@ export default async function SenadoPage() {
       {/* Spec 023 (RF-215..RF-218, ADR-0061 item 3) — o Senado de 2027: as 54
           em disputa somadas aos 27 mandatos até 2031. Some sozinho se a conta
           não fechar com `composicao_vagas` (RF-217). */}
-      <SenadoHemicicloPanel payload={payload} mandato={MANDATO_2031} />
+      <SenadoHemicicloPanel payload={payloadDosPaineis2027} mandato={MANDATO_2031} />
 
       {/* Spec 025 (RF-242/243/249) — V1 (Senado de 2027 por bloco), V2
           (impeachment de ministros do STF) e V4 (renovação). Cada uma só
           aparece com a chave ligada, o critério publicado e o portão de
           cobertura aberto; fechada, não desenha nada. */}
-      <SenadoDe2027Panel payload={payload} mandato={MANDATO_2031} etiquetas={etiquetas} />
-      <RenovacaoPanel payload={payload} mandato2027={MANDATO_2027} etiquetas={etiquetas} />
+      <SenadoDe2027Panel
+        payload={payloadDosPaineis2027}
+        mandato={MANDATO_2031}
+        etiquetas={etiquetas}
+      />
+      <RenovacaoPanel
+        payload={payloadDosPaineis2027}
+        mandato2027={MANDATO_2027}
+        etiquetas={etiquetas}
+      />
 
       {/* Seção 3 — as corridas, estado a estado. A margem de cada linha é a
           da 2ª vaga (RF-104): `top_candidatos[1].pct − top_candidatos[2].pct`.
@@ -692,6 +717,7 @@ export default async function SenadoPage() {
                                 etiquetas={capa.chips(uf.sigla)}
                                 duasBases
                                 turno={payload.turno}
+                                zerado={zerado}
                               />
                             </a>
                           </li>
@@ -734,7 +760,7 @@ export default async function SenadoPage() {
             não existem. */}
         <ForecastTransparency
           pctApurado={payload.pct_apurado_total}
-          preEleicao={pre}
+          preEleicao={cala}
           variant="national"
           granularidade={cargoInfo(CARGO_SENADOR).granularidade}
           cadenciaMinutos={CADENCIA_MIN}

@@ -182,10 +182,11 @@ import { TurnoOneRecap } from "@/components/blocks/TurnoOneRecap";
 import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
+import { currentPresidentialTurno } from "@/lib/config/calendar";
 import { avaliarFrescorDado } from "@/lib/config/dado-freshness";
 import { isPreEleicao } from "@/lib/config/fase";
 import { agruparPorRegiao } from "@/lib/config/regioes";
-import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
+import { resultadoEleitoral, simulacaoLigada, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readArchivedProjection, readNationalProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload } from "@/lib/edge-config/types";
 import { insightsPresidenteDoPayload } from "@/lib/insights/presidente";
@@ -195,6 +196,7 @@ import { queCompetem } from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { rankByParcial } from "@/lib/utils/rank-parcial";
+import { resolverModoNacional } from "@/lib/zerado/majoritario";
 import nationalFixture from "@/tests/fixtures/edge-config/projection-current.json" with {
   type: "json",
 };
@@ -325,7 +327,14 @@ function fixturePayload(): EdgePayload {
  * vírgula e `%`, mas isto aqui vira CSS, e sanitizar na fronteira é mais
  * barato que confiar no formatador para sempre.
  */
-function LivePctLabelStyle({ pctApurado }: { pctApurado: number }) {
+function LivePctLabelStyle({
+  pctApurado,
+  zerado = false,
+}: {
+  pctApurado: number;
+  /** ADR-0076 — placar zerado: o selo mostra "0,0% apurado" de propósito. */
+  zerado?: boolean;
+}) {
   // Nada medido ainda ⇒ o selo não vai à tela. Todas as custom properties do
   // `<ShellLiveBadge>` têm o silêncio como default, então publicar nada é
   // publicar "não afirmo coisa alguma" — que é o oposto do `"ao vivo"` que
@@ -337,7 +346,7 @@ function LivePctLabelStyle({ pctApurado }: { pctApurado: number }) {
   // acende normalmente; num payload real de percentual exatamente 0 o selo
   // some, que é calar, não mentir. A fase da página vem do campo `fase` do
   // payload e de nenhum percentual (ADR-0043 D5).
-  if (!(pctApurado > 0)) return null;
+  if (!zerado && !(pctApurado > 0)) return null;
 
   const seguro = `${formatPercent(pctApurado, 1)} apurado`.replace(/["\\]/g, "");
   return (
@@ -581,7 +590,15 @@ async function getInitialPayload(): Promise<EdgePayload | null> {
 }
 
 export default async function HomePage() {
-  const payload = await getInitialPayload();
+  const lido = await getInitialPayload();
+
+  // 🔴 ADR-0076 — modo zerado. Chave ausente, fase pré ou lista vazia ⇒ o
+  // layout da apuração com todas as candidaturas em 0 (cadastro do Blob, ordem
+  // sorteada do dia). Leitura que FALHOU nunca entra aqui: segue para o ramo
+  // honesto abaixo, sem número. Fora da simulação local, que tem fixture.
+  const { payload, zerado } = simulacaoLigada()
+    ? { payload: lido, zerado: false }
+    : await resolverModoNacional(lido, "pres", currentPresidentialTurno());
 
   // Dois estados caem na mesma tela honesta, e o segundo não é hipotético:
   //
@@ -609,6 +626,9 @@ export default async function HomePage() {
   // poria esta tela em modo pré-eleição COM A APURAÇÃO EM ANDAMENTO
   // (ADR-0043 D5, design 019 § D9 mutação M1).
   const pre = isPreEleicao(payload);
+  // "Identidade fala, medição cala": no zerado tudo que MEDE sai, como na
+  // fase pré — mas o layout é o da apuração (painel de resultado com 0,0%).
+  const cala = pre || zerado;
 
   const { national, por_uf, pct_apurado_total, ufs_apuradas, ts, insights, composition, turno } =
     payload;
@@ -721,7 +741,7 @@ export default async function HomePage() {
   // sobrescrevê-lo faria `NationalNeedle`, `StateGroupedTable` e
   // `HeadlineScore` lerem uma corrida que não é a que chegou no payload. O
   // que a fase decide é o LAYOUT, e é isso que esta constante nomeia.
-  const painelDeIdentidade = pre || mode === "multi-1t";
+  const painelDeIdentidade = pre || zerado || mode === "multi-1t";
 
   // S06/F4d (Fase 4) — Mode 2T: lê archive do 1T para `<TurnoOneRecap />`
   // (ADR-0016). `readArchivedProjection` retorna null se a chave ainda
@@ -784,7 +804,9 @@ export default async function HomePage() {
           limiar de 0,5% de `pct_projetado`, que num payload zerado zera a
           contagem inteira e produz "Disputa entre 0 candidatos" ao lado de
           doze nomes visíveis. */}
-      <RaceTypeIndicator candidatos={national.candidatos} preEleicao={pre} turno={turno} />
+      {zerado ? null : (
+        <RaceTypeIndicator candidatos={national.candidatos} preEleicao={pre} turno={turno} />
+      )}
     </div>
   );
 
@@ -831,7 +853,11 @@ export default async function HomePage() {
 
       {/* Alimenta o selo do `<TopBar>` (ADR-0029 § 4) — "23,4% APURADO" na
           noite da apuração, "ANTES DA VOTAÇÃO" antes dela (RF-159). */}
-      {pre ? <SeloFasePreStyle /> : <LivePctLabelStyle pctApurado={pct_apurado_total} />}
+      {pre ? (
+        <SeloFasePreStyle />
+      ) : (
+        <LivePctLabelStyle pctApurado={pct_apurado_total} zerado={zerado} />
+      )}
 
       {/* ADR-0038 D4 — "o dado do TSE não anda". Primeiro de tudo, e fora de
           `<Panel>`: é uma faixa de estado sobre a página inteira, como o
@@ -856,7 +882,7 @@ export default async function HomePage() {
           "ausente"; a guarda é o que impede um alarme falso no dia em que ele
           gravar. RNF-010: fase pré **não** é degradação, e as duas não devem
           se falar. */}
-      {!pre && <DadoParadoBanner frescor={frescorDado} />}
+      {!cala && <DadoParadoBanner frescor={frescorDado} />}
 
       {/* S06/F4d — Breaking news ticker. ADR-0029 § 1: faixa fina entre o
           shell e o mapa. É conteúdo ambiente, não hero — por isso continua
@@ -870,7 +896,7 @@ export default async function HomePage() {
           definido (`lib/utils/anuncios-definidos.ts`): no Presidente, um item
           nacional quando o Brasil inteiro definiu. `national.chamadas_recentes`
           não é mais lido — o texto dele saía da `chamada` da projeção. */}
-      {!pre && faixaAgora.length > 0 && <BreakingNewsTicker chamadas={faixaAgora} />}
+      {!cala && faixaAgora.length > 0 && <BreakingNewsTicker chamadas={faixaAgora} />}
 
       {/* O mapa NÃO está mais aqui (ADR-0033 § 1). Ele é a coluna persistente
           do `<AppShellSplit>` — à direita no desktop, faixa de 52vh acima dos
@@ -885,7 +911,7 @@ export default async function HomePage() {
           filete órfão. ADR-0029 § 1: logo abaixo do mapa, antes do painel de
           resultado. */}
       {/* `!pre`: a faixa é a proclamação de um vencedor. */}
-      {!pre && (
+      {!cala && (
         <NationalWinnerBanner candidatos={national.candidatos} porUf={por_uf} turno={turno} />
       )}
 
@@ -953,7 +979,7 @@ export default async function HomePage() {
           title={pre ? "Quem está concorrendo" : <ResultTitle />}
           titleId="resultado-heading"
           turno={turno}
-          variant={pre ? "identidade" : "medicao"}
+          variant={pre ? "identidade" : zerado ? "zerado" : "medicao"}
         />
       ) : (
         <Panel
@@ -997,13 +1023,15 @@ export default async function HomePage() {
           se comportou). Uma corrida só ⇒ fatias por
           CANDIDATURA; o nome sai de `national.candidatos`, cruzado por `id`.
           Sem `votacao.corrida` ⇒ `<DetailUnavailable>` (RF-207). */}
-      <CorridaTresCirculos
-        kicker="Presidente · Brasil"
-        modo="candidatura"
-        votacao={payload.votacao}
-        candidatos={payload.national.candidatos}
-        titleId="corrida-tres-circulos-heading"
-      />
+      {zerado ? null : (
+        <CorridaTresCirculos
+          kicker="Presidente · Brasil"
+          modo="candidatura"
+          votacao={payload.votacao}
+          candidatos={payload.national.candidatos}
+          titleId="corrida-tres-circulos-heading"
+        />
+      )}
 
       {/* Spec 021 (RF-192) — "Votação": o eleitorado inteiro em três círculos,
           em `<Panel>` PRÓPRIO, logo depois de "A corrida" (dono, 2026-09-27 —
@@ -1016,7 +1044,7 @@ export default async function HomePage() {
           `payload.votacao` é opcional — sem ele o componente renderiza
           `<DetailUnavailable>` (RF-198), nunca zeros. Os três estados que ele
           distingue (ausente / "não começou" / apurando) estão no RF-193b. */}
-      <VotacaoEleitorado kicker="Presidente · Brasil" votacao={payload.votacao} />
+      {zerado ? null : <VotacaoEleitorado kicker="Presidente · Brasil" votacao={payload.votacao} />}
 
       {/* Seção 3 — chances (`ChancesPanel` do protótipo, 2º painel de
           conteúdo em `App.jsx:350`). Aqui, ao contrário das rotas de UF, o
@@ -1039,7 +1067,7 @@ export default async function HomePage() {
           declarado `number` não-anulável, então o que chega do payload zerado
           é `0`, e `has(0)` é `true`. O painel renderizaria "Fulano vence no 1º
           turno — 0%" com a barra vazia. */}
-      {!pre && mode === "multi-1t" && turno !== 2 && (
+      {!cala && mode === "multi-1t" && turno !== 2 && (
         <ChancesPanel
           title="Segundo turno?"
           pSegundoTurno={national.p_segundo_turno_overall}
@@ -1101,6 +1129,7 @@ export default async function HomePage() {
           eixo={serieNacional ? serieNacional.eixo : []}
           escopo="Brasil"
           preEleicao={pre}
+          zerado={zerado}
           titleId="serie-apuracao-heading"
         />
       </Panel>
@@ -1111,7 +1140,7 @@ export default async function HomePage() {
           sobre votos contados. Não está nos quatro painéis nomeados pelo
           RF-154 — está aqui pela mesma pergunta única do design 019 § D0, que
           classifica também os blocos que a spec não enumerou: mede, cala. */}
-      {!pre && <StrongholdsPanel candidatos={national.candidatos} rows={por_uf} />}
+      {!cala && <StrongholdsPanel candidatos={national.candidatos} rows={por_uf} />}
 
       {/* Seção 5 — o que falta apurar (S07/Bloco 1).
 
@@ -1120,7 +1149,7 @@ export default async function HomePage() {
           apuração concluída."** A lista `pendentes` fica vazia quando todo
           `pct_apurado` é zero, e o componente lê isso como "nada falta", não
           como "nada começou": é o oposto exato do que o número quer dizer. */}
-      {!pre && (
+      {!cala && (
         <RemainingPanel
           rows={por_uf}
           candidatos={national.candidatos}
@@ -1137,7 +1166,7 @@ export default async function HomePage() {
           carimbadas com `HH:MM:SS` ao lado de zero voto, e um intervalo de
           confiança de 95% `[0,0; 0,0]`, que é a forma tipográfica da certeza
           absoluta. */}
-      {!pre && (
+      {!cala && (
         <BulletinPanel
           national={national}
           rows={por_uf}
@@ -1152,7 +1181,7 @@ export default async function HomePage() {
       {/* ADR-0072 — manchetes de feeds públicos (só título, veículo, hora e
           link). `noticias` já vem `null` antes das 17h e com o interruptor
           desligado (`filtrarParaTela`). */}
-      {!pre && leitura.noticias && <NaImprensaPanel itens={leitura.noticias} />}
+      {!cala && leitura.noticias && <NaImprensaPanel itens={leitura.noticias} />}
 
       {/* 🔴 ADR-0057 item 6 (2026-09-28, decisão do dono) — os 27 estados
           agrupados por REGIÃO, com o consolidado da região no topo. Entra
@@ -1168,7 +1197,7 @@ export default async function HomePage() {
           fase pré não há voto a consolidar nem a mostrar por estado. O
           `titleId` é próprio — o `state-grouped-table-heading` do Placar é o
           alvo do `aria-describedby` do mapa e não pode duplicar. */}
-      {!pre && (
+      {!cala && (
         <Panel
           kicker="Estado a estado · não oficial"
           title="Por região"
@@ -1238,7 +1267,7 @@ export default async function HomePage() {
           🔴 RF-154 — agrupa 27 UFs por status de uma apuração que não começou.
           Quem leva o leitor às páginas de estado em fase pré é o `<UfPicker>`
           da moldura do mapa, que permanece (RF-157). */}
-      {!pre && (
+      {!cala && (
         <Panel kicker="Placar por estado">
           {/* 🔴 `corA`/`corB` saem da SIGLA (ADR-0024). Até 19/09 vinham de
               `lider.cor`, a paleta por COLOCAÇÃO — e aqui o efeito era literal:
@@ -1262,7 +1291,7 @@ export default async function HomePage() {
           {/* Agulha — só em binary (2T). Em multi-1t a agulha `national-1t`
               media P(2T), a mesma métrica do `<TwoRoundIndicator />` acima:
               ADR-0018 tirou a duplicata do fluxo. */}
-          {!pre && mode === "binary" && (
+          {!cala && mode === "binary" && (
             <NationalNeedle
               national={national}
               variant="national-2t"
@@ -1276,14 +1305,14 @@ export default async function HomePage() {
               acima de regra de design desta spec. Fica, e vira prosa no
               futuro — sem fração, sem barra, sem percentual. É também a única
               superfície onde a palavra "projeção" é autorizada em fase pré. */}
-          <ForecastTransparency pctApurado={pct_apurado_total} preEleicao={pre} />
+          <ForecastTransparency pctApurado={pct_apurado_total} preEleicao={cala} />
         </div>
       </Panel>
 
       {/* `!pre`: a análise é leitura do modelo sobre o que foi contado.
           ADR-0072: texto da IA quando o interruptor está ligado e o texto é
           fresco; senão, as frases de regra fixa (`frasesRegra`). */}
-      {!pre && analiseIA && (
+      {!cala && analiseIA && (
         <Panel kicker="Análise por IA · não oficial">
           <InsightCard
             frases={analiseIA.frases}
@@ -1293,7 +1322,7 @@ export default async function HomePage() {
           />
         </Panel>
       )}
-      {!pre && !analiseIA && frasesRegra.length > 0 && (
+      {!cala && !analiseIA && frasesRegra.length > 0 && (
         <Panel kicker="Leitura do modelo">
           <InsightCard frases={frasesRegra} heading="Análise" origem="regra" />
         </Panel>

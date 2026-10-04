@@ -259,7 +259,13 @@ export interface ResultPanelProps {
    *   fase não tem. A spec não os enumera porque enumera a figura e a barra;
    *   o critério que os alcança é o mesmo e é o do § D0: **mede, cala.**
    */
-  variant?: "medicao" | "identidade";
+  /**
+   * `"zerado"` — modo zerado (ADR-0076): layout da apuração com tudo em 0.
+   * Fica "Apurado 0,0%" e a lista com 0,0%; saem margem, barra de maioria,
+   * selos e marcas de vaga (medem sobre nada), e a lista NÃO é reordenada —
+   * a ordem é o sorteio do dia que o chamador já fixou.
+   */
+  variant?: "medicao" | "identidade" | "zerado";
   /**
    * Sigla da UF que endereça a **foto** das candidaturas (ADR-0041:
    * `candidatos/foto/<UF>/<sqcand>.jpg`).
@@ -584,6 +590,9 @@ export function ResultPanel({
     return r ? <EtiquetasLinha resolucoes={r} /> : undefined;
   };
   const identidade = variant === "identidade";
+  // ADR-0076 — placar zerado: identidade fala, medição cala, mas no layout
+  // da apuração (figura "Apurado" e linhas com 0,0%).
+  const zerado = variant === "zerado";
   // `vagas` chega do payload; um valor absurdo não pode marcar a lista
   // inteira nem quebrar o índice do corte.
   const nVagas = Number.isFinite(vagas)
@@ -594,7 +603,7 @@ export function ResultPanel({
   // Em `identidade` ela sai independentemente do que o chamador passar: a
   // fase é mais forte que a contagem de vagas, e `poles={true}` ali seria uma
   // contradição, não uma configuração.
-  const mostrarPoles = identidade ? false : (poles ?? !multiVaga);
+  const mostrarPoles = identidade || zerado ? false : (poles ?? !multiVaga);
 
   /* =========================================================================
    * AS DUAS ORDENS (2026-09-20) — "tudo acompanha a base ativa"
@@ -621,7 +630,7 @@ export function ResultPanel({
    * reintroduziria o falso favoritismo estável que aquele RF existe para não
    * haver.
    * ====================================================================== */
-  const ordens = identidade ? null : ordensPorBase(candidatos);
+  const ordens = identidade || zerado ? null : ordensPorBase(candidatos);
   const naOrdemDoDom = ordens ? ordens.proj : candidatos;
   const porParcial = ordens ? ordens.parcial : candidatos;
   const porProj = ordens ? ordens.proj : candidatos;
@@ -728,7 +737,8 @@ export function ResultPanel({
   // inteira mora em `lib/utils/selo-resultado.ts` (função pura, testada à
   // parte). Default: vaga em corrida de várias vagas; nenhum em vaga única —
   // quem quer o selo de turno (home, Governador por UF) pede.
-  const regraSelo: RegraSelo = identidade ? "nenhum" : (selo ?? (multiVaga ? "vaga" : "nenhum"));
+  const regraSelo: RegraSelo =
+    identidade || zerado ? "nenhum" : (selo ?? (multiVaga ? "vaga" : "nenhum"));
   const opcoesSelo = { regra: regraSelo, turno, vagas: nVagas };
   // 2026-10-04 — pelo ponto único `selosPorBase`, o MESMO que a folha do
   // município (`<MunicipioExplorer>`) chama com a mesma lista e as mesmas
@@ -740,8 +750,8 @@ export function ResultPanel({
   // (`lib/utils/vagas-eleitas.ts`, 2026-09-29): os `nVagas` primeiros QUE
   // DISPUTAM daquela ordem. Vaga única não marca ninguém — ali a gramática é a
   // do selo de turno, não a de vaga.
-  const vagasParcial = multiVaga ? idsDasVagas(porParcial, nVagas) : SEM_VAGAS;
-  const vagasProj = multiVaga ? idsDasVagas(porProj, nVagas) : SEM_VAGAS;
+  const vagasParcial = multiVaga && !zerado ? idsDasVagas(porParcial, nVagas) : SEM_VAGAS;
+  const vagasProj = multiVaga && !zerado ? idsDasVagas(porProj, nVagas) : SEM_VAGAS;
   const classeLista = `${styles.list} ${LISTA_PAINEL_CLASSES.lista}`;
 
   const linhas = identidade
@@ -894,7 +904,7 @@ export function ResultPanel({
               de identidade é o defeito que o axe pegou em 2026-09-07 no 3º
               termômetro (`--color-cand-3` sobre o papel = 2,99:1, contra os
               4,5:1 da constituição § 4). Cor de preenchimento não vira tinta. */}
-          {temDuelo ? (
+          {temDuelo && !zerado ? (
             <>
               <span data-testid="result-margem-parcial" data-view-only="parcial">
                 {/* 🔴 04/10 (dono): todo número projetado na cor da projeção —
@@ -970,7 +980,7 @@ export function ResultPanel({
           Não é renderizado em `identidade` (fase pré): sem voto contado a ordem
           é a do número na urna e não segue base nenhuma — constituição § 2 v1.5,
           cuja exceção é expressa e não alcança esta tela. */}
-      {identidade ? null : <ReordenaListaPorBase />}
+      {identidade || zerado ? null : <ReordenaListaPorBase />}
 
       {identidade ? (
         <ul

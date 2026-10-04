@@ -48,3 +48,14 @@ export function fotosDosEleitos(
   }
   return fotos;
 }
+
+/**
+ * ADR-0076 (placar zerado) — o começo comum das URLs de foto da UF
+ * (`…/candidatos/foto/<UF>/`), para o CLIENTE montar a URL de cada linha sem
+ * um mapa `sqcand → URL` no payload (≈120 B por linha, ~1.000 linhas em SP).
+ * `null` sem Blob configurado (⇒ iniciais).
+ */
+export function prefixoFotoDaUf(uf: string): string | null {
+  const url = candidatoFotoUrl(uf, "0");
+  return url?.endsWith("/0.jpg") ? url.slice(0, -"0.jpg".length) : null;
+}

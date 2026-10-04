@@ -52,6 +52,7 @@ import {
   sanearDeputadoUfLista,
 } from "@/lib/blob/deputado-uf";
 import { type CargoProporcional, cargoToken } from "@/lib/config/cargos";
+import { isPreEleicao } from "@/lib/config/fase";
 import {
   type CargoAssembleia,
   resultadoEleitoral,
@@ -63,8 +64,14 @@ import {
   simulacaoDeputadoUfLista,
   simulacaoLigada,
 } from "@/lib/dev/simulacao";
-import { type InterruptorProjecaoLido, readDeputadoProjection } from "@/lib/edge-config/reader";
+import {
+  type InterruptorProjecaoLido,
+  readDeputadoProjection,
+  readDeputadoProjectionResult,
+} from "@/lib/edge-config/reader";
 import type { EdgePayloadDeputado } from "@/lib/edge-config/types";
+import { ufsDoCargo } from "@/lib/utils/casa-legislativa";
+import { bancadaZerada, detalheZeradoUf } from "@/lib/zerado/deputado";
 import depUfFixture from "@/tests/fixtures/blob/dep-uf.json" with { type: "json" };
 import depFixture from "@/tests/fixtures/edge-config/dep-current.json" with { type: "json" };
 
@@ -274,4 +281,97 @@ export async function lerFotosDaCasa(
   const fatia = await readCandidatosUf(sigla, cargoToken(cargo));
   if (fatia.status !== "ok") return new Set();
   return new Set(fatia.slice.candidatos.filter((c) => c.foto_ok).map((c) => c.sqcand));
+}
+
+// ---------------------------------------------------------------------------
+// Placar zerado — ADR-0076 (decisão do dono, 04/10/2026)
+// ---------------------------------------------------------------------------
+
+/** O placar zerado de uma UF: o objeto da página, o resto 61+ (federal) e quem tem foto. */
+export interface ZeradoDaCasa {
+  detail: DeputadoUfDetail;
+  lista: DeputadoUfLista | null;
+  comFoto: ReadonlySet<string>;
+}
+
+/**
+ * O lado NACIONAL do gatilho do placar zerado: (a) a chave do cargo está
+ * AUSENTE, (b) o payload está na fase pré-eleição (`isPreEleicao`), ou (c) o payload real
+ * não tem linha desta UF. 🔴 Leitura que FALHOU nunca zera — e uma leitura
+ * que lança aqui conta como falha (nunca como ausência). Com a simulação
+ * ligada a leitura remota não roda, e sem payload simulado não se zera.
+ */
+async function nacionalPermiteZerar(
+  cargo: CargoProporcional,
+  sigla: string,
+  nacional: EdgePayloadDeputado | null,
+): Promise<boolean> {
+  if (nacional) {
+    return isPreEleicao(nacional) || !nacional.por_uf.some((u) => u.sigla === sigla);
+  }
+  if (simulacaoLigada()) return false;
+  try {
+    return (await readDeputadoProjectionResult(cargo)).estado === "ausente";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * O lado do DETALHE: só sem conteúdo — 404 (nunca gravado), ambiente sem Blob,
+ * ou objeto sem agremiação nenhuma. `fetch_error`/`invalid` são falha: não zera.
+ */
+function detalhePermiteZerar(detalhe: DeputadoUfDetailResult): boolean {
+  if (detalhe.status === "ok") return detalhe.detail.agremiacoes.length === 0;
+  return detalhe.reason === "not_found" || detalhe.reason === "not_configured";
+}
+
+/**
+ * O placar zerado desta UF, ou `null` quando o gatilho não vale ou o cadastro
+ * de candidaturas não veio (aí a tela fica no estado de sempre). Lê o cadastro
+ * do Blob (`readCandidatosUf`, Data Cache de 12 h) — identidade, não resultado.
+ */
+export async function lerZeradoSePermitido(
+  cargo: CargoProporcional,
+  sigla: string,
+  nacional: EdgePayloadDeputado | null,
+  detalhe: DeputadoUfDetailResult,
+): Promise<ZeradoDaCasa | null> {
+  const uf = sigla.toUpperCase();
+  if (!detalhePermiteZerar(detalhe)) return null;
+  if (!(await nacionalPermiteZerar(cargo, uf, nacional))) return null;
+  const fatia = await readCandidatosUf(uf, cargoToken(cargo));
+  if (fatia.status !== "ok" || fatia.slice.candidatos.length === 0) return null;
+  const { detail, lista } = detalheZeradoUf(cargo, uf, fatia.slice.candidatos);
+  return {
+    detail,
+    lista,
+    comFoto: new Set(fatia.slice.candidatos.filter((c) => c.foto_ok).map((c) => c.sqcand)),
+  };
+}
+
+/**
+ * ADR-0076 — para as CAPAS nacionais: a chave do cargo está AUSENTE (e não
+ * falhou)? `true` só com a leitura dizendo "ausente"; falha, exceção ou
+ * simulação ligada ⇒ `false` (a capa fica na espera honesta, sem número).
+ */
+export async function nacionalAusenteDaCasa(cargo: CargoProporcional): Promise<boolean> {
+  if (simulacaoLigada()) return false;
+  try {
+    return (await readDeputadoProjectionResult(cargo)).estado === "ausente";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * ADR-0076 — as agremiações do país a zero, do cadastro das UFs da casa (uma
+ * leitura de Blob por UF, Data Cache de 12 h). UF cujo cadastro não veio fica
+ * de fora — a lista é de identidade, não de resultado.
+ */
+export async function lerBancadaZerada(cargo: CargoProporcional) {
+  const fatias = await Promise.all(
+    ufsDoCargo(cargo).map((uf) => readCandidatosUf(uf, cargoToken(cargo))),
+  );
+  return bancadaZerada(fatias.flatMap((f) => (f.status === "ok" ? f.slice.candidatos : [])));
 }

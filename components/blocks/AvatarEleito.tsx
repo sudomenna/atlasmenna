@@ -43,10 +43,12 @@ export interface AvatarEleitoProps {
   marcas: number;
   /** Mapa `sqcand → URL` dos eleitos com foto; ausente ⇒ nenhum avatar. */
   fotos: FotosDosEleitos | undefined;
+  /** ADR-0076 (placar zerado) — avatar em TODA linha, sem a regra de eleito. */
+  todos?: boolean;
 }
 
-export function AvatarEleito({ nome, sqcand, marcas, fotos }: AvatarEleitoProps) {
-  if (!fotos || !ehEleitoNosBits(marcas)) return null;
+export function AvatarEleito({ nome, sqcand, marcas, fotos, todos = false }: AvatarEleitoProps) {
+  if (!fotos || (!todos && !ehEleitoNosBits(marcas))) return null;
   return (
     <CandidateAvatar
       nome={nome}

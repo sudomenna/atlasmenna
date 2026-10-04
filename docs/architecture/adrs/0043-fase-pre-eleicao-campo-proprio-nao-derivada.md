@@ -9,7 +9,7 @@ date: 2026-09-13
 
 ## Status
 
-Aceito.
+Aceito. **Emendado pelo [ADR-0076](0076-placar-zerado-antes-do-primeiro-boletim.md) (2026-10-04):** o leiaute só-identidade de D7/D8 ("Quem está concorrendo", ordem por número na urna) foi substituído pelo leiaute normal de apuração zerado, com ordem sorteada; D1–D3, D5, D6 e "mede, cala" permanecem.
 
 ## Contexto
 

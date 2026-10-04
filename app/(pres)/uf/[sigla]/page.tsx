@@ -159,6 +159,7 @@ import {
 import { readNationalProjection, readUfProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload, EdgePayloadUf, EdgeUfMunicipio } from "@/lib/edge-config/types";
 import { primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
+import { resolverModoUf } from "@/lib/zerado/majoritario";
 import nationalFixture from "@/tests/fixtures/edge-config/projection-current.json" with {
   type: "json",
 };
@@ -391,6 +392,16 @@ export default async function UFPage({ params }: UFPageProps) {
         readUfDetail(sigla, { cargo: "pres", turno }),
       ]);
   let payload = payloadDoStore;
+
+  // 🔴 ADR-0076 — modo zerado: chave da UF ausente, fase pré ou lista vazia ⇒
+  // o layout da apuração com as candidaturas do cadastro em 0 (ordem sorteada).
+  // Leitura que FALHOU nunca entra aqui. Fora da simulação local.
+  let zerado = false;
+  if (!emSimulacao) {
+    const r = await resolverModoUf(payloadDoStore, "pres", turno, sigla);
+    payload = r.payload;
+    zerado = r.zerado;
+  }
 
   // Detalhe municipal sob `FIXTURE_VARIANT=sim`, e SÓ sob ele: esta rota nunca
   // teve fallback de dev para o Blob, então com o modo desligado `detalhe` é
@@ -634,7 +645,7 @@ export default async function UFPage({ params }: UFPageProps) {
           o usa no sentido em que a desigualdade vale: nacional parado ⇒ esta UF
           parada (acende sem recarga); nacional fresco não prova nada sobre esta
           UF (não apaga o aviso que o servidor já tinha dado). */}
-      <DadoParadoBanner frescor={frescorDado} escopo="uf" />
+      {zerado ? null : <DadoParadoBanner frescor={frescorDado} escopo="uf" />}
 
       {/* O coroplético "{sigla} · quem lidera cada município" (RF-034)
           MUDOU DE ENDEREÇO em 2026-09-09 (map-builder): não vive mais aqui —
@@ -676,6 +687,7 @@ export default async function UFPage({ params }: UFPageProps) {
         selo="nenhum"
         title={<ResultTitle sigla={sigla} />}
         titleId="resultado-heading"
+        variant={zerado ? "zerado" : "medicao"}
       />
 
       {/* Spec 022 (RF-200/201) — "A corrida" da UF em três círculos,
@@ -684,13 +696,15 @@ export default async function UFPage({ params }: UFPageProps) {
           CANDIDATURA, com o nome cruzado por `id` em `payload.candidatos`.
           ⚠️ O payload sintetizado em desenvolvimento não traz `votacao` e cai
           em `<DetailUnavailable>` (RF-207) — não quebra. */}
-      <CorridaTresCirculos
-        kicker={`Presidente · ${sigla}`}
-        modo="candidatura"
-        votacao={payload.votacao}
-        candidatos={payload.candidatos}
-        titleId="corrida-tres-circulos-heading"
-      />
+      {zerado ? null : (
+        <CorridaTresCirculos
+          kicker={`Presidente · ${sigla}`}
+          modo="candidatura"
+          votacao={payload.votacao}
+          candidatos={payload.candidatos}
+          titleId="corrida-tres-circulos-heading"
+        />
+      )}
 
       {/* Spec 021 RF-192 (EMENDADO em 2026-09-26, noite, decisão do dono) —
           "Votação" DA UF: o eleitorado deste estado em três círculos, logo
@@ -699,11 +713,13 @@ export default async function UFPage({ params }: UFPageProps) {
           participação projetada DA UF, nunca da nacional.
           Payload sem `votacao` (fallback sintético em desenvolvimento, ou UF
           sem agregado) ⇒ `<DetailUnavailable>` (RF-198) — não quebra. */}
-      <VotacaoEleitorado
-        kicker={`Presidente · ${sigla}`}
-        votacao={payload.votacao}
-        titleId="votacao-uf-heading"
-      />
+      {zerado ? null : (
+        <VotacaoEleitorado
+          kicker={`Presidente · ${sigla}`}
+          votacao={payload.votacao}
+          titleId="votacao-uf-heading"
+        />
+      )}
 
       {/* Seção 1b — spec 020 (RF-174): a evolução da apuração, no slot T-03
           (entre o painel de resultado e o de municípios). Nunca acima do
@@ -731,13 +747,14 @@ export default async function UFPage({ params }: UFPageProps) {
           `fase` virá no payload e o lugar certo de lê-lo será `isPreEleicao`
           sobre ele — não uma segunda fonte inventada aqui. */}
       <Panel kicker="Evolução da apuração">
-        {serie ? (
+        {serie || zerado ? (
           <SerieApuracaoChart
-            cadenciaMin={serie.cadencia_min}
-            candidatos={serie.candidatos}
-            eixo={serie.eixo}
+            cadenciaMin={serie ? serie.cadencia_min : 5}
+            candidatos={serie ? serie.candidatos : []}
+            eixo={serie ? serie.eixo : []}
             escopo={sigla}
             preEleicao={false}
+            zerado={zerado && !serie}
             titleId="serie-apuracao-heading"
           />
         ) : (

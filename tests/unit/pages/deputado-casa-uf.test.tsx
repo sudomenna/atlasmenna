@@ -43,6 +43,9 @@ vi.mock("@/app/(dep)/_dados-da-casa", () => ({
   // Spec 026 RF-291 — nenhuma foto publicada: as linhas eleitas saem com iniciais.
   lerFotosDaCasa: vi.fn(async () => new Set<string>()),
   lerListaDaCasa: vi.fn(),
+  // ADR-0076 — sem placar zerado aqui (cadastro indisponível ⇒ estado de
+  // sempre). O placar zerado tem a suíte própria: `deputado-zerado-uf.test.tsx`.
+  lerZeradoSePermitido: vi.fn(async () => null),
 }));
 
 const DESLIGADO = { ligada: false, pct_minimo: 25, origem: "ausente" } as const;

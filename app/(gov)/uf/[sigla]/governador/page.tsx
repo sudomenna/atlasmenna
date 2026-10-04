@@ -138,6 +138,7 @@ import { CATEGORIAS_CHIP } from "@/lib/etiquetas/catalogo";
 import { lerEtiquetas } from "@/lib/etiquetas/leitor";
 import { etiquetasDaLista } from "@/lib/etiquetas/telas";
 import { primeiroNomeExibicao } from "@/lib/utils/nome-candidato";
+import { resolverModoUf } from "@/lib/zerado/majoritario";
 import govFixture from "@/tests/fixtures/edge-config/gov-current.json" with { type: "json" };
 
 export const revalidate = 60;
@@ -374,6 +375,16 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
       ]);
   let payload = payloadDoStore;
 
+  // 🔴 ADR-0076 — modo zerado: chave da UF ausente, fase pré ou lista vazia ⇒
+  // o layout da apuração com as candidaturas do cadastro em 0 (ordem sorteada).
+  // Leitura que FALHOU nunca entra aqui. Fora da simulação local.
+  let zerado = false;
+  if (!emSimulacao) {
+    const r = await resolverModoUf(payloadDoStore, "gov", 1, sigla);
+    payload = r.payload;
+    zerado = r.zerado;
+  }
+
   // Detalhe municipal só sob `FIXTURE_VARIANT=sim`. Com o modo desligado,
   // `detalhe` é exatamente `detalheLido` e esta rota continua sem fallback de
   // dev para o Blob.
@@ -601,7 +612,7 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
           o desta UF. O banner sabe usá-lo só no sentido em que isso é válido:
           nacional parado ⇒ esta UF parada (acende); nacional fresco não prova
           nada sobre a UF (não apaga o aviso que o servidor já deu). */}
-      <DadoParadoBanner frescor={frescorDado} escopo="uf" />
+      {zerado ? null : <DadoParadoBanner frescor={frescorDado} escopo="uf" />}
 
       {/* O coroplético "{sigla} · quem lidera cada município" (RF-034) MUDOU
           DE ENDEREÇO em 2026-09-09 (map-builder): não vive mais aqui — vive
@@ -649,6 +660,7 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
         titleId="resultado-heading"
         turno={payload.turno}
         ufDaFoto={sigla}
+        variant={zerado ? "zerado" : "medicao"}
       />
 
       {/* Spec 022 (RF-200/201) — "A corrida" da UF em três círculos,
@@ -657,13 +669,15 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
           CANDIDATURA, com o nome cruzado por `id` em `payload.candidatos`.
           ⚠️ O payload sintetizado em desenvolvimento não traz `votacao` e cai
           em `<DetailUnavailable>` (RF-207) — não quebra. */}
-      <CorridaTresCirculos
-        kicker={`Governador · ${sigla}`}
-        modo="candidatura"
-        votacao={payload.votacao}
-        candidatos={payload.candidatos}
-        titleId="corrida-tres-circulos-heading"
-      />
+      {zerado ? null : (
+        <CorridaTresCirculos
+          kicker={`Governador · ${sigla}`}
+          modo="candidatura"
+          votacao={payload.votacao}
+          candidatos={payload.candidatos}
+          titleId="corrida-tres-circulos-heading"
+        />
+      )}
 
       {/* Spec 021 RF-192 (EMENDADO em 2026-09-26, noite, decisão do dono) —
           "Votação" DA UF: o eleitorado deste estado em três círculos, logo
@@ -672,11 +686,13 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
           participação projetada DA UF, nunca da nacional.
           Payload sem `votacao` (fallback sintético em desenvolvimento, ou UF
           sem agregado) ⇒ `<DetailUnavailable>` (RF-198) — não quebra. */}
-      <VotacaoEleitorado
-        kicker={`Governador · ${sigla}`}
-        votacao={payload.votacao}
-        titleId="votacao-uf-heading"
-      />
+      {zerado ? null : (
+        <VotacaoEleitorado
+          kicker={`Governador · ${sigla}`}
+          votacao={payload.votacao}
+          titleId="votacao-uf-heading"
+        />
+      )}
 
       {/* Seção 1b — spec 020 (RF-174): a evolução da apuração, no slot T-04
           (entre o painel de resultado e o de municípios). Nunca acima do
@@ -694,13 +710,14 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
           resposta (RNF-002). Quem precisa da pergunta é o ramo de espera, e é
           lá que ela é feita. */}
       <Panel kicker="Evolução da apuração">
-        {serie ? (
+        {serie || zerado ? (
           <SerieApuracaoChart
-            cadenciaMin={serie.cadencia_min}
-            candidatos={serie.candidatos}
-            eixo={serie.eixo}
+            cadenciaMin={serie ? serie.cadencia_min : 5}
+            candidatos={serie ? serie.candidatos : []}
+            eixo={serie ? serie.eixo : []}
             escopo={`Governador ${sigla}`}
             preEleicao={false}
+            zerado={zerado && !serie}
             titleId="serie-apuracao-heading"
           />
         ) : (

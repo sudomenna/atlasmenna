@@ -416,7 +416,25 @@ export async function readUfProjection(
   sigla: string,
   opts: { cargo: CargoMajoritario; turno?: Turno },
 ): Promise<EdgePayloadUf | null> {
-  if (!process.env.EDGE_CONFIG) return null;
+  return resolver(await readUfProjectionResult(sigla, opts), {
+    fn: "readUfProjection",
+    sigla,
+    cargo: opts.cargo,
+    turno: opts.turno,
+  });
+}
+
+/**
+ * {@link readUfProjection} sem colapsar "chave ausente" e "leitura falhou" —
+ * o gêmeo UF de {@link readProjectionResult}. Existe para o placar zerado
+ * (ADR-0076): ausente pode virar a tela zerada; falha NUNCA. Não alarma —
+ * quem alarma é {@link readUfProjection}.
+ */
+export async function readUfProjectionResult(
+  sigla: string,
+  opts: { cargo: CargoMajoritario; turno?: Turno },
+): Promise<LeituraEdge<EdgePayloadUf>> {
+  if (!process.env.EDGE_CONFIG) return { estado: "ausente" };
   // O calendário responde só pelo TURNO presidencial (ADR-0028). O cargo é
   // OBRIGATÓRIO e não tem default: qualquer default — vindo do calendário ou
   // literal — faria um caller distraído receber o payload presidencial com
@@ -434,21 +452,18 @@ export async function readUfProjection(
   // `lib/edge-config/keys.ts` roda na montagem da chave) e portanto chega aqui
   // como `"falha"` — que é o classificado certo: não é "a chave não existe", é
   // "não conseguimos nem perguntar".
-  return resolver(
-    await getFirst<EdgePayloadUf>(() => [
-      ufProjectionKey(sigla, cargo, turno),
-      // DEPRECADO — remover em 2026-10-26.
-      deprecatedColonUfProjectionKey(sigla, cargo, turno),
-      ...(isActiveRace
-        ? [
-            legacyUfAliasKey(sigla),
-            // DEPRECADO — remover em 2026-10-26.
-            deprecatedColonLegacyUfAliasKey(sigla),
-          ]
-        : []),
-    ]),
-    { fn: "readUfProjection", sigla, cargo, turno },
-  );
+  return getFirst<EdgePayloadUf>(() => [
+    ufProjectionKey(sigla, cargo, turno),
+    // DEPRECADO — remover em 2026-10-26.
+    deprecatedColonUfProjectionKey(sigla, cargo, turno),
+    ...(isActiveRace
+      ? [
+          legacyUfAliasKey(sigla),
+          // DEPRECADO — remover em 2026-10-26.
+          deprecatedColonLegacyUfAliasKey(sigla),
+        ]
+      : []),
+  ]);
 }
 
 /**
@@ -487,17 +502,29 @@ export async function readUfProjection(
 export async function readDeputadoProjection(
   cargo: CargoProporcional,
 ): Promise<EdgePayloadDeputado | null> {
+  return resolver(await readDeputadoProjectionResult(cargo), {
+    fn: "readDeputadoProjection",
+    cargo: cargoToken(cargo),
+    turno: 1,
+  });
+}
+
+/**
+ * {@link readDeputadoProjection} sem colapsar "chave ausente" e "leitura
+ * falhou" — o gêmeo de {@link readProjectionResult}. Existe para o placar
+ * zerado (ADR-0076): ausente pode virar a tela zerada; falha NUNCA (a regra do
+ * dono: nunca fabricar zeros para cobrir uma falha). Não alarma — quem alarma
+ * é {@link readDeputadoProjection}.
+ */
+export async function readDeputadoProjectionResult(
+  cargo: CargoProporcional,
+): Promise<LeituraEdge<EdgePayloadDeputado>> {
   if (!isCargoProporcional(cargo)) {
     throw new Error(`readDeputadoProjection: cargo ${String(cargo)} não é proporcional`);
   }
-  if (!process.env.EDGE_CONFIG) return null;
-
+  if (!process.env.EDGE_CONFIG) return { estado: "ausente" };
   const token = cargoToken(cargo);
-  return resolver(await getFirst<EdgePayloadDeputado>(() => [currentProjectionKey(token, 1)]), {
-    fn: "readDeputadoProjection",
-    cargo: token,
-    turno: 1,
-  });
+  return getFirst<EdgePayloadDeputado>(() => [currentProjectionKey(token, 1)]);
 }
 
 // ---------------------------------------------------------------------------

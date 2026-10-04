@@ -218,6 +218,11 @@ export interface SerieApuracaoChartProps {
   vagas?: 1 | 2;
   /** Decidido pelo **chamador**, pelo ponto único de leitura da fase. */
   preEleicao?: boolean;
+  /**
+   * ADR-0076 — placar zerado (antes do 1º boletim). Mesma régua vazia do
+   * estado pré, SEM a frase "disponível apenas no dia das eleições".
+   */
+  zerado?: boolean;
   width?: number;
   height?: number;
   /** `id` do `<title>` do SVG — a figura externa aponta para ele. */
@@ -648,6 +653,7 @@ export function SerieApuracaoChart({
   escopo,
   vagas = 1,
   preEleicao = false,
+  zerado = false,
   width = 480,
   height = 260,
   titleId,
@@ -663,11 +669,11 @@ export function SerieApuracaoChart({
   // anunciar antes de haver apuração, e anunciá-la aqui prometeria ao leitor um
   // número que ninguém calculou.
   // -------------------------------------------------------------------------
-  if (preEleicao) {
+  if (preEleicao || zerado) {
     return (
       <figure
         data-testid="serie-apuracao-chart"
-        data-estado="antes-do-dia"
+        data-estado={zerado ? "zerado" : "antes-do-dia"}
         aria-labelledby={titleId}
         style={MOLDURA}
       >
@@ -681,8 +687,9 @@ export function SerieApuracaoChart({
         >
           <title id={titleId}>{`Evolução da apuração — ${escopo}`}</title>
           <desc id={descId}>
-            Os eixos estão desenhados e ainda não há nenhuma linha. O gráfico fica disponível apenas
-            no dia das eleições.
+            {zerado
+              ? "Os eixos estão desenhados e ainda não há nenhuma linha: nenhum boletim foi recebido."
+              : "Os eixos estão desenhados e ainda não há nenhuma linha. O gráfico fica disponível apenas no dia das eleições."}
           </desc>
           <Eixos width={width} yBase={yBase} />
 
@@ -727,13 +734,15 @@ export function SerieApuracaoChart({
         {/* A frase fica SOBRE a régua, centrada — é onde o protótipo a põe, e
             é o que impede a moldura vazia de parecer um gráfico que falhou
             ao carregar. */}
-        <figcaption
-          data-testid="serie-apuracao-nota"
-          className={NOTA_SOBREPOSTA_CLASSES}
-          style={NOTA_SOBREPOSTA}
-        >
-          disponível apenas no dia das eleições
-        </figcaption>
+        {zerado ? null : (
+          <figcaption
+            data-testid="serie-apuracao-nota"
+            className={NOTA_SOBREPOSTA_CLASSES}
+            style={NOTA_SOBREPOSTA}
+          >
+            disponível apenas no dia das eleições
+          </figcaption>
+        )}
       </figure>
     );
   }

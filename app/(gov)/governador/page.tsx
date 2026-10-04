@@ -129,7 +129,7 @@ import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { isPreEleicao } from "@/lib/config/fase";
 import { agruparPorRegiao } from "@/lib/config/regioes";
-import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
+import { resultadoEleitoral, simulacaoLigada, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload, EdgeUfRow } from "@/lib/edge-config/types";
 import { lerEtiquetas } from "@/lib/etiquetas/leitor";
@@ -137,6 +137,7 @@ import { editorialDaCapa } from "@/lib/etiquetas/telas";
 import { itensFaixaAgora } from "@/lib/utils/anuncios-definidos";
 import { classificarProjecao } from "@/lib/utils/desfecho-governador";
 import { haAnulada, NOTA_ANULADAS } from "@/lib/utils/destino-voto";
+import { resolverModoNacional } from "@/lib/zerado/majoritario";
 import govFixture from "@/tests/fixtures/edge-config/gov-current.json" with { type: "json" };
 
 export const revalidate = 60;
@@ -349,13 +350,20 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
   // lista vazia, ganhou da simulação na rota de municípios. Uma resposta vazia
   // é uma resposta, e a mesma armadilha espera aqui no dia em que `EDGE_CONFIG`
   // entrar no `.env.local`.
-  const payload = await resultadoEleitoral(
+  const lido = await resultadoEleitoral(
     () => simulacaoNacional("gov"),
     async () =>
       (await readProjection({ cargo: "gov", turno: 1 })) ??
       (await readProjection({ cargo: "gov", turno: 2 })) ??
       (process.env.NODE_ENV === "development" ? (govFixture as unknown as EdgePayload) : null),
   );
+
+  // 🔴 ADR-0076 — modo zerado: chave ausente, fase pré ou lista vazia ⇒ as 27
+  // corridas no layout da apuração, todas em 0 (cadastro do Blob, ordem
+  // sorteada). Leitura que FALHOU segue para a tela honesta, sem número.
+  const { payload, zerado } = simulacaoLigada()
+    ? { payload: lido, zerado: false }
+    : await resolverModoNacional(lido, "gov", 1);
 
   if (!payload) return <AguardandoGovernadores />;
 
@@ -368,6 +376,8 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
   // liga a fase pré: ela leva ao ramo acima, que é o terceiro estado ("não
   // sabemos") e não um dos dois reais.
   const pre = isPreEleicao(payload);
+  // Identidade fala, medição cala — no zerado como na fase pré.
+  const cala = pre || zerado;
 
   const { national, por_uf, pct_apurado_total } = {
     national: payload.national,
@@ -390,7 +400,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
   const capa = editorialDaCapa(etiquetas, por_uf, {
     cargo: 3,
     turno: payload.turno === 2 ? 2 : 1,
-    preEleicao: pre,
+    preEleicao: cala,
   });
   const palanques = await palanquesDaCapa(payload, etiquetas);
 
@@ -418,7 +428,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
       {/* Breaking news no topo — faixa fina entre o shell e o mapa
           (ADR-0029 § 1). Só renderiza se há UF com resultado matematicamente
           definido — e nenhuma está antes de a votação acontecer. */}
-      {!pre && faixaAgora.length > 0 && <BreakingNewsTicker chamadas={faixaAgora} />}
+      {!cala && faixaAgora.length > 0 && <BreakingNewsTicker chamadas={faixaAgora} />}
 
       {/* O cartograma hexagonal — o "mapa" desta rota — saiu daqui e virou a
           coluna persistente do `<AppShellSplit>` (ADR-0033 § 1), montada por
@@ -491,7 +501,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
           RF-161), no ramo sem payload (é outro componente, acima) e no 2º
           turno: com `turno === 2` não existe "fecha no 1º turno", e a regra
           de desfecho deixa todas as UFs `em_aberto` (`vai_a_2t` nulo). */}
-      {!pre && payload.turno !== 2 ? (
+      {!cala && payload.turno !== 2 ? (
         <Panel
           kicker="Governadores · não oficial"
           title="1º ou 2º turno"
@@ -709,6 +719,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
                             // 1º turno · na parcial" seria falso); a marca de
                             // eleito continua.
                             turno={payload.turno}
+                            zerado={zerado}
                           />
                         ))}
                       </div>
@@ -747,7 +758,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
       {/* Seção 4 — transparência metodológica. RF-158: o bloco fica em fase
           pré (constituição § 8), sem as duas frações e sem barra. */}
       <Panel kicker="Metodologia">
-        <ForecastTransparency pctApurado={pct_apurado_total} preEleicao={pre} variant="national" />
+        <ForecastTransparency pctApurado={pct_apurado_total} preEleicao={cala} variant="national" />
       </Panel>
 
       <Footer />

@@ -175,6 +175,10 @@ describe("RF-281 — GET /uf/<UF>/deputado-estadual/lista", () => {
       params("SP"),
     );
     expect(res.status).toBe(404); // o Blob simulado responde 404
-    expect(urlsLidas()).toEqual(["https://blob.teste/deputado-estadual/uf/SP.json"]);
+    // ADR-0076: com o objeto em 404 a rota consulta o cadastro de candidaturas
+    // (placar zerado) — que aqui também responde 404, e a rota segue em 404.
+    // O primeiro pedido continua sendo o da casa certa, e nenhum é do federal.
+    expect(urlsLidas()[0]).toBe("https://blob.teste/deputado-estadual/uf/SP.json");
+    expect(urlsLidas().some((u) => u.includes("/deputado/uf/"))).toBe(false);
   });
 });
