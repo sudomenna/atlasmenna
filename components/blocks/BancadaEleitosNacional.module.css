@@ -1,0 +1,213 @@
+/* =============================================================================
+ * components/blocks/BancadaEleitosNacional.module.css — spec 026 RF-299 e
+ * RF-300 (ADR-0063, emenda de 04/10 (2)).
+ *
+ * ## Peso: UMA classe por painel, nenhuma por linha no HTML
+ *
+ * A capa `/deputado-federal` está a poucos KiB do teto de documento
+ * (`tests/e2e/perf-budget.spec.ts`, 368 KiB). O que o servidor escreve por
+ * agremiação é só `<div data-acoes="">` (a reserva da altura do botão, para a
+ * linha não crescer depois da hidratação): o `<ul>` da bancada leva a classe
+ * `.bancada`, e tudo desce dela por atributo e por elemento. O botão, a região
+ * e a lista só existem no navegador, depois de montados.
+ * ========================================================================== */
+
+/* A reserva do botão "Ver os eleitos" — vem no HTML vazia e ganha o botão
+ * depois de montada; a altura é a do botão, para não haver salto. Na coluna
+ * do texto (a 2ª), alinhada à sigla. */
+.bancada > li > [data-acoes] {
+  grid-column: 2 / -1;
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  padding-top: var(--space-1);
+}
+
+/* O botão de abrir e o "Recolher": texto, contorno fino, altura de toque.
+ * A seta é desenhada em CSS num pseudo-elemento VAZIO (não entra no nome
+ * acessível nem no axe — o glifo "▾" caía em `incomplete`, `nonBmp`), e o
+ * estado dela vem do `aria-expanded`, a mesma fonte do leitor de tela. */
+.bancada [data-acoes] > button,
+.recolher {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.bancada [data-acoes] > button::before {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border-inline: 0.3125rem solid transparent;
+  border-top: 0.375rem solid currentColor;
+}
+
+.bancada [data-acoes] > button[aria-expanded="true"]::before {
+  transform: rotate(180deg);
+}
+
+/* A região da lista: a linha inteira, abaixo do botão. */
+.regiao {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0 var(--space-1);
+}
+
+.regiao[hidden] {
+  display: none;
+}
+
+/* O cenário projetado da linha (RF-300): o número em ocre, na coluna do
+ * número, e o rótulo inteiro — número, "projeção · não oficial, pontual", o
+ * misto e a parcial com o nome dela — no MESMO elemento, na coluna do texto. */
+.numeroCenario {
+  color: var(--color-pct-proj);
+}
+
+.rotuloCenario {
+  font: var(--type-data);
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.rotuloCenario > b {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* O primeiro número é o do cenário (ocre); o segundo, o da parcial. */
+.rotuloCenario > b:first-of-type {
+  color: var(--color-pct-proj);
+}
+
+/* A legenda da barra (o mesmo rótulo do misto, ou o aviso curto de quando o
+ * cenário não está na tela). */
+.legendaBarra {
+  margin: 0;
+  /* Uma linha reservada desde o servidor: o aviso chega depois da busca e
+   * não empurra a lista (só na base "Projeção" — fora dela, `display: none`). */
+  min-height: 1lh;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+/* --------------------------------------------------------------------------
+ * A lista aberta (montada no clique — `BancadaEleitosNacionalLista.tsx`)
+ * ------------------------------------------------------------------------ */
+
+.cabecalho {
+  margin: 0;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.cabecalho > strong {
+  color: var(--text-primary);
+}
+
+.status {
+  margin: 0;
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.grupos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.grupos > li > p {
+  margin: 0 0 var(--space-1);
+  font: var(--type-label);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.grupos > li > p > small {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.nomes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nomes > li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-3);
+  align-items: baseline;
+  padding: var(--space-1) 0;
+  border-top: 1px solid var(--border-hairline);
+  font: var(--type-body-sm);
+  font-size: var(--text-xs);
+}
+
+.nomes > li:has([data-testid^="candidate-avatar"]) {
+  padding-block: var(--space-2);
+}
+
+.nomes > li > span:first-child {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-2);
+  row-gap: 2px;
+}
+
+.nomes > li > span:first-child > b {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.nomes > li > span:first-child > small,
+.nomes > li > span:last-child > small {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.nomes > li > span:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  font: var(--type-data);
+}
+
+.acoesLista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+@media (min-width: 960px) {
+  .bancada > li > [data-acoes],
+  .bancada [data-acoes] > button,
+  .recolher {
+    min-height: 2rem;
+  }
+}

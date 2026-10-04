@@ -373,64 +373,19 @@ export default async function DeputadoFederalPage() {
 
       {/* Spec 025 (RF-244) — "Câmara de 2027: quem terá maioria", depois do
           plenário por partido (que fica igual, sem marca de limiar — ADR-0049
-          item 6 vale para ELE; as marcas moram só na visão por bloco). */}
-      {/* ADR-0073 — lado a lado a partir de 1280px; abaixo, `display: contents`. */}
-      <div className={painel.par}>
-        <Camara2027Panel bancada={bancada} etiquetas={etiquetas} />
+          item 6 vale para ELE; as marcas moram só na visão por bloco).
 
-        {/* Spec 021 RF-192 — EMENDADO em 2026-09-26 (noite), decisão do dono:
+          Spec 026 RF-299 (04/10, decisão do dono) — sozinho na linha: a
+          bancada saiu do par e virou a última seção de conteúdo, lá embaixo.
+          Sem o invólucro `.par` (ADR-0073): com uma criança só, ele não
+          dispunha nada, e com o painel desligado (etiquetas fora) sobraria
+          uma caixa vazia levando o `gap` do `<main>`. */}
+      <Camara2027Panel bancada={bancada} etiquetas={etiquetas} />
+
+      {/* Spec 021 RF-192 — EMENDADO em 2026-09-26 (noite), decisão do dono:
           "Votação" SAIU desta capa (repetia o eleitorado do Brasil da capa de
           Presidente). Vive em `/uf/[sigla]/deputado-federal`, com o dado DA
           UF. */}
-
-        {/* Seção 2 — a bancada. RF-122, RF-125.1, RF-127, RF-130. O painel
-          saiu para `<DeputadoBancadaPanel>` na spec 027 (design § 8.4): a capa
-          das assembleias mostra o mesmo painel sobre a soma das 27 casas. */}
-        <DeputadoBancadaPanel
-          kicker="Bancada apurada"
-          title="Quem fica com as cadeiras"
-          titleId="bancada-heading"
-          agremiacoes={agremiacoes}
-          total={bancada.total_cadeiras}
-          atribuidas={bancada.cadeiras_atribuidas}
-          rotuloBarra={`Bancada de ${bancada.total_cadeiras} cadeiras`}
-          fraseAguardando={
-            <>
-              cadeiras ainda sem dono — {bancada.ufs_aguardando} de {TOTAL_UFS} estados sem boletim
-              e vagas que a distribuição ainda não fechou.
-            </>
-          }
-          nota={
-            <>
-              {/* Constituição § 8 — de onde vem o número. Os dois fatos que o
-          leitor não tem como inferir da tela: que o agregado nacional é
-          soma nossa, e que o próprio total de cadeiras é dado publicado,
-          não constante. */}
-              <p
-                className="max-w-prose"
-                data-testid="bancada-nota"
-                style={{
-                  margin: 0,
-                  font: "var(--type-body-sm)",
-                  fontSize: "var(--text-xs)",
-                  color: "var(--text-muted)",
-                  textWrap: "pretty",
-                }}
-              >
-                Esta contagem é a <strong>soma das {TOTAL_UFS} corridas estaduais</strong> — o TSE
-                não publica um arquivo nacional para este cargo, então não existe um número oficial
-                a reproduzir: o que existe são {TOTAL_UFS} apurações estaduais, e a soma é nossa. Já
-                o total de {bancada.total_cadeiras} cadeiras não é soma nenhuma: é o tamanho da
-                Câmara, fixo desde antes da urna abrir, e todas elas são renovadas nesta eleição.
-                Quantas cada estado elege continua vindo do dado que o TSE publica, e nós conferimos
-                uma coisa contra a outra. Cadeira contada é cadeira com candidato eleito: quando a
-                conta de um partido dá direito a uma vaga que nenhum candidato dele pode ocupar, a
-                vaga vai para as sobras e não aparece aqui.
-              </p>
-            </>
-          }
-        />
-      </div>
 
       {/* Seção 2b — destaques por template (ADR-0005, NUNCA LLM).
           **Hoje a lista vem vazia e isso não é erro** (design 017 § D10): os
@@ -496,6 +451,67 @@ export default async function DeputadoFederalPage() {
         <UfBandeirasGrid cargo={CARGO_DEPUTADO} resumos={resumosPorUf(payload, interruptor)} />
       </Panel>
 
+      {/* Seção 2 — a bancada. RF-122, RF-125.1, RF-127, RF-130. O painel
+        saiu para `<DeputadoBancadaPanel>` na spec 027 (design § 8.4): a capa
+        das assembleias mostra o mesmo painel sobre a soma das 27 casas.
+
+        Spec 026 RF-299 (04/10, decisão do dono) — a ÚLTIMA seção de
+        conteúdo: depois de "Estado a estado", antes da metodologia. Com
+        `eleitosNacionais`, cada agremiação abre os eleitos do país e, na base
+        "Projeção", mostra o cenário projetado nacional ao lado da parcial
+        (RF-300). `projecaoLigada` é o interruptor lido AGORA, nesta
+        renderização (RF-265): o segundo ponto de leitura, que vale sobre a
+        resposta da rota (ADR-0063 emenda 04/10 (2), item 5). A capa continua
+        sem ler Blob de UF (RF-271): quem lê é a rota, no navegador, sob
+        demanda. */}
+      <DeputadoBancadaPanel
+        kicker="Bancada apurada"
+        title="Quem fica com as cadeiras"
+        titleId="bancada-heading"
+        agremiacoes={agremiacoes}
+        total={bancada.total_cadeiras}
+        atribuidas={bancada.cadeiras_atribuidas}
+        rotuloBarra={`Bancada de ${bancada.total_cadeiras} cadeiras`}
+        eleitosNacionais={{ projecaoLigada: interruptor.ligada }}
+        // Decisão do dono, 04/10: só agremiação com cadeira na parcial.
+        ocultarSemCadeira
+        fraseAguardando={
+          <>
+            cadeiras ainda sem dono — {bancada.ufs_aguardando} de {TOTAL_UFS} estados sem boletim e
+            vagas que a distribuição ainda não fechou.
+          </>
+        }
+        nota={
+          <>
+            {/* Constituição § 8 — de onde vem o número. Os dois fatos que o
+        leitor não tem como inferir da tela: que o agregado nacional é
+        soma nossa, e que o próprio total de cadeiras é dado publicado,
+        não constante. */}
+            <p
+              className="max-w-prose"
+              data-testid="bancada-nota"
+              style={{
+                margin: 0,
+                font: "var(--type-body-sm)",
+                fontSize: "var(--text-xs)",
+                color: "var(--text-muted)",
+                textWrap: "pretty",
+              }}
+            >
+              Esta contagem é a <strong>soma das {TOTAL_UFS} corridas estaduais</strong> — o TSE não
+              publica um arquivo nacional para este cargo, então não existe um número oficial a
+              reproduzir: o que existe são {TOTAL_UFS} apurações estaduais, e a soma é nossa. Já o
+              total de {bancada.total_cadeiras} cadeiras não é soma nenhuma: é o tamanho da Câmara,
+              fixo desde antes da urna abrir, e todas elas são renovadas nesta eleição. Quantas cada
+              estado elege continua vindo do dado que o TSE publica, e nós conferimos uma coisa
+              contra a outra. Cadeira contada é cadeira com candidato eleito: quando a conta de um
+              partido dá direito a uma vaga que nenhum candidato dele pode ocupar, a vaga vai para
+              as sobras e não aparece aqui.
+            </p>
+          </>
+        }
+      />
+
       {/* Seção 4 — constituição § 8 (método da parcial e, desde o ADR-0063, da
           projeção por UF, que superou o § D9 do design 017). */}
       <DeputadoMetodologia
@@ -508,6 +524,8 @@ export default async function DeputadoFederalPage() {
         interruptorLigado={interruptor.ligada}
         interruptorOrigem={interruptor.origem}
         pctMinimo={interruptor.pct_minimo}
+        // Spec 026 RF-300 — o método do cenário nacional misto (§ 8).
+        cenarioNacional
         // Constituição § 8 — com o selo de projeção de algum estado na tela
         // (interruptor ligado, `resumosPorUf`), o bloco traz o "o que está
         // movendo a projeção · não oficial" compacto. Mesma condição dos selos.

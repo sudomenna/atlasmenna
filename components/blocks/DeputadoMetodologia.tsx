@@ -204,6 +204,13 @@ export interface DeputadoMetodologiaProps {
    * passam `true`; ausente ⇒ o texto do federal ("Em DF: …").
    */
   comArtigo?: boolean;
+  /**
+   * Spec 026 RF-300 (ADR-0063, emenda de 04/10 (2)) — a capa FEDERAL soma, na
+   * base "Projeção", um cenário nacional misto. A frase de antes ("não
+   * somamos projeções numa bancada nacional") ficaria falsa nela; no lugar,
+   * o método do misto (§ 8). Ausente (capa das assembleias), o texto de antes.
+   */
+  cenarioNacional?: boolean;
 }
 
 export function DeputadoMetodologia({
@@ -223,6 +230,7 @@ export function DeputadoMetodologia({
   territorio = TERMO_ESTADO,
   modoResumo = false,
   comArtigo = false,
+  cenarioNacional = false,
 }: DeputadoMetodologiaProps) {
   const t = territorio;
   const visivel = variant === "uf" && ehProjecaoVisivel(projecao, interruptorLigado);
@@ -313,7 +321,15 @@ export function DeputadoMetodologia({
                 {fraseEstadoProjecao(projecao, pctApurado, t)}
               </>
             ) : null}
-            {variant === "national" ? (
+            {variant === "national" && cenarioNacional ? (
+              <>
+                {" "}
+                Ela é calculada por estado. Na base "Projeção", o painel da bancada soma um cenário
+                nacional misto: a projeção nos estados em que ela está liberada e a parcial nos
+                demais, sempre com quantos estados entram em cada base. É um número pontual, sem
+                faixa, e não substitui a parcial, que continua ao lado.
+              </>
+            ) : variant === "national" ? (
               <>
                 {" "}
                 Ela existe por estado: não somamos projeções numa bancada nacional, porque juntar

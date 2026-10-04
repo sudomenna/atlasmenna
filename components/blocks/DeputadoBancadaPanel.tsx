@@ -32,7 +32,14 @@
  * tela afirmar "nenhuma cadeira aguardando" sobre uma soma que passa do total.
  * Aqui o negativo vira uma linha que diz o que aconteceu.
  *
- * Server Component, zero JS.
+ * ## As ilhas da capa federal (spec 026 RF-299 e RF-300, 04/10)
+ *
+ * Com `eleitosNacionais` (só a capa federal passa), cada agremiação ganha o
+ * botão "Ver os eleitos" e, na base "Projeção", o cenário projetado nacional
+ * ao lado da parcial — `BancadaEleitosNacional.tsx`. O HTML que o servidor
+ * manda continua sendo a parcial: as ilhas só acrescentam no navegador.
+ *
+ * Server Component; zero JS sem `eleitosNacionais`.
  */
 
 import type { ReactNode } from "react";
@@ -43,6 +50,14 @@ import type { EdgeAgremiacaoBancada } from "@/lib/edge-config/types";
 import { ordenarBancada } from "@/lib/utils/bancada";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
 import { colorForParty, textForParty } from "@/lib/utils/party-color";
+
+import {
+  BancadaLinhaNacional,
+  BancadaNacionalContexto,
+  BarraCenarioNacional,
+  CenarioSemLinha,
+} from "./BancadaEleitosNacional";
+import estilosNacional from "./BancadaEleitosNacional.module.css";
 
 export interface DeputadoBancadaPanelProps {
   kicker: string;
@@ -68,6 +83,26 @@ export interface DeputadoBancadaPanelProps {
   aviso?: ReactNode;
   /** Mostra a coluna da faixa de cadeiras (RF-127). Default `true` (a capa federal). */
   mostrarFaixa?: boolean;
+  /**
+   * Spec 026 RF-299 e RF-300 (ADR-0063, emenda de 04/10 (2)) — SÓ a capa
+   * federal passa: liga as ilhas `<BancadaEleitosNacional>` (o botão "Ver os
+   * eleitos" em cada agremiação e, na base "Projeção", o cenário projetado
+   * nacional ao lado da parcial). `projecaoLigada` é o interruptor que a
+   * PÁGINA leu agora (RF-265) — o segundo ponto de leitura: desligado, a ilha
+   * ignora qualquer projeção que a rota traga. Ausente (a capa das
+   * assembleias), o painel é o de antes, byte a byte.
+   */
+  eleitosNacionais?: { projecaoLigada: boolean };
+  /**
+   * Decisão do dono (04/10, dia do 1º turno) — a lista mostra só as
+   * agremiações com cadeira na parcial (`cadeiras > 0`). Só a capa federal
+   * liga; a das assembleias não muda sem decisão própria. A barra e a conta do
+   * "aguardando" não mudam: quem tem zero já não tinha segmento. Na base
+   * "Projeção", agremiação escondida aqui que tenha cadeira no cenário volta
+   * ao fim da lista pela ilha (RF-300); a que tem parcial e cenário zero fica
+   * visível, com o zero do cenário.
+   */
+  ocultarSemCadeira?: boolean;
 }
 
 /**
@@ -157,174 +192,230 @@ export function DeputadoBancadaPanel({
   nota,
   aviso,
   mostrarFaixa = true,
+  eleitosNacionais,
+  ocultarSemCadeira = false,
 }: DeputadoBancadaPanelProps) {
   const agremiacoes = ordenarBancada(recebidas);
+  // Só a LISTA filtra (ver `ocultarSemCadeira`); barra, rótulo e contas usam todas.
+  const naLista = ocultarSemCadeira ? agremiacoes.filter((a) => a.cadeiras > 0) : agremiacoes;
   // Sem `Math.max(0, …)` — ver o cabeçalho.
   const aguardando = total - atribuidas;
 
-  return (
-    <Panel kicker={kicker} title={title} titleId={titleId}>
-      <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
-        {aviso}
+  // Sem `marker`: não existe "maioria" a marcar. `showLabels={false}`: o
+  // `<VoteBar>` rotula, por default, o primeiro e o segundo segmento —
+  // desenho de duelo majoritário. A lista abaixo nomeia todas.
+  const barra = (
+    <VoteBar
+      ariaLabel={`${rotuloBarra}, com os votos já apurados: ${agremiacoes
+        .filter((a) => a.cadeiras > 0)
+        .map((a) => `${a.sigla} ${a.cadeiras}`)
+        .join(", ")}${aguardando > 0 ? `, ${aguardando} aguardando apuração` : ""}`}
+      marker={null}
+      segments={segmentos(agremiacoes, total, aguardando)}
+      showLabels={false}
+    />
+  );
 
-        {/* Sem `marker`: não existe "maioria" a marcar. `showLabels={false}`:
-            o `<VoteBar>` rotula, por default, o primeiro e o segundo segmento —
-            desenho de duelo majoritário. A lista abaixo nomeia todas. */}
-        <VoteBar
-          ariaLabel={`${rotuloBarra}, com os votos já apurados: ${agremiacoes
-            .filter((a) => a.cadeiras > 0)
-            .map((a) => `${a.sigla} ${a.cadeiras}`)
-            .join(", ")}${aguardando > 0 ? `, ${aguardando} aguardando apuração` : ""}`}
-          marker={null}
-          segments={segmentos(agremiacoes, total, aguardando)}
-          showLabels={false}
-        />
+  const conteudo = (
+    <div className="flex flex-col" style={{ gap: "var(--space-4)" }}>
+      {aviso}
 
-        {/* O `id` é o alvo do `aria-describedby` do hemiciclo da capa federal
-            — é esta lista que serve de equivalente textual do gráfico
-            (constituição § 4). Não renomear sem mexer lá. */}
-        <ul
-          id="bancada-agremiacoes"
-          data-testid="bancada-agremiacoes"
-          style={{ listStyle: "none", margin: 0, padding: 0, display: "grid" }}
-        >
-          {agremiacoes.map((agr) => {
-            const intervalo = intervaloDeCadeiras(agr);
-            const componentes = listarComponentes(agr.componentes);
-            return (
-              <li
-                key={agr.cod}
-                data-testid="bancada-linha"
-                data-cod={agr.cod}
-                className="grid items-baseline"
+      {/* RF-300 — com as ilhas, a barra da parcial ganha a versão do cenário
+          (na base "Projeção", só no navegador). */}
+      {eleitosNacionais ? <BarraCenarioNacional>{barra}</BarraCenarioNacional> : barra}
+
+      {/* O `id` é o alvo do `aria-describedby` do hemiciclo da capa federal
+          — é esta lista que serve de equivalente textual do gráfico
+          (constituição § 4). Não renomear sem mexer lá. */}
+      <ul
+        id="bancada-agremiacoes"
+        data-testid="bancada-agremiacoes"
+        className={eleitosNacionais ? estilosNacional.bancada : undefined}
+        style={{ listStyle: "none", margin: 0, padding: 0, display: "grid" }}
+      >
+        {naLista.map((agr) => {
+          const intervalo = intervaloDeCadeiras(agr);
+          const componentes = listarComponentes(agr.componentes);
+          // O miolo da coluna do texto e a coluna da faixa. Com as ilhas
+          // (capa federal) eles atravessam para `<BancadaLinhaNacional>`
+          // prontos do servidor; sem elas, a linha é a de sempre.
+          const identidade = (
+            <>
+              <span className="inline-flex items-center" style={{ gap: "var(--space-2)" }}>
+                {/* O ponto de cor é redundante com o texto (WCAG 1.4.1). */}
+                <span
+                  aria-hidden="true"
+                  data-testid="bancada-ponto"
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    background: corIdentidadeDaAgremiacao(agr),
+                    flex: "none",
+                  }}
+                />
+                {/* 🔴 A SIGLA INTEIRA — exceção explícita do dono
+                    (2026-09-19) para as capas de Deputados. Nenhum
+                    `siglaExibicao(...)` neste painel. */}
+                <span style={{ font: "var(--type-body-sm)" }}>{agr.sigla}</span>
+              </span>
+
+              <span
                 style={{
-                  gridTemplateColumns: "3rem minmax(0, 1fr) auto",
-                  columnGap: "var(--space-3)",
-                  padding: "var(--space-3) 0",
-                  borderBottom: "1px solid var(--border-hairline)",
+                  font: "var(--type-body-sm)",
+                  fontSize: "var(--text-xs)",
+                  color: "var(--text-muted)",
+                  textWrap: "pretty",
                 }}
               >
-                {/* O rótulo é IRMÃO do número, não filho: `bancada-cadeiras`
-                    vale exatamente a contagem (RF-125.1). */}
-                <span style={{ font: "var(--type-figure-sm)", color: "var(--text-primary)" }}>
-                  <span data-testid="bancada-cadeiras">{agr.cadeiras}</span>
-                  <span className="sr-only"> cadeiras conquistadas</span>
-                </span>
-
-                <span className="min-w-0 flex flex-col" style={{ gap: "var(--space-1)" }}>
-                  <span className="inline-flex items-center" style={{ gap: "var(--space-2)" }}>
-                    {/* O ponto de cor é redundante com o texto (WCAG 1.4.1). */}
-                    <span
-                      aria-hidden="true"
-                      data-testid="bancada-ponto"
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: "50%",
-                        background: corIdentidadeDaAgremiacao(agr),
-                        flex: "none",
-                      }}
-                    />
-                    {/* 🔴 A SIGLA INTEIRA — exceção explícita do dono
-                        (2026-09-19) para as capas de Deputados. Nenhum
-                        `siglaExibicao(...)` neste painel. */}
-                    <span style={{ font: "var(--type-body-sm)" }}>{agr.sigla}</span>
-                  </span>
-
-                  <span
-                    style={{
-                      font: "var(--type-body-sm)",
-                      fontSize: "var(--text-xs)",
-                      color: "var(--text-muted)",
-                      textWrap: "pretty",
-                    }}
-                  >
-                    {/* RF-122 */}
-                    {agr.tipo === "federacao" && componentes.length > 0 ? (
-                      <span data-testid="bancada-federacao">
-                        {agr.nome} — federação de {componentes}.{" "}
-                      </span>
-                    ) : (
-                      <span>{agr.nome}. </span>
-                    )}
-                    {/* RF-130 — legenda separada do nominal. */}
-                    <span data-testid="bancada-votos">
-                      {formatVotes(agr.votos_nominais)} votos nominais e{" "}
-                      {formatVotes(agr.votos_legenda)} de legenda ({formatPercent(agr.pct_votos)}{" "}
-                      dos válidos).
-                    </span>
-                    {/* RF-127 — a cadeira decidida em rodada de sobra vai marcada. */}
-                    {agr.cadeiras_indefinidas ? (
-                      <span data-testid="bancada-indefinidas">
-                        {" "}
-                        {agr.cadeiras_indefinidas === 1
-                          ? "1 dessas cadeiras ainda está indefinida — foi decidida em rodada de sobra, por margem apertada."
-                          : `${agr.cadeiras_indefinidas} dessas cadeiras ainda estão indefinidas — foram decididas em rodada de sobra, por margem apertada.`}
-                      </span>
-                    ) : null}
-                  </span>
-                </span>
-
-                {/* Nada aqui usa `aria-hidden`: o teste (m4) da capa federal
-                    conta `span[aria-hidden]` para conferir os pontos de cor. */}
-                {mostrarFaixa ? (
-                  <span
-                    className="text-right"
-                    style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
-                  >
-                    <span className="sr-only">
-                      {intervalo ? "faixa provável: " : "faixa não disponível "}
-                    </span>
-                    <span data-testid="bancada-intervalo">
-                      {intervalo ? `${intervalo} cadeiras` : "—"}
-                    </span>
+                {/* RF-122 */}
+                {agr.tipo === "federacao" && componentes.length > 0 ? (
+                  <span data-testid="bancada-federacao">
+                    {agr.nome} — federação de {componentes}.{" "}
                   </span>
                 ) : (
-                  <span />
+                  <span>{agr.nome}. </span>
                 )}
-              </li>
-            );
-          })}
-
-          {aguardando > 0 ? (
+                {/* RF-130 — legenda separada do nominal. */}
+                <span data-testid="bancada-votos">
+                  {formatVotes(agr.votos_nominais)} votos nominais e{" "}
+                  {formatVotes(agr.votos_legenda)} de legenda ({formatPercent(agr.pct_votos)} dos
+                  válidos).
+                </span>
+                {/* RF-127 — a cadeira decidida em rodada de sobra vai marcada. */}
+                {agr.cadeiras_indefinidas ? (
+                  <span data-testid="bancada-indefinidas">
+                    {" "}
+                    {agr.cadeiras_indefinidas === 1
+                      ? "1 dessas cadeiras ainda está indefinida — foi decidida em rodada de sobra, por margem apertada."
+                      : `${agr.cadeiras_indefinidas} dessas cadeiras ainda estão indefinidas — foram decididas em rodada de sobra, por margem apertada.`}
+                  </span>
+                ) : null}
+              </span>
+            </>
+          );
+          // Nada aqui usa `aria-hidden`: o teste (m4) da capa federal conta
+          // `span[aria-hidden]` para conferir os pontos de cor.
+          const faixa = mostrarFaixa ? (
+            <span
+              className="text-right"
+              style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
+            >
+              <span className="sr-only">
+                {intervalo ? "faixa provável: " : "faixa não disponível "}
+              </span>
+              <span data-testid="bancada-intervalo">
+                {intervalo ? `${intervalo} cadeiras` : "—"}
+              </span>
+            </span>
+          ) : (
+            <span />
+          );
+          return (
             <li
-              data-testid="bancada-aguardando"
+              key={agr.cod}
+              data-testid="bancada-linha"
+              data-cod={agr.cod}
               className="grid items-baseline"
               style={{
                 gridTemplateColumns: "3rem minmax(0, 1fr) auto",
                 columnGap: "var(--space-3)",
                 padding: "var(--space-3) 0",
+                borderBottom: "1px solid var(--border-hairline)",
               }}
             >
-              <span style={{ font: "var(--type-figure-sm)", color: "var(--text-muted)" }}>
-                {aguardando}
-              </span>
-              <span style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
-                {fraseAguardando}
-              </span>
-              <span />
+              {eleitosNacionais ? (
+                // RF-299 / RF-300 — props mínimas por linha (peso da capa).
+                <BancadaLinhaNacional
+                  cod={agr.cod}
+                  sigla={agr.sigla}
+                  cadeiras={agr.cadeiras}
+                  identidade={identidade}
+                  faixa={faixa}
+                />
+              ) : (
+                <>
+                  {/* O rótulo é IRMÃO do número, não filho: `bancada-cadeiras`
+                      vale exatamente a contagem (RF-125.1). */}
+                  <span style={{ font: "var(--type-figure-sm)", color: "var(--text-primary)" }}>
+                    <span data-testid="bancada-cadeiras">{agr.cadeiras}</span>
+                    <span className="sr-only"> cadeiras conquistadas</span>
+                  </span>
+                  <span className="min-w-0 flex flex-col" style={{ gap: "var(--space-1)" }}>
+                    {identidade}
+                  </span>
+                  {faixa}
+                </>
+              )}
             </li>
-          ) : aguardando < 0 ? (
-            // Nunca deveria acontecer (o total com todas as UFs é a soma das
-            // vagas publicadas). Se acontecer, a tela diz — não esconde.
-            <li
-              data-testid="bancada-excesso"
-              style={{
-                padding: "var(--space-3) 0",
-                font: "var(--type-body-sm)",
-                color: "var(--text-secondary)",
-              }}
-            >
-              As cadeiras somadas ({atribuidas.toLocaleString("pt-BR")}) passam do total de{" "}
-              {total.toLocaleString("pt-BR")} em {(-aguardando).toLocaleString("pt-BR")}. É uma
-              divergência nos dados, não uma cadeira a mais: conferimos a conta de cada casa contra
-              as vagas que o TSE publica.
-            </li>
-          ) : null}
-        </ul>
+          );
+        })}
 
-        {nota}
-      </div>
+        {/* RF-300 — agremiação com cadeira no cenário e sem linha acima. */}
+        {eleitosNacionais ? <CenarioSemLinha /> : null}
+
+        {aguardando > 0 ? (
+          <li
+            data-testid="bancada-aguardando"
+            className="grid items-baseline"
+            style={{
+              gridTemplateColumns: "3rem minmax(0, 1fr) auto",
+              columnGap: "var(--space-3)",
+              padding: "var(--space-3) 0",
+            }}
+          >
+            <span style={{ font: "var(--type-figure-sm)", color: "var(--text-muted)" }}>
+              {aguardando}
+            </span>
+            <span style={{ font: "var(--type-body-sm)", color: "var(--text-muted)" }}>
+              {fraseAguardando}
+            </span>
+            <span />
+          </li>
+        ) : aguardando < 0 ? (
+          // Nunca deveria acontecer (o total com todas as UFs é a soma das
+          // vagas publicadas). Se acontecer, a tela diz — não esconde.
+          <li
+            data-testid="bancada-excesso"
+            style={{
+              padding: "var(--space-3) 0",
+              font: "var(--type-body-sm)",
+              color: "var(--text-secondary)",
+            }}
+          >
+            As cadeiras somadas ({atribuidas.toLocaleString("pt-BR")}) passam do total de{" "}
+            {total.toLocaleString("pt-BR")} em {(-aguardando).toLocaleString("pt-BR")}. É uma
+            divergência nos dados, não uma cadeira a mais: conferimos a conta de cada casa contra as
+            vagas que o TSE publica.
+          </li>
+        ) : null}
+      </ul>
+
+      {nota}
+    </div>
+  );
+
+  return (
+    <Panel kicker={kicker} title={title} titleId={titleId}>
+      {eleitosNacionais ? (
+        // ADR-0063 emenda 04/10 (2), item 5 — o interruptor que a PÁGINA leu,
+        // o total e a cor de cada agremiação (ADR-0024, resolvida aqui).
+        <BancadaNacionalContexto
+          ligada={eleitosNacionais.projecaoLigada}
+          total={total}
+          // `0` no fim: agremiação SEM linha na lista (escondida com zero) — a
+          // ilha a acrescenta se tiver cadeira no cenário.
+          cores={agremiacoes.map((a) =>
+            naLista.includes(a)
+              ? ([a.cod, corDaAgremiacao(a)] as const)
+              : ([a.cod, corDaAgremiacao(a), 0] as const),
+          )}
+        >
+          {conteudo}
+        </BancadaNacionalContexto>
+      ) : (
+        conteudo
+      )}
     </Panel>
   );
 }
