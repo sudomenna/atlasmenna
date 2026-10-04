@@ -92,7 +92,15 @@ export interface DeputadoBancadaPanelProps {
    * ignora qualquer projeção que a rota traga. Ausente (a capa das
    * assembleias), o painel é o de antes, byte a byte.
    */
-  eleitosNacionais?: { projecaoLigada: boolean };
+  eleitosNacionais?: {
+    projecaoLigada: boolean;
+    /**
+     * O payload nacional já diz que alguma UF tem a projeção liberada — a
+     * linha reserva, desde o servidor, o espaço do rótulo do cenário, para a
+     * lista não "pular" quando a busca da rota terminar (CLS, 04/10).
+     */
+    cenarioEsperado?: boolean;
+  };
   /**
    * Decisão do dono (04/10, dia do 1º turno) — a lista mostra só as
    * agremiações com cadeira na parcial (`cadeiras > 0`). Só a capa federal
@@ -410,6 +418,7 @@ export function DeputadoBancadaPanel({
         // o total e a cor de cada agremiação (ADR-0024, resolvida aqui).
         <BancadaNacionalContexto
           ligada={eleitosNacionais.projecaoLigada}
+          esperado={eleitosNacionais.cenarioEsperado ?? false}
           total={total}
           // `0` no fim: agremiação SEM linha na lista (escondida com zero) — a
           // ilha a acrescenta se tiver cadeira no cenário.

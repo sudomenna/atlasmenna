@@ -145,10 +145,12 @@ function Painel({
   ligada = true,
   cadeirasPt = 3,
   ocultar = false,
+  esperado = false,
 }: {
   ligada?: boolean;
   cadeirasPt?: number;
   ocultar?: boolean;
+  esperado?: boolean;
 }) {
   return (
     <DeputadoBancadaPanel
@@ -165,7 +167,7 @@ function Painel({
       rotuloBarra="Bancada de 20 cadeiras"
       fraseAguardando={<>cadeiras ainda sem dono.</>}
       nota={<p>nota</p>}
-      eleitosNacionais={{ projecaoLigada: ligada }}
+      eleitosNacionais={{ projecaoLigada: ligada, cenarioEsperado: esperado }}
       ocultarSemCadeira={ocultar}
     />
   );
@@ -804,5 +806,92 @@ describe("ocultarSemCadeira — a lista só com quem tem cadeira na parcial", ()
     expect(so(pl?.querySelector("[data-testid='bancada-cenario']")?.textContent)).toMatch(
       /^0 no cenário · projeção · não oficial · 2 na parcial$/,
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RF-300 — reserva do rótulo do cenário (CLS, 04/10)
+// ---------------------------------------------------------------------------
+
+describe("RF-300 — a linha reserva o rótulo do cenário enquanto a busca não termina (sem salto)", () => {
+  beforeEach(() => {
+    setViewMode("proj");
+  });
+
+  const reserva = (cod: string) =>
+    host?.querySelector(`[data-cod='${cod}'] [data-testid='bancada-cenario-reserva']`);
+
+  it("cenário esperado: o HTML do servidor já traz a reserva, invisível e fora da árvore de acessibilidade", () => {
+    const html = renderToStaticMarkup(<Painel esperado />);
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const r = doc.querySelector("[data-cod='13'] [data-testid='bancada-cenario-reserva']");
+    expect(r).not.toBeNull();
+    expect(r?.getAttribute("aria-hidden")).toBe("true");
+    expect(r?.getAttribute("data-view-only")).toBe("proj");
+    // O mesmo texto do rótulo, com a parcial no lugar do cenário (mesma quebra).
+    expect(so(r?.textContent)).toBe("3 no cenário · projeção · não oficial · 3 na parcial");
+  });
+
+  it("enquanto a busca está pendente a reserva fica; quando o cenário chega, sai e entra o rótulo", async () => {
+    let soltar: (r: Response) => void = () => {};
+    fetchSpy.mockImplementation(
+      (() =>
+        new Promise<Response>((res) => {
+          soltar = res;
+        })) as unknown as typeof fetch,
+    );
+    await montar(<Painel esperado />);
+    expect(reserva("13")).not.toBeNull();
+    expect(host?.querySelector("[data-cod='13'] [data-testid='bancada-cenario']")).toBeNull();
+    await act(async () => {
+      soltar(new Response(JSON.stringify(dados()), { status: 200 }));
+    });
+    await esperar();
+    expect(reserva("13")).toBeNull();
+    expect(host?.querySelector("[data-cod='13'] [data-testid='bancada-cenario']")).not.toBeNull();
+  });
+
+  it("os dados chegam sem nenhuma UF liberada (X = 0): a reserva sai, sem rótulo no lugar", async () => {
+    responder(dados({ ufs_liberadas: [], ufs_parcial: ["BA", "SP"] }));
+    await montar(<Painel esperado />);
+    expect(reserva("13")).toBeNull();
+    expect(host?.querySelector("[data-cod='13'] [data-testid='bancada-cenario']")).toBeNull();
+  });
+
+  it("a legenda da barra também reserva a altura do rótulo do misto até o cenário chegar", async () => {
+    const html = renderToStaticMarkup(<Painel esperado />);
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const leg = doc.querySelector("[data-testid='bancada-cenario-legenda']");
+    expect(leg?.textContent).toMatch(/^Carregando o cenário · projeção · não oficial…/);
+    expect(leg?.querySelector("[aria-hidden='true']")).not.toBeNull();
+    // Com o cenário na tela, a reserva sai e fica só o rótulo do misto.
+    await montar(<Painel esperado />);
+    const viva = host?.querySelector("[data-testid='bancada-cenario-legenda']");
+    expect(viva?.querySelector("[aria-hidden='true']")).toBeNull();
+    expect(so(viva?.textContent)).toMatch(/^Cenário projetado nacional/);
+  });
+
+  it("busca falhou: a reserva sai (nada de espaço vazio esperando para sempre)", async () => {
+    responder({ erro: "x" }, 502);
+    await montar(<Painel esperado />);
+    expect(reserva("13")).toBeNull();
+  });
+
+  it("sem cenário esperado (nenhuma UF liberada no payload), nenhuma reserva", async () => {
+    let soltar: (r: Response) => void = () => {};
+    fetchSpy.mockImplementation(
+      (() =>
+        new Promise<Response>((res) => {
+          soltar = res;
+        })) as unknown as typeof fetch,
+    );
+    await montar(<Painel />);
+    expect(reserva("13")).toBeNull();
+    soltar(new Response(JSON.stringify(dados()), { status: 200 }));
+  });
+
+  it("projeção desligada pela página: nenhuma reserva, mesmo com cenário esperado", async () => {
+    await montar(<Painel esperado ligada={false} />);
+    expect(reserva("13")).toBeNull();
   });
 });

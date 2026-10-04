@@ -472,7 +472,13 @@ export default async function DeputadoFederalPage() {
         total={bancada.total_cadeiras}
         atribuidas={bancada.cadeiras_atribuidas}
         rotuloBarra={`Bancada de ${bancada.total_cadeiras} cadeiras`}
-        eleitosNacionais={{ projecaoLigada: interruptor.ligada }}
+        eleitosNacionais={{
+          projecaoLigada: interruptor.ligada,
+          // Reserva do rótulo do cenário (sem salto): alguma UF já liberada
+          // no payload que a página leu — já com o interruptor aplicado.
+          cenarioEsperado:
+            interruptor.ligada && payload.por_uf.some((u) => u.projecao?.estado === "liberada"),
+        }}
         // Decisão do dono, 04/10: só agremiação com cadeira na parcial.
         ocultarSemCadeira
         fraseAguardando={

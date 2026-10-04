@@ -17,7 +17,9 @@
  * do texto (a 2ª), alinhada à sigla. */
 .bancada > li > [data-acoes] {
   grid-column: 2 / -1;
-  min-height: var(--tap-min);
+  /* `border-box` (preflight): a reserva conta o `padding-top` — sem somá-lo,
+   * a linha crescia 4 px quando o botão aparecia (CLS medido em 04/10). */
+  min-height: calc(var(--tap-min) + var(--space-1));
   display: flex;
   align-items: center;
   padding-top: var(--space-1);
@@ -85,6 +87,11 @@
 .rotuloCenario > b {
   font-weight: 600;
   color: var(--text-primary);
+}
+
+/* A reserva do rótulo, até o cenário chegar: ocupa o lugar, não aparece. */
+.reserva {
+  visibility: hidden;
 }
 
 /* O primeiro número é o do cenário (ocre); o segundo, o da parcial. */

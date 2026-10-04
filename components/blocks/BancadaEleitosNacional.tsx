@@ -219,13 +219,23 @@ export type CorDaAgremiacao =
 interface ContextoBancada {
   /** O interruptor da projeção que a PÁGINA leu agora (RF-265). */
   ligada: boolean;
+  /**
+   * O payload nacional diz que alguma UF tem a projeção liberada: a linha
+   * reserva o rótulo do cenário antes da busca terminar (sem salto, CLS).
+   */
+  esperado: boolean;
   /** `bancada.total_cadeiras` — o denominador da barra. */
   total: number;
   /** As agremiações do painel, na ordem dele, com a cor. */
   cores: readonly CorDaAgremiacao[];
 }
 
-const Contexto = createContext<ContextoBancada>({ ligada: false, total: 0, cores: [] });
+const Contexto = createContext<ContextoBancada>({
+  ligada: false,
+  esperado: false,
+  total: 0,
+  cores: [],
+});
 
 export interface BancadaNacionalContextoProps extends ContextoBancada {
   children: ReactNode;
@@ -238,6 +248,7 @@ export interface BancadaNacionalContextoProps extends ContextoBancada {
  */
 export function BancadaNacionalContexto({
   ligada,
+  esperado,
   total,
   cores,
   children,
@@ -246,13 +257,31 @@ export function BancadaNacionalContexto({
   useEffect(() => {
     if (ligada && modo === "proj") garantirEleitosNacionais();
   });
-  const valor = useMemo(() => ({ ligada, total, cores }), [ligada, total, cores]);
+  const valor = useMemo(
+    () => ({ ligada, esperado, total, cores }),
+    [ligada, esperado, total, cores],
+  );
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;
 }
 
 // ---------------------------------------------------------------------------
 // A barra
 // ---------------------------------------------------------------------------
+
+const FRASE_CARREGANDO_CENARIO = "Carregando o cenário · projeção · não oficial…";
+
+/**
+ * O tamanho típico do rótulo do misto, para reservar a altura da legenda
+ * enquanto a busca não termina (CLS, 04/10): no celular ele ocupa 3–4 linhas, e
+ * a legenda crescer de 1 para 4 empurrava a lista inteira. Invisível; os
+ * números são só de tamanho.
+ */
+// ⚠️ Sem a palavra "projeção" (nem "projetado"): o texto invisível também é
+// texto, e o RF-266 exige "não oficial" no mesmo elemento de toda ocorrência
+// (o (m5) da capa conta). Só o tamanho importa — ≈ o do rótulo real menos a
+// frase de carregamento que vem antes.
+const RESERVA_LEGENDA =
+  " Cenário nacional, pontual: em 10 de 27 estados conta o estado; nos outros 16, a parcial; em 1, o resultado do TSE. A parcial de cada agremiação continua ao lado.";
 
 /** O aviso curto de quando o cenário não está na tela — ou o rótulo do misto. */
 function legendaDaBarra(
@@ -266,7 +295,7 @@ function legendaDaBarra(
     if (!visao.pronto) return FRASE_NENHUMA_LIBERADA;
     return `Cenário projetado nacional · projeção · não oficial, pontual: ${rotuloDoMisto(visao)}. A parcial de cada agremiação continua ao lado.`;
   }
-  if (st.buscando) return "Carregando o cenário · projeção · não oficial…";
+  if (st.buscando) return FRASE_CARREGANDO_CENARIO;
   if (st.falha === "sem_dado") {
     return "O cenário · projeção · não oficial ainda não está disponível — mostrando a parcial.";
   }
@@ -321,12 +350,14 @@ function segmentosDoCenario(
  * sob `[data-view-only]` — a escondida sai da árvore de acessibilidade (RF-180).
  */
 export function BarraCenarioNacional({ children }: { children: ReactNode }) {
-  const { ligada, total, cores } = useContext(Contexto);
+  const { ligada, esperado, total, cores } = useContext(Contexto);
   const st = useEleitosNacionais();
   const visao = useVisao(ligada);
   const montado = useMontado();
 
   const legenda = montado ? legendaDaBarra(ligada, st, visao) : null;
+  // A reserva da legenda (CLS): desde o servidor até o cenário chegar.
+  const reservar = esperado && ligada && !visao && !st.falha;
   const cenario = visao?.pronto && total > 0 ? segmentosDoCenario(visao, cores, total) : null;
 
   return (
@@ -358,7 +389,16 @@ export function BarraCenarioNacional({ children }: { children: ReactNode }) {
         className={estilos.legendaBarra}
         data-testid="bancada-cenario-legenda"
       >
-        {legenda}
+        {reservar ? (
+          <>
+            {FRASE_CARREGANDO_CENARIO}
+            <span className={estilos.reserva} aria-hidden="true">
+              {RESERVA_LEGENDA}
+            </span>
+          </>
+        ) : (
+          legenda
+        )}
       </p>
     </>
   );
@@ -431,7 +471,7 @@ export function BancadaLinhaNacional({
   identidade,
   faixa,
 }: BancadaLinhaNacionalProps) {
-  const { ligada } = useContext(Contexto);
+  const { ligada, esperado } = useContext(Contexto);
   const st = useEleitosNacionais();
   const visao = useVisao(ligada);
   const montado = useMontado();
@@ -490,6 +530,18 @@ export function BancadaLinhaNacional({
         {identidade}
         {cenario !== undefined && visao ? (
           <RotuloCenario cenario={cenario} parcial={cadeiras} />
+        ) : esperado && ligada && !st.dados && !st.falha ? (
+          // A reserva do rótulo (CLS): o mesmo texto, invisível, com a
+          // parcial no lugar do cenário — a mesma quebra de linha. Some quando
+          // o cenário chega (ou a busca falha).
+          <span
+            data-view-only="proj"
+            className={`${estilos.rotuloCenario} ${estilos.reserva}`}
+            aria-hidden="true"
+            data-testid="bancada-cenario-reserva"
+          >
+            <b>{cadeiras}</b> no cenário · projeção · não oficial · <b>{cadeiras}</b> na parcial
+          </span>
         ) : null}
       </span>
 

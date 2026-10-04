@@ -667,6 +667,19 @@ export default async function SobreOModeloPage() {
             nunca segue a projeção: é sempre a do voto apurado.
           </p>
 
+          {/* Spec 026 RF-300 (emenda 2026-10-04 (2) do ADR-0063) — o cenário
+              nacional da capa /deputado-federal. Constituição § 8: a página
+              de metodologia diz de onde vem o número que mistura duas bases. */}
+          <p style={S.body} data-testid="sobre-o-modelo-cenario-nacional">
+            Na página nacional da Câmara, o modo Projeção soma os 27 estados num{" "}
+            <strong>cenário misto</strong>: onde a projeção do estado já está liberada, conta a
+            projeção; onde ainda está travada, conta a parcial; onde o TSE já totalizou, conta o
+            resultado dele. O número sempre vem com o rótulo que diz a mistura — "projeção em X de
+            27 estados; nos outros Y, a parcial" — e ao lado da parcial de cada partido. Ele é
+            pontual, sem faixa: as faixas de estados diferentes não se somam. Ao longo da noite,
+            conforme os estados passam da trava, o cenário vira projeção pura.
+          </p>
+
           <div style={S.callout}>
             <p style={S.calloutLabel}>Quando a faixa não aparece</p>
             <p>
