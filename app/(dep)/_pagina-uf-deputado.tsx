@@ -107,6 +107,7 @@ import {
 } from "@/lib/blob/deputado-uf";
 import type { CargoProporcional } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
+import { fotosDosEleitos } from "@/lib/deputado/fotos-eleitos";
 import {
   linhasNoDocumento,
   listaEmDuasFaixas,
@@ -131,6 +132,7 @@ import {
   type ExibicaoLinha,
   fraseCorteCabecalho,
   fraseEstadoProjecao,
+  L,
   linhasCompactasDoV1,
   marcasDaLinha,
   paraLinhaCompacta,
@@ -141,7 +143,7 @@ import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { colorForParty } from "@/lib/utils/party-color";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 
-import { lerCandidaturasAguardando, lerDadosDaCasa } from "./_dados-da-casa";
+import { lerCandidaturasAguardando, lerDadosDaCasa, lerFotosDaCasa } from "./_dados-da-casa";
 
 /** `generateStaticParams` do cargo: uma rota por UF que tem a casa (27 · 26 · só o DF). */
 export function paramsEstaticosDaCasa(cargo: CargoProporcional): Array<{ sigla: string }> {
@@ -383,6 +385,13 @@ export async function renderPaginaUfDeputado(
     );
   }
 
+  // Spec 026 RF-291 — quem tem foto publicada (fatia de candidaturas da UF ×
+  // cargo), para a mini-foto dos eleitos. Lida SÓ aqui, depois do "aguardando
+  // dados": naquele estado não há eleito, e a grade de candidaturas já lê a
+  // mesma fatia (uma leitura só, RF-149). A fatia está no Data Cache (12 h);
+  // indisponível ⇒ conjunto vazio ⇒ iniciais.
+  const comFoto = await lerFotosDaCasa(cargo, sigla);
+
   // O resumo prefere o Global Config e cai no Blob — os dois carregam os
   // mesmos quatro números, e sobreviver à falta de um é o ponto de RF-129.
   const pctApurado = row?.pct_apurado ?? detail?.pct_apurado ?? 0;
@@ -418,6 +427,12 @@ export async function renderPaginaUfDeputado(
   const maisVotados = detail
     ? maisVotadosDaUf(detail).map((d) => ({ ...d, marcas: marcasPorSqcand.get(d.sqcand) ?? 0 }))
     : [];
+  // RF-291 — a mini-foto só dos eleitos; cada bloco recebe só o mapa dele.
+  const fotosMaisVotados = fotosDosEleitos(
+    sigla,
+    maisVotados.map((d) => [d.sqcand, d.marcas] as const),
+    comFoto,
+  );
   const movendo = visivel
     ? agremiacoes
         .filter((a) => a.cadeiras_projetadas !== undefined && a.cadeiras_projetadas !== a.cadeiras)
@@ -637,6 +652,7 @@ export async function renderPaginaUfDeputado(
         escopo="uf"
         uf={sigla}
         linhas={maisVotados.length > 0 ? maisVotados : undefined}
+        fotos={fotosMaisVotados}
         titleId="mais-votados-uf-heading"
       />
 
@@ -852,6 +868,12 @@ export async function renderPaginaUfDeputado(
                         mostrarPartido={federacao}
                         tsDetalhe={detail.ts}
                         semPercentual={!agr.candidatos}
+                        // RF-291 — só os eleitos DESTA lista com foto publicada.
+                        fotos={fotosDosEleitos(
+                          sigla,
+                          linhas.map((l) => [l[L.SQCAND], l[L.MARCAS]] as const),
+                          comFoto,
+                        )}
                         // Só nas assembleias: no federal as props nem existem, e o
                         // payload RSC dele não ganha um byte.
                         {...(duasFaixas ? { duasFaixas: true } : {})}

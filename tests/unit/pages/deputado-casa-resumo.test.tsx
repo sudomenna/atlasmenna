@@ -38,6 +38,8 @@ const lerDadosDaCasaMock = vi.fn();
 vi.mock("@/app/(dep)/_dados-da-casa", () => ({
   lerDadosDaCasa: (cargo: number, sigla: string) => lerDadosDaCasaMock(cargo, sigla),
   lerCandidaturasAguardando: vi.fn(async () => null),
+  // Spec 026 RF-291 — nenhuma foto publicada: as linhas eleitas saem com iniciais.
+  lerFotosDaCasa: vi.fn(async () => new Set<string>()),
   lerListaDaCasa: vi.fn(),
 }));
 

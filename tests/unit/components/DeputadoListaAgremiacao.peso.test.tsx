@@ -34,8 +34,16 @@ import {
 import { BIT_MARCA, type LinhaCompacta } from "@/lib/utils/deputado-marcas";
 
 const KIB = 1024;
-/** Teto das listas no documento de SP: HTML + payload RSC das tuplas. */
-const TETO_LISTAS_BYTES = 360 * KIB;
+/**
+ * Teto das listas no documento de SP: HTML + payload RSC das tuplas.
+ *
+ * 360 → **384 KiB** em 03/10 — decisão do dono, 03/10: avatares dos eleitos
+ * (spec 026 RF-291), com a instrução expressa de não se preocupar com o peso.
+ * Medido neste pior caso: 343,4 KiB sem as fotos, **368,2 KiB** com as 69
+ * linhas eleitas levando `<img>` no HTML e a URL no RSC (+24,8 KiB, ~368 B por
+ * eleito). A folga que sobra (~16 KiB) é a mesma ordem da de antes.
+ */
+const TETO_LISTAS_BYTES = 384 * KIB;
 
 /** 30 caracteres, 10 deles acentuados — o nome de urna mais pesado plausível. */
 const NOME_PIOR = "JOÃO CONCEIÇÃO MAGALHÃES ÁVILA";
@@ -82,6 +90,18 @@ function agremiacao(i: number, n: number): DeputadoListaAgremiacaoProps {
     projecaoVisivel: true,
     mostrarPartido: true,
     tsDetalhe: "2026-10-04T23:41:07.312Z",
+    // Spec 026 RF-291 (decisão do dono, 03/10: avatares dos eleitos) — os 69
+    // eleitos com foto, URL do store real (host de 16 caracteres + `sqcand` de
+    // 12 dígitos): o pior caso de cada linha eleita é a `<img>` no HTML e a
+    // URL no RSC.
+    fotos: Object.fromEntries(
+      linhas
+        .filter((l) => (l[7] & BIT_MARCA.PARCIAL) !== 0)
+        .map((l) => [
+          String(l[1]),
+          `https://jbtu251tioj3y57z.public.blob.vercel-storage.com/candidatos/foto/SP/25000${l[1]}.jpg`,
+        ]),
+    ),
   };
 }
 

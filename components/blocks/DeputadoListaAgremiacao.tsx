@@ -51,6 +51,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { DestinoDeputadoTexto, MarcaDeputado } from "@/components/atoms/badges/MarcaDeputado";
 import { Button } from "@/components/atoms/controls/Button";
 import type { DeputadoUfLista } from "@/lib/blob/deputado-uf";
+import type { FotosDosEleitos } from "@/lib/deputado/fotos-eleitos";
 import {
   destinoDoCodigo,
   type ExibicaoLinha,
@@ -65,6 +66,7 @@ import {
 import { formatPercent, formatTimeHMS, formatVotes } from "@/lib/utils/format";
 import { siglaNaFrase } from "@/lib/utils/termo-territorio";
 
+import { AvatarEleito } from "./AvatarEleito";
 import styles from "./DeputadoListaAgremiacao.module.css";
 
 /** Posições visíveis sem clique (ADR-0065 D1). */
@@ -124,6 +126,14 @@ export interface DeputadoListaAgremiacaoProps {
    * passam `true`; ausente ⇒ o texto do federal ("em DF").
    */
   comArtigo?: boolean;
+  /**
+   * Spec 026 RF-291 (decisão do dono de 03/10) — `sqcand → URL` das fotos dos
+   * ELEITOS desta lista (`fotosDosEleitos`, no servidor). Com o mapa, toda
+   * linha eleita ganha a mini-foto (ou as iniciais, se o `sqcand` não está
+   * nele); sem o mapa, nenhuma linha muda. Linhas que chegam pela rota da
+   * lista não têm foto no mapa: se uma delas for eleita, sai com as iniciais.
+   */
+  fotos?: FotosDosEleitos;
 }
 
 // ---------------------------------------------------------------------------
@@ -221,6 +231,7 @@ export function DeputadoListaAgremiacao({
   semPercentual = false,
   duasFaixas = false,
   comArtigo = false,
+  fotos,
 }: DeputadoListaAgremiacaoProps) {
   const naUf = siglaNaFrase(uf, comArtigo);
   const listaId = useId();
@@ -337,6 +348,7 @@ export function DeputadoListaAgremiacao({
             HTML — 8 bytes × ~1.000 linhas no documento de SP (G6, 30/09). */}
         <span>{`${rank}º`}</span>
         <span>
+          <AvatarEleito nome={l[L.NOME]} sqcand={l[L.SQCAND]} marcas={l[L.MARCAS]} fotos={fotos} />
           <b>{l[L.NOME]}</b>
           {meta ? <small>{meta}</small> : null}
           {marcasDosBits(l[L.MARCAS]).map((m) => (

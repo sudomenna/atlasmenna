@@ -28,6 +28,7 @@ import { DestinoDeputadoTexto, MarcaDeputado } from "@/components/atoms/badges/M
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { EdgeDeputadoDestaque } from "@/lib/blob/deputado-uf";
 import type { CargoProporcional } from "@/lib/config/cargos";
+import type { FotosDosEleitos } from "@/lib/deputado/fotos-eleitos";
 import { rotuloCargo } from "@/lib/utils/casa-legislativa";
 import { marcasDosBits } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
@@ -35,6 +36,7 @@ import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import { siglaNaFrase } from "@/lib/utils/termo-territorio";
 
+import { AvatarEleito } from "./AvatarEleito";
 import styles from "./DeputadoListaAgremiacao.module.css";
 
 /** Uma linha do top 10: o destaque do contrato + as marcas já derivadas (bits de `deputado-marcas`). */
@@ -58,6 +60,11 @@ export interface DeputadoMaisVotadosProps {
   uf?: string;
   /** Ausente (objeto v1 ou payload antigo) ⇒ o bloco não aparece (RF-276). */
   linhas: readonly LinhaMaisVotados[] | undefined;
+  /**
+   * Spec 026 RF-291 — `sqcand → URL` das fotos dos eleitos (só a página de
+   * UF passa). Ausente ⇒ nenhum avatar: a capa nacional fica como estava.
+   */
+  fotos?: FotosDosEleitos;
   titleId: string;
 }
 
@@ -67,6 +74,7 @@ export function DeputadoMaisVotados({
   escopo,
   uf,
   linhas,
+  fotos,
   titleId,
 }: DeputadoMaisVotadosProps) {
   if (!linhas || linhas.length === 0) return null;
@@ -111,6 +119,12 @@ export function DeputadoMaisVotados({
               <li key={`${l.uf}:${l.sqcand}`} data-rank={i + 1} data-uf={l.uf}>
                 <span>{`${i + 1}º`}</span>
                 <span>
+                  <AvatarEleito
+                    nome={nome}
+                    sqcand={l.sqcand}
+                    marcas={l.destino === undefined ? (l.marcas ?? 0) : 0}
+                    fotos={fotos}
+                  />
                   <b>{nome}</b>
                   <small>{quem}</small>
                   {l.destino === undefined && l.marcas

@@ -22,6 +22,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   lerCandidaturasAguardando,
   lerDadosDaCasa,
+  lerFotosDaCasa,
   lerListaDaCasa,
 } from "@/app/(dep)/_dados-da-casa";
 import { responderListaDeputado } from "@/app/(dep)/_rota-lista-deputado";
@@ -206,5 +207,40 @@ describe("responderListaDeputado — as UFs da casa", () => {
       expect(res.headers.get("cache-control")).toBe("no-store");
     }
     expect(readDeputadoUfListaMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("spec 026 RF-291 — lerFotosDaCasa: quem tem foto publicada, por casa", () => {
+  const fatia = (cargo: string, uf: string) => ({
+    status: "ok",
+    url: `https://x/candidatos/uf/${uf}/${cargo}.json`,
+    slice: {
+      uf,
+      cargo,
+      fonte_ts: "2026-10-03T08:00:00Z",
+      gerado_ts: "2026-10-03T09:00:00Z",
+      candidatos: [
+        { sqcand: "250002553928", foto_ok: true },
+        { sqcand: "250002553929", foto_ok: false },
+        { sqcand: "250002553930", foto_ok: true },
+      ],
+    },
+  });
+
+  for (const [cargo, uf, token] of [
+    [6, "SP", "dep"],
+    [7, "SP", "est"],
+    [8, "DF", "dis"],
+  ] as const) {
+    it(`cargo ${cargo} em ${uf}: lê a fatia ${token} e devolve só os foto_ok`, async () => {
+      readCandidatosUfMock.mockResolvedValue(fatia(token, uf));
+      const comFoto = await lerFotosDaCasa(cargo, uf);
+      expect(readCandidatosUfMock.mock.calls).toEqual([[uf, token]]);
+      expect([...comFoto].sort()).toEqual(["250002553928", "250002553930"]);
+    });
+  }
+
+  it("fatia indisponível ⇒ conjunto vazio, sem lançar", async () => {
+    expect((await lerFotosDaCasa(6, "SP")).size).toBe(0);
   });
 });

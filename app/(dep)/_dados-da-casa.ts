@@ -40,6 +40,7 @@
  */
 
 import { CandidaturasAguardando } from "@/components/blocks/CandidaturasAguardando";
+import { readCandidatosUf } from "@/lib/blob/candidatos";
 import {
   type DeputadoUfDetail,
   type DeputadoUfDetailResult,
@@ -50,7 +51,7 @@ import {
   sanearDeputadoUfDetail,
   sanearDeputadoUfLista,
 } from "@/lib/blob/deputado-uf";
-import type { CargoProporcional } from "@/lib/config/cargos";
+import { type CargoProporcional, cargoToken } from "@/lib/config/cargos";
 import {
   type CargoAssembleia,
   resultadoEleitoral,
@@ -256,4 +257,21 @@ export async function lerDetalheDaCasa(
  */
 export async function lerCandidaturasAguardando(cargo: CargoProporcional, sigla: string) {
   return CandidaturasAguardando({ cargo, uf: sigla });
+}
+
+/**
+ * Spec 026 RF-291 — os `sqcand` desta casa nesta UF com foto publicada
+ * (`foto_ok`), da fatia de candidaturas do Blob (token de `cargoToken`, Data
+ * Cache de 12 h). Identidade, não resultado: pode vir do Blob real também com
+ * a simulação ligada (os `sqcand` fictícios do simulado só não casam — e as
+ * linhas eleitas caem nas iniciais). Fatia indisponível ⇒ conjunto vazio.
+ * Nunca lança (`readCandidatosUf` não lança).
+ */
+export async function lerFotosDaCasa(
+  cargo: CargoProporcional,
+  sigla: string,
+): Promise<ReadonlySet<string>> {
+  const fatia = await readCandidatosUf(sigla, cargoToken(cargo));
+  if (fatia.status !== "ok") return new Set();
+  return new Set(fatia.slice.candidatos.filter((c) => c.foto_ok).map((c) => c.sqcand));
 }

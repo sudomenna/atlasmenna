@@ -461,6 +461,7 @@ Vide frontmatters de cada spec (`requirements:` no YAML). Soma global: 194 RFs �
 | RF-251 | V3, mapa dos palanques na capa de Governador | M | [025](../specs/025-visoes-editoriais/) | `<PalanquesMapa />` | unit |
 | RF-252 | Página de metodologia e o link em `/sobre-o-modelo` | M | [025](../specs/025-visoes-editoriais/) | `app/sobre-as-etiquetas/page.tsx`, link em `/sobre-o-modelo` | integration |
 | RF-253 | Chaves por visão da cópia do build = `publicar.json` versionado | M | [025](../specs/025-visoes-editoriais/) | `lib/etiquetas/publicador.ts` (emenda RF-228/231) | unit |
+| RF-291 | Mini-foto só de quem está sendo eleito nas páginas de UF de Deputado Federal, Estadual e Distrital (emenda de 03/10, decisão do dono) | M | [026](../specs/026-deputado-listas-projecao/), [027](../specs/027-deputado-estadual-distrital/) | `<AvatarEleito />` em `<DeputadoListaAgremiacao />` e `<DeputadoMaisVotados />`; `lib/deputado/fotos-eleitos.ts`; `lerFotosDaCasa` em `app/(dep)/_dados-da-casa.ts` | unit (`tests/unit/components/AvatarEleito.test.tsx` — mutação "projeção conta como eleito" aplicada e morta; `tests/unit/pages/deputado-dados-da-casa.test.ts`; peso em `DeputadoListaAgremiacao.peso.test.tsx`) |
 
 ---
 

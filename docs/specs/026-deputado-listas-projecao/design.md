@@ -8,7 +8,7 @@ spec: ./spec.md
 # + ADR-0063 (projeção com trava e interruptor), ADR-0064 (destino do voto no proporcional),
 #   ADR-0065 (listas em três faixas) — números a preencher pelo orquestrador
 adrs: [0001, 0005, 0017, 0021, 0023, 0026, 0027, 0034, 0036, 0038, 0049, 0053]
-requirements: [RF-260, RF-261, RF-262, RF-263, RF-264, RF-265, RF-266, RF-267, RF-268, RF-269, RF-270, RF-271, RF-272, RF-273, RF-274, RF-275, RF-276, RF-277]
+requirements: [RF-260, RF-261, RF-262, RF-263, RF-264, RF-265, RF-266, RF-267, RF-268, RF-269, RF-270, RF-271, RF-272, RF-273, RF-274, RF-275, RF-276, RF-277, RF-291]
 ---
 
 # Design 026 — contrato v2, trava, marcas e telas
@@ -605,6 +605,26 @@ O registro em `docs/design-system/components.md` é do `spec-syncer`, na barreir
   cabeçalho da agremiação repete a diferença (RF-272).
 - Classes de CSS (CSS Module), não estilo inline, e `content-visibility: auto` com
   `contain-intrinsic-size` no contêiner da agremiação.
+
+### 8.2b Mini-foto dos eleitos (RF-291, emenda de 03/10)
+
+- **A regra num lugar só**: `<AvatarEleito>` (`components/blocks/AvatarEleito.tsx`, sem diretiva —
+  serve à lista cliente e ao `<DeputadoMaisVotados>` servidor). Eleito = `ehEleitoNosBits`
+  (`lib/utils/deputado-marcas.ts`): bit `PARCIAL` ou `TSE` dos bits já derivados — herda a
+  precedência do § 4 e é a mesma regra de "quem conta como eleito" de `lib/deputado/lista-documento.ts`.
+- **A URL é decidida no servidor**: `lerFotosDaCasa(cargo, uf)` (`app/(dep)/_dados-da-casa.ts`) lê a
+  fatia `candidatos/uf/<UF>/<dep|est|dis>.json` (Data Cache 12 h) e devolve os `sqcand` com
+  `foto_ok`; `fotosDosEleitos` (`lib/deputado/fotos-eleitos.ts`) monta, **por lista**, o mapa
+  `sqcand → candidatoFotoUrl(uf, sqcand)` só dos eleitos com foto. O cliente não deriva URL e não lê
+  `/api/*` (BotID). Eleito fora do mapa ⇒ iniciais. A leitura acontece depois do estado "aguardando
+  dados" (naquele estado não há eleito, e a grade do RF-149 já lê a mesma fatia).
+- **Forma**: `<CandidateAvatar rounded responsive={false} semEstiloInline>` 28×28 com UMA classe
+  (`.avatar` no CSS Module da lista, par neutro `--surface-sunken`/`--text-secondary`); a margem
+  negativa mantém a linha alinhada pela base do texto, e `li:has(.avatar)` ganha `padding` de
+  `--space-2` para o círculo não invadir o filete vizinho. O recorte da faixa 2 (federal) continua
+  vencendo (seletor mais específico).
+- **Peso** (decisão do dono, 03/10): ~368 B por eleito com foto (HTML + RSC); o teto das listas no
+  teste de unidade subiu de 360 para 384 KiB com a medida escrita ao lado.
 
 ### 8.3 Tuplas compactas (contrato interno da frente U — não trafega no Blob)
 

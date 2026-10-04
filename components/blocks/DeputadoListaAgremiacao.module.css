@@ -103,6 +103,44 @@
   color: var(--text-muted);
 }
 
+/* Spec 026 RF-291 — a mini-foto do eleito, à esquerda do nome
+ * (`<AvatarEleito>`). Círculo de 28 px no par neutro do kit (o mesmo do
+ * fallback do `<CandidateAvatar>`, 5,01:1), nunca a cor da agremiação.
+ *
+ * A linha alinha pela linha de base do texto (posição, nome, votos). Para o
+ * círculo não empurrar o nome para o topo de uma linha de 28 px, a margem
+ * negativa reduz a caixa dele à altura de uma linha de texto e `align-self`
+ * o centra nela; o excedente é absorvido pelo `padding` maior das linhas que
+ * têm avatar (abaixo) — o círculo nunca invade o filete da linha vizinha.
+ *
+ * `flex`, não `block`: com `block` as iniciais do fallback caíam no canto
+ * superior esquerdo (o conserto de `e6b7731` no `CandidateResultRow`). Na
+ * `<img>` o `flex` não muda nada. `object-position` com a palavra-chave
+ * `top`, NUNCA porcentagem (a varredura do RF-161). */
+.avatar {
+  flex: none;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-block: -6px;
+  border-radius: var(--radius-pill);
+  object-fit: cover;
+  object-position: center top;
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font: 600 var(--text-2xs) / 1 var(--font-sans);
+  letter-spacing: var(--tracking-caps);
+}
+
+/* A folga do círculo. Perde para o recorte da faixa 2 (`[data-collapsed]`
+ * abaixo, mais específico), que zera o `padding` da linha recolhida. */
+.lista > li:has(.avatar) {
+  padding-block: var(--space-2);
+}
+
 /* Votos e % dos válidos (ou o destino do voto). */
 .lista > li > span:nth-child(3) {
   display: flex;

@@ -326,6 +326,21 @@ export function marcasDosBits(bits: number): Marca[] {
   return marcas;
 }
 
+/**
+ * A linha é de quem está SENDO ELEITO agora — "eleito na parcial" ou, com a
+ * totalização final, "Eleito (TSE)" (spec 026 RF-291, decisão do dono de
+ * 03/10: a mini-foto só para esses). Lê os bits JÁ derivados por
+ * {@link marcasDaLinha}, então herda a precedência inteira: linha com destino
+ * nunca tem bit, e com totalização final só o do TSE sobrevive.
+ *
+ * "Eleito na projeção" sozinho NÃO conta: é estimativa nossa, não oficial
+ * (RF-266) — e é a mesma regra de "quem conta como eleito" de
+ * `lib/deputado/lista-documento.ts`.
+ */
+export function ehEleitoNosBits(bits: number): boolean {
+  return (bits & (BIT_MARCA.PARCIAL | BIT_MARCA.TSE)) !== 0;
+}
+
 /** 0 nenhum · 1 valido_legenda · 2 anulado · 3 sub_judice (design § 8.3). */
 export type CodigoDestino = 0 | 1 | 2 | 3;
 

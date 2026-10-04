@@ -288,8 +288,9 @@ publicadas é conferência.
 WHEN o leitor abre `/uf/[sigla]/deputado-estadual` (26 UFs) ou `/uf/DF/deputado-distrital`, the system
 SHALL renderizar a página da casa com os blocos da página de UF da spec 026 — resumo com `<h1>` nomeando
 a casa (RF-284), Votação, mais votados, cadeiras e candidatos por agremiação (três faixas, marcas, corte,
-puxadores), regras com os números da casa, Conferência e metodologia —, lendo **só** o payload, o Blob e
-a rota do próprio cargo; AND WHEN o leitor abre `/uf/DF/deputado-estadual`, the system SHALL
+puxadores; e a mini-foto dos eleitos, RF-291 da spec 026, emenda de 03/10), regras com os números da
+casa, Conferência e metodologia —, lendo **só** o payload, o Blob e a rota do próprio cargo (a foto
+sai da fatia de candidaturas do próprio cargo, `est`/`dis`); AND WHEN o leitor abre `/uf/DF/deputado-estadual`, the system SHALL
 redirecionar para `/uf/DF/deputado-distrital`.
 
 **Aceitação**:

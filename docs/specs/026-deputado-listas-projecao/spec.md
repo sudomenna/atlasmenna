@@ -5,7 +5,7 @@ status: implementing
 priority: M
 personas: [P1, P2, P3]
 screens: [T-11, T-12]
-requirements: [RF-260, RF-261, RF-262, RF-263, RF-264, RF-265, RF-266, RF-267, RF-268, RF-269, RF-270, RF-271, RF-272, RF-273, RF-274, RF-275, RF-276, RF-277]
+requirements: [RF-260, RF-261, RF-262, RF-263, RF-264, RF-265, RF-266, RF-267, RF-268, RF-269, RF-270, RF-271, RF-272, RF-273, RF-274, RF-275, RF-276, RF-277, RF-291]
 depends_on: [017-deputado-federal, 018-identidade-candidatura]
 amends: [017-deputado-federal, 011-sobre-o-modelo]
 apis: [GET /uf/[sigla]/deputado-federal/lista]
@@ -398,6 +398,34 @@ interruptor a partir do servidor falso, and SHALL medir `/uf/SP/deputado-federal
 - Given a medição, when o portão compara, then o documento cabe em 480 KiB (≈ 70 KiB gzip).
 - Given o axe, when audita a página com a lista aberta e fechada, then zero violações.
 - Given o SSR de SP, when medido, then o tempo é reportado no relatório do portão.
+
+### Emenda de 03/10 — foto dos eleitos
+
+> **Numeração.** RF-291 conferido por grep em 2026-10-03 — nenhum uso anterior no repositório
+> (o último era RF-290, da spec 027). Vale para as três casas: a página de UF é o mesmo módulo
+> (`app/(dep)/_pagina-uf-deputado.tsx`), e a spec 027 (RF-281) a herda.
+
+**RF-291 — Mini-foto só de quem está sendo eleito, nas páginas de UF**
+
+WHEN a página de UF de uma casa proporcional (`/uf/[sigla]/deputado-federal`,
+`/uf/[sigla]/deputado-estadual`, `/uf/DF/deputado-distrital`) lista uma candidatura **eleita na
+parcial** — ou, com a totalização final, **"Eleito (TSE)"** — nas listas por agremiação ou nos mais
+votados da UF, the system SHALL mostrar à esquerda do nome um avatar circular de 28 px com a foto do
+TSE (`candidatos/foto/<UF>/<sqcand>.jpg`) quando a fatia de candidaturas da UF × cargo diz
+`foto_ok`, e as iniciais no mesmo círculo caso contrário (RF-151); AND the system SHALL NOT mostrar
+avatar em linha não eleita (inclusive "eleito na projeção" sozinho), nem em página nacional.
+
+**Aceitação**:
+- Given uma lista com eleito com foto, eleito sem foto, só-projeção e não eleito, when renderiza,
+  then só os dois eleitos têm avatar — foto com a URL do Blob e iniciais —, e os outros dois nenhum.
+- Given a fatia de candidaturas indisponível (ou ambiente sem Blob), when renderiza, then os eleitos
+  saem com as iniciais, nunca com `<img>` quebrada, e a página não falha.
+- Given a capa `/deputado-federal` (mais votados do país), when renderiza, then nenhum avatar.
+- Given o avatar, when auditado, then é decorativo (`alt=""`, `aria-hidden`), tem `width`/`height`
+  explícitos e `loading="lazy"`, e o fundo é o par neutro do kit — mesma forma para todo partido
+  (constituição § 2).
+- Peso: decisão do dono de 03/10 ("não se preocupar com o tamanho em KB"); o teto que estourar sobe
+  com o valor medido e o motivo escrito ao lado.
 
 ## Requisitos Não-Funcionais
 
