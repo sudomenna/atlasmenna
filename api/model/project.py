@@ -6693,7 +6693,9 @@ def build_edge_payload(
     04/10/2026 (decisão do dono) acrescenta `definidos` (opcional, de
     `montar_definidos`): cada `por_uf[]` dos cargos 1/3/5 ganha
     `eleitos_definidos` (ids de `top_candidatos` matematicamente eleitos pela
-    contagem) e, só em Governador 1º turno, `segundo_turno_definido: true`.
+    contagem) e, só em Governador 1º turno, `segundo_turno_definido: true`;
+    junto com eles, `definicao_oficial: true` quando a definição veio do TSE
+    (`md` ou totalização final) e não da conta própria do Senado.
     Chaves AUSENTES quando nada está definido ou `definidos is None` — o payload
     sai byte a byte igual ao de antes. `chamada` não muda. Regras em
     `api/model/definidos.py`.
@@ -7551,8 +7553,8 @@ def build_edge_payload(
             )
             if total_disputa is not None:
                 linha_uf["votos_disputa_projetados"] = total_disputa
-        # 04/10 (decisão do dono) — `eleitos_definidos` / `segundo_turno_definido`:
-        # eleito pela CONTAGEM, não pela projeção (`api/model/definidos.py`).
+        # 04/10 (decisão do dono) — `eleitos_definidos` / `segundo_turno_definido`
+        # (+ `definicao_oficial`, a origem): eleito pela CONTAGEM, não pela projeção (`api/model/definidos.py`).
         # Chaves AUSENTES quando nada está definido — mesma regra de `outros`.
         linha_uf.update(
             campos_definidos(

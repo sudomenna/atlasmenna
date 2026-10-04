@@ -138,7 +138,7 @@ def _snap(uf: str, nivel: str, payload: dict[str, Any]) -> dict[str, Any]:
 def test_md_e_elege_o_lider_da_contagem() -> None:
     """Mata "ignora o md": md='e' ⇒ o líder; o mesmo arquivo sem md ⇒ nada."""
     cands = [_cand(10, 600), _cand(20, 300), _cand(30, 100)]
-    assert definicao_vaga_unica(_leitura(cands, md="e"), turno=1) == Definicao(eleitos=(10,))
+    assert definicao_vaga_unica(_leitura(cands, md="e"), turno=1) == Definicao(eleitos=(10,), oficial=True)
     assert definicao_vaga_unica(_leitura(cands, md=None), turno=1) == Definicao()
     assert definicao_vaga_unica(_leitura(cands, md="n"), turno=1) == Definicao()
 
@@ -147,18 +147,18 @@ def test_md_e_ignora_a_anulada_no_topo() -> None:
     """Mata "líder sem filtrar destino": a anulada tem mais voto, o eleito é
     a primeira que COMPETE. Sub judice compete."""
     cands = [_cand(10, 900, destino="anulado"), _cand(20, 500, destino="sub_judice"), _cand(30, 100)]
-    assert definicao_vaga_unica(_leitura(cands, md="e"), turno=1) == Definicao(eleitos=(20,))
+    assert definicao_vaga_unica(_leitura(cands, md="e"), turno=1) == Definicao(eleitos=(20,), oficial=True)
 
 
 def test_md_s_e_segundo_turno_so_no_primeiro_turno() -> None:
     cands = [_cand(10, 400), _cand(20, 350), _cand(30, 250)]
-    assert definicao_vaga_unica(_leitura(cands, md="s"), turno=1) == Definicao(segundo_turno=True)
+    assert definicao_vaga_unica(_leitura(cands, md="s"), turno=1) == Definicao(segundo_turno=True, oficial=True)
     assert definicao_vaga_unica(_leitura(cands, md="s"), turno=2) == Definicao()
 
 
 def test_md_e_no_segundo_turno() -> None:
     cands = [_cand(10, 400), _cand(20, 600)]
-    assert definicao_vaga_unica(_leitura(cands, md="e"), turno=2) == Definicao(eleitos=(20,))
+    assert definicao_vaga_unica(_leitura(cands, md="e"), turno=2) == Definicao(eleitos=(20,), oficial=True)
 
 
 def test_md_e_com_empate_no_topo_nao_elege() -> None:
@@ -178,15 +178,15 @@ def test_leitura_ausente_nao_define() -> None:
 
 def test_tf_st_decide() -> None:
     cands = [_cand(10, 600, st="Eleito", e="s"), _cand(20, 400, st="Não eleito", e="n")]
-    assert definicao_vaga_unica(_leitura(cands, tf=True), turno=1) == Definicao(eleitos=(10,))
+    assert definicao_vaga_unica(_leitura(cands, tf=True), turno=1) == Definicao(eleitos=(10,), oficial=True)
 
 
 def test_tf_st_decide_sem_a_marca_e() -> None:
     """Mata "ignora st": a situação basta, mesmo sem `e` legível."""
     cands = [_cand(10, 600, st="Eleito"), _cand(20, 400, st="Não eleito")]
-    assert definicao_vaga_unica(_leitura(cands, tf=True), turno=1) == Definicao(eleitos=(10,))
+    assert definicao_vaga_unica(_leitura(cands, tf=True), turno=1) == Definicao(eleitos=(10,), oficial=True)
     sen = [_cand(1, 600, st="Eleito"), _cand(2, 500, st="Eleito"), _cand(3, 100, st="Não eleito")]
-    assert definicao_senado(_leitura(sen, tf=True)) == Definicao(eleitos=(1, 2))
+    assert definicao_senado(_leitura(sen, tf=True)) == Definicao(eleitos=(1, 2), oficial=True)
 
 
 def test_tf_st_segundo_turno() -> None:
@@ -195,22 +195,22 @@ def test_tf_st_segundo_turno() -> None:
         _cand(20, 400, st="2º turno", e="s"),
         _cand(30, 150, st="Não eleito", e="n"),
     ]
-    assert definicao_vaga_unica(_leitura(cands, tf=True), turno=1) == Definicao(segundo_turno=True)
+    assert definicao_vaga_unica(_leitura(cands, tf=True), turno=1) == Definicao(segundo_turno=True, oficial=True)
 
 
 def test_tf_sem_st_duas_marcas_e_segundo_turno_nao_dois_eleitos() -> None:
     """Mata "e == 's' ⇒ eleito" cru: no 1º turno com 2º turno o TSE marca os
     DOIS finalistas com e='s'. Nenhum deles está eleito."""
     cands = [_cand(10, 450, e="s"), _cand(20, 400, e="s"), _cand(30, 150, e="n")]
-    assert definicao_vaga_unica(_leitura(cands, tf=True), turno=1) == Definicao(segundo_turno=True)
+    assert definicao_vaga_unica(_leitura(cands, tf=True), turno=1) == Definicao(segundo_turno=True, oficial=True)
     um = [_cand(10, 600, e="s"), _cand(20, 400, e="n")]
-    assert definicao_vaga_unica(_leitura(um, tf=True), turno=1) == Definicao(eleitos=(10,))
+    assert definicao_vaga_unica(_leitura(um, tf=True), turno=1) == Definicao(eleitos=(10,), oficial=True)
 
 
 def test_tf_ignora_md_residual() -> None:
     """Depois de tf='s' o md some; se sobrar, quem decide são as marcas."""
     cands = [_cand(10, 600, e="n"), _cand(20, 400, e="s")]
-    assert definicao_vaga_unica(_leitura(cands, tf=True, md="e"), turno=2) == Definicao(eleitos=(20,))
+    assert definicao_vaga_unica(_leitura(cands, tf=True, md="e"), turno=2) == Definicao(eleitos=(20,), oficial=True)
 
 
 def test_tf_esae_nao_atribui() -> None:
@@ -220,7 +220,7 @@ def test_tf_esae_nao_atribui() -> None:
 
 def test_tf_senado_duas_marcas_sao_os_dois_eleitos() -> None:
     cands = [_cand(1, 600, e="s"), _cand(2, 500, e="s"), _cand(3, 100, e="n")]
-    assert definicao_senado(_leitura(cands, tf=True)) == Definicao(eleitos=(1, 2))
+    assert definicao_senado(_leitura(cands, tf=True)) == Definicao(eleitos=(1, 2), oficial=True)
     tres = [_cand(1, 600, e="s"), _cand(2, 500, e="s"), _cand(3, 100, e="s")]
     assert definicao_pela_totalizacao(_leitura(tres, tf=True), vagas=2, segundo_turno_possivel=False) == Definicao()
 
@@ -385,7 +385,7 @@ def test_montar_governador_md() -> None:
         [_snap("SP", "uf", sp), _snap("RJ", "uf", rj), _snap("MG", "uf", mg)], 3, 1, 1
     )
     assert defin is not None
-    assert defin.por_uf == {"SP": Definicao(eleitos=(10,)), "RJ": Definicao(segundo_turno=True)}
+    assert defin.por_uf == {"SP": Definicao(eleitos=(10,), oficial=True), "RJ": Definicao(segundo_turno=True, oficial=True)}
 
 
 def test_montar_presidente_so_le_o_br() -> None:
@@ -394,10 +394,10 @@ def test_montar_presidente_so_le_o_br() -> None:
     assert montar_definidos([_snap("SP", "uf", uf_com_md)], 1, 1, 1) is None
     br = _ea20([(13, 600, "valido"), (22, 300, "valido")], cargo=1, md="e")
     defin = montar_definidos([_snap("BR", "br", br), _snap("SP", "uf", uf_com_md)], 1, 1, 1)
-    assert defin is not None and defin.nacional == Definicao(eleitos=(13,))
+    assert defin is not None and defin.nacional == Definicao(eleitos=(13,), oficial=True)
     br_s = _ea20([(13, 450, "valido"), (22, 400, "valido")], cargo=1, md="s")
     defin_s = montar_definidos([_snap("BR", "br", br_s)], 1, 1, 1)
-    assert defin_s is not None and defin_s.nacional == Definicao(segundo_turno=True)
+    assert defin_s is not None and defin_s.nacional == Definicao(segundo_turno=True, oficial=True)
 
 
 def test_montar_outros_cargos_e_sem_agregado() -> None:
@@ -494,3 +494,66 @@ def test_payload_presidente_eleito_fora_do_top_nao_aparece() -> None:
     linhas = _payload(1, Definidos(nacional=Definicao(eleitos=(99,))))
     for uf in linhas.values():
         assert "eleitos_definidos" not in uf
+
+
+# ---------------------------------------------------------------------------
+# `definicao_oficial` — de onde veio a definição (04/10, para o 2º turno)
+# ---------------------------------------------------------------------------
+#
+# Presente (sempre `True`) só junto com `eleitos_definidos`/`segundo_turno_definido`
+# e só quando a definição veio do TSE: `md` (Governador; Presidente pelo `br`) ou
+# a totalização final (`tf == "s"`, qualquer cargo). Ausente na conta própria do
+# Senado e quando nada está definido. Mata "sempre emite", "nunca emite" e
+# "emite pelo cargo em vez da origem" (um Senado com `tf` e outro sem, lado a lado).
+
+
+def _ea20_123(cargo: int, **kw: Any) -> dict[str, Any]:
+    return _ea20([(1, 600, "valido"), (2, 300, "valido"), (3, 100, "valido")], cargo=cargo, **kw)
+
+
+def test_oficial_governador_md_e() -> None:
+    defin = montar_definidos([_snap("SP", "uf", _ea20_123(3, md="e"))], 3, 1, 1)
+    linhas = _payload(3, defin)
+    assert linhas["SP"]["eleitos_definidos"] == [1]
+    assert linhas["SP"]["definicao_oficial"] is True
+    assert "definicao_oficial" not in linhas["RJ"]  # sem definição ⇒ ausente
+
+
+def test_oficial_governador_md_s_acompanha_o_segundo_turno() -> None:
+    defin = montar_definidos([_snap("SP", "uf", _ea20_123(3, md="s"))], 3, 1, 1)
+    linhas = _payload(3, defin)
+    assert linhas["SP"]["segundo_turno_definido"] is True
+    assert linhas["SP"]["definicao_oficial"] is True
+
+
+def test_oficial_presidente_md_do_br() -> None:
+    defin = montar_definidos([_snap("BR", "br", _ea20_123(1, md="e"))], 1, 1, 1)
+    linhas = _payload(1, defin)
+    for sigla in ("SP", "RJ"):
+        assert linhas[sigla]["eleitos_definidos"] == [1]
+        assert linhas[sigla]["definicao_oficial"] is True
+
+
+def test_oficial_senado_so_com_a_totalizacao_final() -> None:
+    # SP: conta própria (R = 1000 − 500 − 100 + 0 = 400; 600 − 100 > 400 ⇒ 1 definido).
+    # RJ: tf='s' com as marcas do TSE ⇒ os dois eleitos, oficial.
+    sp = _ea20_123(5, esna=0)
+    rj = _ea20_123(5, tf="s", marcas={1: {"e": "s"}, 2: {"e": "s"}})
+    defin = montar_definidos([_snap("SP", "uf", sp), _snap("RJ", "uf", rj)], 5, 1, 2)
+    assert defin is not None
+    assert defin.por_uf["SP"] == Definicao(eleitos=(1,))
+    assert defin.por_uf["RJ"] == Definicao(eleitos=(1, 2), oficial=True)
+    linhas = _payload(5, defin)
+    assert linhas["SP"]["eleitos_definidos"] == [1]
+    assert "definicao_oficial" not in linhas["SP"]  # conta própria ⇒ ausente, nunca False
+    assert linhas["RJ"]["eleitos_definidos"] == [1, 2]
+    assert linhas["RJ"]["definicao_oficial"] is True
+
+
+def test_oficial_sem_definicao_ausente() -> None:
+    for uf in _payload(3, None).values():
+        assert "definicao_oficial" not in uf
+    # Definição oficial cujo eleito não está no top: nada a acompanhar ⇒ ausente.
+    assert campos_definidos(1, 1, "SP", [22], Definidos(nacional=Definicao(eleitos=(13,), oficial=True))) == {}
+    # Senado em 2º turno não existe, mas Gov `segundo_turno` no turno 2 some — e a origem junto.
+    assert campos_definidos(3, 2, "SP", [1, 2], Definidos(por_uf={"SP": Definicao(segundo_turno=True, oficial=True)})) == {}

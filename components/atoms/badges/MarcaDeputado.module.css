@@ -100,6 +100,17 @@
   color: var(--text-secondary);
 }
 
+/* `.legenda > li` (0,1,1) vence o `[data-view-only] { display: none }` global
+ * (0,1,0): sem estas duas regras o item da outra base continuava visível. */
+.legenda > li[data-view-only] {
+  display: none;
+}
+
+:root[data-view="proj"] .legenda > li[data-view-only="proj"],
+:root[data-view="parcial"] .legenda > li[data-view-only="parcial"] {
+  display: block;
+}
+
 .legenda > li > .marca,
 .legenda > li > .destino {
   margin-inline-end: var(--space-1);

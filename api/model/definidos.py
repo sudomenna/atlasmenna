@@ -68,6 +68,15 @@ turno, marcaria os DOIS finalistas como eleitos. Por isso a ordem é:
      (Senado, ou o próprio 2º turno), as marcas são os eleitos — se forem
      mais que as vagas, nada.
 
+## Origem (`definicao_oficial`, 04/10, para o 2º turno)
+
+`por_uf[].definicao_oficial: true` acompanha os dois campos acima quando a
+definição daquela UF veio do TSE: o `md` (Governador; Presidente pelo `br`) ou
+as marcas da totalização final (`tf == "s"`, qualquer cargo, inclusive o
+Senado). Ausente quando veio da conta própria do Senado — a tela então diz
+"Cálculo do AtlasMenna sobre a contagem do TSE"; com ele, "Definição oficial
+do TSE".
+
 ## Nunca inventar
 
 Dado ausente ⇒ resultado vazio ⇒ o produtor OMITE os campos (nunca `[]`, nunca
@@ -107,6 +116,12 @@ class Definicao(NamedTuple):
 
     eleitos: tuple[int, ...] = ()
     segundo_turno: bool = False
+    #: A definição veio do PRÓPRIO TSE — o `md` (Governador no arquivo `uf`,
+    #: Presidente no `br`) ou as marcas da totalização final (`tf == "s"`, em
+    #: qualquer cargo). `False` ⇒ a conta própria do Senado. Vira
+    #: `por_uf[].definicao_oficial` (ausente quando falso) — a tela troca a
+    #: atribuição "Cálculo do AtlasMenna…" por "Definição oficial do TSE".
+    oficial: bool = False
 
 
 VAZIA = Definicao()
@@ -165,17 +180,17 @@ def definicao_pela_totalizacao(
             return VAZIA
         if eleitos and segundo:
             return VAZIA  # eleito E 2º turno no mesmo arquivo: contraditório
-        return Definicao(eleitos=eleitos, segundo_turno=segundo)
+        return Definicao(eleitos=eleitos, segundo_turno=segundo, oficial=True)
 
     marcados = sorted(int(c["id"]) for c in cands if _norm(c.get("e")) == "s")
     if segundo_turno_possivel:
         if len(marcados) == 1:
-            return Definicao(eleitos=(marcados[0],))
+            return Definicao(eleitos=(marcados[0],), oficial=True)
         if len(marcados) == 2:
-            return Definicao(segundo_turno=True)
+            return Definicao(segundo_turno=True, oficial=True)
         return VAZIA
     if 0 < len(marcados) <= vagas:
-        return Definicao(eleitos=tuple(marcados))
+        return Definicao(eleitos=tuple(marcados), oficial=True)
     return VAZIA
 
 
@@ -191,14 +206,16 @@ def definicao_vaga_unica(leitura: LeituraAgregado | None, *, turno: int) -> Defi
     md = _norm(leitura.md)
     if md == "e":
         lider = lider_da_contagem(leitura.candidaturas)
-        return Definicao(eleitos=(lider,)) if lider is not None else VAZIA
+        return Definicao(eleitos=(lider,), oficial=True) if lider is not None else VAZIA
     if md == "s" and segundo_turno_possivel:
-        return Definicao(segundo_turno=True)
+        return Definicao(segundo_turno=True, oficial=True)
     return VAZIA
 
 
 def definicao_senado(leitura: LeituraAgregado | None, *, vagas: int = 2) -> Definicao:
-    """Senador: a conta própria conservadora (docstring do módulo)."""
+    """Senador: a conta própria conservadora (docstring do módulo). Só a
+    totalização final (`tf == "s"`) sai com `oficial=True`; a conta própria,
+    nunca."""
     if leitura is None:
         return VAZIA
     if leitura.tf:
@@ -240,6 +257,9 @@ def campos_definidos(
     `eleitos_definidos` só leva ids que estão em `top_candidatos` (é contra
     eles que a tela procura), em ordem crescente (determinismo).
     `segundo_turno_definido: True` só em Governador, 1º turno.
+    `definicao_oficial: True` só JUNTO com uma das duas, e só quando a
+    definição veio do TSE (`Definicao.oficial`) — ausente na conta própria do
+    Senado (nunca `False`).
     """
     if definidos is None:
         return {}
@@ -257,4 +277,6 @@ def campos_definidos(
         out["eleitos_definidos"] = eleitos
     if cargo == 3 and int(turno) == 1 and definicao.segundo_turno and not eleitos:
         out["segundo_turno_definido"] = True
+    if out and definicao.oficial:
+        out["definicao_oficial"] = True
     return out

@@ -191,3 +191,84 @@ describe("Presidente por UF", () => {
     expect(atribuicao(doc)).toBeNull();
   });
 });
+
+// 04/10 (para o 2º turno, 25/10) — a ORIGEM da marca. Depois da totalização
+// final (`tf='s'`) a marca do Senado vem do TSE (`definicao_oficial`), e o
+// cartão não pode continuar dizendo que a conta é do AtlasMenna.
+describe("atribuição pela origem (`definicao_oficial`)", () => {
+  it("🔴 Senado com definicao_oficial ⇒ 'Definição oficial do TSE' [mutação: ignorar `definicao_oficial`]", () => {
+    const doc = parse(
+      <GovernorCard
+        uf={uf({ eleitos_definidos: [ANA, CELIA], definicao_oficial: true })}
+        candidatos={[]}
+        cargo="sen"
+        duasBases
+      />,
+    );
+    expect(atribuicao(doc)).toBe("Definição oficial do TSE");
+    expect(doc.body.textContent).not.toContain("Cálculo do AtlasMenna");
+  });
+
+  it("Governador/Presidente com definicao_oficial ⇒ nenhuma atribuição (como antes)", () => {
+    for (const cargo of ["gov", "pres"] as const) {
+      const doc = parse(
+        <GovernorCard
+          uf={uf({ eleitos_definidos: [ANA], definicao_oficial: true })}
+          candidatos={[]}
+          cargo={cargo}
+          duasBases
+        />,
+      );
+      expect(atribuicao(doc)).toBeNull();
+    }
+  });
+});
+
+// 04/10 (para o 2º turno, 25/10) — o cartão recebe o turno. Em turno 2 não há
+// "Venceria no 1º turno · na parcial" (nem selo de base nenhum), igual a
+// `selosDaBase`; a marca de eleito continua.
+describe("turno 2", () => {
+  const dois = (over: Partial<EdgeUfRow> = {}) =>
+    uf({
+      top_candidatos: [
+        { id: ANA, pct: 55, pct_atual: 58, nome: "Ana Lima", partido: "PT" },
+        { id: BRUNO, pct: 45, pct_atual: 42, nome: "Bruno Reis", partido: "PL" },
+      ],
+      vai_a_2t: false,
+      bucket: "decidido_1t",
+      ...over,
+    });
+
+  it("controle: a mesma linha em turno 1 tem o selo de turno nas duas listas", () => {
+    const doc = parse(<GovernorCard uf={dois()} candidatos={[]} duasBases turno={1} />);
+    expect(selos(doc, "proj")).toEqual({ "Ana Lima": "Vence no 1º turno · projeção" });
+    expect(selos(doc, "parcial")).toEqual({ "Ana Lima": "Venceria no 1º turno · na parcial" });
+  });
+
+  it("🔴 turno 2 sem definido ⇒ nenhum selo, em nenhuma lista nem no leitor de tela [mutação: ignorar `turno`]", () => {
+    const doc = parse(<GovernorCard uf={dois()} candidatos={[]} duasBases turno={2} />);
+    expect(doc.querySelector("li b")).toBeNull();
+    expect(doc.body.textContent).not.toMatch(/turno/i);
+    for (const ul of doc.querySelectorAll("ul")) {
+      expect(ul.getAttribute("aria-label") ?? "").not.toMatch(/turno/i);
+    }
+    // Lista única também.
+    expect(
+      parse(<GovernorCard uf={dois()} candidatos={[]} turno={2} />).querySelector("li b"),
+    ).toBeNull();
+  });
+
+  it("🔴 turno 2 com eleito definido ⇒ só 'Matematicamente eleito', nas duas listas", () => {
+    const doc = parse(
+      <GovernorCard
+        uf={dois({ eleitos_definidos: [ANA], definicao_oficial: true })}
+        candidatos={[]}
+        duasBases
+        turno={2}
+      />,
+    );
+    expect(selos(doc, "proj")).toEqual({ "Ana Lima": "Matematicamente eleito" });
+    expect(selos(doc, "parcial")).toEqual({ "Ana Lima": "Matematicamente eleito" });
+    expect(verdes(doc)).toBe(2);
+  });
+});

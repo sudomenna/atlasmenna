@@ -288,3 +288,34 @@
   color: var(--color-pct-proj);
 }
 /* ── Spec 026 RF-297 — voto projetado por candidatura (fim) ──────────────── */
+
+/* ── Uma base por vez (decisão do dono, 04/10) ──────────────────────────────
+ *
+ * As marcas seguem o seletor global Parcial/Projeção (`<html data-view>`,
+ * `lib/state/view-mode.ts`): na "Parcial" só "eleito na parcial" e a linha de
+ * corte; na "Projeção" só "eleito na projeção · não oficial" e o voto
+ * projetado. "Eleito (TSE)" (`data-marca="tse"`) nunca é escondida.
+ *
+ * `display: none`, e não recuo de cor: a marca da base inativa não pode ser
+ * lida pelo leitor de tela — a mesma razão do `[data-view-only]` global.
+ *
+ * Por que ganchos e não `data-view-only` em cada pílula: medido no pior caso
+ * de SP (`DeputadoListaAgremiacao.peso.test.tsx`), o atributo por pílula, por
+ * voto projetado e por linha de corte somava ~7 KiB e estourava o teto de 384
+ * KiB das listas. Aqui o custo é um atributo por LISTA (`data-proj`, posto só
+ * quando a projeção está visível e não há totalização final — `separaBases`).
+ *
+ * As marcas e o voto projetado da projeção só existem com a projeção visível,
+ * então escondê-los na "Parcial" não depende de `data-proj`. A marca da
+ * parcial e a linha de corte só somem na "Projeção" quando a lista separa as
+ * bases; sem projeção visível elas valem nas duas.
+ *
+ * O voto projetado é o SEGUNDO `<small>` da coluna dos números — o mesmo
+ * gancho da cor dele (RF-297, acima). `<DeputadoMaisVotados>` usa este módulo
+ * e o mesmo markup. */
+:root[data-view="parcial"] .lista [data-marca="projecao"],
+:root[data-view="parcial"] .lista > li > span:nth-child(3) > small + small,
+:root[data-view="proj"] .lista[data-proj] [data-marca="parcial"],
+:root[data-view="proj"] .lista[data-proj] > li[data-corte] {
+  display: none;
+}

@@ -228,6 +228,25 @@ describe("gaveta — escopo do status e atribuição do Senado", () => {
     expect(atribuicao(h)).toBe("Cálculo do AtlasMenna sobre a contagem do TSE");
   });
 
+  // 04/10 (para o 2º turno) — depois da totalização final a marca do Senado
+  // é a do TSE (`definicao_oficial`).
+  it("🔴 Senado com definicao_oficial: 'Definição oficial do TSE' [mutação: ignorar `definicao_oficial`]", () => {
+    const h = render({
+      row: mkRow({ eleitos_definidos: [100, 101], definicao_oficial: true }),
+      cargo: "sen",
+    });
+    expect(status(h)).toBe("Matematicamente eleitos");
+    expect(atribuicao(h)).toBe("Definição oficial do TSE");
+  });
+
+  it("Governador com definicao_oficial: continua sem atribuição", () => {
+    const h = render({
+      row: mkRow({ eleitos_definidos: [100], definicao_oficial: true }),
+      cargo: "gov",
+    });
+    expect(atribuicao(h)).toBeNull();
+  });
+
   it("Senado SEM eleito: nem status nem atribuição", () => {
     const h = render({ row: mkRow(), cargo: "sen" });
     expect(status(h)).toBeNull();

@@ -705,6 +705,10 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
                             // "Parcial / Projeção": apurado na Parcial,
                             // projeção na Projeção.
                             duasBases
+                            // 2º turno ⇒ nenhum selo de turno ("Venceria no
+                            // 1º turno · na parcial" seria falso); a marca de
+                            // eleito continua.
+                            turno={payload.turno}
                           />
                         ))}
                       </div>

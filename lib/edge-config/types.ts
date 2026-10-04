@@ -821,6 +821,21 @@ export interface EdgeUfRow {
    */
   segundo_turno_definido?: true;
   /**
+   * 🔴 2026-10-04 (para o 2º turno, 25/10) — DE ONDE veio a definição desta
+   * UF. Presente (sempre `true`) só junto com
+   * {@link EdgeUfRow.eleitos_definidos} ou
+   * {@link EdgeUfRow.segundo_turno_definido}, quando ela veio do PRÓPRIO TSE:
+   * o `md` (Governador na UF; Presidente pelo arquivo nacional) ou as marcas
+   * da totalização final (`tf='s'`, em qualquer cargo, inclusive o Senado).
+   *
+   * **Ausente ⇒ a conta própria do Senado** (ou nada definido) — nunca
+   * `false`. A tela escreve a atribuição pela origem
+   * (`atribuicaoDaDefinicao`, `lib/utils/eleitos-definidos.ts`): Senado sem o
+   * campo ⇒ "Cálculo do AtlasMenna sobre a contagem do TSE"; com ⇒ "Definição
+   * oficial do TSE". Produtor: `api/model/definidos.py::campos_definidos`.
+   */
+  definicao_oficial?: true;
+  /**
    * Swing em pp vs. 2022 (positivo = em favor do líder).
    *
    * S07/Fase 2 — o tipo passa a aceitar `null`: com a projeção extrapolada

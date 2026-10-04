@@ -19,7 +19,8 @@
  *      (RF-267).
  *   3. Senão: "eleito na parcial" se `parcial`; "eleito na projeção · não
  *      oficial" se `projecao` **e** a projeção está visível — as duas podem
- *      coexistir.
+ *      coexistir NA DERIVAÇÃO, mas a tela mostra uma base por vez (decisão do
+ *      dono, 04/10 — ver {@link separaBases} e {@link avisoSemProjecao}).
  *
  * "Visível" são DUAS leituras, sempre juntas ({@link projecaoVisivel}): o
  * estado publicado pelo modelo (`projecao.estado === "liberada"`) **e** o
@@ -140,6 +141,58 @@ export function projecaoVisivel(
   interruptorLigado: boolean,
 ): boolean {
   return interruptorLigado === true && projecao?.estado === "liberada";
+}
+
+/**
+ * O cargo tem projeção? Só o Deputado Federal (cargo 6). Decisão do dono,
+ * 04/10: Deputado Estadual (7) e Distrital (8) NÃO têm projeção — fica
+ * desativada nas telas, qualquer que seja o estado publicado ou o
+ * interruptor. Quem monta o {@link ContextoMarcas} de uma tela de deputado
+ * passa `cargoTemProjecao(cargo) && projecaoVisivel(...)`.
+ */
+export function cargoTemProjecao(cargo: number): boolean {
+  return cargo === 6;
+}
+
+// ---------------------------------------------------------------------------
+// Uma base por vez — decisão do dono, 04/10
+// ---------------------------------------------------------------------------
+
+/**
+ * O aviso que a base "Projeção" mostra quando NÃO há projeção na tela.
+ *
+ * Decisão do dono (04/10): as marcas seguem o seletor global Parcial/Projeção
+ * — em "Parcial" só as da parcial, em "Projeção" só as da projeção; "Eleito
+ * (TSE)" nas duas. Sem projeção visível, a base "Projeção" mostra as marcas da
+ * PARCIAL e diz isso, num aviso curto que só existe nela (`data-view-only=
+ * "proj"`). Dois textos, porque são duas razões diferentes:
+ *
+ *   - `cargo` ....... Estadual/Distrital: o cargo não tem projeção;
+ *   - `travada` ..... Federal com interruptor desligado ou trava abaixo de 25%.
+ */
+export const AVISO_SEM_PROJECAO = {
+  cargo: "Este cargo não tem projeção — as marcas são da parcial.",
+  travada: "Projeção ainda não liberada — as marcas são da parcial.",
+} as const;
+
+/**
+ * O aviso de {@link AVISO_SEM_PROJECAO} para esta tela, ou `null` quando não há
+ * o que avisar: projeção visível (cada base tem as suas marcas) ou totalização
+ * final (só a marca do TSE existe, nas duas bases — RF-267).
+ */
+export function avisoSemProjecao(cargoComProjecao: boolean, ctx: ContextoMarcas): string | null {
+  if (ctx.totalizacaoFinal || ctx.projecaoVisivel) return null;
+  return cargoComProjecao ? AVISO_SEM_PROJECAO.travada : AVISO_SEM_PROJECAO.cargo;
+}
+
+/**
+ * A lista separa as duas bases? Só com a projeção visível e sem totalização
+ * final. Sem projeção não há o que separar: as marcas da parcial valem nas
+ * duas bases (a "Projeção" ganha o aviso). Com totalização final só a marca
+ * do TSE existe, e ela aparece nas duas.
+ */
+export function separaBases(ctx: ContextoMarcas): boolean {
+  return ctx.projecaoVisivel && !ctx.totalizacaoFinal;
 }
 
 /**

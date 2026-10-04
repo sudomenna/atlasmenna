@@ -93,12 +93,24 @@ export interface LegendaMarcasProps {
    * assembleias passam `true`; ausente ⇒ o texto do federal ("de DF").
    */
   comArtigo?: boolean;
+  /**
+   * Decisão do dono, 04/10 — `avisoSemProjecao(...)`: sem projeção na tela, a
+   * base "Projeção" mostra as marcas da parcial e este aviso (só nela,
+   * `data-view-only="proj"`). `null`/ausente ⇒ nada.
+   */
+  aviso?: string | null;
 }
 
 /**
  * A legenda ÚNICA das marcas para o painel inteiro (spec 026 § Telas, item 5):
  * um lugar só explica o que cada marca quer dizer, em vez de repetir a
  * explicação em mil linhas. Só lista marca que pode aparecer nesta UF agora.
+ *
+ * Uma base por vez (decisão do dono, 04/10): com a projeção visível, o item da
+ * parcial só existe na base "Parcial" e os da projeção só na "Projeção"
+ * (`data-view-only` — `display: none` na outra, fora da árvore de
+ * acessibilidade). Sem projeção visível, o item da parcial vale nas duas e a
+ * "Projeção" ganha o {@link LegendaMarcasProps.aviso}.
  */
 export function LegendaMarcas({
   projecaoVisivel,
@@ -108,7 +120,11 @@ export function LegendaMarcas({
   uf,
   territorio = TERMO_ESTADO,
   comArtigo = false,
+  aviso = null,
 }: LegendaMarcasProps) {
+  // Só separa as bases quando há o que separar (`separaBases`): projeção
+  // visível e sem totalização final — este ramo já é o sem totalização.
+  const soParcial = projecaoVisivel ? "parcial" : undefined;
   return (
     <ul className={styles.legenda} data-testid="dep-legenda-marcas">
       {semPercentual ? null : (
@@ -125,7 +141,12 @@ export function LegendaMarcas({
         </li>
       ) : (
         <>
-          <li>
+          {aviso && !projecaoVisivel ? (
+            <li data-view-only="proj" data-testid="dep-aviso-sem-projecao">
+              {aviso}
+            </li>
+          ) : null}
+          <li data-view-only={soParcial}>
             <MarcaDeputado marca={{ tipo: "parcial", via: null, apertada: false }} /> quem ocuparia
             a cadeira se a contagem parasse agora, pela distribuição do Código Eleitoral sobre os
             votos já apurados. "Pelo quociente" e "nas sobras" dizem por onde a vaga veio na nossa
@@ -133,7 +154,7 @@ export function LegendaMarcas({
             falta contar.
           </li>
           {projecaoVisivel ? (
-            <li>
+            <li data-view-only="proj">
               <MarcaDeputado marca={{ tipo: "projecao", via: "qp", apertada: false }} /> quem
               ocuparia a cadeira na nossa estimativa do resultado final {territorio.doTerritorio}.
               Não é resultado do TSE; "apertada" marca a vaga que ainda pode mudar de mão.
@@ -142,7 +163,7 @@ export function LegendaMarcas({
           {projecaoVisivel ? (
             // Spec 026 RF-297 — o número sob o voto apurado. Só existe com a
             // projeção visível (o mesmo par de leituras da marca acima).
-            <li data-testid="dep-legenda-voto-projetado">
+            <li data-view-only="proj" data-testid="dep-legenda-voto-projetado">
               "projeção ≈ 652 mil · não oficial", sob os votos: o voto que estimamos para o
               candidato ao fim da apuração {territorio.doTerritorio}, arredondado. Aparece nos
               marcados como eleitos e nos 7 seguintes de cada agremiação. Não é resultado do TSE e

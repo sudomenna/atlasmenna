@@ -605,4 +605,16 @@ describe("GovernadorGridPage — painel '1º ou 2º turno' (RF-006.6/7/8)", () =
     // …sem o painel.
     expect(doc.querySelector('[data-testid="desfecho-turno"]')).toBeNull();
   });
+
+  // 04/10 (para o 2º turno, 25/10) — a página passa o turno ao cartão: em
+  // turno 2 nenhum cartão diz "Vence(ria) no 1º turno" nem selo de base
+  // nenhum. Controle: o mesmo `render` em turno 1 tem selos.
+  it("🔴 (y) 2º turno: os cartões das UFs saem sem selo de turno [mutação: não passar `turno`]", async () => {
+    const controle = await render();
+    expect(controle.querySelectorAll("article b[data-s]").length).toBeGreaterThan(0);
+    modo = "turno2";
+    const doc = await render();
+    expect(doc.querySelectorAll("article").length).toBeGreaterThan(0);
+    expect(doc.querySelectorAll("article b[data-s]")).toHaveLength(0);
+  });
 });

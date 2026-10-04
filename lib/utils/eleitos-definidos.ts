@@ -46,12 +46,21 @@ export interface DefinicaoDaUf {
   eleitos: ReadonlySet<number>;
   /** Texto do cabeçalho do balão / status da gaveta; `undefined` ⇒ nenhum. */
   rotulo: string | undefined;
+  /**
+   * A definição veio do PRÓPRIO TSE (`EdgeUfRow.definicao_oficial`): `md` ou
+   * totalização final. `false` sem definição nenhuma, e na conta própria do
+   * Senado. Só a atribuição lê (`atribuicaoDaDefinicao`).
+   */
+  oficial: boolean;
 }
 
 const NINGUEM: ReadonlySet<number> = new Set();
 
 export function definicaoDaUf(
-  row: Pick<EdgeUfRow, "top_candidatos" | "eleitos_definidos" | "segundo_turno_definido">,
+  row: Pick<
+    EdgeUfRow,
+    "top_candidatos" | "eleitos_definidos" | "segundo_turno_definido" | "definicao_oficial"
+  >,
 ): DefinicaoDaUf {
   const declarados = Array.isArray(row.eleitos_definidos) ? row.eleitos_definidos : [];
   const eleitos = new Set<number>();
@@ -60,12 +69,15 @@ export function definicaoDaUf(
       if (declarados.includes(tc.id) && compete(tc)) eleitos.add(tc.id);
     }
   }
-  if (eleitos.size === 1) return { eleitos, rotulo: ROTULO_ELEITO };
-  if (eleitos.size > 1) return { eleitos, rotulo: ROTULO_ELEITOS };
+  // A origem só acompanha uma definição que ESTÁ na tela (o produtor só a
+  // emite junto com os campos acima; isto é defensivo).
+  const oficial = row.definicao_oficial === true;
+  if (eleitos.size === 1) return { eleitos, rotulo: ROTULO_ELEITO, oficial };
+  if (eleitos.size > 1) return { eleitos, rotulo: ROTULO_ELEITOS, oficial };
   if (row.segundo_turno_definido === true) {
-    return { eleitos: NINGUEM, rotulo: ROTULO_SEGUNDO_TURNO };
+    return { eleitos: NINGUEM, rotulo: ROTULO_SEGUNDO_TURNO, oficial };
   }
-  return { eleitos: NINGUEM, rotulo: undefined };
+  return { eleitos: NINGUEM, rotulo: undefined, oficial: false };
 }
 
 // ===========================================================================
@@ -86,7 +98,9 @@ export function definicaoDaUf(
 //  - **Atribuição.** O TSE não publica a marca de eleito do Senado durante a
 //    apuração; a conta é do AtlasMenna (`api/model/definidos.py`). Onde a
 //    marca de Senado aparece, a superfície diz de quem é a conta
-//    (constituição § 8, transparência metodológica).
+//    (constituição § 8, transparência metodológica). Depois da totalização
+//    final (`tf='s'`) a marca do Senado passa a ser a do TSE
+//    (`EdgeUfRow.definicao_oficial`), e o texto diz isso.
 
 /** O cargo da corrida, no vocabulário das superfícies (`UfPickerCargo`). */
 export type CargoDefinicao = "pres" | "gov" | "sen";
@@ -111,6 +125,12 @@ export const PREFIXO_ESTADO = "No estado";
  * que o TSE publica.
  */
 export const ATRIBUICAO_SENADO = "Cálculo do AtlasMenna sobre a contagem do TSE";
+
+/**
+ * Atribuição da marca de Senado quando ela veio do próprio TSE (a totalização
+ * final, `EdgeUfRow.definicao_oficial`).
+ */
+export const ATRIBUICAO_OFICIAL = "Definição oficial do TSE";
 
 /** O prefixo de escopo de uma superfície; `undefined` ⇒ sem prefixo. */
 function prefixoDe({ cargo, superficie }: OpcoesEscopo): string | undefined {
@@ -144,12 +164,15 @@ export function rotuloComEscopo(
 
 /**
  * A atribuição a escrever perto da marca de eleito: só no Senado, e só quando
- * HÁ marca (alguém em `eleitos`). Governador e Presidente seguem o aviso do
- * próprio TSE — sem nota.
+ * HÁ marca (alguém em `eleitos`). A ORIGEM decide o texto: sem
+ * `definicao.oficial` ⇒ a conta própria ({@link ATRIBUICAO_SENADO}); com ⇒ a
+ * totalização final do TSE ({@link ATRIBUICAO_OFICIAL}). Governador e
+ * Presidente seguem o aviso do próprio TSE — sem nota.
  */
 export function atribuicaoDaDefinicao(
   cargo: CargoDefinicao,
-  definicao: Pick<DefinicaoDaUf, "eleitos">,
+  definicao: Pick<DefinicaoDaUf, "eleitos" | "oficial">,
 ): string | undefined {
-  return cargo === "sen" && definicao.eleitos.size > 0 ? ATRIBUICAO_SENADO : undefined;
+  if (cargo !== "sen" || definicao.eleitos.size === 0) return undefined;
+  return definicao.oficial ? ATRIBUICAO_OFICIAL : ATRIBUICAO_SENADO;
 }

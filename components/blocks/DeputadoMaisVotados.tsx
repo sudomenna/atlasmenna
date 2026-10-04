@@ -68,6 +68,18 @@ export interface DeputadoMaisVotadosProps {
    */
   fotos?: FotosDosEleitos;
   titleId: string;
+  /**
+   * Decisão do dono, 04/10 — uma base por vez: `separaBases(ctx)` da página
+   * de UF. Com `true` a `<ol>` leva `data-proj` e o CSS de
+   * `DeputadoListaAgremiacao.module.css` esconde a base inativa (o mesmo da
+   * lista por agremiação). Ignorado no país (a capa não tem marca).
+   */
+  separaBases?: boolean;
+  /**
+   * `avisoSemProjecao(...)` — sem projeção na tela, a base "Projeção" mostra
+   * as marcas da parcial e este aviso (só nela, `data-view-only="proj"`).
+   */
+  aviso?: string | null;
 }
 
 export function DeputadoMaisVotados({
@@ -78,6 +90,8 @@ export function DeputadoMaisVotados({
   linhas,
   fotos,
   titleId,
+  separaBases = false,
+  aviso = null,
 }: DeputadoMaisVotadosProps) {
   if (!linhas || linhas.length === 0) return null;
   const noPais = escopo === "pais";
@@ -99,12 +113,22 @@ export function DeputadoMaisVotados({
             ? `Os 10 candidatos com mais votos apurados no país, de todas as agremiações. O percentual de cada um é sobre os votos válidos ${cargo === 6 ? "do estado dele" : "da unidade dele — o estado, ou o Distrito Federal"} — é lá que a cadeira é disputada.`
             : `Os 10 candidatos com mais votos apurados ${naUf.em}, de todas as agremiações. O percentual é sobre os votos válidos ${naUf.de}.`}
         </p>
+        {!noPais && aviso ? (
+          <p
+            className={styles.legendaColunas}
+            data-view-only="proj"
+            data-testid="dep-mais-votados-aviso-sem-projecao"
+          >
+            {aviso}
+          </p>
+        ) : null}
         {/* Nome acessível = o título do painel ("Mais votados em SP"): o
             leitor que pula de lista em lista sabe qual é esta (G6, 30/09). */}
         <ol
           className={styles.lista}
           aria-labelledby={titleId}
           data-testid={noPais ? "dep-mais-votados-pais" : "dep-mais-votados-uf"}
+          data-proj={!noPais && separaBases ? "" : undefined}
         >
           {linhas.map((l, i) => {
             const nome = nomeExibicao(l.nome, String(l.sqcand));

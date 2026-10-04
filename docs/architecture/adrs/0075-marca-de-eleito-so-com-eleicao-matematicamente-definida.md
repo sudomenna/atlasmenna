@@ -72,6 +72,7 @@ de município, nos cartões e na faixa "AGORA"/Boletim. A fonte, por cargo:
 **Contrato.** `EdgeUfRow.eleitos_definidos?: number[]` (ausente quando vazio) e
 `segundo_turno_definido?: true` (só Governador, 1º turno). `chamada` permanece. Falha no cálculo registra
 aviso e **omite os campos** — nunca derruba o payload.
+`definicao_oficial?: true` (04/10, para o 2º turno) acompanha os dois quando a definição veio do TSE (`md`, ou `tf='s'` em qualquer cargo) e falta na conta própria do Senado; a atribuição do Senado passa a "Definição oficial do TSE" com ele.
 
 **Rótulos.** "Matematicamente eleito(s)" e "2º turno definido"; escopo explícito "No estado:" / "No país:"
 na gaveta de município e em Presidente; no Senado, atribuição "Cálculo do AtlasMenna sobre a contagem do

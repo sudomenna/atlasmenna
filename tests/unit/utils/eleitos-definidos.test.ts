@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 
 import type { EdgeUfRow } from "@/lib/edge-config/types";
 import {
+  ATRIBUICAO_OFICIAL,
   ATRIBUICAO_SENADO,
   atribuicaoDaDefinicao,
   comEscopo,
@@ -22,7 +23,10 @@ import {
   rotuloComEscopo,
 } from "@/lib/utils/eleitos-definidos";
 
-type Linha = Pick<EdgeUfRow, "top_candidatos" | "eleitos_definidos" | "segundo_turno_definido">;
+type Linha = Pick<
+  EdgeUfRow,
+  "top_candidatos" | "eleitos_definidos" | "segundo_turno_definido" | "definicao_oficial"
+>;
 
 const TOP: EdgeUfRow["top_candidatos"] = [
   { id: 13, pct: 45 },
@@ -69,6 +73,7 @@ describe("definicaoDaUf", () => {
     expect(definicaoDaUf(linha({ eleitos_definidos: [999] }))).toEqual({
       eleitos: new Set(),
       rotulo: undefined,
+      oficial: false,
     });
     const d = definicaoDaUf(linha({ eleitos_definidos: [13, 999] }));
     expect([...d.eleitos]).toEqual([13]);
@@ -157,12 +162,39 @@ describe("rotuloComEscopo / comEscopo / atribuicaoDaDefinicao", () => {
   });
 
   it("atribuição: SÓ Senado e SÓ com alguém eleito", () => {
-    const com = { eleitos: new Set([13]) };
-    const sem = { eleitos: new Set<number>() };
+    const com = { eleitos: new Set([13]), oficial: false };
+    const sem = { eleitos: new Set<number>(), oficial: false };
     expect(ATRIBUICAO_SENADO).toBe("Cálculo do AtlasMenna sobre a contagem do TSE");
     expect(atribuicaoDaDefinicao("sen", com)).toBe(ATRIBUICAO_SENADO);
     expect(atribuicaoDaDefinicao("sen", sem)).toBeUndefined();
     expect(atribuicaoDaDefinicao("gov", com)).toBeUndefined();
     expect(atribuicaoDaDefinicao("pres", com)).toBeUndefined();
+  });
+
+  // 04/10 (para o 2º turno) — depois da totalização final a marca do Senado é
+  // a do TSE, e a tela não pode continuar dizendo que a conta é nossa.
+  it("atribuição pela ORIGEM: Senado oficial ⇒ 'Definição oficial do TSE'; Gov/Pres nada", () => {
+    expect(ATRIBUICAO_OFICIAL).toBe("Definição oficial do TSE");
+    const oficial = { eleitos: new Set([13]), oficial: true };
+    expect(atribuicaoDaDefinicao("sen", oficial)).toBe(ATRIBUICAO_OFICIAL);
+    expect(atribuicaoDaDefinicao("sen", { eleitos: new Set<number>(), oficial: true })).toBe(
+      undefined,
+    );
+    expect(atribuicaoDaDefinicao("gov", oficial)).toBeUndefined();
+    expect(atribuicaoDaDefinicao("pres", oficial)).toBeUndefined();
+  });
+
+  it("definicaoDaUf carrega a origem só quando há definição", () => {
+    expect(definicaoDaUf(linha({ eleitos_definidos: [13], definicao_oficial: true })).oficial).toBe(
+      true,
+    );
+    expect(definicaoDaUf(linha({ eleitos_definidos: [13] })).oficial).toBe(false);
+    expect(
+      definicaoDaUf(linha({ segundo_turno_definido: true, definicao_oficial: true })).oficial,
+    ).toBe(true);
+    // Origem sem definição (id fora das linhas) não sobra.
+    expect(
+      definicaoDaUf(linha({ eleitos_definidos: [999], definicao_oficial: true })).oficial,
+    ).toBe(false);
   });
 });

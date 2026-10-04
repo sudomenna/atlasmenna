@@ -314,6 +314,25 @@ describe("hover do mapa nacional — fundo cheio + ✓ só para MATEMATICAMENTE 
     host.remove();
   });
 
+  // 04/10 (para o 2º turno) — depois da totalização final a marca do Senado é
+  // a do TSE (`definicao_oficial`); o balão diz de quem é a definição.
+  it("🔴 Senado com definicao_oficial ⇒ nota 'Definição oficial do TSE' [mutação: ignorar `definicao_oficial`]", () => {
+    const { host, root } = montar(
+      rowSp(true, "PT", { eleitos_definidos: [13, 22], definicao_oficial: true }),
+      "proj",
+      "sen",
+    );
+    disparaHoverEmSp();
+
+    expect(host.querySelector("[data-testid='hover-card-nota']")?.textContent).toBe(
+      "Definição oficial do TSE",
+    );
+    expect(card(host)?.textContent).not.toContain("Cálculo do AtlasMenna");
+
+    act(() => root.unmount());
+    host.remove();
+  });
+
   it("id que não está nas linhas é ignorado — nenhum ✓ e nenhum cabeçalho", () => {
     const { host, root } = montar(rowSp(true, "PT", { eleitos_definidos: [999] }));
     disparaHoverEmSp();

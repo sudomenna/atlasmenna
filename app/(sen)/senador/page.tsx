@@ -691,6 +691,7 @@ export default async function SenadoPage() {
                                 nivelTitulo={4}
                                 etiquetas={capa.chips(uf.sigla)}
                                 duasBases
+                                turno={payload.turno}
                               />
                             </a>
                           </li>

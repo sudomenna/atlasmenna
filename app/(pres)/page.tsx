@@ -1217,6 +1217,7 @@ export default async function HomePage() {
                               cargo="pres"
                               nivelTitulo={4}
                               duasBases
+                              turno={turno}
                             />
                           </a>
                         </li>

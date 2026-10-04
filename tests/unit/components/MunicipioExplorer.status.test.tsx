@@ -381,6 +381,17 @@ describe("eleitos definidos (por_uf da moldura do mapa)", () => {
     expect(eleitoEm("Célia Mota")).toBeNull();
   });
 
+  // 04/10 (para o 2º turno) — depois da totalização final a marca do Senado
+  // é a do TSE (`definicao_oficial`), e a gaveta do município diz isso.
+  it("🔴 Senado com definicao_oficial: 'Definição oficial do TSE' [mutação: ignorar `definicao_oficial`]", () => {
+    montar({ selo: SEN, cargo: "sen" });
+    publicar("sen", linhaPorUf({ eleitos_definidos: [ANA, BRUNO], definicao_oficial: true }));
+    expect(status()).toBe("No estado: matematicamente eleitos");
+    expect(folha()?.querySelector('[data-testid="municipio-sheet-atribuicao"]')?.textContent).toBe(
+      "Definição oficial do TSE",
+    );
+  });
+
   it("2º turno definido: status sem fundo em ninguém", () => {
     montar({ selo: GOV, cargo: "gov" });
     publicar("gov", linhaPorUf({ segundo_turno_definido: true }));

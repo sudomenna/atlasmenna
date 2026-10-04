@@ -165,6 +165,16 @@ export interface GovernorCardProps {
    * projeção sob o resumo "Parcial · …" da região.
    */
   duasBases?: boolean;
+  /**
+   * 04/10/2026 (para o 2º turno, 25/10) — o turno do payload que monta o
+   * cartão (`EdgePayload.turno`). `2` ⇒ NENHUM selo de base (nem de turno —
+   * "Venceria no 1º turno · na parcial" num 2º turno é falso por construção —
+   * nem de vaga): a mesma regra de `selosDaBase` (`lib/utils/selo-resultado.ts`,
+   * regra 4), que já desliga tudo com `turno === 2`. A marca
+   * "Matematicamente eleito" continua valendo: é fato da apuração, não da
+   * base. Ausente ⇒ tratado como 1º turno, o mesmo default de `selosDaBase`.
+   */
+  turno?: number | null;
 }
 
 /**
@@ -297,9 +307,12 @@ export function GovernorCard({
   nivelTitulo = 3,
   etiquetas,
   duasBases = false,
+  turno,
 }: GovernorCardProps) {
   const senado = cargo === "sen";
   const presidente = cargo === "pres";
+  /** 2º turno ⇒ só a marca de eleito; nenhum selo de base (ver a prop). */
+  const segundoTurno = turno === 2;
   // 🔴 2026-10-04 — quem está MATEMATICAMENTE eleito (ponto único,
   // `lib/utils/eleitos-definidos.ts`): igual nas duas bases, casado por `id`.
   const definicao = definicaoDaUf(uf);
@@ -427,6 +440,8 @@ export function GovernorCard({
    *     par do `<ResultPanel>`. Com eleito, a corrida de vaga única está
    *     decidida: nenhum outro selo.
    *  4. Presidente ⇒ só o (1) (ADR-0055: nenhum selo de UF).
+   *  5. 2º turno (`turno === 2`) ⇒ só o (1), em qualquer cargo — a regra 4 de
+   *     `selosDaBase`.
    */
   const selosDaLista = (
     linhas: readonly Row[],
@@ -438,6 +453,7 @@ export function GovernorCard({
     const disputam: number[] = [];
     for (const r of linhas) if (r.id !== null && compete(r)) disputam.push(r.id);
     for (const id of disputam) if (definicao.eleitos.has(id)) selos.set(id, chipEleito);
+    if (segundoTurno) return selos;
     if (senado) {
       let livres = VAGAS_SENADO - selos.size;
       for (const id of disputam) {

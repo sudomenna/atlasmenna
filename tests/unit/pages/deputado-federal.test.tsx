@@ -61,6 +61,18 @@ function projecaoForaDaMetodologia(doc: Document): { soltas: string[]; total: nu
     const t = n.textContent ?? "";
     if (!/proje(ção|tad)/i.test(t)) continue;
     if (metodologia?.contains(n)) continue;
+    // Decisão do dono, 04/10: sem projeção na tela, a base "Projeção" mostra
+    // as marcas da parcial com um aviso que DIZ isso ("Projeção ainda não
+    // liberada — as marcas são da parcial."), com o interruptor desligado
+    // inclusive. É a única menção admitida fora da metodologia; o caso (t5)
+    // confere que ela existe e só na base "Projeção".
+    if (
+      n.parentElement?.closest(
+        "[data-testid='dep-aviso-sem-projecao'], [data-testid='dep-mais-votados-aviso-sem-projecao']",
+      )
+    ) {
+      continue;
+    }
     total++;
     const dono = n.parentElement?.closest("p, li, span, h1, h2, h3, h4, div") ?? n.parentElement;
     if (!(dono?.textContent ?? "").includes("não oficial")) soltas.push(t.trim().slice(0, 80));
@@ -1029,6 +1041,10 @@ describe("/uf/[sigla]/deputado-federal (T-12)", () => {
 
     const desligado = await render(UFDeputadoFederalPage(paramsDe("RR")));
     expect(projecaoForaDaMetodologia(desligado).total).toBe(0);
+    // O aviso da base "Projeção" (decisão do dono, 04/10) — só nela.
+    const aviso = desligado.querySelector("[data-testid='dep-aviso-sem-projecao']");
+    expect(aviso?.textContent).toBe("Projeção ainda não liberada — as marcas são da parcial.");
+    expect(aviso?.getAttribute("data-view-only")).toBe("proj");
     expect(desligado.body.textContent).not.toMatch(/\bModelo\b/);
 
     readInterruptorProjecaoMock.mockResolvedValue(LIGADO);

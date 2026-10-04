@@ -127,8 +127,10 @@ import {
   ufTemCasa,
 } from "@/lib/utils/casa-legislativa";
 import {
+  avisoSemProjecao,
   bitsDasMarcas,
   type ContextoMarcas,
+  cargoTemProjecao,
   type ExibicaoLinha,
   fraseCorteCabecalho,
   fraseEstadoProjecao,
@@ -138,6 +140,7 @@ import {
   maisVotadosComVotoProjetado,
   marcasDaLinha,
   projecaoVisivel,
+  separaBases,
 } from "@/lib/utils/deputado-marcas";
 import { formatPercent, formatTimeHMS, formatVotes } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -399,11 +402,20 @@ export async function renderPaginaUfDeputado(
   // interruptor desligado; a segunda leitura aqui é a rede de segurança, não
   // a única porta.
   const v2 = detail?.contrato === 2;
-  const visivel = projecaoVisivel(detail?.projecao, interruptor.ligada);
+  // Decisão do dono, 04/10: Estadual e Distrital NÃO têm projeção — fica
+  // desativada nesta tela qualquer que seja o estado publicado ou o
+  // interruptor (`cargoTemProjecao`).
+  const comProjecao = cargoTemProjecao(cargo);
+  const visivel = comProjecao && projecaoVisivel(detail?.projecao, interruptor.ligada);
   const ctx: ContextoMarcas = {
     totalizacaoFinal: detail?.totalizacao_final === true,
     projecaoVisivel: visivel,
   };
+  // Uma base por vez (decisão do dono, 04/10): com a projeção visível, cada
+  // base mostra só as suas marcas e números (`data-view-only` / `data-proj`);
+  // sem ela, a base "Projeção" mostra os da parcial com este aviso.
+  const bases = separaBases(ctx);
+  const avisoBase = avisoSemProjecao(comProjecao, ctx);
   // Spec 027 — estadual e distrital levam ao documento, por agremiação, só o
   // conjunto visível por padrão: os eleitos + 7 (emenda 04/10, decisão do
   // dono; `lib/deputado/lista-documento.ts`). O resto vem pela rota da lista,
@@ -450,7 +462,7 @@ export async function renderPaginaUfDeputado(
   // ele desligado a projeção não existe na tela fora da metodologia (RF-265),
   // nem como aviso de estado.
   const fraseProjecao =
-    detail && interruptor.ligada
+    detail && interruptor.ligada && comProjecao
       ? fraseEstadoProjecao(detail.projecao, detail.pct_apurado, territorio)
       : null;
 
@@ -662,6 +674,8 @@ export async function renderPaginaUfDeputado(
           linhas={maisVotados.length > 0 ? maisVotados : undefined}
           fotos={fotosMaisVotados}
           titleId="mais-votados-uf-heading"
+          separaBases={bases}
+          aviso={avisoBase}
         />
       </div>
 
@@ -683,6 +697,7 @@ export async function renderPaginaUfDeputado(
               temDestino={temDestino}
               semPercentual={!v2}
               comArtigo={comArtigo}
+              aviso={avisoBase}
             />
             <ul
               data-testid="uf-agremiacoes"
@@ -801,6 +816,8 @@ export async function renderPaginaUfDeputado(
                         {projetadas !== undefined ? (
                           <span
                             data-testid="uf-cadeiras-projetadas"
+                            // Uma base por vez (04/10): número da projeção.
+                            data-view-only="proj"
                             // Token de projeção (04/10) — mesmo ocre de antes.
                             style={{ font: "var(--type-data)", color: "var(--color-pct-proj)" }}
                           >
@@ -818,6 +835,8 @@ export async function renderPaginaUfDeputado(
                       <span
                         className="text-right"
                         style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
+                        // Uma base por vez (04/10): a faixa é da parcial.
+                        data-view-only={bases ? "parcial" : undefined}
                       >
                         {intervalo ? (
                           <span
@@ -840,6 +859,8 @@ export async function renderPaginaUfDeputado(
                     {corte ? (
                       <p
                         data-testid="uf-corte-cabecalho"
+                        // Uma base por vez (04/10): o corte é da parcial.
+                        data-view-only={bases ? "parcial" : undefined}
                         style={{
                           margin: 0,
                           font: "var(--type-body-sm)",
@@ -979,8 +1000,11 @@ export async function renderPaginaUfDeputado(
         temIntervalo={agremiacoes.some((a) => a.cadeiras_ci95 !== undefined)}
         variant="uf"
         uf={sigla}
-        projecao={detail?.projecao ?? null}
-        interruptorLigado={interruptor.ligada}
+        // Estadual e Distrital sem projeção (decisão do dono, 04/10): a
+        // metodologia diz "desligada", e não o estado de uma projeção que a
+        // tela não mostra.
+        projecao={comProjecao ? (detail?.projecao ?? null) : null}
+        interruptorLigado={comProjecao && interruptor.ligada}
         interruptorOrigem={interruptor.origem}
         movendo={movendo}
         temFaixaProjetada={agremiacoes.some((a) => a.cadeiras_projetadas_ci95 !== undefined)}

@@ -42,6 +42,20 @@
  * exibição do nome e da sigla entram por `import()` no clique, para não pesar
  * no bundle de quem nunca clica.
  *
+ * ## Uma base por vez (decisão do dono, 04/10)
+ *
+ * As marcas seguem o seletor global Parcial/Projeção: na "Parcial" só "eleito
+ * na parcial" (com "sobra apertada") e a linha de corte; na "Projeção" só
+ * "eleito na projeção · não oficial" (com "apertada") e o voto projetado.
+ * "Eleito (TSE)" nas duas. Com a projeção visível (`separaBases`) a `<ol>`
+ * leva `data-proj` e o CSS Module esconde a base inativa por `display: none`
+ * — fora da árvore de acessibilidade —, lendo ganchos que JÁ estão no markup
+ * (`data-marca` da pílula, `data-corte`, o segundo `<small>` dos números).
+ * Zero byte por linha, de propósito: `data-view-only` em cada pílula e em
+ * cada voto projetado foi medido no pior caso de SP e estourava o teto das
+ * listas (ver o teste de peso). Sem projeção visível, nada se esconde: as
+ * marcas da parcial valem nas duas bases, e a legenda da página dá o aviso.
+ *
  * ## A ordem nunca é decidida aqui
  *
  * `rank` do produtor (voto apurado). Nem marca nem projeção reordenam
@@ -64,6 +78,7 @@ import {
   marcasDosBits,
   ordenarPorRank,
   paraLinhaCompacta,
+  separaBases,
   textoVotoProjetado,
   ultimoRankVisivelDasTuplas,
   unirPorSqcand,
@@ -436,6 +451,8 @@ export function DeputadoListaAgremiacao({
         // Duas faixas: nada a recolher — o atributo nem existe (ADR-0065,
         // emenda de 03/10: "nem `data-collapsed`, nem recorte por CSS").
         data-collapsed={duasFaixas ? undefined : aberta ? "false" : "true"}
+        // Uma base por vez (decisão do dono, 04/10) — ver o cabeçalho do arquivo.
+        data-proj={separaBases({ totalizacaoFinal, projecaoVisivel }) ? "" : undefined}
         aria-busy={buscando || undefined}
         aria-label={`Candidatos de ${sigla} ${naUf.em}, por votos apurados`}
         // Alvo de foco só quando a busca não trouxe linha (ver `focoEm`); fora
