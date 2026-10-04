@@ -8699,6 +8699,9 @@ def _do_project_proporcional(
     # pelo MESMO ponto único que alimenta `votacao` (`_agregados_de_uf`). Dele
     # saem a conferência contra o TSE e o recurso do `% apurado`.
     agregados_uf = _agregados_de_uf(agregados)
+    # 🔴 04/10/2026 noite — `% apurado` OFICIAL do TSE (`s.st/s.ts` do
+    # arquivo agregado da UF), por ordem do dono — como no majoritário.
+    pct_oficial_prop = _pct_apurado_oficial(agregados)
 
     if not por_uf:
         _log(
@@ -8781,6 +8784,9 @@ def _do_project_proporcional(
             eleitorado_total_uf=eleitorado_total_by_uf.get(sigla, 0),
             agregado=agregado_da_uf[0] if agregado_da_uf is not None else None,
         )
+        if sigla in pct_oficial_prop:
+            pct_apurado = pct_oficial_prop[sigla]
+            fonte_pct = "ponderado"
         if fonte_pct != "ponderado":
             _log(
                 "warn" if fonte_pct == "maximo" else "info",
