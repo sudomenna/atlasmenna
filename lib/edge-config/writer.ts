@@ -315,6 +315,51 @@ export async function writeEdgePayload(key: string, value: unknown): Promise<voi
   });
 }
 
+/** Lote de `upsert`s num PATCH só (dividido em blocos de até ~400 KB). */
+export async function writeEdgeItemsBatch(
+  entries: readonly { key: string; value: unknown }[],
+): Promise<void> {
+  const token = process.env.EDGE_CONFIG_TOKEN;
+  const edgeConfigId = resolveEdgeConfigId();
+  if (!token || !edgeConfigId) {
+    logWarn("global-config batch write skipped: missing credentials", {
+      n: entries.length,
+    });
+    return;
+  }
+  const url = vercelApiUrl(`/v1/edge-config/${edgeConfigId}/items`);
+  const LIMITE = 400_000;
+  const lotes: { operation: "upsert"; key: string; value: unknown }[][] = [];
+  let atual: { operation: "upsert"; key: string; value: unknown }[] = [];
+  let bytes = 0;
+  for (const e of entries) {
+    const n = JSON.stringify(e.value).length + e.key.length + 40;
+    if (atual.length > 0 && bytes + n > LIMITE) {
+      lotes.push(atual);
+      atual = [];
+      bytes = 0;
+    }
+    atual.push({ operation: "upsert", key: e.key, value: e.value });
+    bytes += n;
+  }
+  if (atual.length > 0) lotes.push(atual);
+  for (const items of lotes) {
+    const body = JSON.stringify({ items });
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body,
+    });
+    if (!response.ok) {
+      const t = await response.text().catch(() => "<unreadable body>");
+      throw new Error(
+        `global-config batch write failed (http ${response.status}): ${t.slice(0, 500)}`,
+      );
+    }
+    logInfo("global-config batch write ok", { keys: items.length, bytes: body.length });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Orçamento de tamanho — STORE inteiro (o limite que a Vercel de fato aplica)
 // ---------------------------------------------------------------------------
@@ -1108,41 +1153,22 @@ export async function writeProjection(
 
   const failures: WriteFailure[] = [];
 
-  // Nacional — grava em ambas as chaves (nomeada + alias).
-  // Sequencial nas 2 nacionais (alias replicado): permite cache do
-  // payload stringified intermediário sem complexidade extra.
+  // 🔴 04/10/2026 17h40 — UM PATCH com todas as chaves (em lotes por tamanho),
+  // não um por chave. A API limita a 100 atualizações/hora: com ~58 PATCHes
+  // por ciclo de Presidente o limite estourou às 17h30 e o site congelou.
+  const todos: { key: string; value: unknown }[] = [
+    { key: namedNationalKey, value: payload },
+    { key: LEGACY_CURRENT_ALIAS_KEY, value: payload },
+    ...ufKeys.map(({ key, payload: ufPayload }) => ({ key, value: ufPayload })),
+  ];
   try {
-    await writeEdgePayload(namedNationalKey, payload);
+    await writeEdgeItemsBatch(todos);
   } catch (err) {
     failures.push({
-      key: namedNationalKey,
+      key: todos.map((t) => t.key).join(","),
       message: err instanceof Error ? err.message : String(err),
     });
   }
-  try {
-    await writeEdgePayload(LEGACY_CURRENT_ALIAS_KEY, payload);
-  } catch (err) {
-    failures.push({
-      key: LEGACY_CURRENT_ALIAS_KEY,
-      message: err instanceof Error ? err.message : String(err),
-    });
-  }
-
-  // Per-UF em paralelo (best-effort). `Promise.allSettled` para coletar
-  // sucessos e falhas sem aborto antecipado.
-  const ufResults = await Promise.allSettled(
-    ufKeys.map(({ key, payload: ufPayload }) => writeEdgePayload(key, ufPayload)),
-  );
-  ufResults.forEach((result, i) => {
-    if (result.status === "rejected") {
-      // ufKeys.length === ufResults.length por construção; o `!` é seguro.
-      const k = ufKeys[i]?.key ?? `projection-uf-<index-${i}>`;
-      failures.push({
-        key: k,
-        message: result.reason instanceof Error ? result.reason.message : String(result.reason),
-      });
-    }
-  });
 
   // Colhe o Blob ANTES de decidir sobre a exceção: mesmo num ciclo que falhou
   // no Global Config, o detalhe municipal pode ter publicado, e o log precisa
