@@ -772,16 +772,19 @@ export async function listIngestTargets(
     // par, estabilidade) — sem tratamento especial por cargo. O custo é
     // pequeno e concentrado numa única fatia por rodada, não multiplicado
     // pelas 6 invocações do cron fatiado.
-    if (env === "production" && granularidade === "zona") {
-      targetsDoCargo = [...targetsDoCargo, ...buildProductionTargetsUf(codEleicao, baseUrl, cargo)];
-    }
-
     // Fatiamento só é válido em granularidade "zona" (ver docstring de
     // `ListIngestTargetsOptions.fatia`) — um cargo resolvido em "uf" (padrão
     // ou via `TSE_DEPUTADO_GRANULARIDADE=uf`) ignora `opts.fatia` por
     // completo e devolve o agregado inteiro, sem mudança de comportamento.
     if (opts.fatia !== undefined && granularidade === "zona") {
       targetsDoCargo = sliceTargets(targetsDoCargo, opts.fatia.indice, opts.fatia.total);
+    }
+
+    // 🔴 04/10/2026 18h20 — o agregado entra DEPOIS do fatiamento: as 27 UFs
+    // em TODA fatia (+27 GETs a cada 5 min), não numa só a cada 30 min. O
+    // `% apurado` oficial exibido no Deputado sai deste arquivo.
+    if (env === "production" && granularidade === "zona") {
+      targetsDoCargo = [...targetsDoCargo, ...buildProductionTargetsUf(codEleicao, baseUrl, cargo)];
     }
 
     targets.push(...targetsDoCargo);
