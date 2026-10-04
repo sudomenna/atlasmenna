@@ -292,7 +292,12 @@ function triggerModel(opts: {
   projecaoDep?: ProjecaoDepNoPost;
 }): void {
   const { baseUrl, cargo, turno, triggerTs, modelSecret, projecaoDep } = opts;
-  const url = `${baseUrl}/api/model/project`;
+  // 🔴 04/10 ~20h15: proporcionais (6/7/8) numa função própria — o cálculo
+  // do Deputado derrubava Presidente/Governador/Senado por memória e tempo
+  // dividindo a mesma instância (ver api/model/project_dep.py).
+  const url = isCargoProporcional(cargo)
+    ? `${baseUrl}/api/model/project_dep`
+    : `${baseUrl}/api/model/project`;
 
   // Encapsulada como Promise pra entregar pra `after()` E para que erros
   // sejam capturados num catch único (sem unhandled rejection).

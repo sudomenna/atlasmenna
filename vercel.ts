@@ -328,6 +328,14 @@ const config: VercelProjectConfig = {
       // que não são necessários em runtime.
       excludeFiles: "{tests/**,__tests__/**,**/*.test.py,**/test_*.py,**/__pycache__/**,**/*.pyc}",
     },
+    // 🔴 04/10/2026 ~20h15: o MESMO modelo, função separada para Deputado
+    // (6/7/8) — dividindo instância, ele derrubava os majoritários por
+    // memória e tempo. Ver api/model/project_dep.py.
+    "api/model/project_dep.py": {
+      maxDuration: 300,
+      memory: 3009,
+      excludeFiles: "{tests/**,__tests__/**,**/*.test.py,**/test_*.py,**/__pycache__/**,**/*.pyc}",
+    },
   },
 };
 
