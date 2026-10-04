@@ -3,13 +3,14 @@ id: ADR-0005
 title: Templates de insights, não LLM
 status: accepted
 date: 2026-05-17
+amended_by: [ADR-0072] # parcial: só a caixa "Análise" da home presidencial; critério de supersessão parcial na nota de 2026-09-05 do ADR-0017
 ---
 
 # ADR-0005 — Templates de insights, não LLM
 
 ## Status
 
-Aceito.
+Superseded (parcialmente) por [ADR-0072](0072-leitura-da-noite-ia-e-imprensa.md) em 2026-10-04, apenas na caixa "Análise" da home presidencial; nas demais superfícies este ADR segue aceito e vigente.
 
 ## Contexto
 

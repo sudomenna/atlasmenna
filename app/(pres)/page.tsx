@@ -170,6 +170,7 @@ import { ForecastTransparency } from "@/components/blocks/ForecastTransparency";
 import { GovernorCard } from "@/components/blocks/GovernorCard";
 import { HeadlineScore } from "@/components/blocks/HeadlineScore";
 import { InsightCard } from "@/components/blocks/InsightCard";
+import { NaImprensaPanel } from "@/components/blocks/NaImprensaPanel";
 import { NationalNeedle } from "@/components/blocks/NationalNeedle";
 import { NationalWinnerBanner } from "@/components/blocks/NationalWinnerBanner";
 import { RegiaoConsolidada } from "@/components/blocks/RegiaoConsolidada";
@@ -187,6 +188,8 @@ import { agruparPorRegiao } from "@/lib/config/regioes";
 import { resultadoEleitoral, simulacaoNacional } from "@/lib/dev/simulacao";
 import { readArchivedProjection, readNationalProjection } from "@/lib/edge-config/reader";
 import type { EdgePayload } from "@/lib/edge-config/types";
+import { insightsPresidenteDoPayload } from "@/lib/insights/presidente";
+import { LEITURA_VAZIA, lerLeituraParaTela } from "@/lib/leitura/ler";
 import { queCompetem } from "@/lib/utils/destino-voto";
 import { formatPercent } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -608,6 +611,28 @@ export default async function HomePage() {
 
   const { national, por_uf, pct_apurado_total, ufs_apuradas, ts, insights, composition, turno } =
     payload;
+
+  /**
+   * ADR-0072 — "leitura da noite": análise por IA, manchetes da imprensa e
+   * histórico do Boletim, gravados no Blob pelo cron `/api/internal/leitura-noite`
+   * e ligados pelo interruptor `interruptor-leitura-noite` (sem deploy).
+   *
+   * Só depois de começar a apuração (fase ≠ pré e `pct > 0`): antes disso não
+   * há o que ler, e a página não paga a leitura. `lerLeituraParaTela` nunca
+   * lança; o `.catch` é a segunda barreira — numa publicação nova não há página
+   * em cache para servir, e um erro aqui viraria 500 na home.
+   */
+  const leitura =
+    !pre && pct_apurado_total > 0
+      ? await lerLeituraParaTela({ pctApuradoTotal: pct_apurado_total, turno }).catch(
+          () => LEITURA_VAZIA,
+        )
+      : LEITURA_VAZIA;
+  // Reserva por regra fixa quando a IA está desligada, falhou ou ficou velha.
+  // O orchestrator grava `insights: []` (api/model/project.py) — sem esta
+  // reserva a caixa "Análise" nunca aparecia em produção.
+  const frasesRegra = insights.length > 0 ? insights : insightsPresidenteDoPayload(payload);
+  const analiseIA = leitura.ia;
 
   /**
    * Spec 020 (RF-168 a RF-171) — a série por candidatura do escopo NACIONAL.
@@ -1131,8 +1156,14 @@ export default async function HomePage() {
           ufsApuradas={ufs_apuradas}
           ts={ts}
           turno={turno}
+          historico={leitura.historico}
         />
       )}
+
+      {/* ADR-0072 — manchetes de feeds públicos (só título, veículo, hora e
+          link). `noticias` já vem `null` antes das 17h e com o interruptor
+          desligado (`filtrarParaTela`). */}
+      {!pre && leitura.noticias && <NaImprensaPanel itens={leitura.noticias} />}
 
       {/* 🔴 ADR-0057 item 6 (2026-09-28, decisão do dono) — os 27 estados
           agrupados por REGIÃO, com o consolidado da região no topo. Entra
@@ -1249,12 +1280,22 @@ export default async function HomePage() {
         </div>
       </Panel>
 
-      {/* `!pre`: os insights são leitura do modelo sobre o que foi contado. O
-          semeador grava `insights: []`, e a guarda protege contra o dia em que
-          ele gravar algo. */}
-      {!pre && insights.length > 0 && (
+      {/* `!pre`: a análise é leitura do modelo sobre o que foi contado.
+          ADR-0072: texto da IA quando o interruptor está ligado e o texto é
+          fresco; senão, as frases de regra fixa (`frasesRegra`). */}
+      {!pre && analiseIA && (
+        <Panel kicker="Análise por IA · não oficial">
+          <InsightCard
+            frases={analiseIA.frases}
+            heading="Análise"
+            origem="ia"
+            atualizadoEm={analiseIA.gerado_em}
+          />
+        </Panel>
+      )}
+      {!pre && !analiseIA && frasesRegra.length > 0 && (
         <Panel kicker="Leitura do modelo">
-          <InsightCard frases={insights} heading="Análise" />
+          <InsightCard frases={frasesRegra} heading="Análise" origem="regra" />
         </Panel>
       )}
 

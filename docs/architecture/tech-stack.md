@@ -35,6 +35,7 @@ source: PRD.md § 10
 | Config | `vercel.ts` | — | TS-typed, dynamic. ⚠️ **`@vercel/config` NÃO é dependência instalada** — decisão deliberada registrada em `vercel.ts:1-7`: o pacote não existe consolidado no npm; o projeto usa um shape literal validado por `pnpm typecheck` |
 | MDX | `@next/mdx` | latest | Página `/sobre-o-modelo` |
 | Validação | Zod | latest | Schema do TSE, payloads de API |
+| Texto por LLM (caixa "Análise" da home) | `ai` (AI SDK) + Vercel AI Gateway | 7 | Claude Sonnet 5.5 (`anthropic/claude-sonnet-5.5`) escreve 2–4 frases, chamado **só** pelo cron `/api/internal/leitura-noite` (nunca por requisição de leitor) e importado só por `lib/leitura/ia.ts` — fora do bundle do leitor. `@ai-sdk/gateway` vem como dependência do próprio `ai`. Exceção escopada ao [ADR-0005](./adrs/0005-templates-nao-llm.md) e ao § 6 da constituição: [ADR-0072](./adrs/0072-leitura-da-noite-ia-e-imprensa.md) |
 | Testes unit | Vitest | latest | Mais rápido que Jest |
 | Testes e2e | Playwright | latest | Browser real |
 | Load test | k6 | latest | 20k VUs simulados |
@@ -64,7 +65,8 @@ source: PRD.md § 10
     "maplibre-gl": "^5.0.0",
     "pmtiles": "^4.0.0",
     "zod": "^4.0.0",
-    "@next/mdx": "^16.0.0"
+    "@next/mdx": "^16.0.0",
+    "ai": "^7.0.0" // AI SDK v7 + AI Gateway (@ai-sdk/gateway vem com ele); só lib/leitura/ia.ts importa — ADR-0072
   },
   "devDependencies": {
     "typescript": "^5.6.0",
@@ -102,3 +104,4 @@ A `@neondatabase/serverless` depende de `ws` para suporte a WebSocket em runtime
 - ADRs que justificam decisões-chave: [./adrs/](./adrs/)
 - Princípio "stack 100% Vercel": [../constitution.md](../constitution.md#9-stack-100-vercel)
 - Orçamento de bundle refinado: [../nfr/performance.md](../nfr/performance.md)
+- Texto por LLM na caixa "Análise" da home (`ai` + AI Gateway): [ADR-0072](./adrs/0072-leitura-da-noite-ia-e-imprensa.md)

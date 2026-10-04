@@ -8,10 +8,23 @@
  * Cobertura: RF-026 (estado da apuração + timestamp) e RF-044 (texto de
  * análise por template) na superfície nacional.
  *
- * ===== Texto: template determinístico, nunca LLM =====
- * ADR-0005 e constituição § 2. Toda sentença deste bloco sai de
- * `buildBulletin()`, uma função pura de (payload) → itens. Mesma entrada,
- * mesma saída — não há `Date.now()`, `Math.random()` nem chamada de rede.
+ * ===== Texto: template determinístico, nunca LLM — NESTE bloco =====
+ * Constituição § 2. O ADR-0072 (04/10/2026) revogou o ADR-0005 só para a
+ * caixa "Análise" (`<InsightCard origem="ia">`), que pode trazer texto escrito
+ * por IA. Aqui continua valendo "nunca LLM": toda sentença deste bloco sai de
+ * regra fixa — ou de `buildBulletin()`, uma função pura de (payload) → itens
+ * (mesma entrada, mesma saída; sem `Date.now()`, `Math.random()` nem rede), ou
+ * do histórico da leitura da noite (`historico`, ADR-0072), cujas linhas o
+ * cron monta com os templates de `lib/leitura/eventos.ts`.
+ *
+ * ===== Dois modos =====
+ *   - SEM `historico` (ou vazio): o estado atual, montado por
+ *     `buildBulletin()` e carimbado com o `ts` do ciclo do modelo — o
+ *     comportamento de sempre.
+ *   - COM `historico`: uma linha por mudança detectada, cada uma com a hora
+ *     REAL em que o cron a viu, da mais nova para a mais antiga. As
+ *     {@link HISTORICO_VISIVEL} primeiras ficam à vista; o resto vai num
+ *     `<details>` (zero JS).
  *
  * As frases descrevem, não julgam: "aparece com", "a diferença projetada é
  * de", "a projeção indica", "já foram chamadas". Nenhum adjetivo de mérito
@@ -25,8 +38,10 @@
  *     prontas do orchestrator (`national.chamadas_recentes[].texto`) — este
  *     componente as repassa literalmente, sem reescrever.
  *   - `<InsightCard />` (RF-044) segue existindo com as frases de
- *     `payload.insights`, geradas server-side. Não há sobreposição: aqui as
- *     frases nascem do estado numérico da corrida; lá, do engine de insights.
+ *     `payload.insights`, geradas server-side — ou, com a leitura da noite
+ *     ligada, com a análise escrita por IA (ADR-0072). Não há sobreposição:
+ *     aqui as frases nascem do estado numérico da corrida por regra fixa; lá,
+ *     do engine de insights ou da IA.
  *
  * Server Component puro — sem estado, sem hooks, zero JS novo (RNF-007a).
  *
@@ -52,8 +67,17 @@ export interface BulletinPanelProps {
   totalUfs?: number;
   /** Máximo de chamadas do orchestrator listadas abaixo dos fatos. */
   maxChamadas?: number;
+  /**
+   * Histórico da leitura da noite (ADR-0072) — `EventoBoletim[]` entra direto
+   * (mesmos `id`, `ts`, `head`, `text`). Presente e não vazio ⇒ substitui o
+   * `buildBulletin()`. `null`/ausente/vazio ⇒ comportamento de sempre.
+   */
+  historico?: BulletinItem[] | null;
   className?: string;
 }
+
+/** Linhas do histórico à vista; o resto vai para o `<details>`. */
+export const HISTORICO_VISIVEL = 15;
 
 export interface BulletinItem {
   /** Chave estável — usada como `key` e como `data-item`. */
@@ -86,7 +110,7 @@ export function buildBulletin({
   turno,
   totalUfs = 27,
   maxChamadas = 3,
-}: Omit<BulletinPanelProps, "className">): BulletinItem[] {
+}: Omit<BulletinPanelProps, "className" | "historico">): BulletinItem[] {
   const items: BulletinItem[] = [];
 
   items.push({
@@ -166,8 +190,86 @@ export function buildBulletin({
   return items;
 }
 
-export function BulletinPanel({ className, ...data }: BulletinPanelProps) {
-  const items = buildBulletin(data);
+/**
+ * Histórico do mais novo para o mais antigo, pelo `ts` de cada linha. Ordena
+ * aqui mesmo que o contrato já diga "mais novo primeiro": o painel não confia
+ * na ordem de um objeto que veio da rede. `ts` ilegível vai para o fim, na
+ * ordem em que veio. `id` repetido entra uma vez só, com o horário mais
+ * antigo (a mesma regra da mesclagem do cron) — `id` é `key` e `data-item`.
+ */
+export function ordenarHistorico(historico: readonly BulletinItem[]): BulletinItem[] {
+  const ordenado = historico
+    .map((item, i) => ({ item, i, t: Date.parse(item.ts) }))
+    .sort((a, b) => {
+      const aOk = Number.isFinite(a.t);
+      const bOk = Number.isFinite(b.t);
+      if (!aOk && !bOk) return a.i - b.i;
+      if (!aOk) return 1;
+      if (!bOk) return -1;
+      return b.t - a.t || a.i - b.i;
+    })
+    .map(({ item }) => item);
+  // Do mais antigo para o mais novo, o primeiro `id` visto fica.
+  const vistos = new Set<string>();
+  const unicos: BulletinItem[] = [];
+  for (let i = ordenado.length - 1; i >= 0; i--) {
+    const item = ordenado[i] as BulletinItem;
+    if (vistos.has(item.id)) continue;
+    vistos.add(item.id);
+    unicos.push(item);
+  }
+  return unicos.reverse();
+}
+
+const NOTA_HISTORICO =
+  "Cada linha registra uma mudança no horário em que foi detectada, montada por regra fixa a partir da contagem do TSE e da projeção não oficial do AtlasMenna. O resultado oficial é do TSE.";
+
+const NOTA_ESTADO_ATUAL =
+  "Linhas montadas por regra fixa a partir da contagem do TSE e da projeção não oficial do AtlasMenna, com o horário da última rodada do modelo. O resultado oficial é do TSE.";
+
+function Linhas({
+  items,
+  testId,
+  start,
+}: {
+  items: BulletinItem[];
+  testId: string;
+  start?: number;
+}) {
+  return (
+    <ol data-testid={testId} start={start} className="m-0 list-none p-0">
+      {items.map((item, i) => (
+        <li
+          key={item.id}
+          data-item={item.id}
+          className="grid grid-cols-[3.25rem_1fr]"
+          style={{
+            gap: "var(--space-3)",
+            padding: "var(--space-3) 0",
+            borderTop: i === 0 ? undefined : "1px solid var(--border-hairline)",
+          }}
+        >
+          <time
+            dateTime={item.ts}
+            style={{ font: "var(--type-data)", color: "var(--text-secondary)" }}
+          >
+            {formatTimeHMS(item.ts)}
+          </time>
+          <span style={{ font: "var(--type-body-sm)", textWrap: "pretty" }}>
+            <strong style={{ fontWeight: 600 }}>{item.head}</strong>{" "}
+            <span style={{ color: "var(--text-secondary)" }}>{item.text}</span>
+          </span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+export function BulletinPanel({ className, historico, ...data }: BulletinPanelProps) {
+  const comHistorico = Boolean(historico && historico.length > 0);
+  const items = comHistorico ? ordenarHistorico(historico ?? []) : buildBulletin(data);
+  const visiveis = comHistorico ? items.slice(0, HISTORICO_VISIVEL) : items;
+  const anteriores = comHistorico ? items.slice(HISTORICO_VISIVEL) : [];
 
   return (
     <Panel
@@ -176,31 +278,31 @@ export function BulletinPanel({ className, ...data }: BulletinPanelProps) {
       titleId="bulletin-panel-heading"
       className={className}
     >
-      <ol data-testid="bulletin-list" className="m-0 list-none p-0">
-        {items.map((item, i) => (
-          <li
-            key={item.id}
-            data-item={item.id}
-            className="grid grid-cols-[3.25rem_1fr]"
+      <Linhas items={visiveis} testId="bulletin-list" />
+      {anteriores.length > 0 ? (
+        <details
+          data-testid="bulletin-anteriores"
+          style={{ borderTop: "1px solid var(--border-hairline)" }}
+        >
+          <summary
             style={{
-              gap: "var(--space-3)",
               padding: "var(--space-3) 0",
-              borderTop: i === 0 ? undefined : "1px solid var(--border-hairline)",
+              font: "var(--type-body-sm)",
+              color: "var(--text-secondary)",
+              cursor: "pointer",
             }}
           >
-            <time
-              dateTime={item.ts}
-              style={{ font: "var(--type-data)", color: "var(--text-secondary)" }}
-            >
-              {formatTimeHMS(item.ts)}
-            </time>
-            <span style={{ font: "var(--type-body-sm)", textWrap: "pretty" }}>
-              <strong style={{ fontWeight: 600 }}>{item.head}</strong>{" "}
-              <span style={{ color: "var(--text-secondary)" }}>{item.text}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
+            {anteriores.length === 1
+              ? "Ver a 1 linha anterior"
+              : `Ver as ${anteriores.length} linhas anteriores`}
+          </summary>
+          <Linhas
+            items={anteriores}
+            testId="bulletin-list-anteriores"
+            start={HISTORICO_VISIVEL + 1}
+          />
+        </details>
+      ) : null}
       <p
         data-testid="bulletin-nota"
         style={{
@@ -210,8 +312,7 @@ export function BulletinPanel({ className, ...data }: BulletinPanelProps) {
           color: "var(--text-muted)",
         }}
       >
-        Linhas montadas por regra fixa a partir do payload do modelo, sem edição humana e sem texto
-        gerado por IA. Projeção não oficial; o resultado é do TSE.
+        {comHistorico ? NOTA_HISTORICO : NOTA_ESTADO_ATUAL}
       </p>
     </Panel>
   );

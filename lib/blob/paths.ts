@@ -432,3 +432,13 @@ export function candidatoFotoUrl(
     return null;
   }
 }
+
+/**
+ * Leitura da noite (ADR-0072): histórico do Boletim, manchetes e análise por
+ * IA da home presidencial, gravados pelo cron `/api/internal/leitura-noite`.
+ *
+ * `leitura/pres/t<turno>.json` — ex. `leitura/pres/t1.json`.
+ */
+export function leituraNoiteBlobPathname(turno: Turno): string {
+  return blobPathname(["leitura", "pres", `t${turno}`], "leituraNoiteBlobPathname");
+}

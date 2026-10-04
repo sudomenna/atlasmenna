@@ -287,6 +287,20 @@ const config: VercelProjectConfig = {
       path: "/api/ingest",
       schedule: "0 12 * * *",
     },
+    // ── Leitura da noite da home presidencial — ADR-0072 ──
+    // Histórico do Boletim, manchetes de feeds e análise por IA, gravados no
+    // Blob (`leitura/pres/t<turno>.json`). A cada minuto, só na janela da
+    // apuração (20-23,0-7 UTC = 17h-04h BRT) — sem entrada na janela do
+    // simulado: a leitura só faz sentido sobre a apuração real.
+    // NASCE DESLIGADO: IA e notícias só rodam com a chave
+    // `interruptor-leitura-noite` do Global Config ligada
+    // (`pnpm leitura:interruptor`), sem deploy. O histórico roda sempre. O
+    // ritmo da IA (no máximo 1 tentativa a cada 4 min) e das notícias (5 min)
+    // é decidido dentro do ciclo (`lib/leitura/ciclo.ts`), não aqui.
+    {
+      path: "/api/internal/leitura-noite",
+      schedule: "* 20-23,0-7 * * *",
+    },
   ],
   // gru1 = São Paulo. Audiência majoritariamente BR — minimizar latência.
   regions: ["gru1"],

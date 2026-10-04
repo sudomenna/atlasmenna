@@ -152,7 +152,7 @@ Se editar uma spec, **mantenha o frontmatter íntegro**. Se adicionar um RF, atu
 - **Componentes**: [docs/design-system/components.md](./docs/design-system/components.md). O catálogo já mapeia componente → arquivo → RF.
 - **Edge Config no read path, nunca Postgres** ([ADR-0001](./docs/architecture/adrs/0001-edge-config-no-read-path.md)).
 - **Mapa via `next/dynamic({ ssr: false })`** ([ADR-0010](./docs/architecture/adrs/0010-mapa-dynamic-import.md)).
-- **Sem LLM em insights** ([ADR-0005](./docs/architecture/adrs/0005-templates-nao-llm.md)) — use templates determinísticos.
+- **Sem LLM em insights, exceto a caixa Análise da home** ([ADR-0072](./docs/architecture/adrs/0072-leitura-da-noite-ia-e-imprensa.md); o resto segue o [ADR-0005](./docs/architecture/adrs/0005-templates-nao-llm.md)) — use templates determinísticos.
 - **Sem PII coletada** (constituição § 5).
 - **Cores via tokens** — PT=vermelho, PL=azul ([docs/design-system/tokens.md](./docs/design-system/tokens.md)). Nunca cores oficiais de partido.
 

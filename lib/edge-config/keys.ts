@@ -346,3 +346,22 @@ export const DEPRECATED_COLON_CURRENT_ALIAS_KEY = "projection:current";
 export function deprecatedColonLegacyUfAliasKey(sigla: string): string {
   return `projection:uf:${normaliseSigla(sigla, "deprecatedColonLegacyUfAliasKey")}`;
 }
+
+// ---------------------------------------------------------------------------
+// Interruptor da leitura da noite — ADR-0072 (IA, notícias, histórico)
+// ---------------------------------------------------------------------------
+
+/**
+ * Chave do interruptor da "leitura da noite" (`lib/leitura/`): liga/desliga,
+ * sem deploy, a análise por IA, o painel "Na imprensa" e o histórico do
+ * Boletim. Valor: `{ ia, noticias, historico, modelo?, em?, por? }`,
+ * interpretado por `interpretarInterruptorLeitura` (`lib/leitura/interruptor.ts`)
+ * — falha fechada, só `=== true` liga. AUSENTE = tudo desligado.
+ *
+ * Escrita só por `pnpm leitura:interruptor` (`scripts/interruptor-leitura.ts`).
+ */
+export const INTERRUPTOR_LEITURA_NOITE_KEY = "interruptor-leitura-noite";
+
+export function interruptorLeituraNoiteKey(): string {
+  return assertValidGlobalConfigKey(INTERRUPTOR_LEITURA_NOITE_KEY, "interruptorLeituraNoiteKey");
+}

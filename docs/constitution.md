@@ -2,8 +2,8 @@
 title: AtlasMenna — Constituição do Produto
 description: Princípios não-negociáveis que governam toda decisão de produto, design e engenharia
 status: stable
-version: 1.6
-last_updated: 2026-09-29
+version: 1.7
+last_updated: 2026-10-04
 ---
 
 # Constituição do AtlasMenna
@@ -71,8 +71,10 @@ A norma vigente é a **Resolução TSE nº 23.751/2026**, que trata da divulgaç
 ## 6. Determinismo do modelo
 
 - Projeção é **explicável**: cada valor pode ser reproduzido a partir do snapshot persistido + código versionado.
-- Templates de insights **não usam LLM** — saída determinística, sem custo variável, sem risco de alucinação.
+- Templates de insights **não usam LLM** — saída determinística, sem custo variável, sem risco de alucinação. **Exceção única (1.7):** a caixa "Análise / Leitura do modelo" da home presidencial pode ter o texto escrito por LLM, nas condições do [ADR-0072](./architecture/adrs/0072-leitura-da-noite-ia-e-imprensa.md) — rotulada como texto de IA, com interruptor que a desliga sem deploy e reserva por regra fixa. Nessa caixa o risco de alucinação existe e foi assumido pelo dono. Todos os demais textos analíticos continuam por template.
 - Toda execução do modelo é persistida com timestamp em `projections` (auditabilidade).
+
+> **Mudança 1.6 → 1.7 (2026-10-04).** Até esta versão o § 6 afirmava, sem exceção, que os templates de insights não usam LLM — "saída determinística, sem custo variável, sem risco de alucinação" — e o [ADR-0005](./architecture/adrs/0005-templates-nao-llm.md) sustentava isso para todo texto analítico do produto. Em 2026-10-04, às 09h20, o dono decidiu que a caixa "Análise / Leitura do modelo" da home presidencial passa a ter o texto **escrito por LLM** (Claude Sonnet 5.5, pelo Vercel AI Gateway), **publicado automaticamente, sem revisão humana e sem verificador** de números ou de adjetivos; a única trava de conteúdo exigida é uma instrução no prompt ("sem adjetivos de mérito sobre candidatos"). A 1.7 faz uma coisa: abre, no § 6, **uma exceção única e escopada** ao item "sem LLM" — a caixa Análise da home, rotulada como texto de IA, com interruptor que a desliga sem deploy e reserva por regra fixa; os demais textos analíticos seguem por template. A exceção **não alcança a projeção**: o modelo estatístico, os números e os intervalos continuam determinísticos e reproduzíveis, e o texto do LLM não entra no modelo, em `projections` nem no payload. O **§ 2 não muda** e continua valendo para o texto do LLM; o que muda é que, nessa caixa, a garantia de neutralidade deixa de ser estrutural (template) e passa a ser uma instrução de prompt sem verificação — risco que o dono assumiu expressamente, e cujo remédio é desligar a IA. Justificativa completa em [ADR-0072](./architecture/adrs/0072-leitura-da-noite-ia-e-imprensa.md), que supersede o ADR-0005 só na caixa Análise. ⚠️ **Sobre a numeração.** A emenda proposta no [ADR-0031](./architecture/adrs/0031-piso-separacao-entre-partidos.md) (nunca aprovada), que a nota 1.4 → 1.5 e a sua atualização de 2026-09-29 previam como 1.6 → 1.7, passa a ser **1.7 → 1.8** se e quando for aprovada. Nenhum outro parágrafo do § 6, nem qualquer outro princípio (§§ 1–5, 7–10), foi alterado.
 
 ## 7. Resiliência operacional
 

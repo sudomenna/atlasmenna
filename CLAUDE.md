@@ -296,7 +296,7 @@ Stack completa em [docs/architecture/tech-stack.md](./docs/architecture/tech-sta
 
 - **Postgres NUNCA no read path do cliente** ([ADR-0001](./docs/architecture/adrs/0001-edge-config-no-read-path.md)). Read path é Edge Config.
 - **Mapa via `next/dynamic({ ssr: false })`** ([ADR-0010](./docs/architecture/adrs/0010-mapa-dynamic-import.md)). Bundle above-the-fold <150KB ([RNF-007a](./docs/nfr/performance.md)) só é viável assim.
-- **Sem LLM em insights** ([ADR-0005](./docs/architecture/adrs/0005-templates-nao-llm.md)). Use templates determinísticos.
+- **Sem LLM em insights, exceto a caixa Análise da home** ([ADR-0072](./docs/architecture/adrs/0072-leitura-da-noite-ia-e-imprensa.md); o resto segue o [ADR-0005](./docs/architecture/adrs/0005-templates-nao-llm.md)). Use templates determinísticos.
 - **Cores via tokens** — PT=vermelho, PL=azul. Nunca cores oficiais de partido (constituição § 2).
 - **Snapshots append-only** (constituição § 10). Nunca UPDATE/DELETE em `snapshots`.
 - **Resolução TSE 23.751/2026 (arts. 264–269) está PUBLICADA e rege o pleito** — fonte canônica em [docs/reference/regulatory.md](./docs/reference/regulatory.md). ⚠️ A 23.736/2024 (municipais) **não** é mais referência de práticas: foi a analogia com ela que produziu as premissas falsas de maio/2026 (cadastro inexistente, abandono do EA20). Não há watch pendente aqui.

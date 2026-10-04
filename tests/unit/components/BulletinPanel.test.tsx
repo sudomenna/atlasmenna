@@ -214,10 +214,109 @@ describe("<BulletinPanel />", () => {
     );
   });
 
-  it("(l) declara origem do texto e o caráter não oficial (constituição § 1, ADR-0005)", () => {
+  it("(l) declara origem do texto e o caráter não oficial (constituição § 1, ADR-0072)", () => {
     const doc = parse(<BulletinPanel {...base} />);
     const nota = doc.querySelector('[data-testid="bulletin-nota"]')?.textContent ?? "";
-    expect(nota).toContain("sem texto gerado por IA");
+    // ADR-0072: a página agora pode ter texto de IA (caixa Análise); o rodapé
+    // do Boletim não afirma mais "sem texto gerado por IA" — diz que ESTE
+    // bloco é regra fixa.
+    expect(nota).not.toContain("sem texto gerado por IA");
+    expect(nota).toContain("regra fixa");
     expect(nota).toContain("não oficial");
+    expect(nota).toContain("O resultado oficial é do TSE.");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Histórico da leitura da noite (ADR-0072)
+// ---------------------------------------------------------------------------
+
+function evento(n: number, minutos: number) {
+  // minutos depois das 20:00 de Brasília (23:00Z)
+  const ts = new Date(Date.UTC(2026, 9, 4, 23, 0, 0) + minutos * 60_000).toISOString();
+  return { id: `ev-${n}`, ts, head: `Linha ${n}`, text: `Texto ${n}.`, tipo: "marco" as const };
+}
+
+describe("<BulletinPanel historico>", () => {
+  it("(m) sem histórico (null ou []) → comportamento de sempre (buildBulletin)", () => {
+    for (const historico of [null, undefined, []]) {
+      const doc = parse(<BulletinPanel {...base} historico={historico} />);
+      const ids = [...doc.querySelectorAll('[data-testid="bulletin-list"] > li')].map((li) =>
+        li.getAttribute("data-item"),
+      );
+      expect(ids).toEqual(buildBulletin(base).map((i) => i.id));
+      expect(doc.querySelector('[data-testid="bulletin-anteriores"]')).toBeNull();
+    }
+  });
+
+  it("(n) histórico do mais novo para o mais antigo, cada linha com o próprio horário e data-item = id", () => {
+    // Entrada fora de ordem de propósito: o painel não confia na ordem da rede.
+    const historico = [evento(1, 0), evento(3, 30), evento(2, 12)];
+    const doc = parse(<BulletinPanel {...base} historico={historico} />);
+    const lis = [...doc.querySelectorAll('[data-testid="bulletin-list"] > li')];
+    expect(lis.map((li) => li.getAttribute("data-item"))).toEqual(["ev-3", "ev-2", "ev-1"]);
+    expect(lis.map((li) => li.querySelector("time")?.textContent)).toEqual([
+      "20:30:00",
+      "20:12:00",
+      "20:00:00",
+    ]);
+    expect(lis[0]?.querySelector("time")?.getAttribute("datetime")).toBe(historico[1]?.ts);
+    // Nada do buildBulletin quando há histórico.
+    expect(doc.querySelector('[data-item="apuracao"]')).toBeNull();
+    // Título preservado (teste de integração confere este texto).
+    expect(doc.querySelector("#bulletin-panel-heading")?.textContent).toBe(
+      "O que está acontecendo agora",
+    );
+  });
+
+  it("(o) até 15 linhas: tudo à vista, sem <details>", () => {
+    const historico = Array.from({ length: 15 }, (_, i) => evento(i, i));
+    const doc = parse(<BulletinPanel {...base} historico={historico} />);
+    expect(doc.querySelectorAll('[data-testid="bulletin-list"] > li')).toHaveLength(15);
+    expect(doc.querySelector("details")).toBeNull();
+  });
+
+  it("(p) acima de 15: as 15 mais novas à vista e o resto num <details>", () => {
+    const historico = Array.from({ length: 22 }, (_, i) => evento(i, i));
+    const doc = parse(<BulletinPanel {...base} historico={historico} />);
+    const visiveis = [...doc.querySelectorAll('[data-testid="bulletin-list"] > li')];
+    expect(visiveis).toHaveLength(15);
+    expect(visiveis[0]?.getAttribute("data-item")).toBe("ev-21");
+    expect(visiveis[14]?.getAttribute("data-item")).toBe("ev-7");
+
+    const details = doc.querySelector('[data-testid="bulletin-anteriores"]');
+    expect(details?.tagName).toBe("DETAILS");
+    expect(details?.querySelector("summary")?.textContent).toBe("Ver as 7 linhas anteriores");
+    const anteriores = [...(details?.querySelectorAll("li") ?? [])];
+    expect(anteriores.map((li) => li.getAttribute("data-item"))).toEqual([
+      "ev-6",
+      "ev-5",
+      "ev-4",
+      "ev-3",
+      "ev-2",
+      "ev-1",
+      "ev-0",
+    ]);
+  });
+
+  it("(q) 16 linhas → 'Ver a 1 linha anterior' (singular)", () => {
+    const historico = Array.from({ length: 16 }, (_, i) => evento(i, i));
+    const doc = parse(<BulletinPanel {...base} historico={historico} />);
+    expect(doc.querySelector("summary")?.textContent).toBe("Ver a 1 linha anterior");
+  });
+
+  it("(r) id repetido entra uma vez, com o horário mais antigo", () => {
+    const historico = [evento(1, 10), { ...evento(1, 40), text: "Duplicada." }, evento(2, 20)];
+    const doc = parse(<BulletinPanel {...base} historico={historico} />);
+    const lis = [...doc.querySelectorAll('[data-testid="bulletin-list"] > li')];
+    expect(lis.map((li) => li.getAttribute("data-item"))).toEqual(["ev-2", "ev-1"]);
+    expect(lis[1]?.querySelector("time")?.textContent).toBe("20:10:00");
+  });
+
+  it("(s) rodapé do histórico: mudança no horário em que foi detectada, regra fixa, não oficial", () => {
+    const doc = parse(<BulletinPanel {...base} historico={[evento(1, 0)]} />);
+    expect(doc.querySelector('[data-testid="bulletin-nota"]')?.textContent).toBe(
+      "Cada linha registra uma mudança no horário em que foi detectada, montada por regra fixa a partir da contagem do TSE e da projeção não oficial do AtlasMenna. O resultado oficial é do TSE.",
+    );
   });
 });
