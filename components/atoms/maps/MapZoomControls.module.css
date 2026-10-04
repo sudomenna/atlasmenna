@@ -1,0 +1,73 @@
+/*
+ * components/atoms/maps/MapZoomControls.module.css
+ *
+ * Botões +/−/⟲ do mapa (ADR-0071). Duas posições, uma por breakpoint — o mesmo
+ * corte de 960px de `MapFrameMobile.module.css` e `AppShellSplit.module.css`:
+ *
+ *   - `.desktop` — coluna sobreposta ao canto inferior direito do mapa (o
+ *     cromo desktop já é sobreposto, ADR-0033 § 1). Some abaixo de 960px.
+ *   - `.bar` — faixa EM FLUXO, logo abaixo do mapa, só no celular: nada por
+ *     cima do mapa no celular (ADR-0056). Some a partir de 960px.
+ *
+ * Como em `MapFrameMobile.module.css`, a cópia inativa vira `display: none`,
+ * que a retira da árvore de acessibilidade (nunca dois conjuntos anunciados).
+ * Cores só por token. O anel de foco é o `:focus-visible` global
+ * (`app/globals.css`) — não é sobrescrito aqui.
+ */
+
+.desktop {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .desktop {
+    position: absolute;
+    right: var(--space-3);
+    bottom: var(--space-3);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+}
+
+.bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-page);
+}
+
+@media (min-width: 960px) {
+  .bar {
+    display: none;
+  }
+}
+
+.btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+}
+
+.btn:disabled {
+  color: var(--text-muted);
+  box-shadow: none;
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.icon {
+  display: block;
+}

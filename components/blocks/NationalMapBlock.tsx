@@ -46,6 +46,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import { type MapView, MapViewToggle } from "@/components/atoms/controls/MapViewToggle";
 import { CandidateLegendGroup } from "@/components/atoms/maps/MapLegend";
+import { MapZoomControls } from "@/components/atoms/maps/MapZoomControls";
 import { Sheet } from "@/components/atoms/overlays/Sheet";
 import mapFrameStyles from "@/components/blocks/MapFrameMobile.module.css";
 import {
@@ -288,6 +289,10 @@ export function NationalMapBlock({
               {action}
             </div>
           </div>
+          {/* ADR-0071 — +/−/⟲ no canto inferior direito (a legenda ocupa o
+              inferior esquerdo), SÓ DESKTOP; no celular a cópia fica na faixa
+              abaixo do mapa (`.mobileChrome`, ADR-0056). */}
+          <MapZoomControls variant="desktop" />
         </section>
 
         {/* Cromo em FLUXO — SÓ CELULAR (2026-09-27, `mapFrameStyles.mobileChrome`).
@@ -296,6 +301,7 @@ export function NationalMapBlock({
             IRMÃ do `<section>` do canvas, empilhada abaixo dele — ver a
             docstring de `mapFrameStyles.canvasFill`. */}
         <div className={mapFrameStyles.mobileChrome}>
+          <MapZoomControls variant="bar" />
           <div className={mapFrameStyles.bar}>
             {/* Simetria com a cópia de desktop acima: hoje nenhum caller do
                 nível Brasil passa `backHref` (o único jeito de chegar aqui é

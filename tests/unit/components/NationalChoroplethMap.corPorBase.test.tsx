@@ -59,7 +59,8 @@ import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 
 const pintura = vi.hoisted(() => ({ chamadas: [] as Array<[string, string, unknown]> }));
 
-vi.mock("maplibre-gl", () => {
+vi.mock("maplibre-gl", async () => {
+  const { addZoomApi } = await import("./_fake-map-zoom");
   class FakeMap {
     cameraForBounds() {
       return { center: [-51.415, -14.24] as [number, number], zoom: 3 };
@@ -70,7 +71,7 @@ vi.mock("maplibre-gl", () => {
     }
     setFilter() {}
     getCanvas() {
-      return { style: {} };
+      return { style: {}, setAttribute() {}, removeAttribute() {}, tabIndex: 0 };
     }
     isStyleLoaded() {
       return true;
@@ -81,6 +82,7 @@ vi.mock("maplibre-gl", () => {
     remove() {}
     on() {}
   }
+  addZoomApi(FakeMap.prototype);
   return { default: { Map: FakeMap } };
 });
 vi.mock("maplibre-gl/dist/maplibre-gl.css", () => ({}));

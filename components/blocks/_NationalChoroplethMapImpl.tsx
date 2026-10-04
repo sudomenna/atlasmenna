@@ -98,6 +98,14 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import type { MapView } from "@/components/atoms/controls/MapViewToggle";
 import {
+  applyZoomLimits,
+  attachInteractionMode,
+  attachZoomControls,
+  MAP_INTERACTION_OPTIONS,
+  toLngLat,
+  ZOOM_RESET_MS,
+} from "@/components/atoms/maps/_map-interaction";
+import {
   registerPmtilesProtocolOnce,
   resetPmtilesProtocol,
 } from "@/components/atoms/maps/_pmtiles-protocol";
@@ -1006,6 +1014,18 @@ export function NationalChoroplethMapImpl({
     let hangTimer: number | undefined;
     let attempt = 0;
     let cancelled = false;
+    // ADR-0071 — o que o mapa VIVO pendurou fora dele (listener de media query,
+    // registro dos botões na store). Tem de cair ANTES de `map.remove()`, tanto
+    // no retry do self-heal quanto no unmount: controle apontando para mapa
+    // destruído é o erro a evitar.
+    let detachInteraction: (() => void) | null = null;
+    let detachZoomControls: (() => void) | null = null;
+    function desligarDoMapaVivo() {
+      detachInteraction?.();
+      detachZoomControls?.();
+      detachInteraction = null;
+      detachZoomControls = null;
+    }
 
     // Self-heal (2026-09-09, ver `_pmtiles-protocol.ts`): pmtiles@4.4.1
     // cacheia pra sempre uma Promise de header/diretório que falhe ou nunca
@@ -1123,24 +1143,49 @@ export function NationalChoroplethMapImpl({
         center: FALLBACK_CAMERA.center,
         zoom: FALLBACK_CAMERA.zoom,
         attributionControl: false,
-        dragRotate: false,
-        touchPitch: false,
-        // UX: scroll do mouse na página NÃO deve dar zoom no mapa embedded —
-        // usuário rolando vê página rolar, não mapa ampliar. Pinch em mobile
-        // continua funcionando via touchZoom (default true).
-        scrollZoom: false,
+        // ADR-0071 (2026-10-03) — substitui o antigo `scrollZoom: false` ("a
+        // roda NÃO deve dar zoom no mapa embedded"). Regra nova: computador
+        // (≥ 960px) amplia com a roda, centrado no cursor; celular (< 960px)
+        // usa gestos cooperativos (um dedo rola a página, dois movem/ampliam,
+        // roda só com Ctrl/⌘); duplo clique desligado (o 1º clique já navega
+        // ou abre a ficha); sem rotação, caixa de seleção nem teclado no
+        // canvas. O modo por largura é ligado logo abaixo
+        // (`attachInteractionMode`); ver `_map-interaction.ts`.
+        ...MAP_INTERACTION_OPTIONS,
       });
 
       mapRef.current = map;
-      map.jumpTo(
-        computeFrameCamera(
-          map,
-          BRAZIL_BOUNDS,
-          rect.width,
-          rect.height,
-          framePaddingCeilingRef.current,
-        ),
+
+      // ADR-0071 — canvas fora da ordem de Tab: MapLibre nasce com
+      // `tabindex=0` e `aria-label="Map"`, que competem com o `role="img"` do
+      // container. O teclado passa a usar os botões `<MapZoomControls>`
+      // (focáveis) e a tabela/lista paralela; mesmo tratamento de
+      // `ChoroplethMapUF.tsx`.
+      const canvas = map.getCanvas();
+      canvas.setAttribute("aria-hidden", "true");
+      canvas.removeAttribute("aria-label");
+      canvas.tabIndex = -1;
+
+      detachInteraction = attachInteractionMode(map);
+
+      const frameCamera = computeFrameCamera(
+        map,
+        BRAZIL_BOUNDS,
+        rect.width,
+        rect.height,
+        framePaddingCeilingRef.current,
       );
+      map.jumpTo(frameCamera);
+
+      // ADR-0071 — limites DEPOIS do enquadramento inicial (não o alteram).
+      // Piso: o próprio enquadramento, e nunca abaixo do nível em que o
+      // dataset some (`UFS_PMTILES_MIN_ZOOM` + folga — canvas em branco sem
+      // erro nenhum). Teto: 4 níveis acima do enquadramento.
+      applyZoomLimits(map, {
+        minZoom: Math.max(frameCamera.zoom, UFS_PMTILES_MIN_ZOOM + ZOOM_SAFETY_MARGIN),
+        maxZoom: frameCamera.zoom + 4,
+        base: BRAZIL_BOUNDS,
+      });
 
       hangTimer = window.setTimeout(() => {
         if (cancelled || map.isStyleLoaded()) return;
@@ -1155,12 +1200,39 @@ export function NationalChoroplethMapImpl({
             `${STYLE_LOAD_TIMEOUT_MS}ms — reinicializando protocolo pmtiles (retry ${attempt})`,
         );
         resetPmtilesProtocol();
+        desligarDoMapaVivo();
         map.remove();
         mount();
       }, STYLE_LOAD_TIMEOUT_MS);
 
       map.on("load", () => {
         window.clearTimeout(hangTimer);
+        // ADR-0071 — registra os botões +/−/⟲ (fora do chunk do mapa) na store.
+        // Câmera "do Brasil inteiro" sempre recomputada do contêiner de AGORA
+        // (mesma conta do mount) — o reset e o "⟲ habilitado?" concordam.
+        const cameraDoBrasil = () => {
+          const caixa = container.getBoundingClientRect();
+          return computeFrameCamera(
+            map,
+            BRAZIL_BOUNDS,
+            caixa.width,
+            caixa.height,
+            framePaddingCeilingRef.current,
+          );
+        };
+        detachZoomControls?.();
+        detachZoomControls = attachZoomControls(map, {
+          resetLabel: "Ver o Brasil inteiro",
+          home: () => {
+            const cam = cameraDoBrasil();
+            return { ...toLngLat(cam.center), zoom: Math.max(cam.zoom, map.getMinZoom()) };
+          },
+          reset: () => {
+            // Sem `essential: true`: sob `prefers-reduced-motion` o MapLibre
+            // zera a duração e a câmera salta.
+            map.easeTo({ ...cameraDoBrasil(), duration: ZOOM_RESET_MS });
+          },
+        });
         // Use latest refs at load time
         applyColors(
           map,
@@ -1241,6 +1313,27 @@ export function NationalChoroplethMapImpl({
         map.getCanvas().style.cursor = "";
       });
 
+      // ADR-0071 — o balão é ancorado em pixel de TELA; quando o mapa se move por
+      // baixo dele (roda, pinça, botões, arraste) ele ficaria preso na posição
+      // antiga, apontando para outro estado. Fecha no começo do movimento; o
+      // próximo `mousemove` reabre no lugar certo. Só limpa a store se o hover
+      // era do mapa — um destaque vindo da tabela (foco de teclado) não é
+      // nosso para apagar.
+      const fecharBalaoAoMover = () => {
+        const doFocoDaTabela = origemTooltipRef.current === "table";
+        if (useHoverStore.getState().source === "map") useHoverStore.getState().clear();
+        origemTooltipRef.current = null;
+        setTooltip(null);
+        // O contorno aceso pelo foco da tabela continua aceso (a store ainda
+        // aponta para aquela UF); só o balão, que é ancorado em pixel, fecha.
+        if (!doFocoDaTabela && map.isStyleLoaded()) {
+          map.setFilter("ufs-stroke-hover", ["==", "SIGLA_UF", ""]);
+        }
+        map.getCanvas().style.cursor = "";
+      };
+      map.on("movestart", fecharBalaoAoMover);
+      map.on("zoomstart", fecharBalaoAoMover);
+
       // Click (RF-030.3) — dois destinos, ver a docstring do topo do arquivo:
       // com PONTEIRO FINO navega para a página do estado (decisão
       // 2026-09-19, predicado corrigido 2026-09-20); sem ele (toque) abre a
@@ -1296,6 +1389,7 @@ export function NationalChoroplethMapImpl({
     return () => {
       cancelled = true;
       window.clearTimeout(hangTimer);
+      desligarDoMapaVivo();
       mapRef.current?.remove();
       mapRef.current = null;
     };
@@ -1380,10 +1474,14 @@ export function NationalChoroplethMapImpl({
    * `<UfHoverLink>` (`components/atoms/tables/UfHoverLink.tsx`), com
    * `source: "table"`; aqui só obedecemos.
    *
-   * **O mapa continua SEM `tabIndex`, e isso é decisão, não esquecimento**:
+   * **O mapa continua SEM parada de Tab, e isso é decisão, não esquecimento**:
    * tornar as 27 UFs focáveis duplicaria as 27 paradas de tabulação que a
    * tabela já oferece. O desenho fica como está — o mapa é `role="img"`
-   * descrito pela tabela, e a tabela é quem tem o foco.
+   * descrito pela tabela, e a tabela é quem tem o foco. (Desde o ADR-0071 o
+   * `<canvas>` do MapLibre recebe `tabIndex = -1` + `aria-hidden` no mount; até
+   * então ele nascia com `tabindex=0` e ESTAVA na ordem de Tab, ao contrário do
+   * que este e o comentário do `role="img"` abaixo afirmavam. O teclado usa os
+   * botões `<MapZoomControls>`.)
    *
    * ## O posicionamento, que é o ponto difícil
    *
@@ -1547,10 +1645,11 @@ export function NationalChoroplethMapImpl({
         // desktop NÃO é regressão de acessibilidade, e isto foi CONFERIDO no
         // código, não presumido: este `role="img"` não tem `tabIndex`, e na
         // data em que a nota foi escrita não havia handler de teclado nenhum
-        // neste arquivo. O canvas do MapLibre nunca esteve na ordem
-        // de tabulação, logo a `<StateResultSheet>` que o clique abria também
-        // nunca foi alcançável por teclado — não se perde um caminho que não
-        // existia. O caminho de teclado para chegar a um estado é, e continua
+        // neste arquivo. (⚠️ A premissa "o canvas do MapLibre nunca esteve na
+        // ordem de tabulação" era FALSA — ele nascia com `tabindex=0` e parava o
+        // Tab sem fazer nada; corrigido em 2026-10-03, ADR-0071: `tabIndex = -1`
+        // no mount.) A `<StateResultSheet>` que o clique abria nunca foi
+        // alcançável por teclado — não se perde um caminho que não existia. O caminho de teclado para chegar a um estado é, e continua
         // sendo, o `<UfPicker>`: 27 `<Link>` de verdade (`UfPicker.tsx:232`,
         // `ufsPorNome()`), montado em TODOS os ramos de
         // `PersistentMapFrame.tsx` (pres, gov e sen, com e sem `sigla`) — e

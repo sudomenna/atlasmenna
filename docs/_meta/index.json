@@ -558,6 +558,14 @@
       "date": "2026-10-03",
       "note": "Decisão do dono em 03/10, véspera do 1º turno, contra a recomendação do orquestrador de esperar até depois de 04/10; portões e2e de peso e a11y rodam antes de publicar. Reverte o desenho do sprite de 18/09 (16d4a26), que só vivia em scripts/data/bandeiras-uf/PROVENIENCIA.md — nenhum ADR o decidia, então nada é superseded; o ADR-0049 cita o encaixe e fica obsoleto nesse ponto. Medido: SVG otimizado das 28 = 393,6 KB (AL 146,7, RJ 65,7, RN 54,1, PR 36,7, RS 27,9, SC 26,1, CE 8,2, AM 5,1 acima do teto de 4 KB; brasão ~5 px a 21x15); /deputado-federal 307,8 KiB vs teto 320 KiB; sprite via dangerouslySetInnerHTML contado em dobro (HTML + RSC). Decisão: 27 WebP a 60 px de altura, q90, 0,5-1,9 KB cada, 29,3 KB total (BR gerado mas não publicado), em public/bandeiras/<UF>.webp; SVGs originais (Commons, domínio público, Wikidata P41) versionados em scripts/data/bandeiras-uf/; <img alt='' width height decoding='async'>, lazy abaixo da dobra, eager nos títulos; hairline por token. Usos: UfBandeirasGrid, UfPicker, GovernorCard, h1 das páginas de UF; NÃO em UfLinksGrid (spec 019) nem tooltips do mapa. Removidos: gen-uf-flags.ts, uf-flags.generated.ts, UfFlagSprite, script gen:uf-flags e seu teste. Negativas: até 27 requisições de mesma origem (efeito em cache frio não medido); falha de CDN volta a existir (ícone decorativo ausente); raster só escala ~4x; tetos de 4 KB/60 KB substituídos por teste unitário: exatamente 27 .webp, cada um ≤ 3 KB; tags <img> também em HTML + RSC (não medido); deploy na véspera com congelamento 16h-05h em 04/10 (ADR-0063).",
       "path": "docs/architecture/adrs/0070-bandeiras-de-uf-em-webp-same-origin-no-lugar-do-sprite-svg-inline.md"
+    },
+    {
+      "id": "0071",
+      "title": "Zoom nos mapas do Brasil e do estado — gestos cooperativos abaixo de 960px, roda livre a partir de 960px, botões +/−/⟲ fora do chunk do MapLibre, limites de zoom e de arraste",
+      "status": "accepted",
+      "date": "2026-10-03",
+      "note": "Decisão do dono em 03/10, véspera do 1º turno; commit único revertível, horário de corte 20h de 03/10 (senão 05/10). Emenda a regra de scrollZoom:false (S05) que nunca teve ADR — nada superseded. < 960px: cooperativeGestures (1 dedo rola a página, 2 dedos movem/ampliam, Ctrl/⌘+roda; aviso pt-BR); >= 960px: roda/pinça livre (coluna do mapa não rola). Duplo clique/toque duplo, boxZoom, teclado do canvas, rotação e world copies desligados (ADR-0050: 1º clique navega/abre ficha). Limites: minZoom = enquadramento (Brasil nunca abaixo de z2+0,15), maxZoom Brasil enquadramento+4 / estado z11, maxBounds ~25% de folga. Botões +/−/⟲ em MapZoomControls (components/atoms/maps/) via store Zustand lib/state/map-zoom-store.ts registrado pelo mapa ativo, fora do chunk (RNF-007b em ~285/300 KiB); sobre o mapa no desktop, na faixa abaixo no celular (ADR-0056). Animações sem essential:true (RNF-026). Canvas nacional sai da Tab (teclado usa os botões; tabela paralela RNF-025). Fora de escopo: flyTo Brasil→estado, mapas órfãos. Rejeitadas: NavigationControl nativo, 1 dedo move no celular, botões sobre o mapa no celular. Negativas: roda sem modificador amplia no desktop; descoberta do gesto de 2 dedos; pinça não emulável; store é o ponto frágil (desregistro); critério por largura e não por ponteiro; deploy na véspera (congelamento 16h-05h em 04/10, ADR-0063).",
+      "path": "docs/architecture/adrs/0071-interacao-de-zoom-nos-mapas.md"
     }
   ],
   "nfr": {
@@ -943,7 +951,10 @@
         "RF-188",
         "RF-189",
         "RF-190",
-        "RF-191"
+        "RF-191",
+        "RF-292",
+        "RF-293",
+        "RF-295"
       ],
       "depends_on": ["001-ingestao-tse", "002-modelo-estatistico", "008-interatividade-brushing"],
       "apis": ["GET /api/projection"],
@@ -972,7 +983,8 @@
         "ResultPanel",
         "CandidateListCollapse",
         "RegiaoConsolidada",
-        "RegiaoRecolhivel"
+        "RegiaoRecolhivel",
+        "MapZoomControls"
       ],
       "nfr": [
         "RNF-001",
@@ -1009,7 +1021,8 @@
         "0053",
         "0055",
         "0056",
-        "0057"
+        "0057",
+        "0071"
       ],
       "shipped_with_carry_overs": ""
     },

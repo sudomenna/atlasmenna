@@ -91,7 +91,8 @@ const espiao = vi.hoisted(() => ({
   containerHeight: 0,
 }));
 
-vi.mock("maplibre-gl", () => {
+vi.mock("maplibre-gl", async () => {
+  const { addZoomApi } = await import("./_fake-map-zoom");
   class FakeMap {
     cameraForBounds(_bounds: unknown, opts: { padding: FakePadding }) {
       espiao.cameraForBoundsCalls.push({ ...opts.padding });
@@ -113,7 +114,7 @@ vi.mock("maplibre-gl", () => {
     on() {}
     setFilter() {}
     getCanvas() {
-      return { style: {} };
+      return { style: {}, setAttribute() {}, removeAttribute() {}, tabIndex: 0 };
     }
     isStyleLoaded() {
       return true;
@@ -123,6 +124,7 @@ vi.mock("maplibre-gl", () => {
     }
     remove() {}
   }
+  addZoomApi(FakeMap.prototype);
   return { default: { Map: FakeMap } };
 });
 vi.mock("maplibre-gl/dist/maplibre-gl.css", () => ({}));

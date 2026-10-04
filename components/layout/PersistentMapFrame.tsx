@@ -133,6 +133,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { municipiosTotalFor } from "@/components/atoms/maps/_shared";
 import { MapSkeleton } from "@/components/atoms/maps/MapSkeleton";
+import { MapZoomControls } from "@/components/atoms/maps/MapZoomControls";
 import {
   DetailUnavailable,
   type DetailUnavailableReason,
@@ -514,8 +515,12 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
             >
               ← Brasil
             </Link>
+            {/* ADR-0071 — +/−/⟲ sobre o mapa, canto inferior direito, SÓ
+                DESKTOP; no celular a cópia fica na faixa abaixo (`.mobileChrome`). */}
+            <MapZoomControls variant="desktop" />
           </div>
           <div className={mapFrameStyles.mobileChrome}>
+            <MapZoomControls variant="bar" />
             <div className={mapFrameStyles.bar}>
               <Link href={homeHref} className={mapFrameStyles.btn}>
                 ← Brasil
@@ -726,8 +731,12 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
             >
               ← Brasil
             </Link>
+            {/* ADR-0071 — +/−/⟲ sobre o mapa, canto inferior direito, SÓ
+                DESKTOP; no celular a cópia fica na faixa abaixo (`.mobileChrome`). */}
+            <MapZoomControls variant="desktop" />
           </div>
           <div className={mapFrameStyles.mobileChrome}>
+            <MapZoomControls variant="bar" />
             <div className={mapFrameStyles.bar}>
               <Link href={homeHref} className={mapFrameStyles.btn}>
                 ← Brasil
@@ -877,8 +886,11 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
               />
             </div>
           )}
+          {/* ADR-0071 — +/−/⟲ sobre o mapa, SÓ DESKTOP (celular: faixa abaixo). */}
+          <MapZoomControls variant="desktop" />
         </section>
         <div className={mapFrameStyles.mobileChrome}>
+          <MapZoomControls variant="bar" />
           <div className={mapFrameStyles.bar}>
             <Link href={homeHref} className={mapFrameStyles.btn}>
               ← Brasil

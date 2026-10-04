@@ -35,7 +35,8 @@ const espiao = vi.hoisted(() => ({
   handlers: new Map<string, Handler>(),
 }));
 
-vi.mock("maplibre-gl", () => {
+vi.mock("maplibre-gl", async () => {
+  const { addZoomApi } = await import("./_fake-map-zoom");
   class FakeMap {
     setFeatureState() {}
     setFilter() {}
@@ -63,6 +64,7 @@ vi.mock("maplibre-gl", () => {
       }
     }
   }
+  addZoomApi(FakeMap.prototype);
   return { default: { Map: FakeMap } };
 });
 vi.mock("maplibre-gl/dist/maplibre-gl.css", () => ({}));

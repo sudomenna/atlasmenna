@@ -5,12 +5,12 @@ status: shipped
 priority: M
 personas: [P1, P2, P3, P4]
 screens: [T-01]
-requirements: [RF-021, RF-022, RF-023, RF-025, RF-026, RF-027, RF-028, RF-029, RF-030, RF-030.1, RF-030.2, RF-030.3, RF-030.4, RF-030.5, RF-030.6, RF-030.7, RF-030.8, RF-061, RF-062, RF-063, RF-177, RF-178, RF-180, RF-181, RF-185, RF-186, RF-187, RF-188, RF-189, RF-190, RF-191]
+requirements: [RF-021, RF-022, RF-023, RF-025, RF-026, RF-027, RF-028, RF-029, RF-030, RF-030.1, RF-030.2, RF-030.3, RF-030.4, RF-030.5, RF-030.6, RF-030.7, RF-030.8, RF-061, RF-062, RF-063, RF-177, RF-178, RF-180, RF-181, RF-185, RF-186, RF-187, RF-188, RF-189, RF-190, RF-191, RF-292, RF-293, RF-295]
 depends_on: [001-ingestao-tse, 002-modelo-estatistico, 008-interatividade-brushing]
 apis: [GET /api/projection]
-components: [HeadlineScore, NationalChoroplethMap, MapViewToggle, StateGroupedTable, NationalNeedle, ChancesPanel, InsightCard, ForecastTransparency, LiveBadge, Tabs, MinorCandidatesList, RaceTypeIndicator, TurnoBadge, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader, ApuracaoMeta, BreakingNewsTicker, NationalWinnerBanner, TurnoOneRecap, ResultPanel, CandidateListCollapse]
+components: [HeadlineScore, NationalChoroplethMap, MapViewToggle, StateGroupedTable, NationalNeedle, ChancesPanel, InsightCard, ForecastTransparency, LiveBadge, Tabs, MinorCandidatesList, RaceTypeIndicator, TurnoBadge, ProjectionThermometer, ProjectionThermometers, TrilhaKicker, RaceHeader, ApuracaoMeta, BreakingNewsTicker, NationalWinnerBanner, TurnoOneRecap, ResultPanel, CandidateListCollapse, MapZoomControls]
 nfr: [RNF-001, RNF-002, RNF-003, RNF-007, RNF-008, RNF-022, RNF-023, RNF-024, RNF-025, RNF-026, RNF-028]
-adrs: [0001, 0002, 0003, 0004, 0005, 0010, 0012, 0013, 0014, 0017, 0018, 0019, 0025, 0033, 0034, 0038, 0050, 0051, 0053, 0055, 0056, 0057]
+adrs: [0001, 0002, 0003, 0004, 0005, 0010, 0012, 0013, 0014, 0017, 0018, 0019, 0025, 0033, 0034, 0038, 0050, 0051, 0053, 0055, 0056, 0057, 0071]
 shipped_with_carry_overs:
   - RF-025-UFForecastTable-completa-deferida-S05
   - RF-030.4-hachura-flip-MapLibre-sprite-deferida-S05
@@ -455,6 +455,53 @@ WHEN o usuário interage com um estado/município no mapa, the system SHALL aval
 - Given tablet com touch (pointer: coarse, sem suporte a hover), when toque UF, then balão **não** aparece; `<StateResultSheet>` gaveta abre ao tap.
 - Given Safari/Chrome em aparelho com toque que emite mousemove **sintético** antes do tap, when `bloqueiaBalaoNoToqueRef` está ativo (lê resultado de `useHasFinePointer`), then balão é suprimido apesar do mousemove artificial.
 - Given desktop de 375px de largura com mouse real (fine pointer), when cursor sobre UF, then balão abre (critério é ponteiro, não viewport).
+
+**RF-292 — Zoom dos mapas por largura de tela, com limites (mapa do Brasil e mapa de estado)**
+
+WHILE a largura da janela é ≥ 960px, the system SHALL ampliar e reduzir o mapa (Brasil por UF e estado por município) com a roda do mouse e a pinça do trackpad, centrado no cursor, e mover o mapa ao arrastar com um botão do mouse.
+WHILE a largura da janela é < 960px, the system SHALL usar gestos cooperativos: um dedo rola a página, dois dedos movem e ampliam o mapa, e com mouse só Ctrl/⌘ + roda amplia; the system SHALL exibir o aviso em pt-BR ("Use dois dedos para mover o mapa" / "Use Ctrl/⌘ + rolagem para ampliar o mapa") quando o gesto não ampliar.
+WHEN o usuário dá duplo clique ou toque duplo no mapa, the system SHALL NOT ampliar (o primeiro clique já navega ou abre a ficha, RF-030.3 / ADR-0050).
+The system SHALL limitar o zoom mínimo ao enquadramento inicial (no mapa do Brasil, nunca abaixo de z2 + 0,15, onde o desenho fica em branco), o zoom máximo a enquadramento + 4 (Brasil) ou z11 (estado), e o arraste a uma caixa ~25% maior que o país/estado; the system SHALL desligar rotação, `boxZoom`, teclado do canvas e cópias do mundo (ADR-0071).
+
+**Aceitação**:
+- Given janela de 1440px, when o usuário gira a roda sobre o mapa do Brasil, then o mapa amplia/reduz suavemente em torno do cursor e a página não rola; ao afastar, para no enquadramento inicial (nunca em branco).
+- Given janela de 375px, when o usuário arrasta um dedo sobre o mapa, then a página rola e o aviso de dois dedos aparece; when usa dois dedos, then o mapa move e amplia.
+- Given janela de 375px com mouse, when gira a roda sem modificador, then a página rola; com Ctrl/⌘ pressionado, o mapa amplia.
+- Given o usuário alarga a janela de 800px para 1200px com a página aberta, when o `matchMedia("(min-width: 960px)")` muda, then o modo troca sem recarregar.
+- Given o mapa do Brasil ou do estado, when o usuário dá duplo clique ou toque duplo numa UF/município, then o zoom não muda e apenas um clique é tratado (uma navegação, ou uma abertura da ficha).
+- Given o mapa do Brasil ampliado ao máximo, when o usuário tenta arrastá-lo além da caixa de limite, then o mapa para na borda; o zoom máximo não ultrapassa enquadramento + 4 (Brasil) / z11 (estado).
+- Given `prefers-reduced-motion: reduce`, when o usuário aciona um botão de zoom (RF-293), then a câmera salta sem animação (nenhuma animação usa `essential: true`; RNF-026).
+- Given o balão de passar o mouse aberto, when o mapa começa a se mover (`movestart`/`zoomstart`), then o balão fecha.
+
+**RF-293 — Botões de ampliar, reduzir e voltar ao enquadramento**
+
+WHEN há um mapa ativo (Brasil ou estado), the system SHALL exibir os botões "Ampliar o mapa", "Reduzir o mapa" e "Ver o Brasil inteiro"/"Ver o estado inteiro", fora do chunk do MapLibre (RNF-007b), com alvo de toque mínimo `--tap-min` e `aria-label` próprio; no desktop (≥ 960px) os botões ficam sobre o mapa, no canto do cromo sobreposto sem cobrir a legenda, e no celular (< 960px) ficam na faixa abaixo do mapa, nunca sobre ele (ADR-0056).
+WHILE a câmera está no enquadramento inicial, the system SHALL manter o botão de voltar ao enquadramento desabilitado.
+IF nenhum mapa está registrado (mapa ainda não carregou, ou desmontado na troca Brasil → estado), the system SHALL NOT renderizar os botões.
+The system SHALL tirar o canvas do mapa do Brasil da ordem de Tab (`tabIndex = -1`, `aria-hidden`), mantendo a tabela/lista paralela como alternativa acessível (RNF-025); o teclado opera o zoom pelos botões.
+
+**Aceitação**:
+- Given o mapa do Brasil carregado, when o usuário aciona "Ampliar o mapa" ou "Reduzir o mapa", then o zoom muda um nível com animação de ~250 ms (sem animação sob movimento reduzido) e respeita os limites do RF-292.
+- Given a câmera movida do enquadramento inicial, when o usuário aciona o botão de voltar, then o mapa retorna ao enquadramento inicial (~400 ms) e o botão volta a ficar desabilitado.
+- Given a navegação do Brasil para `/uf/SP` (mapa recriado), when o mapa antigo é destruído, then os botões passam a controlar o mapa do estado, nunca o antigo (desregistro no unmount; o `unregister` do mapa antigo não apaga o registro do novo).
+- Given viewport de 375px, when a página renderiza, then os botões estão na faixa abaixo do mapa e nenhum elemento fica sobre o canvas; cada botão tem altura e largura ≥ `--tap-min` (44px).
+- Given navegação por teclado, when o usuário pressiona Tab, then o foco passa pelos três botões e não para no canvas do mapa.
+
+
+**RF-295 — "Onde cada candidato é mais forte": ordenar por percentual ou por votos de diferença**
+
+WHERE o painel "Onde cada candidato é mais forte" (`<StrongholdsPanel />`, home de Presidente) está visível, the system SHALL oferecer a chave "Ordenar por" com dois critérios — "Percentual" (padrão) e "Votos" —, independente da pílula de candidato (trocar de candidato mantém o critério).
+WHILE o critério é "Percentual", the system SHALL ordenar as UFs pelo percentual projetado do candidato (desc) e exibir a diferença em pp, exatamente como antes da chave.
+WHILE o critério é "Votos", the system SHALL ordenar as UFs pela diferença em votos projetados, `(pct do candidato − pct do adversário da linha) / 100 × votos_disputa_projetados` da UF, arredondada para inteiro, com o mesmo adversário da diferença em pp (em 1º, o 2º; abaixo, o 1º), em ordem decrescente (maiores vantagens primeiro, depois as menores desvantagens; empate pela sigla), e exibir essa diferença em forma compacta com sinal (ex.: "+1,2 mi", "−340 mil").
+IF uma UF não publica `votos_disputa_projetados`, the system SHALL NOT incluí-la no critério "Votos" (nunca estimar nem tratar como 0) e SHALL declarar no `<caption>` quantas UFs ficaram de fora.
+The system SHALL nomear o critério ativo no `<caption>` da tabela e manter a coluna "Projetado" (%), a barra e a cor (pela margem em pp) iguais nos dois critérios; a chave é um `<fieldset>` com `<legend>` "Ordenar por" e `<button aria-pressed>` com `aria-controls` para a tabela e alvo de toque `--tap-min` abaixo de 960px (RNF-022, RNF-023).
+
+**Aceitação**:
+- Given o painel recém-renderizado, when nada foi clicado, then "Percentual" está com `aria-pressed="true"`, a ordem é por percentual desc e a coluna "Diferença" está em pp.
+- Given UFs em que a ordem por votos difere da ordem por percentual, when o usuário aciona "Votos", then as linhas reordenam pela diferença em votos desc, a coluna passa a "Diferença em votos" com valores compactos com sinal, e o `<caption>` diz "Ordenado pela diferença em votos projetados".
+- Given uma UF do candidato sem `votos_disputa_projetados`, when o critério é "Votos", then a UF não aparece e o `<caption>` declara "1 UF sem total de votos projetado fora da lista"; no critério "Percentual" ela continua na lista.
+- Given o critério "Votos" ativo, when o usuário troca de candidato, then o critério continua "Votos".
+- Given um candidato em 3º numa UF, when o critério é "Votos", then a diferença é medida contra o 1º colocado, não contra o 2º.
 
 ## Requisitos Não-Funcionais aplicáveis
 

@@ -57,6 +57,14 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import {
+  applyZoomLimits,
+  attachInteractionMode,
+  attachZoomControls,
+  MAP_INTERACTION_OPTIONS,
+  toLngLat,
+  ZOOM_RESET_MS,
+} from "@/components/atoms/maps/_map-interaction";
+import {
   registerPmtilesProtocolOnce,
   resetPmtilesProtocol,
 } from "@/components/atoms/maps/_pmtiles-protocol";
@@ -448,6 +456,18 @@ export function ChoroplethMapUF({
     let hangTimer: number | undefined;
     let attempt = 0;
     let cancelled = false;
+    // ADR-0071 — o que o mapa VIVO pendurou fora dele (listener de media query,
+    // registro dos botões na store). Cai ANTES de `map.remove()` no retry do
+    // self-heal e no unmount: controle apontando para mapa destruído é o erro
+    // a evitar (trocar de UF recria o mapa).
+    let detachInteraction: (() => void) | null = null;
+    let detachZoomControls: (() => void) | null = null;
+    function desligarDoMapaVivo() {
+      detachInteraction?.();
+      detachZoomControls?.();
+      detachInteraction = null;
+      detachZoomControls = null;
+    }
 
     // Self-heal — mesma causa raiz do mapa nacional (ver
     // `_pmtiles-protocol.ts` e `_NationalChoroplethMapImpl.tsx`): uma
@@ -561,9 +581,11 @@ export function ChoroplethMapUF({
         bounds: bbox,
         fitBoundsOptions: { padding: 16 },
         attributionControl: false,
-        dragRotate: false,
-        touchPitch: false,
-        scrollZoom: false,
+        // ADR-0071 (2026-10-03) — computador amplia com a roda; celular usa
+        // gestos cooperativos (um dedo rola a página); duplo clique, rotação,
+        // caixa de seleção e teclado no canvas desligados. Modo por largura
+        // ligado logo abaixo (`attachInteractionMode`); ver `_map-interaction.ts`.
+        ...MAP_INTERACTION_OPTIONS,
       });
 
       mapRef.current = map;
@@ -581,6 +603,7 @@ export function ChoroplethMapUF({
             `${STYLE_LOAD_TIMEOUT_MS}ms — reinicializando protocolo pmtiles (retry ${attempt})`,
         );
         resetPmtilesProtocol();
+        desligarDoMapaVivo();
         map.remove();
         mount();
       }, STYLE_LOAD_TIMEOUT_MS);
@@ -599,8 +622,42 @@ export function ChoroplethMapUF({
       canvas.removeAttribute("aria-label");
       canvas.tabIndex = -1;
 
+      detachInteraction = attachInteractionMode(map);
+
       map.on("load", () => {
         window.clearTimeout(hangTimer);
+        // ADR-0071 — limites DEPOIS do enquadramento inicial (o `fitBounds` do
+        // construtor já rodou): piso = o próprio enquadramento da UF; teto = z11
+        // (os tiles vão até z10, z11 é sobre-amostragem leve; nunca abaixo do
+        // piso + 2, para UF minúscula numa tela grande); sem arrastar para
+        // longe da UF.
+        const enquadramento = { ...map.getCenter(), zoom: map.getZoom() };
+        applyZoomLimits(map, {
+          // Piso também nunca abaixo de z3, o primeiro nível dos tiles
+          // municipais (contêiner 0×0 no `load` daria zoom ~0 e mapa em branco).
+          minZoom: Math.max(enquadramento.zoom, 3),
+          maxZoom: Math.max(11, enquadramento.zoom + 2),
+          base: bbox,
+        });
+        // Botões +/−/⟲ (fora do chunk do mapa) via store. "Ver o estado
+        // inteiro" refaz o mesmo `fitBounds` do construtor.
+        detachZoomControls?.();
+        detachZoomControls = attachZoomControls(map, {
+          resetLabel: "Ver o estado inteiro",
+          home: () => {
+            const cam = map.cameraForBounds(bbox, { padding: 16 });
+            return cam?.center != null && cam.zoom != null
+              ? { ...toLngLat(cam.center), zoom: Math.max(cam.zoom, map.getMinZoom()) }
+              : { lng: enquadramento.lng, lat: enquadramento.lat, zoom: enquadramento.zoom };
+          },
+          reset: () => {
+            // Sem `essential: true`: sob `prefers-reduced-motion` o MapLibre
+            // zera a duração e a câmera salta. `linear`: sem ele o `fitBounds`
+            // usa `flyTo` (arco de afastar-e-aproximar), estranho em 400 ms; com
+            // ele é o mesmo `easeTo` que o mapa do Brasil usa.
+            map.fitBounds(bbox, { padding: 16, duration: ZOOM_RESET_MS, linear: true });
+          },
+        });
         // Aplica cores iniciais. `resolveCssColor` é obrigatório: `m.cor` chega
         // como token (`var(--color-cand-1)`) e o MapLibre não lê variável CSS —
         // sem resolver, todo município cai no cinza do `coalesce` acima.
@@ -678,6 +735,29 @@ export function ChoroplethMapUF({
         setTooltip(null);
       });
 
+      // ADR-0071 — o balão é ancorado em pixel de TELA; quando o mapa se move
+      // por baixo dele (roda, pinça, botões, arraste) ficaria preso na posição
+      // antiga, apontando para outro município. Fecha no começo do movimento; o
+      // próximo `mousemove` reabre no lugar certo. Só limpa a store se o hover
+      // era do mapa — o destaque vindo da tabela não é nosso para apagar.
+      const fecharBalaoAoMover = () => {
+        const doMapa = useHoverStore.getState().source === "map";
+        if (doMapa) useHoverStore.getState().clear();
+        setTooltip(null);
+        // O contorno aceso pela tabela (hover externo) continua aceso; só o que
+        // o próprio mapa acendeu é apagado.
+        if (doMapa && map.isStyleLoaded()) {
+          map.setFilter("municipios-stroke-hover", [
+            "all",
+            ufFilter,
+            ["==", ["get", "CD_MUN"], ""],
+          ]);
+        }
+        map.getCanvas().style.cursor = "";
+      };
+      map.on("movestart", fecharBalaoAoMover);
+      map.on("zoomstart", fecharBalaoAoMover);
+
       // Clique no município: realça (era o único efeito até 2026-09-10, e é o
       // que serve o tap-to-select do mobile) E abre a folha do município — o
       // `MunSheet` do protótipo, aberto a partir do mapa
@@ -720,6 +800,7 @@ export function ChoroplethMapUF({
     return () => {
       cancelled = true;
       window.clearTimeout(hangTimer);
+      desligarDoMapaVivo();
       mapRef.current?.remove();
       mapRef.current = null;
     };
