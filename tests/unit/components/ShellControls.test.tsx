@@ -103,4 +103,27 @@ describe("<ShellControls />", () => {
     const css = readFileSync("components/layout/ShellControls.module.css", "utf8");
     expect(css).toMatch(/\.row\s*\{[^}]*flex-wrap:\s*wrap/);
   });
+
+  it("(h) no celular o respiro sob a fileira viaja com o controle — fileira vazia não ocupa altura", () => {
+    // Medido em 2026-10-04, 375px, produção: com o "Parcial / Projeção"
+    // escondido (`--shell-viewmode-display: none`) ou em rota sem corrida, o
+    // `padding-bottom` da `.row` sobrava sozinho como uma faixa vazia de 8px
+    // no topo grudado (61px em vez de 53). Margem de item some com o item;
+    // padding do pai não. `getBoundingClientRect()` é zero no happy-dom, então
+    // o que se trava é a regra; a medida foi feita no navegador.
+    const css = readFileSync("components/layout/ShellControls.module.css", "utf8");
+    // Com a chave: o comentário do topo do CSS cita a media query pelo nome.
+    const corte = css.indexOf("@media (min-width: 960px) {");
+    expect(corte, "media query de 960px não encontrada no CSS").toBeGreaterThan(0);
+    const mobile = css.slice(0, corte);
+    const desktop = css.slice(corte);
+    const row = mobile.match(/\.row\s*\{([^}]*)\}/)?.[1] ?? "";
+    expect(row).toMatch(/padding:\s*0 var\(--space-4\);/);
+    expect(row).not.toMatch(/padding-bottom/);
+    expect(mobile).toMatch(/\n\.control\s*\{[^}]*margin-bottom:\s*var\(--space-2\)/);
+    // A partir de 960px a navegação de cargo ocupa a fileira em toda rota:
+    // o padding volta para a `.row` e a margem sai do controle.
+    expect(desktop).toMatch(/\.row\s*\{[^}]*padding-bottom:\s*var\(--space-2\)/);
+    expect(desktop).toMatch(/\.control\s*\{[^}]*margin-bottom:\s*0/);
+  });
 });

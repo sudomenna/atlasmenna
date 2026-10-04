@@ -31,12 +31,20 @@
  * nem participa do flex, então a fileira tem um único item e nunca precisa
  * quebrar — o layout mobile (os dois controles dividindo a largura) continua
  * idêntico. */
+/* Sem `padding-bottom` aqui abaixo de 960px: o respiro de 8px sob a fileira
+ * viaja com o `.control` (margem, regra logo abaixo), e não com a `.row`.
+ * Medido em 2026-10-04, 375px, produção: com o "Parcial / Projeção" escondido
+ * (fase pré / ramo de espera, `--shell-viewmode-display: none`) ou em rota
+ * sem corrida, a fileira ficava vazia e o padding sozinho fazia dela uma faixa
+ * de 8px — o topo grudado tinha 61px em vez de 53. Margem de item some quando
+ * o item some; padding do pai não. A partir de 960px a navegação de cargo
+ * ocupa a fileira em toda rota, e o padding volta (media query no fim). */
 .row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
-  padding: 0 var(--space-4) var(--space-2);
+  padding: 0 var(--space-4);
 }
 
 .controls {
@@ -67,6 +75,7 @@
   display: flex;
   flex: 1 1 0;
   min-width: 0;
+  margin-bottom: var(--space-2);
 }
 
 /* RF-161 (spec 019) — o segmentado "Parcial / Projeção" some em fase
@@ -108,6 +117,10 @@ body:not(:has(main[data-trilha])) .controls {
 /* Desktop: cargo à esquerda, controles encostados à direita, todos na
  * largura natural — a linha do protótipo em `App.jsx:330-332`. */
 @media (min-width: 960px) {
+  .row {
+    padding-bottom: var(--space-2);
+  }
+
   .controls {
     flex: 0 0 auto;
     margin-left: auto;
@@ -115,6 +128,7 @@ body:not(:has(main[data-trilha])) .controls {
 
   .control {
     flex: 0 0 auto;
+    margin-bottom: 0;
   }
 
   /* A CAUSA RAIZ do defeito medido em 1024px mora aqui, não na `.row`
