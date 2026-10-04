@@ -315,6 +315,17 @@ export async function writeEdgePayload(key: string, value: unknown): Promise<voi
   });
 }
 
+/** 🔴 04/10/2026 — cópia de cada chave em `edge-espelho/<chave>.json` no Blob. */
+export async function espelharNoBlob(
+  entries: readonly { key: string; value: unknown }[],
+): Promise<void> {
+  const r = await Promise.allSettled(
+    entries.map((e) => putJson(`edge-espelho/${e.key}.json`, e.value)),
+  );
+  const falhas = r.filter((x) => x.status === "rejected").length;
+  if (falhas > 0) logWarn("espelho blob: falhas", { falhas, total: entries.length });
+}
+
 /** Lote de `upsert`s num PATCH só (dividido em blocos de até ~400 KB). */
 export async function writeEdgeItemsBatch(
   entries: readonly { key: string; value: unknown }[],
@@ -1161,6 +1172,9 @@ export async function writeProjection(
     { key: LEGACY_CURRENT_ALIAS_KEY, value: payload },
     ...ufKeys.map(({ key, payload: ufPayload }) => ({ key, value: ufPayload })),
   ];
+  // Espelho no Blob ANTES do Global Config (que pode recusar por limite de
+  // gravações/hora) — o reader fica com o `ts` mais novo dos dois.
+  await espelharNoBlob(todos);
   try {
     await writeEdgeItemsBatch(todos);
   } catch (err) {
@@ -1370,6 +1384,7 @@ export async function writeDeputadoProjection(
 
   let failure: WriteFailure | null = null;
   try {
+    await espelharNoBlob([{ key: nationalKey, value: payload }]);
     await writeEdgePayload(nationalKey, payload);
   } catch (err) {
     failure = { key: nationalKey, message: err instanceof Error ? err.message : String(err) };

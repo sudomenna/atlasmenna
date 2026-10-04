@@ -36,6 +36,7 @@
  */
 
 import { get } from "@vercel/edge-config";
+import { blobUrlFor } from "@/lib/blob/paths";
 
 import { type Cargo, currentPresidentialTurno, type Turno } from "@/lib/config/calendar";
 import {
@@ -166,14 +167,53 @@ async function getFirst<T>(construirChaves: () => readonly string[]): Promise<Le
 
   for (const key of keys) {
     let value: T | undefined;
+    const espelhoP = lerEspelhoBlob<T>(key);
     try {
       value = await get<T>(key);
     } catch (erro) {
+      const espelho = await espelhoP;
+      if (espelho) return { estado: "ok", valor: espelho };
       return { estado: "falha", erro };
     }
-    if (value) return { estado: "ok", valor: value };
+    const espelho = await espelhoP;
+    const escolhido = maisNovo(value, espelho);
+    if (escolhido) return { estado: "ok", valor: escolhido };
   }
   return { estado: "ausente" };
+}
+
+/**
+ * 🔴 04/10/2026 17h45 — espelho no Blob de cada chave de projeção. A API do
+ * Global Config limita a 100 gravações/hora e o limite estourou às 17h30: o
+ * writer passou a gravar a mesma chave em `edge-espelho/<chave>.json`, e a
+ * leitura fica com o que tiver o `ts` mais novo. Qualquer falha no Blob é
+ * silenciosa — o Edge Config continua sendo a fonte normal.
+ */
+async function lerEspelhoBlob<T>(key: string): Promise<T | undefined> {
+  try {
+    const url = blobUrlFor(`edge-espelho/${key}.json`);
+    if (!url) return undefined;
+    const r = await fetch(url, {
+      next: { revalidate: 20 },
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!r.ok) return undefined;
+    return (await r.json()) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+function tsDe(v: unknown): number {
+  if (!v || typeof v !== "object") return Number.NEGATIVE_INFINITY;
+  const t = Date.parse(String((v as { ts?: unknown }).ts ?? ""));
+  return Number.isFinite(t) ? t : Number.NEGATIVE_INFINITY;
+}
+
+function maisNovo<T>(a: T | undefined, b: T | undefined): T | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return tsDe(b) > tsDe(a) ? b : a;
 }
 
 /**
