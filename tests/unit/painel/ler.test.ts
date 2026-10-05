@@ -1,20 +1,23 @@
 /**
  * tests/unit/painel/ler.test.ts
  *
- * Leitura do retrato (`lib/painel/ler.ts`, ADR-0077): a validação de forma e o
- * caminho do Blob PRIVADO (com `@vercel/blob` simulado — nenhum teste vai à
- * rede). O caminho do arquivo local (`NODE_ENV=development`) é o que o
- * `pnpm dev` usa e foi conferido no navegador.
+ * Leitura do retrato (`lib/painel/ler.ts`, ADR-0077, plano B): a validação de
+ * forma e o `fetch` da URL secreta (`PAINEL_RETRATO_URL`), com `fetch`
+ * simulado — nenhum teste vai à rede. O caminho do arquivo local
+ * (`NODE_ENV=development`) é o que o `pnpm dev` usa e foi conferido no navegador.
+ *
+ * O que importa travar além do caminho feliz: a URL é o segredo, e ela não
+ * pode aparecer no resultado (a página mostra o `motivo`) nem no log.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const get = vi.hoisted(() => vi.fn());
-vi.mock("@vercel/blob", () => ({ get }));
-
 import { montarRetrato } from "@/lib/painel/agregar";
 import { lerRetrato, validarRetrato } from "@/lib/painel/ler";
-import { PAINEL_BLOB_PATHNAME } from "@/lib/painel/tipos";
+
+const URL_SECRETA = `https://loja.public.blob.vercel-storage.com/painel/${"ab".repeat(32)}/retrato-1t-2026.json`;
+const SEGREDO = "ab".repeat(32);
+const fetchSimulado = vi.fn();
 
 const T0 = Date.parse("2026-10-04T19:30:00Z");
 
@@ -45,23 +48,22 @@ function retratoValido() {
   });
 }
 
-function respostaDoBlob(corpo: string) {
-  return {
-    statusCode: 200,
-    stream: new Response(corpo).body,
-    headers: new Headers(),
-    blob: {},
-  };
-}
-
 beforeEach(() => {
-  get.mockReset();
+  fetchSimulado.mockReset();
+  vi.stubGlobal("fetch", fetchSimulado);
   vi.stubEnv("NODE_ENV", "production");
 });
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
+
+/** Nada do resultado, serializado, pode conter o segredo. */
+function semSegredo(resultado: unknown): void {
+  expect(JSON.stringify(resultado)).not.toContain(SEGREDO);
+}
 
 describe("validarRetrato", () => {
   it("aceita o que montarRetrato produz", () => {
@@ -81,34 +83,42 @@ describe("validarRetrato", () => {
   });
 });
 
-describe("lerRetrato fora de desenvolvimento — Blob PRIVADO", () => {
-  it("sem credencial do Blob: 'ausente', sem chamar o Blob", async () => {
-    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "");
+describe("lerRetrato fora de desenvolvimento — URL secreta do Blob", () => {
+  it("sem PAINEL_RETRATO_URL: 'ausente', sem ir à rede, com motivo que não revela nada", async () => {
+    vi.stubEnv("PAINEL_RETRATO_URL", "");
     const r = await lerRetrato();
     expect(r.status).toBe("ausente");
-    expect(get).not.toHaveBeenCalled();
+    expect(fetchSimulado).not.toHaveBeenCalled();
+    if (r.status === "ausente") expect(r.motivo).not.toMatch(/https?:|blob|painel\//i);
   });
 
-  it("lê do caminho certo, com access 'private', e valida", async () => {
-    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "vercel_blob_rw_teste_123");
-    get.mockResolvedValue(respostaDoBlob(JSON.stringify(retratoValido())));
+  it("busca a URL do ambiente com cache: 'no-store' e valida", async () => {
+    vi.stubEnv("PAINEL_RETRATO_URL", URL_SECRETA);
+    fetchSimulado.mockResolvedValue(new Response(JSON.stringify(retratoValido())));
     const r = await lerRetrato();
     expect(r.status).toBe("ok");
-    expect(get).toHaveBeenCalledWith(
-      PAINEL_BLOB_PATHNAME,
-      expect.objectContaining({ access: "private" }),
-    );
+    expect(fetchSimulado).toHaveBeenCalledWith(URL_SECRETA, { cache: "no-store" });
+    semSegredo({ ...r, retrato: undefined });
   });
 
-  it("blob inexistente vira 'ausente'; JSON quebrado e formato errado viram 'erro' — nunca exceção", async () => {
-    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "vercel_blob_rw_teste_123");
-    get.mockResolvedValueOnce(null);
-    expect((await lerRetrato()).status).toBe("ausente");
-    get.mockResolvedValueOnce(respostaDoBlob("{quebrado"));
-    expect((await lerRetrato()).status).toBe("erro");
-    get.mockResolvedValueOnce(respostaDoBlob(JSON.stringify({ versao: 99 })));
-    expect((await lerRetrato()).status).toBe("erro");
-    get.mockRejectedValueOnce(new Error("store não aceita privado"));
-    expect((await lerRetrato()).status).toBe("erro");
+  it("404 vira 'ausente'; outro HTTP, JSON quebrado, formato errado e erro de rede viram 'erro' — nunca exceção, nunca a URL", async () => {
+    vi.stubEnv("PAINEL_RETRATO_URL", URL_SECRETA);
+    const avisos = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const casos: [Response | Error, string][] = [
+      [new Response("x", { status: 404 }), "ausente"],
+      [new Response("x", { status: 403 }), "erro"],
+      [new Response("{quebrado"), "erro"],
+      [new Response(JSON.stringify({ versao: 99 })), "erro"],
+      [new TypeError(`fetch failed: ${URL_SECRETA}`), "erro"],
+    ];
+    for (const [resposta, esperado] of casos) {
+      if (resposta instanceof Error) fetchSimulado.mockRejectedValueOnce(resposta);
+      else fetchSimulado.mockResolvedValueOnce(resposta);
+      const r = await lerRetrato();
+      expect(r.status).toBe(esperado);
+      semSegredo(r);
+    }
+    // o log também não leva a URL (nem a mensagem do erro de rede, que a contém)
+    semSegredo(avisos.mock.calls);
   });
 });

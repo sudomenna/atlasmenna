@@ -2,13 +2,15 @@
  * tests/unit/painel/retrato-fora-do-cliente.test.ts
  *
  * Trava do ADR-0077: **nenhum arquivo `"use client"` alcança o módulo de
- * leitura do retrato (`lib/painel/ler.ts`) nem um JSON de retrato** — nem
- * direto, nem por um módulo intermediário.
+ * leitura do retrato (`lib/painel/ler.ts`), um JSON de retrato ou um módulo que
+ * mencione `PAINEL_RETRATO_URL`** — nem direto, nem por um módulo intermediário.
  *
  * ## Por que existe
  *
  * O retrato do painel privado é o registro operacional da noite. Ele vive no
- * Vercel Blob PRIVADO e a página fica atrás de senha. Mas tudo que um
+ * Vercel Blob num ENDEREÇO SECRETO (plano B do ADR-0077: a URL, guardada em
+ * `PAINEL_RETRATO_URL`, é o próprio segredo) e a página fica atrás de senha.
+ * Mas tudo que um
  * componente de cliente importa vira um chunk em `/_next/static/...` — e
  * esses arquivos são servidos a QUALQUER UM, sem passar pelo `proxy.ts`. Um
  * `import { lerRetrato } from "@/lib/painel/ler"` num `"use client"` (ou um
@@ -21,8 +23,9 @@
  * Varre `app/`, `components/` e `lib/` atrás dos arquivos cuja primeira
  * instrução é `"use client"` e percorre o grafo de imports de cada um
  * (`@/…` e caminhos relativos; pacotes de `node_modules` ficam de fora — o
- * retrato não mora lá). Reprova se algum caminho chegar a `lib/painel/ler.ts`
- * ou a um `.json` com "retrato" no nome.
+ * retrato não mora lá). Reprova se algum caminho chegar a `lib/painel/ler.ts`,
+ * a um `.json` com "retrato" no nome ou a qualquer arquivo cujo texto mencione
+ * `PAINEL_RETRATO_URL` — inclusive o próprio componente de cliente.
  *
  * `import type` é ignorado: some na compilação e não leva nada ao navegador.
  *
@@ -39,6 +42,13 @@ import { describe, expect, it } from "vitest";
 const RAIZ = process.cwd();
 const PASTAS = ["app", "components", "lib"];
 const PROIBIDO_LER = "lib/painel/ler.ts";
+/** O nome da variável com a URL secreta (montado, para este arquivo não ser falso positivo de grep). */
+const VAR_URL = ["PAINEL", "RETRATO", "URL"].join("_");
+
+/** O texto do arquivo menciona a variável da URL secreta? */
+function mencionaUrlSecreta(fonte: string): boolean {
+  return fonte.includes(VAR_URL);
+}
 
 /** Arquivo é PROIBIDO no cliente? */
 function proibido(caminhoRelativo: string): boolean {
@@ -114,7 +124,9 @@ function caminhoAteProibido(
     visitados.add(arquivo);
     if (proibido(rel(arquivo))) return trilha;
     if (!/\.(tsx?|jsx?|mjs)$/.test(arquivo)) continue;
-    for (const esp of importsDe(ler(arquivo))) {
+    const fonte = ler(arquivo);
+    if (mencionaUrlSecreta(fonte)) return trilha;
+    for (const esp of importsDe(fonte)) {
       const alvo = resolve_(esp, arquivo);
       if (alvo && !visitados.has(alvo))
         fila.push({ arquivo: alvo, trilha: [...trilha, rel(alvo)] });
@@ -137,9 +149,11 @@ describe("retrato do painel nunca alcança um componente de cliente", () => {
     expect(importsDe(readFileSync(join(RAIZ, "app/painel/page.tsx"), "utf8"))).toContain(
       "@/lib/painel/ler",
     );
+    // e a variável da URL existe de fato no leitor do servidor
+    expect(mencionaUrlSecreta(readFileSync(join(RAIZ, PROIBIDO_LER), "utf8"))).toBe(true);
   });
 
-  it('nenhum `"use client"` chega a lib/painel/ler.ts nem a um JSON de retrato', () => {
+  it('nenhum `"use client"` chega a lib/painel/ler.ts, a um JSON de retrato nem à variável da URL secreta', () => {
     const infracoes: string[] = [];
     for (const c of clientes) {
       const trilha = caminhoAteProibido(c, (a) => readFileSync(a, "utf8"), resolver, relDaRaiz);
@@ -164,6 +178,9 @@ describe("a varredura acha o que procura (grafo sintético)", () => {
     "/r/components/Y.tsx": `"use client";\nimport type { RetratoPainel } from "@/lib/painel/ler";\n`,
     "/r/components/Z.tsx": `"use client";\nimport dados from "../build/painel/retrato-1t-2026.json";\n`,
     "/r/build/painel/retrato-1t-2026.json": "{}",
+    "/r/components/W.tsx": `"use client";\nconst u = process.env.${["PAINEL", "RETRATO", "URL"].join("_")};\n`,
+    "/r/components/V.tsx": `"use client";\nimport { u } from "@/lib/onde";\n`,
+    "/r/lib/onde.ts": `export const u = process.env.${["PAINEL", "RETRATO", "URL"].join("_")};\n`,
   };
   const rel = (a: string) => a.replace("/r/", "");
   const res = (esp: string, de: string): string | null => {
@@ -185,6 +202,14 @@ describe("a varredura acha o que procura (grafo sintético)", () => {
 
   it("reprova o JSON do retrato importado direto", () => {
     expect(caminhoAteProibido("/r/components/Z.tsx", ler, res, rel)).not.toBeNull();
+  });
+
+  it("reprova o cliente que menciona a variável da URL — direto ou por módulo intermediário", () => {
+    expect(caminhoAteProibido("/r/components/W.tsx", ler, res, rel)).toEqual(["components/W.tsx"]);
+    expect(caminhoAteProibido("/r/components/V.tsx", ler, res, rel)).toEqual([
+      "components/V.tsx",
+      "lib/onde.ts",
+    ]);
   });
 
   it("aceita `import type` (some na compilação)", () => {

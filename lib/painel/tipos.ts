@@ -6,9 +6,14 @@
  * o sistema fez numa noite de apuração. A página lê só este arquivo — nunca o
  * banco (ADR-0001).
  *
- * 🔴 O retrato é privado. Ele NÃO é commitado (o repositório é público) e vive
- * no Vercel Blob com `access: "private"`. Este módulo só tem tipos e
- * constantes; quem lê o arquivo é `lib/painel/ler.ts`, que NUNCA pode ser
+ * 🔴 O retrato é privado. Ele NÃO é commitado (o repositório é público). Vive
+ * no Vercel Blob num ENDEREÇO SECRETO (plano B do ADR-0077: a store do projeto
+ * é pública e recusou `access: "private"`): `painel/<segredo>/retrato-1t-2026.json`,
+ * com `<segredo>` = 32 bytes aleatórios, trocado a cada publicação. A URL só
+ * existe numa variável de ambiente do servidor, cujo nome só aparece em
+ * `lib/painel/ler.ts` — este módulo é importado (via `eixo.ts`) pelo componente
+ * de cliente, e a trava reprova qualquer menção ao nome no grafo do cliente.
+ * Este módulo só tem tipos e constantes; quem lê o arquivo é `lib/painel/ler.ts`, que NUNCA pode ser
  * importado por um arquivo `"use client"` (trava em
  * `tests/unit/painel/retrato-fora-do-cliente.test.ts`).
  *
@@ -19,8 +24,14 @@
 /** Versão do formato. Muda quando um campo muda de sentido ou some. */
 export const VERSAO_RETRATO = 1 as const;
 
-/** Caminho no Vercel Blob (privado). Sem sufixo aleatório: regravar substitui. */
-export const PAINEL_BLOB_PATHNAME = "painel/retrato-1t-2026.json";
+/** Nome do arquivo no Blob; o caminho inteiro é `painel/<segredo>/<este nome>`. */
+export const PAINEL_BLOB_ARQUIVO = "retrato-1t-2026.json";
+
+/**
+ * Onde o gerador grava a URL secreta depois de `--escrever` (sob `build/`, fora
+ * do git). Sem quebra de linha final — é para colar na variável de ambiente.
+ */
+export const PAINEL_URL_ARQUIVO_LOCAL = ["build", "painel", "url-retrato.txt"] as const;
 
 /**
  * Caminho local, relativo à raiz do repositório — sob `build/`, que o git

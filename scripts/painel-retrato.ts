@@ -7,7 +7,7 @@
  * do Presidente e as correções publicadas. A página lê só este arquivo.
  *
  *   pnpm painel:retrato --env-file <caminho/.env.local>              # grava build/painel/…
- *   pnpm painel:retrato --env-file <caminho/.env.local> --escrever   # + Blob PRIVADO
+ *   pnpm painel:retrato --env-file <caminho/.env.local> --escrever   # + Blob, endereço secreto
  *
  * Opções (todas opcionais):
  *   --de  2026-10-04T16:30:00-03:00     início da janela (BRT por padrão)
@@ -53,11 +53,22 @@
  * repositório é PÚBLICO e o retrato não pode ser commitado). `--saida` e
  * `--guardar-insumos` RECUSAM qualquer caminho fora de `build/`
  * ({@link dentroDeBuild}).
- * Com `--escrever`: também `painel/retrato-1t-2026.json` no Vercel Blob com
- * `access: "private"`, sem sufixo aleatório, sobrescrevendo.
+ * Com `--escrever` (plano B do ADR-0077 — a store do projeto é PÚBLICA e
+ * recusou `access: "private"` com "Cannot use private access on a public
+ * store"): o retrato sobe com `access: "public"` num ENDEREÇO SECRETO,
+ * `painel/<segredo>/retrato-1t-2026.json`, com `<segredo>` = 32 bytes
+ * aleatórios em hexadecimal (`crypto.randomBytes`), sorteado de NOVO a cada
+ * `--escrever` — publicar de novo invalida o endereço antigo para quem não
+ * recebeu o novo. Cache curto (60 s).
+ *
+ * 🔴 A URL é o segredo e NÃO vai para o terminal (terminal vira print, log de
+ * CI, histórico). Ela é gravada só em `build/painel/url-retrato.txt`, sem
+ * quebra de linha final, para ser colada na variável `PAINEL_RETRATO_URL` do
+ * projeto na Vercel. O terminal mostra apenas onde ela foi gravada.
  */
 
 import { execFileSync } from "node:child_process";
+import { randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -78,7 +89,8 @@ import {
   CARGOS_DO_PAINEL,
   type CargoDoPainel,
   PAINEL_ARQUIVO_LOCAL,
-  PAINEL_BLOB_PATHNAME,
+  PAINEL_BLOB_ARQUIVO,
+  PAINEL_URL_ARQUIVO_LOCAL,
 } from "@/lib/painel/tipos";
 import { selecionarEnvDoVigia } from "./_vigia-env";
 
@@ -401,6 +413,47 @@ function lerCommits(args: ArgsRetrato): CommitBruto[] {
 }
 
 // ---------------------------------------------------------------------------
+// Publicação no Blob — endereço secreto
+// ---------------------------------------------------------------------------
+
+/** 32 bytes aleatórios em hexadecimal (64 caracteres) — o segredo do caminho. */
+export function novoSegredo(): string {
+  return randomBytes(32).toString("hex");
+}
+
+/** `painel/<segredo>/retrato-1t-2026.json`. Recusa segredo que não seja 64 hex. */
+export function caminhoSecreto(segredo: string): string {
+  if (!/^[0-9a-f]{64}$/.test(segredo)) throw new Error("segredo inválido (esperado 64 hex)");
+  return `painel/${segredo}/${PAINEL_BLOB_ARQUIVO}`;
+}
+
+/**
+ * Sobe o retrato num endereço secreto NOVO e grava a URL em
+ * `build/painel/url-retrato.txt` (sem quebra de linha final). Devolve só o
+ * caminho do arquivo onde a URL foi gravada — nunca a URL, para que nada
+ * acima consiga imprimi-la por descuido.
+ */
+export async function publicarRetrato(
+  corpo: string,
+  token: string,
+  cwd: string,
+  segredo: string = novoSegredo(),
+): Promise<string> {
+  const r = await put(caminhoSecreto(segredo), corpo, {
+    access: "public",
+    addRandomSuffix: false,
+    allowOverwrite: true,
+    cacheControlMaxAge: 60,
+    contentType: "application/json; charset=utf-8",
+    token,
+  });
+  const arquivo = resolve(cwd, ...PAINEL_URL_ARQUIVO_LOCAL);
+  mkdirSync(dirname(arquivo), { recursive: true });
+  writeFileSync(arquivo, r.url);
+  return PAINEL_URL_ARQUIVO_LOCAL.join("/");
+}
+
+// ---------------------------------------------------------------------------
 // Principal
 // ---------------------------------------------------------------------------
 
@@ -499,14 +552,8 @@ async function principal(): Promise<void> {
     console.log("\n(ensaio — nada foi para o Blob. Para subir: acrescente --escrever)");
     return;
   }
-  const r = await put(PAINEL_BLOB_PATHNAME, corpo, {
-    access: "private",
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: "application/json; charset=utf-8",
-    token: blobToken ?? undefined,
-  });
-  console.log(`\nNo Blob PRIVADO: ${r.pathname}`);
+  const onde = await publicarRetrato(corpo, blobToken as string, process.cwd());
+  console.log(`\nURL gravada em ${onde}`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

@@ -13,10 +13,12 @@
  *   2. esta página confere a MESMA senha de novo, no cabeçalho que recebeu —
  *      se algum dia uma variante de caminho escapar do matcher, a página não
  *      entrega dado nenhum;
- *   3. o retrato vem do Vercel Blob PRIVADO (nunca do repositório, que é
- *      público) e só por `lib/painel/ler.ts`, que nenhum arquivo
- *      `"use client"` importa. O único componente de cliente
- *      (`GraficoPorMinuto`) recebe números por props.
+ *   3. o retrato vem do Vercel Blob num ENDEREÇO SECRETO (plano B do ADR-0077;
+ *      nunca do repositório, que é público), lido só por `lib/painel/ler.ts`,
+ *      que nenhum arquivo `"use client"` importa. A URL não aparece nesta
+ *      página — nem na mensagem de falha, que mostra só um motivo genérico.
+ *      O único componente de cliente (`GraficoPorMinuto`) recebe números por
+ *      props.
  *
  * Nada de Postgres aqui (ADR-0001): a página lê só o retrato.
  *

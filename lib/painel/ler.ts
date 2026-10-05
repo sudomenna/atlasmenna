@@ -6,8 +6,15 @@
  *
  *   - `NODE_ENV=development` → o arquivo local `build/painel/retrato-1t-2026.json`
  *     (gerado por `pnpm painel:retrato`, sem `--escrever`);
- *   - qualquer outro ambiente → `get()` PRIVADO do Vercel Blob
- *     (`painel/retrato-1t-2026.json`, `access: "private"`).
+ *   - qualquer outro ambiente → `fetch` da URL SECRETA do Vercel Blob, lida
+ *     da variável de servidor `PAINEL_RETRATO_URL` (plano B do ADR-0077: a
+ *     store do projeto é pública e recusou `access: "private"`; o retrato fica
+ *     num caminho com 32 bytes aleatórios, `painel/<segredo>/…`).
+ *
+ * 🔴 A URL é o segredo. Ela nunca sai deste módulo: não vai para o resultado
+ * (nem nos motivos de falha, que a página mostra), não vai para log, não vai
+ * para props. E nenhum arquivo `"use client"` pode mencioná-la (trava em
+ * `tests/unit/painel/retrato-fora-do-cliente.test.ts`).
  *
  * Nunca o banco: a página do painel não toca Postgres (ADR-0001).
  *
@@ -22,18 +29,16 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { get } from "@vercel/blob";
 
 import {
   CARGOS_DO_PAINEL,
   PAINEL_ARQUIVO_LOCAL,
-  PAINEL_BLOB_PATHNAME,
   type RetratoPainel,
   VERSAO_RETRATO,
 } from "./tipos";
 
 export type LeituraRetrato =
-  | { status: "ok"; retrato: RetratoPainel; origem: "arquivo-local" | "blob-privado" }
+  | { status: "ok"; retrato: RetratoPainel; origem: "arquivo-local" | "blob" }
   | { status: "ausente"; motivo: string }
   | { status: "erro"; motivo: string };
 
@@ -108,30 +113,44 @@ function lerArquivoLocal(): LeituraRetrato {
 }
 
 /**
- * O ponto de leitura do Blob, isolado: se a store não aceitar blob privado,
- * é só aqui que muda.
+ * O ponto de leitura do Blob, isolado. A URL vem SÓ do ambiente do servidor,
+ * e os motivos devolvidos são genéricos de propósito: a página os exibe, e um
+ * motivo com a URL dentro entregaria o segredo a quem visse a tela.
  */
-async function lerBlobPrivado(): Promise<LeituraRetrato> {
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return { status: "ausente", motivo: "este ambiente não tem credencial do Blob" };
+async function lerBlobSecreto(): Promise<LeituraRetrato> {
+  const url = process.env.PAINEL_RETRATO_URL;
+  if (!url) {
+    return {
+      status: "ausente",
+      motivo: "o endereço do retrato não está configurado neste ambiente",
+    };
+  }
+  let resposta: Response;
+  try {
+    resposta = await fetch(url, { cache: "no-store" });
+  } catch (e) {
+    // Só o tipo do erro: a mensagem de um erro de rede pode carregar a URL.
+    console.warn("[painel] leitura do retrato falhou (rede)", e instanceof Error ? e.name : "?");
+    return { status: "erro", motivo: "a leitura do retrato falhou" };
+  }
+  if (resposta.status === 404) {
+    return { status: "ausente", motivo: "o retrato ainda não foi publicado" };
+  }
+  if (!resposta.ok) {
+    console.warn("[painel] leitura do retrato falhou", resposta.status);
+    return { status: "erro", motivo: "a leitura do retrato falhou" };
   }
   try {
-    const r = await get(PAINEL_BLOB_PATHNAME, { access: "private", useCache: false });
-    if (!r || r.statusCode !== 200) {
-      return { status: "ausente", motivo: "o retrato ainda não foi publicado no Blob privado" };
-    }
-    const texto = await new Response(r.stream).text();
-    const retrato = validarRetrato(JSON.parse(texto));
+    const retrato = validarRetrato(JSON.parse(await resposta.text()));
     return retrato
-      ? { status: "ok", retrato, origem: "blob-privado" }
-      : { status: "erro", motivo: "o retrato do Blob não tem o formato esperado" };
-  } catch (e) {
-    console.warn("[painel] leitura do retrato no Blob falhou", e);
-    return { status: "erro", motivo: "a leitura do retrato no Blob falhou" };
+      ? { status: "ok", retrato, origem: "blob" }
+      : { status: "erro", motivo: "o retrato publicado não tem o formato esperado" };
+  } catch {
+    return { status: "erro", motivo: "o retrato publicado não é JSON válido" };
   }
 }
 
 export async function lerRetrato(): Promise<LeituraRetrato> {
   if (process.env.NODE_ENV === "development") return lerArquivoLocal();
-  return lerBlobPrivado();
+  return lerBlobSecreto();
 }
