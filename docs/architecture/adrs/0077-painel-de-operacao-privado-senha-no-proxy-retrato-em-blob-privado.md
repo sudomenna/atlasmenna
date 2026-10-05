@@ -17,6 +17,18 @@ valendo só em `/api/*`; o `proxy.ts` ganha uma segunda função (portão de sen
 primeira. O [ADR-0001](0001-edge-config-no-read-path.md) fica intacto (Decisão 2). **Risco aberto**: a
 store de Blob em uso pode não aceitar blob privado; o plano B está descrito na Decisão 2 e nas Consequências.
 
+**Emenda (2026-10-05, mesmo dia) — PLANO B EM VIGOR.** O primeiro `--escrever` falhou com
+`Cannot use private access on a public store`: a store do projeto é pública, e o acesso é por store, não
+por arquivo. O dono escolheu o plano B, sem criar store nova. A alternativa recusada foi uma store privada só
+para o painel: ao conectá-la ao projeto, ela disputaria o nome `BLOB_READ_WRITE_TOKEN` com a store do site.
+O retrato vai como blob **público** em `painel/<32 bytes hex aleatórios>/retrato-1t-2026.json`, com um
+segredo novo a cada `--escrever`. A URL fica só na env `PAINEL_RETRATO_URL` (Production) e em
+`build/painel/url-retrato.txt` (fora do git); o gerador não a imprime. A página lê o retrato com `fetch`
+no servidor (`no-store`), e um teste estático reprova qualquer `"use client"` que mencione a env. A
+**confidencialidade do dado passa a ser por obscuridade** da URL. A senha continua protegendo a página. Os
+riscos são baixos: o dado é só contagens e horários, sem PII, e o código do sistema já é público. Nas seções
+abaixo, onde se lê "Blob privado" / `get()` privado, vale este parágrafo.
+
 ## Contexto
 
 **1. O que o dono quer ver, e de onde isso pode vir.** Depois do 1º turno o dono pediu um painel em

@@ -1880,9 +1880,13 @@ arquivos que o TSE deixou parados, commits). **Não é ao vivo** — lê um retr
   production` + **novo deploy** (env só vale a partir do deploy seguinte).
 - **Retrato**: `pnpm painel:retrato --env-file <.env.local>` lê o banco **só com SELECT**
   (transação READ ONLY, lista branca: só `DATABASE_URL`) e grava
-  `build/painel/retrato-1t-2026.json`. `--escrever` sobe também para o Vercel Blob
-  **privado** em `painel/retrato-1t-2026.json`. `--guardar-insumos`/`--de-insumos`
-  remontam sem consultar o banco. 🔴 **Nunca commitar o retrato** — o repositório é público.
+  `build/painel/retrato-1t-2026.json`. `--escrever` sobe também para o Vercel Blob num
+  endereço **secreto** (`painel/<hex aleatório>/…`, store pública — emenda do ADR-0077) e grava
+  a URL só em `build/painel/url-retrato.txt`. Depois de cada `--escrever` (o segredo muda):
+  `vercel env rm PAINEL_RETRATO_URL production -y` e
+  `vercel env add PAINEL_RETRATO_URL production < build/painel/url-retrato.txt` + novo deploy.
+  `--guardar-insumos`/`--de-insumos` remontam sem consultar o banco.
+  🔴 **Nunca commitar o retrato nem a URL** — o repositório é público.
 - **2º turno**: o gerador aceita `--turno 2 --de --ate`, mas o caminho no Blob e o arquivo
   local estão fixos no 1º turno (`lib/painel/tipos.ts`) — parametrizar antes de gerar.
 - Logs de texto (`lib/tse/log.ts`) **não** entram: vivem no stdout da Vercel, com
