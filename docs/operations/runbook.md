@@ -1868,6 +1868,27 @@ fechado vencer no espelho). Pedir o comando ao agente; não há script pronto pa
 Enquanto suspensa, qualquer chamada a `/api/ingest*` com o segredo certo responde
 `200 {"skipped":"ingestao_suspensa"}` sem tocar banco nem TSE.
 
+## Painel privado `/painel` — retrato da noite (ADR-0077, 05/10/2026)
+
+Página só do dono: o que o sistema fez na noite de apuração (pedidos ao TSE por minuto,
+novidades, erros, bloqueios 429, duração das coletas, rodadas e paradas da projeção,
+arquivos que o TSE deixou parados, commits). **Não é ao vivo** — lê um retrato JSON.
+
+- **Senha**: HTTP Basic no `proxy.ts` contra `PAINEL_SENHA` (Production, tipo *Secret*,
+  criada pelo dono em 05/10). Usuário qualquer. Sem a env → 401 sempre (fail-closed).
+  Trocar a senha: `vercel env rm PAINEL_SENHA production` + `vercel env add PAINEL_SENHA
+  production` + **novo deploy** (env só vale a partir do deploy seguinte).
+- **Retrato**: `pnpm painel:retrato --env-file <.env.local>` lê o banco **só com SELECT**
+  (transação READ ONLY, lista branca: só `DATABASE_URL`) e grava
+  `build/painel/retrato-1t-2026.json`. `--escrever` sobe também para o Vercel Blob
+  **privado** em `painel/retrato-1t-2026.json`. `--guardar-insumos`/`--de-insumos`
+  remontam sem consultar o banco. 🔴 **Nunca commitar o retrato** — o repositório é público.
+- **2º turno**: o gerador aceita `--turno 2 --de --ate`, mas o caminho no Blob e o arquivo
+  local estão fixos no 1º turno (`lib/painel/tipos.ts`) — parametrizar antes de gerar.
+- Logs de texto (`lib/tse/log.ts`) **não** entram: vivem no stdout da Vercel, com
+  retenção curta. Pedidos por minuto são **estimativa** (total do ciclo espalhado pela
+  duração); novidades por minuto são exatas (`snapshots`).
+
 ## Ferramentas do pipeline TSE
 
 Três ferramentas introduzidas no hardening pré-simulado (Fase 0 da S07). As duas primeiras existem para que **nenhum teste precise tocar o CDN do TSE**.

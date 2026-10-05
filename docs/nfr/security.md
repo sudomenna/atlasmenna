@@ -26,6 +26,7 @@ source: PRD.md §§ 6.4, 18
 | Ingest auth | Header `x-cron-secret` (manual) **ou** `Authorization: Bearer <CRON_SECRET>` (Vercel Cron) + IP allowlist Vercel Cron ([ADR-0035 D3](../architecture/adrs/0035-par-municipio-zona-unidade-de-ingestao.md)) |
 | Rate limit `/api/projection` | 60 req/min por IP via Edge Middleware (cookie bucket) |
 | Bot detection | Vercel BotID em `/api/*` |
+| Painel privado `/painel` | HTTP Basic em `proxy.ts` contra `PAINEL_SENHA` (Secret, `production`), fail-closed (sem a env → 401), sem BotID, `noindex`; a página confere a senha de novo. Sem limite de tentativas (RNF-017 pendente) — senha longa ([ADR-0077](../architecture/adrs/0077-painel-de-operacao-privado-senha-no-proxy-retrato-em-blob-privado.md)) |
 | LGPD | Nenhum dado pessoal; analytics agregadas e anonimizadas |
 | Cookies | Apenas técnico para rate limit, sem tracking de terceiros |
 | Disclaimer | Footer em todas as páginas: "Não oficial. Fonte: TSE." |

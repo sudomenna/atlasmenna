@@ -305,6 +305,22 @@ para os mapas de UF — não existe tal arquivo de teste hoje.
 Pasta `lib/config/cargos.ts` define tabela canônica de cargos com slugs e metadados (granularidade, cadência, `temArquivoBr`, etc.).
 Pasta `lib/config/private-folders.ts` define roteamento de private folders `(sen)` e `(dep)`.
 
+## Painel privado `/painel` (ADR-0077, 05/10/2026)
+
+Rota fora dos grupos públicos, atrás de senha (`proxy.ts`), sem spec — ferramenta do dono.
+Componentes em `components/painel/`; só `GraficoPorMinuto` é client e recebe só números por
+props (nenhum `"use client"` alcança `lib/painel/ler.ts` — trava em
+`tests/unit/painel/retrato-fora-do-cliente.test.ts`).
+
+| Componente | Arquivo | Papel |
+|---|---|---|
+| `GraficoPorMinuto` | `components/painel/GraficoPorMinuto.tsx` | Barras/áreas empilhadas por cargo, minuto a minuto; leitura por toque e teclado (`role="slider"`) |
+| `RodadasDaProjecao`, `DuracaoDosCiclos`, `ReguaDeHoras` | `components/painel/Faixas.tsx` | Faixas por cargo: rodadas do modelo com paradas (falha hachurada / sem novidade tracejada) e duração das coletas |
+| `TabelaRolavel`, `VerEmTabela`, `TabelaPorBlocos`, `TabelaDeCiclos`, `FiltroDeCiclos` | `components/painel/Tabelas.tsx` | Fallback em tabela de todo gráfico (constituição § 4); contêiner rolável focável com nome |
+
+Cores por cargo em `components/painel/painel.module.css` (`--painel-cargo-N`), ≥ 3:1 nos dois
+temas — travado em `tests/unit/painel/contraste-cores.test.ts`.
+
 ## Cross-refs
 
 - Estrutura de pastas: [../architecture/folder-structure.md](../architecture/folder-structure.md)
