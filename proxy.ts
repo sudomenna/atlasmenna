@@ -1,33 +1,32 @@
-// proxy.ts — Routing Middleware (Vercel) / Next.js Proxy aplicado a /api/*.
+// proxy.ts — Routing Middleware (Vercel) / Next.js Proxy aplicado a /api/* e
+// ao painel privado /painel.
 //
 // Renomeado de `middleware.ts` em S04/F0.5 (Next 16 deprecation):
 // arquivo `middleware.ts` → `proxy.ts`, função `middleware` → `proxy`.
-// Comportamento e matcher idênticos.
 //
-// Propósito: bot detection via Vercel BotID (ADR-0009 + RNF-018). Rate limit
-// complementar (RNF-017) por IP fica para chore futura.
+// Dois portões, um por família de rota:
+//
+//   1. `/api/*` — bot detection via Vercel BotID (ADR-0009 + RNF-018), com as
+//      exceções documentadas abaixo (rotas de máquina com segredo, leitura
+//      pública de `/api/projection`). Rate limit complementar (RNF-017) por IP
+//      fica para chore futura.
+//   2. `/painel` — senha (HTTP Basic Auth contra `PAINEL_SENHA`), fail-closed,
+//      SEM BotID (ADR-0077). O site nunca chamou `initBotId` no cliente, então
+//      todo navegador seria classificado como bot e o dono levaria 403 na
+//      própria página.
 //
 // Pacote canônico é `botid` (sem scope @vercel — confirmado no registry).
 // Cross-refs:
 //   - ADR-0009: docs/architecture/adrs/0009-botid-vercel.md
+//   - ADR-0077: painel privado de monitoramento (retrato fixo, senha)
 //   - NFR segurança: docs/nfr/security.md (RNF-017, RNF-018)
 
 import { checkBotId } from "botid/server";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-/**
- * Comparação de segredo em tempo constante — evita que a latência da resposta
- * revele quantos caracteres do segredo estavam certos.
- */
-function segredoConfere(fornecido: string | null, esperado: string | undefined): boolean {
-  if (!fornecido || !esperado || fornecido.length !== esperado.length) return false;
-  let diff = 0;
-  for (let i = 0; i < fornecido.length; i++) {
-    diff |= fornecido.charCodeAt(i) ^ esperado.charCodeAt(i);
-  }
-  return diff === 0;
-}
+import { ehRotaDoPainel, PAINEL_WWW_AUTHENTICATE, painelAutorizado } from "@/lib/painel/acesso";
+import { segredoConfere } from "@/lib/utils/segredo";
 
 /**
  * Extrai o segredo apresentado, nos três formatos que as rotas autenticadas
@@ -80,13 +79,46 @@ function ehLeituraPublica(req: NextRequest, caminho: string): boolean {
   return ROTAS_PUBLICAS_DE_LEITURA.some((p) => caminho === p || caminho.startsWith(`${p}/`));
 }
 
+/**
+ * Portão do painel privado (ADR-0077). Roda ANTES de tudo e devolve sempre —
+ * `/painel` nunca chega ao BotID.
+ *
+ * - Sem `PAINEL_SENHA` no ambiente → 401 para qualquer pedido (fail-closed).
+ * - Senha errada ou ausente → 401 com `WWW-Authenticate`, que faz o navegador
+ *   abrir a caixa de senha.
+ * - Senha certa → segue, com `X-Robots-Tag` para nenhum buscador indexar.
+ *
+ * Vale igual para o HTML e para as requisições RSC: a navegação do App Router
+ * pede `/painel?_rsc=…` (mesmo `pathname`) e o transporte por arquivo
+ * (`/painel.rsc`, `/painel.segments/…`) é coberto por `ehRotaDoPainel` e pelo
+ * matcher do Next. O navegador reenvia a senha guardada nesses pedidos.
+ */
+function portaoDoPainel(req: NextRequest): NextResponse {
+  if (!painelAutorizado(req.headers.get("authorization"), process.env.PAINEL_SENHA)) {
+    return new NextResponse("Acesso restrito.", {
+      status: 401,
+      headers: {
+        "WWW-Authenticate": PAINEL_WWW_AUTHENTICATE,
+        "X-Robots-Tag": "noindex, nofollow",
+        "Cache-Control": "no-store",
+        "content-type": "text/plain; charset=utf-8",
+      },
+    });
+  }
+  const res = NextResponse.next();
+  res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return res;
+}
+
 export async function proxy(req: NextRequest) {
+  const caminho = req.nextUrl.pathname;
+  if (ehRotaDoPainel(caminho)) return portaoDoPainel(req);
+
   // Portão de autenticação ANTES do BotID: um segredo válido É a autorização.
   // O BotID existe para proteger endpoint público sem autenticação (RNF-018);
   // aplicá-lo depois de um segredo correto não acrescenta proteção e cria um
   // modo de falha novo. Segredo errado ou ausente continua caindo no BotID e,
   // depois dele, na checagem da própria rota — nada aqui autoriza ninguém.
-  const caminho = req.nextUrl.pathname;
   if (ehRotaDeMaquina(caminho)) {
     const { cron, model } = segredoApresentado(req);
     if (
@@ -116,8 +148,11 @@ export async function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Matcher restrito a /api/* — páginas públicas não passam pelo BotID
-// para evitar falsos positivos em crawlers legítimos (Google, social cards).
+// Matcher: `/api/*` (BotID e portões de segredo) e o painel privado (senha,
+// ADR-0077). As páginas PÚBLICAS continuam fora — não passam pelo BotID, para
+// evitar falsos positivos em crawlers legítimos (Google, social cards).
+// O Next 16 acrescenta sozinho, a cada fonte, os sufixos de transporte
+// (`.rsc`, `.segments/…`, `/_next/data/…/.json`) — ver `getMiddlewareMatchers`.
 export const config = {
-  matcher: ["/api/:path*"],
+  matcher: ["/api/:path*", "/painel", "/painel/:path*"],
 };

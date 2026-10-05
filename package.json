@@ -44,6 +44,7 @@
     "dep:projecao": "tsx scripts/interruptor-projecao.ts",
     "leitura:interruptor": "tsx scripts/interruptor-leitura.ts",
     "fechamento:1t": "tsx scripts/fechamento-1t.ts",
+    "painel:retrato": "tsx scripts/painel-retrato.ts",
     "projection:seed": "tsx data-pipeline/projection-seed.ts",
     "sim": "tsx data-pipeline/simulacao-gerar.ts",
     "sim:full": "pnpm sim && .venv-model/bin/python3.14 scripts/gerar-serie-fixtures.py && biome format --write tests/fixtures/simulacao",

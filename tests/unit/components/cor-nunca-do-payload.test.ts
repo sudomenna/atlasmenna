@@ -88,6 +88,12 @@ const PERMITIDOS = new Set<string>([
   // `m.cor` aqui é a cor que o CALLER já resolveu (prop `municipios[]`), não um
   // campo de candidato do payload — ver a docstring de `ChoroplethMunicipio`.
   "components/atoms/maps/ChoroplethMapUF.tsx",
+  // Painel privado (ADR-0077): `sr.cor` / `l.cor` é a cor do CARGO
+  // (`var(--painel-cargo-N)`), resolvida pela página de servidor
+  // (`corDoCargo`, `components/painel/Faixas.tsx`) e passada por prop. O
+  // painel não desenha candidatura nenhuma e não lê payload — só o retrato
+  // operacional da noite.
+  "components/painel/GraficoPorMinuto.tsx",
 ]);
 
 function arquivosDe(dir: string, acc: string[] = []): string[] {
