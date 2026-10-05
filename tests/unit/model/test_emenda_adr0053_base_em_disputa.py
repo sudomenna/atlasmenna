@@ -274,6 +274,9 @@ def _recorte(body: dict[str, Any], recorte: str) -> dict[str, Any]:
 
 def _rodar_golden(monkeypatch, nome: str) -> dict[str, Any]:
     shares, dvt, cargo, vpe, recorte = _CENARIOS_GOLDEN[nome]
+    # O golden foi gravado antes da regra de 05/10 (100% apurado ⇒ projeção ==
+    # apuração) e o cenário sai com 100% — esta suíte mede anulados, não ela.
+    monkeypatch.setattr(proj, "_igualar_projecao_ao_apurado", lambda *_a: None)
     snaps, eleit = _cenario({"SP": shares, "RJ": shares}, dvt, cargo=cargo, vpe=vpe)
     return _recorte(_rodar(monkeypatch, snaps, eleit, cargo=cargo), recorte)
 

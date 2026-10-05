@@ -5519,6 +5519,51 @@ def _e_proporcional(cargo: int) -> bool:
     return bool(info is not None and info["proporcional"])
 
 
+def _igualar_projecao_ao_apurado(
+    edge_payload: Any, uf_payloads: Any
+) -> None:
+    """Com 100% apurado (pst oficial), a projeção É a apuração.
+
+    🔴 05/10/2026, fim do 1º turno: com tudo contado, "Projeção" mostrava
+    Flávio 47,12% contra 47,03% apurado — a pós-estratificação por cadastro e
+    a média nacional ponderada por eleitorado não colapsam no observado.
+    Bloco a bloco (nacional e cada UF) com `pct_apurado(_total) >= 100`:
+    `pct_projetado` e o IC viram `pct_atual`, `votos_projetados` vira
+    `votos_atuais`. Abaixo de 100% não toca em nada.
+    """
+
+    def _igualar(cands: Any) -> None:
+        if not isinstance(cands, list):
+            return
+        for c in cands:
+            if not isinstance(c, dict) or c.get("pct_atual") is None:
+                continue
+            c["pct_projetado"] = c["pct_atual"]
+            if "pct_projetado_lower" in c or "pct_projetado_upper" in c:
+                c["pct_projetado_lower"] = c["pct_atual"]
+                c["pct_projetado_upper"] = c["pct_atual"]
+            if isinstance(c.get("ci95"), dict):
+                c["ci95"] = {"lower": c["pct_atual"], "upper": c["pct_atual"]}
+            if c.get("votos_atuais") is not None:
+                c["votos_projetados"] = c["votos_atuais"]
+            comp = c.get("comparecimento")
+            if isinstance(comp, dict) and comp.get("pct_atual") is not None:
+                comp["pct_projetado"] = comp["pct_atual"]
+                comp["lower"] = comp["pct_atual"]
+                comp["upper"] = comp["pct_atual"]
+
+    if isinstance(edge_payload, dict) and float(
+        edge_payload.get("pct_apurado_total") or 0.0
+    ) >= 100.0:
+        national = edge_payload.get("national")
+        if isinstance(national, dict):
+            _igualar(national.get("candidatos"))
+    blocos = uf_payloads.values() if isinstance(uf_payloads, dict) else (uf_payloads or [])
+    for p in blocos:
+        if isinstance(p, dict) and float(p.get("pct_apurado") or 0.0) >= 100.0:
+            _igualar(p.get("candidatos"))
+
+
 def compute_national(
     cargo: int,
     turno: int,
@@ -9627,6 +9672,10 @@ def _do_project(body_bytes: bytes) -> tuple[int, dict[str, Any]]:
             ]
             if _pct_nac and isinstance(edge_payload, dict):
                 edge_payload["pct_apurado_total"] = max(_pct_nac)
+            # 🔴 05/10/2026 — apuração encerrada (100% oficial): projeção ==
+            # apuração na tela. O nacional era média das UFs ponderada pelo
+            # cadastro, não soma de votos — divergia mesmo com tudo contado.
+            _igualar_projecao_ao_apurado(edge_payload, uf_payloads)
             post_edge_write(edge_payload, payloads_uf=uf_payloads)
         except Exception as edge_exc:  # noqa: BLE001 — never block the response
             _log(
