@@ -74,7 +74,24 @@ export const rollingReleasePolicy: RollingReleasePolicy = {
   stages: [{ percentage: 10 }, { percentage: 50 }],
 };
 
-const config: VercelProjectConfig = {
+// =============================================================================
+// 🔴 05/10/2026 — INGESTÃO DESLIGADA: 1º turno encerrado (TSE 100% totalizado;
+// Presidente 02:59, estaduais 06:08 de 05/10). O resultado publicado foi
+// fechado por `pnpm fechamento:1t` e nada pode sobrescrevê-lo.
+//
+// A lista inteira de crons de ingestão continua aqui, INTACTA, em
+// `cronsIngestao` — só não entra em `config.crons` enquanto
+// `INGESTAO_CRONS_LIGADOS` for `false`. Para o 2º turno (25/10/2026):
+//   1. `INGESTAO_CRONS_LIGADOS = true` (abaixo);
+//   2. `INGESTAO_SUSPENSA_ATE` e `TURNOS_ENCERRADOS` em
+//      `lib/tse/ingest-suspensao.ts` (o handler também recusa sozinho);
+//   3. `TSE_TURNO=2` no ambiente de produção; deploy.
+// Roteiro: docs/operations/runbook.md § "Fechamento do 1º turno".
+// Teste: tests/unit/config/vercel-crons.test.ts.
+// =============================================================================
+export const INGESTAO_CRONS_LIGADOS = false;
+
+export const cronsIngestao: VercelCron[] = [
   // Crons da spec 001 (ingestão TSE).
   // ADR-0011 fixou cadência em 60s — Vercel Cron mínimo nativo é 1/min.
   // RNF-006: defasagem TSE→tela <90s.
@@ -121,187 +138,193 @@ const config: VercelProjectConfig = {
   //   de ≥1 execução/dia em plano pago. Aponta para `/api/ingest` SEM cargo
   //   (todos os cargos ativos) — o handler retorna {skipped} fora da
   //   janela, então o heartbeat é inofensivo.
-  crons: [
-    {
-      path: "/api/ingest/presidente",
-      schedule: "* 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/governador",
-      schedule: "* 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/presidente",
-      schedule: "* 12-19 * * *",
-    },
-    {
-      path: "/api/ingest/governador",
-      schedule: "* 12-19 * * *",
-    },
-    // ── Senador (cargo 5) — ADR-0026 item 1, emendado em 2026-09-11 ──
-    // Cadência própria e MENOR que a de 60 s dos majoritários: a cada 5 min.
-    //
-    // ⚠️ Corrigido em 2026-09-13: este comentário dizia "em granularidade UF,
-    // 27 GETs por ciclo". Falso desde 2026-09-11, quando o Senador saiu de UF
-    // para ZONA (nota "(b)" do ADR-0026) — `lib/config/cargos.ts` mostra
-    // `granularidade: "zona"`, `rpsMax: 25`, ~6.110 alvos, ~244 s de ciclo.
-    // A reescrita deste bloco em `e2f3240` separou Senador de Deputado mas
-    // copiou a alegação errada adiante, com o bloco correto logo abaixo.
-    //
-    // A folga aqui é a mais apertada do projeto: ~244 s de ciclo dentro de uma
-    // janela de 300 s entre disparos. Medir `duration_ms` no simulado 1 não é
-    // opcional.
-    //
-    // Mesmas duas janelas dos demais: apuração (20-23,0-7 UTC = 17h-04h BRT) e
-    // simulado (12-19 UTC = 9h-16h59 BRT). `INGEST_WINDOW` decide qual vale em
-    // cada ambiente — fora dela o handler responde `{skipped}` sem custo.
-    {
-      path: "/api/ingest/senador",
-      schedule: "*/5 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/senador",
-      schedule: "*/5 12-19 * * *",
-    },
-    // ── Deputado Federal (cargo 6) EM 6 FATIAS — ADR-0026 item 1, emenda
-    //    2026-09-13 ──
-    //
-    // Deputado Federal saiu de granularidade UF (27 alvos, um cron `*/15`) para
-    // ZONA (~6.110 alvos) em 2026-09-13 — mesmo diagnóstico de bootstrap que
-    // moveu o Senador em 11/09: um único arquivo por UF só dá ao estimador do
-    // RF-127 uma unidade de reamostragem, e o IC95 degenera. A `rpsMax` do
-    // cargo continua 5 (não reabre a calibragem do pior caso agregado de
-    // 80 rps — `piorCasoAgregadoRps()`, `lib/config/cargos.ts`), então varrer
-    // os ~6.110 alvos numa invocação só levaria ~1.222 s — muito acima do
-    // `maxDuration` de 300 s.
-    //
-    // A varredura é dividida em 6 fatias (`sliceTargets`,
-    // `lib/tse/targets.ts`; segmento de rota, não query string — mesmo achado
-    // (B) do ADR-0026 nota 2026-09-11 que já valia pra distinguir cargos no
-    // mesmo minuto), cada uma cobrindo ~1/6 do fan-out (~1.019 alvos, ~204 s).
-    // As 6 entradas abaixo disparam uma fatia a cada 5 min, intercaladas em
-    // 5 min uma da outra (fatia 1 nos minutos 0 e 30, fatia 2 nos minutos 5 e
-    // 35, ..., fatia 6 nos minutos 25 e 55) — a volta completa (as 6 fatias)
-    // leva 30 min. A UI precisa dizer "atualizado a cada 30 min" quando
-    // exibir Deputado (ADR-0026 item 5, constituição § 8) — nunca um
-    // "atualizado às" único numa tela que mistura cargos de cadências
-    // diferentes.
-    //
-    // Chave de emergência: `TSE_DEPUTADO_GRANULARIDADE=uf` reverte o cargo a
-    // UF — nesse modo cada uma das 6 invocações abaixo devolve o agregado
-    // completo de 27 UFs, ignorando a fatia (ver
-    // `getGranularidade`/`listIngestTargets`, `lib/tse/targets.ts`).
-    // 🔴 EXIGE NOVO DEPLOY (corrigido em 29/09, ADR-0063 D4): na Vercel,
-    // variável de ambiente só chega a um deployment novo — indisponível das
-    // 16h às 05h de 04/10, quando o deploy está congelado. O que age sem
-    // deploy é chave do Global Config (ex.: `interruptor-projecao-dep`,
-    // `pnpm dep:projecao`), nunca variável de ambiente.
-    //
-    // Mesmas duas janelas dos demais cargos: apuração (20-23,0-7 UTC) e
-    // simulado (12-19 UTC).
-    {
-      path: "/api/ingest/deputado-federal/1",
-      schedule: "0,15,30,45 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/2",
-      schedule: "2,17,32,47 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/3",
-      schedule: "5,20,35,50 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/4",
-      schedule: "7,22,37,52 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/5",
-      schedule: "10,25,40,55 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/6",
-      schedule: "12,27,42,57 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/1",
-      schedule: "0,15,30,45 12-19 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/2",
-      schedule: "2,17,32,47 12-19 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/3",
-      schedule: "5,20,35,50 12-19 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/4",
-      schedule: "7,22,37,52 12-19 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/5",
-      schedule: "10,25,40,55 12-19 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-federal/6",
-      schedule: "12,27,42,57 12-19 * * *",
-    },
-    // ── Deputado Estadual (7) e Distrital (8) — spec 027 Fase 1, ADR-0067 ──
-    //
-    // Um arquivo-RESUMO por casa (`granularidade: "uf"` em
-    // `lib/config/cargos.ts`): 26 alvos para o 7 (as UFs sem o DF), 1 para o 8
-    // (só o DF), a 1 rps cada (`rpsMax: 1`) — ~26 s e ~1 s por ciclo. A cada
-    // 5 min, nas duas janelas: apuração (20-23,0-7 UTC) e simulado (12-19 UTC —
-    // SEM a hora 20, que já é da apuração: duas entradas do mesmo caminho no
-    // mesmo minuto dobrariam a taxa, porque a trava anti-sobreposição não é
-    // atômica).
-    //
-    // Em minutos DESLOCADOS das fatias do 6 e do Senador (que ocupam todos os
-    // múltiplos de 5): o 7 nos minutos 2, 7, 12, …; o 8 nos 3, 8, 13, …. Não
-    // muda o pior caso agregado (um ciclo de Senador ou de uma fatia do 6 dura
-    // ~4 min e ainda está no ar — por isso ele é 82, e não 80, em
-    // `piorCasoAgregadoRps`), mas espalha o início das invocações. Lista
-    // explícita em vez de `2-59/5`: é a forma que este arquivo já usa e que o
-    // teste de cadência (`dado-freshness.test.ts`) sabe ler.
-    //
-    // Sem fatia (a rota `/api/ingest/[cargo]/[fatia]` aceita só o 6). Se a
-    // Fase 2 subir, o 7 vira zona fatiada e estas entradas mudam.
-    {
-      path: "/api/ingest/deputado-estadual",
-      schedule: "2,7,12,17,22,27,32,37,42,47,52,57 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-distrital",
-      schedule: "3,8,13,18,23,28,33,38,43,48,53,58 20-23,0-7 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-estadual",
-      schedule: "2,7,12,17,22,27,32,37,42,47,52,57 12-19 * * *",
-    },
-    {
-      path: "/api/ingest/deputado-distrital",
-      schedule: "3,8,13,18,23,28,33,38,43,48,53,58 12-19 * * *",
-    },
-    {
-      path: "/api/ingest",
-      schedule: "0 12 * * *",
-    },
-    // ── Leitura da noite da home presidencial — ADR-0072 ──
-    // Histórico do Boletim, manchetes de feeds e análise por IA, gravados no
-    // Blob (`leitura/pres/t<turno>.json`). A cada minuto, só na janela da
-    // apuração (20-23,0-7 UTC = 17h-04h BRT) — sem entrada na janela do
-    // simulado: a leitura só faz sentido sobre a apuração real.
-    // NASCE DESLIGADO: IA e notícias só rodam com a chave
-    // `interruptor-leitura-noite` do Global Config ligada
-    // (`pnpm leitura:interruptor`), sem deploy. O histórico roda sempre. O
-    // ritmo da IA (no máximo 1 tentativa a cada 4 min) e das notícias (5 min)
-    // é decidido dentro do ciclo (`lib/leitura/ciclo.ts`), não aqui.
-    {
-      path: "/api/internal/leitura-noite",
-      schedule: "* 20-23,0-7 * * *",
-    },
-  ],
+  {
+    path: "/api/ingest/presidente",
+    schedule: "* 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/governador",
+    schedule: "* 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/presidente",
+    schedule: "* 12-19 * * *",
+  },
+  {
+    path: "/api/ingest/governador",
+    schedule: "* 12-19 * * *",
+  },
+  // ── Senador (cargo 5) — ADR-0026 item 1, emendado em 2026-09-11 ──
+  // Cadência própria e MENOR que a de 60 s dos majoritários: a cada 5 min.
+  //
+  // ⚠️ Corrigido em 2026-09-13: este comentário dizia "em granularidade UF,
+  // 27 GETs por ciclo". Falso desde 2026-09-11, quando o Senador saiu de UF
+  // para ZONA (nota "(b)" do ADR-0026) — `lib/config/cargos.ts` mostra
+  // `granularidade: "zona"`, `rpsMax: 25`, ~6.110 alvos, ~244 s de ciclo.
+  // A reescrita deste bloco em `e2f3240` separou Senador de Deputado mas
+  // copiou a alegação errada adiante, com o bloco correto logo abaixo.
+  //
+  // A folga aqui é a mais apertada do projeto: ~244 s de ciclo dentro de uma
+  // janela de 300 s entre disparos. Medir `duration_ms` no simulado 1 não é
+  // opcional.
+  //
+  // Mesmas duas janelas dos demais: apuração (20-23,0-7 UTC = 17h-04h BRT) e
+  // simulado (12-19 UTC = 9h-16h59 BRT). `INGEST_WINDOW` decide qual vale em
+  // cada ambiente — fora dela o handler responde `{skipped}` sem custo.
+  {
+    path: "/api/ingest/senador",
+    schedule: "*/5 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/senador",
+    schedule: "*/5 12-19 * * *",
+  },
+  // ── Deputado Federal (cargo 6) EM 6 FATIAS — ADR-0026 item 1, emenda
+  //    2026-09-13 ──
+  //
+  // Deputado Federal saiu de granularidade UF (27 alvos, um cron `*/15`) para
+  // ZONA (~6.110 alvos) em 2026-09-13 — mesmo diagnóstico de bootstrap que
+  // moveu o Senador em 11/09: um único arquivo por UF só dá ao estimador do
+  // RF-127 uma unidade de reamostragem, e o IC95 degenera. A `rpsMax` do
+  // cargo continua 5 (não reabre a calibragem do pior caso agregado de
+  // 80 rps — `piorCasoAgregadoRps()`, `lib/config/cargos.ts`), então varrer
+  // os ~6.110 alvos numa invocação só levaria ~1.222 s — muito acima do
+  // `maxDuration` de 300 s.
+  //
+  // A varredura é dividida em 6 fatias (`sliceTargets`,
+  // `lib/tse/targets.ts`; segmento de rota, não query string — mesmo achado
+  // (B) do ADR-0026 nota 2026-09-11 que já valia pra distinguir cargos no
+  // mesmo minuto), cada uma cobrindo ~1/6 do fan-out (~1.019 alvos, ~204 s).
+  // As 6 entradas abaixo disparam uma fatia a cada 5 min, intercaladas em
+  // 5 min uma da outra (fatia 1 nos minutos 0 e 30, fatia 2 nos minutos 5 e
+  // 35, ..., fatia 6 nos minutos 25 e 55) — a volta completa (as 6 fatias)
+  // leva 30 min. A UI precisa dizer "atualizado a cada 30 min" quando
+  // exibir Deputado (ADR-0026 item 5, constituição § 8) — nunca um
+  // "atualizado às" único numa tela que mistura cargos de cadências
+  // diferentes.
+  //
+  // Chave de emergência: `TSE_DEPUTADO_GRANULARIDADE=uf` reverte o cargo a
+  // UF — nesse modo cada uma das 6 invocações abaixo devolve o agregado
+  // completo de 27 UFs, ignorando a fatia (ver
+  // `getGranularidade`/`listIngestTargets`, `lib/tse/targets.ts`).
+  // 🔴 EXIGE NOVO DEPLOY (corrigido em 29/09, ADR-0063 D4): na Vercel,
+  // variável de ambiente só chega a um deployment novo — indisponível das
+  // 16h às 05h de 04/10, quando o deploy está congelado. O que age sem
+  // deploy é chave do Global Config (ex.: `interruptor-projecao-dep`,
+  // `pnpm dep:projecao`), nunca variável de ambiente.
+  //
+  // Mesmas duas janelas dos demais cargos: apuração (20-23,0-7 UTC) e
+  // simulado (12-19 UTC).
+  {
+    path: "/api/ingest/deputado-federal/1",
+    schedule: "0,15,30,45 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/2",
+    schedule: "2,17,32,47 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/3",
+    schedule: "5,20,35,50 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/4",
+    schedule: "7,22,37,52 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/5",
+    schedule: "10,25,40,55 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/6",
+    schedule: "12,27,42,57 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/1",
+    schedule: "0,15,30,45 12-19 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/2",
+    schedule: "2,17,32,47 12-19 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/3",
+    schedule: "5,20,35,50 12-19 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/4",
+    schedule: "7,22,37,52 12-19 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/5",
+    schedule: "10,25,40,55 12-19 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-federal/6",
+    schedule: "12,27,42,57 12-19 * * *",
+  },
+  // ── Deputado Estadual (7) e Distrital (8) — spec 027 Fase 1, ADR-0067 ──
+  //
+  // Um arquivo-RESUMO por casa (`granularidade: "uf"` em
+  // `lib/config/cargos.ts`): 26 alvos para o 7 (as UFs sem o DF), 1 para o 8
+  // (só o DF), a 1 rps cada (`rpsMax: 1`) — ~26 s e ~1 s por ciclo. A cada
+  // 5 min, nas duas janelas: apuração (20-23,0-7 UTC) e simulado (12-19 UTC —
+  // SEM a hora 20, que já é da apuração: duas entradas do mesmo caminho no
+  // mesmo minuto dobrariam a taxa, porque a trava anti-sobreposição não é
+  // atômica).
+  //
+  // Em minutos DESLOCADOS das fatias do 6 e do Senador (que ocupam todos os
+  // múltiplos de 5): o 7 nos minutos 2, 7, 12, …; o 8 nos 3, 8, 13, …. Não
+  // muda o pior caso agregado (um ciclo de Senador ou de uma fatia do 6 dura
+  // ~4 min e ainda está no ar — por isso ele é 82, e não 80, em
+  // `piorCasoAgregadoRps`), mas espalha o início das invocações. Lista
+  // explícita em vez de `2-59/5`: é a forma que este arquivo já usa e que o
+  // teste de cadência (`dado-freshness.test.ts`) sabe ler.
+  //
+  // Sem fatia (a rota `/api/ingest/[cargo]/[fatia]` aceita só o 6). Se a
+  // Fase 2 subir, o 7 vira zona fatiada e estas entradas mudam.
+  {
+    path: "/api/ingest/deputado-estadual",
+    schedule: "2,7,12,17,22,27,32,37,42,47,52,57 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-distrital",
+    schedule: "3,8,13,18,23,28,33,38,43,48,53,58 20-23,0-7 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-estadual",
+    schedule: "2,7,12,17,22,27,32,37,42,47,52,57 12-19 * * *",
+  },
+  {
+    path: "/api/ingest/deputado-distrital",
+    schedule: "3,8,13,18,23,28,33,38,43,48,53,58 12-19 * * *",
+  },
+  {
+    path: "/api/ingest",
+    schedule: "0 12 * * *",
+  },
+];
+
+/** Crons que não são de ingestão e seguem ligados. */
+const cronsSempre: VercelCron[] = [
+  // ── Leitura da noite da home presidencial — ADR-0072 ──
+  // Histórico do Boletim, manchetes de feeds e análise por IA, gravados no
+  // Blob (`leitura/pres/t<turno>.json`). A cada minuto, só na janela da
+  // apuração (20-23,0-7 UTC = 17h-04h BRT) — sem entrada na janela do
+  // simulado: a leitura só faz sentido sobre a apuração real.
+  // NASCE DESLIGADO: IA e notícias só rodam com a chave
+  // `interruptor-leitura-noite` do Global Config ligada
+  // (`pnpm leitura:interruptor`), sem deploy. O histórico roda sempre. O
+  // ritmo da IA (no máximo 1 tentativa a cada 4 min) e das notícias (5 min)
+  // é decidido dentro do ciclo (`lib/leitura/ciclo.ts`), não aqui.
+  {
+    path: "/api/internal/leitura-noite",
+    schedule: "* 20-23,0-7 * * *",
+  },
+];
+
+const config: VercelProjectConfig = {
+  crons: [...(INGESTAO_CRONS_LIGADOS ? cronsIngestao : []), ...cronsSempre],
   // gru1 = São Paulo. Audiência majoritariamente BR — minimizar latência.
   regions: ["gru1"],
   // Python functions da spec 002 (modelo estatístico).

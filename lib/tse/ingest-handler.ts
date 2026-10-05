@@ -46,6 +46,12 @@ import { alertasDoCiclo, notifySlack } from "@/lib/tse/alerts";
 import { fetchEA20, getClientStats, resetClientStats } from "@/lib/tse/client";
 import { parseEA20Numeric } from "@/lib/tse/ea20-schema";
 import { serialiseCause } from "@/lib/tse/errors";
+import {
+  INGESTAO_SUSPENSA_ATE,
+  ingestaoSuspensa,
+  travaAtiva,
+  turnoEncerrado,
+} from "@/lib/tse/ingest-suspensao";
 import { isWithinIngestWindow, parseIngestWindow } from "@/lib/tse/ingest-window";
 import { logDebug, logError, logInfo, logWarn } from "@/lib/tse/log";
 import { calculateLagSeconds } from "@/lib/tse/metrics";
@@ -465,6 +471,16 @@ export async function runIngestCycle(
   // 2. Feature flags + window check — RF-002
   // --------------------------------------------------------------------------
 
+  // 🔴 05/10/2026 — 1º turno fechado (`lib/tse/ingest-suspensao.ts`). Antes de
+  // qualquer leitura de banco ou do TSE: nenhum ciclo pode regravar o
+  // resultado fechado por `pnpm fechamento:1t`.
+  if (travaAtiva() && ingestaoSuspensa(new Date())) {
+    logInfo("ingest skipped — ingestão suspensa (1º turno encerrado)", {
+      ate: INGESTAO_SUSPENSA_ATE,
+    });
+    return NextResponse.json({ skipped: "ingestao_suspensa", ate: INGESTAO_SUSPENSA_ATE });
+  }
+
   const enabled = process.env.CRON_ENABLED !== "false";
   if (!enabled) {
     logInfo("ingest skipped — CRON_ENABLED=false", {});
@@ -502,6 +518,13 @@ export async function runIngestCycle(
       error: serialiseCause(err),
     });
     return NextResponse.json({ error: "misconfigured", detail: String(err) }, { status: 500 });
+  }
+
+  // 🔴 05/10/2026 — turno fechado nunca volta a ser ingerido, nem depois da
+  // data acima (protege o 1º turno se o 2º for religado sem `TSE_TURNO=2`).
+  if (travaAtiva() && turnoEncerrado(turno)) {
+    logInfo("ingest skipped — turno encerrado", { turno });
+    return NextResponse.json({ skipped: "turno_encerrado", turno });
   }
 
   const env = process.env.VERCEL_ENV === "production" ? "production" : "preview";

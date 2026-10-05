@@ -33,7 +33,9 @@ import {
   textoCadencia,
   textoDadoParado,
 } from "@/lib/config/dado-freshness";
-import vercelConfig from "@/vercel";
+// Desde 05/10/2026 a ingestão está fora de `config.crons` (1º turno encerrado);
+// a cadência que volta no 2º turno é a de `cronsIngestao`.
+import { cronsIngestao } from "@/vercel";
 
 /** Hora de referência fixa — nada aqui pode depender do relógio da máquina. */
 const AGORA = Date.parse("2026-10-04T23:00:00-03:00");
@@ -292,7 +294,7 @@ describe("a cadência da tabela bate com os crons reais de `vercel.ts` (ADR-0038
   /** Quantas FATIAS distintas cada cargo tem (1 para quem não é fatiado). */
   const fatias = new Map<CargoTse, Set<string>>();
 
-  for (const cron of vercelConfig.crons ?? []) {
+  for (const cron of cronsIngestao) {
     // `/api/ingest/<slug>` ou `/api/ingest/<slug>/<fatia>`. O heartbeat diário
     // (`/api/ingest`, sem slug) não é cadência de cargo nenhum.
     const m = cron.path.match(/^\/api\/ingest\/([a-z-]+)(?:\/(\d+))?$/);

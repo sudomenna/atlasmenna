@@ -14,9 +14,13 @@
 import { describe, expect, it } from "vitest";
 
 import { parseCargoSegment } from "@/lib/config/cargos";
-import vercelConfig from "@/vercel";
+// Desde 05/10/2026 (1º turno encerrado) a ingestão está fora de `config.crons`;
+// a lista que volta para o 2º turno é `cronsIngestao` — é ela que se confere.
+import vercelConfig, { cronsIngestao } from "@/vercel";
 
-const CRONS = vercelConfig.crons ?? [];
+const CRONS = [...cronsIngestao, ...(vercelConfig.crons ?? [])].filter(
+  (c, i, todos) => todos.findIndex((o) => o.path === c.path && o.schedule === c.schedule) === i,
+);
 
 /**
  * Expande um campo de cron (minuto ou hora). Cobre `*`, `*` barra `N`, `a-b`,
