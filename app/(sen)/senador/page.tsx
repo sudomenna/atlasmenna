@@ -70,6 +70,7 @@ import { SenadoHemicicloPanel } from "@/components/blocks/SenadoHemiciclo";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { cargoInfo } from "@/lib/config/cargos";
 import { FASE_PRE_ELEICAO, isPreEleicao } from "@/lib/config/fase";
 import { agruparPorRegiao } from "@/lib/config/regioes";
@@ -82,7 +83,7 @@ import { MANDATO_2027 } from "@/lib/senado/mandato-2027";
 import { MANDATO_2031 } from "@/lib/senado/mandato-2031";
 import { haAnulada, NOTA_ANULADAS_SEM_REGRA_1T } from "@/lib/utils/destino-voto";
 import { textForParty } from "@/lib/utils/party-color";
-import { VAGA_LABEL } from "@/lib/utils/selo-resultado";
+import { rotuloVaga } from "@/lib/utils/selo-resultado";
 import {
   nomesDoPartido,
   nomesNaParcial,
@@ -246,6 +247,8 @@ export default async function SenadoPage() {
   const pre = isPreEleicao(payload);
   // Identidade fala, medição cala — no zerado como na fase pré.
   const cala = pre || zerado;
+  // 05/10/2026 — 1º turno encerrado: TSE totalizou, a tela é o resultado final.
+  const encerrado = primeiroTurnoEncerrado();
   // ADR-0076 — os três painéis do Senado de 2027 (hemiciclo, relação com o
   // governo, renovação) derivam a fase do payload. No zerado eles leem a
   // forma "pré" — 27 cadeiras que continuam + 54 cinza em disputa, sem
@@ -341,7 +344,13 @@ export default async function SenadoPage() {
           de duas vagas (RF-106) — que é REGRA DA ELEIÇÃO, não medição, e por
           isso fica igual nas duas fases. */}
       <Panel
-        kicker={pre ? "Candidaturas registradas no TSE" : "Projeção Atlas Menna · não oficial"}
+        kicker={
+          pre
+            ? "Candidaturas registradas no TSE"
+            : encerrado
+              ? "Resultado final · 1º turno"
+              : "Projeção Atlas Menna · não oficial"
+        }
         title={pre ? "Quem está concorrendo em cada estado" : "Senado 2026"}
         titleId="senado-heading"
         headingLevel={1}
@@ -480,9 +489,9 @@ export default async function SenadoPage() {
               data-view-only="parcial"
               style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
             >
-              Os quatro mais votados até agora em cada estado e a soma dos demais, em percentual dos
-              votos já apurados. Se a apuração parasse agora, as duas vagas ficariam com os que
-              levam o selo "vaga na parcial" — não é resultado nem projeção.
+              {encerrado
+                ? 'Os quatro mais votados de cada estado e a soma dos demais, em percentual dos votos válidos, com a totalização do TSE encerrada. São duas vagas por estado: ficam com elas os dois mais votados, que levam o selo "Eleito".'
+                : 'Os quatro mais votados até agora em cada estado e a soma dos demais, em percentual dos votos já apurados. Se a apuração parasse agora, as duas vagas ficariam com os que levam o selo "vaga na parcial" — não é resultado nem projeção.'}
             </p>
             {/* Spec 025 (RF-247) — filtro por etiqueta: esconde corridas, nunca reordena. */}
             {capa.filtro.length > 0 ? (
@@ -634,7 +643,7 @@ export default async function SenadoPage() {
                   linhas={linhasProj}
                   aguardando={aguardando}
                   ufsAguardando={nomesProj?.ufsAguardando ?? null}
-                  selo={VAGA_LABEL.proj}
+                  selo={rotuloVaga("proj")}
                   testId="composicao-partidos"
                   testIdAguardando="composicao-aguardando"
                 />
@@ -673,19 +682,20 @@ export default async function SenadoPage() {
                   id="composicao-parcial-heading"
                   style={{ margin: 0, font: "var(--type-title)", fontSize: "var(--text-lg)" }}
                 >
-                  Se a apuração parasse agora
+                  {encerrado ? "Resultado final" : "Se a apuração parasse agora"}
                 </h3>
                 <p
                   className="max-w-prose"
                   style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
                 >
-                  O que já saiu das urnas, sem projeção: em cada estado, as duas vagas ficam com os
-                  dois mais votados até aqui.
+                  {encerrado
+                    ? "Com a totalização do TSE encerrada: em cada estado, as duas vagas ficam com os dois mais votados."
+                    : "O que já saiu das urnas, sem projeção: em cada estado, as duas vagas ficam com os dois mais votados até aqui."}
                 </p>
                 {parcial && parcial.atribuidas > 0 ? (
                   <>
                     <VoteBar
-                      ariaLabel={`Vagas em disputa se a apuração parasse agora: ${parcial.porPartido
+                      ariaLabel={`${encerrado ? "Vagas do Senado no resultado final" : "Vagas em disputa se a apuração parasse agora"}: ${parcial.porPartido
                         .map((p) => `${p.partido} ${p.vagas}`)
                         .join(
                           ", ",
@@ -701,7 +711,7 @@ export default async function SenadoPage() {
                       linhas={linhasParcial}
                       aguardando={parcial.aguardando}
                       ufsAguardando={nomesParcial?.ufsAguardando ?? null}
-                      selo={VAGA_LABEL.parcial}
+                      selo={rotuloVaga("parcial")}
                       testId="composicao-partidos-parcial"
                       testIdAguardando="composicao-aguardando-parcial"
                     />
@@ -734,9 +744,9 @@ export default async function SenadoPage() {
                     textWrap: "pretty",
                   }}
                 >
-                  Retrato do que já foi contado, não resultado nem projeção. Estado ainda sem votos
-                  apurados fica aguardando; estado com a apuração concluída conta igual à projeção.
-                  O total por partido é a soma das 27 corridas estaduais. Não oficial.
+                  {encerrado
+                    ? "Contagem final do TSE, com a totalização encerrada. O total por partido é a soma das 27 corridas estaduais. Não oficial."
+                    : "Retrato do que já foi contado, não resultado nem projeção. Estado ainda sem votos apurados fica aguardando; estado com a apuração concluída conta igual à projeção. O total por partido é a soma das 27 corridas estaduais. Não oficial."}
                   {linhasParcial.some((l) => l.nomes)
                     ? " Abra um partido para ver os nomes."
                     : null}

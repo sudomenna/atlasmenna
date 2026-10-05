@@ -118,6 +118,7 @@ import {
   seriePorCandidatoFrom,
   type UfDetailResult,
 } from "@/lib/blob/uf-detail";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { avaliarFrescorDado } from "@/lib/config/dado-freshness";
 import { isPreEleicao } from "@/lib/config/fase";
 import {
@@ -149,7 +150,9 @@ function ResultTitle({ sigla }: { sigla: string }) {
     <>
       {/* Bandeira decorativa (`alt=""`), uma só para os dois textos. */}
       <UfFlag sigla={sigla} width={25} height={18} eager inline />
-      <span data-view-only="parcial">Governador {sigla} — Resultado parcial</span>
+      <span data-view-only="parcial">
+        Governador {sigla} — {primeiroTurnoEncerrado() ? "Resultado final" : "Resultado parcial"}
+      </span>
       <span data-view-only="proj">Governador {sigla} — Projeção Atlas Menna</span>
     </>
   );
@@ -544,6 +547,8 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
   // cargo (D3) — aqui, os mesmos 180 s do Presidente, porque Governador
   // compartilha a cadência de 60 s do ADR-0011.
   const frescorDado = avaliarFrescorDado(payload.dado_ts, payload.cargo);
+  // 05/10/2026 — 1º turno encerrado: TSE totalizou, a tela é o resultado final.
+  const encerrado = primeiroTurnoEncerrado();
 
   // 🔴 A cor sai da SIGLA (ADR-0024), não de `c.cor` — a paleta por COLOCAÇÃO
   // do ADR-0013, que o produtor parou de emitir em 19/09.
@@ -650,8 +655,12 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
         candidatos={payload.candidatos}
         etiquetas={etiquetasDoPainel}
         headingLevel={1}
-        kicker="Projeção Atlas Menna · não oficial"
-        note="Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados na UF."
+        kicker={encerrado ? "Resultado final · 1º turno" : "Projeção Atlas Menna · não oficial"}
+        note={
+          encerrado
+            ? "Contagem final do TSE, com a totalização encerrada. Não oficial."
+            : "Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados na UF."
+        }
         pctApurado={payload.pct_apurado}
         // Versão D (2026-09-27) — a disputa é do próprio estado, então o selo
         // de turno vale aqui. Em 2º turno o painel não põe selo nenhum.

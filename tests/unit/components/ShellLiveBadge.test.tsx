@@ -56,6 +56,7 @@ vi.mock("@/lib/blob/candidatos", async (importOriginal) => {
 import HomePage from "@/app/(pres)/page";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { ShellLiveBadge } from "@/components/layout/ShellLiveBadge";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgePayload } from "@/lib/edge-config/types";
 
 /**
@@ -90,7 +91,7 @@ async function declaracoesDaHome(payload: EdgePayload | null): Promise<string> {
  * de classe no componente ou no CSS quebra o casamento em vez de passar
  * silenciosamente.
  */
-function resolverSelo(declaracoesDaPagina: string) {
+function resolverSelo(declaracoesDaPagina: string, cssGlobalExtra = "") {
   const escopo = new Map<string, string>();
   for (const cls of MARKUP_DO_SELO.matchAll(/class="([^"]+)"/g)) {
     for (const nome of (cls[1] ?? "").split(/\s+/)) {
@@ -100,7 +101,14 @@ function resolverSelo(declaracoesDaPagina: string) {
   }
   // Anti-vácuo: se o casamento falhar, todo `display` viria do default do
   // navegador e as asserções abaixo mediriam nada.
-  expect([...escopo.keys()].sort()).toEqual(["badge", "dot", "label", "srAoVivo", "srPre"]);
+  expect([...escopo.keys()].sort()).toEqual([
+    "badge",
+    "dot",
+    "label",
+    "srAoVivo",
+    "srFinal",
+    "srPre",
+  ]);
 
   const cssEscopado = CSS_DO_SELO.replace(
     /(^|[\s,>+~{])\.([A-Za-z_][\w-]*)/g,
@@ -108,7 +116,7 @@ function resolverSelo(declaracoesDaPagina: string) {
       escopo.has(nome) ? `${antes}.${escopo.get(nome)}` : inteiro,
   );
 
-  document.head.innerHTML = `<style>${cssEscopado}</style><style>${declaracoesDaPagina}</style>`;
+  document.head.innerHTML = `<style>${cssEscopado}</style><style>${declaracoesDaPagina}</style><style>${cssGlobalExtra}</style>`;
   document.body.innerHTML = MARKUP_DO_SELO;
 
   const q = (testid: string) =>
@@ -118,7 +126,8 @@ function resolverSelo(declaracoesDaPagina: string) {
   const pre = q("shell-live-badge-sr-pre");
   const aoVivo = q("shell-live-badge-sr-ao-vivo");
   const dot = q("shell-live-badge-dot");
-  expect(badge && pre && aoVivo && dot).toBeTruthy();
+  const final = q("shell-live-badge-sr-final");
+  expect(badge && pre && aoVivo && dot && final).toBeTruthy();
 
   const visivel = (el: HTMLElement | null) =>
     el !== null && getComputedStyle(el).display !== "none";
@@ -126,7 +135,7 @@ function resolverSelo(declaracoesDaPagina: string) {
   return {
     seloNaTela: visivel(badge),
     /** O que o leitor de tela ouve — só o que não está em `display: none`. */
-    textoAcessivel: [pre, aoVivo]
+    textoAcessivel: [pre, aoVivo, final]
       .filter(visivel)
       .map((el) => (el as HTMLElement).textContent ?? "")
       .join(" | "),
@@ -246,5 +255,50 @@ describe("RF-159 — o selo do shell", () => {
     expect(r.seloNaTela).toBe(false);
     expect(r.textoAcessivel).toBe("");
     expect(r.pontoAnimado).toBe(false);
+  });
+
+  /**
+   * 1º turno encerrado (05/10/2026): `app/layout.tsx` escreve
+   * `data-encerrado="1t"` no `<html>`, e as regras `:root[data-encerrado]` de
+   * `app/globals.css` vencem o `:root{…}` que a página publica — o selo diz
+   * "Resultado final", o ponto para e o leitor de tela ouve a frase final, não
+   * "Apuração ao vivo". Lidas do arquivo real, nunca copiadas aqui.
+   */
+  it("🔴 (1º turno encerrado) a página publica liveness, mas o selo diz resultado final", async () => {
+    const globais = readFileSync(join(RAIZ, "app/globals.css"), "utf8").replace(
+      /\/\*[\s\S]*?\*\//g,
+      "",
+    );
+    const regras = [...globais.matchAll(/:root\[data-encerrado\][^{]*\{[^}]*\}/g)].map((m) => m[0]);
+    expect(regras.length).toBeGreaterThan(0);
+    document.documentElement.setAttribute("data-encerrado", "1t");
+    try {
+      const r = resolverSelo(await declaracoesDaHome(payloadNormalApurando()), regras.join("\n"));
+      expect(r.seloNaTela).toBe(true);
+      expect(r.textoAcessivel).toBe("Resultado final do 1º turno");
+      expect(r.pontoAnimado).toBe(false);
+    } finally {
+      document.documentElement.removeAttribute("data-encerrado");
+    }
+  });
+
+  it("🔴 (1º turno encerrado) a home do Presidente fala em resultado final, sem projeção nem a nota do atraso", async () => {
+    readNationalProjectionMock.mockResolvedValue(payloadNormalApurando());
+    const aoVivo = renderToStaticMarkup(await HomePage());
+    // Par: ao vivo o kicker e a nota de 04/10 estão lá.
+    expect(aoVivo).toContain("Projeção Atlas Menna · não oficial");
+    expect(aoVivo).toContain("às vezes atualiza com atraso");
+
+    vi.mocked(primeiroTurnoEncerrado).mockReturnValue(true);
+    try {
+      const final = renderToStaticMarkup(await HomePage());
+      expect(final).toContain("Resultado final · 1º turno");
+      expect(final).toContain("Resultado final");
+      expect(final).not.toContain("Projeção Atlas Menna · não oficial");
+      expect(final).not.toContain("às vezes atualiza com atraso");
+      expect(final).not.toContain("Resultado parcial");
+    } finally {
+      vi.mocked(primeiroTurnoEncerrado).mockReturnValue(false);
+    }
   });
 });

@@ -42,8 +42,8 @@
  */
 
 import type { CSSProperties } from "react";
-
 import styles from "@/components/blocks/GovernadoresPorPartido.module.css";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgeUfRow } from "@/lib/edge-config/types";
 import { agregarPorPartido, type BaseDesfecho } from "@/lib/utils/desfecho-governador";
 import { colorForParty } from "@/lib/utils/party-color";
@@ -64,10 +64,17 @@ const PALAVRA_ELEITOS: Record<BaseDesfecho, [string, string]> = {
   contagem: ["fecharia", "fechariam"],
 };
 
+/** 1º turno encerrado (05/10/2026): a contagem é a final — "eleito", sem condicional. */
+function palavraEleitos(base: BaseDesfecho): [string, string] {
+  return base === "contagem" && primeiroTurnoEncerrado()
+    ? ["eleito no 1º turno", "eleitos no 1º turno"]
+    : PALAVRA_ELEITOS[base];
+}
+
 function textoDaLinha(base: BaseDesfecho, eleitos: number, turno2: number): string {
   const partes: string[] = [];
   if (eleitos > 0) {
-    const [s, p] = PALAVRA_ELEITOS[base];
+    const [s, p] = palavraEleitos(base);
     partes.push(`${eleitos} ${eleitos === 1 ? s : p}`);
   }
   if (turno2 > 0) partes.push(`${turno2} no 2º turno`);
@@ -81,7 +88,7 @@ export function GovernadoresPorPartido({
 }: GovernadoresPorPartidoProps) {
   const Heading = `h${headingLevel}` as "h3" | "h4" | "h5";
   const linhas = agregarPorPartido(porUf, base);
-  const [legendaEleitos] = PALAVRA_ELEITOS[base];
+  const [legendaEleitos] = palavraEleitos(base);
 
   return (
     <div className={styles.bloco} data-testid="por-partido" data-base={base}>

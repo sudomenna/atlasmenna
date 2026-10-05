@@ -132,10 +132,10 @@
  */
 
 import { useId, useState } from "react";
-
 import { PartyTag } from "@/components/atoms/data/PartyTag";
 import { rotuloDaUnidade } from "@/components/atoms/maps/_shared";
 import { Panel } from "@/components/atoms/surfaces/Panel";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { queCompetem } from "@/lib/utils/destino-voto";
 import { formatPercent, formatPp, formatVotesCompact } from "@/lib/utils/format";
@@ -442,8 +442,12 @@ function CandidateTable({
           style={{ font: "var(--type-data)", color: "var(--text-secondary)" }}
         >
           {porVotos
-            ? "Ordenado pela diferença em votos projetados"
-            : "Ordenado pelo percentual projetado"}
+            ? primeiroTurnoEncerrado()
+              ? "Ordenado pela diferença em votos"
+              : "Ordenado pela diferença em votos projetados"
+            : primeiroTurnoEncerrado()
+              ? "Ordenado pelo percentual final"
+              : "Ordenado pelo percentual projetado"}
         </span>
       </caption>
       <thead>
@@ -458,7 +462,7 @@ function CandidateTable({
             {porVotos ? "Diferença em votos" : "Diferença"}
           </th>
           <th scope="col" style={{ ...HEAD_CELL, textAlign: "right" }}>
-            Projetado
+            {primeiroTurnoEncerrado() ? "Final" : "Projetado"}
           </th>
         </tr>
       </thead>
@@ -666,12 +670,24 @@ export function StrongholdsPanel({
           color: "var(--text-muted)",
         }}
       >
-        As {topUfs} UFs em que o candidato escolhido acima é mais forte. A diferença é a margem
-        projetada local — para quem está em 1º, a distância até o 2º; abaixo disso, a distância até
-        o 1º —, em pontos percentuais em “Percentual” e, em “Votos”, convertida em votos pelo total
-        projetado de votos em disputa da UF (UF sem esse total fica fora). Só entram UFs em que o
-        candidato esteja entre os {STRONGHOLD_POSICAO_MAX} primeiros colocados. Projeção não
-        oficial; o resultado é do TSE.
+        {primeiroTurnoEncerrado() ? (
+          // 1º turno encerrado (05/10/2026): a margem é a do resultado final.
+          <>
+            As {topUfs} UFs em que o candidato escolhido acima é mais forte. A diferença é a margem
+            local no resultado final — para quem está em 1º, a distância até o 2º; abaixo disso, a
+            distância até o 1º. Só entram UFs em que o candidato esteja entre os{" "}
+            {STRONGHOLD_POSICAO_MAX} primeiros colocados. Não oficial; o resultado é do TSE.
+          </>
+        ) : (
+          <>
+            As {topUfs} UFs em que o candidato escolhido acima é mais forte. A diferença é a margem
+            projetada local — para quem está em 1º, a distância até o 2º; abaixo disso, a distância
+            até o 1º —, em pontos percentuais em “Percentual” e, em “Votos”, convertida em votos
+            pelo total projetado de votos em disputa da UF (UF sem esse total fica fora). Só entram
+            UFs em que o candidato esteja entre os {STRONGHOLD_POSICAO_MAX} primeiros colocados.
+            Projeção não oficial; o resultado é do TSE.
+          </>
+        )}
       </p>
     </Panel>
   );

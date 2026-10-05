@@ -105,7 +105,9 @@ describe("shell estático (ADR-0029 § 2 — restrição dura)", () => {
 
   it("(c) o layout escreve `data-view` estaticamente, a partir da constante da store", () => {
     const code = read("app/layout.tsx");
-    expect(code).toContain("data-view={VIEW_MODE_DEFAULT}");
+    // 05/10/2026 — com o 1º turno encerrado o layout fixa "parcial" (não há
+    // controle para trocar); fora dele, a constante da store.
+    expect(code).toContain('data-view={encerrado ? "parcial" : VIEW_MODE_DEFAULT}');
     expect(code).toContain('from "@/lib/state/view-mode"');
     // Se o default mudar sem o `<html>` acompanhar, o primeiro render do
     // cliente diverge do HTML do servidor e a hidratação é descartada.

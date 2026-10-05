@@ -31,6 +31,7 @@
 
 import { MarcaDeputado } from "@/components/atoms/badges/MarcaDeputado";
 import { CandidateAvatar } from "@/components/atoms/data/CandidateAvatar";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import {
   type EleitosNacionais,
   FRASE_NENHUMA_LIBERADA,
@@ -112,12 +113,19 @@ function tituloDoGrupo(g: GrupoUf): { titulo: string; nota: string | null } {
     case "tse":
       return { titulo: `${g.uf} · ${eleitos} (TSE)`, nota: null };
     case "travada":
+      // 1º turno encerrado: contagem final — sem "na parcial" nem projeção.
+      if (primeiroTurnoEncerrado()) return { titulo: `${g.uf} · ${eleitos}`, nota: null };
       return {
         titulo: `${g.uf} · ${eleitos} na parcial`,
         nota: " — projeção ainda travada neste estado",
       };
     case "parcial":
-      return { titulo: `${g.uf} · ${eleitos} na parcial`, nota: null };
+      return {
+        titulo: primeiroTurnoEncerrado()
+          ? `${g.uf} · ${eleitos}`
+          : `${g.uf} · ${eleitos} na parcial`,
+        nota: null,
+      };
   }
 }
 
@@ -135,8 +143,14 @@ function cabecalho(
       ? `Ninguém de ${sigla} entra no cenário projetado · não oficial.`
       : `${n} no cenário projetado · não oficial, pontual · ${rotuloDoMisto(visao)}.`;
   }
-  if (n === 0) return `Ninguém de ${sigla} está sendo eleito na parcial agora.`;
   const estados = plural(k, "estado", "estados");
+  // 1º turno encerrado (05/10/2026): a contagem é a final do TSE.
+  if (primeiroTurnoEncerrado()) {
+    return n === 0
+      ? `Ninguém de ${sigla} foi eleito.`
+      : `${plural(n, "eleito", "eleitos")} em ${estados} — contagem final do TSE.`;
+  }
+  if (n === 0) return `Ninguém de ${sigla} está sendo eleito na parcial agora.`;
   if (grupos.every((g) => g.origem === "tse")) {
     return `${plural(n, "eleito", "eleitos")} (TSE) em ${estados} — resultado oficial.`;
   }

@@ -45,6 +45,7 @@
  */
 
 import styles from "@/components/blocks/GovernadoresPlacarTurno.module.css";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgeUfRow } from "@/lib/edge-config/types";
 import {
   agruparPorDesfecho,
@@ -82,8 +83,25 @@ const NOTAS: Record<BaseDesfecho, string> = {
     "Retrato do que já foi contado, não resultado nem projeção: fecharia no 1º turno o estado cujo líder tem hoje mais de 50% dos votos apurados.",
 };
 
+/**
+ * 1º turno encerrado (05/10/2026): a contagem é a FINAL do TSE — o
+ * condicional ("fecharia") vira afirmação.
+ */
+const ROTULOS_FINAL: Record<DesfechoGovernador, [string, string]> = {
+  eleito_1t: ["eleito no 1º turno", "eleitos no 1º turno"],
+  segundo_turno: ["vai ao 2º turno", "vão ao 2º turno"],
+  em_aberto: ["em aberto", "em aberto"],
+  aguardando: ["aguardando apuração", "aguardando apuração"],
+};
+
+const NOTA_FINAL =
+  "Contagem final do TSE, com a totalização encerrada: é eleito no 1º turno quem teve mais da metade dos votos válidos. Não oficial.";
+
 function rotulo(base: BaseDesfecho, desfecho: DesfechoGovernador, n: number): string {
-  const [singular, plural] = ROTULOS[base][desfecho];
+  const [singular, plural] =
+    base === "contagem" && primeiroTurnoEncerrado()
+      ? ROTULOS_FINAL[desfecho]
+      : ROTULOS[base][desfecho];
   return n === 1 ? singular : plural;
 }
 
@@ -149,7 +167,9 @@ export function GovernadoresPlacarTurno({ porUf, base }: GovernadoresPlacarTurno
         })}
       </ul>
 
-      <p className={styles.nota}>{NOTAS[base]}</p>
+      <p className={styles.nota}>
+        {base === "contagem" && primeiroTurnoEncerrado() ? NOTA_FINAL : NOTAS[base]}
+      </p>
     </div>
   );
 }

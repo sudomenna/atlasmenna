@@ -73,6 +73,7 @@
  */
 
 import { Panel } from "@/components/atoms/surfaces/Panel";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import {
   projecaoVisivel as ehProjecaoVisivel,
   fraseEstadoProjecao,
@@ -233,11 +234,14 @@ export function DeputadoMetodologia({
   cenarioNacional = false,
 }: DeputadoMetodologiaProps) {
   const t = territorio;
+  // 1º turno encerrado (05/10/2026): a contagem é a final do TSE — sem
+  // "parasse agora", sem cadência e sem o bloco da projeção.
+  const encerrado = primeiroTurnoEncerrado();
   const visivel = variant === "uf" && ehProjecaoVisivel(projecao, interruptorLigado);
   // Capa: o bloco aparece exatamente quando os selos aparecem — interruptor
   // ligado e ao menos um estado com estado de projeção publicado.
   const selosNaCapa =
-    variant === "national" && interruptorLigado && (projecaoPorUf?.length ?? 0) > 0;
+    !encerrado && variant === "national" && interruptorLigado && (projecaoPorUf?.length ?? 0) > 0;
   const liberadas = selosNaCapa
     ? (projecaoPorUf ?? []).filter((u) => u.estado === "liberada").map((u) => u.sigla)
     : [];
@@ -253,7 +257,17 @@ export function DeputadoMetodologia({
         className="flex flex-col"
         style={{ gap: "var(--space-3)" }}
       >
-        <p className="max-w-prose" style={PARAGRAFO}>
+        {encerrado && temDado ? (
+          <p className="max-w-prose" style={PARAGRAFO} data-testid="dep-metodologia-final">
+            Estes números <strong>não são uma projeção</strong>. São a distribuição de cadeiras
+            pelas regras do Código Eleitoral aplicada à <strong>contagem final do TSE</strong>, com
+            a totalização encerrada. Não oficial: o resultado oficial é o do TSE.
+          </p>
+        ) : null}
+        <p
+          className="max-w-prose"
+          style={{ ...PARAGRAFO, ...(encerrado && temDado ? { display: "none" } : {}) }}
+        >
           {temDado ? "Os números da parcial" : "Estes números"}{" "}
           <strong>não são uma projeção</strong>. São a distribuição de cadeiras pelas regras do
           Código Eleitoral aplicada aos votos <strong>já apurados</strong> — a resposta para "como
@@ -296,7 +310,7 @@ export function DeputadoMetodologia({
         {/* Spec 026 — só com dado: sem payload não há trava nem interruptor a
           relatar, e o ramo sem dado é contado palavra a palavra em
           `fase-pre-eleicao.test.tsx`. */}
-        {temDado ? (
+        {temDado && !encerrado ? (
           <p className="max-w-prose" style={PARAGRAFO} data-testid="dep-metodologia-projecao">
             <strong>A projeção, que é não oficial, é outra conta.</strong> Estimamos o voto final de
             cada candidato e de cada legenda zona a zona: a zona que já tem boletim é esticada até o
@@ -405,7 +419,7 @@ export function DeputadoMetodologia({
           </section>
         ) : null}
 
-        {temDado ? (
+        {temDado && !encerrado ? (
           <p className="max-w-prose" style={PARAGRAFO} data-testid="dep-metodologia-limites">
             <strong>O limite que mais pesa é o voto de reduto.</strong> A estimativa só enxerga o
             tamanho da zona, não o lugar: um candidato forte numa região que ainda não apurou fica

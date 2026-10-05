@@ -44,16 +44,31 @@ export interface ShellControlsProps {
    * lugar que decide a composição do shell.
    */
   cargoNav?: ReactNode;
+  /**
+   * 1º turno encerrado (`primeiroTurnoEncerrado()`, decidido pelo layout):
+   * no lugar do controle "Parcial / Projeção", um rótulo fixo
+   * "Resultado final". A página fica no apurado (`data-view="parcial"`).
+   */
+  encerrado?: boolean;
 }
 
-export function ShellControls({ cargoNav }: ShellControlsProps) {
+export function ShellControls({ cargoNav, encerrado = false }: ShellControlsProps) {
   return (
     <div className={styles.row}>
       {cargoNav}
       <div className={styles.controls} data-testid="shell-controls">
         {/* Duas classes: `.control` dá o layout, `.viewMode` dá o interruptor
             de visibilidade que a fase pré-eleição usa (RF-161 — ver o CSS). */}
-        <ViewModeSwitch className={`${styles.control} ${styles.viewMode}`} />
+        {encerrado ? (
+          <span
+            className={`${styles.control} ${styles.viewMode} ${styles.final}`}
+            data-testid="shell-resultado-final"
+          >
+            Resultado final
+          </span>
+        ) : (
+          <ViewModeSwitch className={`${styles.control} ${styles.viewMode}`} />
+        )}
       </div>
     </div>
   );

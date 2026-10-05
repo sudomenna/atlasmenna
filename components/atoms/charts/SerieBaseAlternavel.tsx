@@ -36,6 +36,7 @@
  */
 
 import { type ReactNode, useId, useState } from "react";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 
 import styles from "./SerieBaseAlternavel.module.css";
 
@@ -56,34 +57,42 @@ export interface SerieBaseAlternavelProps {
 export function SerieBaseAlternavel({ children }: SerieBaseAlternavelProps) {
   const [base, setBase] = useState<SerieBase>(SERIE_BASE_INICIAL);
   const alvoId = useId();
+  // 1º turno encerrado (05/10/2026): sem chave — o gráfico fica na apuração.
+  const encerrado = primeiroTurnoEncerrado();
 
   return (
     <>
-      <fieldset data-testid="serie-base-chave" className={styles.chave}>
-        <legend className="sr-only">Linhas do gráfico</legend>
-        <span className={styles.segmentos}>
-          {OPCOES.map(({ valor, rotulo }) => {
-            const ativo = valor === base;
-            return (
-              <button
-                key={valor}
-                type="button"
-                data-testid="serie-base-botao"
-                data-base={valor}
-                aria-pressed={ativo}
-                aria-controls={alvoId}
-                className={[styles.segmento, ativo ? styles.segmentoOn : null]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => setBase(valor)}
-              >
-                {rotulo}
-              </button>
-            );
-          })}
-        </span>
-      </fieldset>
-      <div id={alvoId} data-serie-base={base} className={styles.raiz}>
+      {encerrado ? null : (
+        <fieldset data-testid="serie-base-chave" className={styles.chave}>
+          <legend className="sr-only">Linhas do gráfico</legend>
+          <span className={styles.segmentos}>
+            {OPCOES.map(({ valor, rotulo }) => {
+              const ativo = valor === base;
+              return (
+                <button
+                  key={valor}
+                  type="button"
+                  data-testid="serie-base-botao"
+                  data-base={valor}
+                  aria-pressed={ativo}
+                  aria-controls={alvoId}
+                  className={[styles.segmento, ativo ? styles.segmentoOn : null]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onClick={() => setBase(valor)}
+                >
+                  {rotulo}
+                </button>
+              );
+            })}
+          </span>
+        </fieldset>
+      )}
+      <div
+        id={alvoId}
+        data-serie-base={encerrado ? SERIE_BASE_INICIAL : base}
+        className={styles.raiz}
+      >
         {children}
       </div>
     </>

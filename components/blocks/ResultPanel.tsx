@@ -108,6 +108,7 @@ import { CandidateListCollapse } from "@/components/blocks/CandidateListCollapse
 import { EtiquetasAviso } from "@/components/blocks/EtiquetasAviso";
 import { ReordenaListaPorBase } from "@/components/blocks/ReordenaListaPorBase";
 import { candidatoFotoUrl } from "@/lib/blob/paths";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgeCandidate } from "@/lib/edge-config/types";
 import { normalizarSqcand } from "@/lib/etiquetas/formato";
 import type { ResolucoesExibiveis } from "@/lib/etiquetas/telas";
@@ -118,8 +119,8 @@ import { ordensPorBase } from "@/lib/utils/rank-parcial";
 import {
   type BaseSelo,
   type RegraSelo,
+  rotuloVaga,
   selosPorBase,
-  VAGA_LABEL,
 } from "@/lib/utils/selo-resultado";
 import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
 
@@ -434,15 +435,15 @@ export function VagaBadge({ base = "proj" }: { base?: "parcial" | "proj" | "amba
     return (
       <span data-testid="result-vaga-marker">
         <span data-view-only="parcial">
-          <SeloPilula texto={VAGA_LABEL.parcial} />
+          <SeloPilula texto={rotuloVaga("parcial")} />
         </span>
         <span data-view-only="proj">
-          <SeloPilula texto={VAGA_LABEL.proj} />
+          <SeloPilula texto={rotuloVaga("proj")} />
         </span>
       </span>
     );
   }
-  return <SeloPilula testId="result-vaga-marker" texto={VAGA_LABEL[base]} />;
+  return <SeloPilula testId="result-vaga-marker" texto={rotuloVaga(base)} />;
 }
 
 /**
@@ -914,9 +915,12 @@ export function ResultPanel({
               <span data-testid="result-margem-parcial" data-view-only="parcial">
                 {/* 🔴 04/10 (dono): todo número projetado na cor da projeção —
                     aqui, a nota "projeção +3,2 pp" sob a margem apurada. */}
+                {/* 1º turno encerrado: sem nota de projeção — a margem é a final. */}
                 <Figure
                   label={rotuloMargem(dentroParcial)}
-                  note={`projeção ${formatPp(margemProj)}`}
+                  {...(primeiroTurnoEncerrado()
+                    ? {}
+                    : { note: `projeção ${formatPp(margemProj)}` })}
                   noteColor="var(--color-pct-proj)"
                   size="lg"
                   unit="pp"

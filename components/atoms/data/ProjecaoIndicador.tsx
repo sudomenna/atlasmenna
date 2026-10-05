@@ -44,6 +44,7 @@
  * Server Component puro — sem `"use client"`.
  */
 
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { formatPercent, formatVotesCompact } from "@/lib/utils/format";
 
 import s from "./ProjecaoIndicador.module.css";
@@ -102,7 +103,8 @@ export function ProjecaoIndicador({
   bloco = false,
   className,
 }: ProjecaoIndicadorProps) {
-  if (!finito(projetado)) return null;
+  // 1º turno encerrado (05/10/2026): não há leitura do modelo a mostrar.
+  if (!finito(projetado) || primeiroTurnoEncerrado()) return null;
   const texto = formatPercent(projetado, 1);
   const direcao = direcaoProjecao(projetado, parcial);
   const seta = direcao ? SETA[direcao] : "";

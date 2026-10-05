@@ -9,7 +9,7 @@ export default defineConfig({
     // num destino real. Ver `tests/setup/no-remote-writes.ts` — é o arquivo
     // que explica por que esta linha existe, e ele deve ser lido antes de
     // qualquer tentativa de removê-la.
-    setupFiles: ["./tests/setup/no-remote-writes.ts"],
+    setupFiles: ["./tests/setup/no-remote-writes.ts", "./tests/setup/modo-ao-vivo.ts"],
     include: [
       "tests/unit/**/*.{test,spec}.{ts,tsx}",
       "tests/integration/**/*.{test,spec}.{ts,tsx}",

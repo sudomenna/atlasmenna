@@ -32,6 +32,7 @@
  *    `> 50`, estritamente: 50,0% não é maioria absoluta.
  */
 
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgeDestinoVoto } from "@/lib/edge-config/types";
 import { ordensPorBase } from "@/lib/utils/rank-parcial";
 import { ocupantesDasVagas } from "@/lib/utils/vagas-eleitas";
@@ -55,6 +56,30 @@ export const TURNO_LABEL = {
   segundo: { parcial: "2º turno · na parcial", proj: "2º turno · projeção" },
   primeiro: { parcial: "Venceria no 1º turno · na parcial", proj: "Vence no 1º turno · projeção" },
 } as const;
+
+/**
+ * Os selos do modo "1º turno encerrado" (05/10/2026, `primeiroTurnoEncerrado`):
+ * com a totalização do TSE em 100%, quem ocupa a vaga ou passa de 50% na
+ * contagem FINAL está eleito, e quem fica entre os dois primeiros sem maioria
+ * vai ao 2º turno. Sem base a dizer — não há mais parcial nem projeção.
+ *
+ * "Eleito" no masculino genérico: o payload não traz o gênero da candidatura.
+ */
+export const SELO_FINAL = {
+  vaga: "Eleito",
+  primeiro: "Eleito no 1º turno",
+  segundo: "Vai ao 2º turno",
+} as const;
+
+/** Selo de vaga (Senado) na base — o final quando o 1º turno está encerrado. */
+export function rotuloVaga(base: BaseSelo): string {
+  return primeiroTurnoEncerrado() ? SELO_FINAL.vaga : VAGA_LABEL[base];
+}
+
+/** Selo de turno na base — o final quando o 1º turno está encerrado. */
+export function rotuloTurno(desfecho: "primeiro" | "segundo", base: BaseSelo): string {
+  return primeiroTurnoEncerrado() ? SELO_FINAL[desfecho] : TURNO_LABEL[desfecho][base];
+}
 
 /** Quantos cartões existem — o teto de selos por base. */
 export const SELOS_MAX = 2;
@@ -100,7 +125,7 @@ export function selosDaBase(
     // balão do mapa, dos cartões de `/senador` e do hemiciclo de 2027. O
     // clamp acima continua aqui: ele é sobre CARTÕES (`SELOS_MAX`), não sobre
     // a regra de quem elege.
-    for (const c of ocupantesDasVagas(ordenada, n)) selos.set(c.id, VAGA_LABEL[base]);
+    for (const c of ocupantesDasVagas(ordenada, n)) selos.set(c.id, rotuloVaga(base));
     return selos;
   }
 
@@ -109,10 +134,10 @@ export function selosDaBase(
   if (lider == null) return selos;
   const pctLider = pctDaBase(lider);
   if (Number.isFinite(pctLider) && pctLider > 50) {
-    selos.set(lider.id, TURNO_LABEL.primeiro[base]);
+    selos.set(lider.id, rotuloTurno("primeiro", base));
     return selos;
   }
-  for (const c of disputam.slice(0, SELOS_MAX)) selos.set(c.id, TURNO_LABEL.segundo[base]);
+  for (const c of disputam.slice(0, SELOS_MAX)) selos.set(c.id, rotuloTurno("segundo", base));
   return selos;
 }
 

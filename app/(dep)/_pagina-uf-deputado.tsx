@@ -105,6 +105,7 @@ import {
   ordenarAgremiacoes,
   sanearDeputadoUfDetail,
 } from "@/lib/blob/deputado-uf";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { CargoProporcional } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
 import { fotosDosEleitos, prefixoFotoDaUf } from "@/lib/deputado/fotos-eleitos";
@@ -562,7 +563,11 @@ export async function renderPaginaUfDeputado(
 
       {/* Seção 1 — o resumo. Sobrevive à ausência do Blob (RF-129). */}
       <Panel
-        kicker="Atlas Menna · apuração ao vivo · não oficial"
+        kicker={
+          primeiroTurnoEncerrado()
+            ? "Resultado final · 1º turno"
+            : "Atlas Menna · apuração ao vivo · não oficial"
+        }
         title={
           <>
             {/* Bandeira decorativa (`alt=""`); o texto do título não muda. */}
@@ -668,7 +673,10 @@ export async function renderPaginaUfDeputado(
               style={{ margin: 0, font: "var(--type-data)", color: "var(--text-muted)" }}
             >
               {fraseFrescorDado(resumoFrescor.frescor, resumoFrescor.ts)}
-              {cadencia > 0 ? `, a cada ${cadencia} ${cadencia === 1 ? "minuto" : "minutos"}` : ""}.
+              {cadencia > 0 && !primeiroTurnoEncerrado()
+                ? `, a cada ${cadencia} ${cadencia === 1 ? "minuto" : "minutos"}`
+                : ""}
+              .
             </p>
           ) : detalheTs ? (
             <p
@@ -758,7 +766,8 @@ export async function renderPaginaUfDeputado(
             >
               {agremiacoes.map((agr) => {
                 const componentes = listarComponentes(agr.componentes);
-                const intervalo = intervaloDeCadeiras(agr);
+                // 1º turno encerrado: a contagem é final — não há faixa a mostrar.
+                const intervalo = primeiroTurnoEncerrado() ? null : intervaloDeCadeiras(agr);
                 const federacao = agr.tipo === "federacao";
                 const exibicao: ExibicaoLinha = {
                   nome: nomeExibicao,
@@ -805,7 +814,9 @@ export async function renderPaginaUfDeputado(
                           nacional para o porquê de não ser filho. */}
                       <span style={{ font: "var(--type-kpi-sm)" }}>
                         <span data-testid="uf-cadeiras">{agr.cadeiras}</span>
-                        <span className="sr-only"> cadeiras na parcial</span>
+                        <span className="sr-only">
+                          {primeiroTurnoEncerrado() ? " cadeiras" : " cadeiras na parcial"}
+                        </span>
                       </span>
                       <span className="min-w-0 flex flex-col" style={{ gap: "var(--space-1)" }}>
                         {/* ADR-0065 (negativas): um título por agremiação, para
@@ -886,7 +897,12 @@ export async function renderPaginaUfDeputado(
                           que não existe (ADR-0063 D8, emenda). */}
                       <span
                         className="text-right"
-                        style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
+                        style={{
+                          font: "var(--type-data)",
+                          color: "var(--text-muted)",
+                          // 1º turno encerrado: contagem final, sem faixa.
+                          ...(primeiroTurnoEncerrado() ? { display: "none" } : {}),
+                        }}
                         // Uma base por vez (04/10): a faixa é da parcial.
                         data-view-only={bases ? "parcial" : undefined}
                       >

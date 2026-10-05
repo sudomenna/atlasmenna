@@ -147,7 +147,7 @@ import {
   seriePorCandidatoFrom,
   type UfDetailResult,
 } from "@/lib/blob/uf-detail";
-import { currentPresidentialTurno } from "@/lib/config/calendar";
+import { currentPresidentialTurno, primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { cargoExisteNaUf, isExterior, ufsDoCargo } from "@/lib/config/cargos";
 import { avaliarFrescorDado } from "@/lib/config/dado-freshness";
 import { isPreEleicao } from "@/lib/config/fase";
@@ -179,7 +179,9 @@ function ResultTitle({ sigla }: { sigla: string }) {
     <>
       {/* Bandeira decorativa (`alt=""`), uma só para os dois textos. */}
       <UfFlag sigla={sigla} width={25} height={18} eager inline />
-      <span data-view-only="parcial">{rotulo} — Resultado parcial</span>
+      <span data-view-only="parcial">
+        {rotulo} — {primeiroTurnoEncerrado() ? "Resultado final" : "Resultado parcial"}
+      </span>
       <span data-view-only="proj">{rotulo} — Projeção Atlas Menna</span>
     </>
   );
@@ -567,6 +569,8 @@ export default async function UFPage({ params }: UFPageProps) {
   // `dado_ts` que já veio no payload. Cargo do payload, não literal: o limiar
   // é por cargo (D3).
   const frescorDado = avaliarFrescorDado(payload.dado_ts, payload.cargo);
+  // 05/10/2026 — 1º turno encerrado: TSE totalizou, a tela é o resultado final.
+  const encerrado = primeiroTurnoEncerrado();
 
   // O dispatch `binary` | `multi-1t` saiu com os termômetros (D23): o
   // `<ResultPanel>` é o mesmo nos dois turnos — em 2T a corrida tem dois
@@ -665,8 +669,12 @@ export default async function UFPage({ params }: UFPageProps) {
         // base — que é o defeito que a mudança corrigiu.
         candidatos={payload.candidatos}
         headingLevel={1}
-        kicker="Projeção Atlas Menna · não oficial"
-        note="Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados na UF."
+        kicker={encerrado ? "Resultado final · 1º turno" : "Projeção Atlas Menna · não oficial"}
+        note={
+          encerrado
+            ? "Contagem final do TSE, com a totalização encerrada. Não oficial."
+            : "Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados na UF."
+        }
         pctApurado={payload.pct_apurado}
         // 🔴 SEM selo (decisão do dono, 2026-09-27): quem vai ao 2º turno é
         // decidido pelo Brasil, não pelo estado. "2º turno" no 2º colocado de

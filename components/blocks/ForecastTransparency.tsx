@@ -32,6 +32,7 @@
 import type { CSSProperties } from "react";
 
 import type { VarianteFasePreEleicao } from "@/components/atoms/banners/FasePreEleicaoBanner";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { formatPercentTrim } from "@/lib/utils/format";
 
 export interface ForecastTransparencyProps {
@@ -194,6 +195,8 @@ export function ForecastTransparency({
 }: ForecastTransparencyProps) {
   const pctReal = clampPercent(pctApurado);
   const pctModel = 100 - pctReal;
+  // 1º turno encerrado: a ingestão parou — não há cadência a anunciar.
+  const cadenciaAnunciada = cadenciaMinutos && !primeiroTurnoEncerrado() ? cadenciaMinutos : 0;
 
   const heading =
     variant === "uf" ? "O que está movendo o forecast estadual" : "O que está movendo o forecast";
@@ -278,7 +281,7 @@ export function ForecastTransparency({
       {/* RF-108 — os dois fatos que o leitor não tem como inferir da tela:
           a resolução da projeção e a frequência com que ela muda. Texto,
           não tooltip: "legível sem clique" é literal na aceitação. */}
-      {granularidade === "uf" || cadenciaMinutos ? (
+      {granularidade === "uf" || cadenciaAnunciada ? (
         <p
           data-testid="forecast-cadencia"
           className="mt-3 max-w-prose text-sm"
@@ -287,7 +290,7 @@ export function ForecastTransparency({
           {granularidade === "uf"
             ? "Esta projeção é feita no nível do estado: para este cargo lemos o boletim agregado por unidade da federação, e não os de cada zona eleitoral — uma escolha nossa, para caber no limite de requisições que o TSE impõe. Por isso não há mapa de municípios aqui, e a projeção é menos fina que a de Presidente e Governador. "
             : null}
-          {cadenciaMinutos
+          {cadenciaAnunciada
             ? `Os números são atualizados a cada ${cadenciaMinutos} ${
                 cadenciaMinutos === 1 ? "minuto" : "minutos"
               }.`

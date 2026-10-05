@@ -206,6 +206,7 @@ function dadoTsDe(frescor: FrescorDado): string | null | undefined {
   switch (frescor.estado) {
     case "fresco":
     case "parado":
+    case "encerrado":
       return frescor.dadoTs;
     case "indisponivel":
       return null;

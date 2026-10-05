@@ -59,6 +59,10 @@
   display: var(--live-sr-ao-vivo, none);
 }
 
+.srFinal {
+  display: var(--live-sr-final, none);
+}
+
 @keyframes atlasmenna-shell-pulse {
   0%,
   100% {

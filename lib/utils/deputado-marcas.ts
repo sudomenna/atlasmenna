@@ -50,6 +50,7 @@
  * campos.
  */
 
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type {
   DeputadoDestinoProporcional,
   DeputadoMarcaTse,
@@ -140,6 +141,9 @@ export function projecaoVisivel(
   projecao: { estado: string } | null | undefined,
   interruptorLigado: boolean,
 ): boolean {
+  // 1º turno encerrado (05/10/2026): a totalização acabou — nenhuma leitura
+  // do modelo vai à tela, e as marcas são as da contagem final.
+  if (primeiroTurnoEncerrado()) return false;
   return interruptorLigado === true && projecao?.estado === "liberada";
 }
 
@@ -181,7 +185,7 @@ export const AVISO_SEM_PROJECAO = {
  * final (só a marca do TSE existe, nas duas bases — RF-267).
  */
 export function avisoSemProjecao(cargoComProjecao: boolean, ctx: ContextoMarcas): string | null {
-  if (ctx.totalizacaoFinal || ctx.projecaoVisivel) return null;
+  if (ctx.totalizacaoFinal || ctx.projecaoVisivel || primeiroTurnoEncerrado()) return null;
   return cargoComProjecao ? AVISO_SEM_PROJECAO.travada : AVISO_SEM_PROJECAO.cargo;
 }
 
@@ -237,6 +241,18 @@ export const TEXTO_MARCA = {
   tse: "Eleito (TSE)",
 } as const;
 
+/**
+ * 1º turno encerrado (05/10/2026, `primeiroTurnoEncerrado`): com a totalização
+ * do TSE em 100%, a marca da contagem é a do resultado final — "Eleito", sem
+ * "na parcial".
+ */
+export const TEXTO_MARCA_FINAL = "Eleito";
+
+/** "eleito na parcial" — ou "eleito" com o 1º turno encerrado. */
+function eleitoDaContagem(): string {
+  return primeiroTurnoEncerrado() ? "eleito" : "eleito na parcial";
+}
+
 /** A NOSSA via, dita como conta nossa. */
 export const TEXTO_VIA: Readonly<Record<ViaDeputado, string>> = {
   qp: "pelo quociente",
@@ -282,7 +298,7 @@ export function textoDaMarca(marca: Marca): TextoDaMarca {
       };
     case "parcial":
       return {
-        principal: TEXTO_MARCA.parcial,
+        principal: primeiroTurnoEncerrado() ? TEXTO_MARCA_FINAL : TEXTO_MARCA.parcial,
         via: marca.via === null ? null : TEXTO_VIA[marca.via],
         apertada: marca.apertada ? "sobra apertada" : null,
         citacaoTse: null,
@@ -829,7 +845,7 @@ export function fraseEstadoProjecao(
   pctApurado: number,
   territorio: TermoDoTerritorio = TERMO_ESTADO,
 ): string | null {
-  if (!projecao) return null;
+  if (!projecao || primeiroTurnoEncerrado()) return null;
   const pre = "Projeção · não oficial:";
   if (projecao.estado === "liberada") {
     return `Projeção liberada · não oficial — estimativa nossa do resultado final ${territorio.doTerritorio}, zona a zona.`;
@@ -867,7 +883,7 @@ export function fraseEstadoProjecao(
 export function seloEstadoProjecao(
   projecao: ProjecaoUfParaTexto | null | undefined,
 ): string | null {
-  if (!projecao) return null;
+  if (!projecao || primeiroTurnoEncerrado()) return null;
   if (projecao.estado === "liberada") return "projeção liberada · não oficial";
   if (projecao.estado === "aguardando") {
     return projecao.motivo === "pct_minimo"
@@ -903,7 +919,7 @@ export function fraseCorte(
   const unidade = corte.diferenca === 1 ? "voto separa" : "votos separam";
   const ultimo = nomes.ultimo ? ` (${nomes.ultimo})` : "";
   const primeiro = nomes.primeiro ? ` (${nomes.primeiro})` : "";
-  const base = `Linha de corte: ${votos} ${unidade} o último eleito na parcial${ultimo} do primeiro de fora${primeiro}.`;
+  const base = `Linha de corte: ${votos} ${unidade} o último ${eleitoDaContagem()}${ultimo} do primeiro de fora${primeiro}.`;
   return corte.primeiro_fora_abaixo_piso_10 ? `${base} ${PISO_10_TEXTO}` : base;
 }
 
@@ -914,6 +930,6 @@ export function fraseCorte(
 export function fraseCorteCabecalho(corte: CorteParaTexto): string {
   const votos = corte.diferenca.toLocaleString("pt-BR");
   const unidade = corte.diferenca === 1 ? "voto" : "votos";
-  const base = `Corte: ${votos} ${unidade} entre o último eleito na parcial e o primeiro de fora.`;
+  const base = `Corte: ${votos} ${unidade} entre o último ${eleitoDaContagem()} e o primeiro de fora.`;
   return corte.primeiro_fora_abaixo_piso_10 ? `${base} ${PISO_10_TEXTO}` : base;
 }

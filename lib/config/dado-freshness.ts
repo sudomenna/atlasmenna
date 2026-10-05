@@ -48,9 +48,11 @@
  * JSON — nenhuma chamada nova ao TSE, nenhuma query nova (ADR-0038 D4).
  */
 
-import { inicioDaCobrancaDeAtraso } from "@/lib/config/calendar";
+import { inicioDaCobrancaDeAtraso, primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { CargoTse } from "@/lib/config/cargos";
 import { formatTimeHMS } from "@/lib/utils/format";
+
+const TZ_BRASILIA = "America/Sao_Paulo";
 
 /**
  * Cadência de ingestão de cada cargo, em segundos, espelhando os crons de
@@ -139,6 +141,16 @@ export type FrescorDado =
       cargo: CargoTse;
     }
   | {
+      /**
+       * 1º turno encerrado (05/10/2026, `primeiroTurnoEncerrado`): o TSE
+       * totalizou e a ingestão parou. `dado_ts` é a hora do resultado FINAL —
+       * nunca vira "parado", e nenhuma tela fala em cadência.
+       */
+      estado: "encerrado";
+      dadoTs: string;
+      cargo: CargoTse;
+    }
+  | {
       /** `dado_ts` presente e além do limiar. Acende o banner de D4. */
       estado: "parado";
       dadoTs: string;
@@ -199,6 +211,10 @@ export function avaliarFrescorDado(
   // para o texto de `ts` aqui seria fabricar o substituto que D1 proíbe.
   if (!Number.isFinite(ms)) return { estado: "indisponivel", cargo };
 
+  // 1º turno encerrado: o dado não anda porque a totalização acabou, não
+  // porque a ingestão caiu. Nunca "parado".
+  if (primeiroTurnoEncerrado(new Date(agoraMs))) return { estado: "encerrado", dadoTs, cargo };
+
   const limiarSegundos = limiarDadoParadoSegundos(cargo);
   // `Math.max(0, …)`: o relógio do boletim (BRT fixo −03:00, sem DST — ver
   // `calculateLagSeconds`, `lib/tse/metrics.ts`) e o do servidor podem
@@ -248,6 +264,34 @@ export const ROTULO_DADO_TS = "Dado do TSE";
  */
 export const ROTULO_TS_LEGADO = "Última atualização";
 
+/** Rótulo da figura de frescor no estado `"encerrado"`. */
+export const ROTULO_TOTALIZACAO_ENCERRADA = "Totalização encerrada";
+
+/** "05/10 às 01:23" — dia/mês e hora:minuto no fuso de Brasília. */
+export function dataHoraCurta(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const partes = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: TZ_BRASILIA,
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(d);
+  const p = (tipo: Intl.DateTimeFormatPartTypes) =>
+    partes.find((x) => x.type === tipo)?.value ?? "";
+  return `${p("day")}/${p("month")} às ${p("hour")}:${p("minute")}`;
+}
+
+/**
+ * A frase de frescor do modo "1º turno encerrado" — substitui
+ * "Dado do TSE às HH:MM:SS, a cada N minutos": não há cadência a anunciar.
+ */
+export function fraseTotalizacaoEncerrada(dadoTs: string): string {
+  return `Resultado final do TSE · totalização encerrada em ${dataHoraCurta(dadoTs)}`;
+}
+
 /** Valor mostrado quando o ciclo não produziu hora do dado (estado `null`). */
 export const VALOR_DADO_TS_INDISPONIVEL = "indisponível neste ciclo";
 
@@ -267,6 +311,8 @@ export function rotuloFrescorDado(
     case "fresco":
     case "parado":
       return { label: ROTULO_DADO_TS, value: formatTimeHMS(frescor.dadoTs) };
+    case "encerrado":
+      return { label: ROTULO_TOTALIZACAO_ENCERRADA, value: dataHoraCurta(frescor.dadoTs) };
     case "indisponivel":
       return { label: ROTULO_DADO_TS, value: VALOR_DADO_TS_INDISPONIVEL };
     case "ausente":
@@ -288,6 +334,8 @@ export function fraseFrescorDado(frescor: FrescorDado, ts: string): string {
     case "fresco":
     case "parado":
       return `${ROTULO_DADO_TS} às ${formatTimeHMS(frescor.dadoTs)}`;
+    case "encerrado":
+      return fraseTotalizacaoEncerrada(frescor.dadoTs);
     case "indisponivel":
       return `Hora do dado ${VALOR_DADO_TS_INDISPONIVEL}`;
     case "ausente":

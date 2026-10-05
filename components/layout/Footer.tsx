@@ -14,6 +14,7 @@
 import Link from "next/link";
 
 import { PausaAtualizacao } from "@/components/layout/PausaAtualizacao";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 
 export function Footer() {
   return (
@@ -36,7 +37,9 @@ export function Footer() {
         </a>
         . AtlasMenna 2026.
       </p>
-      <PausaAtualizacao />
+      {/* 1º turno encerrado: a página não se atualiza mais — prometer
+          "se atualiza a cada minuto" seria falso. */}
+      {primeiroTurnoEncerrado() ? null : <PausaAtualizacao />}
       {/*
         `/candidatos` (spec 018, T-13) entra AQUI e não no `<CargoTabs>`: o
         próprio `CargoTabs.tsx` registra que "Deputado Federal" já não cabe em

@@ -59,6 +59,7 @@ import { Footer } from "@/components/layout/Footer";
 import { SeletorDeputado } from "@/components/layout/SeletorDeputado";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { aplicarInterruptorNoNacional } from "@/lib/blob/deputado-uf";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
 import { isPreEleicao } from "@/lib/config/fase";
 import { resumosPorUf } from "@/lib/deputado/resumos-por-uf";
@@ -139,7 +140,7 @@ function fraseFrescor(payload: EdgePayloadDeputado | null): string {
   if (!payload) return "aguardando o primeiro boletim.";
   const frescor = avaliarFrescorDado(payload.dado_ts, payload.cargo);
   const cadencia =
-    payload.atualizacao_min > 0
+    payload.atualizacao_min > 0 && !primeiroTurnoEncerrado()
       ? `, a cada ${payload.atualizacao_min} ${payload.atualizacao_min === 1 ? "minuto" : "minutos"}`
       : "";
   return `${fraseFrescorDado(frescor, payload.ts)}${cadencia}.`;
@@ -202,7 +203,11 @@ export default async function DeputadoEstadualPage() {
 
       {/* Seção 1 — o enquadramento. */}
       <Panel
-        kicker="Atlas Menna · apuração ao vivo · não oficial"
+        kicker={
+          primeiroTurnoEncerrado()
+            ? "Resultado final · 1º turno"
+            : "Atlas Menna · apuração ao vivo · não oficial"
+        }
         title={TITULO}
         titleId="casas-heading"
         headingLevel={1}

@@ -34,12 +34,20 @@
  * só `destino-voto`, que já está lá.
  */
 
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgeUfRow } from "@/lib/edge-config/types";
 import { compete } from "@/lib/utils/destino-voto";
 
 export const ROTULO_ELEITO = "Matematicamente eleito";
 export const ROTULO_ELEITOS = "Matematicamente eleitos";
 export const ROTULO_SEGUNDO_TURNO = "2º turno definido";
+
+/** Os rótulos com o 1º turno encerrado (`primeiroTurnoEncerrado`). */
+export const ROTULO_FINAL = {
+  eleito: "Eleito",
+  eleitos: "Eleitos",
+  segundoTurno: "Haverá 2º turno",
+} as const;
 
 export interface DefinicaoDaUf {
   /** Ids (de `top_candidatos[].id`) que recebem fundo cheio + ✓. */
@@ -72,10 +80,19 @@ export function definicaoDaUf(
   // A origem só acompanha uma definição que ESTÁ na tela (o produtor só a
   // emite junto com os campos acima; isto é defensivo).
   const oficial = row.definicao_oficial === true;
-  if (eleitos.size === 1) return { eleitos, rotulo: ROTULO_ELEITO, oficial };
-  if (eleitos.size > 1) return { eleitos, rotulo: ROTULO_ELEITOS, oficial };
+  // 1º turno encerrado (05/10/2026): com a totalização do TSE em 100%, o
+  // definido é o resultado final — sem o "matematicamente".
+  const final = primeiroTurnoEncerrado();
+  if (eleitos.size === 1)
+    return { eleitos, rotulo: final ? ROTULO_FINAL.eleito : ROTULO_ELEITO, oficial };
+  if (eleitos.size > 1)
+    return { eleitos, rotulo: final ? ROTULO_FINAL.eleitos : ROTULO_ELEITOS, oficial };
   if (row.segundo_turno_definido === true) {
-    return { eleitos: NINGUEM, rotulo: ROTULO_SEGUNDO_TURNO, oficial };
+    return {
+      eleitos: NINGUEM,
+      rotulo: final ? ROTULO_FINAL.segundoTurno : ROTULO_SEGUNDO_TURNO,
+      oficial,
+    };
   }
   return { eleitos: NINGUEM, rotulo: undefined, oficial: false };
 }

@@ -43,9 +43,9 @@
  */
 
 import type { ReactNode } from "react";
-
 import { VoteBar, type VoteBarSegment } from "@/components/atoms/bars/VoteBar";
 import { Panel } from "@/components/atoms/surfaces/Panel";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgeAgremiacaoBancada } from "@/lib/edge-config/types";
 import { ordenarBancada } from "@/lib/utils/bancada";
 import { formatPercent, formatVotes } from "@/lib/utils/format";
@@ -150,7 +150,8 @@ function corIdentidadeDaAgremiacao(agr: EdgeAgremiacaoBancada): string {
  */
 function intervaloDeCadeiras(agr: EdgeAgremiacaoBancada): string | null {
   const ci = agr.cadeiras_ci95;
-  if (!ci) return null;
+  // 1º turno encerrado: a contagem é final — não há faixa a mostrar.
+  if (!ci || primeiroTurnoEncerrado()) return null;
   const [lo, hi] = ci;
   return lo === hi ? `${lo}` : `${lo} a ${hi}`;
 }
@@ -312,21 +313,22 @@ export function DeputadoBancadaPanel({
           );
           // Nada aqui usa `aria-hidden`: o teste (m4) da capa federal conta
           // `span[aria-hidden]` para conferir os pontos de cor.
-          const faixa = mostrarFaixa ? (
-            <span
-              className="text-right"
-              style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
-            >
-              <span className="sr-only">
-                {intervalo ? "faixa provável: " : "faixa não disponível "}
+          const faixa =
+            mostrarFaixa && !primeiroTurnoEncerrado() ? (
+              <span
+                className="text-right"
+                style={{ font: "var(--type-data)", color: "var(--text-muted)" }}
+              >
+                <span className="sr-only">
+                  {intervalo ? "faixa provável: " : "faixa não disponível "}
+                </span>
+                <span data-testid="bancada-intervalo">
+                  {intervalo ? `${intervalo} cadeiras` : "—"}
+                </span>
               </span>
-              <span data-testid="bancada-intervalo">
-                {intervalo ? `${intervalo} cadeiras` : "—"}
-              </span>
-            </span>
-          ) : (
-            <span />
-          );
+            ) : (
+              <span />
+            );
           return (
             <li
               key={agr.cod}

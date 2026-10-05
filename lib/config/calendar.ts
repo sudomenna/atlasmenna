@@ -206,3 +206,41 @@ export function currentPresidentialTurno(now?: Date): Turno {
 // devolvia sempre `"pres"` por construção, e todo call site que a usasse
 // estaria perguntando algo que não tem resposta única. Não recriar — quem
 // precisa de um cargo passa o seu explicitamente.
+
+// ---------------------------------------------------------------------------
+// 1º turno encerrado (05/10/2026 — ordem do dono: "colocar o 1º turno como
+// encerrado")
+// ---------------------------------------------------------------------------
+
+/**
+ * Instante a partir do qual o site trata o 1º turno de 2026 como ENCERRADO:
+ * o TSE totalizou 100% das seções e a ingestão parou.
+ *
+ * Constante do repositório, não variável de ambiente — mesmo raciocínio do
+ * resto deste módulo (determinismo, constituição § 6): o mesmo instante dá a
+ * mesma tela em qualquer servidor, preview ou teste, sem depender de
+ * configuração que pode faltar num ambiente e sobrar em outro.
+ */
+export const ENCERRAMENTO_1T_2026 = "2026-10-05T03:00:00-03:00";
+
+/** Início do 2º turno — a mesma data da entrada `turno: 2` de {@link CALENDAR_2026}. */
+const INICIO_2T_2026 = "2026-10-25T00:00:00-03:00";
+
+/**
+ * O 1º turno está encerrado em `now`? Verdadeiro de {@link ENCERRAMENTO_1T_2026}
+ * até o início do 2º turno (exclusive) — no 2º turno a tela volta ao
+ * comportamento de apuração ao vivo, sem mudança alguma.
+ *
+ * O que o modo faz (05/10/2026): sem o controle "Parcial / Projeção" (a tela
+ * fica no apurado, rotulado "Resultado final"), sem vocabulário de projeção,
+ * sem aviso de dado parado e sem atualização automática — a ingestão parou e
+ * o número na tela é o final.
+ *
+ * Função pura do instante: chame-a no servidor (página, layout) e passe o
+ * resultado adiante quando der; os rótulos compartilhados com componentes de
+ * cliente a chamam no ponto de uso.
+ */
+export function primeiroTurnoEncerrado(now: Date = new Date()): boolean {
+  const t = now.getTime();
+  return t >= Date.parse(ENCERRAMENTO_1T_2026) && t < Date.parse(INICIO_2T_2026);
+}

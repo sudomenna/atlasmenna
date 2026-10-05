@@ -89,6 +89,7 @@ import {
   seriePorCandidatoFrom,
   type UfDetailResult,
 } from "@/lib/blob/uf-detail";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { cargoInfo, vagasDaCorrida } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
 import { simulacaoLigada, simulacaoMunicipiosUf, simulacaoSenadorUf } from "@/lib/dev/simulacao";
@@ -218,7 +219,9 @@ function ResultTitle({ sigla }: { sigla: string }) {
     <>
       {/* Bandeira decorativa (`alt=""`), uma só para os dois textos. */}
       <UfFlag sigla={sigla} width={25} height={18} eager inline />
-      <span data-view-only="parcial">Senado {sigla} — Resultado parcial</span>
+      <span data-view-only="parcial">
+        Senado {sigla} — {primeiroTurnoEncerrado() ? "Resultado final" : "Resultado parcial"}
+      </span>
       <span data-view-only="proj">Senado {sigla} — Projeção Atlas Menna</span>
     </>
   );
@@ -390,6 +393,8 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
   const { payload, zerado } = emSimulacao
     ? { payload: lidoUf, zerado: false }
     : await resolverModoUf(lidoUf, "sen", 1, sigla, { vagas: VAGAS_PADRAO });
+  // 05/10/2026 — 1º turno encerrado: TSE totalizou, a tela é o resultado final.
+  const encerrado = primeiroTurnoEncerrado();
 
   if (!payload) {
     // RF-149 — cargo 5 nesta UF.
@@ -573,9 +578,9 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
         candidatos={payload.candidatos}
         etiquetas={etiquetasDoPainel}
         headingLevel={1}
-        kicker="Projeção Atlas Menna · não oficial"
+        kicker={encerrado ? "Resultado final · 1º turno" : "Projeção Atlas Menna · não oficial"}
         note={
-          zerado
+          zerado || encerrado
             ? `${vagas} vagas por estado, em turno único — as ${vagas} candidaturas mais votadas se elegem, sem diferença entre elas.`
             : `${vagas} vagas por estado, em turno único — as ${vagas} candidaturas mais votadas se elegem, sem diferença entre elas. A margem acima é a distância da ${vagas}ª vaga para a primeira candidatura fora dela. Projeção por regra de três sobre o boletim do estado.`
         }
@@ -664,7 +669,9 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
           numa lista que A e B ocupam vaga e no painel de baixo que a disputa
           é entre B e C. O gate aceita qualquer uma das duas não-vazia: se uma
           base tem medidores, o painel tem o que dizer. */}
-      {incertezaMedida && (eleitosParcial.length > 0 || eleitosProj.length > 0) ? (
+      {/* 1º turno encerrado: não há "chance" a medir — o resultado é final. */}
+      {encerrado ? null : incertezaMedida &&
+        (eleitosParcial.length > 0 || eleitosProj.length > 0) ? (
         <ChancesPanel
           eleitos={eleitosParcial}
           eleitosProj={eleitosProj}

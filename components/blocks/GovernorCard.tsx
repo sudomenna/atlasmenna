@@ -41,6 +41,7 @@ import { EtiquetasLinha } from "@/components/atoms/data/EtiquetasLinha";
 import { UfFlag } from "@/components/atoms/data/UfFlag";
 import { nomeDaUnidade } from "@/components/atoms/maps/_shared";
 import { candidateColor } from "@/components/blocks/_candidateColor";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { vagasDaCorrida } from "@/lib/config/cargos";
 import type { EdgeCandidate, EdgeDestinoVoto, EdgeUfRow } from "@/lib/edge-config/types";
 import { normalizarSqcand } from "@/lib/etiquetas/formato";
@@ -60,7 +61,7 @@ import {
 import { formatPercentTrim } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { rankByParcial } from "@/lib/utils/rank-parcial";
-import { type BaseSelo, TURNO_LABEL, VAGA_LABEL } from "@/lib/utils/selo-resultado";
+import { type BaseSelo, rotuloTurno, rotuloVaga } from "@/lib/utils/selo-resultado";
 import { vagasDaUfNaParcial } from "@/lib/utils/senado-parcial";
 import { siglaExibicao } from "@/lib/utils/sigla-partido";
 import { idsDasVagas } from "@/lib/utils/vagas-eleitas";
@@ -220,9 +221,13 @@ const CHIP_EM_APURACAO: StatusChip = { label: "EM APURAÇÃO", s: "a", ariaText:
  */
 function chipVaga(base: BaseSelo): StatusChip {
   return {
-    label: VAGA_LABEL[base],
+    label: rotuloVaga(base),
     s: "a",
-    ariaText: base === "proj" ? "vaga projetada" : "vaga na parcial",
+    ariaText: primeiroTurnoEncerrado()
+      ? "eleito"
+      : base === "proj"
+        ? "vaga projetada"
+        : "vaga na parcial",
   };
 }
 
@@ -243,16 +248,23 @@ function chipTurno(desfecho: DesfechoGovernador, base: BaseSelo): StatusChip | n
   switch (desfecho) {
     case "eleito_1t":
       return {
-        label: TURNO_LABEL.primeiro[base],
+        label: rotuloTurno("primeiro", base),
         s: "a",
-        ariaText:
-          base === "proj" ? "vence no 1º turno pela projeção" : "venceria no 1º turno na parcial",
+        ariaText: primeiroTurnoEncerrado()
+          ? "eleito no 1º turno"
+          : base === "proj"
+            ? "vence no 1º turno pela projeção"
+            : "venceria no 1º turno na parcial",
       };
     case "segundo_turno":
       return {
-        label: TURNO_LABEL.segundo[base],
+        label: rotuloTurno("segundo", base),
         s: "t",
-        ariaText: base === "proj" ? "2º turno pela projeção" : "2º turno na parcial",
+        ariaText: primeiroTurnoEncerrado()
+          ? "vai ao 2º turno"
+          : base === "proj"
+            ? "2º turno pela projeção"
+            : "2º turno na parcial",
       };
     case "em_aberto":
       return base === "proj" ? CHIP_EM_APURACAO : null;

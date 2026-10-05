@@ -127,6 +127,7 @@ import { RegiaoConsolidada } from "@/components/blocks/RegiaoConsolidada";
 import { UfLinksGrid } from "@/components/blocks/UfLinksGrid";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { isPreEleicao } from "@/lib/config/fase";
 import { agruparPorRegiao } from "@/lib/config/regioes";
 import { resultadoEleitoral, simulacaoLigada, simulacaoNacional } from "@/lib/dev/simulacao";
@@ -378,6 +379,8 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
   const pre = isPreEleicao(payload);
   // Identidade fala, medição cala — no zerado como na fase pré.
   const cala = pre || zerado;
+  // 05/10/2026 — 1º turno encerrado: TSE totalizou, a tela é o resultado final.
+  const encerrado = primeiroTurnoEncerrado();
 
   const { national, por_uf, pct_apurado_total } = {
     national: payload.national,
@@ -451,7 +454,13 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
           como não-oficial uma projeção que não está lá (o `<Footer>` continua
           carregando "Não oficial. Fonte: TSE." em toda página). */}
       <Panel
-        kicker={pre ? "Candidaturas registradas no TSE" : "Projeção Atlas Menna · não oficial"}
+        kicker={
+          pre
+            ? "Candidaturas registradas no TSE"
+            : encerrado
+              ? "Resultado final · 1º turno"
+              : "Projeção Atlas Menna · não oficial"
+        }
         title={pre ? "Quem está concorrendo em cada estado" : "Governadores 2026"}
         titleId="resultado-heading"
         headingLevel={1}
@@ -464,7 +473,9 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
           >
             {pre
               ? "São 27 disputas estaduais independentes — uma em cada estado e no Distrito Federal. Abrir um estado mostra quem concorre lá. Fonte: TSE."
-              : "27 corridas estaduais — apuração em tempo real. Não oficial. Fonte: TSE."}
+              : encerrado
+                ? "27 corridas estaduais — resultado final do 1º turno, com a totalização do TSE encerrada. Não oficial. Fonte: TSE."
+                : "27 corridas estaduais — apuração em tempo real. Não oficial. Fonte: TSE."}
           </p>
 
           {/* "Participação do eleitorado" (os termômetros de brancos/nulos e
@@ -546,13 +557,15 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
                   id="desfecho-contagem-heading"
                   style={{ margin: 0, font: "var(--type-title)", fontSize: "var(--text-lg)" }}
                 >
-                  Se a apuração parasse agora
+                  {encerrado ? "Resultado final" : "Se a apuração parasse agora"}
                 </h3>
                 <p
                   className="max-w-prose"
                   style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
                 >
-                  O que já saiu das urnas, sem projeção.
+                  {encerrado
+                    ? "Quem foi eleito no 1º turno e quem vai ao 2º, pela contagem final do TSE."
+                    : "O que já saiu das urnas, sem projeção."}
                 </p>
                 <GovernadoresPlacarTurno porUf={por_uf} base="contagem" />
                 <GovernadoresPorPartido porUf={por_uf} base="contagem" />

@@ -6,7 +6,7 @@ import { CargoTabs } from "@/components/layout/CargoTabs";
 import { ShellControls } from "@/components/layout/ShellControls";
 import { ShellLiveBadge } from "@/components/layout/ShellLiveBadge";
 import { TopBar } from "@/components/layout/TopBar";
-import { currentPresidentialTurno } from "@/lib/config/calendar";
+import { currentPresidentialTurno, primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { THEME_INIT_SCRIPT } from "@/lib/state/theme";
 import { VIEW_MODE_DEFAULT } from "@/lib/state/view-mode";
 import "./globals.css";
@@ -103,11 +103,16 @@ export const metadata: Metadata = {
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const turno = currentPresidentialTurno();
+  // 05/10/2026 — 1º turno encerrado: sem "Parcial / Projeção" (a tela fica no
+  // apurado), sem atualização automática, e `data-encerrado` no `<html>` para
+  // a cascata (selo do topo, colunas de projeção — ver `app/globals.css`).
+  const encerrado = primeiroTurnoEncerrado();
 
   return (
     <html
       lang="pt-BR"
-      data-view={VIEW_MODE_DEFAULT}
+      data-view={encerrado ? "parcial" : VIEW_MODE_DEFAULT}
+      data-encerrado={encerrado ? "1t" : undefined}
       className={`${sans.variable} ${serifDisplay.variable} ${mono.variable}`}
       suppressHydrationWarning
     >
@@ -119,7 +124,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <TopBar
           brand="AtlasMenna"
           brandHref="/"
-          subtitle={`Eleições 2026 · ${turno}º turno · não oficial`}
+          subtitle={
+            encerrado
+              ? "Eleições 2026 · 1º turno encerrado · não oficial"
+              : `Eleições 2026 · ${turno}º turno · não oficial`
+          }
           right={
             <>
               <ShellLiveBadge />
@@ -127,11 +136,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </>
           }
         >
-          <ShellControls cargoNav={<CargoTabs placement="top" />} />
+          <ShellControls cargoNav={<CargoTabs placement="top" />} encerrado={encerrado} />
         </TopBar>
         {children}
         <CargoTabs placement="bottom" />
-        <AtualizacaoAutomatica />
+        {encerrado ? null : <AtualizacaoAutomatica />}
       </body>
     </html>
   );

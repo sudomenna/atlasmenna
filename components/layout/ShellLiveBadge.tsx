@@ -81,6 +81,12 @@ export function ShellLiveBadge({ className }: ShellLiveBadgeProps) {
       <span className={`sr-only ${styles.srAoVivo}`} data-testid="shell-live-badge-sr-ao-vivo">
         Apuração ao vivo
       </span>
+      {/* 1º turno encerrado — `:root[data-encerrado]` (app/globals.css) troca
+          o rótulo para "Resultado final", para o ponto e mostra esta frase no
+          lugar de "Apuração ao vivo". */}
+      <span className={`sr-only ${styles.srFinal}`} data-testid="shell-live-badge-sr-final">
+        Resultado final do 1º turno
+      </span>
     </span>
   );
 }

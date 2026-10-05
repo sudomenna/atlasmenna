@@ -55,6 +55,7 @@
 import { rotuloDaUnidade } from "@/components/atoms/maps/_shared";
 import { UfHoverLink } from "@/components/atoms/tables/UfHoverLink";
 import { candidateMarkerColor } from "@/components/blocks/_candidateColor";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgeCandidate, EdgeUfRow } from "@/lib/edge-config/types";
 import { formatPercent, formatPp } from "@/lib/utils/format";
 import { nomeExibicao } from "@/lib/utils/nome-candidato";
@@ -477,7 +478,9 @@ function MultiTable({ rows, candidatos, multiDisputaThreshold, className }: Mult
           Resultados por estado
         </h2>
         <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-          UFs agrupadas pelo líder projetado (1º turno).{" "}
+          {primeiroTurnoEncerrado()
+            ? "UFs agrupadas pelo líder (resultado final do 1º turno)."
+            : "UFs agrupadas pelo líder projetado (1º turno)."}{" "}
           {/* Gêmea da legenda do modo binário — ver lá o porquê. */}
           <strong style={{ fontWeight: 600 }}>Outros</strong> é a soma das candidaturas fora das
           quatro primeiras de cada estado; o número entre parênteses é quantas são.

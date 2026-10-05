@@ -182,7 +182,7 @@ import { TurnoOneRecap } from "@/components/blocks/TurnoOneRecap";
 import { VotacaoEleitorado } from "@/components/blocks/VotacaoEleitorado";
 import { Footer } from "@/components/layout/Footer";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
-import { currentPresidentialTurno } from "@/lib/config/calendar";
+import { currentPresidentialTurno, primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { isExterior, unidadesDeApuracao } from "@/lib/config/cargos";
 import { avaliarFrescorDado } from "@/lib/config/dado-freshness";
 import { isPreEleicao } from "@/lib/config/fase";
@@ -367,10 +367,10 @@ function LivePctLabelStyle({
  * de tela ouve um título, não dois. Alternar em JavaScript exigiria tornar o
  * `<h1>` client, o que custaria bundle acima da dobra por um texto.
  */
-function ResultTitle() {
+function ResultTitle({ encerrado = false }: { encerrado?: boolean }) {
   return (
     <>
-      <span data-view-only="parcial">Resultado parcial</span>
+      <span data-view-only="parcial">{encerrado ? "Resultado final" : "Resultado parcial"}</span>
       <span data-view-only="proj">Projeção Atlas Menna</span>
     </>
   );
@@ -630,6 +630,8 @@ export default async function HomePage() {
   // "Identidade fala, medição cala": no zerado tudo que MEDE sai, como na
   // fase pré — mas o layout é o da apuração (painel de resultado com 0,0%).
   const cala = pre || zerado;
+  // 05/10/2026 — 1º turno encerrado: TSE totalizou, a tela é o resultado final.
+  const encerrado = primeiroTurnoEncerrado();
 
   const { national, por_uf, pct_apurado_total, ufs_apuradas, ts, insights, composition, turno } =
     payload;
@@ -969,18 +971,26 @@ export default async function HomePage() {
           action={badgesDeEstado}
           candidatos={candidatosDoPainel}
           headingLevel={1}
-          kicker={pre ? "Candidaturas registradas no TSE" : "Projeção Atlas Menna · não oficial"}
+          kicker={
+            pre
+              ? "Candidaturas registradas no TSE"
+              : encerrado
+                ? "Resultado final · 1º turno"
+                : "Projeção Atlas Menna · não oficial"
+          }
           note={
             pre
               ? "Esta é a lista de candidaturas registradas pelo TSE para a Presidência, na ordem do número na urna. Nenhum voto foi contado: a votação é em 4 de outubro de 2026."
-              : "Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados por UF e país. O % apurado do Brasil é a soma dos estados publicados pelo TSE — a tela “Brasil” do site do TSE às vezes atualiza com atraso em relação aos estados, e por isso pode mostrar um número menor."
+              : encerrado
+                ? "Contagem final do TSE, com a totalização encerrada. Não oficial."
+                : "Projeção por regra de três: votos apurados ÷ % apurado em cada município, somados por UF e país. O % apurado do Brasil é a soma dos estados publicados pelo TSE — a tela “Brasil” do site do TSE às vezes atualiza com atraso em relação aos estados, e por isso pode mostrar um número menor."
           }
           pctApurado={pct_apurado_total}
           rule="none"
           // Versão D (2026-09-27) — "2º turno · …" / "Vence(ria) no 1º turno · …"
           // nos dois cartões. Na fase pré (`identidade`) o painel ignora.
           selo="turno"
-          title={pre ? "Quem está concorrendo" : <ResultTitle />}
+          title={pre ? "Quem está concorrendo" : <ResultTitle encerrado={encerrado} />}
           titleId="resultado-heading"
           turno={turno}
           variant={pre ? "identidade" : zerado ? "zerado" : "medicao"}
@@ -989,7 +999,7 @@ export default async function HomePage() {
         <Panel
           action={badgesDeEstado}
           headingLevel={1}
-          kicker="Projeção Atlas Menna · não oficial"
+          kicker={encerrado ? "Resultado final · 1º turno" : "Projeção Atlas Menna · não oficial"}
           rule="none"
         >
           {/* `--space-6` dentro do painel: 24px separa sub-blocos de uma MESMA
@@ -1073,7 +1083,7 @@ export default async function HomePage() {
           declarado `number` não-anulável, então o que chega do payload zerado
           é `0`, e `has(0)` é `true`. O painel renderizaria "Fulano vence no 1º
           turno — 0%" com a barra vazia. */}
-      {!cala && mode === "multi-1t" && turno !== 2 && (
+      {!cala && !encerrado && mode === "multi-1t" && turno !== 2 && (
         <ChancesPanel
           title="Segundo turno?"
           pSegundoTurno={national.p_segundo_turno_overall}
@@ -1155,7 +1165,7 @@ export default async function HomePage() {
           apuração concluída."** A lista `pendentes` fica vazia quando todo
           `pct_apurado` é zero, e o componente lê isso como "nada falta", não
           como "nada começou": é o oposto exato do que o número quer dizer. */}
-      {!cala && (
+      {!cala && !encerrado && (
         <RemainingPanel
           rows={por_uf}
           candidatos={national.candidatos}
@@ -1173,7 +1183,7 @@ export default async function HomePage() {
           carimbadas com `HH:MM:SS` ao lado de zero voto, e um intervalo de
           confiança de 95% `[0,0; 0,0]`, que é a forma tipográfica da certeza
           absoluta. */}
-      {!cala && (
+      {!cala && !encerrado && (
         <BulletinPanel
           national={national}
           rows={por_uf}
@@ -1344,7 +1354,7 @@ export default async function HomePage() {
       {/* `!pre`: a análise é leitura do modelo sobre o que foi contado.
           ADR-0072: texto da IA quando o interruptor está ligado e o texto é
           fresco; senão, as frases de regra fixa (`frasesRegra`). */}
-      {!cala && analiseIA && (
+      {!cala && !encerrado && analiseIA && (
         <Panel kicker="Análise por IA · não oficial">
           <InsightCard
             frases={analiseIA.frases}
@@ -1354,7 +1364,7 @@ export default async function HomePage() {
           />
         </Panel>
       )}
-      {!cala && !analiseIA && frasesRegra.length > 0 && (
+      {!cala && !encerrado && !analiseIA && frasesRegra.length > 0 && (
         <Panel kicker="Leitura do modelo">
           <InsightCard frases={frasesRegra} heading="Análise" origem="regra" />
         </Panel>

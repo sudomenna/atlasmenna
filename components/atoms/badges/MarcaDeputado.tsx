@@ -16,6 +16,7 @@
  * bundle além deste arquivo.
  */
 
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import {
   type DestinoDeputado,
   type Marca,
@@ -146,13 +147,22 @@ export function LegendaMarcas({
               {aviso}
             </li>
           ) : null}
-          <li data-view-only={soParcial}>
-            <MarcaDeputado marca={{ tipo: "parcial", via: null, apertada: false }} /> quem ocuparia
-            a cadeira se a contagem parasse agora, pela distribuição do Código Eleitoral sobre os
-            votos já apurados. "Pelo quociente" e "nas sobras" dizem por onde a vaga veio na nossa
-            conta; "sobra apertada" marca a vaga de sobra cuja margem é menor que o voto que ainda
-            falta contar.
-          </li>
+          {primeiroTurnoEncerrado() ? (
+            // 1º turno encerrado (05/10/2026): a contagem é a final do TSE.
+            <li>
+              <MarcaDeputado marca={{ tipo: "parcial", via: null, apertada: false }} /> quem ocupa a
+              cadeira pela distribuição do Código Eleitoral sobre a contagem final do TSE. "Pelo
+              quociente" e "nas sobras" dizem por onde a vaga veio na nossa conta.
+            </li>
+          ) : (
+            <li data-view-only={soParcial}>
+              <MarcaDeputado marca={{ tipo: "parcial", via: null, apertada: false }} /> quem
+              ocuparia a cadeira se a contagem parasse agora, pela distribuição do Código Eleitoral
+              sobre os votos já apurados. "Pelo quociente" e "nas sobras" dizem por onde a vaga veio
+              na nossa conta; "sobra apertada" marca a vaga de sobra cuja margem é menor que o voto
+              que ainda falta contar.
+            </li>
+          )}
           {projecaoVisivel ? (
             <li data-view-only="proj">
               <MarcaDeputado marca={{ tipo: "projecao", via: "qp", apertada: false }} /> quem

@@ -108,6 +108,7 @@ import { Footer } from "@/components/layout/Footer";
 import { SeletorDeputado } from "@/components/layout/SeletorDeputado";
 import { SeloFasePreStyle } from "@/components/layout/SeloFasePreStyle";
 import { aplicarInterruptorNoNacional } from "@/lib/blob/deputado-uf";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { cargoInfo } from "@/lib/config/cargos";
 import { avaliarFrescorDado, fraseFrescorDado } from "@/lib/config/dado-freshness";
 import { isPreEleicao } from "@/lib/config/fase";
@@ -265,7 +266,11 @@ export default async function DeputadoFederalPage() {
       {/* Seção 1 — o enquadramento da corrida. O `<h1>` é o título deste
           painel (ADR-0029 § 5). */}
       <Panel
-        kicker="Atlas Menna · apuração ao vivo · não oficial"
+        kicker={
+          primeiroTurnoEncerrado()
+            ? "Resultado final · 1º turno"
+            : "Atlas Menna · apuração ao vivo · não oficial"
+        }
         title="Câmara dos Deputados 2026"
         titleId="camara-heading"
         headingLevel={1}
@@ -373,7 +378,7 @@ export default async function DeputadoFederalPage() {
               }}
             >
               {fraseFrescorDado(frescorDado, payload.ts)}
-              {payload.atualizacao_min > 0
+              {payload.atualizacao_min > 0 && !primeiroTurnoEncerrado()
                 ? `, a cada ${payload.atualizacao_min} ${
                     payload.atualizacao_min === 1 ? "minuto" : "minutos"
                   }`
@@ -407,7 +412,7 @@ export default async function DeputadoFederalPage() {
           um painel sempre presente com miolo vazio — um título "Destaques" sem
           nada embaixo diz ao leitor que algo falhou, quando nada falhou. Não é
           exceção ao ADR-0017: ali o que não pode sumir é dado que EXISTE. */}
-      {payload.insights.length > 0 ? (
+      {payload.insights.length > 0 && !primeiroTurnoEncerrado() ? (
         <Panel kicker="Destaques" title="O que chama atenção" titleId="insights-heading">
           <ul
             data-testid="dep-insights"
@@ -536,7 +541,9 @@ export default async function DeputadoFederalPage() {
               as sobras e não aparece aqui.
               {zerado
                 ? null
-                : " Partidos e federações sem nenhuma cadeira na parcial ficam fora da lista."}
+                : primeiroTurnoEncerrado()
+                  ? " Partidos e federações sem nenhuma cadeira ficam fora da lista."
+                  : " Partidos e federações sem nenhuma cadeira na parcial ficam fora da lista."}
             </p>
           </>
         }

@@ -143,6 +143,7 @@ import mapFrameStyles from "@/components/blocks/MapFrameMobile.module.css";
 import { CHIP_STYLE, NationalMapBlock } from "@/components/blocks/NationalMapBlock";
 import { UfLeaderMapLazy } from "@/components/blocks/UfMapsLazy";
 import { UfPicker, type UfPickerCargo } from "@/components/layout/UfPicker";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { cargoFromToken, isExterior } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
 import type { EdgePayload, EdgePayloadUf, EdgeUfMunicipio } from "@/lib/edge-config/types";
@@ -264,7 +265,8 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
       }
     };
     void buscar();
-    const id = setInterval(() => void buscar(), REFRESH_MS);
+    // 1º turno encerrado: a ingestão parou — busca uma vez, sem renovar.
+    const id = primeiroTurnoEncerrado() ? undefined : setInterval(() => void buscar(), REFRESH_MS);
     return () => {
       vivo = false;
       clearInterval(id);
@@ -312,7 +314,8 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
     void buscar();
     // 🔴 04/10 noite — renova sozinho (pedido do dono), mesma cadência do
     // payload nacional acima.
-    const id = setInterval(() => void buscar(), REFRESH_MS);
+    // 1º turno encerrado: a ingestão parou — busca uma vez, sem renovar.
+    const id = primeiroTurnoEncerrado() ? undefined : setInterval(() => void buscar(), REFRESH_MS);
     return () => {
       vivo = false;
       clearInterval(id);
@@ -369,7 +372,8 @@ export function PersistentMapFrame({ cargo }: PersistentMapFrameProps) {
       }
     };
     void buscar();
-    const id = setInterval(() => void buscar(), REFRESH_MS);
+    // 1º turno encerrado: a ingestão parou — busca uma vez, sem renovar.
+    const id = primeiroTurnoEncerrado() ? undefined : setInterval(() => void buscar(), REFRESH_MS);
     return () => {
       vivo = false;
       clearInterval(id);

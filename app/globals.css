@@ -822,6 +822,28 @@ a:hover {
   display: revert;
 }
 
+/* 1º turno encerrado (05/10/2026, `primeiroTurnoEncerrado()` em
+ * `lib/config/calendar.ts`; o layout escreve `data-encerrado` no `<html>`).
+ *
+ * - A coluna da projeção sai inteira, inclusive a de `data-view-cell` (que na
+ *   visão Parcial só recuava de cor): com a totalização encerrada a projeção
+ *   é o próprio apurado, e não há leitura do modelo a mostrar.
+ * - O selo do topo deixa de dizer "% apurado"/"ao vivo": rótulo fixo, ponto
+ *   parado. A especificidade (0,2,0) vence o `:root{…}` que cada página emite
+ *   (0,1,0), então nenhuma página precisa saber do modo para o selo mudar. */
+:root[data-encerrado] [data-view-cell="proj"],
+:root[data-encerrado] [data-view-only="proj"],
+:root[data-encerrado] [data-testid="shell-live-badge-dot"] {
+  display: none;
+}
+
+:root[data-encerrado] {
+  --live-pct-label: "Resultado final";
+  --live-dot-state: paused;
+  --live-sr-ao-vivo: none;
+  --live-sr-final: inline;
+}
+
 /* 🔴 O vão fantasma da faixa colapsada (2026-09-20, 2ª rodada).
  *
  * `display: none` tira o item da grade, e a faixa `auto` que o hospedava
