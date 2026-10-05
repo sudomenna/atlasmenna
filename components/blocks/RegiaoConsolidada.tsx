@@ -46,12 +46,12 @@
  */
 
 import type { CSSProperties, ReactNode } from "react";
-
 import {
   ProjecaoIndicador,
   VotosProjetados,
   votosProjetadosExibiveis,
 } from "@/components/atoms/data/ProjecaoIndicador";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { Regiao } from "@/lib/config/regioes";
 import type { EdgeUfRow } from "@/lib/edge-config/types";
 import {
@@ -170,9 +170,10 @@ function Resumo({
   // total novo nasce aqui; sem consolidado (`sem_total_projetado`, região sem
   // votos) não sai nada.
   const votosProj = base === "proj" && c.disponivel ? votosProjetadosExibiveis(c.total) : null;
-  const baseTxt = `${base === "proj" ? "Projeção" : "Parcial"} · ${
-    senado ? "% dos votos" : "% dos votos válidos em disputa"
-  }`;
+  // 1º turno encerrado (05/10/2026): a base é o resultado final.
+  const baseTxt = `${
+    primeiroTurnoEncerrado() ? "Resultado final" : base === "proj" ? "Projeção" : "Parcial"
+  } · ${senado ? "% dos votos" : "% dos votos válidos em disputa"}`;
 
   return (
     <div className={styles.resumo} data-view-only={base}>

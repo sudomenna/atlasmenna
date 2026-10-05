@@ -54,6 +54,7 @@
  * cinza cheio.
  */
 
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { cargoInfo } from "@/lib/config/cargos";
 import { isPreEleicao } from "@/lib/config/fase";
 import type { EdgePayload } from "@/lib/edge-config/types";
@@ -445,6 +446,12 @@ export function derivarSenado2027(
 export function textoDoPartido(p: PartidoSenado2027, base: BaseSenado2027 = "proj"): string {
   const partes: string[] = [];
   if (p.continua > 0) partes.push(`${p.continua} até 2031`);
+  // 1º turno encerrado (05/10/2026): toda vaga de 2026 é eleição final.
+  if (primeiroTurnoEncerrado()) {
+    const eleitos = p.decidida + p.projetada;
+    if (eleitos > 0) partes.push(`${eleitos} ${eleitos === 1 ? "eleito" : "eleitos"} em 2026`);
+    return `${p.sigla} ${p.cadeiras} — ${partes.join(" + ")}`;
+  }
   if (p.decidida > 0) partes.push(`${p.decidida} em 2026 (apuração concluída no estado)`);
   // Base Parcial (04/10): a cadeira não firme é a da contagem de agora.
   if (p.projetada > 0) {

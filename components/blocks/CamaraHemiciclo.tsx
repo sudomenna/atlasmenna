@@ -106,7 +106,6 @@
  */
 
 import type { CSSProperties } from "react";
-
 import {
   agruparEmTrechos,
   CINZA_ASSENTO,
@@ -114,6 +113,7 @@ import {
   Hemiciclo,
   type TrechoHemiciclo,
 } from "@/components/blocks/Hemiciclo";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgeBancadaNacional } from "@/lib/edge-config/types";
 import { ordenarBancada } from "@/lib/utils/bancada";
 import { layoutHemiciclo } from "@/lib/utils/hemiciclo";
@@ -311,10 +311,12 @@ export function CamaraHemiciclo({
       style={style}
       legenda={
         <>
-          Cada bolinha é uma cadeira, pintada pela agremiação que a está ganhando com os votos já
-          contados. As cadeiras estão na mesma ordem da lista abaixo — maior bancada primeiro —, que
-          não é posição ideológica.{" "}
-          {indefinidas > 0 ? (
+          {primeiroTurnoEncerrado()
+            ? "Cada bolinha é uma cadeira, pintada pela agremiação que a conquistou na contagem final do TSE."
+            : "Cada bolinha é uma cadeira, pintada pela agremiação que a está ganhando com os votos já contados."}{" "}
+          As cadeiras estão na mesma ordem da lista abaixo — maior bancada primeiro —, que não é
+          posição ideológica.{" "}
+          {indefinidas > 0 && !primeiroTurnoEncerrado() ? (
             <span data-testid="camara-hemiciclo-indefinidas">
               {indefinidas === 1
                 ? "1 cadeira aparece cinza com anel colorido"

@@ -268,7 +268,7 @@ export default async function DeputadoFederalPage() {
       <Panel
         kicker={
           primeiroTurnoEncerrado()
-            ? "Resultado final · 1º turno"
+            ? "Resultado final · 1º turno · não oficial"
             : "Atlas Menna · apuração ao vivo · não oficial"
         }
         title="Câmara dos Deputados 2026"

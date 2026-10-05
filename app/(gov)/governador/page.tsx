@@ -173,6 +173,19 @@ const FILTER_LABELS: Record<StatusFilter, string> = {
   chamadas: "Decididas pela projeção",
 };
 
+/** 1º turno encerrado (05/10/2026): a classificação é a do resultado final. */
+const FILTER_LABELS_FINAL: Record<StatusFilter, string> = {
+  todas: "Todas",
+  em_disputa: "Em disputa",
+  decididos_1t: "Eleitos no 1º turno",
+  vai_2t: "Vão ao 2º turno",
+  chamadas: "Decididas",
+};
+
+function rotuloFiltro(f: StatusFilter): string {
+  return (primeiroTurnoEncerrado() ? FILTER_LABELS_FINAL : FILTER_LABELS)[f];
+}
+
 const FILTER_ORDER: StatusFilter[] = ["todas", "em_disputa", "decididos_1t", "vai_2t", "chamadas"];
 
 /**
@@ -458,7 +471,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
           pre
             ? "Candidaturas registradas no TSE"
             : encerrado
-              ? "Resultado final · 1º turno"
+              ? "Resultado final · 1º turno · não oficial"
               : "Projeção Atlas Menna · não oficial"
         }
         title={pre ? "Quem está concorrendo em cada estado" : "Governadores 2026"}
@@ -655,7 +668,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
                           textDecoration: "none",
                         }}
                       >
-                        {FILTER_LABELS[f]}
+                        {rotuloFiltro(f)}
                       </a>
                     </li>
                   );
@@ -670,7 +683,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
 
             {ufsFiltradas.length === 0 ? (
               <p style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}>
-                Nenhuma UF se encaixa no filtro <strong>{FILTER_LABELS[status]}</strong> no momento.{" "}
+                Nenhuma UF se encaixa no filtro <strong>{rotuloFiltro(status)}</strong> no momento.{" "}
                 <a href="/governador">Ver todas</a>.
               </p>
             ) : null}
@@ -695,7 +708,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
               {ufsFiltradas.length > 0 ? (
                 <p style={{ margin: 0, font: "var(--type-data)", color: "var(--text-muted)" }}>
                   {ufsFiltradas.length} {ufsFiltradas.length === 1 ? "corrida" : "corridas"} —{" "}
-                  {FILTER_LABELS[status].toLowerCase()}.
+                  {rotuloFiltro(status).toLowerCase()}.
                 </p>
               ) : null}
               {agruparPorRegiao(por_uf).map((grupo) => {
@@ -746,7 +759,7 @@ export default async function GovernadorGridPage({ searchParams }: PageProps) {
                         }}
                       >
                         Nenhum estado do {grupo.regiao.nome} no filtro{" "}
-                        {FILTER_LABELS[status].toLowerCase()}.
+                        {rotuloFiltro(status).toLowerCase()}.
                       </p>
                     )}
                   </RegiaoConsolidada>

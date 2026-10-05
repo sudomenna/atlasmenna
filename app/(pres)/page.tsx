@@ -975,7 +975,7 @@ export default async function HomePage() {
             pre
               ? "Candidaturas registradas no TSE"
               : encerrado
-                ? "Resultado final · 1º turno"
+                ? "Resultado final · 1º turno · não oficial"
                 : "Projeção Atlas Menna · não oficial"
           }
           note={
@@ -999,7 +999,11 @@ export default async function HomePage() {
         <Panel
           action={badgesDeEstado}
           headingLevel={1}
-          kicker={encerrado ? "Resultado final · 1º turno" : "Projeção Atlas Menna · não oficial"}
+          kicker={
+            encerrado
+              ? "Resultado final · 1º turno · não oficial"
+              : "Projeção Atlas Menna · não oficial"
+          }
           rule="none"
         >
           {/* `--space-6` dentro do painel: 24px separa sub-blocos de uma MESMA

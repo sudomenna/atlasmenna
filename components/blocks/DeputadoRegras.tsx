@@ -20,6 +20,7 @@
 
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import type { DeputadoRegras as RegrasDados } from "@/lib/blob/deputado-uf";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import { formatVotes } from "@/lib/utils/format";
 import { siglaNaFrase, TERMO_ESTADO, type TermoDoTerritorio } from "@/lib/utils/termo-territorio";
 
@@ -60,8 +61,14 @@ export function DeputadoRegras({
       {regras ? (
         <div className="flex flex-col" style={{ gap: "var(--space-3)" }} data-testid="dep-regras">
           <p className="max-w-prose" style={TEXTO}>
-            Os números abaixo são de agora: o quociente eleitoral muda a cada boletim, porque
-            depende dos votos válidos já apurados {naUf.em}.
+            {primeiroTurnoEncerrado() ? (
+              <>Os números abaixo são os da contagem final do TSE {naUf.em}.</>
+            ) : (
+              <>
+                Os números abaixo são de agora: o quociente eleitoral muda a cada boletim, porque
+                depende dos votos válidos já apurados {naUf.em}.
+              </>
+            )}
           </p>
           <dl
             className="grid"

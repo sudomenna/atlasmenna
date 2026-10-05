@@ -578,7 +578,11 @@ export default async function UFSenadorPage({ params }: UFSenadorPageProps) {
         candidatos={payload.candidatos}
         etiquetas={etiquetasDoPainel}
         headingLevel={1}
-        kicker={encerrado ? "Resultado final · 1º turno" : "Projeção Atlas Menna · não oficial"}
+        kicker={
+          encerrado
+            ? "Resultado final · 1º turno · não oficial"
+            : "Projeção Atlas Menna · não oficial"
+        }
         note={
           zerado || encerrado
             ? `${vagas} vagas por estado, em turno único — as ${vagas} candidaturas mais votadas se elegem, sem diferença entre elas.`

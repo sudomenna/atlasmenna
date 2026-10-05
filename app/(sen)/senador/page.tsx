@@ -348,7 +348,7 @@ export default async function SenadoPage() {
           pre
             ? "Candidaturas registradas no TSE"
             : encerrado
-              ? "Resultado final · 1º turno"
+              ? "Resultado final · 1º turno · não oficial"
               : "Projeção Atlas Menna · não oficial"
         }
         title={pre ? "Quem está concorrendo em cada estado" : "Senado 2026"}

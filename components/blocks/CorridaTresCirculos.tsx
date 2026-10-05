@@ -133,6 +133,7 @@ import {
   unidadeVotos,
   votosPorEleitorValido,
 } from "@/components/blocks/VotacaoEleitorado";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type {
   EdgeCorridaEntrada,
   EdgeCorridaPartido,
@@ -772,7 +773,7 @@ export function CorridaTresCirculos({
           visao={visaoApurado}
           id="corrida-circulo-3"
           defsPrefix={titleId}
-          titulo="Do eleitorado apto, até agora"
+          titulo={primeiroTurnoEncerrado() ? "Do eleitorado apto" : "Do eleitorado apto, até agora"}
           baseLabel={base3}
           total={c.aptos * k}
           fatias={c3 ?? []}

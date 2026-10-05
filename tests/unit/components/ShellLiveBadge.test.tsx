@@ -292,7 +292,7 @@ describe("RF-159 — o selo do shell", () => {
     vi.mocked(primeiroTurnoEncerrado).mockReturnValue(true);
     try {
       const final = renderToStaticMarkup(await HomePage());
-      expect(final).toContain("Resultado final · 1º turno");
+      expect(final).toContain("Resultado final · 1º turno · não oficial");
       expect(final).toContain("Resultado final");
       expect(final).not.toContain("Projeção Atlas Menna · não oficial");
       expect(final).not.toContain("às vezes atualiza com atraso");

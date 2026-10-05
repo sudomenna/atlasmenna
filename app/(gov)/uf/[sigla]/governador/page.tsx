@@ -655,7 +655,11 @@ export default async function UFGovernadorPage({ params }: UFGovernadorPageProps
         candidatos={payload.candidatos}
         etiquetas={etiquetasDoPainel}
         headingLevel={1}
-        kicker={encerrado ? "Resultado final · 1º turno" : "Projeção Atlas Menna · não oficial"}
+        kicker={
+          encerrado
+            ? "Resultado final · 1º turno · não oficial"
+            : "Projeção Atlas Menna · não oficial"
+        }
         note={
           encerrado
             ? "Contagem final do TSE, com a totalização encerrada. Não oficial."

@@ -300,7 +300,8 @@ export function textoDaMarca(marca: Marca): TextoDaMarca {
       return {
         principal: primeiroTurnoEncerrado() ? TEXTO_MARCA_FINAL : TEXTO_MARCA.parcial,
         via: marca.via === null ? null : TEXTO_VIA[marca.via],
-        apertada: marca.apertada ? "sobra apertada" : null,
+        // 1º turno encerrado: contagem final — nada mais pode mudar de mão.
+        apertada: marca.apertada && !primeiroTurnoEncerrado() ? "sobra apertada" : null,
         citacaoTse: null,
       };
   }

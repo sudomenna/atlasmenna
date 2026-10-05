@@ -205,7 +205,7 @@ export default async function DeputadoEstadualPage() {
       <Panel
         kicker={
           primeiroTurnoEncerrado()
-            ? "Resultado final · 1º turno"
+            ? "Resultado final · 1º turno · não oficial"
             : "Atlas Menna · apuração ao vivo · não oficial"
         }
         title={TITULO}
@@ -369,16 +369,28 @@ export default async function DeputadoEstadualPage() {
             textWrap: "pretty",
           }}
         >
-          Os números desta página <strong>não são uma projeção</strong>. Em cada casa, são a
-          distribuição de cadeiras pelas regras do Código Eleitoral aplicada aos votos{" "}
-          <strong>já apurados</strong> — "como ficaria a casa se a contagem parasse agora" —, e a
-          soma junta as {TOTAL_CASAS} contas. A projeção, que é não oficial, quando existe, é feita
-          casa a casa e aparece só na página de cada uma: não somamos projeções.{" "}
-          {interruptor.ligada
-            ? "Ela está ligada no site para as assembleias."
-            : interruptor.origem === "invalida" || interruptor.origem === "falha"
-              ? "Neste momento não foi possível ler o interruptor da projeção das assembleias, e por segurança ela fica desligada."
-              : "Neste momento ela está desligada no site para as assembleias."}{" "}
+          {primeiroTurnoEncerrado() ? (
+            // 1º turno encerrado (05/10/2026): contagem final, sem projeção.
+            <>
+              Os números desta página <strong>não são uma projeção</strong>. Em cada casa, são a
+              distribuição de cadeiras pelas regras do Código Eleitoral aplicada à{" "}
+              <strong>contagem final do TSE</strong>, com a totalização encerrada, e a soma junta as{" "}
+              {TOTAL_CASAS} contas. Não oficial: o resultado oficial é o do TSE.{" "}
+            </>
+          ) : (
+            <>
+              Os números desta página <strong>não são uma projeção</strong>. Em cada casa, são a
+              distribuição de cadeiras pelas regras do Código Eleitoral aplicada aos votos{" "}
+              <strong>já apurados</strong> — "como ficaria a casa se a contagem parasse agora" —, e
+              a soma junta as {TOTAL_CASAS} contas. A projeção, que é não oficial, quando existe, é
+              feita casa a casa e aparece só na página de cada uma: não somamos projeções.{" "}
+              {interruptor.ligada
+                ? "Ela está ligada no site para as assembleias."
+                : interruptor.origem === "invalida" || interruptor.origem === "falha"
+                  ? "Neste momento não foi possível ler o interruptor da projeção das assembleias, e por segurança ela fica desligada."
+                  : "Neste momento ela está desligada no site para as assembleias."}{" "}
+            </>
+          )}
           O método completo está em{" "}
           <a href="/sobre-o-modelo#sec-cadeiras" style={{ color: "inherit" }}>
             Sobre o modelo

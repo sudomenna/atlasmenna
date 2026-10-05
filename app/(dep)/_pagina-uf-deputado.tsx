@@ -565,7 +565,7 @@ export async function renderPaginaUfDeputado(
       <Panel
         kicker={
           primeiroTurnoEncerrado()
-            ? "Resultado final · 1º turno"
+            ? "Resultado final · 1º turno · não oficial"
             : "Atlas Menna · apuração ao vivo · não oficial"
         }
         title={

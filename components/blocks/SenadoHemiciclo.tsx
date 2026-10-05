@@ -58,7 +58,6 @@
  */
 
 import type { CSSProperties } from "react";
-
 import { Panel } from "@/components/atoms/surfaces/Panel";
 import {
   agruparEmTrechos,
@@ -67,6 +66,7 @@ import {
   Hemiciclo,
 } from "@/components/blocks/Hemiciclo";
 import { RealceHemiciclo } from "@/components/blocks/RealceHemiciclo";
+import { primeiroTurnoEncerrado } from "@/lib/config/calendar";
 import type { EdgePayload } from "@/lib/edge-config/types";
 import type { ValidacaoMandato2031 } from "@/lib/senado/mandato-2031";
 import { ARCOS_SENADO, layoutHemiciclo } from "@/lib/utils/hemiciclo";
@@ -157,9 +157,11 @@ function itensDaLegenda(senado: Senado2027, pre: boolean): ItemLegenda[] {
         id: "projetada",
         forma: "anel",
         n: contagem.projetada,
-        texto: parcial
-          ? "anel na cor do partido: vagas de 2026 se a apuração parasse agora — ainda podem mudar"
-          : "anel na cor do partido: vagas de 2026 pela projeção — ainda podem mudar",
+        texto: primeiroTurnoEncerrado()
+          ? "anel na cor do partido: eleitos em 2026"
+          : parcial
+            ? "anel na cor do partido: vagas de 2026 se a apuração parasse agora — ainda podem mudar"
+            : "anel na cor do partido: vagas de 2026 pela projeção — ainda podem mudar",
       },
     );
   }
@@ -242,7 +244,11 @@ export function SenadoHemiciclo({
       : "") +
     (contagem.projetada > 0
       ? `; ${plural(contagem.projetada, "vaga", "vagas")} de 2026 ${
-          senado.base === "parcial" ? "se a apuração parasse agora" : "pela projeção"
+          primeiroTurnoEncerrado()
+            ? "eleitas no resultado final"
+            : senado.base === "parcial"
+              ? "se a apuração parasse agora"
+              : "pela projeção"
         }`
       : "") +
     (contagem.aguardando > 0
@@ -437,9 +443,11 @@ export function SenadoHemicicloPanel({ payload, mandato }: SenadoHemicicloPanelP
             data-testid="senado-hemiciclo-parcial-texto"
             style={{ margin: 0, font: "var(--type-body-sm)", color: "var(--text-secondary)" }}
           >
-            {naParcial.ok
-              ? `Se a apuração parasse agora: as ${senado.vagasEmDisputa} vagas em disputa com os dois mais votados até aqui em cada estado, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estão em disputa. Estado ainda sem votos apurados fica aguardando. Não oficial.`
-              : "O Senado pela contagem de agora não pôde ser montado com segurança. Não oficial."}
+            {naParcial.ok && primeiroTurnoEncerrado()
+              ? `Resultado final: as ${senado.vagasEmDisputa} vagas de 2026 com os dois mais votados em cada estado, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estavam em disputa. Não oficial.`
+              : naParcial.ok
+                ? `Se a apuração parasse agora: as ${senado.vagasEmDisputa} vagas em disputa com os dois mais votados até aqui em cada estado, somadas às ${senado.contagem.continua_2031} cadeiras com mandato até 2031, que não estão em disputa. Estado ainda sem votos apurados fica aguardando. Não oficial.`
+                : "O Senado pela contagem de agora não pôde ser montado com segurança. Não oficial."}
           </p>
           {naParcial.ok ? (
             <RealceHemiciclo
