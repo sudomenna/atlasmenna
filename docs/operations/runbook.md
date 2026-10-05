@@ -1787,6 +1787,87 @@ entre 25/09 e 03/10 `--modo dia-d` vai acusar os dois códigos como faltando, **
 e `TSE_MAX_RPS` deixados para trás reprovam o check. É essa metade que impede o erro simétrico
 — chegar na noite da eleição buscando o CDN de teste, ou lendo um store que ninguém alimenta.
 
+## 🔴 Fechamento do 1º turno — `pnpm fechamento:1t` (05/10/2026)
+
+**Estado:** 1º turno encerrado. TSE 100% totalizado (Presidente 499.248/499.248
+seções, arquivo de 02:59 de 05/10; cargos estaduais 497.897/497.897, 06:08). A
+ingestão está **desligada** em duas camadas e o resultado publicado é fechado
+uma vez, por script.
+
+### Por que existe
+
+O TSE congelou 12 arquivos de zona do **Presidente** (~21h de 04/10). A soma das
+zonas ficou sem votos em BA, MG e SP — nacional: Flávio −6.460, Lula −8.870. Os
+agregados oficiais por UF (`<uf>-c0001-e006257-u.json`, inclusive `zz`) e do
+Brasil (`br-…`) estão completos. Decisão do dono ("opção A"): publicar o número
+oficial. Governador, Senador e Deputados já batiam com o TSE.
+
+### O que o script faz (`scripts/fechamento-1t.ts`, regras em `scripts/_fechamento-1t-core.ts`)
+
+1. Lê do Global Config todas as chaves do 1º turno (`projection-current-{pres,gov,sen,dep,est,dis}-t1`,
+   `projection-uf-<UF>-{pres,gov,sen}-t1` e os aliases legados do Presidente) e o espelho
+   `edge-espelho/<chave>.json` do Blob, ficando com o `ts` mais novo — a mesma regra do
+   `getFirst` do reader.
+2. Baixa os agregados do TSE (Presidente: eleição 6257, BR + 27 UFs + ZZ; Governador e
+   Senador: 6259, 27 UFs), **sem User-Agent próprio**, e recusa se algum não estiver 100%.
+3. Presidente: votos e percentuais oficiais (nacional e por UF, linhas `por_uf` do
+   nacional, `participacao`, `votacao`), na convenção do `build_edge_payload` (base em
+   disputa, anulada fora — ADR-0053; 5 casas na UF; "Outros" do 4º em diante; ordem por voto).
+4. Todos os cargos: projeção == apuração (porte do `_igualar_projecao_ao_apurado` + faixas
+   de `participacao`, `votacao.projetada`, margens do `por_uf`, `cadeiras_ci95` do Deputado).
+   ⚠️ `national.candidatos` de Governador/Senador **não** é tocado (união de 27 corridas).
+5. Carimba `ts` = agora, `dado_ts` = hora final do TSE, `encerrado: true`.
+6. Confere o resultado contra o TSE (Presidente tem de dar diferença 0, senão aborta).
+
+Não toca banco (lista branca de env: `EDGE_CONFIG`, `EDGE_CONFIG_ID`, `EDGE_CONFIG_TOKEN`,
+`VERCEL_TEAM_ID`, `BLOB_READ_WRITE_TOKEN`, `BLOB_PUBLIC_BASE_URL`; apaga `DATABASE_URL`
+do ambiente). **Não** use `set -a; . ./.env.local`. Não reescreve o Blob das telas
+(`municipios/uf/…`, `deputado*/uf/…`): o mapa municipal do Presidente em BA/MG/SP segue
+sem os votos das 12 zonas congeladas (diferença < 0,1% na UF).
+
+### Ensaio (só lê; grava cópia local em `build/fechamento-1t/<carimbo>/`)
+
+```bash
+pnpm fechamento:1t                                  # do checkout principal (lê ./.env.local)
+pnpm fechamento:1t --env-file ~/Projetos/AtlasMenna/.env.local   # de um worktree
+```
+
+Saída: diff por chave, Presidente BR/BA/MG/SP antes→depois, maior diferença contra o
+TSE por cargo, e `novo.json` com os payloads que seriam gravados.
+
+### Escrita
+
+```bash
+pnpm fechamento:1t --escrever
+```
+
+Ordem: (1) arquivo intocado de cada chave em `arquivo/1t-2026/<chave>.json` no Blob —
+**só se ainda não existir**, para uma segunda rodada não sobrescrever o original — mais
+`arquivo/1t-2026/_manifesto-<carimbo>.json`; (2) um lote de `upsert` no Global Config
+(`writeEdgeItemsBatch`; ~117 chaves, ~730 KB, sai em 2 requisições de até 400 KB — o limite
+é 100 gravações/hora); (3) espelho `edge-espelho/<chave>.json`. Conferir no site
+(Global Config: segundos; espelho: cache de ~20 s).
+
+### Restaurar a versão anterior
+
+O original está em `arquivo/1t-2026/<chave>.json` (Blob público) e em
+`build/fechamento-1t/<carimbo>/edge/` (local). Para voltar: gravar esses objetos de volta
+com `writeEdgeItemsBatch` + `espelharNoBlob` **com `ts` novo** (o reader fica com o `ts`
+mais novo entre Global Config e espelho — gravar o original com o `ts` antigo deixaria o
+fechado vencer no espelho). Pedir o comando ao agente; não há script pronto para isso.
+
+### Religar a ingestão para o 2º turno (25/10)
+
+1. `vercel.ts`: `INGESTAO_CRONS_LIGADOS = true` (a lista `cronsIngestao` está intacta).
+2. `lib/tse/ingest-suspensao.ts`: `INGESTAO_SUSPENSA_ATE` vale até 25/10 08h — antecipar se
+   houver simulado do TSE antes. `TURNOS_ENCERRADOS = [1]` **fica** — é o que impede um
+   ciclo com `TSE_TURNO=1` de reabrir o 1º turno.
+3. Ambiente de produção: `TSE_TURNO=2` (e os códigos de eleição do 2º turno).
+4. Atualizar `tests/unit/config/vercel-crons.test.ts` (o caso "nenhum cron no ar") e deploy.
+
+Enquanto suspensa, qualquer chamada a `/api/ingest*` com o segredo certo responde
+`200 {"skipped":"ingestao_suspensa"}` sem tocar banco nem TSE.
+
 ## Ferramentas do pipeline TSE
 
 Três ferramentas introduzidas no hardening pré-simulado (Fase 0 da S07). As duas primeiras existem para que **nenhum teste precise tocar o CDN do TSE**.

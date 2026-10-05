@@ -1218,6 +1218,13 @@ export interface EdgePayload {
    * `null`/ausente pelos mesmos dois motivos de `dado_ts`.
    */
   pares_atrasados?: number | null;
+  /**
+   * 🔴 05/10/2026 — `true` quando o resultado do turno foi FECHADO por
+   * `pnpm fechamento:1t` (`scripts/fechamento-1t.ts`): TSE 100% totalizado,
+   * projeção == apuração, ingestão suspensa. Ausente em todo payload gravado
+   * pelo modelo. Nunca `false` — ausente é o "não encerrado".
+   */
+  encerrado?: true;
   cargo: Cargo;
   turno: Turno;
   /** % total apurado da corrida (0–100). */
@@ -1875,6 +1882,13 @@ export interface EdgePayloadUf {
    * nunca manchete.
    */
   pares_atrasados?: number | null;
+  /**
+   * 🔴 05/10/2026 — `true` quando o resultado do turno foi FECHADO por
+   * `pnpm fechamento:1t` (`scripts/fechamento-1t.ts`): TSE 100% totalizado,
+   * projeção == apuração, ingestão suspensa. Ausente em todo payload gravado
+   * pelo modelo. Nunca `false` — ausente é o "não encerrado".
+   */
+  encerrado?: true;
   cargo: Cargo;
   turno: Turno;
   pct_apurado: number; // 0–100
@@ -2103,6 +2117,13 @@ export interface EdgePayloadDeputado {
    * sinal nenhum — 27 unidades não acusam cobertura parcial.
    */
   pares_atrasados?: number | null;
+  /**
+   * 🔴 05/10/2026 — `true` quando o resultado do turno foi FECHADO por
+   * `pnpm fechamento:1t` (`scripts/fechamento-1t.ts`): TSE 100% totalizado,
+   * projeção == apuração, ingestão suspensa. Ausente em todo payload gravado
+   * pelo modelo. Nunca `false` — ausente é o "não encerrado".
+   */
+  encerrado?: true;
   /**
    * Discriminante do payload — 6, 7 ou 8 (`CargoProporcional`). Decide a chave
    * de Global Config e o prefixo do Blob (`writeDeputadoProjection`), e é o que
