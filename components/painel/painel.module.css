@@ -9,22 +9,29 @@
  * Seis tons categóricos, um por cargo, em ordem FIXA (Presidente, Governador,
  * Senador, Dep. Federal, Dep. Estadual, Dep. Distrital). Não são cores de
  * partido nem de candidato (constituição § 2): identificam o CARGO num painel
- * de operação. Validados com o verificador de paleta (contraste, separação para
- * daltonismo entre vizinhos no empilhado) nos dois temas, sobre `--paper-0`:
- * no claro, três tons ficam abaixo de 3:1 contra o fundo — por isso todo
- * gráfico tem legenda em texto e tabela equivalente ("Ver em tabela").
+ * de operação.
+ *
+ * Contraste de não-texto (RNF-035, WCAG 1.4.11): TODO tom passa de 3:1 contra
+ * o fundo real do gráfico (`--paper-1`) e contra `--paper-0`, nos dois temas.
+ * No claro, Governador, Senador, Dep. Federal e Dep. Estadual foram escurecidos
+ * (mesma matiz, menos luz) em 05/10 para chegar lá. A conta está travada em
+ * `tests/unit/painel/contraste-cores.test.ts` — quem mexer num hex aqui roda o
+ * teste. A separação para daltonismo entre vizinhos do empilhado foi conferida
+ * com o verificador de paleta (pior par vizinho ΔE 8,5 no claro).
  *
  * Modo `pure` de CSS Modules: toda regra carrega ao menos uma classe local.
  */
 
 .painel {
   --painel-cargo-1: #2a78d6;
-  --painel-cargo-3: #eb6834;
-  --painel-cargo-5: #1baf7a;
-  --painel-cargo-6: #eda100;
-  --painel-cargo-7: #e87ba4;
+  --painel-cargo-3: #e2602b;
+  --painel-cargo-5: #009c68;
+  --painel-cargo-6: #c27800;
+  --painel-cargo-7: #d0658f;
   --painel-cargo-8: #008300;
   --painel-falha: var(--color-warning);
+  /* Contorno das paradas "sem novidade": ≥ 3:1 contra o fundo (teste de contraste). */
+  --painel-neutro-borda: var(--color-text-muted);
   --painel-falha-fundo: rgba(180, 67, 47, 0.16);
   --painel-neutro-fundo: rgba(128, 136, 146, 0.18);
 
@@ -117,6 +124,11 @@
   background: var(--color-surface-card);
   padding: var(--space-4);
   border-radius: var(--radius-sm);
+}
+
+.subtitulo3 {
+  font: 600 var(--text-md) / var(--leading-snug) var(--font-sans);
+  margin: var(--space-6) 0 var(--space-1);
 }
 
 /* ---------------------------------------------------------------- resumo */
@@ -269,13 +281,14 @@
   overflow: visible;
 }
 
+/* Régua de gráfico: `--border-chart` (RNF-035), nunca `--color-border`. */
 .grade {
-  stroke: var(--color-border);
+  stroke: var(--border-chart);
   stroke-width: 1;
 }
 
 .gradeVertical {
-  stroke: var(--color-border);
+  stroke: var(--border-chart);
   stroke-width: 1;
   stroke-dasharray: 2 4;
 }
@@ -285,6 +298,14 @@
  * legenda; a leitura ao toque dá o valor de cada uma. */
 .areaEmpilhada {
   stroke: none;
+}
+
+/* 1 px na cor do fundo entre camadas vizinhas do empilhado (RNF-035): a matiz
+ * sozinha não separa duas séries. */
+.separador {
+  fill: none;
+  stroke: var(--color-bg-page);
+  stroke-width: 1;
 }
 
 .referencia {
@@ -344,15 +365,14 @@
   touch-action: pan-y;
 }
 
-.camadaDeLeitura:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
+/* O balão nunca passa da altura do gráfico: `max-height` + corte. Nos
+ * gráficos baixos (erros, bloqueios) ele lista só as séries com valor. */
 .leitura {
   position: absolute;
   top: 0;
   z-index: 2;
+  max-height: 100%;
+  overflow: hidden;
   min-width: 10rem;
   max-width: min(18rem, 70vw);
   padding: var(--space-2) var(--space-3);
@@ -469,12 +489,38 @@
   }
 }
 
+/* Paradas da projeção: retângulos HTML por trás do SVG (a hachura em CSS não
+ * se deforma com o `preserveAspectRatio="none"` do desenho). Distinguem-se por
+ * mais que a cor: FALHA tem hachura e contorno cheio; SEM NOVIDADE, fundo liso
+ * e contorno tracejado. Os dois contornos passam de 3:1 contra o fundo. */
+.buracos {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.buraco {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 2px;
+  box-sizing: border-box;
+}
+
 .buracoFalha {
-  fill: var(--painel-falha-fundo);
+  background:
+    repeating-linear-gradient(135deg, var(--painel-falha) 0 1.5px, transparent 1.5px 6px),
+    var(--painel-falha-fundo);
+  border: 1.5px solid var(--painel-falha);
 }
 
 .buracoNeutro {
-  fill: var(--painel-neutro-fundo);
+  background: var(--painel-neutro-fundo);
+  border: 1.5px dashed var(--painel-neutro-borda);
+}
+
+.faixaPlot .faixaSvg {
+  position: relative;
 }
 
 .tique {
@@ -517,13 +563,15 @@
 }
 
 .amostraFalha {
-  background: var(--painel-falha-fundo);
-  border: 1px solid var(--painel-falha);
+  background:
+    repeating-linear-gradient(135deg, var(--painel-falha) 0 1.5px, transparent 1.5px 4px),
+    var(--painel-falha-fundo);
+  border: 1.5px solid var(--painel-falha);
 }
 
 .amostraNeutra {
   background: var(--painel-neutro-fundo);
-  border: 1px solid var(--color-border);
+  border: 1.5px dashed var(--painel-neutro-borda);
 }
 
 /* --------------------------------------------------------------- tabelas */

@@ -96,6 +96,22 @@ export function RodadasDaProjecao({
             <div key={c.cd} className={s.faixa}>
               <span className={s.faixaNome}>{c.nome}</span>
               <div className={s.faixaPlot}>
+                {/* As paradas são retângulos HTML atrás do desenho: hachura e
+                    contorno em CSS não se deformam com o SVG esticado. */}
+                <div className={s.buracos} aria-hidden="true">
+                  {buracos
+                    .filter((b) => b.cargo === c.cd)
+                    .map((b) => (
+                      <span
+                        key={b.de}
+                        className={`${s.buraco} ${b.tipo === "falha" ? s.buracoFalha : s.buracoNeutro}`}
+                        style={{
+                          left: `${(x(b.de) / minutos) * 100}%`,
+                          width: `${(Math.max(0, x(b.ate) - x(b.de)) / minutos) * 100}%`,
+                        }}
+                      />
+                    ))}
+                </div>
                 <svg
                   className={s.faixaSvg}
                   viewBox={`0 0 ${minutos} ${H}`}
@@ -105,18 +121,6 @@ export function RodadasDaProjecao({
                   aria-label={resumo}
                 >
                   <GradeDeHoras inicioMs={inicioMs} minutos={minutos} altura={H} />
-                  {buracos
-                    .filter((b) => b.cargo === c.cd)
-                    .map((b) => (
-                      <rect
-                        key={b.de}
-                        x={x(b.de)}
-                        width={Math.max(0.5, x(b.ate) - x(b.de))}
-                        y={0}
-                        height={H}
-                        className={b.tipo === "falha" ? s.buracoFalha : s.buracoNeutro}
-                      />
-                    ))}
                   <path
                     d={tiques}
                     stroke={corDoCargo(c.cd)}

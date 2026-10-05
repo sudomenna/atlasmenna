@@ -120,3 +120,40 @@ export function escalaBonita(maximo: number): { yMax: number; marcas: number[] }
   for (let v = 0; v <= yMax + passo / 2; v += passo) marcas.push(Math.round(v * 1000) / 1000);
   return { yMax, marcas };
 }
+
+/**
+ * O próximo minuto lido pelo teclado no gráfico (padrão de `role="slider"`):
+ *
+ *   - Seta direita / cima: +1 (com Shift, +10); seta esquerda / baixo: −1 (−10);
+ *   - Page Up: +60 (uma hora); Page Down: −60;
+ *   - Home: o primeiro minuto; End: o último.
+ *
+ * Sem minuto selecionado (`atual === null`), qualquer tecla de navegação vai
+ * para o minuto 0 — exceto End, que vai para o último. Sempre dentro do eixo.
+ *
+ * `undefined` = a tecla não é de navegação (o componente deixa o navegador agir).
+ */
+export function proximoMinuto(
+  atual: number | null,
+  tecla: string,
+  shift: boolean,
+  minutos: number,
+): number | undefined {
+  const ultimo = Math.max(0, minutos - 1);
+  const limitar = (n: number) => Math.max(0, Math.min(ultimo, n));
+  const passo = shift ? 10 : 1;
+  const deslocamento: Record<string, number> = {
+    ArrowRight: passo,
+    ArrowUp: passo,
+    ArrowLeft: -passo,
+    ArrowDown: -passo,
+    PageUp: 60,
+    PageDown: -60,
+  };
+  if (tecla === "Home") return 0;
+  if (tecla === "End") return ultimo;
+  const d = deslocamento[tecla];
+  if (d === undefined) return undefined;
+  if (atual === null) return 0;
+  return limitar(atual + d);
+}

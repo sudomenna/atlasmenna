@@ -33,8 +33,16 @@
  * `BLOB_READ_WRITE_TOKEN` entra apenas com `--escrever`. Variável já definida
  * no ambiente vence o arquivo (CI, agendador).
  *
- * Toda consulta roda numa transação `READ ONLY` (`neon(url, { readOnly: true })`):
- * um `INSERT`/`UPDATE` aqui seria recusado pelo próprio Postgres. As consultas
+ * Toda consulta roda numa transação `READ ONLY` — e o jeito de conseguir isso
+ * NÃO é `neon(url, { readOnly: true })`. 🔴 Conferido no código do driver
+ * (`@neondatabase/serverless`, `index.mjs`): o cabeçalho `Neon-Batch-Read-Only`
+ * só é enviado quando a consulta vai como LOTE (array). Uma `sql.query()`
+ * avulsa ignora `readOnly` em silêncio — a primeira versão deste script
+ * (`a9413db`) acreditava estar em modo leitura e não estava. Por isso cada
+ * consulta passa por {@link consultarSoLeitura}, que a embrulha em
+ * `sql.transaction([…], { readOnly: true })`: aí um `INSERT`/`UPDATE` é recusado
+ * pelo próprio Postgres. Trava em `tests/unit/scripts/painel-retrato-leitura.test.ts`.
+ * As consultas
  * nunca selecionam `snapshots.payload` inteiro — só `payload->'s'` de linhas já
  * escolhidas por id (a mesma lição do `8a977b8`: ranquear o id, buscar o
  * payload depois). E nunca usam `snapshots.pct_apurado` (é o `s.psa`).
@@ -42,16 +50,18 @@
  * ## Saída
  *
  * Sem `--escrever`: só o arquivo local (sob `build/`, que o git ignora — o
- * repositório é PÚBLICO e o retrato não pode ser commitado).
+ * repositório é PÚBLICO e o retrato não pode ser commitado). `--saida` e
+ * `--guardar-insumos` RECUSAM qualquer caminho fora de `build/`
+ * ({@link dentroDeBuild}).
  * Com `--escrever`: também `painel/retrato-1t-2026.json` no Vercel Blob com
  * `access: "private"`, sem sufixo aleatório, sobrescrevendo.
  */
 
 import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { neon } from "@neondatabase/serverless";
+import { type NeonQueryFunction, neon } from "@neondatabase/serverless";
 import { put } from "@vercel/blob";
 
 import { CARGOS } from "@/lib/config/cargos";
@@ -111,6 +121,24 @@ export function lerData(raw: string): number {
   return ms;
 }
 
+/**
+ * Resolve `caminho` a partir de `cwd` e exige que ele fique DENTRO de
+ * `<cwd>/build/` — a única pasta que o git ignora para este fim. O repositório
+ * é público: um retrato (ou os insumos) gravado em qualquer outro lugar viraria
+ * um `git add` distraído de distância de ficar público.
+ */
+export function dentroDeBuild(caminho: string, cwd: string, opcao: string): string {
+  const base = resolve(cwd, "build");
+  const alvo = resolve(cwd, caminho);
+  const rel = relative(base, alvo);
+  if (rel === "" || rel.startsWith("..") || isAbsolute(rel)) {
+    throw new Error(
+      `${opcao} precisa ficar dentro de build/ (o repositório é público); recebido: ${caminho}`,
+    );
+  }
+  return alvo;
+}
+
 export function lerArgs(argv: readonly string[], cwd = process.cwd()): ArgsRetrato {
   const valor = (nome: string): string | undefined => {
     const i = argv.indexOf(`--${nome}`);
@@ -135,8 +163,10 @@ export function lerArgs(argv: readonly string[], cwd = process.cwd()): ArgsRetra
     correcoesDeMs: lerData(valor("correcoes-de") ?? PADRAO.correcoesDe),
     correcoesAteMs: lerData(valor("correcoes-ate") ?? PADRAO.correcoesAte),
     paradosCargos,
-    saida: valor("saida") ?? resolve(cwd, ...PAINEL_ARQUIVO_LOCAL),
-    guardarInsumos: valor("guardar-insumos") ?? null,
+    saida: dentroDeBuild(valor("saida") ?? PAINEL_ARQUIVO_LOCAL.join("/"), cwd, "--saida"),
+    guardarInsumos: ((g) => (g ? dentroDeBuild(g, cwd, "--guardar-insumos") : null))(
+      valor("guardar-insumos"),
+    ),
     deInsumos: valor("de-insumos") ?? null,
   };
 }
@@ -196,13 +226,27 @@ function inteiroOuNull(v: unknown): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-async function lerDoBanco(databaseUrl: string, args: ArgsRetrato) {
-  const sql = neon(databaseUrl, { readOnly: true });
+/**
+ * Uma consulta, numa transação `READ ONLY` de verdade: o lote de um item só
+ * faz o driver mandar `Neon-Batch-Read-Only: true` (ver a docstring do
+ * arquivo). Devolve as linhas da única consulta do lote.
+ */
+export async function consultarSoLeitura(
+  sql: NeonQueryFunction<false, false>,
+  texto: string,
+  params: unknown[],
+): Promise<Record<string, unknown>[]> {
+  const [linhas] = await sql.transaction([sql.query(texto, params)], { readOnly: true });
+  return (linhas ?? []) as Record<string, unknown>[];
+}
+
+export async function lerDoBanco(databaseUrl: string, args: ArgsRetrato) {
+  const sql = neon(databaseUrl);
   const de = new Date(args.deMs).toISOString();
   const ate = new Date(args.ateMs).toISOString();
   const consulta = async (rotulo: string, texto: string, params: unknown[]): Promise<Linha[]> => {
     const t0 = Date.now();
-    const r = (await sql.query(texto, params)) as Linha[];
+    const r = (await consultarSoLeitura(sql, texto, params)) as Linha[];
     console.log(`  · ${rotulo}: ${r.length} linhas em ${Date.now() - t0} ms`);
     return r;
   };

@@ -36,6 +36,7 @@ import {
   FiltroDeCiclos,
   TabelaDeCiclos,
   TabelaPorBlocos,
+  TabelaRolavel,
   VerEmTabela,
 } from "@/components/painel/Tabelas";
 import { painelAutorizado } from "@/lib/painel/acesso";
@@ -64,6 +65,12 @@ import {
 } from "@/lib/painel/tipos";
 
 export const dynamic = "force-dynamic";
+
+const LEGENDA_POR_CARGO =
+  "Uma coleta é uma passada pedindo ao TSE todos os arquivos de um cargo. A do Deputado Federal é dividida em 6 partes.";
+const LEGENDA_DURACAO =
+  "Duração das coletas por cargo (todas as coletas estão na tabela do fim da página)";
+const LEGENDA_PARADAS = "Paradas da projeção de mais de 10 minutos";
 
 export const metadata: Metadata = {
   title: "Painel da noite — AtlasMenna",
@@ -256,34 +263,43 @@ function Conteudo({
     (CARGOS_COM_RODADA as readonly number[]).includes(c.cd),
   );
   const coletasFiltradas = filtrarCiclos(r.ciclos, filtro);
+  const legendaCorrecoes = `${r.correcoes.length} correções, da mais antiga para a mais recente`;
+  const legendaParados = `${r.arquivosParados.length} arquivos, pela hora da última novidade`;
 
   const falhasPorMinuto: {
     id: string;
     titulo: string;
     serie: SeriePorCargo;
     explica: string;
-    total?: string;
+    /** Total como faixa, quando a soma pode contar o mesmo evento duas vezes. */
+    faixa?: string;
+    nota?: string;
+    unidade: string;
   }[] = [
     {
       id: "erros",
       titulo: "Erros",
+      unidade: "erros",
       serie: r.porMinuto.erros,
       explica: "pedidos que falharam (rede, resposta inválida), no minuto em que a coleta terminou",
     },
     {
       id: "bloqueios",
       titulo: "Bloqueios do TSE",
+      unidade: "pedidos bloqueados",
       serie: r.porMinuto.bloqueios,
       explica:
         "pedidos que o TSE recusou por excesso (resposta 429), no minuto em que a coleta terminou",
-      total:
+      faixa: bloqMin === bloqMax ? undefined : `${fmtNum(bloqMin)} a ${fmtNum(bloqMax)}`,
+      nota:
         bloqMin === bloqMax
           ? undefined
-          : `entre ${fmtNum(bloqMin)} e ${fmtNum(bloqMax)} — duas coletas simultâneas na mesma máquina relatam o mesmo contador, então o gráfico pode mostrar o mesmo bloqueio duas vezes`,
+          : "Duas coletas simultâneas na mesma máquina relatam o mesmo contador, então o gráfico pode mostrar o mesmo bloqueio duas vezes.",
     },
     {
       id: "nao-encontrados",
       titulo: "Arquivos não encontrados",
+      unidade: "arquivos não encontrados",
       serie: r.porMinuto.naoEncontrados,
       explica: "pedidos a que o TSE respondeu “não existe” (404)",
     },
@@ -321,12 +337,9 @@ function Conteudo({
         <h3 className={s.explica} style={{ marginTop: "var(--space-6)" }}>
           Por cargo
         </h3>
-        <div className={s.rolavel}>
+        <TabelaRolavel rotulo={LEGENDA_POR_CARGO}>
           <table className={s.tabela}>
-            <caption>
-              Uma coleta é uma passada pedindo ao TSE todos os arquivos de um cargo. A do Deputado
-              Federal é dividida em 6 partes.
-            </caption>
+            <caption>{LEGENDA_POR_CARGO}</caption>
             <thead>
               <tr>
                 <th scope="col">Cargo</th>
@@ -360,7 +373,7 @@ function Conteudo({
               ))}
             </tbody>
           </table>
-        </div>
+        </TabelaRolavel>
         <p className={s.explica} style={{ marginTop: "var(--space-2)" }}>
           * O contador de bloqueios é da máquina, não da coleta: duas coletas rodando ao mesmo tempo
           na mesma máquina relatam o mesmo número. Por isso a soma por cargo pode contar o mesmo
@@ -423,6 +436,7 @@ function Conteudo({
           marcas={marcas}
           alturaPx={220}
           mostrarTotal
+          nome="Pedidos ao TSE"
           rotulo={`Pedidos ao TSE por segundo, estimados, de ${horaCurta(inicioMs)} a ${horaCurta(inicioMs + minutos * 60_000)}, empilhados por cargo. Pico estimado de ${fmtNum(picoPedidos, 0)} por segundo às ${horaCurta(inicioMs + minutoDoPico * 60_000)}; ${minutosAcimaDe100} minutos acima do limite de 100 por segundo na estimativa.`}
         />
         <VerEmTabela>
@@ -454,6 +468,7 @@ function Conteudo({
           marcas={marcas}
           alturaPx={200}
           mostrarTotal
+          nome="Arquivos com novidade"
           rotulo={`Arquivos com novidade por minuto, empilhados por cargo. Total de ${fmtNum(totalNovidades)}; pico de ${fmtNum(picoNovidades)} num único minuto, às ${horaCurta(inicioMs + novidadesTotal.indexOf(picoNovidades) * 60_000)}.`}
         />
         <VerEmTabela>
@@ -487,20 +502,25 @@ function Conteudo({
           const escala = escalaBonita(pico);
           return (
             <div key={f.id} style={{ marginBottom: "var(--space-6)" }}>
-              <h3 className={s.explica} style={{ color: "var(--color-text)", marginBottom: 0 }}>
-                {f.titulo} — {f.total ?? `${fmtNum(soma1)} ao todo`} ({f.explica})
+              <h3 className={s.subtitulo3}>
+                {f.titulo}: {f.faixa ?? fmtNum(soma1)}
               </h3>
+              <p className={s.explica}>
+                {f.explica.charAt(0).toUpperCase()}
+                {f.explica.slice(1)}.{f.nota ? ` ${f.nota}` : ""}
+              </p>
               <GraficoPorMinuto
                 inicioMs={inicioMs}
                 minutos={minutos}
                 series={seriesDe(f.serie)}
                 modo="barras"
                 yMax={escala.yMax}
-                unidade={f.titulo.toLowerCase()}
+                unidade={f.unidade}
                 marcasY={escala.marcas}
                 alturaPx={110}
                 mostrarTotal
-                rotulo={`${f.titulo} por minuto, por cargo: ${f.total ?? `${fmtNum(soma1)} ao todo`}; pico de ${fmtNum(pico)} às ${horaCurta(inicioMs + total.indexOf(pico) * 60_000)}.`}
+                nome={f.titulo}
+                rotulo={`${f.titulo} por minuto, por cargo: ${f.faixa ?? fmtNum(soma1)} ao todo; pico de ${fmtNum(pico)} às ${horaCurta(inicioMs + total.indexOf(pico) * 60_000)}.`}
               />
               <VerEmTabela>
                 <TabelaPorBlocos
@@ -531,33 +551,33 @@ function Conteudo({
           ciclos={r.ciclos}
         />
         <VerEmTabela>
-          <table className={s.tabela}>
-            <caption>
-              Duração das coletas por cargo (todas as coletas estão na tabela do fim da página)
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Cargo</th>
-                <th scope="col">Coletas</th>
-                <th scope="col">Duração típica</th>
-                <th scope="col">Mais longa</th>
-                <th scope="col">Acima de 5 min</th>
-                <th scope="col">Não terminaram</th>
-              </tr>
-            </thead>
-            <tbody>
-              {r.totais.map((t) => (
-                <tr key={t.cargo}>
-                  <th scope="row">{nomeDoCargo(r, t.cargo)}</th>
-                  <td>{fmtNum(t.ciclos)}</td>
-                  <td>{t.duracaoMedianaS === null ? "—" : `${fmtNum(t.duracaoMedianaS)} s`}</td>
-                  <td>{t.duracaoMaximaS === null ? "—" : `${fmtNum(t.duracaoMaximaS)} s`}</td>
-                  <td>{fmtNum(t.ciclosAcimaDe300s)}</td>
-                  <td>{fmtNum(t.interrompidos)}</td>
+          <TabelaRolavel rotulo={LEGENDA_DURACAO}>
+            <table className={s.tabela}>
+              <caption>{LEGENDA_DURACAO}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Cargo</th>
+                  <th scope="col">Coletas</th>
+                  <th scope="col">Duração típica</th>
+                  <th scope="col">Mais longa</th>
+                  <th scope="col">Acima de 5 min</th>
+                  <th scope="col">Não terminaram</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {r.totais.map((t) => (
+                  <tr key={t.cargo}>
+                    <th scope="row">{nomeDoCargo(r, t.cargo)}</th>
+                    <td>{fmtNum(t.ciclos)}</td>
+                    <td>{t.duracaoMedianaS === null ? "—" : `${fmtNum(t.duracaoMedianaS)} s`}</td>
+                    <td>{t.duracaoMaximaS === null ? "—" : `${fmtNum(t.duracaoMaximaS)} s`}</td>
+                    <td>{fmtNum(t.ciclosAcimaDe300s)}</td>
+                    <td>{fmtNum(t.interrompidos)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TabelaRolavel>
         </VerEmTabela>
       </section>
 
@@ -565,9 +585,10 @@ function Conteudo({
       <section id="projecao" className={s.secao} aria-labelledby="t-projecao">
         <h2 id="t-projecao">Rodadas da projeção</h2>
         <p className={s.explica}>
-          Cada tracinho é uma rodada do modelo de projeção. As faixas sombreadas são paradas de mais
-          de 10 minutos. Os Deputados não aparecem aqui: o modelo deles não grava rodadas no mesmo
-          lugar.
+          Cada tracinho é uma rodada do modelo de projeção. As faixas marcam paradas de mais de 10
+          minutos: listradas e com borda cheia quando foi falha, lisas e com borda tracejada quando
+          o TSE não mudou nada. Os Deputados não aparecem aqui: o modelo deles não grava rodadas no
+          mesmo lugar.
         </p>
         <RodadasDaProjecao
           inicioMs={inicioMs}
@@ -577,33 +598,35 @@ function Conteudo({
           buracos={r.buracosProjecao}
         />
         <VerEmTabela>
-          <table className={s.tabela}>
-            <caption>Paradas da projeção de mais de 10 minutos</caption>
-            <thead>
-              <tr>
-                <th scope="col">Cargo</th>
-                <th scope="col">De</th>
-                <th scope="col">Até</th>
-                <th scope="col">Minutos</th>
-                <th scope="col">Tipo</th>
-                <th scope="col">Pedidos ao modelo sem resposta</th>
-              </tr>
-            </thead>
-            <tbody>
-              {r.buracosProjecao.map((b) => (
-                <tr key={`${b.cargo}-${b.de}`}>
-                  <th scope="row">{nomeDoCargo(r, b.cargo)}</th>
-                  <td className={s.mono}>{horaComDia(msDeIso(b.de), ref)}</td>
-                  <td className={s.mono}>{horaComDia(msDeIso(b.ate), ref)}</td>
-                  <td>{fmtNum(b.minutos)}</td>
-                  <td>{b.tipo === "falha" ? "falha" : "sem novidade"}</td>
-                  <td>
-                    {b.acionamentosSemRodada} de {b.acionamentos}
-                  </td>
+          <TabelaRolavel rotulo={LEGENDA_PARADAS}>
+            <table className={s.tabela}>
+              <caption>{LEGENDA_PARADAS}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Cargo</th>
+                  <th scope="col">De</th>
+                  <th scope="col">Até</th>
+                  <th scope="col">Minutos</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Pedidos ao modelo sem resposta</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {r.buracosProjecao.map((b) => (
+                  <tr key={`${b.cargo}-${b.de}`}>
+                    <th scope="row">{nomeDoCargo(r, b.cargo)}</th>
+                    <td className={s.mono}>{horaComDia(msDeIso(b.de), ref)}</td>
+                    <td className={s.mono}>{horaComDia(msDeIso(b.ate), ref)}</td>
+                    <td>{fmtNum(b.minutos)}</td>
+                    <td>{b.tipo === "falha" ? "falha" : "sem novidade"}</td>
+                    <td>
+                      {b.acionamentosSemRodada} de {b.acionamentos}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TabelaRolavel>
           <TabelaPorBlocos
             legenda="Rodadas da projeção a cada 15 minutos"
             inicioMs={inicioMs}
@@ -653,6 +676,7 @@ function Conteudo({
           marcasY={[0, 25, 50, 75, 100]}
           marcas={marcas}
           alturaPx={200}
+          nome="% apurado do Presidente"
           rotulo={`Percentual apurado do Presidente: começa em ${fmtNum(r.apuradoPresidente.somaDosEstados[0]?.pct ?? 0, 1)}% e chega a ${fmtNum(r.apuradoPresidente.somaDosEstados.at(-1)?.pct ?? 0, 1)}% às ${horaCurta(msDeIso(r.apuradoPresidente.somaDosEstados.at(-1)?.hora ?? r.eixo.inicio))}; o arquivo nacional do TSE fica abaixo da soma dos estados durante a maior parte da noite.`}
         />
         <VerEmTabela>
@@ -682,9 +706,9 @@ function Conteudo({
         {r.correcoes.length === 0 ? (
           <p>Nenhuma correção no período.</p>
         ) : (
-          <div className={`${s.rolavel} ${s.rolavelAlta}`}>
+          <TabelaRolavel rotulo={legendaCorrecoes} alta>
             <table className={s.tabela}>
-              <caption>{r.correcoes.length} correções, da mais antiga para a mais recente</caption>
+              <caption>{legendaCorrecoes}</caption>
               <thead>
                 <tr>
                   <th scope="col">Hora do registro</th>
@@ -704,7 +728,7 @@ function Conteudo({
                 ))}
               </tbody>
             </table>
-          </div>
+          </TabelaRolavel>
         )}
       </section>
 
@@ -719,9 +743,9 @@ function Conteudo({
         {r.arquivosParados.length === 0 ? (
           <p>Nenhum arquivo parado incompleto.</p>
         ) : (
-          <div className={s.rolavel}>
+          <TabelaRolavel rotulo={legendaParados}>
             <table className={s.tabela}>
-              <caption>{r.arquivosParados.length} arquivos, pela hora da última novidade</caption>
+              <caption>{legendaParados}</caption>
               <thead>
                 <tr>
                   <th scope="col">Cargo</th>
@@ -753,7 +777,7 @@ function Conteudo({
                 ))}
               </tbody>
             </table>
-          </div>
+          </TabelaRolavel>
         )}
       </section>
 

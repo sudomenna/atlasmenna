@@ -8,10 +8,10 @@
  *   - {@link TabelaPorBlocos}: séries por minuto somadas em blocos de 15 min;
  *   - {@link TabelaDeCiclos}: a lista de coletas, com filtro por cargo.
  *
- * 🔴 Toda `<table>` mora dentro de um `<div>` que rola (`.rolavel`): solta,
- * a tabela cresce até caber o conteúdo e empurra a página para os lados no
- * celular — `sr-only` também não a esconderia (memória do projeto, 2.424 px de
- * rolagem horizontal medidos).
+ * 🔴 Toda `<table>` mora dentro de um {@link TabelaRolavel}: solta, a tabela
+ * cresce até caber o conteúdo e empurra a página para os lados no celular —
+ * `sr-only` também não a esconderia (memória do projeto, 2.424 px de rolagem
+ * horizontal medidos).
  */
 
 import Link from "next/link";
@@ -23,11 +23,46 @@ import type { CicloPainel, RetratoPainel } from "@/lib/painel/tipos";
 
 import s from "./painel.module.css";
 
+/**
+ * A caixa que rola em volta de TODA tabela do painel.
+ *
+ * Uma área que rola precisa ser alcançável pelo teclado (axe
+ * `scrollable-region-focusable`, WCAG 2.1.1): sem foco, quem não usa mouse não
+ * consegue rolar a tabela para os lados no celular nem descer a lista longa.
+ * Por isso `tabIndex={0}` e, para o leitor de tela anunciar o que é a parada em
+ * que caiu, uma região (`<section>` com nome = papel `region`, a forma
+ * semântica de `role="region"`) cujo nome é o MESMO texto da legenda
+ * (`<caption>`) da tabela.
+ */
+export function TabelaRolavel({
+  rotulo,
+  alta = false,
+  children,
+}: {
+  /** O texto do `<caption>` da tabela que está dentro. */
+  rotulo: string;
+  /** Limita a altura (70% da tela) — para listas longas. */
+  alta?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={alta ? `${s.rolavel} ${s.rolavelAlta}` : s.rolavel}
+      aria-label={rotulo}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: área que rola precisa de foco por teclado (axe scrollable-region-focusable)
+      tabIndex={0}
+    >
+      {children}
+    </section>
+  );
+}
+
+/** A alternativa em tabela de cada gráfico (constituição § 4), recolhida. */
 export function VerEmTabela({ children }: { children: ReactNode }) {
   return (
     <details className={s.detalhes}>
       <summary>Ver em tabela</summary>
-      <div className={`${s.rolavel} ${s.rolavelAlta}`}>{children}</div>
+      {children}
     </details>
   );
 }
@@ -77,39 +112,41 @@ export function TabelaPorBlocos({
     return null;
   };
   return (
-    <table className={s.tabela}>
-      <caption>{legenda}</caption>
-      <thead>
-        <tr>
-          <th scope="col">Horário</th>
-          {colunas.map((c) => (
-            <th key={c.rotulo} scope="col">
-              {c.rotulo}
-            </th>
-          ))}
-          {total ? <th scope="col">Total</th> : null}
-        </tr>
-      </thead>
-      <tbody>
-        {Array.from({ length: nBlocos }, (_, b) => {
-          const de = inicioMs + b * bloco * 60_000;
-          const ate = inicioMs + Math.min(minutos, (b + 1) * bloco) * 60_000;
-          const linha = colunas.map((_, i) => valorDoBloco(i, b));
-          const soma = linha.reduce<number>((acc, v) => acc + (v ?? 0), 0);
-          return (
-            <tr key={de}>
-              <th scope="row">
-                {horaCurta(de)}–{horaCurta(ate)}
+    <TabelaRolavel rotulo={legenda} alta>
+      <table className={s.tabela}>
+        <caption>{legenda}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Horário</th>
+            {colunas.map((c) => (
+              <th key={c.rotulo} scope="col">
+                {c.rotulo}
               </th>
-              {linha.map((v, i) => (
-                <td key={colunas[i]?.rotulo}>{v === null ? "—" : fmtNum(v, casas)}</td>
-              ))}
-              {total ? <td>{fmtNum(soma, casas)}</td> : null}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+            ))}
+            {total ? <th scope="col">Total</th> : null}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: nBlocos }, (_, b) => {
+            const de = inicioMs + b * bloco * 60_000;
+            const ate = inicioMs + Math.min(minutos, (b + 1) * bloco) * 60_000;
+            const linha = colunas.map((_, i) => valorDoBloco(i, b));
+            const soma = linha.reduce<number>((acc, v) => acc + (v ?? 0), 0);
+            return (
+              <tr key={de}>
+                <th scope="row">
+                  {horaCurta(de)}–{horaCurta(ate)}
+                </th>
+                {linha.map((v, i) => (
+                  <td key={colunas[i]?.rotulo}>{v === null ? "—" : fmtNum(v, casas)}</td>
+                ))}
+                {total ? <td>{fmtNum(soma, casas)}</td> : null}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </TabelaRolavel>
   );
 }
 
@@ -206,13 +243,11 @@ export function TabelaDeCiclos({
   const ref = msDeIso(retrato.janela.de);
   const h = (iso: string | null) => (iso === null ? "—" : horaComDia(msDeIso(iso), ref));
   const n = (v: number | null, casas = 0) => (v === null ? "—" : fmtNum(v, casas));
+  const legenda = `Mostrando ${fmtNum(ciclos.length)} de ${fmtNum(total)} coletas, em ordem de término. Linhas destacadas tiveram algum problema (coluna "Situação").`;
   return (
-    <div className={`${s.rolavel} ${s.rolavelAlta}`}>
+    <TabelaRolavel rotulo={legenda} alta>
       <table className={s.tabela}>
-        <caption>
-          Mostrando {fmtNum(ciclos.length)} de {fmtNum(total)} coletas, em ordem de término. Linhas
-          destacadas tiveram algum problema (coluna "Situação").
-        </caption>
+        <caption>{legenda}</caption>
         <thead>
           <tr>
             <th scope="col">Cargo</th>
@@ -253,6 +288,6 @@ export function TabelaDeCiclos({
           ))}
         </tbody>
       </table>
-    </div>
+    </TabelaRolavel>
   );
 }

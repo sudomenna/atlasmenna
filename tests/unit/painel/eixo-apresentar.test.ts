@@ -20,12 +20,64 @@ import {
   horaComDia,
   horaCurta,
   marcasDeHora,
+  proximoMinuto,
   somarEmBlocos,
 } from "@/lib/painel/eixo";
 import type { CicloPainel } from "@/lib/painel/tipos";
 
 const T0 = Date.parse("2026-10-04T19:30:00Z"); // 16h30 BRT
 const MIN = 60_000;
+
+describe("proximoMinuto (teclado do gráfico)", () => {
+  const N = 720;
+  it("do vazio, a PRIMEIRA seta vai ao minuto 0 (não ao 1), em qualquer direção", () => {
+    for (const t of ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "PageUp", "PageDown"]) {
+      expect(proximoMinuto(null, t, false, N)).toBe(0);
+      expect(proximoMinuto(null, t, true, N)).toBe(0);
+    }
+  });
+  it("setas: ±1, com Shift ±10; cima = direita, baixo = esquerda", () => {
+    expect(proximoMinuto(5, "ArrowRight", false, N)).toBe(6);
+    expect(proximoMinuto(5, "ArrowUp", false, N)).toBe(6);
+    expect(proximoMinuto(5, "ArrowLeft", false, N)).toBe(4);
+    expect(proximoMinuto(5, "ArrowDown", false, N)).toBe(4);
+    expect(proximoMinuto(5, "ArrowRight", true, N)).toBe(15);
+  });
+  it("Page Up / Page Down andam uma hora; Home e End vão às pontas", () => {
+    expect(proximoMinuto(100, "PageUp", false, N)).toBe(160);
+    expect(proximoMinuto(100, "PageDown", false, N)).toBe(40);
+    expect(proximoMinuto(100, "Home", false, N)).toBe(0);
+    expect(proximoMinuto(100, "End", false, N)).toBe(719);
+    expect(proximoMinuto(null, "End", false, N)).toBe(719);
+  });
+  it("nunca sai do eixo", () => {
+    expect(proximoMinuto(0, "ArrowLeft", false, N)).toBe(0);
+    expect(proximoMinuto(30, "PageDown", false, N)).toBe(0);
+    expect(proximoMinuto(700, "PageUp", false, N)).toBe(719);
+  });
+  it("tecla que não é de navegação: undefined (o navegador age — Tab, Enter…)", () => {
+    expect(proximoMinuto(5, "Tab", false, N)).toBeUndefined();
+    expect(proximoMinuto(null, "Enter", false, N)).toBeUndefined();
+  });
+});
+
+describe("tabelas do painel: toda caixa que rola é focável", () => {
+  it("a classe da caixa rolável só é usada dentro de TabelaRolavel", async () => {
+    const { readFileSync } = await import("node:fs");
+    const usos = [
+      "app/painel/page.tsx",
+      "components/painel/Tabelas.tsx",
+      "components/painel/Faixas.tsx",
+    ]
+      .map((f) => readFileSync(f, "utf8").match(/s\.rolavel\b/g)?.length ?? 0)
+      .reduce((a, b) => a + b, 0);
+    // dois usos, ambos na linha do className de `TabelaRolavel`
+    expect(usos).toBe(2);
+    const tabelas = readFileSync("components/painel/Tabelas.tsx", "utf8");
+    expect(tabelas).toMatch(/<section\s+className=\{alta \? `\$\{s\.rolavel\}/);
+    expect(tabelas).toMatch(/tabIndex=\{0\}/);
+  });
+});
 
 describe("eixo", () => {
   it("horaCurta e horaComDia falam BRT e marcam a virada do dia", () => {
