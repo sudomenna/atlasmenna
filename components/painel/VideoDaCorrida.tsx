@@ -6,7 +6,8 @@
  * "Baixar vídeo" de UM gráfico da corrida do Presidente (pedido do dono em
  * 06/10/2026): cada um dos três gráficos — apuração, projeção, os dois
  * sobrepostos — tem o seu botão, que gera NO NAVEGADOR um vídeo vertical da
- * evolução daquele gráfico ao longo da noite e o baixa. Igual no celular e no
+ * evolução daquele gráfico de 17h22 a 23h00 (15 s, os 2 últimos parados no
+ * quadro das 23h) e o baixa. Igual no celular e no
  * computador: o botão só baixa. Não há compartilhamento nem vídeo combinado.
  *
  * Um gerador só, parametrizado pelo gráfico (`grafico`), não três cópias.
@@ -27,9 +28,13 @@ import {
   escolherFormato,
   estadoNoInstante,
   type GraficoDaCorrida,
-  instanteDoQuadro,
+  instanteDoQuadroDoVideo,
+  janelaDoVideo,
   nomeDoArquivoDoVideo,
   ultimoAte,
+  VIDEO_FPS,
+  VIDEO_SEGUNDOS_TOTAL,
+  VIDEO_TOTAL_QUADROS,
 } from "@/lib/painel/corrida";
 import { fmtNum, horaCurta } from "@/lib/painel/eixo";
 
@@ -49,11 +54,10 @@ export interface DadosDoVideo {
 
 const LARGURA = 720;
 const ALTURA = 1280;
-const FPS = 30;
-const SEGUNDOS_ANIMADOS = 12;
-const SEGUNDOS_PARADOS = 2;
-const TOTAL_QUADROS = (SEGUNDOS_ANIMADOS + SEGUNDOS_PARADOS) * FPS;
-const QUADROS_PARADOS = SEGUNDOS_PARADOS * FPS;
+// Janela (17h22–23h00) e ritmo (15 s, 2 parados) moram em `lib/painel/corrida.ts`
+// (`VIDEO_*`, `janelaDoVideo`, `instanteDoQuadroDoVideo`) — um lugar só.
+const FPS = VIDEO_FPS;
+const TOTAL_QUADROS = VIDEO_TOTAL_QUADROS;
 
 const TITULO: Record<GraficoDaCorrida, string> = {
   apuracao: "Apuração",
@@ -110,12 +114,13 @@ function lerPaleta(raiz: HTMLElement, tintas: string[]): Paleta {
   };
 }
 
-/** O domínio do vídeo: a noite toda, da 1ª chegada à última rodada, com folga. */
+/**
+ * O domínio do vídeo: SÓ a janela `janelaDoVideo` (17h22–23h00), e a escala
+ * vertical ajustada ao que aparece nela (ignorando a primeira rajada).
+ */
 function dominioDoVideo(d: DadosDoVideo, grafico: GraficoDaCorrida): Dominio {
   const { apuracao, projecao } = d;
-  const tIni = Math.max(0, (apuracao.t[0] ?? projecao.t[0] ?? 0) - 120);
-  const tFim =
-    Math.max(apuracao.t[apuracao.t.length - 1] ?? 0, projecao.t[projecao.t.length - 1] ?? 0) + 120;
+  const { tIni, tFim } = janelaDoVideo(d.inicioMs);
   const series = [
     ...(grafico !== "projecao" ? apuracao.pct.map((v) => ({ t: apuracao.t, v })) : []),
     ...(grafico !== "apuracao"
@@ -204,9 +209,13 @@ function desenharQuadro(
   for (
     let h = Math.ceil((inicioMs + dom.tIni * 1000) / 3_600_000) * 3_600_000;
     h <= inicioMs + dom.tFim * 1000;
-    h += 2 * 3_600_000
+    h += 3_600_000
   ) {
-    ctx.fillText(horaCurta(h), X((h - inicioMs) / 1000) - 22, y1 + 10);
+    // centrado na marca, mas sem sair do quadro (o "23h00" cai na borda direita)
+    const rotulo = horaCurta(h);
+    const largura = ctx.measureText(rotulo).width;
+    const x = Math.min(X((h - inicioMs) / 1000) - largura / 2, LARGURA - 8 - largura);
+    ctx.fillText(rotulo, x, y1 + 10);
   }
 
   ctx.save();
@@ -399,7 +408,7 @@ export function VideoDaCorrida({
     // ficaria com buracos; o intervalo só fica mais lento.
     relogio = setInterval(() => {
       if (cancelado) return;
-      const t = instanteDoQuadro(quadro, TOTAL_QUADROS, QUADROS_PARADOS, dom.tIni, dom.tFim);
+      const t = instanteDoQuadroDoVideo(quadro, dados.inicioMs);
       desenharQuadro(ctx, dados, grafico, pal, t, dom);
       quadro++;
       if (quadro % FPS === 0) setEstado({ fase: "gerando", progresso: quadro / TOTAL_QUADROS });
@@ -439,7 +448,7 @@ export function VideoDaCorrida({
       )}
       <p id={idAjuda} className={s.explica} aria-live="polite">
         {estado.fase === "ocioso"
-          ? "Vídeo vertical de ~14 s com a evolução deste gráfico na noite, gerado aqui no aparelho."
+          ? `Vídeo vertical de ${VIDEO_SEGUNDOS_TOTAL} s com a evolução deste gráfico das 17h22 às 23h, gerado aqui no aparelho.`
           : estado.fase === "gerando"
             ? "A gravação acontece em tempo real; a página continua utilizável."
             : estado.fase === "erro"

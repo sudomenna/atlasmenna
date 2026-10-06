@@ -19,13 +19,20 @@ import {
   escolherFormato,
   estadoNoInstante,
   instanteDoQuadro,
+  instanteDoQuadroDoVideo,
+  janelaDoVideo,
   nomeDoArquivoDoVideo,
   proximoInstante,
   type RodadaCorrida,
+  segundosAteHoraBrt,
   serieCorrida,
   trocasDeLideranca,
   ultimoAte,
   type VersaoCorrida,
+  VIDEO_FPS,
+  VIDEO_QUADROS_PARADOS,
+  VIDEO_SEGUNDOS_TOTAL,
+  VIDEO_TOTAL_QUADROS,
 } from "@/lib/painel/corrida";
 
 const T0 = Date.parse("2026-10-04T20:24:00Z");
@@ -278,6 +285,80 @@ describe("teclado e quadros do vídeo", () => {
     expect(nomeDoArquivoDoVideo("ambos", "webm")).toBe(
       "atlasmenna-presidente-1t-apuracao-e-projecao.webm",
     );
+  });
+});
+
+describe("vídeo: janela 17h22–23h00 e 15 s (2 parados) — constantes num lugar só", () => {
+  // o eixo do retrato começa às 16h30 BRT de 04/10
+  const inicioEixo = Date.parse("2026-10-04T16:30:00-03:00");
+  const brt = (seg: number) =>
+    new Date(inicioEixo + seg * 1000 - 3 * 3_600_000).toISOString().slice(11, 19);
+  const apuracao = {
+    t: [55 * 60, 120 * 60, 500 * 60],
+    pct: [
+      [42, 41, 45],
+      [50, 51, 47],
+    ],
+    votos: [
+      [1, 2, 3],
+      [1, 2, 3],
+    ],
+    apurado: [2, 40, 100],
+  };
+  const projecao = {
+    t: [60 * 60, 300 * 60],
+    pct: [
+      [44, 45],
+      [48, 47],
+    ],
+  };
+
+  it("as constantes: 15 s a 30 fps, os 2 últimos parados", () => {
+    expect(VIDEO_SEGUNDOS_TOTAL).toBe(15);
+    expect(VIDEO_FPS).toBe(30);
+    expect(VIDEO_TOTAL_QUADROS).toBe(450);
+    expect(VIDEO_QUADROS_PARADOS).toBe(60);
+  });
+
+  it("janela: 17h22 e 23h00 BRT, em segundos desde o início do eixo", () => {
+    const { tIni, tFim } = janelaDoVideo(inicioEixo);
+    expect(brt(tIni)).toBe("17:22:00");
+    expect(brt(tFim)).toBe("23:00:00");
+    expect(tIni).toBe(52 * 60);
+    expect(tFim).toBe(390 * 60);
+    // hora já passada no dia cai no dia seguinte
+    expect(segundosAteHoraBrt(inicioEixo, 3)).toBe((10 * 60 + 30) * 60);
+  });
+
+  it("o 1º quadro é 17h22 e nada apareceu ainda; a apuração começa depois", () => {
+    const t = instanteDoQuadroDoVideo(0, inicioEixo);
+    expect(brt(t)).toBe("17:22:00");
+    expect(estadoNoInstante(apuracao, projecao, t)).toMatchObject({ iApuracao: -1, iProjecao: -1 });
+  });
+
+  it("o último quadro animado é 23h00, e os 2 s finais ficam parados nele", () => {
+    const ultimoAnimado = VIDEO_TOTAL_QUADROS - VIDEO_QUADROS_PARADOS - 1;
+    expect(brt(instanteDoQuadroDoVideo(ultimoAnimado, inicioEixo))).toBe("23:00:00");
+    const final = instanteDoQuadroDoVideo(VIDEO_TOTAL_QUADROS - 1, inicioEixo);
+    expect(brt(final)).toBe("23:00:00");
+    for (let q = ultimoAnimado; q < VIDEO_TOTAL_QUADROS; q++) {
+      expect(instanteDoQuadroDoVideo(q, inicioEixo)).toBe(final);
+    }
+    // às 23h00 vale a chegada de 20h50 (a de 04h50 está fora da janela) e a rodada das 21h30
+    const e = estadoNoInstante(apuracao, projecao, final);
+    expect(e.pct).toEqual([41, 51]);
+    expect(e.projecao).toEqual([45, 47]);
+  });
+
+  it("anima devagar e sem voltar: cada quadro animado avança ~45 s da noite", () => {
+    const passos: number[] = [];
+    for (let q = 1; q < VIDEO_TOTAL_QUADROS - VIDEO_QUADROS_PARADOS; q++) {
+      passos.push(
+        instanteDoQuadroDoVideo(q, inicioEixo) - instanteDoQuadroDoVideo(q - 1, inicioEixo),
+      );
+    }
+    expect(Math.min(...passos)).toBeGreaterThan(0);
+    expect(Math.max(...passos)).toBeLessThan(60);
   });
 });
 

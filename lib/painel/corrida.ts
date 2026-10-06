@@ -429,3 +429,49 @@ const SUFIXO_DO_ARQUIVO: Record<GraficoDaCorrida, string> = {
 export function nomeDoArquivoDoVideo(grafico: GraficoDaCorrida, extensao: "mp4" | "webm"): string {
   return `atlasmenna-presidente-1t-${SUFIXO_DO_ARQUIVO[grafico]}.${extensao}`;
 }
+
+// ---------------------------------------------------------------------------
+// Janela e ritmo dos vídeos — o ÚNICO lugar onde mudam (ajuste do dono, 06/10)
+// ---------------------------------------------------------------------------
+
+/** O vídeo mostra só este trecho da noite (BRT): da primeira rajada às 23h. */
+export const VIDEO_JANELA_INICIO_BRT = { hora: 17, minuto: 22 } as const;
+export const VIDEO_JANELA_FIM_BRT = { hora: 23, minuto: 0 } as const;
+/** Duração total do vídeo, da qual os últimos segundos ficam parados no fim. */
+export const VIDEO_SEGUNDOS_TOTAL = 15;
+export const VIDEO_SEGUNDOS_PARADOS = 2;
+export const VIDEO_FPS = 30;
+export const VIDEO_TOTAL_QUADROS = VIDEO_SEGUNDOS_TOTAL * VIDEO_FPS;
+export const VIDEO_QUADROS_PARADOS = VIDEO_SEGUNDOS_PARADOS * VIDEO_FPS;
+
+const BRT_MS = 3 * 3_600_000;
+
+/**
+ * Segundos, a partir de `inicioMs`, até o próximo `hora:minuto` BRT (no mesmo
+ * dia de `inicioMs` em BRT, ou no seguinte se já passou).
+ */
+export function segundosAteHoraBrt(inicioMs: number, hora: number, minuto = 0): number {
+  const brt = new Date(inicioMs - BRT_MS);
+  const alvo =
+    Date.UTC(brt.getUTCFullYear(), brt.getUTCMonth(), brt.getUTCDate(), hora, minuto) + BRT_MS;
+  const t = alvo >= inicioMs ? alvo : alvo + 24 * 3_600_000;
+  return Math.round((t - inicioMs) / 1000);
+}
+
+/** A janela do vídeo em segundos desde o início do eixo: `[17h22, 23h00]`. */
+export function janelaDoVideo(inicioMs: number): { tIni: number; tFim: number } {
+  return {
+    tIni: segundosAteHoraBrt(
+      inicioMs,
+      VIDEO_JANELA_INICIO_BRT.hora,
+      VIDEO_JANELA_INICIO_BRT.minuto,
+    ),
+    tFim: segundosAteHoraBrt(inicioMs, VIDEO_JANELA_FIM_BRT.hora, VIDEO_JANELA_FIM_BRT.minuto),
+  };
+}
+
+/** O instante (segundos) do quadro `quadro` no vídeo padrão: janela e ritmo acima. */
+export function instanteDoQuadroDoVideo(quadro: number, inicioMs: number): number {
+  const { tIni, tFim } = janelaDoVideo(inicioMs);
+  return instanteDoQuadro(quadro, VIDEO_TOTAL_QUADROS, VIDEO_QUADROS_PARADOS, tIni, tFim);
+}
