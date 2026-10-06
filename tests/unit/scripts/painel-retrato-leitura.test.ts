@@ -86,6 +86,7 @@ describe("lerDoBanco — o caminho inteiro de leitura", () => {
     // dos municípios (a consulta que só roda nesse caso).
     estado.responder = (texto) => {
       if (texto.includes("max(id)")) return [{ cargo: 1, id: "10" }];
+      if (texto.includes("SELECT id::text AS id")) return [{ id: "11" }];
       if (texto.includes("WHERE id = ANY")) {
         return [
           {
@@ -107,8 +108,9 @@ describe("lerDoBanco — o caminho inteiro de leitura", () => {
     const lido = await lerDoBanco("postgresql://u:p@h/db", args);
 
     expect(lido.versoes[0]?.municipio).toBe("X");
-    // ingest_log, snapshots/minuto, rodadas, agregados, últimos ids, 1 lote, municípios
-    expect(estado.transacoes.length).toBe(7);
+    // ingest_log, snapshots/minuto, rodadas, agregados do Presidente (ids + 1 lote),
+    // rodadas da corrida, candidatos da corrida, últimos ids, 1 lote, municípios
+    expect(estado.transacoes.length).toBe(10);
     expect(estado.queries).toBe(estado.transacoes.length);
     for (const t of estado.transacoes) {
       expect(t.opcoes).toEqual({ readOnly: true });

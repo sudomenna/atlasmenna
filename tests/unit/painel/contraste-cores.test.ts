@@ -128,3 +128,26 @@ describe("a função de contraste mede certo (âncoras conhecidas)", () => {
     }
   });
 });
+
+describe("linhas da corrida do Presidente (tokens de partido) — ≥ 3:1 nos dois temas", () => {
+  // As linhas usam `textForParty(sigla)` = `var(--party-<sigla>-text)`
+  // (`components/painel/SecaoCorrida.tsx`). Lidas do CSS gerado: a 1ª definição
+  // é a do tema claro, a 2ª a do bloco `[data-theme="dark"]`.
+  const CSS_PARTIDOS = readFileSync(join(RAIZ, "app/tokens-party.css"), "utf8");
+  const tokens = (sigla: string): [string, string] => {
+    const todas = [
+      ...CSS_PARTIDOS.matchAll(new RegExp(`--party-${sigla}-text:\\s*(#[0-9a-fA-F]{6})\\b`, "g")),
+    ];
+    if (todas.length < 2) throw new Error(`--party-${sigla}-text: esperava claro e escuro`);
+    return [todas[0]?.[1] as string, todas[1]?.[1] as string];
+  };
+  it("a seção usa o token de texto do partido", () => {
+    const fonte = readFileSync(join(RAIZ, "components/painel/SecaoCorrida.tsx"), "utf8");
+    expect(fonte).toMatch(/tinta:\s*textForParty\(/);
+  });
+  it.each(["pt", "pl"])("--party-%s-text", (sigla) => {
+    const [claro, escuro] = tokens(sigla);
+    for (const fundo of FUNDOS.claro) expect(contraste(claro, fundo)).toBeGreaterThanOrEqual(3);
+    for (const fundo of FUNDOS.escuro) expect(contraste(escuro, fundo)).toBeGreaterThanOrEqual(3);
+  });
+});

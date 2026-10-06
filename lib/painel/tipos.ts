@@ -22,7 +22,14 @@
  */
 
 /** Versão do formato. Muda quando um campo muda de sentido ou some. */
-export const VERSAO_RETRATO = 1 as const;
+export const VERSAO_RETRATO = 2 as const;
+
+/**
+ * Os dois candidatos a Presidente acompanhados no gráfico da corrida (pedido do
+ * dono em 06/10/2026): os dois primeiros colocados do 1º turno, pelo número de
+ * urna. Nome e partido saem do banco (`candidatos`) na geração do retrato.
+ */
+export const CANDIDATOS_DA_CORRIDA = [13, 22] as const;
 
 /** Nome do arquivo no Blob; o caminho inteiro é `painel/<segredo>/<este nome>`. */
 export const PAINEL_BLOB_ARQUIVO = "retrato-1t-2026.json";
@@ -209,6 +216,40 @@ export interface TotaisCargo {
   rodadas: number | null;
 }
 
+/**
+ * A corrida do Presidente entre os dois primeiros, em alta resolução
+ * (`lib/painel/corrida.ts`). Colunas paralelas, para o JSON ficar enxuto:
+ * `pct[k][i]` é o candidato `k` no instante `i`.
+ */
+export interface CorridaPainel {
+  candidatos: { id: number; nome: string; partido: string }[];
+  /** Uma posição por chegada de arquivo de UF. */
+  apuracao: {
+    /** Segundos desde `eixo.inicio`. */
+    t: number[];
+    /** % dos votos válidos, 3 casas. */
+    pct: number[][];
+    votos: number[][];
+    /** % apurado nacional, 3 casas. */
+    apurado: number[];
+  };
+  /** Uma posição por rodada do modelo (nada interpolado entre rodadas). */
+  projecao: {
+    /** Segundos desde `eixo.inicio` — a hora em que o modelo rodou. */
+    t: number[];
+    /** Hora do boletim do TSE que a rodada usou (segundos desde o início), ou `null`. */
+    tBoletim: (number | null)[];
+    pct: (number | null)[][];
+    lo: (number | null)[][];
+    hi: (number | null)[][];
+    pVitoria: (number | null)[][];
+  };
+  /** Soma por UF × `projections.pct_atual` (o que o modelo viu). */
+  conferencia: { instantes: number; difMaxPp: number; horaDaDifMax: string | null };
+  /** Trocas de liderança na apuração (índice do novo líder em `candidatos`). */
+  trocas: { hora: string; lider: number; apurado: number }[];
+}
+
 export interface RetratoPainel {
   versao: typeof VERSAO_RETRATO;
   geradoEm: string;
@@ -229,6 +270,8 @@ export interface RetratoPainel {
     /** O arquivo nacional do TSE (`br`), que atrasava em relação às UFs. */
     arquivoBrasil: PontoApurado[];
   };
+  /** `null` quando a geração não teve os dados da corrida. */
+  corridaPresidente: CorridaPainel | null;
   correcoes: CorrecaoPainel[];
   totais: TotaisCargo[];
   fonte: {

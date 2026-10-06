@@ -34,6 +34,7 @@ import { Footer } from "@/components/layout/Footer";
 import { corDoCargo, DuracaoDosCiclos, RodadasDaProjecao } from "@/components/painel/Faixas";
 import { GraficoPorMinuto, type SerieDoGrafico } from "@/components/painel/GraficoPorMinuto";
 import s from "@/components/painel/painel.module.css";
+import { SecaoCorrida } from "@/components/painel/SecaoCorrida";
 import {
   FiltroDeCiclos,
   TabelaDeCiclos,
@@ -138,6 +139,9 @@ function Subtitulo({ retrato }: { retrato: RetratoPainel }) {
         <ul className={s.indice}>
           <li>
             <a href="#resumo">Resumo</a>
+          </li>
+          <li>
+            <a href="#corrida">Presidente: os dois primeiros</a>
           </li>
           <li>
             <a href="#ocorrencias">Ocorrências</a>
@@ -382,6 +386,9 @@ function Conteudo({
           bloqueio duas vezes, e o resumo acima dá uma faixa.
         </p>
       </section>
+
+      {/* ---------------------------------------------- corrida do Presidente */}
+      <SecaoCorrida retrato={r} />
 
       {/* ------------------------------------------------------- ocorrências */}
       <section id="ocorrencias" className={s.secao} aria-labelledby="t-ocorrencias">

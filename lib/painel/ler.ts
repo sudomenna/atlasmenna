@@ -84,7 +84,42 @@ export function validarRetrato(dado: unknown): RetratoPainel | null {
       if (!Array.isArray(v) || v.length !== n) return null;
     }
   }
+  if (r.corridaPresidente === undefined) return null;
+  if (r.corridaPresidente !== null && !corridaValida(r.corridaPresidente)) return null;
   return r as RetratoPainel;
+}
+
+/**
+ * A corrida do Presidente tem colunas paralelas: todas as listas de um bloco
+ * precisam ter o mesmo tamanho, e uma lista por candidato. Uma coluna curta
+ * desenharia um candidato deslocado no tempo sem erro nenhum.
+ */
+function corridaValida(c: unknown): boolean {
+  if (!c || typeof c !== "object") return false;
+  const { candidatos, apuracao, projecao, conferencia, trocas } = c as Record<string, unknown>;
+  if (!Array.isArray(candidatos) || candidatos.length === 0) return false;
+  if (!Array.isArray(trocas) || !conferencia || typeof conferencia !== "object") return false;
+  const nc = candidatos.length;
+  const colunas = (bloco: unknown, simples: string[], porCandidato: string[]): boolean => {
+    if (!bloco || typeof bloco !== "object") return false;
+    const b = bloco as Record<string, unknown>;
+    const t = b.t;
+    if (!Array.isArray(t)) return false;
+    for (const k of simples) {
+      const v = b[k];
+      if (!Array.isArray(v) || v.length !== t.length) return false;
+    }
+    for (const k of porCandidato) {
+      const v = b[k];
+      if (!Array.isArray(v) || v.length !== nc) return false;
+      if (!v.every((linha) => Array.isArray(linha) && linha.length === t.length)) return false;
+    }
+    return true;
+  };
+  return (
+    colunas(apuracao, ["apurado"], ["pct", "votos"]) &&
+    colunas(projecao, ["tBoletim"], ["pct", "lo", "hi", "pVitoria"])
+  );
 }
 
 function lerArquivoLocal(): LeituraRetrato {

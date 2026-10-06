@@ -73,7 +73,7 @@ describe("validarRetrato", () => {
 
   it("recusa outra versão, lista faltando e série com tamanho diferente do eixo", () => {
     const r = retratoValido();
-    expect(validarRetrato({ ...r, versao: 2 })).toBeNull();
+    expect(validarRetrato({ ...r, versao: 1 })).toBeNull();
     expect(validarRetrato({ ...r, ciclos: undefined })).toBeNull();
     const truncado = JSON.parse(JSON.stringify(r));
     truncado.porMinuto.pedidosEstimados["6"].pop();
@@ -120,5 +120,52 @@ describe("lerRetrato fora de desenvolvimento — URL secreta do Blob", () => {
     }
     // o log também não leva a URL (nem a mensagem do erro de rede, que a contém)
     semSegredo(avisos.mock.calls);
+  });
+});
+
+describe("validarRetrato — a corrida do Presidente", () => {
+  const corrida = () => ({
+    candidatos: [
+      { id: 13, nome: "A", partido: "PT" },
+      { id: 22, nome: "B", partido: "PL" },
+    ],
+    apuracao: {
+      t: [1, 2],
+      pct: [
+        [40, 41],
+        [60, 59],
+      ],
+      votos: [
+        [4, 41],
+        [6, 59],
+      ],
+      apurado: [1, 2],
+    },
+    projecao: {
+      t: [3],
+      tBoletim: [2],
+      pct: [[40], [60]],
+      lo: [[39], [59]],
+      hi: [[41], [61]],
+      pVitoria: [[0], [1]],
+    },
+    conferencia: { instantes: 1, difMaxPp: 0.1, horaDaDifMax: null },
+    trocas: [],
+  });
+  it("aceita a corrida bem formada e aceita `null` (retrato sem os dados)", () => {
+    const r = JSON.parse(JSON.stringify(retratoValido()));
+    expect(validarRetrato({ ...r, corridaPresidente: corrida() })).not.toBeNull();
+    expect(validarRetrato({ ...r, corridaPresidente: null })).not.toBeNull();
+  });
+  it("recusa coluna de candidato mais curta que o eixo da série (deslocaria a linha no tempo)", () => {
+    const r = JSON.parse(JSON.stringify(retratoValido()));
+    const c = corrida();
+    c.apuracao.pct[1]?.pop();
+    expect(validarRetrato({ ...r, corridaPresidente: c })).toBeNull();
+    const d = corrida();
+    d.projecao.hi = [[41]];
+    expect(validarRetrato({ ...r, corridaPresidente: d })).toBeNull();
+    const { corridaPresidente: _, ...semCampo } = r;
+    expect(validarRetrato(semCampo)).toBeNull();
   });
 });

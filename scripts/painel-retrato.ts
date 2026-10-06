@@ -85,13 +85,16 @@ import {
   type RodadaBruta,
   type UltimaVersao,
 } from "@/lib/painel/agregar";
+import type { RodadaCorrida, VersaoCorrida } from "@/lib/painel/corrida";
 import {
+  CANDIDATOS_DA_CORRIDA,
   CARGOS_DO_PAINEL,
   type CargoDoPainel,
   PAINEL_ARQUIVO_LOCAL,
   PAINEL_BLOB_ARQUIVO,
   PAINEL_URL_ARQUIVO_LOCAL,
 } from "@/lib/painel/tipos";
+import { nomeExibicao } from "@/lib/utils/nome-candidato";
 import { selecionarEnvDoVigia } from "./_vigia-env";
 
 // ---------------------------------------------------------------------------
@@ -300,23 +303,112 @@ export async function lerDoBanco(databaseUrl: string, args: ArgsRetrato) {
     )
   ).map((r) => ({ cargo: Number(r.cargo), tsMs: ms(r.ts), dadoTsMs: msOuNull(r.dado_ts) }));
 
-  // ~2,3 mil versões de arquivos agregados (UF e Brasil) do Presidente; de
-  // cada uma, só `s.st` e `s.ts` (seções), nunca o payload inteiro.
-  const agregadosPresidente: AgregadoApurado[] = (
-    await consulta(
-      "agregados do Presidente",
-      `SELECT ts, uf, nivel, payload->'s'->>'st' AS st, payload->'s'->>'ts' AS tot
-         FROM snapshots
-        WHERE cargo = 1 AND turno = $3 AND nivel IN ('uf', 'br') AND ts >= $1 AND ts < $2
-        ORDER BY ts, id`,
-      [de, ate, args.turno],
-    )
-  ).map((r) => ({
-    tsMs: ms(r.ts),
-    uf: String(r.uf ?? "").trim(),
-    nivel: String(r.nivel),
-    st: r.st,
-    tot: r.tot,
+  // A corrida do Presidente e o % apurado nacional saem das MESMAS ~2,3 mil
+  // versões de arquivos agregados (UF, exterior e Brasil), em DOIS passos:
+  //   1. os ids (colunas pequenas, índice `ix_snap_ts`);
+  //   2. por chave primária, em lotes, SÓ os pedaços do payload que importam:
+  //      `s.st`/`s.ts` (seções), `v.vv` (votos válidos) e o `vap` de cada
+  //      candidato acompanhado em `carg[].agr[].par[].cand[]` (EA20,
+  //      `lib/tse/ea20-schema.ts`). Nunca o payload inteiro.
+  const idsAgregados = await consulta(
+    "agregados do Presidente (ids)",
+    `SELECT id::text AS id
+       FROM snapshots
+      WHERE cargo = 1 AND turno = $3 AND nivel IN ('uf', 'br') AND ts >= $1 AND ts < $2
+      ORDER BY ts, id`,
+    [de, ate, args.turno],
+  );
+  const versoesCorrida: VersaoCorrida[] = [];
+  const idsLista = idsAgregados.map((r) => String(r.id));
+  for (let i = 0; i < idsLista.length; i += 1000) {
+    const lote = idsLista.slice(i, i + 1000);
+    const linhas = await consulta(
+      `agregados do Presidente ${i + 1}–${i + lote.length}`,
+      `SELECT ts, uf, nivel,
+              payload->'s'->>'st' AS st, payload->'s'->>'ts' AS tot, payload->'v'->>'vv' AS vv,
+              jsonb_path_query_first(payload, '$.carg[*].agr[*].par[*].cand[*] ? (@.n == $n).vap',
+                                     jsonb_build_object('n', $2::text)) #>> '{}' AS vap_a,
+              jsonb_path_query_first(payload, '$.carg[*].agr[*].par[*].cand[*] ? (@.n == $n).vap',
+                                     jsonb_build_object('n', $3::text)) #>> '{}' AS vap_b
+         FROM snapshots WHERE id = ANY($1::bigint[])`,
+      [lote, String(CANDIDATOS_DA_CORRIDA[0]), String(CANDIDATOS_DA_CORRIDA[1])],
+    );
+    for (const r of linhas) {
+      versoesCorrida.push({
+        tsMs: ms(r.ts),
+        uf: String(r.uf ?? "").trim(),
+        nivel: String(r.nivel),
+        st: r.st,
+        tot: r.tot,
+        vv: r.vv,
+        votos: [r.vap_a, r.vap_b],
+      });
+    }
+  }
+  versoesCorrida.sort((a, b) => a.tsMs - b.tsMs);
+  const semVotos = versoesCorrida.filter(
+    (v) => v.nivel !== "br" && v.votos.some((x) => x === null || x === undefined),
+  ).length;
+  if (semVotos > 0) console.warn(`  ! ${semVotos} versões de UF sem os votos de algum candidato`);
+
+  // As rodadas do modelo para os dois candidatos, no nacional (`uf IS NULL`).
+  const rodadasBrutas = await consulta(
+    "rodadas da corrida",
+    `SELECT ts, candidato_id, pct_projetado, pct_projetado_lower, pct_projetado_upper,
+            p_vitoria, pct_atual, votos_atuais, dado_ts
+       FROM projections
+      WHERE cargo = 1 AND turno = $3 AND uf IS NULL AND candidato_id = ANY($4::int[])
+        AND ts >= $1 AND ts < $2
+      ORDER BY ts`,
+    [de, ate, args.turno, [...CANDIDATOS_DA_CORRIDA]],
+  );
+  const porTs = new Map<number, RodadaCorrida>();
+  const nulos = () => CANDIDATOS_DA_CORRIDA.map(() => null as number | null);
+  for (const r of rodadasBrutas) {
+    const t = ms(r.ts);
+    const k = (CANDIDATOS_DA_CORRIDA as readonly number[]).indexOf(Number(r.candidato_id));
+    if (k < 0) continue;
+    const rod = porTs.get(t) ?? {
+      tsMs: t,
+      dadoTsMs: msOuNull(r.dado_ts),
+      pct: nulos(),
+      lo: nulos(),
+      hi: nulos(),
+      pVitoria: nulos(),
+      pctAtual: nulos(),
+      votosAtuais: nulos(),
+    };
+    rod.pct[k] = inteiroOuNull(r.pct_projetado);
+    rod.lo[k] = inteiroOuNull(r.pct_projetado_lower);
+    rod.hi[k] = inteiroOuNull(r.pct_projetado_upper);
+    rod.pVitoria[k] = inteiroOuNull(r.p_vitoria);
+    rod.pctAtual[k] = inteiroOuNull(r.pct_atual);
+    rod.votosAtuais[k] = inteiroOuNull(r.votos_atuais);
+    porTs.set(t, rod);
+  }
+  const rodadasCorrida = [...porTs.values()].sort((a, b) => a.tsMs - b.tsMs);
+
+  const cadastro = await consulta(
+    "candidatos da corrida",
+    `SELECT numero, nome_urna, sq_candidato, partido_sigla
+       FROM candidatos WHERE cargo = 1 AND numero = ANY($1::int[])`,
+    [[...CANDIDATOS_DA_CORRIDA]],
+  );
+  const candidatosCorrida = CANDIDATOS_DA_CORRIDA.map((n) => {
+    const c = cadastro.find((r) => Number(r.numero) === n);
+    return {
+      id: n,
+      nome: c ? nomeExibicao(String(c.nome_urna), String(c.sq_candidato)) : `Candidato ${n}`,
+      partido: c ? String(c.partido_sigla) : "",
+    };
+  });
+
+  const agregadosPresidente: AgregadoApurado[] = versoesCorrida.map((v) => ({
+    tsMs: v.tsMs,
+    uf: v.uf,
+    nivel: v.nivel,
+    st: v.st,
+    tot: v.tot,
   }));
 
   // Arquivos parados, em DOIS passos (o de um passo só — JOIN com o filtro no
@@ -374,7 +466,14 @@ export async function lerDoBanco(databaseUrl: string, args: ArgsRetrato) {
     for (const v of versoes) v.municipio = porCodigo.get(v.codMunicipioTse) ?? null;
   }
 
-  return { ingest, novidades, rodadas, agregadosPresidente, versoes };
+  return {
+    ingest,
+    novidades,
+    rodadas,
+    agregadosPresidente,
+    versoes,
+    corrida: { candidatos: candidatosCorrida, versoes: versoesCorrida, rodadas: rodadasCorrida },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -495,6 +594,7 @@ async function principal(): Promise<void> {
     novidades: lido.novidades,
     rodadas: lido.rodadas,
     agregadosPresidente: lido.agregadosPresidente,
+    corrida: lido.corrida ?? null,
     ultimasVersoes: lido.versoes,
     commits,
     gitRef: args.gitRef,
@@ -532,6 +632,21 @@ async function principal(): Promise<void> {
   console.table(retrato.buracosCiclos);
   console.log(`\nArquivos parados: ${retrato.arquivosParados.length}`);
   console.table(retrato.arquivosParados);
+  const corrida = retrato.corridaPresidente;
+  if (corrida) {
+    console.log(
+      `\nCorrida do Presidente: ${corrida.candidatos.map((c) => `${c.nome} (${c.partido})`).join(" × ")}` +
+        ` · ${corrida.apuracao.t.length} instantes de apuração · ${corrida.projecao.t.length} rodadas` +
+        ` · ${Buffer.byteLength(JSON.stringify(corrida))} bytes`,
+    );
+    console.log(
+      `  soma por UF × pct_atual do modelo: ${corrida.conferencia.instantes} instantes,` +
+        ` diferença máxima ${corrida.conferencia.difMaxPp} pp (rodada de ${corrida.conferencia.horaDaDifMax})`,
+    );
+    console.log("  trocas de liderança:", JSON.stringify(corrida.trocas));
+  } else {
+    console.log("\nCorrida do Presidente: sem dados");
+  }
   console.log("\nEpisódios de bloqueio (429):");
   console.table(
     retrato.episodiosDeBloqueio.map((e) => ({

@@ -692,3 +692,117 @@
 .mono {
   font-family: var(--font-mono);
 }
+
+/* ------------------------------------------------- corrida do Presidente */
+
+.corrida {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.painelCorrida {
+  margin-top: var(--space-2);
+}
+
+/* Os caminhos da corrida estão em coordenadas de dado (segundos, −%) e a
+ * janela de horário é só o `viewBox`: o que passa da faixa vertical é cortado
+ * no próprio SVG, em vez de vazar por cima da régua (a régua de horas, fora
+ * do SVG, continua visível). */
+.recorte .svg {
+  overflow: hidden;
+}
+
+.linhaCorrida {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.linhaPontilhada {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 0.1 5;
+}
+
+.verticeCorrida {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.margemCorrida {
+  fill-opacity: 0.16;
+  stroke: none;
+}
+
+.margemCorridaLeve {
+  fill-opacity: 0.07;
+  stroke: none;
+}
+
+.linhaApurado {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-width: 2;
+}
+
+.leituraCorrida {
+  min-width: 15rem;
+  max-width: min(22rem, 80vw);
+}
+
+.leitura .leituraTitulo {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.semMoldura {
+  border: 0;
+  min-width: 0;
+}
+
+/* --------------------------------------------- vídeo de cada gráfico */
+
+.video {
+  margin-top: var(--space-4);
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.botaoVideoSecundario {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  font: 600 var(--text-sm) / 1 var(--font-sans);
+  cursor: pointer;
+  background: var(--color-surface-card);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.videoProgresso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  font: var(--type-body-sm);
+}
+
+.videoProgresso label {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* A prévia é o próprio canvas que está sendo gravado, em miniatura. */
+.videoPrevia {
+  width: min(180px, 40vw);
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.videoPreviaOculta {
+  display: none;
+}

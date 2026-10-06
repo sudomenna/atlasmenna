@@ -20,6 +20,13 @@
  */
 
 import {
+  conferirComModelo,
+  type RodadaCorrida,
+  serieCorrida,
+  trocasDeLideranca,
+  type VersaoCorrida,
+} from "./corrida";
+import {
   type ArquivoParado,
   BRT_OFFSET_MS,
   type BuracoCiclos,
@@ -30,6 +37,7 @@ import {
   type ChaveCargo,
   type CicloPainel,
   type CorrecaoPainel,
+  type CorridaPainel,
   type EpisodioBloqueio,
   type PontoApurado,
   type RetratoPainel,
@@ -667,6 +675,64 @@ export interface InsumosRetrato {
   gitRef: string;
   correcoesDeMs: number;
   correcoesAteMs: number;
+  /** A corrida do Presidente entre os dois primeiros; `null`/ausente = sem dados. */
+  corrida?: InsumosCorrida | null;
+}
+
+export interface InsumosCorrida {
+  candidatos: { id: number; nome: string; partido: string }[];
+  versoes: readonly VersaoCorrida[];
+  rodadas: readonly RodadaCorrida[];
+}
+
+const arred3 = (x: number) => Math.round(x * 1000) / 1000;
+const arred3OuNull = (x: number | null) => (x === null ? null : arred3(x));
+
+/**
+ * Monta a corrida em colunas enxutas: instantes em SEGUNDOS desde o início do
+ * eixo, percentuais com 3 casas. Instante fora da janela do retrato fica de fora.
+ */
+export function montarCorrida(
+  ins: InsumosCorrida,
+  inicioEixoMs: number,
+  deMs: number,
+  ateMs: number,
+): CorridaPainel {
+  const n = ins.candidatos.length;
+  const seg = (ms: number) => Math.round((ms - inicioEixoMs) / 1000);
+  const serie = serieCorrida(ins.versoes, n).filter((p) => p.tMs >= deMs && p.tMs < ateMs);
+  const rodadas = [...ins.rodadas]
+    .filter((r) => r.tsMs >= deMs && r.tsMs < ateMs)
+    .sort((a, b) => a.tsMs - b.tsMs);
+  const conf = conferirComModelo(serie, rodadas);
+  const porCand = <T>(f: (k: number) => T[]) => Array.from({ length: n }, (_, k) => f(k));
+  return {
+    candidatos: ins.candidatos,
+    apuracao: {
+      t: serie.map((p) => seg(p.tMs)),
+      pct: porCand((k) => serie.map((p) => arred3(p.pct[k] ?? 0))),
+      votos: porCand((k) => serie.map((p) => p.votos[k] ?? 0)),
+      apurado: serie.map((p) => arred3(p.apurado)),
+    },
+    projecao: {
+      t: rodadas.map((r) => seg(r.tsMs)),
+      tBoletim: rodadas.map((r) => (r.dadoTsMs === null ? null : seg(r.dadoTsMs))),
+      pct: porCand((k) => rodadas.map((r) => arred3OuNull(r.pct[k] ?? null))),
+      lo: porCand((k) => rodadas.map((r) => arred3OuNull(r.lo[k] ?? null))),
+      hi: porCand((k) => rodadas.map((r) => arred3OuNull(r.hi[k] ?? null))),
+      pVitoria: porCand((k) => rodadas.map((r) => arred3OuNull(r.pVitoria[k] ?? null))),
+    },
+    conferencia: {
+      instantes: conf.instantes,
+      difMaxPp: conf.difMaxPp,
+      horaDaDifMax: conf.tMsDaDifMax === null ? null : isoBrt(conf.tMsDaDifMax),
+    },
+    trocas: trocasDeLideranca(serie).map((t) => ({
+      hora: isoBrt(t.tMs),
+      lider: t.lider,
+      apurado: arred3(t.apurado),
+    })),
+  };
 }
 
 function seriesVazias(n: number): SeriePorCargo {
@@ -839,6 +905,10 @@ export function montarRetrato(ins: InsumosRetrato): RetratoPainel {
       somaDosEstados: pontos(apurado.somaDosEstados),
       arquivoBrasil: pontos(apurado.arquivoBrasil),
     },
+    corridaPresidente:
+      ins.corrida && ins.corrida.candidatos.length > 0
+        ? montarCorrida(ins.corrida, inicioEixo, ins.deMs, ins.ateMs)
+        : null,
     correcoes,
     totais,
     fonte: {
